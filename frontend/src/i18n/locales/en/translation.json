@@ -1,0 +1,132 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "refresh": "Refresh",
+    "settings": "Settings",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "nav": {
+    "overview": "Overview",
+    "dashboard": "Custom Dashboard",
+    "campaigns": "Campaigns",
+    "stratum": "Stratum Analytics",
+    "benchmarks": "Benchmarks",
+    "assets": "Asset Library",
+    "rules": "Automation Rules",
+    "whatsapp": "WhatsApp",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "kpi": {
+      "spend": "Total Spend",
+      "revenue": "Revenue",
+      "roas": "ROAS",
+      "impressions": "Impressions",
+      "clicks": "Clicks",
+      "conversions": "Conversions",
+      "ctr": "CTR"
+    },
+    "period": {
+      "today": "Today",
+      "7d": "Last 7 Days",
+      "30d": "Last 30 Days",
+      "90d": "Last 90 Days"
+    }
+  },
+  "simulator": {
+    "title": "What-If Simulator",
+    "description": "Predict the impact of budget changes",
+    "budgetChange": "Budget Change",
+    "currentBudget": "Current Budget",
+    "predictedRevenue": "Predicted Revenue",
+    "predictedROAS": "Predicted ROAS",
+    "runSimulation": "Run Simulation",
+    "confidence": "Confidence"
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "newCampaign": "New Campaign",
+    "allPlatforms": "All Platforms",
+    "allStatuses": "All Statuses",
+    "platform": {
+      "meta": "Meta",
+      "google": "Google",
+      "tiktok": "TikTok",
+      "snapchat": "Snapchat",
+      "linkedin": "LinkedIn"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed",
+      "draft": "Draft"
+    }
+  },
+  "benchmarks": {
+    "title": "Competitor Intelligence",
+    "shareOfVoice": "Share of Voice",
+    "addCompetitor": "Add Competitor",
+    "topKeywords": "Top Keywords",
+    "trafficTrend": "Traffic Trend"
+  },
+  "assets": {
+    "title": "Asset Library",
+    "uploadAsset": "Upload Asset",
+    "fatigueScore": "Fatigue Score",
+    "fatigueWarning": "High fatigue - consider refreshing creative"
+  },
+  "rules": {
+    "title": "Automation Rules",
+    "newRule": "New Rule",
+    "condition": "When",
+    "action": "Then",
+    "operators": {
+      "equals": "equals",
+      "greater_than": "is greater than",
+      "less_than": "is less than"
+    },
+    "actions": {
+      "apply_label": "Apply Label",
+      "send_alert": "Send Alert",
+      "pause_campaign": "Pause Campaign",
+      "adjust_budget": "Adjust Budget"
+    }
+  },
+  "guide": {
+    "welcome": {
+      "title": "Welcome to Stratum AI!",
+      "content": "Let's take a quick tour of the platform."
+    },
+    "kpiTiles": {
+      "title": "KPI Overview",
+      "content": "These tiles show your key performance metrics at a glance."
+    },
+    "simulator": {
+      "title": "What-If Simulator",
+      "content": "Use this tool to predict how budget changes will affect your ROAS."
+    },
+    "navigation": {
+      "title": "Navigation",
+      "content": "Access different sections of the platform from the sidebar."
+    }
+  },
+  "tooltips": {
+    "roas": "Return on Ad Spend - Revenue divided by ad spend",
+    "ctr": "Click-Through Rate - Clicks divided by impressions",
+    "cpm": "Cost Per Mille - Cost per 1,000 impressions",
+    "cpc": "Cost Per Click - Total spend divided by clicks",
+    "cpa": "Cost Per Acquisition - Total spend divided by conversions",
+    "confidenceInterval": "The range within which the true value is likely to fall"
+  }
+}
