@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -24,6 +24,10 @@ import {
   Paperclip,
   Image,
   Smile,
+  FileSpreadsheet,
+  Download,
+  AlertCircle,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { whatsappApi } from '@/services/api'
@@ -37,6 +41,16 @@ import type {
 } from '@/types/whatsapp'
 
 type TabType = 'inbox' | 'contacts' | 'templates' | 'messages'
+type AddContactTab = 'single' | 'csv'
+
+// CSV parsed contact type
+interface CSVContact {
+  phone_number: string
+  country_code: string
+  display_name: string
+  isValid: boolean
+  error?: string
+}
 
 // Conversation type for inbox
 interface Conversation {
@@ -416,6 +430,20 @@ export function WhatsApp() {
   const [chatMessages, setChatMessages] = useState<WhatsAppMessage[]>(mockChatMessages)
   const [replyText, setReplyText] = useState('')
 
+  // New contact modal state
+  const [addContactTab, setAddContactTab] = useState<AddContactTab>('single')
+  const [csvContacts, setCsvContacts] = useState<CSVContact[]>([])
+  const [csvFileName, setCsvFileName] = useState<string>('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [csvError, setCsvError] = useState<string>('')
+  const [isImporting, setIsImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Single contact form state
+  const [newContactPhone, setNewContactPhone] = useState('')
+  const [newContactCountry, setNewContactCountry] = useState('')
+  const [newContactName, setNewContactName] = useState('')
+
   // Toggle single contact selection
   const toggleContactSelection = (contactId: number) => {
     setSelectedContactIds((prev) =>
@@ -451,6 +479,203 @@ export function WhatsApp() {
     setShowBroadcastModal(false)
     setSelectedContactIds([])
     setBroadcastTemplate('')
+  }
+
+  // Validate phone number format
+  const validatePhoneNumber = (phone: string): boolean => {
+    // Basic validation: starts with + and has 10-15 digits
+    const phoneRegex = /^\+?[1-9]\d{9,14}$/
+    return phoneRegex.test(phone.replace(/[\s-]/g, ''))
+  }
+
+  // Parse CSV content
+  const parseCSV = useCallback((content: string): CSVContact[] => {
+    const lines = content.trim().split('\n')
+    if (lines.length < 2) {
+      setCsvError('CSV file must have a header row and at least one data row')
+      return []
+    }
+
+    // Parse header
+    const header = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''))
+    const phoneIndex = header.findIndex(h => h.includes('phone') || h.includes('number') || h.includes('mobile'))
+    const countryIndex = header.findIndex(h => h.includes('country') || h.includes('code'))
+    const nameIndex = header.findIndex(h => h.includes('name') || h.includes('display'))
+
+    if (phoneIndex === -1) {
+      setCsvError('CSV must have a column with "phone" or "number" in the header')
+      return []
+    }
+
+    // Parse data rows
+    const contacts: CSVContact[] = []
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+
+      // Handle CSV with quotes
+      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''))
+
+      const phone = values[phoneIndex]?.trim() || ''
+      const country = countryIndex !== -1 ? values[countryIndex]?.trim().toUpperCase() : ''
+      const name = nameIndex !== -1 ? values[nameIndex]?.trim() : ''
+
+      const isValid = validatePhoneNumber(phone)
+
+      contacts.push({
+        phone_number: phone.startsWith('+') ? phone : `+${phone}`,
+        country_code: country || 'US',
+        display_name: name,
+        isValid,
+        error: isValid ? undefined : 'Invalid phone number format'
+      })
+    }
+
+    return contacts
+  }, [])
+
+  // Handle file selection
+  const handleFileSelect = useCallback((file: File) => {
+    setCsvError('')
+
+    if (!file.name.endsWith('.csv')) {
+      setCsvError('Please upload a CSV file')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setCsvError('File size must be less than 5MB')
+      return
+    }
+
+    setCsvFileName(file.name)
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+      const parsed = parseCSV(content)
+      setCsvContacts(parsed)
+    }
+    reader.onerror = () => {
+      setCsvError('Failed to read file')
+    }
+    reader.readAsText(file)
+  }, [parseCSV])
+
+  // Handle drag events
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = e.dataTransfer.files
+    if (files.length > 0) {
+      handleFileSelect(files[0])
+    }
+  }
+
+  // Handle single contact submission
+  const handleAddSingleContact = () => {
+    if (!newContactPhone || !newContactCountry) return
+
+    const newContact: WhatsAppContact = {
+      id: contacts.length + 1,
+      phone_number: newContactPhone.startsWith('+') ? newContactPhone : `+${newContactPhone}`,
+      country_code: newContactCountry.toUpperCase(),
+      display_name: newContactName || null,
+      is_verified: false,
+      opt_in_status: 'pending',
+      wa_id: null,
+      profile_name: null,
+      message_count: 0,
+      last_message_at: null,
+      created_at: new Date().toISOString(),
+    }
+
+    setContacts(prev => [...prev, newContact])
+    resetContactModal()
+  }
+
+  // Handle CSV import
+  const handleImportCSV = async () => {
+    const validContacts = csvContacts.filter(c => c.isValid)
+    if (validContacts.length === 0) return
+
+    setIsImporting(true)
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    const newContacts: WhatsAppContact[] = validContacts.map((c, index) => ({
+      id: contacts.length + index + 1,
+      phone_number: c.phone_number,
+      country_code: c.country_code,
+      display_name: c.display_name || null,
+      is_verified: false,
+      opt_in_status: 'pending' as const,
+      wa_id: null,
+      profile_name: null,
+      message_count: 0,
+      last_message_at: null,
+      created_at: new Date().toISOString(),
+    }))
+
+    setContacts(prev => [...prev, ...newContacts])
+    setIsImporting(false)
+    resetContactModal()
+  }
+
+  // Reset contact modal state
+  const resetContactModal = () => {
+    setShowNewContactModal(false)
+    setAddContactTab('single')
+    setCsvContacts([])
+    setCsvFileName('')
+    setCsvError('')
+    setNewContactPhone('')
+    setNewContactCountry('')
+    setNewContactName('')
+  }
+
+  // Download sample CSV
+  const downloadSampleCSV = () => {
+    const sampleContent = `phone_number,country_code,display_name
++1234567890,US,John Smith
++9876543210,UK,Jane Doe
++1122334455,DE,Hans Mueller
++5544332211,BR,Maria Silva`
+
+    const blob = new Blob([sampleContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'contacts_template.csv'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Remove a contact from CSV preview
+  const removeCSVContact = (index: number) => {
+    setCsvContacts(prev => prev.filter((_, i) => i !== index))
   }
 
   const getOptInBadge = (status: OptInStatus) => {
@@ -1229,61 +1454,288 @@ export function WhatsApp() {
         )}
       </div>
 
-      {/* New Contact Modal */}
+      {/* New Contact Modal - Enhanced with CSV Upload */}
       {showNewContactModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-card rounded-xl border shadow-lg w-full max-w-md p-6">
-            <h2 className="text-xl font-bold mb-4">Add New Contact</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                setShowNewContactModal(false)
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone Number *</label>
-                <input
-                  type="tel"
-                  placeholder="+1234567890"
-                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  required
-                />
-                <p className="text-xs text-muted-foreground mt-1">Include country code (e.g., +1 for US)</p>
+          <div className="bg-card rounded-xl border shadow-lg w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Add Contacts</h2>
+              <button
+                onClick={resetContactModal}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1 p-1 rounded-lg bg-muted mb-6">
+              <button
+                onClick={() => setAddContactTab('single')}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                  addContactTab === 'single'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <UserCheck className="w-4 h-4" />
+                Single Contact
+              </button>
+              <button
+                onClick={() => setAddContactTab('csv')}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                  addContactTab === 'csv'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Import CSV
+              </button>
+            </div>
+
+            {/* Single Contact Form */}
+            {addContactTab === 'single' && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleAddSingleContact()
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium mb-1">Phone Number *</label>
+                  <input
+                    type="tel"
+                    placeholder="+1234567890"
+                    value={newContactPhone}
+                    onChange={(e) => setNewContactPhone(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Include country code (e.g., +1 for US)</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Country Code *</label>
+                  <input
+                    type="text"
+                    placeholder="US"
+                    value={newContactCountry}
+                    onChange={(e) => setNewContactCountry(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Display Name</label>
+                  <input
+                    type="text"
+                    placeholder="John Smith"
+                    value={newContactName}
+                    onChange={(e) => setNewContactName(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={resetContactModal}
+                    className="flex-1 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!newContactPhone || !newContactCountry}
+                    className="flex-1 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add Contact
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* CSV Upload Form */}
+            {addContactTab === 'csv' && (
+              <div className="space-y-4">
+                {/* Download Template */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-dashed">
+                  <div className="flex items-center gap-3">
+                    <FileSpreadsheet className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">CSV Template</p>
+                      <p className="text-xs text-muted-foreground">Download a sample template to get started</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={downloadSampleCSV}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background border hover:bg-muted transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                </div>
+
+                {/* Drop Zone */}
+                {csvContacts.length === 0 && (
+                  <div
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      'relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all',
+                      isDragging
+                        ? 'border-green-500 bg-green-500/5'
+                        : 'border-muted-foreground/25 hover:border-green-500/50 hover:bg-muted/50'
+                    )}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleFileSelect(file)
+                      }}
+                      className="hidden"
+                    />
+                    <Upload className={cn(
+                      'w-10 h-10 mx-auto mb-3',
+                      isDragging ? 'text-green-500' : 'text-muted-foreground'
+                    )} />
+                    <p className="text-sm font-medium mb-1">
+                      {isDragging ? 'Drop your file here' : 'Drag & drop your CSV file here'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      or click to browse (max 5MB)
+                    </p>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {csvError && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 text-red-600">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <p className="text-sm">{csvError}</p>
+                  </div>
+                )}
+
+                {/* CSV Preview */}
+                {csvContacts.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium">{csvFileName}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCsvContacts([])
+                          setCsvFileName('')
+                          setCsvError('')
+                        }}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="flex gap-4 p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span className="text-sm">
+                          <strong>{csvContacts.filter(c => c.isValid).length}</strong> valid
+                        </span>
+                      </div>
+                      {csvContacts.filter(c => !c.isValid).length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-amber-500" />
+                          <span className="text-sm">
+                            <strong>{csvContacts.filter(c => !c.isValid).length}</strong> invalid
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contact List */}
+                    <div className="max-h-48 overflow-y-auto rounded-lg border divide-y">
+                      {csvContacts.map((contact, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            'flex items-center justify-between p-3',
+                            !contact.isValid && 'bg-red-500/5'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              'w-8 h-8 rounded-full flex items-center justify-center',
+                              contact.isValid ? 'bg-green-500/10' : 'bg-red-500/10'
+                            )}>
+                              {contact.isValid ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4 text-red-500" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">
+                                {contact.display_name || 'No name'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {contact.phone_number} • {contact.country_code}
+                              </p>
+                              {contact.error && (
+                                <p className="text-xs text-red-500">{contact.error}</p>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeCSVContact(index)}
+                            className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                          >
+                            <X className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={resetContactModal}
+                    className="flex-1 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImportCSV}
+                    disabled={csvContacts.filter(c => c.isValid).length === 0 || isImporting}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isImporting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Importing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        Import {csvContacts.filter(c => c.isValid).length} Contacts
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Country Code *</label>
-                <input
-                  type="text"
-                  placeholder="US"
-                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Display Name</label>
-                <input
-                  type="text"
-                  placeholder="John Smith"
-                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowNewContactModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
-                >
-                  Add Contact
-                </button>
-              </div>
-            </form>
+            )}
           </div>
         </div>
       )}
