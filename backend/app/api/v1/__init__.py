@@ -18,6 +18,7 @@ from app.api.v1.endpoints import (
     gdpr,
     users,
     whatsapp,
+    tenants,
 )
 
 api_router = APIRouter()
@@ -34,6 +35,13 @@ api_router.include_router(
     users.router,
     prefix="/users",
     tags=["Users"],
+)
+
+# Tenant management
+api_router.include_router(
+    tenants.router,
+    prefix="/tenants",
+    tags=["Tenants"],
 )
 
 # Campaigns (Module B)

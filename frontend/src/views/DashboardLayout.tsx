@@ -16,6 +16,7 @@ import {
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
   Squares2X2Icon,
+  BuildingOffice2Icon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
@@ -103,8 +104,20 @@ export default function DashboardLayout() {
             })}
           </nav>
 
-          {/* Settings at bottom */}
-          <div className="border-t p-4">
+          {/* Admin & Settings at bottom */}
+          <div className="border-t p-4 space-y-1">
+            <NavLink
+              to="/tenants"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                location.pathname === '/tenants'
+                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              )}
+            >
+              <BuildingOffice2Icon className="h-5 w-5" />
+              {t('nav.tenants')}
+            </NavLink>
             <NavLink
               to="/settings"
               className={cn(
