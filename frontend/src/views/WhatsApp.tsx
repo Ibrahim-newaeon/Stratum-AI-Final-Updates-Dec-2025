@@ -28,6 +28,8 @@ import {
   Download,
   AlertCircle,
   X,
+  ChevronDown,
+  Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { whatsappApi } from '@/services/api'
