@@ -32,6 +32,7 @@
     "i18next-browser-languagedetector": "^7.2.0",
     "lucide-react": "^0.330.0",
     "react": "^18.2.0",
+    "react-countup": "^6.5.3",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^1.5.3",
     "react-hook-form": "^7.50.1",

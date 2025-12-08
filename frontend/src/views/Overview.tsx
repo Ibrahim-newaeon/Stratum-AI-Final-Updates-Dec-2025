@@ -3,32 +3,17 @@
  * Stratum AI Marketing Intelligence Platform
  *
  * Features:
- * - Real-time KPI cards
- * - Interactive charts
+ * - Real-time KPI cards with animations
+ * - Interactive charts with error boundaries
  * - Campaign performance table
- * - Advanced filtering
+ * - Advanced filtering with empty states
+ * - Keyboard shortcuts
  * - Responsive design
+ * - Full accessibility support
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
 import {
   RefreshCw,
   Download,
@@ -43,12 +28,22 @@ import {
   Eye,
   ShoppingCart,
   BarChart3,
+  Keyboard,
 } from 'lucide-react'
 import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { CampaignTable } from '@/components/dashboard/CampaignTable'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
+import {
+  PlatformPerformanceChart,
+  ROASByPlatformChart,
+  DailyTrendChart,
+  RegionalBreakdownChart,
+} from '@/components/charts'
+import { KPICardSkeleton, TableSkeleton, AlertSkeleton } from '@/components/ui/Skeleton'
+import { NoFilterResultsState } from '@/components/ui/EmptyState'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import {
   Campaign,
   DashboardFilters,
@@ -198,12 +193,21 @@ const mockAlerts = [
   },
 ]
 
-const REGION_COLORS = ['#6366f1', '#ec4899', '#f97316', '#14b8a6', '#8b5cf6', '#f43f5e']
+// Regional data for pie chart
+const regionalData = [
+  { name: 'Saudi Arabia', value: 45 },
+  { name: 'UAE', value: 30 },
+  { name: 'Qatar', value: 10 },
+  { name: 'Kuwait', value: 8 },
+  { name: 'Other', value: 7 },
+]
 
 export function Overview() {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [showKeyboardHints, setShowKeyboardHints] = useState(false)
 
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -216,8 +220,8 @@ export function Overview() {
     campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
   })
 
-  // Calculate KPI metrics from campaigns
-  const calculateKPIs = useCallback((): KPIMetrics => {
+  // Memoized: Calculate KPI metrics from campaigns
+  const kpis = useMemo((): KPIMetrics => {
     const totalSpend = mockCampaigns.reduce((sum, c) => sum + c.spend, 0)
     const totalRevenue = mockCampaigns.reduce((sum, c) => sum + c.revenue, 0)
     const totalConversions = mockCampaigns.reduce((sum, c) => sum + c.conversions, 0)
@@ -245,7 +249,24 @@ export function Overview() {
     }
   }, [])
 
-  const kpis = calculateKPIs()
+  // Memoized: Filter campaigns based on current filters
+  const filteredCampaigns = useMemo(() => {
+    return mockCampaigns.filter((campaign) => {
+      if (filters.platforms.length > 0 && !filters.platforms.includes(campaign.platform)) {
+        return false
+      }
+      if (filters.regions.length > 0 && !filters.regions.includes(campaign.region)) {
+        return false
+      }
+      if (filters.campaignTypes.length > 0 && !filters.campaignTypes.includes(campaign.campaign_type)) {
+        return false
+      }
+      return true
+    })
+  }, [filters])
+
+  // Check if filters resulted in empty data
+  const hasNoFilterResults = filteredCampaigns.length === 0 && mockCampaigns.length > 0
 
   // Refresh data
   const handleRefresh = useCallback(async () => {
@@ -261,23 +282,123 @@ export function Overview() {
     setFilters((prev) => ({ ...prev, ...newFilters }))
   }, [])
 
+  // Clear all filters
+  const handleClearFilters = useCallback(() => {
+    setFilters({
+      dateRange: {
+        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        end: new Date(),
+      },
+      platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads'],
+      regions: ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq'],
+      campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
+    })
+  }, [])
+
+  // Export handler
+  const handleExport = useCallback(() => {
+    // TODO: Implement export functionality
+    console.log('Exporting dashboard data...')
+  }, [])
+
+  // KPI action handlers
+  const handleViewDetails = useCallback((metric: string) => {
+    console.log('View details for:', metric)
+  }, [])
+
+  const handleSetAlert = useCallback((metric: string) => {
+    console.log('Set alert for:', metric)
+  }, [])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+
+      switch (e.key.toLowerCase()) {
+        case 'r':
+          if (!e.ctrlKey && !e.metaKey) {
+            e.preventDefault()
+            handleRefresh()
+          }
+          break
+        case 'e':
+          if (!e.ctrlKey && !e.metaKey) {
+            e.preventDefault()
+            handleExport()
+          }
+          break
+        case '?':
+          e.preventDefault()
+          setShowKeyboardHints((prev) => !prev)
+          break
+        case 'escape':
+          setShowKeyboardHints(false)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleRefresh, handleExport])
+
+  // Simulate initial data loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoading(false)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [])
+
   // Auto-refresh every 5 minutes
   useEffect(() => {
     const interval = setInterval(handleRefresh, 5 * 60 * 1000)
     return () => clearInterval(interval)
   }, [handleRefresh])
 
-  // Regional data for pie chart
-  const regionalData = [
-    { name: 'Saudi Arabia', value: 45, color: REGION_COLORS[0] },
-    { name: 'UAE', value: 30, color: REGION_COLORS[1] },
-    { name: 'Qatar', value: 10, color: REGION_COLORS[2] },
-    { name: 'Kuwait', value: 8, color: REGION_COLORS[3] },
-    { name: 'Other', value: 7, color: REGION_COLORS[4] },
-  ]
+  // Calculate active filter count
+  const activeFilterCount =
+    (filters.platforms.length < 4 ? 4 - filters.platforms.length : 0) +
+    (filters.regions.length < 6 ? 6 - filters.regions.length : 0)
 
   return (
     <div className="space-y-6">
+      {/* Keyboard Shortcuts Modal */}
+      {showKeyboardHints && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowKeyboardHints(false)}
+        >
+          <div
+            className="bg-card border rounded-xl p-6 shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Keyboard className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">Keyboard Shortcuts</h3>
+            </div>
+            <div className="space-y-3">
+              {[
+                { key: 'R', action: 'Refresh data' },
+                { key: 'E', action: 'Export dashboard' },
+                { key: '?', action: 'Toggle shortcuts' },
+                { key: 'Esc', action: 'Close modal' },
+              ].map((shortcut) => (
+                <div key={shortcut.key} className="flex items-center justify-between">
+                  <span className="text-muted-foreground">{shortcut.action}</span>
+                  <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded border">
+                    {shortcut.key}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -290,10 +411,21 @@ export function Overview() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Keyboard shortcut hint */}
+          <button
+            onClick={() => setShowKeyboardHints(true)}
+            className="hidden lg:flex items-center px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            title="Keyboard shortcuts (?)"
+          >
+            <Keyboard className="w-4 h-4 mr-1" />
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded">?</kbd>
+          </button>
+
           <button
             onClick={handleRefresh}
             disabled={loading}
             className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium bg-background hover:bg-muted transition-colors disabled:opacity-50"
+            aria-label="Refresh data (R)"
           >
             {loading ? (
               <>
@@ -308,7 +440,11 @@ export function Overview() {
             )}
           </button>
 
-          <button className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            aria-label="Export dashboard (E)"
+          >
             <Download className="w-4 h-4 mr-2" />
             {t('common.export')}
           </button>
@@ -328,41 +464,61 @@ export function Overview() {
         <KPICard
           title="Total Spend"
           value={formatCurrency(kpis.totalSpend)}
+          numericValue={kpis.totalSpend}
+          prefix="$"
           delta={kpis.spendDelta}
           deltaText="vs last period"
           trend={kpis.spendDelta && kpis.spendDelta > 0 ? 'up' : 'down'}
           icon={<DollarSign className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('spend')}
+          onSetAlert={() => handleSetAlert('spend')}
         />
 
         <KPICard
           title="Total Revenue"
           value={formatCurrency(kpis.totalRevenue)}
+          numericValue={kpis.totalRevenue}
+          prefix="$"
           delta={kpis.revenueDelta}
           deltaText="vs last period"
           trend={kpis.revenueDelta && kpis.revenueDelta > 0 ? 'up' : 'down'}
           trendIsGood={true}
           icon={<TrendingUp className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('revenue')}
+          onSetAlert={() => handleSetAlert('revenue')}
         />
 
         <KPICard
           title="ROAS"
           value={`${kpis.overallROAS.toFixed(2)}x`}
+          numericValue={kpis.overallROAS}
+          suffix="x"
+          decimals={2}
           delta={kpis.roasDelta}
           deltaText="vs target"
           trend={kpis.roasDelta && kpis.roasDelta > 0 ? 'up' : 'down'}
           trendIsGood={true}
           highlight={kpis.overallROAS >= 3.0}
           icon={<Target className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('roas')}
+          onSetAlert={() => handleSetAlert('roas')}
         />
 
         <KPICard
           title="Total Conversions"
           value={kpis.totalConversions.toLocaleString('en-US')}
+          numericValue={kpis.totalConversions}
           delta={kpis.conversionsDelta}
           deltaText="vs last period"
           trend={kpis.conversionsDelta && kpis.conversionsDelta > 0 ? 'up' : 'down'}
           trendIsGood={true}
           icon={<ShoppingCart className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('conversions')}
+          onSetAlert={() => handleSetAlert('conversions')}
         />
       </div>
 
@@ -371,184 +527,125 @@ export function Overview() {
         <KPICard
           title="CPA"
           value={formatCurrency(kpis.overallCPA)}
+          numericValue={kpis.overallCPA}
+          prefix="$"
+          decimals={2}
           size="small"
           icon={<DollarSign className="w-4 h-4" />}
+          loading={initialLoading}
         />
 
         <KPICard
           title="CTR"
           value={`${kpis.avgCTR.toFixed(2)}%`}
+          numericValue={kpis.avgCTR}
+          suffix="%"
+          decimals={2}
           size="small"
           icon={<MousePointerClick className="w-4 h-4" />}
+          loading={initialLoading}
         />
 
         <KPICard
           title="CPM"
           value={formatCurrency(kpis.avgCPM)}
+          numericValue={kpis.avgCPM}
+          prefix="$"
+          decimals={2}
           size="small"
           icon={<BarChart3 className="w-4 h-4" />}
+          loading={initialLoading}
         />
 
         <KPICard
           title="Impressions"
           value={formatCompactNumber(kpis.totalImpressions)}
+          numericValue={kpis.totalImpressions}
           size="small"
           icon={<Eye className="w-4 h-4" />}
+          loading={initialLoading}
         />
 
         <KPICard
           title="Clicks"
           value={formatCompactNumber(kpis.totalClicks)}
+          numericValue={kpis.totalClicks}
           size="small"
           icon={<MousePointerClick className="w-4 h-4" />}
+          loading={initialLoading}
         />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Platform Performance Chart */}
-        <div className="rounded-xl border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
-            Platform Performance Comparison
-          </h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockPlatformSummary}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="platform" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(value) => formatCompactNumber(value)} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem',
-                  }}
-                  formatter={(value: number, name: string) => [
-                    name === 'spend' || name === 'revenue' ? formatCurrency(value) : value,
-                    name.charAt(0).toUpperCase() + name.slice(1),
-                  ]}
-                />
-                <Legend />
-                <Bar dataKey="spend" name="Spend" fill="#f97316" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="revenue" name="Revenue" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <PlatformPerformanceChart
+          data={mockPlatformSummary}
+          loading={initialLoading}
+          onRefresh={handleRefresh}
+        />
 
-        {/* ROAS by Platform */}
-        <div className="rounded-xl border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">ROAS by Platform</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockPlatformSummary} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} domain={[0, 5]} tickFormatter={(value) => `${value}x`} />
-                <YAxis dataKey="platform" type="category" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={100} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem',
-                  }}
-                  formatter={(value: number) => [`${value.toFixed(2)}x`, 'ROAS']}
-                />
-                <Bar dataKey="roas" name="ROAS" fill="#10b981" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <ROASByPlatformChart
+          data={mockPlatformSummary}
+          loading={initialLoading}
+          targetROAS={3.0}
+          onRefresh={handleRefresh}
+        />
       </div>
 
       {/* Second Row of Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Daily Performance Trend */}
-        <div className="lg:col-span-2 rounded-xl border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Daily Performance Trend</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockDailyPerformance}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(value) => formatCompactNumber(value)} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem',
-                  }}
-                  formatter={(value: number) => [formatCurrency(value), '']}
-                />
-                <Legend />
-                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#0ea5e9" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                <Area type="monotone" dataKey="spend" name="Spend" stroke="#f97316" strokeWidth={2} fillOpacity={1} fill="url(#colorSpend)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="lg:col-span-2">
+          <DailyTrendChart
+            data={mockDailyPerformance}
+            loading={initialLoading}
+            onRefresh={handleRefresh}
+          />
         </div>
 
-        {/* Regional Breakdown */}
-        <div className="rounded-xl border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Performance by Region</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={regionalData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {regionalData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem',
-                  }}
-                  formatter={(value: number) => [`${value}%`, 'Share']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <RegionalBreakdownChart
+          data={regionalData}
+          loading={initialLoading}
+          onRefresh={handleRefresh}
+        />
       </div>
 
       {/* Third Row - Table and Simulator */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Campaign Performance Table */}
-        <div className="lg:col-span-2 rounded-xl border bg-card overflow-hidden">
-          <div className="px-6 py-4 border-b">
-            <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
-          </div>
-          <CampaignTable
-            campaigns={mockCampaigns}
-            onCampaignClick={(campaignId) => {
-              console.log('Navigate to campaign:', campaignId)
-            }}
-          />
+        <div className="lg:col-span-2">
+          {initialLoading ? (
+            <TableSkeleton rows={5} columns={7} />
+          ) : hasNoFilterResults ? (
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <div className="px-6 py-4 border-b">
+                <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
+              </div>
+              <NoFilterResultsState
+                onClearFilters={handleClearFilters}
+                filterCount={activeFilterCount}
+              />
+            </div>
+          ) : (
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <div className="px-6 py-4 border-b">
+                <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
+              </div>
+              <ErrorBoundary>
+                <CampaignTable
+                  campaigns={filteredCampaigns}
+                  onCampaignClick={(campaignId) => {
+                    console.log('Navigate to campaign:', campaignId)
+                  }}
+                />
+              </ErrorBoundary>
+            </div>
+          )}
         </div>
 
         {/* Simulator Widget */}
-        <SimulateSlider />
+        <ErrorBoundary>
+          <SimulateSlider />
+        </ErrorBoundary>
       </div>
 
       {/* Alerts Section */}
@@ -561,30 +658,41 @@ export function Overview() {
           <button className="text-sm text-primary hover:underline">{t('common.viewAll')}</button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {mockAlerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={cn(
-                'p-4 rounded-lg border-l-4',
-                alert.severity === 'warning' && 'bg-amber-500/10 border-amber-500',
-                alert.severity === 'good' && 'bg-green-500/10 border-green-500',
-                alert.severity === 'critical' && 'bg-red-500/10 border-red-500'
-              )}
-            >
-              <div className="flex items-start gap-3">
-                {alert.severity === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5" />}
-                {alert.severity === 'good' && <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />}
-                {alert.severity === 'critical' && <Info className="w-5 h-5 text-red-500 mt-0.5" />}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground">{alert.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{alert.message}</p>
-                  <p className="text-xs text-muted-foreground mt-2">{alert.time}</p>
+        {initialLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <AlertSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {mockAlerts.map((alert) => (
+              <div
+                key={alert.id}
+                className={cn(
+                  'p-4 rounded-lg border-l-4 transition-all hover:shadow-md cursor-pointer',
+                  alert.severity === 'warning' && 'bg-amber-500/10 border-amber-500 hover:bg-amber-500/15',
+                  alert.severity === 'good' && 'bg-green-500/10 border-green-500 hover:bg-green-500/15',
+                  alert.severity === 'critical' && 'bg-red-500/10 border-red-500 hover:bg-red-500/15'
+                )}
+                role="button"
+                tabIndex={0}
+                aria-label={`${alert.severity} alert: ${alert.title}`}
+              >
+                <div className="flex items-start gap-3">
+                  {alert.severity === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'good' && <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'critical' && <Info className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-foreground">{alert.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{alert.message}</p>
+                    <p className="text-xs text-muted-foreground mt-2">{alert.time}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
