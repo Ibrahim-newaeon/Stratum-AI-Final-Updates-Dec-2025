@@ -43,3 +43,8 @@ htmlcov/
 *.tmp
 *.temp
 .cache/
+
+# ML models and training data (generated)
+backend/models/
+*.pkl
+sample_training_data.csv
