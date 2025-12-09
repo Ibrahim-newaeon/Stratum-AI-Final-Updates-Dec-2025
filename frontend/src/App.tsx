@@ -17,6 +17,7 @@ const Rules = lazy(() => import('./views/Rules'))
 const WhatsApp = lazy(() => import('./views/WhatsApp'))
 const Settings = lazy(() => import('./views/Settings'))
 const Tenants = lazy(() => import('./views/Tenants'))
+const MLTraining = lazy(() => import('./views/MLTraining'))
 
 function App() {
   return (
@@ -103,6 +104,14 @@ function App() {
               element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <Tenants />
+                </Suspense>
+              }
+            />
+            <Route
+              path="ml-training"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <MLTraining />
                 </Suspense>
               }
             />

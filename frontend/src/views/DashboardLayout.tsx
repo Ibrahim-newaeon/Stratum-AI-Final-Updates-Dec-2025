@@ -17,6 +17,7 @@ import {
   ChatBubbleLeftRightIcon,
   Squares2X2Icon,
   BuildingOffice2Icon,
+  CpuChipIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
@@ -117,6 +118,18 @@ export default function DashboardLayout() {
             >
               <BuildingOffice2Icon className="h-5 w-5" />
               {t('nav.tenants')}
+            </NavLink>
+            <NavLink
+              to="/ml-training"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                location.pathname === '/ml-training'
+                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              )}
+            >
+              <CpuChipIcon className="h-5 w-5" />
+              {t('nav.mlTraining')}
             </NavLink>
             <NavLink
               to="/settings"

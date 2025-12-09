@@ -20,6 +20,7 @@ from app.api.v1.endpoints import (
     whatsapp,
     tenants,
     linkedin,
+    ml_training,
 )
 
 api_router = APIRouter()
@@ -106,4 +107,11 @@ api_router.include_router(
     linkedin.router,
     prefix="/linkedin",
     tags=["LinkedIn Ads"],
+)
+
+# ML Training & Data Upload
+api_router.include_router(
+    ml_training.router,
+    prefix="/ml",
+    tags=["ML Training"],
 )
