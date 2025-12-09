@@ -19,6 +19,7 @@ from app.api.v1.endpoints import (
     users,
     whatsapp,
     tenants,
+    linkedin,
 )
 
 api_router = APIRouter()
@@ -98,4 +99,11 @@ api_router.include_router(
     whatsapp.router,
     prefix="/whatsapp",
     tags=["WhatsApp"],
+)
+
+# LinkedIn Ads Integration
+api_router.include_router(
+    linkedin.router,
+    prefix="/linkedin",
+    tags=["LinkedIn Ads"],
 )

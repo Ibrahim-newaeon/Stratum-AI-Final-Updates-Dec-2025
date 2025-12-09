@@ -26,6 +26,7 @@ export const chartTheme = {
     google: '#EA4335',
     tiktok: '#00F2EA',
     snapchat: '#FFFC00',
+    linkedin: '#0A66C2',
     whatsapp: '#25D366',
 
     // Status
@@ -41,7 +42,7 @@ export const chartTheme = {
   },
 
   // Platform color palette (ordered)
-  platformColors: ['#1877F2', '#EA4335', '#00F2EA', '#FFFC00', '#25D366'],
+  platformColors: ['#1877F2', '#EA4335', '#00F2EA', '#FFFC00', '#0A66C2', '#25D366'],
 
   // Regional breakdown colors
   regionColors: ['#6366f1', '#ec4899', '#f97316', '#14b8a6', '#8b5cf6', '#f43f5e'],
@@ -162,6 +163,8 @@ export function getPlatformChartColor(platform: string): string {
     'tiktok': chartTheme.colors.tiktok,
     'snapchat ads': chartTheme.colors.snapchat,
     'snapchat': chartTheme.colors.snapchat,
+    'linkedin ads': chartTheme.colors.linkedin,
+    'linkedin': chartTheme.colors.linkedin,
     'whatsapp': chartTheme.colors.whatsapp,
   }
   return platformMap[platform.toLowerCase()] || chartTheme.seriesColors[0]

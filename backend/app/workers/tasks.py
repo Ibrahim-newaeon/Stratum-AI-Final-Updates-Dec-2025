@@ -638,3 +638,203 @@ def _publish_event(tenant_id: int, event_type: str, payload: Dict[str, Any]):
 
     except Exception as e:
         logger.warning(f"Failed to publish event: {e}")
+
+
+# =============================================================================
+# WhatsApp Tasks
+# =============================================================================
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    max_retries=3,
+)
+def send_whatsapp_message(
+    self,
+    tenant_id: int,
+    message_id: int,
+    contact_phone: str,
+    message_type: str,
+    template_name: Optional[str] = None,
+    template_variables: Optional[Dict] = None,
+    content: Optional[str] = None,
+    media_url: Optional[str] = None,
+):
+    """
+    Send a WhatsApp message via the Meta API.
+
+    This task is queued from the API endpoint and handles
+    the actual sending asynchronously.
+    """
+    import asyncio
+    from app.models import WhatsAppMessage, WhatsAppMessageStatus
+
+    logger.info(f"Sending WhatsApp message {message_id} to {contact_phone}")
+
+    with SyncSessionLocal() as db:
+        # Get the message record
+        message = db.execute(
+            select(WhatsAppMessage).where(
+                WhatsAppMessage.id == message_id,
+                WhatsAppMessage.tenant_id == tenant_id,
+            )
+        ).scalar_one_or_none()
+
+        if not message:
+            logger.error(f"Message {message_id} not found")
+            return {"status": "not_found"}
+
+        try:
+            # Import WhatsApp client
+            from app.services.whatsapp_client import WhatsAppClient, WhatsAppAPIError
+
+            client = WhatsAppClient()
+
+            # Run async function in sync context
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            try:
+                if message_type == "template":
+                    # Build components from template variables
+                    components = []
+                    if template_variables:
+                        body_params = [
+                            {"type": "text", "text": str(v)}
+                            for v in template_variables.get("body", [])
+                        ]
+                        if body_params:
+                            components.append({
+                                "type": "body",
+                                "parameters": body_params
+                            })
+
+                    response = loop.run_until_complete(
+                        client.send_template_message(
+                            recipient_phone=contact_phone,
+                            template_name=template_name,
+                            components=components if components else None,
+                        )
+                    )
+
+                elif message_type == "text":
+                    response = loop.run_until_complete(
+                        client.send_text_message(
+                            recipient_phone=contact_phone,
+                            text=content,
+                        )
+                    )
+
+                elif message_type in ["image", "video", "document", "audio"]:
+                    response = loop.run_until_complete(
+                        client.send_media_message(
+                            recipient_phone=contact_phone,
+                            media_type=message_type,
+                            media_url=media_url,
+                            caption=content,
+                        )
+                    )
+
+                else:
+                    raise ValueError(f"Unsupported message type: {message_type}")
+
+            finally:
+                loop.close()
+
+            # Update message with WhatsApp message ID
+            wamid = response.get("messages", [{}])[0].get("id")
+            message.wamid = wamid
+            message.status = WhatsAppMessageStatus.SENT
+            message.sent_at = datetime.now(timezone.utc)
+
+            # Update status history
+            status_history = message.status_history or []
+            status_history.append({
+                "status": "sent",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            message.status_history = status_history
+
+            db.commit()
+
+            logger.info(f"Message {message_id} sent successfully, wamid: {wamid}")
+
+            # Publish real-time event
+            _publish_event(tenant_id, "message_sent", {
+                "message_id": message_id,
+                "wamid": wamid,
+            })
+
+            return {"status": "sent", "wamid": wamid}
+
+        except WhatsAppAPIError as e:
+            message.status = WhatsAppMessageStatus.FAILED
+            message.error_code = e.error_code
+            message.error_message = e.message
+
+            status_history = message.status_history or []
+            status_history.append({
+                "status": "failed",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "error": e.message,
+            })
+            message.status_history = status_history
+
+            db.commit()
+
+            logger.error(f"Failed to send message {message_id}: {e.message}")
+            raise  # Trigger retry
+
+        except Exception as e:
+            message.status = WhatsAppMessageStatus.FAILED
+            message.error_message = str(e)
+            db.commit()
+
+            logger.error(f"Error sending message {message_id}: {e}")
+            raise  # Trigger retry
+
+
+@shared_task
+def process_scheduled_whatsapp_messages():
+    """
+    Process WhatsApp messages that are scheduled to be sent.
+    Scheduled every minute by Celery beat.
+    """
+    from app.models import WhatsAppMessage, WhatsAppMessageStatus, WhatsAppContact
+
+    logger.info("Processing scheduled WhatsApp messages")
+
+    with SyncSessionLocal() as db:
+        # Get messages scheduled for now or earlier
+        now = datetime.now(timezone.utc)
+        messages = db.execute(
+            select(WhatsAppMessage).where(
+                WhatsAppMessage.status == WhatsAppMessageStatus.PENDING,
+                WhatsAppMessage.scheduled_at <= now,
+                WhatsAppMessage.scheduled_at.isnot(None),
+            )
+        ).scalars().all()
+
+        task_count = 0
+        for msg in messages:
+            # Get contact phone
+            contact = db.execute(
+                select(WhatsAppContact).where(WhatsAppContact.id == msg.contact_id)
+            ).scalar_one_or_none()
+
+            if contact:
+                send_whatsapp_message.delay(
+                    tenant_id=msg.tenant_id,
+                    message_id=msg.id,
+                    contact_phone=contact.phone_number,
+                    message_type=msg.message_type,
+                    template_name=msg.template_name,
+                    template_variables=msg.template_variables,
+                    content=msg.content,
+                    media_url=msg.media_url,
+                )
+                task_count += 1
+
+    logger.info(f"Queued {task_count} scheduled WhatsApp messages")
+    return {"tasks_queued": task_count}

@@ -62,6 +62,7 @@ class AdPlatform(str, PyEnum):
     GOOGLE = "google"
     TIKTOK = "tiktok"
     SNAPCHAT = "snapchat"
+    LINKEDIN = "linkedin"
 
 
 class CampaignStatus(str, PyEnum):
