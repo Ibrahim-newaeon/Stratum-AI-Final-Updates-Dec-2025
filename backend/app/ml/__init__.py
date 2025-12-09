@@ -9,12 +9,16 @@ Module A: Intelligence Engine
 - ROAS Forecaster
 - Conversion Predictor
 - What-If Simulator
+- Training Pipeline
+- Data Loader
 """
 
 from app.ml.simulator import WhatIfSimulator
 from app.ml.forecaster import ROASForecaster
 from app.ml.conversion_predictor import ConversionPredictor
 from app.ml.inference import ModelRegistry, InferenceStrategy
+from app.ml.data_loader import TrainingDataLoader
+from app.ml.train import ModelTrainer, train_from_csv, train_from_sample_data
 
 __all__ = [
     "WhatIfSimulator",
@@ -22,4 +26,8 @@ __all__ = [
     "ConversionPredictor",
     "ModelRegistry",
     "InferenceStrategy",
+    "TrainingDataLoader",
+    "ModelTrainer",
+    "train_from_csv",
+    "train_from_sample_data",
 ]
