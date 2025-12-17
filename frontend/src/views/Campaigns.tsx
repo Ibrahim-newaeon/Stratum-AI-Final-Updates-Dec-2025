@@ -16,6 +16,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
+import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal'
 
 interface Campaign {
   id: number
@@ -137,6 +138,7 @@ export function Campaigns() {
   const [sortField, setSortField] = useState<SortField>('spend')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([])
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -227,7 +229,10 @@ export function Campaigns() {
           <p className="text-muted-foreground">{t('campaigns.subtitle')}</p>
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+        <button
+          onClick={() => setCreateModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
           <Plus className="w-4 h-4" />
           <span>{t('campaigns.createNew')}</span>
         </button>
@@ -467,6 +472,16 @@ export function Campaigns() {
           </button>
         </div>
       </div>
+
+      {/* Campaign Create Modal */}
+      <CampaignCreateModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={(campaign) => {
+          console.log('Campaign created:', campaign)
+          // In a real app, you'd refetch the campaigns list here
+        }}
+      />
     </div>
   )
 }
