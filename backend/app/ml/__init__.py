@@ -19,6 +19,7 @@ from app.ml.conversion_predictor import ConversionPredictor
 from app.ml.inference import ModelRegistry, InferenceStrategy
 from app.ml.data_loader import TrainingDataLoader
 from app.ml.train import ModelTrainer, train_from_csv, train_from_sample_data
+from app.ml.roas_optimizer import ROASOptimizer, LivePredictionEngine
 
 __all__ = [
     "WhatIfSimulator",
@@ -30,4 +31,6 @@ __all__ = [
     "ModelTrainer",
     "train_from_csv",
     "train_from_sample_data",
+    "ROASOptimizer",
+    "LivePredictionEngine",
 ]

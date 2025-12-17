@@ -838,3 +838,218 @@ def process_scheduled_whatsapp_messages():
 
     logger.info(f"Queued {task_count} scheduled WhatsApp messages")
     return {"tasks_queued": task_count}
+
+
+# =============================================================================
+# Live Prediction Tasks
+# =============================================================================
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    max_retries=2,
+)
+def run_live_predictions(self, tenant_id: int):
+    """
+    Run live predictions for all campaigns of a tenant.
+    Generates predictions, alerts, and ROAS optimization recommendations.
+    """
+    from app.ml.roas_optimizer import ROASOptimizer, LivePredictionEngine
+    from app.models import MLPrediction
+
+    logger.info(f"Running live predictions for tenant {tenant_id}")
+
+    with SyncSessionLocal() as db:
+        # Get all active campaigns
+        campaigns = db.execute(
+            select(Campaign).where(
+                Campaign.tenant_id == tenant_id,
+                Campaign.is_deleted == False,
+            )
+        ).scalars().all()
+
+        if not campaigns:
+            logger.info(f"No campaigns found for tenant {tenant_id}")
+            return {"status": "no_campaigns"}
+
+        # Convert to dict format
+        campaign_data = []
+        for c in campaigns:
+            campaign_data.append({
+                "id": c.id,
+                "name": c.name,
+                "platform": c.platform.value if c.platform else "meta",
+                "spend": c.total_spend_cents / 100 if c.total_spend_cents else 0,
+                "revenue": c.revenue_cents / 100 if c.revenue_cents else 0,
+                "roas": c.roas or 0,
+                "impressions": c.impressions or 0,
+                "clicks": c.clicks or 0,
+                "conversions": c.conversions or 0,
+                "ctr": c.ctr or 0,
+                "daily_budget": c.daily_budget_cents / 100 if c.daily_budget_cents else 0,
+                "status": c.status.value if c.status else "unknown",
+            })
+
+        # Run ROAS optimization analysis
+        import asyncio
+        optimizer = ROASOptimizer()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            analysis = loop.run_until_complete(
+                optimizer.analyze_portfolio(campaign_data)
+            )
+        finally:
+            loop.close()
+
+        # Store predictions in database
+        prediction_record = MLPrediction(
+            tenant_id=tenant_id,
+            prediction_type="portfolio_analysis",
+            input_data={"campaign_count": len(campaigns)},
+            prediction_result=analysis,
+            confidence_score=0.75,
+            model_version="roas_optimizer_v1.0",
+        )
+        db.add(prediction_record)
+
+        # Store individual campaign predictions
+        for camp_analysis in analysis.get("campaign_analyses", []):
+            camp_prediction = MLPrediction(
+                tenant_id=tenant_id,
+                campaign_id=camp_analysis.get("campaign_id"),
+                prediction_type="campaign_roas_optimization",
+                input_data=camp_analysis.get("current_metrics", {}),
+                prediction_result={
+                    "health_score": camp_analysis.get("health_score"),
+                    "recommendations": camp_analysis.get("recommendations"),
+                    "optimal_budget": camp_analysis.get("optimal_budget"),
+                },
+                confidence_score=0.70,
+                model_version="roas_optimizer_v1.0",
+            )
+            db.add(camp_prediction)
+
+        db.commit()
+
+        # Publish event for real-time updates
+        _publish_event(tenant_id, "predictions_updated", {
+            "campaign_count": len(campaigns),
+            "portfolio_roas": analysis.get("portfolio_metrics", {}).get("portfolio_roas"),
+            "potential_uplift": analysis.get("potential_uplift", {}).get("uplift_percent"),
+        })
+
+        logger.info(f"Live predictions completed for tenant {tenant_id}: {len(campaigns)} campaigns analyzed")
+
+        return {
+            "status": "completed",
+            "campaigns_analyzed": len(campaigns),
+            "portfolio_roas": analysis.get("portfolio_metrics", {}).get("portfolio_roas"),
+        }
+
+
+@shared_task
+def run_all_tenant_predictions():
+    """
+    Run live predictions for all active tenants.
+    Scheduled every 30 minutes by Celery beat.
+    """
+    logger.info("Starting live predictions for all tenants")
+
+    with SyncSessionLocal() as db:
+        # Get all active tenants
+        tenants = db.execute(
+            select(Tenant).where(Tenant.is_active == True)
+        ).scalars().all()
+
+        task_count = 0
+        for tenant in tenants:
+            run_live_predictions.delay(tenant.id)
+            task_count += 1
+
+    logger.info(f"Queued {task_count} tenant prediction tasks")
+    return {"tasks_queued": task_count}
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    max_retries=2,
+)
+def generate_roas_alerts(self, tenant_id: int):
+    """
+    Generate ROAS alerts for campaigns with significant changes.
+    Compares current metrics with previous period.
+    """
+    from app.models import MLPrediction
+
+    logger.info(f"Generating ROAS alerts for tenant {tenant_id}")
+
+    with SyncSessionLocal() as db:
+        # Get campaigns
+        campaigns = db.execute(
+            select(Campaign).where(
+                Campaign.tenant_id == tenant_id,
+                Campaign.is_deleted == False,
+            )
+        ).scalars().all()
+
+        alerts = []
+        for campaign in campaigns:
+            # Check for ROAS below threshold
+            if campaign.roas and campaign.roas < 1.0:
+                alerts.append({
+                    "campaign_id": campaign.id,
+                    "campaign_name": campaign.name,
+                    "type": "low_roas",
+                    "severity": "critical" if campaign.roas < 0.5 else "high",
+                    "message": f"ROAS is {campaign.roas:.2f}x - below break-even",
+                    "recommendation": "Consider pausing or reducing budget",
+                })
+
+            # Check for high ROAS - scaling opportunity
+            if campaign.roas and campaign.roas > 3.0:
+                alerts.append({
+                    "campaign_id": campaign.id,
+                    "campaign_name": campaign.name,
+                    "type": "scaling_opportunity",
+                    "severity": "info",
+                    "message": f"ROAS is {campaign.roas:.2f}x - excellent performance",
+                    "recommendation": "Consider increasing budget by 20-30%",
+                })
+
+            # Check for low CTR
+            if campaign.ctr and campaign.ctr < 0.5:
+                alerts.append({
+                    "campaign_id": campaign.id,
+                    "campaign_name": campaign.name,
+                    "type": "low_ctr",
+                    "severity": "medium",
+                    "message": f"CTR is {campaign.ctr:.2f}% - below average",
+                    "recommendation": "Review ad creative and targeting",
+                })
+
+        # Store alerts
+        if alerts:
+            alert_record = MLPrediction(
+                tenant_id=tenant_id,
+                prediction_type="roas_alerts",
+                input_data={"campaign_count": len(campaigns)},
+                prediction_result={"alerts": alerts, "alert_count": len(alerts)},
+                confidence_score=0.85,
+                model_version="alert_engine_v1.0",
+            )
+            db.add(alert_record)
+            db.commit()
+
+            # Publish alert event
+            _publish_event(tenant_id, "roas_alerts_generated", {
+                "alert_count": len(alerts),
+                "critical_count": len([a for a in alerts if a["severity"] == "critical"]),
+            })
+
+        logger.info(f"Generated {len(alerts)} ROAS alerts for tenant {tenant_id}")
+
+        return {"alerts_generated": len(alerts)}

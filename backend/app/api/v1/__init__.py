@@ -21,6 +21,7 @@ from app.api.v1.endpoints import (
     tenants,
     linkedin,
     ml_training,
+    predictions,
 )
 
 api_router = APIRouter()
@@ -114,4 +115,11 @@ api_router.include_router(
     ml_training.router,
     prefix="/ml",
     tags=["ML Training"],
+)
+
+# Live Predictions & ROAS Optimization
+api_router.include_router(
+    predictions.router,
+    prefix="/predictions",
+    tags=["Live Predictions"],
 )
