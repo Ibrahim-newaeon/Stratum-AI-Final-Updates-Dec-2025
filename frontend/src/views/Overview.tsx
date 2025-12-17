@@ -35,6 +35,9 @@ import { KPICard } from '@/components/dashboard/KPICard'
 import { CampaignTable } from '@/components/dashboard/CampaignTable'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
+import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget'
+import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget'
+import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget'
 import {
   PlatformPerformanceChart,
   ROASByPlatformChart,
@@ -664,6 +667,21 @@ export function Overview() {
         {/* Simulator Widget */}
         <ErrorBoundary>
           <SimulateSlider />
+        </ErrorBoundary>
+      </div>
+
+      {/* AI Predictions Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <ErrorBoundary>
+          <LivePredictionsWidget />
+        </ErrorBoundary>
+
+        <ErrorBoundary>
+          <ROASAlertsWidget />
+        </ErrorBoundary>
+
+        <ErrorBoundary>
+          <BudgetOptimizerWidget />
         </ErrorBoundary>
       </div>
 

@@ -5,6 +5,9 @@ export { PlatformBreakdownWidget } from './PlatformBreakdownWidget'
 export { AlertsWidget } from './AlertsWidget'
 export { QuickActionsWidget } from './QuickActionsWidget'
 export { SimulatorWidget } from './SimulatorWidget'
+export { LivePredictionsWidget } from './LivePredictionsWidget'
+export { ROASAlertsWidget } from './ROASAlertsWidget'
+export { BudgetOptimizerWidget } from './BudgetOptimizerWidget'
 
 export type WidgetType =
   | 'kpi-spend'
@@ -21,6 +24,9 @@ export type WidgetType =
   | 'alerts'
   | 'quick-actions'
   | 'simulator'
+  | 'live-predictions'
+  | 'roas-alerts'
+  | 'budget-optimizer'
 
 export interface WidgetConfig {
   id: string
@@ -62,4 +68,7 @@ export const availableWidgets: { type: WidgetType; title: string; description: s
   { type: 'alerts', title: 'Alerts', description: 'Recent alerts and notifications', defaultSize: { w: 4, h: 3 } },
   { type: 'quick-actions', title: 'Quick Actions', description: 'Common quick actions', defaultSize: { w: 3, h: 3 } },
   { type: 'simulator', title: 'What-If Simulator', description: 'Budget impact simulator', defaultSize: { w: 6, h: 4 } },
+  { type: 'live-predictions', title: 'Live Predictions', description: 'AI-powered campaign predictions', defaultSize: { w: 6, h: 5 } },
+  { type: 'roas-alerts', title: 'ROAS Alerts', description: 'Performance alerts and opportunities', defaultSize: { w: 6, h: 5 } },
+  { type: 'budget-optimizer', title: 'Budget Optimizer', description: 'AI budget reallocation recommendations', defaultSize: { w: 6, h: 5 } },
 ]
