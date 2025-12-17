@@ -22,6 +22,7 @@ from app.api.v1.endpoints import (
     linkedin,
     ml_training,
     predictions,
+    capi,
 )
 
 api_router = APIRouter()
@@ -122,4 +123,11 @@ api_router.include_router(
     predictions.router,
     prefix="/predictions",
     tags=["Live Predictions"],
+)
+
+# Conversion API (CAPI) Integration
+api_router.include_router(
+    capi.router,
+    prefix="/capi",
+    tags=["Conversion API"],
 )

@@ -30,7 +30,9 @@
     "whatsapp": "WhatsApp",
     "settings": "Settings",
     "tenants": "Organizations",
-    "mlTraining": "ML Training"
+    "mlTraining": "ML Training",
+    "capiSetup": "CAPI Setup",
+    "dataQuality": "Data Quality"
   },
   "overview": {
     "title": "Overview",

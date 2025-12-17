@@ -30,7 +30,9 @@
     "whatsapp": "واتساب",
     "settings": "الإعدادات",
     "tenants": "المؤسسات",
-    "mlTraining": "تدريب الذكاء الاصطناعي"
+    "mlTraining": "تدريب الذكاء الاصطناعي",
+    "capiSetup": "إعداد واجهة التحويلات",
+    "dataQuality": "جودة البيانات"
   },
   "overview": {
     "title": "نظرة عامة",

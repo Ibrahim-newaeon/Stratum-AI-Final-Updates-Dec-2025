@@ -18,6 +18,8 @@ const WhatsApp = lazy(() => import('./views/WhatsApp'))
 const Settings = lazy(() => import('./views/Settings'))
 const Tenants = lazy(() => import('./views/Tenants'))
 const MLTraining = lazy(() => import('./views/MLTraining'))
+const CAPISetup = lazy(() => import('./views/CAPISetup'))
+const DataQuality = lazy(() => import('./views/DataQuality'))
 
 function App() {
   return (
@@ -112,6 +114,22 @@ function App() {
               element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <MLTraining />
+                </Suspense>
+              }
+            />
+            <Route
+              path="capi-setup"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <CAPISetup />
+                </Suspense>
+              }
+            />
+            <Route
+              path="data-quality"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <DataQuality />
                 </Suspense>
               }
             />

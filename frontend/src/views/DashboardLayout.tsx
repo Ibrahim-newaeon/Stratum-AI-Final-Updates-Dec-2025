@@ -18,6 +18,8 @@ import {
   Squares2X2Icon,
   BuildingOffice2Icon,
   CpuChipIcon,
+  SignalIcon,
+  ChartPieIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
@@ -130,6 +132,30 @@ export default function DashboardLayout() {
             >
               <CpuChipIcon className="h-5 w-5" />
               {t('nav.mlTraining')}
+            </NavLink>
+            <NavLink
+              to="/capi-setup"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                location.pathname === '/capi-setup'
+                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              )}
+            >
+              <SignalIcon className="h-5 w-5" />
+              {t('nav.capiSetup')}
+            </NavLink>
+            <NavLink
+              to="/data-quality"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                location.pathname === '/data-quality'
+                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              )}
+            >
+              <ChartPieIcon className="h-5 w-5" />
+              {t('nav.dataQuality')}
             </NavLink>
             <NavLink
               to="/settings"
