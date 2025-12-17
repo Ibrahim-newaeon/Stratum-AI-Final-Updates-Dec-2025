@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   HomeIcon,
@@ -21,10 +21,13 @@ import {
   SignalIcon,
   ChartPieIcon,
   CircleStackIcon,
+  ShieldCheckIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
   { name: 'nav.overview', href: '/overview', icon: HomeIcon, tourId: 'nav-overview' },
@@ -40,14 +43,28 @@ const navigation = [
 export default function DashboardLayout() {
   const { t, i18n } = useTranslation()
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [learningHubOpen, setLearningHubOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'ar' : 'en'
     i18n.changeLanguage(newLang)
     // Update document direction for RTL support
     document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr'
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const getUserInitials = () => {
+    if (!user?.name) return 'U'
+    const names = user.name.split(' ')
+    return names.map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
   return (
@@ -110,6 +127,21 @@ export default function DashboardLayout() {
 
           {/* Admin & Settings at bottom */}
           <div className="border-t p-4 space-y-1">
+            {/* Superadmin Dashboard - only for superadmins */}
+            {user?.role === 'superadmin' && (
+              <NavLink
+                to="/superadmin"
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  location.pathname === '/superadmin'
+                    ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+              >
+                <ShieldCheckIcon className="h-5 w-5" />
+                Superadmin
+              </NavLink>
+            )}
             <NavLink
               to="/tenants"
               className={cn(
@@ -228,12 +260,51 @@ export default function DashboardLayout() {
             </button>
 
             {/* User menu */}
-            <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors">
-              <div className="h-7 w-7 rounded-full bg-gradient-stratum flex items-center justify-center">
-                <span className="text-white text-xs font-medium">DU</span>
-              </div>
-              <span className="hidden lg:block text-sm font-medium">Demo User</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors"
+              >
+                <div className="h-7 w-7 rounded-full bg-gradient-stratum flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">{getUserInitials()}</span>
+                </div>
+                <div className="hidden lg:block text-left">
+                  <span className="text-sm font-medium block">{user?.name || 'User'}</span>
+                  <span className="text-xs text-muted-foreground capitalize">{user?.role || 'user'}</span>
+                </div>
+              </button>
+
+              {/* Dropdown menu */}
+              {userMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setUserMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-48 py-2 rounded-lg border bg-card shadow-lg z-50">
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                    <NavLink
+                      to="/settings"
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <CogIcon className="w-4 h-4" />
+                      {t('common.settings')}
+                    </NavLink>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                    >
+                      <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                      {t('common.logout')}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 

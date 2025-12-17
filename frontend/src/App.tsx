@@ -4,9 +4,12 @@ import DashboardLayout from './views/DashboardLayout'
 import { Toaster } from './components/ui/toaster'
 import { JoyrideProvider } from './components/guide/JoyrideWrapper'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { AuthProvider } from './contexts/AuthContext'
 import LoadingSpinner from './components/common/LoadingSpinner'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 
 // Lazy load pages for code splitting
+const Login = lazy(() => import('./views/Login'))
 const Overview = lazy(() => import('./views/Overview'))
 const CustomDashboard = lazy(() => import('./views/CustomDashboard'))
 const Campaigns = lazy(() => import('./views/Campaigns'))
@@ -21,23 +24,43 @@ const MLTraining = lazy(() => import('./views/MLTraining'))
 const CAPISetup = lazy(() => import('./views/CAPISetup'))
 const DataQuality = lazy(() => import('./views/DataQuality'))
 const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'))
+const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'))
 
 function App() {
   return (
     <ThemeProvider>
-      <JoyrideProvider>
-        <div className="min-h-screen bg-background">
-          <Routes>
-          <Route path="/" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="/overview" replace />} />
-            <Route
-              path="overview"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Overview />
-                </Suspense>
-              }
-            />
+      <AuthProvider>
+        <JoyrideProvider>
+          <div className="min-h-screen bg-background">
+            <Routes>
+              {/* Public routes */}
+              <Route
+                path="/login"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Login />
+                  </Suspense>
+                }
+              />
+
+              {/* Protected routes */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/overview" replace />} />
+                <Route
+                  path="overview"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Overview />
+                    </Suspense>
+                  }
+                />
             <Route
               path="dashboard"
               element={
@@ -134,19 +157,34 @@ function App() {
                 </Suspense>
               }
             />
-            <Route
-              path="emq-dashboard"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <DataQualityDashboard />
-                </Suspense>
-              }
-            />
-          </Route>
-          </Routes>
-          <Toaster />
-        </div>
-      </JoyrideProvider>
+                <Route
+                  path="emq-dashboard"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <DataQualityDashboard />
+                    </Suspense>
+                  }
+                />
+                {/* Superadmin only routes */}
+                <Route
+                  path="superadmin"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperadminDashboard />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              {/* Catch all - redirect to overview */}
+              <Route path="*" element={<Navigate to="/overview" replace />} />
+            </Routes>
+            <Toaster />
+          </div>
+        </JoyrideProvider>
+      </AuthProvider>
     </ThemeProvider>
   )
 }

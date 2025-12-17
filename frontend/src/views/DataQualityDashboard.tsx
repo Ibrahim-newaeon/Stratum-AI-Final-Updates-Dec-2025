@@ -314,12 +314,80 @@ export function DataQualityDashboard() {
   const [eventFilter, setEventFilter] = useState('all')
   const [envFilter, setEnvFilter] = useState('prod')
 
+  // State for resolved/dismissed items
+  const [resolvedIssues, setResolvedIssues] = useState<string[]>([])
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([])
+  const [resolvingIssue, setResolvingIssue] = useState<string | null>(null)
+  const [resolvingAlert, setResolvingAlert] = useState<string | null>(null)
+
+  // Filter data based on selected filters
+  const filteredPlatformEMQ = platformFilter === 'all'
+    ? mockPlatformEMQ
+    : mockPlatformEMQ.filter(p => p.platform === platformFilter)
+
+  const filteredEventEMQ = eventFilter === 'all'
+    ? mockEventEMQ
+    : mockEventEMQ.filter(e => {
+        const eventMap: Record<string, string> = {
+          'purchase': 'Purchase',
+          'add_to_cart': 'AddToCart',
+          'begin_checkout': 'BeginCheckout',
+          'view_content': 'ViewContent',
+          'lead': 'Lead',
+        }
+        return e.event === eventMap[eventFilter]
+      })
+
+  const filteredServerBrowserSplit = platformFilter === 'all'
+    ? mockServerBrowserSplit
+    : mockServerBrowserSplit.filter(p => p.platform === platformFilter)
+
+  const filteredAlerts = mockAlerts.filter(alert => {
+    if (dismissedAlerts.includes(alert.id)) return false
+    if (platformFilter !== 'all' && alert.platform && alert.platform !== platformFilter) return false
+    return true
+  })
+
+  const filteredIntegrityIssues = mockIntegrityIssues.filter(
+    issue => !resolvedIssues.includes(issue.type)
+  )
+
   const handleRefresh = () => {
     setIsLoading(true)
     setTimeout(() => {
       setIsLoading(false)
       setLastRefresh(new Date())
+      // Reset resolved/dismissed on refresh to simulate fresh data
+      setResolvedIssues([])
+      setDismissedAlerts([])
     }, 1000)
+  }
+
+  const handleResolveIssue = (issueType: string) => {
+    setResolvingIssue(issueType)
+    // Simulate backend call
+    setTimeout(() => {
+      setResolvedIssues(prev => [...prev, issueType])
+      setResolvingIssue(null)
+    }, 1500)
+  }
+
+  const handleDismissAlert = (alertId: string) => {
+    setResolvingAlert(alertId)
+    // Simulate backend call
+    setTimeout(() => {
+      setDismissedAlerts(prev => [...prev, alertId])
+      setResolvingAlert(null)
+    }, 1000)
+  }
+
+  const handleAutoResolveAlert = (alertId: string) => {
+    setResolvingAlert(alertId)
+    // Simulate backend auto-resolution
+    setTimeout(() => {
+      setDismissedAlerts(prev => [...prev, alertId])
+      setResolvingAlert(null)
+    }, 2000)
   }
 
   const getStatusColor = (status: 'good' | 'warning' | 'critical') => {
@@ -499,7 +567,7 @@ export function DataQualityDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {mockPlatformEMQ.map((row) => (
+                {filteredPlatformEMQ.length > 0 ? filteredPlatformEMQ.map((row) => (
                   <tr key={row.platform} className="hover:bg-muted/30">
                     <td className="py-3">
                       <div className="flex items-center gap-2">
@@ -531,7 +599,13 @@ export function DataQualityDashboard() {
                       </span>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      No data for selected platform
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -555,7 +629,7 @@ export function DataQualityDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {mockEventEMQ.map((row) => (
+                {filteredEventEMQ.length > 0 ? filteredEventEMQ.map((row) => (
                   <tr key={row.event} className="hover:bg-muted/30">
                     <td className="py-3 font-medium">{row.event}</td>
                     <td className={cn('text-right font-semibold', getCoverageTextColor(row.emqScore))}>
@@ -576,7 +650,13 @@ export function DataQualityDashboard() {
                       </span>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                      No data for selected event type
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -644,7 +724,7 @@ export function DataQualityDashboard() {
             Server vs Browser Split
           </h3>
           <div className="space-y-4">
-            {mockServerBrowserSplit.map((row) => (
+            {filteredServerBrowserSplit.length > 0 ? filteredServerBrowserSplit.map((row) => (
               <div key={row.platform} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -677,7 +757,11 @@ export function DataQualityDashboard() {
                   />
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="py-8 text-center text-muted-foreground">
+                No data for selected platform
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4 mt-4 pt-4 border-t text-xs">
             <div className="flex items-center gap-2">
@@ -699,9 +783,14 @@ export function DataQualityDashboard() {
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
             Data Integrity Issues
+            {resolvedIssues.length > 0 && (
+              <span className="text-xs font-normal text-green-500 ml-2">
+                ({resolvedIssues.length} resolved)
+              </span>
+            )}
           </h3>
           <div className="space-y-3">
-            {mockIntegrityIssues.map((issue, idx) => (
+            {filteredIntegrityIssues.length > 0 ? filteredIntegrityIssues.map((issue, idx) => (
               <div
                 key={idx}
                 className={cn(
@@ -715,18 +804,47 @@ export function DataQualityDashboard() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{issue.description}</span>
-                    <span className={cn(
-                      'font-bold',
-                      issue.severity === 'critical' && 'text-red-500',
-                      issue.severity === 'warning' && 'text-amber-500',
-                      issue.severity === 'info' && 'text-blue-500'
-                    )}>
-                      {issue.count.toLocaleString()}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        'font-bold',
+                        issue.severity === 'critical' && 'text-red-500',
+                        issue.severity === 'warning' && 'text-amber-500',
+                        issue.severity === 'info' && 'text-blue-500'
+                      )}>
+                        {issue.count.toLocaleString()}
+                      </span>
+                      <button
+                        onClick={() => handleResolveIssue(issue.type)}
+                        disabled={resolvingIssue === issue.type}
+                        className={cn(
+                          'px-3 py-1 rounded-md text-xs font-medium transition-colors',
+                          issue.severity === 'critical'
+                            ? 'bg-red-500/10 text-red-600 hover:bg-red-500/20 disabled:bg-red-500/5'
+                            : issue.severity === 'warning'
+                            ? 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 disabled:bg-amber-500/5'
+                            : 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 disabled:bg-blue-500/5'
+                        )}
+                      >
+                        {resolvingIssue === issue.type ? (
+                          <span className="flex items-center gap-1">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            Resolving...
+                          </span>
+                        ) : (
+                          'Auto-Resolve'
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+                <p className="font-medium text-green-500">All Issues Resolved</p>
+                <p className="text-sm text-muted-foreground">No pending data integrity issues</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -819,9 +937,14 @@ export function DataQualityDashboard() {
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-primary" />
             Alerts
+            {dismissedAlerts.length > 0 && (
+              <span className="text-xs font-normal text-green-500 ml-2">
+                ({dismissedAlerts.length} dismissed)
+              </span>
+            )}
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {mockAlerts.map((alert) => (
+            {filteredAlerts.length > 0 ? filteredAlerts.map((alert) => (
               <div
                 key={alert.id}
                 className={cn(
@@ -846,11 +969,49 @@ export function DataQualityDashboard() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{alert.description}</p>
-                    <span className="text-xs text-muted-foreground mt-2 block">{alert.timestamp}</span>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-muted-foreground">{alert.timestamp}</span>
+                      <div className="flex items-center gap-2">
+                        {alert.severity !== 'info' && (
+                          <button
+                            onClick={() => handleAutoResolveAlert(alert.id)}
+                            disabled={resolvingAlert === alert.id}
+                            className={cn(
+                              'px-3 py-1 rounded-md text-xs font-medium transition-colors',
+                              alert.severity === 'critical'
+                                ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
+                                : 'bg-amber-500 text-white hover:bg-amber-600 disabled:bg-amber-400'
+                            )}
+                          >
+                            {resolvingAlert === alert.id ? (
+                              <span className="flex items-center gap-1">
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                Fixing...
+                              </span>
+                            ) : (
+                              'Auto-Fix'
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDismissAlert(alert.id)}
+                          disabled={resolvingAlert === alert.id}
+                          className="px-3 py-1 rounded-md text-xs font-medium bg-muted hover:bg-muted/80 transition-colors disabled:opacity-50"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+                <p className="font-medium text-green-500">No Active Alerts</p>
+                <p className="text-sm text-muted-foreground">All alerts have been addressed</p>
+              </div>
+            )}
           </div>
         </div>
 
