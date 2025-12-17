@@ -20,6 +20,7 @@ import {
   CpuChipIcon,
   SignalIcon,
   ChartPieIcon,
+  CircleStackIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
@@ -156,6 +157,18 @@ export default function DashboardLayout() {
             >
               <ChartPieIcon className="h-5 w-5" />
               {t('nav.dataQuality')}
+            </NavLink>
+            <NavLink
+              to="/emq-dashboard"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                location.pathname === '/emq-dashboard'
+                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              )}
+            >
+              <CircleStackIcon className="h-5 w-5" />
+              {t('nav.emqDashboard')}
             </NavLink>
             <NavLink
               to="/settings"

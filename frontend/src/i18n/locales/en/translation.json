@@ -36,7 +36,8 @@
     "tenants": "Organizations",
     "mlTraining": "ML Training",
     "capiSetup": "CAPI Setup",
-    "dataQuality": "Data Quality"
+    "dataQuality": "Data Quality",
+    "emqDashboard": "EMQ Dashboard"
   },
   "overview": {
     "title": "Overview",
@@ -243,5 +244,39 @@
     "cpc": "Cost Per Click - Total spend divided by clicks",
     "cpa": "Cost Per Acquisition - Total spend divided by conversions",
     "confidenceInterval": "The range within which the true value is likely to fall"
+  },
+  "dataQuality": {
+    "title": "Data Quality Dashboard",
+    "subtitle": "Monitor Event Match Quality across all platforms",
+    "kpi": {
+      "overallEMQ": "Overall Match Quality",
+      "purchaseEMQ": "Purchase EMQ",
+      "serverCoverage": "Server Coverage",
+      "dedupRate": "Deduplication Rate",
+      "paramCompleteness": "Parameter Completeness",
+      "piiViolations": "PII Violations"
+    },
+    "sections": {
+      "emqByPlatform": "EMQ by Platform",
+      "emqByEvent": "EMQ by Event Type",
+      "parameterCoverage": "Required Parameter Coverage",
+      "serverBrowserSplit": "Server vs Browser Split",
+      "dataIntegrity": "Data Integrity Issues",
+      "piiCompliance": "PII Compliance Monitor",
+      "funnelQuality": "Funnel Quality View",
+      "alerts": "Alerts",
+      "recommendations": "Recommendations"
+    },
+    "filters": {
+      "dateRange": "Date Range",
+      "platform": "Platform",
+      "event": "Event",
+      "environment": "Environment"
+    },
+    "status": {
+      "good": "Good",
+      "warning": "Warning",
+      "critical": "Critical"
+    }
   }
 }

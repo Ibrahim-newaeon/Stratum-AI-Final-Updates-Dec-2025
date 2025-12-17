@@ -20,6 +20,7 @@ const Tenants = lazy(() => import('./views/Tenants'))
 const MLTraining = lazy(() => import('./views/MLTraining'))
 const CAPISetup = lazy(() => import('./views/CAPISetup'))
 const DataQuality = lazy(() => import('./views/DataQuality'))
+const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'))
 
 function App() {
   return (
@@ -130,6 +131,14 @@ function App() {
               element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <DataQuality />
+                </Suspense>
+              }
+            />
+            <Route
+              path="emq-dashboard"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <DataQualityDashboard />
                 </Suspense>
               }
             />

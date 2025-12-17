@@ -36,7 +36,8 @@
     "tenants": "المؤسسات",
     "mlTraining": "تدريب الذكاء الاصطناعي",
     "capiSetup": "إعداد واجهة التحويلات",
-    "dataQuality": "جودة البيانات"
+    "dataQuality": "جودة البيانات",
+    "emqDashboard": "لوحة جودة المطابقة"
   },
   "overview": {
     "title": "نظرة عامة",
@@ -261,5 +262,39 @@
     "cpc": "التكلفة لكل نقرة - إجمالي الإنفاق مقسومًا على النقرات",
     "cpa": "تكلفة الاكتساب - إجمالي الإنفاق مقسومًا على التحويلات",
     "confidenceInterval": "النطاق الذي يُحتمل أن تقع فيه القيمة الحقيقية"
+  },
+  "dataQuality": {
+    "title": "لوحة جودة البيانات",
+    "subtitle": "مراقبة جودة مطابقة الأحداث عبر جميع المنصات",
+    "kpi": {
+      "overallEMQ": "جودة المطابقة الإجمالية",
+      "purchaseEMQ": "جودة مطابقة الشراء",
+      "serverCoverage": "تغطية الخادم",
+      "dedupRate": "معدل إزالة التكرار",
+      "paramCompleteness": "اكتمال المعلمات",
+      "piiViolations": "انتهاكات البيانات الشخصية"
+    },
+    "sections": {
+      "emqByPlatform": "الجودة حسب المنصة",
+      "emqByEvent": "الجودة حسب نوع الحدث",
+      "parameterCoverage": "تغطية المعلمات المطلوبة",
+      "serverBrowserSplit": "الخادم مقابل المتصفح",
+      "dataIntegrity": "مشاكل سلامة البيانات",
+      "piiCompliance": "مراقبة الامتثال للخصوصية",
+      "funnelQuality": "عرض جودة القمع",
+      "alerts": "التنبيهات",
+      "recommendations": "التوصيات"
+    },
+    "filters": {
+      "dateRange": "النطاق الزمني",
+      "platform": "المنصة",
+      "event": "الحدث",
+      "environment": "البيئة"
+    },
+    "status": {
+      "good": "جيد",
+      "warning": "تحذير",
+      "critical": "حرج"
+    }
   }
 }
