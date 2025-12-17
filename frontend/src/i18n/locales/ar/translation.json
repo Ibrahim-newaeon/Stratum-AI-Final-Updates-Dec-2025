@@ -8,11 +8,16 @@
     "create": "إنشاء",
     "search": "بحث",
     "filter": "تصفية",
+    "filters": "الفلاتر",
     "export": "تصدير",
     "refresh": "تحديث",
     "settings": "إعدادات",
     "logout": "تسجيل الخروج",
-    "profile": "الملف الشخصي"
+    "profile": "الملف الشخصي",
+    "collapse": "طي",
+    "expand": "توسيع",
+    "showFilters": "إظهار الفلاتر",
+    "hideFilters": "إخفاء الفلاتر"
   },
   "nav": {
     "overview": "نظرة عامة",
@@ -23,7 +28,17 @@
     "assets": "مكتبة الأصول",
     "rules": "قواعد التشغيل الآلي",
     "whatsapp": "واتساب",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "tenants": "المؤسسات",
+    "mlTraining": "تدريب الذكاء الاصطناعي"
+  },
+  "overview": {
+    "title": "نظرة عامة",
+    "subtitle": "أداء إعلاناتك في لمحة",
+    "totalSpend": "إجمالي الإنفاق",
+    "totalRevenue": "إجمالي الإيرادات",
+    "overallROAS": "العائد الإجمالي",
+    "activeCampaigns": "الحملات النشطة"
   },
   "dashboard": {
     "title": "لوحة التحكم",

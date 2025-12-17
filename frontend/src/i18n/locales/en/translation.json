@@ -8,11 +8,16 @@
     "create": "Create",
     "search": "Search",
     "filter": "Filter",
+    "filters": "Filters",
     "export": "Export",
     "refresh": "Refresh",
     "settings": "Settings",
     "logout": "Logout",
-    "profile": "Profile"
+    "profile": "Profile",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "showFilters": "Show Filters",
+    "hideFilters": "Hide Filters"
   },
   "nav": {
     "overview": "Overview",
@@ -23,7 +28,17 @@
     "assets": "Asset Library",
     "rules": "Automation Rules",
     "whatsapp": "WhatsApp",
-    "settings": "Settings"
+    "settings": "Settings",
+    "tenants": "Organizations",
+    "mlTraining": "ML Training"
+  },
+  "overview": {
+    "title": "Overview",
+    "subtitle": "Your advertising performance at a glance",
+    "totalSpend": "Total Spend",
+    "totalRevenue": "Total Revenue",
+    "overallROAS": "Overall ROAS",
+    "activeCampaigns": "Active Campaigns"
   },
   "dashboard": {
     "title": "Dashboard",

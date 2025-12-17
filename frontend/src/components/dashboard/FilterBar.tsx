@@ -1,10 +1,11 @@
 /**
  * Filter Bar Component
- * Responsive filter controls for dashboard with global region support
+ * Responsive collapsible filter controls for dashboard with global region support
  */
 
 import React, { useState, useMemo } from 'react'
-import { Filter, X, ChevronDown, Search, Globe } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Filter, X, ChevronDown, ChevronUp, Search, Globe, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DashboardFilters } from '@/types/dashboard'
 
@@ -106,6 +107,7 @@ interface FilterBarProps {
   regions?: string[]
   useGlobalRegions?: boolean
   className?: string
+  defaultExpanded?: boolean
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -115,8 +117,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   regions,
   useGlobalRegions = true,
   className = '',
+  defaultExpanded = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const { t } = useTranslation()
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [regionSearch, setRegionSearch] = useState('')
   const [expandedContinents, setExpandedContinents] = useState<string[]>(['Middle East'])
 
@@ -176,13 +180,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     return continentCountries.every(c => filters.regions.includes(c))
   }
 
-  // Check if some countries in a continent are selected
-  const isContinentPartiallySelected = (continent: string) => {
-    const continentCountries = GLOBAL_REGIONS[continent as keyof typeof GLOBAL_REGIONS] || []
-    const selectedCount = continentCountries.filter(c => filters.regions.includes(c)).length
-    return selectedCount > 0 && selectedCount < continentCountries.length
-  }
-
   // Handle date range change
   const handleDateChange = (type: 'start' | 'end', value: string) => {
     const newDateRange = { ...filters.dateRange }
@@ -209,7 +206,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   // Select all / clear all
   const selectAllPlatforms = () => onChange({ platforms })
   const clearAllPlatforms = () => onChange({ platforms: [] })
-  const selectAllRegions = () => onChange({ regions })
   const clearAllRegions = () => onChange({ regions: [] })
 
   // Quick date presets
@@ -242,271 +238,298 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     onChange({ dateRange: { start, end } })
   }
 
-  return (
-    <div className={className}>
-      {/* Mobile Filter Toggle */}
-      <div className="lg:hidden mb-4">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-card border rounded-lg shadow-sm"
-        >
-          <div className="flex items-center">
-            <Filter className="h-5 w-5 mr-2 text-muted-foreground" />
-            <span className="font-medium text-foreground">Filters</span>
-            <span className="ml-2 px-2 py-1 text-xs bg-primary/10 text-primary rounded-full">
-              {filters.platforms.length + filters.regions.length}
-            </span>
-          </div>
-          <ChevronDown
-            className={cn('h-5 w-5 text-muted-foreground transition-transform', isOpen && 'rotate-180')}
-          />
-        </button>
-      </div>
+  // Calculate active filters count
+  const activeFiltersCount = filters.platforms.length + filters.regions.length
 
-      {/* Filter Content */}
+  return (
+    <div className={cn('bg-card border rounded-lg shadow-sm', className)}>
+      {/* Collapsible Header */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors rounded-t-lg"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <SlidersHorizontal className="h-5 w-5 text-primary" />
+          </div>
+          <div className="text-left">
+            <h3 className="font-semibold text-foreground">{t('common.filters')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {activeFiltersCount > 0 ? (
+                <>
+                  <span className="font-medium text-primary">{activeFiltersCount}</span> active filters
+                </>
+              ) : (
+                'No filters applied'
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Quick Summary Pills (when collapsed) */}
+          {!isExpanded && activeFiltersCount > 0 && (
+            <div className="hidden sm:flex items-center gap-2">
+              {filters.platforms.length > 0 && (
+                <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+                  {filters.platforms.length} platforms
+                </span>
+              )}
+              {filters.regions.length > 0 && (
+                <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                  {filters.regions.length} regions
+                </span>
+              )}
+            </div>
+          )}
+          <div className={cn(
+            'p-2 rounded-full transition-colors',
+            isExpanded ? 'bg-primary/10' : 'bg-muted'
+          )}>
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5 text-primary" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+      </button>
+
+      {/* Collapsible Content */}
       <div
         className={cn(
-          'lg:block bg-card border rounded-lg p-6 shadow-sm',
-          isOpen ? 'block' : 'hidden'
+          'overflow-hidden transition-all duration-300 ease-in-out',
+          isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
         )}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Date Range */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
+        <div className="px-4 pb-4 pt-2 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Date Range */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
 
-            {/* Quick Presets */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              {['7days', '30days', '90days'].map((preset) => (
-                <button
-                  key={preset}
-                  onClick={() => applyDatePreset(preset)}
-                  className="px-3 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  {preset === '7days'
-                    ? 'Last 7 Days'
-                    : preset === '30days'
-                      ? 'Last 30 Days'
-                      : 'Last 90 Days'}
-                </button>
-              ))}
-            </div>
+              {/* Quick Presets */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {['7days', '30days', '90days'].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => applyDatePreset(preset)}
+                    className="px-3 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {preset === '7days'
+                      ? 'Last 7 Days'
+                      : preset === '30days'
+                        ? 'Last 30 Days'
+                        : 'Last 90 Days'}
+                  </button>
+                ))}
+              </div>
 
-            {/* Custom Date Inputs */}
-            <div className="space-y-2">
-              <input
-                type="date"
-                value={filters.dateRange.start.toISOString().split('T')[0]}
-                onChange={(e) => handleDateChange('start', e.target.value)}
-                max={filters.dateRange.end.toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-              <input
-                type="date"
-                value={filters.dateRange.end.toISOString().split('T')[0]}
-                onChange={(e) => handleDateChange('end', e.target.value)}
-                min={filters.dateRange.start.toISOString().split('T')[0]}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-          </div>
-
-          {/* Platform Filter */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-foreground">Platforms</label>
-              <div className="flex gap-2">
-                <button
-                  onClick={selectAllPlatforms}
-                  className="text-xs text-primary hover:underline"
-                >
-                  All
-                </button>
-                <button
-                  onClick={clearAllPlatforms}
-                  className="text-xs text-muted-foreground hover:underline"
-                >
-                  Clear
-                </button>
+              {/* Custom Date Inputs */}
+              <div className="space-y-2">
+                <input
+                  type="date"
+                  value={filters.dateRange.start.toISOString().split('T')[0]}
+                  onChange={(e) => handleDateChange('start', e.target.value)}
+                  max={filters.dateRange.end.toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                <input
+                  type="date"
+                  value={filters.dateRange.end.toISOString().split('T')[0]}
+                  onChange={(e) => handleDateChange('end', e.target.value)}
+                  min={filters.dateRange.start.toISOString().split('T')[0]}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
             </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {platforms.map((platform) => (
-                <label
-                  key={platform}
-                  className="flex items-center cursor-pointer hover:bg-muted/50 p-2 rounded transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.platforms.includes(platform)}
-                    onChange={() => togglePlatform(platform)}
-                    className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
-                  />
-                  <span className="ml-2 text-sm text-foreground">{platform}</span>
+
+            {/* Platform Filter */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-foreground">Platforms</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={selectAllPlatforms}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={clearAllPlatforms}
+                    className="text-xs text-muted-foreground hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {platforms.map((platform) => (
+                  <label
+                    key={platform}
+                    className="flex items-center cursor-pointer hover:bg-muted/50 p-2 rounded transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.platforms.includes(platform)}
+                      onChange={() => togglePlatform(platform)}
+                      className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
+                    />
+                    <span className="ml-2 text-sm text-foreground">{platform}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Region Filter - Global Countries */}
+            <div className="lg:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="flex items-center text-sm font-medium text-foreground">
+                  <Globe className="h-4 w-4 mr-1.5 text-primary" />
+                  Global Regions
                 </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Region Filter - Global Countries */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-2">
-              <label className="flex items-center text-sm font-medium text-foreground">
-                <Globe className="h-4 w-4 mr-1.5 text-primary" />
-                Global Regions
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onChange({ regions: ALL_REGIONS })}
-                  className="text-xs text-primary hover:underline"
-                >
-                  All
-                </button>
-                <button
-                  onClick={clearAllRegions}
-                  className="text-xs text-muted-foreground hover:underline"
-                >
-                  Clear
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onChange({ regions: ALL_REGIONS })}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={clearAllRegions}
+                    className="text-xs text-muted-foreground hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Region Search */}
-            <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search countries..."
-                value={regionSearch}
-                onChange={(e) => setRegionSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-              {regionSearch && (
-                <button
-                  onClick={() => setRegionSearch('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+              {/* Region Search */}
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search countries..."
+                  value={regionSearch}
+                  onChange={(e) => setRegionSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                {regionSearch && (
+                  <button
+                    onClick={() => setRegionSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
 
-            {/* Selected Count */}
-            <div className="text-xs text-muted-foreground mb-2">
-              <span className="font-semibold text-primary">{filters.regions.length}</span> of {ALL_REGIONS.length} countries selected
-            </div>
+              {/* Selected Count */}
+              <div className="text-xs text-muted-foreground mb-2">
+                <span className="font-semibold text-primary">{filters.regions.length}</span> of {ALL_REGIONS.length} countries selected
+              </div>
 
-            {/* Continent Groups */}
-            <div className="space-y-1 max-h-64 overflow-y-auto border rounded-md p-2 bg-background">
-              {Object.entries(filteredGlobalRegions).map(([continent, countries]) => (
-                <div key={continent} className="border-b last:border-b-0 pb-2 last:pb-0">
-                  {/* Continent Header */}
-                  <div className="flex items-center justify-between py-2 px-2 hover:bg-muted/50 rounded cursor-pointer">
-                    <div
-                      className="flex items-center flex-1"
-                      onClick={() => toggleContinent(continent)}
-                    >
-                      <ChevronDown
-                        className={cn(
-                          'h-4 w-4 mr-2 text-muted-foreground transition-transform',
-                          !expandedContinents.includes(continent) && '-rotate-90'
-                        )}
-                      />
-                      <span className="font-medium text-sm text-foreground">{continent}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        ({countries.filter(c => filters.regions.includes(c)).length}/{countries.length})
-                      </span>
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          selectContinent(continent)
-                        }}
-                        className={cn(
-                          'px-2 py-0.5 text-xs rounded transition-colors',
-                          isContinentFullySelected(continent)
-                            ? 'bg-primary/20 text-primary'
-                            : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
-                        )}
+              {/* Continent Groups */}
+              <div className="space-y-1 max-h-48 overflow-y-auto border rounded-md p-2 bg-background">
+                {Object.entries(filteredGlobalRegions).map(([continent, countries]) => (
+                  <div key={continent} className="border-b last:border-b-0 pb-2 last:pb-0">
+                    {/* Continent Header */}
+                    <div className="flex items-center justify-between py-2 px-2 hover:bg-muted/50 rounded cursor-pointer">
+                      <div
+                        className="flex items-center flex-1"
+                        onClick={() => toggleContinent(continent)}
                       >
-                        All
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          clearContinent(continent)
-                        }}
-                        className="px-2 py-0.5 text-xs bg-muted text-muted-foreground rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Countries List */}
-                  {expandedContinents.includes(continent) && (
-                    <div className="grid grid-cols-2 gap-1 ml-6 mt-1">
-                      {countries.map((country) => (
-                        <label
-                          key={country}
-                          className="flex items-center cursor-pointer hover:bg-muted/50 p-1.5 rounded transition-colors text-sm"
+                        <ChevronDown
+                          className={cn(
+                            'h-4 w-4 mr-2 text-muted-foreground transition-transform',
+                            !expandedContinents.includes(continent) && '-rotate-90'
+                          )}
+                        />
+                        <span className="font-medium text-sm text-foreground">{continent}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ({countries.filter(c => filters.regions.includes(c)).length}/{countries.length})
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            selectContinent(continent)
+                          }}
+                          className={cn(
+                            'px-2 py-0.5 text-xs rounded transition-colors',
+                            isContinentFullySelected(continent)
+                              ? 'bg-primary/20 text-primary'
+                              : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                          )}
                         >
-                          <input
-                            type="checkbox"
-                            checked={filters.regions.includes(country)}
-                            onChange={() => toggleRegion(country)}
-                            className="h-3.5 w-3.5 text-primary focus:ring-primary border-border rounded"
-                          />
-                          <span className="ml-2 text-foreground truncate">{country}</span>
-                        </label>
-                      ))}
+                          All
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            clearContinent(continent)
+                          }}
+                          className="px-2 py-0.5 text-xs bg-muted text-muted-foreground rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        >
+                          Clear
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
 
-              {Object.keys(filteredGlobalRegions).length === 0 && (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  No countries match "{regionSearch}"
-                </div>
-              )}
+                    {/* Countries List */}
+                    {expandedContinents.includes(continent) && (
+                      <div className="grid grid-cols-2 gap-1 ml-6 mt-1">
+                        {countries.map((country) => (
+                          <label
+                            key={country}
+                            className="flex items-center cursor-pointer hover:bg-muted/50 p-1.5 rounded transition-colors text-sm"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={filters.regions.includes(country)}
+                              onChange={() => toggleRegion(country)}
+                              className="h-3.5 w-3.5 text-primary focus:ring-primary border-border rounded"
+                            />
+                            <span className="ml-2 text-foreground truncate">{country}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {Object.keys(filteredGlobalRegions).length === 0 && (
+                  <div className="text-center py-4 text-muted-foreground text-sm">
+                    No countries match "{regionSearch}"
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Active Filters Summary */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Active Filters</label>
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground">
-                <span className="font-semibold">{filters.platforms.length}</span> platforms selected
-              </div>
-              <div className="text-xs text-muted-foreground">
-                <span className="font-semibold">{filters.regions.length}</span> regions selected
-              </div>
-              <div className="text-xs text-muted-foreground">
-                <span className="font-semibold">
-                  {Math.ceil(
-                    (filters.dateRange.end.getTime() - filters.dateRange.start.getTime()) /
-                      (1000 * 60 * 60 * 24)
-                  )}
-                </span>{' '}
-                days period
-              </div>
-
-              {/* Clear All Button */}
-              <button
-                onClick={() => {
-                  clearAllPlatforms()
-                  clearAllRegions()
-                }}
-                className="mt-4 w-full flex items-center justify-center px-4 py-2 border rounded-md text-sm font-medium text-foreground bg-background hover:bg-muted transition-colors"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Clear All Filters
-              </button>
+          {/* Footer with Clear All */}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              <span className="font-semibold">{filters.platforms.length}</span> platforms,
+              <span className="font-semibold ml-1">{filters.regions.length}</span> regions,
+              <span className="font-semibold ml-1">
+                {Math.ceil(
+                  (filters.dateRange.end.getTime() - filters.dateRange.start.getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )}
+              </span> days
             </div>
+            <button
+              onClick={() => {
+                clearAllPlatforms()
+                clearAllRegions()
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
+              <X className="h-4 w-4" />
+              Clear All
+            </button>
           </div>
         </div>
       </div>
