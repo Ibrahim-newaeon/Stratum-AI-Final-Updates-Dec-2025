@@ -92,8 +92,7 @@ export default function Login() {
               Platform
             </h1>
             <p className="text-lg text-white/80 max-w-md">
-              Optimize your advertising campaigns across all platforms with AI-powered insights,
-              real-time analytics, and automated optimization.
+              Built for cross-platform growth: AI-powered insights, real-time analytics, automated optimization, EMQ measurement, auto-resolution logic, and clear ROAS lift—always on.
             </p>
           </div>
 
