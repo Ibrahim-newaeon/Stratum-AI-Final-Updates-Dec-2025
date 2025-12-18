@@ -80,6 +80,19 @@ const PLATFORMS = [
       { field: 'access_token', label: 'Access Token', placeholder: '', help: 'OAuth 2.0 access token', sensitive: true },
     ],
   },
+  {
+    id: 'whatsapp',
+    name: 'WhatsApp Business',
+    logo: '/platforms/whatsapp.svg',
+    color: 'bg-green-500',
+    description: 'WhatsApp Business Cloud API',
+    credentials: [
+      { field: 'phone_number_id', label: 'Phone Number ID', placeholder: '1234567890123456', help: 'From WhatsApp Business Manager > Phone Numbers' },
+      { field: 'business_account_id', label: 'Business Account ID', placeholder: '1234567890123456', help: 'WhatsApp Business Account ID from Meta Business Suite' },
+      { field: 'access_token', label: 'Access Token', placeholder: 'EAABsbCS...', help: 'Permanent token from System User in Business Settings', sensitive: true },
+      { field: 'webhook_verify_token', label: 'Webhook Verify Token', placeholder: 'your_verify_token', help: 'Custom token for webhook verification' },
+    ],
+  },
 ]
 
 interface PlatformStatus {
