@@ -1,0 +1,1509 @@
+/**
+ * Campaign Creation Modal
+ * Multi-step wizard for creating campaigns across all platforms
+ */
+
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Loader2,
+  Target,
+  DollarSign,
+  Users,
+  Calendar,
+  AlertCircle,
+  RefreshCw,
+  UserPlus,
+  UsersRound,
+  Bookmark,
+  Image as ImageIcon,
+  Video,
+  FileText,
+  Upload,
+  FolderOpen,
+  Plus,
+  Trash2,
+  Eye,
+  AlertTriangle,
+} from 'lucide-react'
+import { cn, getPlatformColor } from '@/lib/utils'
+
+interface CampaignCreateModalProps {
+  open: boolean
+  onClose: () => void
+  onSuccess?: (campaign: any) => void
+}
+
+// Platform configurations
+const PLATFORMS = [
+  {
+    id: 'meta',
+    name: 'Meta',
+    description: 'Facebook & Instagram Ads',
+    color: 'bg-blue-600',
+    objectives: ['AWARENESS', 'TRAFFIC', 'ENGAGEMENT', 'LEADS', 'APP_PROMOTION', 'SALES'],
+  },
+  {
+    id: 'google',
+    name: 'Google',
+    description: 'Search, Display & YouTube',
+    color: 'bg-red-500',
+    objectives: ['SEARCH', 'DISPLAY', 'VIDEO', 'SHOPPING', 'PERFORMANCE_MAX', 'DISCOVERY'],
+  },
+  {
+    id: 'tiktok',
+    name: 'TikTok',
+    description: 'TikTok For Business',
+    color: 'bg-black',
+    objectives: ['REACH', 'TRAFFIC', 'VIDEO_VIEWS', 'COMMUNITY_INTERACTION', 'CONVERSIONS', 'APP_PROMOTION'],
+  },
+  {
+    id: 'snapchat',
+    name: 'Snapchat',
+    description: 'Snapchat Ads Manager',
+    color: 'bg-yellow-400',
+    objectives: ['AWARENESS', 'CONSIDERATION', 'CONVERSIONS', 'CATALOG_SALES'],
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    description: 'B2B Advertising',
+    color: 'bg-blue-700',
+    objectives: ['BRAND_AWARENESS', 'WEBSITE_VISITS', 'ENGAGEMENT', 'VIDEO_VIEWS', 'LEAD_GENERATION', 'CONVERSIONS'],
+  },
+]
+
+// Mock ad accounts per platform
+const MOCK_AD_ACCOUNTS: Record<string, Array<{ id: string; name: string; currency: string }>> = {
+  meta: [
+    { id: 'act_123456789', name: 'Main Business Account', currency: 'USD' },
+    { id: 'act_987654321', name: 'E-commerce Store', currency: 'USD' },
+    { id: 'act_456789123', name: 'Saudi Arabia Account', currency: 'SAR' },
+  ],
+  google: [
+    { id: '123-456-7890', name: 'Google Ads - Primary', currency: 'USD' },
+    { id: '098-765-4321', name: 'Google Ads - MENA', currency: 'AED' },
+  ],
+  tiktok: [
+    { id: 'tt_adv_12345', name: 'TikTok Business Center', currency: 'USD' },
+    { id: 'tt_adv_67890', name: 'TikTok - GCC Region', currency: 'SAR' },
+  ],
+  snapchat: [
+    { id: 'snap_org_111', name: 'Snapchat Ad Account', currency: 'USD' },
+  ],
+  linkedin: [
+    { id: 'li_502123456', name: 'LinkedIn B2B Account', currency: 'USD' },
+    { id: 'li_502789012', name: 'LinkedIn - Enterprise', currency: 'EUR' },
+  ],
+}
+
+// Mock audiences per platform
+const MOCK_AUDIENCES: Record<string, {
+  custom: Array<{ id: string; name: string; size: number }>;
+  lookalike: Array<{ id: string; name: string; size: number; source: string }>;
+  saved: Array<{ id: string; name: string; description: string }>;
+}> = {
+  meta: {
+    custom: [
+      { id: 'ca_001', name: 'Website Visitors - 30 Days', size: 125000 },
+      { id: 'ca_002', name: 'Email Subscribers', size: 45000 },
+      { id: 'ca_003', name: 'App Users', size: 78000 },
+      { id: 'ca_004', name: 'Purchase History - 90 Days', size: 32000 },
+    ],
+    lookalike: [
+      { id: 'la_001', name: '1% Lookalike - Purchasers', size: 2100000, source: 'Purchase History' },
+      { id: 'la_002', name: '2% Lookalike - High Value', size: 4200000, source: 'Top 10% Customers' },
+      { id: 'la_003', name: '1% Lookalike - Subscribers', size: 1900000, source: 'Email Subscribers' },
+    ],
+    saved: [
+      { id: 'sa_001', name: 'Tech Enthusiasts 25-44', description: 'Age 25-44, Interest in Technology' },
+      { id: 'sa_002', name: 'Fashion Shoppers', description: 'Interest in Fashion, Online Shopping' },
+      { id: 'sa_003', name: 'Parents with Kids', description: 'Parents, Age 30-50, Family interests' },
+    ],
+  },
+  google: {
+    custom: [
+      { id: 'gca_001', name: 'Converters - Last 30 Days', size: 15000 },
+      { id: 'gca_002', name: 'Cart Abandoners', size: 28000 },
+    ],
+    lookalike: [
+      { id: 'gla_001', name: 'Similar to Converters', size: 1500000, source: 'Conversion List' },
+    ],
+    saved: [
+      { id: 'gsa_001', name: 'In-Market: Software', description: 'In-market for Business Software' },
+      { id: 'gsa_002', name: 'Affinity: Tech Savvy', description: 'Technology enthusiasts' },
+    ],
+  },
+  tiktok: {
+    custom: [
+      { id: 'tca_001', name: 'Video Viewers - 7 Days', size: 250000 },
+      { id: 'tca_002', name: 'Profile Visitors', size: 180000 },
+    ],
+    lookalike: [
+      { id: 'tla_001', name: 'Lookalike - Engagers', size: 3000000, source: 'Video Engagers' },
+    ],
+    saved: [
+      { id: 'tsa_001', name: 'Gen Z Shoppers', description: 'Age 18-24, Shopping interest' },
+    ],
+  },
+  snapchat: {
+    custom: [
+      { id: 'sca_001', name: 'Snap Pixel Audience', size: 95000 },
+    ],
+    lookalike: [
+      { id: 'sla_001', name: 'Lookalike - Buyers', size: 1200000, source: 'Purchasers' },
+    ],
+    saved: [
+      { id: 'ssa_001', name: 'Millennials & Gen Z', description: 'Age 18-35' },
+    ],
+  },
+  linkedin: {
+    custom: [
+      { id: 'lca_001', name: 'Website Retargeting', size: 8500 },
+      { id: 'lca_002', name: 'Company List - Enterprise', size: 2500 },
+    ],
+    lookalike: [
+      { id: 'lla_001', name: 'Lookalike - Decision Makers', size: 450000, source: 'Engaged Leads' },
+    ],
+    saved: [
+      { id: 'lsa_001', name: 'IT Decision Makers', description: 'IT Directors, CTOs, CIOs' },
+      { id: 'lsa_002', name: 'Marketing Professionals', description: 'Marketing Managers, CMOs' },
+    ],
+  },
+}
+
+const STEPS = ['platform', 'basics', 'budget', 'targeting', 'creatives'] as const
+type Step = typeof STEPS[number]
+
+// Asset type for library selection
+interface LibraryAsset {
+  id: number
+  name: string
+  type: 'image' | 'video' | 'copy'
+  thumbnail: string
+  dimensions?: string
+  duration?: string
+  fatigueScore: number
+  impressions: number
+}
+
+// Mock assets from library (would be fetched from API)
+const MOCK_LIBRARY_ASSETS: LibraryAsset[] = [
+  {
+    id: 1,
+    name: 'Summer_Banner_v3',
+    type: 'image',
+    thumbnail: 'https://placehold.co/300x250/0ea5e9/white?text=Summer+Sale',
+    dimensions: '300x250',
+    fatigueScore: 78,
+    impressions: 2300000,
+  },
+  {
+    id: 2,
+    name: 'Product_Hero_Widget',
+    type: 'image',
+    thumbnail: 'https://placehold.co/1200x628/10b981/white?text=Widget+Pro',
+    dimensions: '1200x628',
+    fatigueScore: 23,
+    impressions: 890000,
+  },
+  {
+    id: 3,
+    name: 'Brand_Video_30s',
+    type: 'video',
+    thumbnail: 'https://placehold.co/1920x1080/8b5cf6/white?text=Brand+Video',
+    duration: '0:30',
+    fatigueScore: 35,
+    impressions: 1560000,
+  },
+  {
+    id: 4,
+    name: 'Retargeting_Carousel',
+    type: 'image',
+    thumbnail: 'https://placehold.co/1080x1080/f59e0b/white?text=Carousel',
+    dimensions: '1080x1080',
+    fatigueScore: 15,
+    impressions: 670000,
+  },
+  {
+    id: 5,
+    name: 'Promo_Story_Video',
+    type: 'video',
+    thumbnail: 'https://placehold.co/1080x1920/ec4899/white?text=Story',
+    duration: '0:15',
+    fatigueScore: 8,
+    impressions: 450000,
+  },
+  {
+    id: 6,
+    name: 'Flash_Sale_Banner',
+    type: 'image',
+    thumbnail: 'https://placehold.co/728x90/ef4444/white?text=Flash+Sale',
+    dimensions: '728x90',
+    fatigueScore: 52,
+    impressions: 1200000,
+  },
+]
+
+// Uploaded file interface
+interface UploadedFile {
+  id: string
+  file: File
+  preview: string
+  type: 'image' | 'video'
+  name: string
+}
+
+interface FormData {
+  // Platform
+  platform: string
+  // Basics
+  name: string
+  objective: string
+  external_id: string
+  account_id: string
+  status: string
+  // Budget
+  daily_budget: string
+  lifetime_budget: string
+  currency: string
+  start_date: string
+  end_date: string
+  // Targeting
+  targeting_age_min: string
+  targeting_age_max: string
+  targeting_genders: string[]
+  targeting_locations: string
+  targeting_interests: string
+  // Audiences
+  custom_audiences: string[]
+  lookalike_audiences: string[]
+  saved_audiences: string[]
+  // Creatives
+  selected_assets: number[]  // Asset IDs from library
+  ad_headline: string
+  ad_description: string
+  ad_cta: string
+  destination_url: string
+}
+
+const initialFormData: FormData = {
+  platform: '',
+  name: '',
+  objective: '',
+  external_id: '',
+  account_id: '',
+  status: 'draft',
+  daily_budget: '',
+  lifetime_budget: '',
+  currency: 'USD',
+  start_date: '',
+  end_date: '',
+  targeting_age_min: '18',
+  targeting_age_max: '65',
+  targeting_genders: [],
+  targeting_locations: '',
+  targeting_interests: '',
+  custom_audiences: [],
+  lookalike_audiences: [],
+  saved_audiences: [],
+  // Creatives
+  selected_assets: [],
+  ad_headline: '',
+  ad_description: '',
+  ad_cta: 'LEARN_MORE',
+  destination_url: '',
+}
+
+export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreateModalProps) {
+  const { t } = useTranslation()
+  const [currentStep, setCurrentStep] = useState<Step>('platform')
+  const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
+  const [adAccounts, setAdAccounts] = useState<Array<{ id: string; name: string; currency: string }>>([])
+  const [audienceTab, setAudienceTab] = useState<'custom' | 'lookalike' | 'saved'>('custom')
+  const [creativesTab, setCreativesTab] = useState<'library' | 'upload'>('library')
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [assetTypeFilter, setAssetTypeFilter] = useState<'all' | 'image' | 'video'>('all')
+
+  const currentStepIndex = STEPS.indexOf(currentStep)
+  const selectedPlatform = PLATFORMS.find(p => p.id === formData.platform)
+  const platformAudiences = formData.platform ? MOCK_AUDIENCES[formData.platform] : null
+
+  // Fetch ad accounts when platform changes
+  useEffect(() => {
+    if (formData.platform) {
+      setIsLoadingAccounts(true)
+      // Simulate API call
+      setTimeout(() => {
+        setAdAccounts(MOCK_AD_ACCOUNTS[formData.platform] || [])
+        setIsLoadingAccounts(false)
+        // Auto-select first account and set its currency
+        const accounts = MOCK_AD_ACCOUNTS[formData.platform] || []
+        if (accounts.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            account_id: accounts[0].id,
+            currency: accounts[0].currency,
+          }))
+        }
+      }, 500)
+    }
+  }, [formData.platform])
+
+  const updateFormData = (field: keyof FormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  const handleAccountChange = (accountId: string) => {
+    const account = adAccounts.find(a => a.id === accountId)
+    if (account) {
+      setFormData(prev => ({
+        ...prev,
+        account_id: accountId,
+        currency: account.currency,
+      }))
+    }
+  }
+
+  const toggleAudience = (type: 'custom_audiences' | 'lookalike_audiences' | 'saved_audiences', audienceId: string) => {
+    setFormData(prev => {
+      const current = prev[type]
+      if (current.includes(audienceId)) {
+        return { ...prev, [type]: current.filter(id => id !== audienceId) }
+      }
+      return { ...prev, [type]: [...current, audienceId] }
+    })
+  }
+
+  const toggleAsset = (assetId: number) => {
+    setFormData(prev => {
+      const current = prev.selected_assets
+      if (current.includes(assetId)) {
+        return { ...prev, selected_assets: current.filter(id => id !== assetId) }
+      }
+      return { ...prev, selected_assets: [...current, assetId] }
+    })
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files) return
+
+    const newFiles: UploadedFile[] = []
+    Array.from(files).forEach(file => {
+      const isVideo = file.type.startsWith('video/')
+      const isImage = file.type.startsWith('image/')
+
+      if (isVideo || isImage) {
+        const preview = URL.createObjectURL(file)
+        newFiles.push({
+          id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          file,
+          preview,
+          type: isVideo ? 'video' : 'image',
+          name: file.name,
+        })
+      }
+    })
+
+    setUploadedFiles(prev => [...prev, ...newFiles])
+  }
+
+  const removeUploadedFile = (fileId: string) => {
+    setUploadedFiles(prev => {
+      const file = prev.find(f => f.id === fileId)
+      if (file) URL.revokeObjectURL(file.preview)
+      return prev.filter(f => f.id !== fileId)
+    })
+  }
+
+  const filteredLibraryAssets = MOCK_LIBRARY_ASSETS.filter(asset => {
+    if (assetTypeFilter === 'all') return true
+    return asset.type === assetTypeFilter
+  })
+
+  const getFatigueColor = (score: number) => {
+    if (score >= 70) return 'text-red-500'
+    if (score >= 40) return 'text-amber-500'
+    return 'text-green-500'
+  }
+
+  const validateStep = (step: Step): boolean => {
+    const newErrors: Partial<Record<keyof FormData, string>> = {}
+
+    switch (step) {
+      case 'platform':
+        if (!formData.platform) {
+          newErrors.platform = t('campaigns.create.errors.platformRequired')
+        }
+        break
+      case 'basics':
+        if (!formData.name.trim()) {
+          newErrors.name = t('campaigns.create.errors.nameRequired')
+        }
+        if (!formData.objective) {
+          newErrors.objective = t('campaigns.create.errors.objectiveRequired')
+        }
+        if (!formData.account_id) {
+          newErrors.account_id = t('campaigns.create.errors.accountRequired')
+        }
+        break
+      case 'budget':
+        if (!formData.daily_budget && !formData.lifetime_budget) {
+          newErrors.daily_budget = t('campaigns.create.errors.budgetRequired')
+        }
+        if (formData.start_date && formData.end_date && formData.end_date < formData.start_date) {
+          newErrors.end_date = t('campaigns.create.errors.endDateInvalid')
+        }
+        break
+      case 'targeting':
+        const minAge = parseInt(formData.targeting_age_min)
+        const maxAge = parseInt(formData.targeting_age_max)
+        if (minAge < 13 || minAge > 100) {
+          newErrors.targeting_age_min = t('campaigns.create.errors.ageInvalid')
+        }
+        if (maxAge < 13 || maxAge > 100) {
+          newErrors.targeting_age_max = t('campaigns.create.errors.ageInvalid')
+        }
+        if (minAge > maxAge) {
+          newErrors.targeting_age_max = t('campaigns.create.errors.ageRangeInvalid')
+        }
+        break
+      case 'creatives':
+        // At least one asset or uploaded file required
+        if (formData.selected_assets.length === 0 && uploadedFiles.length === 0) {
+          newErrors.selected_assets = t('campaigns.create.errors.creativesRequired', 'Select at least one creative asset')
+        }
+        // Destination URL required if assets selected
+        if ((formData.selected_assets.length > 0 || uploadedFiles.length > 0) && !formData.destination_url.trim()) {
+          newErrors.destination_url = t('campaigns.create.errors.destinationRequired', 'Destination URL is required')
+        }
+        break
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      const nextIndex = currentStepIndex + 1
+      if (nextIndex < STEPS.length) {
+        setCurrentStep(STEPS[nextIndex])
+      }
+    }
+  }
+
+  const handleBack = () => {
+    const prevIndex = currentStepIndex - 1
+    if (prevIndex >= 0) {
+      setCurrentStep(STEPS[prevIndex])
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!validateStep('creatives')) return
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const external_id = formData.external_id || `stratum_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+      const payload = {
+        name: formData.name,
+        platform: formData.platform,
+        status: formData.status,
+        objective: formData.objective,
+        external_id,
+        account_id: formData.account_id,
+        daily_budget_cents: formData.daily_budget ? Math.round(parseFloat(formData.daily_budget) * 100) : null,
+        lifetime_budget_cents: formData.lifetime_budget ? Math.round(parseFloat(formData.lifetime_budget) * 100) : null,
+        currency: formData.currency,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
+        targeting_age_min: parseInt(formData.targeting_age_min) || 18,
+        targeting_age_max: parseInt(formData.targeting_age_max) || 65,
+        targeting_genders: formData.targeting_genders.length > 0 ? formData.targeting_genders : null,
+        targeting_locations: formData.targeting_locations
+          ? formData.targeting_locations.split(',').map(l => ({ name: l.trim() }))
+          : null,
+        targeting_interests: formData.targeting_interests
+          ? formData.targeting_interests.split(',').map(i => i.trim())
+          : null,
+        custom_audiences: formData.custom_audiences.length > 0 ? formData.custom_audiences : null,
+        lookalike_audiences: formData.lookalike_audiences.length > 0 ? formData.lookalike_audiences : null,
+        saved_audiences: formData.saved_audiences.length > 0 ? formData.saved_audiences : null,
+        // Creatives
+        asset_ids: formData.selected_assets.length > 0 ? formData.selected_assets : null,
+        ad_headline: formData.ad_headline || null,
+        ad_description: formData.ad_description || null,
+        ad_cta: formData.ad_cta,
+        destination_url: formData.destination_url,
+        // Uploaded files would be handled via separate upload endpoint
+        has_new_uploads: uploadedFiles.length > 0,
+      }
+
+      const response = await fetch('/api/v1/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        onSuccess?.(data.data)
+        handleClose()
+      } else {
+        setSubmitError(data.message || t('campaigns.create.errors.submitFailed'))
+      }
+    } catch (err) {
+      setSubmitError(t('campaigns.create.errors.submitFailed'))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleClose = () => {
+    setFormData(initialFormData)
+    setCurrentStep('platform')
+    setErrors({})
+    setSubmitError(null)
+    setAdAccounts([])
+    onClose()
+  }
+
+  const formatAudienceSize = (size: number) => {
+    if (size >= 1000000) return `${(size / 1000000).toFixed(1)}M`
+    if (size >= 1000) return `${(size / 1000).toFixed(0)}K`
+    return size.toString()
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-card border shadow-xl mx-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">{t('campaigns.create.title')}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t('campaigns.create.subtitle')}</p>
+          </div>
+          <button
+            onClick={handleClose}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Step Indicator */}
+        <div className="px-6 py-4 border-b bg-muted/30">
+          <div className="flex items-center justify-between">
+            {STEPS.map((step, index) => (
+              <div key={step} className="flex items-center">
+                <div
+                  className={cn(
+                    'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all',
+                    index < currentStepIndex
+                      ? 'bg-green-500 text-white'
+                      : index === currentStepIndex
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  {index < currentStepIndex ? <Check className="w-4 h-4" /> : index + 1}
+                </div>
+                <span
+                  className={cn(
+                    'ml-2 text-sm font-medium hidden sm:block',
+                    index === currentStepIndex ? 'text-foreground' : 'text-muted-foreground'
+                  )}
+                >
+                  {t(`campaigns.create.steps.${step}`)}
+                </span>
+                {index < STEPS.length - 1 && (
+                  <div
+                    className={cn(
+                      'w-12 h-0.5 mx-4 transition-colors',
+                      index < currentStepIndex ? 'bg-green-500' : 'bg-muted'
+                    )}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[50vh]">
+          {/* Platform Selection Step */}
+          {currentStep === 'platform' && (
+            <div className="space-y-4">
+              <p className="text-muted-foreground">{t('campaigns.create.selectPlatform')}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {PLATFORMS.map(platform => (
+                  <button
+                    key={platform.id}
+                    onClick={() => updateFormData('platform', platform.id)}
+                    className={cn(
+                      'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
+                      formData.platform === platform.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-transparent bg-muted/50 hover:bg-muted'
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg',
+                        platform.color
+                      )}
+                    >
+                      {platform.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{platform.name}</h3>
+                      <p className="text-sm text-muted-foreground">{platform.description}</p>
+                    </div>
+                    {formData.platform === platform.id && (
+                      <Check className="w-5 h-5 text-primary ml-auto" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              {errors.platform && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.platform}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Basics Step */}
+          {currentStep === 'basics' && (
+            <div className="space-y-5">
+              {/* Campaign Name */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.campaignName')} *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={e => updateFormData('name', e.target.value)}
+                  placeholder={t('campaigns.create.campaignNamePlaceholder')}
+                  className={cn(
+                    'w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
+                    errors.name && 'border-red-500'
+                  )}
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+                )}
+              </div>
+
+              {/* Objective */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.objective')} *
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {selectedPlatform?.objectives.map(obj => (
+                    <button
+                      key={obj}
+                      onClick={() => updateFormData('objective', obj)}
+                      className={cn(
+                        'px-3 py-2 rounded-lg text-sm font-medium border transition-all',
+                        formData.objective === obj
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-transparent bg-muted hover:bg-muted/80 text-foreground'
+                      )}
+                    >
+                      {t(`campaigns.create.objectives.${obj.toLowerCase()}`, obj.replace(/_/g, ' '))}
+                    </button>
+                  ))}
+                </div>
+                {errors.objective && (
+                  <p className="mt-1 text-sm text-red-500">{errors.objective}</p>
+                )}
+              </div>
+
+              {/* Ad Account Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.accountId')} *
+                </label>
+                {isLoadingAccounts ? (
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border bg-muted">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">Loading accounts...</span>
+                  </div>
+                ) : (
+                  <select
+                    value={formData.account_id}
+                    onChange={e => handleAccountChange(e.target.value)}
+                    className={cn(
+                      'w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
+                      errors.account_id && 'border-red-500'
+                    )}
+                  >
+                    <option value="">Select an ad account</option>
+                    {adAccounts.map(account => (
+                      <option key={account.id} value={account.id}>
+                        {account.name} ({account.id}) - {account.currency}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {errors.account_id && (
+                  <p className="mt-1 text-sm text-red-500">{errors.account_id}</p>
+                )}
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.initialStatus')}
+                </label>
+                <div className="flex gap-3">
+                  {['draft', 'active', 'paused'].map(status => (
+                    <button
+                      key={status}
+                      onClick={() => updateFormData('status', status)}
+                      className={cn(
+                        'px-4 py-2 rounded-lg text-sm font-medium border transition-all',
+                        formData.status === status
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-transparent bg-muted hover:bg-muted/80 text-foreground'
+                      )}
+                    >
+                      {t(`campaigns.status.${status}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Budget Step */}
+          {currentStep === 'budget' && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <DollarSign className="w-5 h-5 text-blue-500" />
+                <p className="text-sm text-blue-600 dark:text-blue-400">
+                  {t('campaigns.create.budgetInfo')}
+                </p>
+              </div>
+
+              {/* Currency (Auto-set based on account) */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.currency')}
+                </label>
+                <select
+                  value={formData.currency}
+                  onChange={e => updateFormData('currency', e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                >
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="EUR">EUR - Euro</option>
+                  <option value="GBP">GBP - British Pound</option>
+                  <option value="SAR">SAR - Saudi Riyal</option>
+                  <option value="AED">AED - UAE Dirham</option>
+                </select>
+              </div>
+
+              {/* Daily Budget */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.dailyBudget')}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    {formData.currency === 'USD' ? '$' : formData.currency === 'EUR' ? '€' : formData.currency}
+                  </span>
+                  <input
+                    type="number"
+                    value={formData.daily_budget}
+                    onChange={e => updateFormData('daily_budget', e.target.value)}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    className={cn(
+                      'w-full pl-12 pr-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
+                      errors.daily_budget && 'border-red-500'
+                    )}
+                  />
+                </div>
+                {errors.daily_budget && (
+                  <p className="mt-1 text-sm text-red-500">{errors.daily_budget}</p>
+                )}
+              </div>
+
+              {/* Lifetime Budget */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.lifetimeBudget')}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    {formData.currency === 'USD' ? '$' : formData.currency === 'EUR' ? '€' : formData.currency}
+                  </span>
+                  <input
+                    type="number"
+                    value={formData.lifetime_budget}
+                    onChange={e => updateFormData('lifetime_budget', e.target.value)}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-12 pr-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              {/* Schedule */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {t('campaigns.create.startDate')}
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={e => updateFormData('start_date', e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {t('campaigns.create.endDate')}
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={e => updateFormData('end_date', e.target.value)}
+                    min={formData.start_date}
+                    className={cn(
+                      'w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
+                      errors.end_date && 'border-red-500'
+                    )}
+                  />
+                  {errors.end_date && (
+                    <p className="mt-1 text-sm text-red-500">{errors.end_date}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Targeting Step */}
+          {currentStep === 'targeting' && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                <Users className="w-5 h-5 text-purple-500" />
+                <p className="text-sm text-purple-600 dark:text-purple-400">
+                  {t('campaigns.create.targetingInfo')}
+                </p>
+              </div>
+
+              {/* Audiences Section */}
+              {platformAudiences && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-3">
+                    {t('campaigns.create.audiences', 'Audiences')}
+                  </label>
+
+                  {/* Audience Tabs */}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setAudienceTab('custom')}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                        audienceTab === 'custom'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      )}
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Custom ({platformAudiences.custom.length})
+                    </button>
+                    <button
+                      onClick={() => setAudienceTab('lookalike')}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                        audienceTab === 'lookalike'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      )}
+                    >
+                      <UsersRound className="w-4 h-4" />
+                      Lookalike ({platformAudiences.lookalike.length})
+                    </button>
+                    <button
+                      onClick={() => setAudienceTab('saved')}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                        audienceTab === 'saved'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      )}
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      Saved ({platformAudiences.saved.length})
+                    </button>
+                  </div>
+
+                  {/* Custom Audiences */}
+                  {audienceTab === 'custom' && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {platformAudiences.custom.map(audience => (
+                        <label
+                          key={audience.id}
+                          className={cn(
+                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                            formData.custom_audiences.includes(audience.id)
+                              ? 'border-primary bg-primary/5'
+                              : 'border-transparent bg-muted/50 hover:bg-muted'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={formData.custom_audiences.includes(audience.id)}
+                              onChange={() => toggleAudience('custom_audiences', audience.id)}
+                              className="rounded border-muted-foreground"
+                            />
+                            <span className="font-medium text-sm">{audience.name}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)} users</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Lookalike Audiences */}
+                  {audienceTab === 'lookalike' && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {platformAudiences.lookalike.map(audience => (
+                        <label
+                          key={audience.id}
+                          className={cn(
+                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                            formData.lookalike_audiences.includes(audience.id)
+                              ? 'border-primary bg-primary/5'
+                              : 'border-transparent bg-muted/50 hover:bg-muted'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={formData.lookalike_audiences.includes(audience.id)}
+                              onChange={() => toggleAudience('lookalike_audiences', audience.id)}
+                              className="rounded border-muted-foreground"
+                            />
+                            <div>
+                              <span className="font-medium text-sm block">{audience.name}</span>
+                              <span className="text-xs text-muted-foreground">Source: {audience.source}</span>
+                            </div>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Saved Audiences */}
+                  {audienceTab === 'saved' && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {platformAudiences.saved.map(audience => (
+                        <label
+                          key={audience.id}
+                          className={cn(
+                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                            formData.saved_audiences.includes(audience.id)
+                              ? 'border-primary bg-primary/5'
+                              : 'border-transparent bg-muted/50 hover:bg-muted'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={formData.saved_audiences.includes(audience.id)}
+                              onChange={() => toggleAudience('saved_audiences', audience.id)}
+                              className="rounded border-muted-foreground"
+                            />
+                            <div>
+                              <span className="font-medium text-sm block">{audience.name}</span>
+                              <span className="text-xs text-muted-foreground">{audience.description}</span>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Selected audiences count */}
+                  {(formData.custom_audiences.length > 0 || formData.lookalike_audiences.length > 0 || formData.saved_audiences.length > 0) && (
+                    <p className="text-xs text-primary mt-2">
+                      {formData.custom_audiences.length + formData.lookalike_audiences.length + formData.saved_audiences.length} audience(s) selected
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Age Range */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.ageRange')}
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="number"
+                    value={formData.targeting_age_min}
+                    onChange={e => updateFormData('targeting_age_min', e.target.value)}
+                    min="13"
+                    max="100"
+                    className={cn(
+                      'w-24 px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary text-center',
+                      errors.targeting_age_min && 'border-red-500'
+                    )}
+                  />
+                  <span className="text-muted-foreground">to</span>
+                  <input
+                    type="number"
+                    value={formData.targeting_age_max}
+                    onChange={e => updateFormData('targeting_age_max', e.target.value)}
+                    min="13"
+                    max="100"
+                    className={cn(
+                      'w-24 px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary text-center',
+                      errors.targeting_age_max && 'border-red-500'
+                    )}
+                  />
+                  <span className="text-sm text-muted-foreground">{t('campaigns.create.yearsOld')}</span>
+                </div>
+                {(errors.targeting_age_min || errors.targeting_age_max) && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.targeting_age_min || errors.targeting_age_max}
+                  </p>
+                )}
+              </div>
+
+              {/* Gender */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.gender')}
+                </label>
+                <div className="flex gap-3">
+                  {['all', 'male', 'female'].map(gender => (
+                    <button
+                      key={gender}
+                      onClick={() => {
+                        if (gender === 'all') {
+                          updateFormData('targeting_genders', [])
+                        } else {
+                          const current = formData.targeting_genders
+                          if (current.includes(gender)) {
+                            updateFormData('targeting_genders', current.filter(g => g !== gender))
+                          } else {
+                            updateFormData('targeting_genders', [...current, gender])
+                          }
+                        }
+                      }}
+                      className={cn(
+                        'px-4 py-2 rounded-lg text-sm font-medium border transition-all',
+                        (gender === 'all' && formData.targeting_genders.length === 0) ||
+                        formData.targeting_genders.includes(gender)
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-transparent bg-muted hover:bg-muted/80 text-foreground'
+                      )}
+                    >
+                      {t(`campaigns.create.genders.${gender}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Locations */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.locations')}
+                </label>
+                <input
+                  type="text"
+                  value={formData.targeting_locations}
+                  onChange={e => updateFormData('targeting_locations', e.target.value)}
+                  placeholder={t('campaigns.create.locationsPlaceholder')}
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('campaigns.create.locationsHelp')}
+                </p>
+              </div>
+
+              {/* Interests */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('campaigns.create.interests')}
+                </label>
+                <input
+                  type="text"
+                  value={formData.targeting_interests}
+                  onChange={e => updateFormData('targeting_interests', e.target.value)}
+                  placeholder={t('campaigns.create.interestsPlaceholder')}
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('campaigns.create.interestsHelp')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Creatives Step */}
+          {currentStep === 'creatives' && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <ImageIcon className="w-5 h-5 text-green-500" />
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  {t('campaigns.create.creativesInfo', 'Select creatives from your asset library or upload new files. Avoid high-fatigue assets for better performance.')}
+                </p>
+              </div>
+
+              {/* Creative Source Tabs */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCreativesTab('library')}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                    creativesTab === 'library'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80'
+                  )}
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  {t('campaigns.create.fromLibrary', 'From Library')}
+                </button>
+                <button
+                  onClick={() => setCreativesTab('upload')}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                    creativesTab === 'upload'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80'
+                  )}
+                >
+                  <Upload className="w-4 h-4" />
+                  {t('campaigns.create.uploadNew', 'Upload New')}
+                </button>
+              </div>
+
+              {/* Library Selection */}
+              {creativesTab === 'library' && (
+                <div className="space-y-3">
+                  {/* Type Filter */}
+                  <div className="flex gap-2">
+                    {(['all', 'image', 'video'] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => setAssetTypeFilter(type)}
+                        className={cn(
+                          'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                          assetTypeFilter === type
+                            ? 'bg-primary/10 text-primary border border-primary/30'
+                            : 'bg-muted/50 hover:bg-muted'
+                        )}
+                      >
+                        {type === 'all' ? 'All Types' : type === 'image' ? 'Images' : 'Videos'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Asset Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+                    {filteredLibraryAssets.map(asset => {
+                      const isSelected = formData.selected_assets.includes(asset.id)
+                      const isHighFatigue = asset.fatigueScore >= 70
+
+                      return (
+                        <div
+                          key={asset.id}
+                          onClick={() => toggleAsset(asset.id)}
+                          className={cn(
+                            'relative rounded-lg border-2 overflow-hidden cursor-pointer transition-all',
+                            isSelected
+                              ? 'border-primary ring-2 ring-primary/20'
+                              : 'border-transparent hover:border-muted-foreground/30',
+                            isHighFatigue && 'opacity-75'
+                          )}
+                        >
+                          {/* Thumbnail */}
+                          <div className="aspect-video bg-muted">
+                            <img
+                              src={asset.thumbnail}
+                              alt={asset.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          {/* Selection Indicator */}
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+
+                          {/* Type Badge */}
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/50 text-white text-xs flex items-center gap-1">
+                            {asset.type === 'video' ? <Video className="w-3 h-3" /> : <ImageIcon className="w-3 h-3" />}
+                            {asset.dimensions || asset.duration}
+                          </div>
+
+                          {/* High Fatigue Warning */}
+                          {isHighFatigue && (
+                            <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-red-500/90 text-white text-xs flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              High Fatigue
+                            </div>
+                          )}
+
+                          {/* Info */}
+                          <div className="p-2 bg-card">
+                            <p className="text-xs font-medium truncate">{asset.name}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-xs text-muted-foreground">
+                                {(asset.impressions / 1000000).toFixed(1)}M views
+                              </span>
+                              <span className={cn('text-xs font-medium', getFatigueColor(asset.fatigueScore))}>
+                                {asset.fatigueScore}% fatigue
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Selected Count */}
+                  {formData.selected_assets.length > 0 && (
+                    <p className="text-sm text-primary">
+                      {formData.selected_assets.length} asset(s) selected from library
+                    </p>
+                  )}
+
+                  {errors.selected_assets && (
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.selected_assets}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Upload Tab */}
+              {creativesTab === 'upload' && (
+                <div className="space-y-4">
+                  {/* Upload Zone */}
+                  <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Upload className="w-10 h-10 text-muted-foreground mb-3" />
+                    <p className="text-sm font-medium">{t('campaigns.create.dropFiles', 'Drop files here or click to upload')}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t('campaigns.create.supportedFormats', 'Supports JPG, PNG, MP4, MOV up to 100MB')}
+                    </p>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,video/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Uploaded Files Preview */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">{t('campaigns.create.uploadedFiles', 'Uploaded Files')}</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {uploadedFiles.map(file => (
+                          <div key={file.id} className="relative rounded-lg border overflow-hidden group">
+                            <div className="aspect-video bg-muted">
+                              {file.type === 'image' ? (
+                                <img src={file.preview} alt={file.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <video src={file.preview} className="w-full h-full object-cover" />
+                              )}
+                            </div>
+                            <button
+                              onClick={() => removeUploadedFile(file.id)}
+                              className="absolute top-2 right-2 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                            <div className="p-2">
+                              <p className="text-xs truncate">{file.name}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Ad Copy Section */}
+              <div className="pt-4 border-t space-y-4">
+                <h4 className="font-medium">{t('campaigns.create.adCopy', 'Ad Copy')}</h4>
+
+                {/* Headline */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {t('campaigns.create.headline', 'Headline')}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.ad_headline}
+                    onChange={e => updateFormData('ad_headline', e.target.value)}
+                    placeholder={t('campaigns.create.headlinePlaceholder', 'e.g., Limited Time Offer - 50% Off!')}
+                    maxLength={40}
+                    className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground text-right">
+                    {formData.ad_headline.length}/40
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {t('campaigns.create.description', 'Description')}
+                  </label>
+                  <textarea
+                    value={formData.ad_description}
+                    onChange={e => updateFormData('ad_description', e.target.value)}
+                    placeholder={t('campaigns.create.descriptionPlaceholder', 'Describe your offer or product...')}
+                    maxLength={125}
+                    rows={2}
+                    className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground text-right">
+                    {formData.ad_description.length}/125
+                  </p>
+                </div>
+
+                {/* CTA Button */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {t('campaigns.create.callToAction', 'Call to Action')}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {['LEARN_MORE', 'SHOP_NOW', 'SIGN_UP', 'DOWNLOAD', 'BOOK_NOW', 'CONTACT_US', 'GET_OFFER'].map(cta => (
+                      <button
+                        key={cta}
+                        onClick={() => updateFormData('ad_cta', cta)}
+                        className={cn(
+                          'px-3 py-1.5 rounded-lg text-sm font-medium border transition-all',
+                          formData.ad_cta === cta
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-transparent bg-muted hover:bg-muted/80'
+                        )}
+                      >
+                        {cta.replace(/_/g, ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Destination URL */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {t('campaigns.create.destinationUrl', 'Destination URL')} *
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.destination_url}
+                    onChange={e => updateFormData('destination_url', e.target.value)}
+                    placeholder="https://example.com/landing-page"
+                    className={cn(
+                      'w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
+                      errors.destination_url && 'border-red-500'
+                    )}
+                  />
+                  {errors.destination_url && (
+                    <p className="mt-1 text-sm text-red-500">{errors.destination_url}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Submit Error */}
+          {submitError && (
+            <div className="mt-4 flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600">
+              <AlertCircle className="w-5 h-5" />
+              <span>{submitError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between p-6 border-t bg-muted/30">
+          <button
+            onClick={currentStepIndex === 0 ? handleClose : handleBack}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            {currentStepIndex === 0 ? t('common.cancel') : t('common.back')}
+          </button>
+
+          {currentStepIndex < STEPS.length - 1 ? (
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-2 px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              {t('common.next')}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('campaigns.create.creating')}
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  {t('campaigns.create.createCampaign')}
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default CampaignCreateModal

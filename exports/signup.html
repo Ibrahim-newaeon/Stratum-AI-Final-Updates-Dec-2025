@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Stratum AI</title>
+  <meta name="description" content="Create your Stratum AI account and start your 14-day free trial. No credit card required.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#0ea5e9',
+              foreground: '#ffffff',
+            },
+          },
+        },
+      },
+    }
+  </script>
+
+  <style>
+    .bg-gradient-stratum {
+      background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+    }
+    .text-gradient-stratum {
+      background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .shadow-glow {
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+    }
+    .shadow-glow-lg {
+      box-shadow: 0 0 40px rgba(14, 165, 233, 0.4);
+    }
+    /* Dark mode overrides */
+    .dark .bg-background { background-color: #0f172a; }
+    .dark .text-foreground { color: #f8fafc; }
+    .dark .text-muted-foreground { color: #94a3b8; }
+    .dark .border { border-color: #334155; }
+    .dark .bg-card { background-color: #1e293b; }
+    .dark input { background-color: #1e293b; color: #f8fafc; border-color: #334155; }
+    .dark input::placeholder { color: #64748b; }
+    .dark .hover\:bg-muted:hover { background-color: #334155; }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+  <div class="min-h-screen flex">
+    <!-- Left side - Branding -->
+    <div class="hidden lg:flex lg:w-1/2 bg-gradient-stratum relative overflow-hidden">
+      <div class="absolute inset-0 bg-black/20"></div>
+      <div class="relative z-10 flex flex-col justify-between p-12 text-white">
+        <div>
+          <a href="landing-page.html" class="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+            <div class="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center shadow-glow">
+              <span class="text-white font-bold text-2xl">S</span>
+            </div>
+            <span class="text-3xl font-bold">Stratum AI</span>
+          </a>
+          <h1 class="text-4xl font-bold mb-4 leading-tight">
+            Start Your Free Trial
+            <br>
+            Today
+          </h1>
+          <p class="text-lg text-white/80 max-w-md">
+            Join thousands of marketing teams using Stratum AI to maximize their advertising ROI across all platforms.
+          </p>
+        </div>
+
+        <div class="space-y-6">
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/80">Unified analytics across 5+ platforms</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/80">AI-powered budget optimization</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/80">Automated campaign rules</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-white/80">Real-time competitor insights</span>
+            </div>
+          </div>
+
+          <p class="text-sm text-white/60">
+            No credit card required. 14-day free trial.
+          </p>
+        </div>
+
+        <!-- Decorative elements -->
+        <div class="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/5 blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-20 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
+      </div>
+    </div>
+
+    <!-- Right side - Sign Up Form -->
+    <div class="flex-1 flex items-center justify-center p-8 bg-white dark:bg-slate-900 overflow-y-auto">
+      <div class="w-full max-w-md">
+        <!-- Mobile logo -->
+        <div class="lg:hidden flex items-center justify-center gap-2 mb-8">
+          <a href="landing-page.html" class="flex items-center gap-2">
+            <div class="h-10 w-10 rounded-lg bg-gradient-stratum flex items-center justify-center shadow-glow">
+              <span class="text-white font-bold text-xl">S</span>
+            </div>
+            <span class="text-2xl font-bold text-gradient-stratum">Stratum AI</span>
+          </a>
+        </div>
+
+        <!-- Dark mode toggle -->
+        <div class="flex justify-end mb-4">
+          <button id="theme-toggle" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
+        </div>
+
+        <a href="landing-page.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white mb-6 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to home
+        </a>
+
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-2">Create your account</h2>
+          <p class="text-slate-500 dark:text-slate-400">
+            Already have an account?
+            <a href="login.html" class="text-sky-500 hover:underline ml-1">Sign in</a>
+          </p>
+        </div>
+
+        <form id="signup-form" class="space-y-5">
+          <!-- Error message (hidden by default) -->
+          <div id="error-message" class="hidden items-center gap-2 p-3 rounded-lg bg-red-500/10 text-red-500 text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="error-text"></span>
+          </div>
+
+          <!-- Company name -->
+          <div class="space-y-2">
+            <label for="company_name" class="text-sm font-medium">Company Name</label>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+              <input
+                id="company_name"
+                name="company_name"
+                type="text"
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                placeholder="Acme Inc."
+                required
+              >
+            </div>
+          </div>
+
+          <!-- Full name -->
+          <div class="space-y-2">
+            <label for="full_name" class="text-sm font-medium">Your Full Name</label>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              <input
+                id="full_name"
+                name="full_name"
+                type="text"
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                placeholder="John Doe"
+                required
+              >
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="space-y-2">
+            <label for="email" class="text-sm font-medium">Work Email</label>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+              </svg>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                placeholder="john@yourcompany.com"
+                required
+              >
+            </div>
+            <p id="email-hint" class="text-xs text-slate-500 dark:text-slate-400">
+              Please use your company email. Personal emails (Gmail, Yahoo, etc.) are not accepted.
+            </p>
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-2">
+            <label for="password" class="text-sm font-medium">Password</label>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                class="w-full pl-10 pr-12 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                placeholder="Create a strong password"
+                required
+              >
+              <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <svg id="eye-off-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Password requirements -->
+            <div id="password-requirements" class="grid grid-cols-2 gap-2 mt-2">
+              <div class="req flex items-center gap-1 text-xs text-slate-400" data-req="length">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                At least 8 characters
+              </div>
+              <div class="req flex items-center gap-1 text-xs text-slate-400" data-req="uppercase">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                One uppercase letter
+              </div>
+              <div class="req flex items-center gap-1 text-xs text-slate-400" data-req="lowercase">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                One lowercase letter
+              </div>
+              <div class="req flex items-center gap-1 text-xs text-slate-400" data-req="number">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                One number
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="space-y-2">
+            <label for="confirmPassword" class="text-sm font-medium">Confirm Password</label>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                placeholder="Confirm your password"
+                required
+              >
+            </div>
+            <p id="password-match" class="text-xs hidden"></p>
+          </div>
+
+          <!-- Terms agreement -->
+          <div class="flex items-start gap-2">
+            <input id="terms" type="checkbox" class="mt-1 w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500">
+            <label for="terms" class="text-sm text-slate-500 dark:text-slate-400">
+              I agree to the
+              <a href="#" class="text-sky-500 hover:underline">Terms of Service</a>
+              and
+              <a href="#" class="text-sky-500 hover:underline">Privacy Policy</a>
+            </label>
+          </div>
+
+          <!-- Submit button -->
+          <button
+            type="submit"
+            id="submit-btn"
+            disabled
+            class="w-full py-3 rounded-lg font-semibold text-white bg-gradient-stratum shadow-glow hover:shadow-glow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            Create Account
+          </button>
+        </form>
+
+        <!-- Footer -->
+        <p class="text-center text-xs text-slate-500 dark:text-slate-400 mt-8">
+          By signing up, you agree to receive marketing communications from Stratum AI.
+          You can unsubscribe at any time.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      html.classList.add('dark');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    // Password visibility toggle
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const eyeIcon = document.getElementById('eye-icon');
+    const eyeOffIcon = document.getElementById('eye-off-icon');
+
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      confirmPasswordInput.setAttribute('type', type);
+      eyeIcon.classList.toggle('hidden');
+      eyeOffIcon.classList.toggle('hidden');
+    });
+
+    // Form validation
+    const form = document.getElementById('signup-form');
+    const emailInput = document.getElementById('email');
+    const emailHint = document.getElementById('email-hint');
+    const termsCheckbox = document.getElementById('terms');
+    const submitBtn = document.getElementById('submit-btn');
+    const passwordMatch = document.getElementById('password-match');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+
+    // Blocked email domains
+    const blockedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'mail.com', 'protonmail.com'];
+
+    // Password requirements
+    const requirements = {
+      length: (p) => p.length >= 8,
+      uppercase: (p) => /[A-Z]/.test(p),
+      lowercase: (p) => /[a-z]/.test(p),
+      number: (p) => /\d/.test(p)
+    };
+
+    function validateEmail() {
+      const email = emailInput.value;
+      const domain = email.split('@')[1]?.toLowerCase();
+      const isBlocked = blockedDomains.includes(domain);
+
+      if (email && isBlocked) {
+        emailHint.textContent = 'Personal emails are not accepted. Please use your work email.';
+        emailHint.classList.remove('text-slate-500', 'dark:text-slate-400');
+        emailHint.classList.add('text-red-500');
+        return false;
+      } else {
+        emailHint.textContent = 'Please use your company email. Personal emails (Gmail, Yahoo, etc.) are not accepted.';
+        emailHint.classList.add('text-slate-500', 'dark:text-slate-400');
+        emailHint.classList.remove('text-red-500');
+        return true;
+      }
+    }
+
+    function validatePassword() {
+      const password = passwordInput.value;
+      let allMet = true;
+
+      Object.keys(requirements).forEach(req => {
+        const el = document.querySelector(`[data-req="${req}"]`);
+        const met = requirements[req](password);
+        if (met) {
+          el.classList.remove('text-slate-400');
+          el.classList.add('text-green-500');
+        } else {
+          el.classList.add('text-slate-400');
+          el.classList.remove('text-green-500');
+          allMet = false;
+        }
+      });
+
+      return allMet;
+    }
+
+    function validatePasswordMatch() {
+      const password = passwordInput.value;
+      const confirm = confirmPasswordInput.value;
+
+      if (confirm) {
+        passwordMatch.classList.remove('hidden');
+        if (password === confirm) {
+          passwordMatch.textContent = 'Passwords match';
+          passwordMatch.classList.remove('text-red-500');
+          passwordMatch.classList.add('text-green-500');
+          return true;
+        } else {
+          passwordMatch.textContent = 'Passwords do not match';
+          passwordMatch.classList.add('text-red-500');
+          passwordMatch.classList.remove('text-green-500');
+          return false;
+        }
+      } else {
+        passwordMatch.classList.add('hidden');
+        return false;
+      }
+    }
+
+    function validateForm() {
+      const isEmailValid = validateEmail();
+      const isPasswordValid = validatePassword();
+      const doPasswordsMatch = validatePasswordMatch();
+      const termsAccepted = termsCheckbox.checked;
+
+      const companyName = document.getElementById('company_name').value;
+      const fullName = document.getElementById('full_name').value;
+      const email = emailInput.value;
+
+      const allFieldsFilled = companyName && fullName && email && passwordInput.value && confirmPasswordInput.value;
+
+      submitBtn.disabled = !(allFieldsFilled && isEmailValid && isPasswordValid && doPasswordsMatch && termsAccepted);
+    }
+
+    // Event listeners
+    emailInput.addEventListener('input', validateForm);
+    passwordInput.addEventListener('input', validateForm);
+    confirmPasswordInput.addEventListener('input', validateForm);
+    termsCheckbox.addEventListener('change', validateForm);
+    document.getElementById('company_name').addEventListener('input', validateForm);
+    document.getElementById('full_name').addEventListener('input', validateForm);
+
+    // Form submission
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // For demo purposes
+      alert('Account created successfully! Redirecting to platform setup...');
+      // window.location.href = '/setup';
+    });
+  </script>
+
+</body>
+</html>

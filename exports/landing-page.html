@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratum AI - Unified Marketing Intelligence Platform</title>
+  <meta name="description" content="Stratum AI consolidates Meta, Google, TikTok, Snapchat, and LinkedIn into one intelligent platform. Get AI-powered predictions, automated optimization, and real-time insights.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#0ea5e9',
+              foreground: '#ffffff',
+            },
+            background: '#ffffff',
+            foreground: '#0f172a',
+            muted: {
+              DEFAULT: '#f1f5f9',
+              foreground: '#64748b',
+            },
+            border: '#e2e8f0',
+          },
+        },
+      },
+    }
+  </script>
+
+  <style>
+    /* Custom gradient for Stratum branding */
+    .bg-gradient-stratum {
+      background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+    }
+
+    .text-gradient-stratum {
+      background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .shadow-glow {
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+    }
+
+    .shadow-glow-lg {
+      box-shadow: 0 0 40px rgba(14, 165, 233, 0.4);
+    }
+
+    /* Smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* CMS Editable sections marked with data attributes */
+    [data-cms-editable] {
+      /* Styles for CMS editable regions */
+    }
+
+    /* Dark mode styles */
+    .dark body { background-color: #0f172a; color: #f8fafc; }
+    .dark .bg-white { background-color: #0f172a; }
+    .dark .bg-slate-50 { background-color: #1e293b; }
+    .dark .bg-background { background-color: #0f172a; }
+    .dark .bg-card, .dark .bg-background { background-color: #1e293b; }
+    .dark .text-slate-900 { color: #f8fafc; }
+    .dark .text-slate-700 { color: #e2e8f0; }
+    .dark .text-slate-500 { color: #94a3b8; }
+    .dark .border-slate-200 { border-color: #334155; }
+    .dark .hover\:bg-slate-100:hover { background-color: #334155; }
+    .dark .hover\:bg-slate-200:hover { background-color: #475569; }
+  </style>
+</head>
+<body class="min-h-screen bg-white dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 antialiased">
+
+  <!-- ============================================ -->
+  <!-- NAVIGATION -->
+  <!-- ============================================ -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200" data-cms-editable="navigation">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-2" data-cms-editable="logo">
+          <div class="h-9 w-9 rounded-lg bg-gradient-stratum flex items-center justify-center shadow-glow">
+            <span class="text-white font-bold text-lg">S</span>
+          </div>
+          <span class="text-xl font-bold text-gradient-stratum">Stratum AI</span>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="hidden md:flex items-center gap-8" data-cms-editable="nav-links">
+          <a href="#features" class="text-sm text-slate-500 hover:text-slate-900 transition-colors">Features</a>
+          <a href="#platforms" class="text-sm text-slate-500 hover:text-slate-900 transition-colors">Platforms</a>
+          <a href="#pricing" class="text-sm text-slate-500 hover:text-slate-900 transition-colors">Pricing</a>
+          <a href="#testimonials" class="text-sm text-slate-500 hover:text-slate-900 transition-colors">Testimonials</a>
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="flex items-center gap-3" data-cms-editable="nav-cta">
+          <!-- Dark mode toggle -->
+          <button id="theme-toggle" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
+          <a href="login.html" class="px-4 py-2 text-sm font-medium text-slate-900 dark:text-white hover:text-sky-500 transition-colors">Login</a>
+          <a href="signup.html" class="px-4 py-2 text-sm font-medium text-white bg-gradient-stratum rounded-lg shadow-glow hover:shadow-glow-lg transition-all">Start Free</a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="md:hidden p-2 rounded-lg hover:bg-slate-100" id="mobile-menu-btn">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================ -->
+  <!-- HERO SECTION -->
+  <!-- ============================================ -->
+  <section class="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden" data-cms-editable="hero">
+    <!-- Background Effects -->
+    <div class="absolute inset-0 bg-gradient-to-b from-sky-500/5 to-transparent"></div>
+    <div class="absolute top-20 left-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+    <div class="max-w-7xl mx-auto relative">
+      <div class="text-center max-w-4xl mx-auto">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 text-sky-500 text-sm font-medium mb-6" data-cms-editable="hero-badge">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+          </svg>
+          <span>AI-Powered Marketing Intelligence</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight" data-cms-editable="hero-headline">
+          Unify Your Ad Platforms.<br>
+          <span class="text-gradient-stratum">Amplify Your Results.</span>
+        </h1>
+
+        <!-- Subheadline -->
+        <p class="text-lg sm:text-xl text-slate-500 mb-8 max-w-2xl mx-auto" data-cms-editable="hero-subheadline">
+          Stratum AI consolidates Meta, Google, TikTok, Snapchat, and LinkedIn into one intelligent platform.
+          Get AI-powered predictions, automated optimization, and real-time insights.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12" data-cms-editable="hero-cta">
+          <a href="signup.html" class="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-white bg-gradient-stratum rounded-xl shadow-glow hover:shadow-glow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
+            Start Free Trial
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </a>
+          <a href="#features" class="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-slate-900 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+            See How It Works
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto" data-cms-editable="hero-stats">
+          <div class="text-center">
+            <div class="text-3xl sm:text-4xl font-bold text-gradient-stratum">50%</div>
+            <div class="text-sm text-slate-500 mt-1">Time Saved on Reporting</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl sm:text-4xl font-bold text-gradient-stratum">32%</div>
+            <div class="text-sm text-slate-500 mt-1">Average ROAS Improvement</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl sm:text-4xl font-bold text-gradient-stratum">5+</div>
+            <div class="text-sm text-slate-500 mt-1">Platforms Unified</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl sm:text-4xl font-bold text-gradient-stratum">24/7</div>
+            <div class="text-sm text-slate-500 mt-1">Automated Monitoring</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- PLATFORMS SECTION -->
+  <!-- ============================================ -->
+  <section id="platforms" class="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50" data-cms-editable="platforms">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4" data-cms-editable="platforms-headline">
+          All Your Ad Platforms, One Dashboard
+        </h2>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto" data-cms-editable="platforms-subheadline">
+          Stop switching between platforms. Stratum AI unifies your data from all major advertising channels.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-6" data-cms-editable="platforms-list">
+        <!-- Meta -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            <svg viewBox="0 0 36 36" class="w-8 h-8">
+              <defs>
+                <linearGradient id="metaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0668E1"/>
+                  <stop offset="50%" stop-color="#0080FB"/>
+                  <stop offset="100%" stop-color="#00C6FF"/>
+                </linearGradient>
+              </defs>
+              <path fill="url(#metaGradient)" d="M8.5 6C5.5 6 3 8.5 3 12c0 3.5 2.5 8 5.5 12 3 4 6 7 8.5 7s5.5-3 8.5-7c3-4 5.5-8.5 5.5-12 0-3.5-2.5-6-5.5-6-3 0-5.5 3-8.5 7-3-4-5.5-7-8.5-7zm0 3c2 0 4 2 6.5 5.5.5.7 1 1.4 1.5 2.1l.5.7.5-.7c.5-.7 1-1.4 1.5-2.1C21 11 23 9 25 9c1.5 0 3 1.5 3 3.5 0 2.5-2 6-4.5 9.5-2.5 3.5-5 6-6.5 6s-4-2.5-6.5-6c-2.5-3.5-4.5-7-4.5-9.5 0-2 1.5-3.5 3-3.5z"/>
+            </svg>
+          </div>
+          <span class="font-semibold text-lg">Meta</span>
+        </div>
+
+        <!-- Google -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            <svg viewBox="0 0 48 48" class="w-8 h-8">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+            </svg>
+          </div>
+          <span class="font-semibold text-lg">Google</span>
+        </div>
+
+        <!-- TikTok -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            <svg viewBox="0 0 48 48" class="w-8 h-8">
+              <path fill="#00f2ea" d="M38.377,13.338c-2.099-1.47-3.577-3.704-4.025-6.299C34.275,6.604,34.225,6.177,34.198,5.75h-7.186l-0.009,26.926c-0.108,3.104-2.662,5.587-5.796,5.587c-1.053,0-2.046-0.276-2.899-0.766c-1.578-0.906-2.644-2.565-2.739-4.487c-0.151-3.073,2.199-5.672,5.253-5.811c0.324-0.015,0.645,0.009,0.961,0.06V19.97c-0.325-0.039-0.654-0.069-0.99-0.069c-6.867,0-12.433,5.519-12.505,12.369c-0.043,4.053,1.874,7.672,4.913,10.034c1.874,1.455,4.216,2.323,6.779,2.323c6.853,0,12.434-5.569,12.505-12.414l-0.047-13.377c2.692,1.919,5.981,3.042,9.52,3.042V14.594c-0.653,0-1.29-0.063-1.91-0.181C39.635,14.16,39.002,13.776,38.377,13.338z"/>
+              <path fill="#ff004f" d="M38.377,13.338c-2.099-1.47-3.577-3.704-4.025-6.299C34.275,6.604,34.225,6.177,34.198,5.75h-7.186l-0.009,26.926c-0.108,3.104-2.662,5.587-5.796,5.587c-1.053,0-2.046-0.276-2.899-0.766c-1.578-0.906-2.644-2.565-2.739-4.487c-0.151-3.073,2.199-5.672,5.253-5.811c0.324-0.015,0.645,0.009,0.961,0.06V19.97c-0.325-0.039-0.654-0.069-0.99-0.069c-6.867,0-12.433,5.519-12.505,12.369c-0.043,4.053,1.874,7.672,4.913,10.034c1.874,1.455,4.216,2.323,6.779,2.323c6.853,0,12.434-5.569,12.505-12.414l-0.047-13.377c2.692,1.919,5.981,3.042,9.52,3.042V14.594c-0.653,0-1.29-0.063-1.91-0.181C39.635,14.16,39.002,13.776,38.377,13.338z" opacity=".5"/>
+            </svg>
+          </div>
+          <span class="font-semibold text-lg">TikTok</span>
+        </div>
+
+        <!-- Snapchat -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            <svg viewBox="0 0 48 48" class="w-8 h-8">
+              <path fill="#FFFC00" d="M24,4C12.954,4,4,12.954,4,24s8.954,20,20,20s20-8.954,20-20S35.046,4,24,4z"/>
+              <path fill="#000" d="M35.7,28.3c-3.1-0.5-4.5-3.8-4.6-4c-0.1-0.2-0.2-0.3-0.2-0.5c0-0.4,0.3-0.6,0.8-0.8c0.2-0.1,0.5-0.2,0.8-0.3c0.8-0.3,1.4-0.6,1.4-1.2c0-0.5-0.4-0.9-1-0.9c-0.2,0-0.4,0.1-0.6,0.2c-0.3,0.1-0.6,0.3-1,0.3c-0.3,0-0.5-0.1-0.6-0.2c0.1-0.8,0.2-1.8,0.3-2.8c0.1-2.9-0.5-7.1-6.9-7.1c-6.4,0-7,4.2-6.9,7.1c0,1,0.2,2,0.3,2.8c-0.1,0.1-0.3,0.2-0.6,0.2c-0.4,0-0.7-0.2-1-0.3c-0.2-0.1-0.4-0.2-0.6-0.2c-0.6,0-1,0.4-1,0.9c0,0.6,0.6,0.9,1.4,1.2c0.3,0.1,0.6,0.2,0.8,0.3c0.5,0.2,0.8,0.4,0.8,0.8c0,0.1-0.1,0.3-0.2,0.5c-0.1,0.2-1.5,3.5-4.6,4c-0.5,0.1-0.8,0.5-0.7,1c0.1,0.5,0.6,0.9,1.7,1c0.7,0.1,1.1,0.2,1.2,0.7c0,0.2,0.1,0.4,0.2,0.6c0.2,0.3,0.5,0.5,0.9,0.5c0.4,0,0.9-0.1,1.5-0.3c0.9-0.3,2-0.6,3.5-0.1c0.8,0.3,1.5,0.9,2.3,1.5c1.1,0.9,2.4,2,4.2,2c0.1,0,0.1,0,0.2,0c0.1,0,0.1,0,0.2,0c1.8,0,3.1-1.1,4.2-2c0.8-0.7,1.5-1.2,2.3-1.5c1.5-0.5,2.6-0.2,3.5,0.1c0.6,0.2,1.1,0.3,1.5,0.3c0.4,0,0.7-0.2,0.9-0.5c0.1-0.2,0.1-0.4,0.2-0.6c0.1-0.5,0.5-0.6,1.2-0.7c1.1-0.1,1.6-0.5,1.7-1C36.5,28.8,36.2,28.4,35.7,28.3z"/>
+            </svg>
+          </div>
+          <span class="font-semibold text-lg">Snapchat</span>
+        </div>
+
+        <!-- LinkedIn -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            <svg viewBox="0 0 48 48" class="w-8 h-8">
+              <path fill="#0077B5" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"/>
+              <path fill="#fff" d="M12 19H17V36H12zM14.485 17h-.028C12.965 17 12 15.888 12 14.499 12 13.08 12.995 12 14.514 12c1.521 0 2.458 1.08 2.486 2.499C17 15.887 16.035 17 14.485 17zM36 36h-5v-9.099c0-2.198-1.225-3.698-3.192-3.698-1.501 0-2.313 1.012-2.707 1.99C24.957 25.543 25 26.511 25 27v9h-5V19h5v2.616C25.721 20.5 26.85 19 29.738 19c3.578 0 6.261 2.25 6.261 7.274L36 36 36 36z"/>
+            </svg>
+          </div>
+          <span class="font-semibold text-lg">LinkedIn</span>
+        </div>
+
+        <!-- X (Twitter) -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            <svg viewBox="0 0 24 24" class="w-8 h-8">
+              <path fill="#000" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </div>
+          <span class="font-semibold text-lg">X (Twitter)</span>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+            <svg viewBox="0 0 48 48" class="w-8 h-8">
+              <path fill="#25D366" d="M24,4C12.954,4,4,12.954,4,24c0,3.807,1.078,7.363,2.942,10.397L4.104,43.6c-0.153,0.506,0.311,0.97,0.817,0.817l9.203-2.838C17.031,42.922,20.387,44,24,44c11.046,0,20-8.954,20-20S35.046,4,24,4z"/>
+              <path fill="#fff" d="M34.6,29.7c-0.5-0.2-2.8-1.4-3.2-1.5c-0.4-0.2-0.7-0.2-1,0.2c-0.3,0.4-1.2,1.5-1.5,1.8c-0.3,0.3-0.5,0.4-1,0.1c-0.5-0.2-2-0.7-3.8-2.3c-1.4-1.2-2.4-2.8-2.6-3.2c-0.3-0.5,0-0.7,0.2-0.9c0.2-0.2,0.5-0.5,0.7-0.8c0.2-0.2,0.3-0.4,0.5-0.7c0.2-0.3,0.1-0.6,0-0.8c-0.1-0.2-1-2.4-1.4-3.3c-0.4-0.9-0.7-0.8-1-0.8c-0.3,0-0.6,0-0.9,0c-0.3,0-0.8,0.1-1.3,0.6c-0.4,0.5-1.6,1.6-1.6,3.8c0,2.2,1.6,4.4,1.9,4.7c0.2,0.3,3.2,5,7.8,7c1.1,0.5,1.9,0.8,2.6,1c1.1,0.3,2.1,0.3,2.8,0.2c0.9-0.1,2.8-1.1,3.2-2.2c0.4-1.1,0.4-2.1,0.3-2.3C35.3,30,35,29.9,34.6,29.7z"/>
+            </svg>
+          </div>
+          <span class="font-semibold text-lg">WhatsApp</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- FEATURES SECTION -->
+  <!-- ============================================ -->
+  <section id="features" class="py-20 px-4 sm:px-6 lg:px-8" data-cms-editable="features">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4" data-cms-editable="features-headline">
+          Everything You Need to Dominate Digital Advertising
+        </h2>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto" data-cms-editable="features-subheadline">
+          From AI predictions to automated optimization, Stratum AI gives you the tools to maximize ROAS.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" data-cms-editable="features-list">
+        <!-- Feature 1: AI-Powered Intelligence -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all group">
+          <div class="w-12 h-12 rounded-xl bg-gradient-stratum flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">AI-Powered Intelligence</h3>
+          <p class="text-slate-500">Machine learning models predict ROAS, optimize budgets, and identify growth opportunities automatically.</p>
+        </div>
+
+        <!-- Feature 2: Unified Multi-Platform -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all group">
+          <div class="w-12 h-12 rounded-xl bg-gradient-stratum flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Unified Multi-Platform</h3>
+          <p class="text-slate-500">Connect Meta, Google, TikTok, Snapchat, and LinkedIn in one dashboard. No more platform switching.</p>
+        </div>
+
+        <!-- Feature 3: Smart Automation -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all group">
+          <div class="w-12 h-12 rounded-xl bg-gradient-stratum flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Smart Automation</h3>
+          <p class="text-slate-500">IFTTT-style rules that pause underperformers, reallocate budgets, and send alerts automatically.</p>
+        </div>
+
+        <!-- Feature 4: Competitor Intelligence -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all group">
+          <div class="w-12 h-12 rounded-xl bg-gradient-stratum flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Competitor Intelligence</h3>
+          <p class="text-slate-500">Track competitors, benchmark performance, and identify market opportunities in real-time.</p>
+        </div>
+
+        <!-- Feature 5: Real-Time Analytics -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all group">
+          <div class="w-12 h-12 rounded-xl bg-gradient-stratum flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Real-Time Analytics</h3>
+          <p class="text-slate-500">Live dashboards with KPIs, trends, and custom reports. Make decisions with confidence.</p>
+        </div>
+
+        <!-- Feature 6: GDPR Compliant -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:border-sky-300 hover:shadow-lg transition-all group">
+          <div class="w-12 h-12 rounded-xl bg-gradient-stratum flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">GDPR Compliant</h3>
+          <p class="text-slate-500">Enterprise-grade security with PII encryption, audit trails, and data export capabilities.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- HOW IT WORKS SECTION -->
+  <!-- ============================================ -->
+  <section class="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50" data-cms-editable="how-it-works">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4" data-cms-editable="how-it-works-headline">
+          Get Started in Minutes
+        </h2>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto" data-cms-editable="how-it-works-subheadline">
+          Three simple steps to transform your marketing performance.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8" data-cms-editable="how-it-works-steps">
+        <!-- Step 1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-stratum flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <span class="text-white font-bold text-2xl">1</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Connect Your Platforms</h3>
+          <p class="text-slate-500">Link your Meta, Google, TikTok, Snapchat, and LinkedIn accounts in seconds.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-stratum flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <span class="text-white font-bold text-2xl">2</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Let AI Analyze</h3>
+          <p class="text-slate-500">Our ML models process your data to find optimization opportunities.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-stratum flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <span class="text-white font-bold text-2xl">3</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Watch Results Grow</h3>
+          <p class="text-slate-500">Automated rules and AI recommendations boost your ROAS continuously.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- PRICING SECTION -->
+  <!-- ============================================ -->
+  <section id="pricing" class="py-20 px-4 sm:px-6 lg:px-8" data-cms-editable="pricing">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4" data-cms-editable="pricing-headline">
+          Simple, Transparent Pricing
+        </h2>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto" data-cms-editable="pricing-subheadline">
+          Start free, upgrade when you're ready. No hidden fees.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto" data-cms-editable="pricing-plans">
+        <!-- Starter Plan -->
+        <div class="relative p-8 bg-white rounded-2xl border-2 border-slate-200">
+          <h3 class="text-2xl font-bold mb-2">Starter</h3>
+          <div class="mb-4">
+            <span class="text-4xl font-bold">$49</span>
+            <span class="text-slate-500">/per month</span>
+          </div>
+          <p class="text-slate-500 mb-6">For small teams getting started</p>
+
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>5 team members</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>25 campaigns</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>2 ad platforms</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>10 automation rules</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Basic AI predictions</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>90-day data retention</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Email support</span>
+            </li>
+          </ul>
+
+          <a href="signup.html" class="block w-full py-3 text-center font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">
+            Start 14-Day Free Trial
+          </a>
+        </div>
+
+        <!-- Professional Plan (Popular) -->
+        <div class="relative p-8 bg-white rounded-2xl border-2 border-sky-500 shadow-glow">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-stratum text-white text-sm font-medium rounded-full">
+            Most Popular
+          </div>
+
+          <h3 class="text-2xl font-bold mb-2">Professional</h3>
+          <div class="mb-4">
+            <span class="text-4xl font-bold">$199</span>
+            <span class="text-slate-500">/per month</span>
+          </div>
+          <p class="text-slate-500 mb-6">For growing marketing teams</p>
+
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>15 team members</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>100 campaigns</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>5 ad platforms</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>50 automation rules</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Advanced AI predictions</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>20 competitor tracking</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>1-year data retention</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>API access</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Priority support</span>
+            </li>
+          </ul>
+
+          <a href="signup.html" class="block w-full py-3 text-center font-semibold rounded-lg bg-gradient-stratum text-white shadow-glow hover:shadow-glow-lg transition-all">
+            Start 14-Day Free Trial
+          </a>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="relative p-8 bg-white rounded-2xl border-2 border-slate-200">
+          <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
+          <div class="mb-4">
+            <span class="text-4xl font-bold">Custom</span>
+            <span class="text-slate-500">/contact us</span>
+          </div>
+          <p class="text-slate-500 mb-6">For large organizations</p>
+
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Unlimited team members</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Unlimited campaigns</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>All ad platforms</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Unlimited automation</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Full AI capabilities</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Unlimited competitors</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Unlimited data retention</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>White-label option</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Dedicated success manager</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>SLA guarantee</span>
+            </li>
+          </ul>
+
+          <a href="signup.html" class="block w-full py-3 text-center font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">
+            Contact Sales
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- TESTIMONIALS SECTION -->
+  <!-- ============================================ -->
+  <section id="testimonials" class="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50" data-cms-editable="testimonials">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4" data-cms-editable="testimonials-headline">
+          Trusted by Marketing Teams Worldwide
+        </h2>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto" data-cms-editable="testimonials-subheadline">
+          See what our customers have to say about Stratum AI.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8" data-cms-editable="testimonials-list">
+        <!-- Testimonial 1 -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200">
+          <div class="flex gap-1 mb-4">
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+          </div>
+          <p class="text-slate-700 mb-4 italic">"Stratum AI transformed how we manage ads. We cut reporting time by 60% and improved ROAS by 40%."</p>
+          <div>
+            <div class="font-semibold">Sarah Chen</div>
+            <div class="text-sm text-slate-500">Head of Performance Marketing, TechScale Inc.</div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200">
+          <div class="flex gap-1 mb-4">
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+          </div>
+          <p class="text-slate-700 mb-4 italic">"The AI predictions are incredibly accurate. It's like having a data scientist on the team 24/7."</p>
+          <div>
+            <div class="font-semibold">Michael Torres</div>
+            <div class="text-sm text-slate-500">Digital Marketing Director, GrowthBox</div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-200">
+          <div class="flex gap-1 mb-4">
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+          </div>
+          <p class="text-slate-700 mb-4 italic">"Finally, one platform for all our ad channels. The automation rules alone saved us 20 hours per week."</p>
+          <div>
+            <div class="font-semibold">Emma Williams</div>
+            <div class="text-sm text-slate-500">CMO, Velocity Commerce</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- CTA SECTION -->
+  <!-- ============================================ -->
+  <section class="py-20 px-4 sm:px-6 lg:px-8" data-cms-editable="cta">
+    <div class="max-w-4xl mx-auto">
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-stratum p-12 text-center text-white">
+        <div class="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+
+        <div class="relative">
+          <h2 class="text-3xl sm:text-4xl font-bold mb-4" data-cms-editable="cta-headline">
+            Ready to Transform Your Marketing?
+          </h2>
+          <p class="text-lg text-white/80 mb-8 max-w-xl mx-auto" data-cms-editable="cta-subheadline">
+            Join thousands of marketing teams using Stratum AI to maximize their advertising ROI.
+          </p>
+          <a href="signup.html" class="inline-flex items-center gap-2 px-8 py-4 bg-white text-sky-500 font-semibold rounded-xl hover:bg-white/90 transition-colors" data-cms-editable="cta-button">
+            Start Your Free Trial
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </a>
+          <p class="text-sm text-white/60 mt-4">No credit card required. 14-day free trial.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================ -->
+  <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-200" data-cms-editable="footer">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <!-- Brand -->
+        <div data-cms-editable="footer-brand">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="h-9 w-9 rounded-lg bg-gradient-stratum flex items-center justify-center">
+              <span class="text-white font-bold text-lg">S</span>
+            </div>
+            <span class="text-xl font-bold">Stratum AI</span>
+          </div>
+          <p class="text-sm text-slate-500">
+            The unified marketing intelligence platform for modern teams.
+          </p>
+        </div>
+
+        <!-- Product Links -->
+        <div data-cms-editable="footer-product">
+          <h4 class="font-semibold mb-4">Product</h4>
+          <ul class="space-y-2 text-sm text-slate-500">
+            <li><a href="#features" class="hover:text-slate-900 transition-colors">Features</a></li>
+            <li><a href="#pricing" class="hover:text-slate-900 transition-colors">Pricing</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">Integrations</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">API</a></li>
+          </ul>
+        </div>
+
+        <!-- Company Links -->
+        <div data-cms-editable="footer-company">
+          <h4 class="font-semibold mb-4">Company</h4>
+          <ul class="space-y-2 text-sm text-slate-500">
+            <li><a href="#" class="hover:text-slate-900 transition-colors">About</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">Blog</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal Links -->
+        <div data-cms-editable="footer-legal">
+          <h4 class="font-semibold mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm text-slate-500">
+            <li><a href="#" class="hover:text-slate-900 transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">Terms of Service</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">Cookie Policy</a></li>
+            <li><a href="#" class="hover:text-slate-900 transition-colors">GDPR</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-8 border-t border-slate-200 text-center text-sm text-slate-500" data-cms-editable="footer-copyright">
+        <p>&copy; 2024 Stratum AI. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Dark mode toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+
+    // Check for saved theme preference or default to system preference
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      html.classList.add('dark');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', function() {
+        // Add your mobile menu logic here
+        alert('Mobile menu - implement dropdown');
+      });
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Update copyright year
+    document.querySelector('[data-cms-editable="footer-copyright"] p').innerHTML =
+      '&copy; ' + new Date().getFullYear() + ' Stratum AI. All rights reserved.';
+  </script>
+
+</body>
+</html>

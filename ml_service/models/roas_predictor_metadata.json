@@ -1,0 +1,22 @@
+{
+  "name": "roas_predictor",
+  "version": "1.0.0",
+  "created_at": "2025-12-20T12:24:47.060399+00:00",
+  "features": [
+    "log_spend",
+    "log_impressions",
+    "log_clicks",
+    "ctr",
+    "cpm",
+    "platform_meta"
+  ],
+  "metrics": {
+    "r2": 0.08070154686777709,
+    "mae": 1.7375902874454372,
+    "rmse": 2.1847839271626674,
+    "mape": 1994.5533992769754,
+    "cv_r2_mean": 0.09552603160302955,
+    "cv_r2_std": 0.013994726263177925
+  },
+  "model_type": "GradientBoostingRegressor"
+}

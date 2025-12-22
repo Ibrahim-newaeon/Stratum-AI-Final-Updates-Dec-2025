@@ -1,0 +1,28 @@
+{
+  "name": "conversion_predictor",
+  "version": "1.0.0",
+  "created_at": "2025-12-20T12:24:48.374894+00:00",
+  "features": [
+    "log_spend",
+    "log_impressions",
+    "log_clicks",
+    "ctr",
+    "cpc",
+    "platform_meta"
+  ],
+  "metrics": {
+    "r2": 0.34431156104704763,
+    "mae": 5.684091787767826,
+    "rmse": 10.114202140012555,
+    "mape": 73607642862.1758,
+    "feature_importances": {
+      "log_spend": 0.07136388416530365,
+      "log_impressions": 0.07625491361801782,
+      "log_clicks": 0.6884970483450873,
+      "ctr": 0.07392599354437625,
+      "cpc": 0.08995816032721507,
+      "platform_meta": 0.0
+    }
+  },
+  "model_type": "RandomForestRegressor"
+}

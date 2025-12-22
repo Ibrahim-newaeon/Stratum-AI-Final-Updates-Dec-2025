@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Stratum AI</title>
+  <meta name="description" content="Sign in to your Stratum AI account to access your unified marketing intelligence dashboard.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#0ea5e9',
+              foreground: '#ffffff',
+            },
+          },
+        },
+      },
+    }
+  </script>
+
+  <style>
+    .bg-gradient-stratum {
+      background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+    }
+    .text-gradient-stratum {
+      background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .shadow-glow {
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+    }
+    .shadow-glow-lg {
+      box-shadow: 0 0 40px rgba(14, 165, 233, 0.4);
+    }
+    /* Dark mode overrides */
+    .dark .bg-background { background-color: #0f172a; }
+    .dark .text-foreground { color: #f8fafc; }
+    .dark .text-muted-foreground { color: #94a3b8; }
+    .dark .border { border-color: #334155; }
+    .dark .bg-card { background-color: #1e293b; }
+    .dark input { background-color: #1e293b; color: #f8fafc; border-color: #334155; }
+    .dark input::placeholder { color: #64748b; }
+    .dark .hover\:bg-muted:hover { background-color: #334155; }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+  <div class="min-h-screen flex">
+    <!-- Left side - Branding -->
+    <div class="hidden lg:flex lg:w-1/2 bg-gradient-stratum relative overflow-hidden">
+      <div class="absolute inset-0 bg-black/20"></div>
+      <div class="relative z-10 flex flex-col justify-between p-12 text-white">
+        <div>
+          <a href="landing-page.html" class="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+            <div class="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center shadow-glow">
+              <span class="text-white font-bold text-2xl">S</span>
+            </div>
+            <span class="text-3xl font-bold">Stratum AI</span>
+          </a>
+          <h1 class="text-4xl font-bold mb-4 leading-tight">
+            Unified Ad Intelligence
+            <br>
+            Platform
+          </h1>
+          <p class="text-lg text-white/80 max-w-md">
+            Built for cross-platform growth: AI-powered insights, real-time analytics, automated optimization, EMQ measurement, auto-resolution logic, and clear ROAS lift—always on.
+          </p>
+        </div>
+
+        <div class="space-y-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
+              <span class="text-2xl font-bold">M</span>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
+              <span class="text-2xl font-bold">G</span>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
+              <span class="text-2xl font-bold">T</span>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
+              <span class="text-2xl font-bold">S</span>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
+              <span class="text-2xl font-bold">L</span>
+            </div>
+          </div>
+          <p class="text-sm text-white/60">
+            Integrated with Meta, Google, TikTok, Snapchat, LinkedIn & more
+          </p>
+        </div>
+
+        <!-- Decorative elements -->
+        <div class="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/5 blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-20 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
+      </div>
+    </div>
+
+    <!-- Right side - Login Form -->
+    <div class="flex-1 flex items-center justify-center p-8 bg-white dark:bg-slate-900">
+      <div class="w-full max-w-md">
+        <!-- Mobile logo -->
+        <div class="lg:hidden flex items-center justify-center gap-2 mb-8">
+          <a href="landing-page.html" class="flex items-center gap-2">
+            <div class="h-10 w-10 rounded-lg bg-gradient-stratum flex items-center justify-center shadow-glow">
+              <span class="text-white font-bold text-xl">S</span>
+            </div>
+            <span class="text-2xl font-bold text-gradient-stratum">Stratum AI</span>
+          </a>
+        </div>
+
+        <!-- Dark mode toggle -->
+        <div class="flex justify-end mb-4">
+          <button id="theme-toggle" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
+        </div>
+
+        <a href="landing-page.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white mb-6 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to home
+        </a>
+
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-2">Welcome back</h2>
+          <p class="text-slate-500 dark:text-slate-400">
+            Don't have an account?
+            <a href="signup.html" class="text-sky-500 hover:underline ml-1">Sign up</a>
+          </p>
+        </div>
+
+        <form id="login-form" class="space-y-5">
+          <!-- Error message (hidden by default) -->
+          <div id="error-message" class="hidden items-center gap-2 p-3 rounded-lg bg-red-500/10 text-red-500 text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="error-text"></span>
+          </div>
+
+          <!-- Email field -->
+          <div class="space-y-2">
+            <label for="email" class="text-sm font-medium">Email address</label>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+              </svg>
+              <input
+                id="email"
+                type="email"
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                placeholder="name@company.com"
+                required
+              >
+            </div>
+          </div>
+
+          <!-- Password field -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="password" class="text-sm font-medium">Password</label>
+              <a href="#" class="text-sm text-sky-500 hover:underline">Forgot password?</a>
+            </div>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <input
+                id="password"
+                type="password"
+                class="w-full pl-10 pr-12 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                placeholder="Enter your password"
+                required
+              >
+              <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <svg id="eye-off-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember me -->
+          <div class="flex items-center gap-2">
+            <input id="remember" type="checkbox" class="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500">
+            <label for="remember" class="text-sm text-slate-500 dark:text-slate-400">Remember me for 30 days</label>
+          </div>
+
+          <!-- Submit button -->
+          <button
+            type="submit"
+            class="w-full py-3 rounded-lg font-semibold text-white bg-gradient-stratum shadow-glow hover:shadow-glow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            Sign in
+          </button>
+        </form>
+
+        <!-- Demo accounts -->
+        <div class="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+          <p class="text-center text-sm text-slate-500 dark:text-slate-400 mb-4">Demo Accounts</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button class="demo-btn px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" data-email="superadmin@stratum.ai" data-password="admin123">
+              Super Admin
+            </button>
+            <button class="demo-btn px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" data-email="admin@company.com" data-password="admin123">
+              Admin
+            </button>
+            <button class="demo-btn px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" data-email="user@company.com" data-password="user123">
+              User
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-xs text-slate-500 dark:text-slate-400 mt-8">
+          By signing in, you agree to our
+          <a href="#" class="text-sky-500 hover:underline">Terms of Service</a>
+          and
+          <a href="#" class="text-sky-500 hover:underline">Privacy Policy</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+
+    // Check for saved theme preference or default to system preference
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      html.classList.add('dark');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    // Password visibility toggle
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eye-icon');
+    const eyeOffIcon = document.getElementById('eye-off-icon');
+
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      eyeIcon.classList.toggle('hidden');
+      eyeOffIcon.classList.toggle('hidden');
+    });
+
+    // Demo account buttons
+    const demoBtns = document.querySelectorAll('.demo-btn');
+    const emailInput = document.getElementById('email');
+
+    demoBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        emailInput.value = btn.dataset.email;
+        passwordInput.value = btn.dataset.password;
+      });
+    });
+
+    // Form submission
+    const loginForm = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // For demo purposes - show success and redirect
+      // In production, this would send to your API
+      const email = emailInput.value;
+      const password = passwordInput.value;
+
+      if (email && password) {
+        // Simulate login success
+        alert('Login successful! Redirecting to dashboard...');
+        // window.location.href = '/dashboard';
+      } else {
+        errorMessage.classList.remove('hidden');
+        errorMessage.classList.add('flex');
+        errorText.textContent = 'Please fill in all fields';
+      }
+    });
+  </script>
+
+</body>
+</html>

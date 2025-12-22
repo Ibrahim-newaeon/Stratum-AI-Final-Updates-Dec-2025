@@ -1,0 +1,206 @@
+# =============================================================================
+# Stratum AI - Production Docker Compose Override
+# =============================================================================
+# This file overrides docker-compose.yml settings for production.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL 16 Database - Production
+  # ===========================================================================
+  db:
+    restart: always
+    ports: []  # Don't expose database externally
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ===========================================================================
+  # Redis - Production
+  # ===========================================================================
+  redis:
+    restart: always
+    ports: []  # Don't expose Redis externally
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:-}
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ===========================================================================
+  # FastAPI Backend - Production
+  # ===========================================================================
+  api:
+    restart: always
+    environment:
+      - APP_ENV=production
+      - DEBUG=false
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=json
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - ML_MODELS_PATH=/app/ml_service/models
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-false}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_TLS=${SMTP_TLS:-true}
+      - FROM_EMAIL=${FROM_EMAIL:-}
+      - FROM_NAME=${FROM_NAME:-Stratum AI}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-500}
+      - RATE_LIMIT_BURST=${RATE_LIMIT_BURST:-100}
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./ml_service:/app/ml_service:ro
+      - api_logs:/app/logs
+    ports:
+      - "127.0.0.1:8000:8000"  # Only bind to localhost (Nginx handles external)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      replicas: 2
+    command: >
+      sh -c "alembic upgrade head && gunicorn app.main:app
+      --workers 4
+      --worker-class uvicorn.workers.UvicornWorker
+      --bind 0.0.0.0:8000
+      --access-logfile -
+      --error-logfile -
+      --capture-output
+      --timeout 120
+      --keep-alive 5
+      --max-requests 1000
+      --max-requests-jitter 50"
+
+  # ===========================================================================
+  # Celery Worker - Production
+  # ===========================================================================
+  worker:
+    restart: always
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - ML_MODELS_PATH=/app/ml_service/models
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./ml_service:/app/ml_service:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      replicas: 2
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4 --max-tasks-per-child=100
+
+  # ===========================================================================
+  # Celery Beat (Scheduler) - Production
+  # ===========================================================================
+  scheduler:
+    restart: always
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    volumes:
+      - ./backend/app:/app/app:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+  # ===========================================================================
+  # Frontend - Production Build
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        VITE_WS_URL: ${VITE_WS_URL:-wss://api.yourdomain.com}
+        VITE_DEFAULT_LOCALE: ${VITE_DEFAULT_LOCALE:-en}
+    restart: always
+    environment:
+      - NODE_ENV=production
+    volumes: []  # Don't mount source code in production
+    ports:
+      - "127.0.0.1:5173:80"  # Nginx serves on port 80 inside container
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    command: ["nginx", "-g", "daemon off;"]
+
+  # ===========================================================================
+  # Flower - Production (Optional)
+  # ===========================================================================
+  flower:
+    restart: always
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - FLOWER_PORT=5555
+      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+    ports:
+      - "127.0.0.1:5555:5555"  # Only localhost
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  api_logs:
