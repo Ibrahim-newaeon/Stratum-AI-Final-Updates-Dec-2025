@@ -1,0 +1,30 @@
+.elementor-editor-active .at-animation-image-style-1 img{
+	clip-path: none;
+}
+
+.elementor-editor-active .awaiken-portfolio-grid{
+	min-height: 500px;
+	overflow: hidden;
+}
+
+.elementor-editor-active .post-entry ul{
+	margin: 0;
+}
+
+/* Header Position */
+
+.elementor-editor-active #elementor-add-new-section{
+	margin: 0 auto;
+	padding: 150px 0;
+}
+
+.elementor-editor-active #elementor-add-new-section > .elementor-add-section-inner{
+	position: relative;
+}
+
+@media only screen and (max-width: 991px){
+	
+	.elementor-editor-active #elementor-add-new-section{
+		padding: 150px 0 100px;
+	}
+}

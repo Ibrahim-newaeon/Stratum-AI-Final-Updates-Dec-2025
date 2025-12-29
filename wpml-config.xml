@@ -1,0 +1,9 @@
+<wpml-config>
+  <admin-texts>
+    <key name="theme_mods_nextmind">
+      <key name="project_page_title"/>
+      <key name="blog_page_title"/>
+      <key name="footer_copyright_text"/>
+    </key>
+  </admin-texts>
+</wpml-config>
