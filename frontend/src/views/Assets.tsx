@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -160,7 +160,7 @@ export function Assets() {
   }
 
   const getStatusBadge = (status: AssetStatus) => {
-    const config = {
+    const config: Record<AssetStatus, { color: string; icon: React.ComponentType<{ className?: string }>; label: string }> = {
       active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
       paused: { color: 'bg-amber-500/10 text-amber-500', icon: Clock, label: 'Paused' },
       fatigued: { color: 'bg-red-500/10 text-red-500', icon: AlertTriangle, label: 'Fatigued' },
