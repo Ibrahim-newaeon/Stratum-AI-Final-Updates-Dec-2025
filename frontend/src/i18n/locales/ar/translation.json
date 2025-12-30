@@ -45,7 +45,11 @@
     "totalSpend": "إجمالي الإنفاق",
     "totalRevenue": "إجمالي الإيرادات",
     "overallROAS": "العائد الإجمالي",
-    "activeCampaigns": "الحملات النشطة"
+    "activeCampaigns": "الحملات النشطة",
+    "recentAlerts": "التنبيهات الأخيرة",
+    "topCampaigns": "أفضل الحملات",
+    "platformPerformance": "أداء المنصات",
+    "recentActivity": "النشاط الأخير"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -189,32 +193,92 @@
       }
     }
   },
+  "stratum": {
+    "title": "تحليلات ستراتوم",
+    "subtitle": "تحليلات إعلانية متقدمة مدعومة بالذكاء الاصطناعي",
+    "overview": "نظرة عامة على التحليلات",
+    "performance": "مقاييس الأداء",
+    "insights": "رؤى الذكاء الاصطناعي",
+    "predictions": "التنبؤات",
+    "optimization": "توصيات التحسين"
+  },
   "benchmarks": {
     "title": "ذكاء المنافسين",
+    "subtitle": "قارن أداءك بمعايير الصناعة والمنافسين",
     "shareOfVoice": "نسبة المشاركة",
     "addCompetitor": "إضافة منافس",
     "topKeywords": "الكلمات الرئيسية الأكثر شيوعًا",
-    "trafficTrend": "اتجاه الزيارات"
+    "trafficTrend": "اتجاه الزيارات",
+    "demographicsHeatmap": "خريطة حرارية للديموغرافيا",
+    "ctrBySegment": "نسبة النقر حسب الشريحة",
+    "geographicPerformance": "الأداء الجغرافي",
+    "performanceByRegion": "الأداء حسب المنطقة",
+    "industryAverage": "متوسط الصناعة",
+    "yourPerformance": "أداءك",
+    "competitorAnalysis": "تحليل المنافسين"
   },
   "assets": {
     "title": "مكتبة الأصول",
+    "subtitle": "إدارة وتنظيم أصولك الإبداعية عبر جميع الحملات",
     "uploadAsset": "تحميل أصل",
     "fatigueScore": "درجة الإجهاد",
-    "fatigueWarning": "إجهاد مرتفع - فكّر في تحديث التصميم"
+    "fatigueWarning": "إجهاد مرتفع - فكّر في تحديث التصميم",
+    "allAssets": "جميع الأصول",
+    "images": "الصور",
+    "videos": "الفيديوهات",
+    "documents": "المستندات",
+    "searchAssets": "البحث عن الأصول...",
+    "sortBy": "ترتيب حسب",
+    "dateCreated": "تاريخ الإنشاء",
+    "dateModified": "تاريخ التعديل",
+    "fileName": "اسم الملف",
+    "fileSize": "حجم الملف",
+    "assetDetails": "تفاصيل الأصل",
+    "usedIn": "مستخدم في",
+    "campaigns": "الحملات",
+    "performance": "الأداء",
+    "impressions": "مرات الظهور",
+    "clicks": "النقرات",
+    "ctr": "نسبة النقر",
+    "status": {
+      "active": "نشط",
+      "paused": "متوقف مؤقتًا",
+      "fatigued": "مُجهَد",
+      "draft": "مسودة"
+    },
+    "actions": {
+      "edit": "تعديل",
+      "delete": "حذف",
+      "download": "تحميل",
+      "duplicate": "تكرار",
+      "preview": "معاينة"
+    }
   },
   "rules": {
     "title": "قواعد الأتمتة",
+    "subtitle": "إنشاء وإدارة القواعد الآلية لتحسين حملاتك",
     "newRule": "قاعدة جديدة",
+    "editRule": "تعديل القاعدة",
+    "deleteRule": "حذف القاعدة",
     "createRule": "إنشاء قاعدة",
+    "saveRule": "حفظ القاعدة",
     "condition": "متى",
     "action": "ثم",
     "ruleName": "اسم القاعدة",
+    "ruleDescription": "الوصف",
     "description": "الوصف",
+    "status": "الحالة",
+    "enabled": "مفعّل",
+    "disabled": "معطّل",
     "totalRules": "إجمالي القواعد",
     "activeRules": "القواعد النشطة",
+    "pausedRules": "القواعد المتوقفة",
     "triggersToday": "عمليات التشغيل اليوم",
     "actionsExecuted": "الإجراءات المنفذة",
+    "timesTriggered": "مرات التشغيل",
+    "searchRules": "البحث عن القواعد...",
     "searchPlaceholder": "البحث عن القواعد...",
+    "allRules": "جميع القواعد",
     "allStatuses": "جميع الحالات",
     "active": "نشط",
     "paused": "متوقف مؤقتًا",
@@ -225,16 +289,37 @@
     "lastTriggered": "آخر تشغيل",
     "noRules": "لم يتم العثور على قواعد",
     "createFirst": "إنشاء القاعدة الأولى",
+    "metrics": {
+      "spend": "الإنفاق",
+      "revenue": "الإيرادات",
+      "roas": "عائد الإنفاق",
+      "ctr": "نسبة النقر",
+      "cpc": "تكلفة النقرة",
+      "cpm": "تكلفة الألف ظهور",
+      "conversions": "التحويلات",
+      "impressions": "مرات الظهور",
+      "clicks": "النقرات"
+    },
     "operators": {
       "equals": "يساوي",
+      "not_equals": "لا يساوي",
       "greater_than": "أكبر من",
-      "less_than": "أقل من"
+      "less_than": "أقل من",
+      "greater_than_or_equal": "أكبر من أو يساوي",
+      "less_than_or_equal": "أقل من أو يساوي",
+      "contains": "يحتوي على",
+      "not_contains": "لا يحتوي على"
     },
     "actions": {
       "apply_label": "تطبيق التسمية",
       "send_alert": "إرسال تنبيه",
       "pause_campaign": "إيقاف الحملة مؤقتًا",
-      "adjust_budget": "تعديل الميزانية"
+      "activate_campaign": "تفعيل الحملة",
+      "adjust_budget": "تعديل الميزانية",
+      "increase_budget": "زيادة الميزانية",
+      "decrease_budget": "تقليل الميزانية",
+      "send_email": "إرسال إشعار بريد إلكتروني",
+      "send_slack": "إرسال إشعار سلاك"
     }
   },
   "guide": {

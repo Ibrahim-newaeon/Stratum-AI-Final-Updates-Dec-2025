@@ -45,7 +45,11 @@
     "totalSpend": "Total Spend",
     "totalRevenue": "Total Revenue",
     "overallROAS": "Overall ROAS",
-    "activeCampaigns": "Active Campaigns"
+    "activeCampaigns": "Active Campaigns",
+    "recentAlerts": "Recent Alerts",
+    "topCampaigns": "Top Campaigns",
+    "platformPerformance": "Platform Performance",
+    "recentActivity": "Recent Activity"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -189,34 +193,120 @@
       }
     }
   },
+  "stratum": {
+    "title": "Stratum Analytics",
+    "subtitle": "Advanced AI-powered advertising analytics and insights",
+    "overview": "Analytics Overview",
+    "performance": "Performance Metrics",
+    "insights": "AI Insights",
+    "predictions": "Predictions",
+    "optimization": "Optimization Recommendations"
+  },
   "benchmarks": {
     "title": "Competitor Intelligence",
+    "subtitle": "Compare your performance against industry benchmarks and competitors",
     "shareOfVoice": "Share of Voice",
     "addCompetitor": "Add Competitor",
     "topKeywords": "Top Keywords",
-    "trafficTrend": "Traffic Trend"
+    "trafficTrend": "Traffic Trend",
+    "demographicsHeatmap": "Demographics Heatmap",
+    "ctrBySegment": "CTR by Segment",
+    "geographicPerformance": "Geographic Performance",
+    "performanceByRegion": "Performance by Region",
+    "industryAverage": "Industry Average",
+    "yourPerformance": "Your Performance",
+    "competitorAnalysis": "Competitor Analysis"
   },
   "assets": {
     "title": "Asset Library",
+    "subtitle": "Manage and organize your creative assets across all campaigns",
     "uploadAsset": "Upload Asset",
     "fatigueScore": "Fatigue Score",
-    "fatigueWarning": "High fatigue - consider refreshing creative"
+    "fatigueWarning": "High fatigue - consider refreshing creative",
+    "allAssets": "All Assets",
+    "images": "Images",
+    "videos": "Videos",
+    "documents": "Documents",
+    "searchAssets": "Search assets...",
+    "sortBy": "Sort By",
+    "dateCreated": "Date Created",
+    "dateModified": "Date Modified",
+    "fileName": "File Name",
+    "fileSize": "File Size",
+    "assetDetails": "Asset Details",
+    "usedIn": "Used In",
+    "campaigns": "Campaigns",
+    "performance": "Performance",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "ctr": "CTR",
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "fatigued": "Fatigued",
+      "draft": "Draft"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "download": "Download",
+      "duplicate": "Duplicate",
+      "preview": "Preview"
+    }
   },
   "rules": {
     "title": "Automation Rules",
+    "subtitle": "Create and manage automated rules to optimize your campaigns",
     "newRule": "New Rule",
+    "editRule": "Edit Rule",
+    "deleteRule": "Delete Rule",
     "condition": "When",
     "action": "Then",
+    "ruleName": "Rule Name",
+    "ruleDescription": "Description",
+    "status": "Status",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "lastTriggered": "Last Triggered",
+    "timesTriggered": "Times Triggered",
+    "createRule": "Create Rule",
+    "saveRule": "Save Rule",
+    "searchRules": "Search rules...",
+    "allRules": "All Rules",
+    "activeRules": "Active Rules",
+    "pausedRules": "Paused Rules",
+    "noRules": "No automation rules found",
+    "metrics": {
+      "spend": "Spend",
+      "revenue": "Revenue",
+      "roas": "ROAS",
+      "ctr": "CTR",
+      "cpc": "CPC",
+      "cpm": "CPM",
+      "conversions": "Conversions",
+      "impressions": "Impressions",
+      "clicks": "Clicks"
+    },
     "operators": {
       "equals": "equals",
+      "not_equals": "does not equal",
       "greater_than": "is greater than",
-      "less_than": "is less than"
+      "less_than": "is less than",
+      "greater_than_or_equal": "is greater than or equal to",
+      "less_than_or_equal": "is less than or equal to",
+      "contains": "contains",
+      "not_contains": "does not contain"
     },
     "actions": {
       "apply_label": "Apply Label",
       "send_alert": "Send Alert",
       "pause_campaign": "Pause Campaign",
-      "adjust_budget": "Adjust Budget"
+      "activate_campaign": "Activate Campaign",
+      "adjust_budget": "Adjust Budget",
+      "increase_budget": "Increase Budget",
+      "decrease_budget": "Decrease Budget",
+      "send_email": "Send Email Notification",
+      "send_slack": "Send Slack Notification"
     }
   },
   "guide": {
