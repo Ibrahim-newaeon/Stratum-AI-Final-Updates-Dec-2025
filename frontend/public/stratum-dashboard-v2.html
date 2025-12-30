@@ -15,11 +15,51 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            primary: { DEFAULT: '#8B5CF6', 50: '#F5F3FF', 100: '#EDE9FE', 500: '#8B5CF6', 600: '#7C3AED', 700: '#6D28D9' },
-            success: '#10B981',
-            warning: '#F59E0B',
-            danger: '#EF4444',
-            dark: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+            // Core Surfaces
+            dark: {
+              950: '#0a0a1a',  // App Background
+              900: '#14162b',  // Surface 1 (Cards)
+              800: '#1a1f3c',  // Surface 2 (Elevated)
+              700: '#21264a',  // Surface 3 (Hover)
+              600: '#2d3356',
+            },
+            // Primary Brand
+            primary: {
+              DEFAULT: '#4DA3FF',
+              hover: '#6CB6FF',
+              active: '#3A8AE6',
+              50: '#EBF5FF',
+              100: '#E1EFFF',
+              500: '#4DA3FF',
+              600: '#3A8AE6',
+              700: '#2B7ACC',
+            },
+            // Accent Colors
+            accent: {
+              glow: '#00F2EA',
+              purple: '#7C7CFF',
+              emerald: '#2CFFC8',
+            },
+            // Status Colors
+            success: '#2EE59D',
+            warning: '#FFC857',
+            danger: '#FF4D6D',
+            info: '#4DA3FF',
+            // Typography
+            text: {
+              primary: '#EAEAF0',
+              secondary: '#B3B3C6',
+              muted: '#8A8AA3',
+              disabled: '#5F5F7A',
+              inverse: '#0A0A1A',
+            }
+          },
+          boxShadow: {
+            'soft': '0 4px 12px rgba(0,0,0,0.25)',
+            'medium': '0 8px 24px rgba(0,0,0,0.35)',
+            'deep': '0 16px 48px rgba(0,0,0,0.45)',
+            'glow': '0 0 30px rgba(77, 163, 255, 0.3), 0 0 60px rgba(0, 242, 234, 0.15)',
+            'glow-accent': '0 0 20px rgba(0, 242, 234, 0.4)',
           }
         }
       }
@@ -28,69 +68,196 @@
   <style>
     [x-cloak] { display: none !important; }
 
-    /* Theme CSS Variables */
+    /* ============================================
+       PROFESSIONAL DARK UI COLOR SYSTEM
+       ============================================ */
+
     :root {
-      --theme-primary: #8B5CF6;
-      --theme-secondary: #EC4899;
-      --theme-accent: #8B5CF6;
-      --theme-bg: #020617;
-      --theme-surface: #0f172a;
-      --theme-card: #1e293b;
-      --theme-border: #334155;
+      /* Core Surfaces */
+      --surface-bg: #0a0a1a;
+      --surface-1: #14162b;
+      --surface-2: #1a1f3c;
+      --surface-3: #21264a;
+      --border-color: rgba(255,255,255,0.06);
+
+      /* Primary Brand */
+      --primary: #4DA3FF;
+      --primary-hover: #6CB6FF;
+      --primary-active: #3A8AE6;
+      --glow-accent: #00F2EA;
+
+      /* Secondary & Accent */
+      --accent-purple: #7C7CFF;
+      --accent-emerald: #2CFFC8;
+      --warning: #FFC857;
+      --danger: #FF4D6D;
+      --success: #2EE59D;
+      --info: #4DA3FF;
+
+      /* Typography */
+      --text-primary: #EAEAF0;
+      --text-secondary: #B3B3C6;
+      --text-muted: #8A8AA3;
+      --text-disabled: #5F5F7A;
     }
+
+    /* Glassmorphism Layer */
+    .glass {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Professional Gradients */
+    .gradient-stratum {
+      background: linear-gradient(135deg, #4DA3FF 0%, #00F2EA 100%);
+    }
+    .gradient-profit {
+      background: linear-gradient(135deg, #2EE59D 0%, #2CFFC8 100%);
+    }
+    .gradient-risk {
+      background: linear-gradient(135deg, #FF4D6D 0%, #FF6B6B 100%);
+    }
+    .gradient-purple {
+      background: linear-gradient(135deg, #7C7CFF 0%, #A78BFA 100%);
+    }
+
+    /* Glow Effects */
+    .shadow-glow {
+      box-shadow: 0 0 30px rgba(77, 163, 255, 0.3), 0 0 60px rgba(0, 242, 234, 0.15);
+    }
+    .shadow-glow-accent {
+      box-shadow: 0 0 20px rgba(0, 242, 234, 0.4);
+    }
+
+    /* Card Styles */
+    .card {
+      background: #14162b;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    /* Button Primary */
+    .btn-primary {
+      background: linear-gradient(135deg, #4da3ff, #00f2ea);
+      color: #0a0a1a;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 20px rgba(77, 163, 255, 0.5);
+      transform: translateY(-1px);
+    }
+
+    /* Input Fields */
+    .input-field {
+      background: #101226;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #eaeaf0;
+      border-radius: 10px;
+      padding: 12px;
+      transition: all 0.2s ease;
+    }
+    .input-field:focus {
+      border-color: #4DA3FF;
+      box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.15);
+      outline: none;
+    }
+
+    /* Override Tailwind dark colors */
+    .bg-dark-950 { background-color: #0a0a1a !important; }
+    .bg-dark-900 { background-color: #14162b !important; }
+    .bg-dark-800 { background-color: #1a1f3c !important; }
+    .bg-dark-700 { background-color: #21264a !important; }
+    .border-dark-700 { border-color: rgba(255,255,255,0.06) !important; }
+    .text-dark-200 { color: #B3B3C6 !important; }
+
+    /* Primary Colors */
+    .text-primary { color: #4DA3FF !important; }
+    .bg-primary { background-color: #4DA3FF !important; }
+    .bg-primary\/10 { background-color: rgba(77, 163, 255, 0.1) !important; }
+    .bg-primary\/20 { background-color: rgba(77, 163, 255, 0.2) !important; }
+    .border-primary { border-color: #4DA3FF !important; }
+    .border-primary\/30 { border-color: rgba(77, 163, 255, 0.3) !important; }
+
+    /* Status Colors */
+    .text-success { color: #2EE59D !important; }
+    .bg-success { background-color: #2EE59D !important; }
+    .bg-success\/10 { background-color: rgba(46, 229, 157, 0.1) !important; }
+    .bg-success\/20 { background-color: rgba(46, 229, 157, 0.2) !important; }
+
+    .text-warning { color: #FFC857 !important; }
+    .bg-warning { background-color: #FFC857 !important; }
+    .bg-warning\/10 { background-color: rgba(255, 200, 87, 0.1) !important; }
+    .bg-warning\/20 { background-color: rgba(255, 200, 87, 0.2) !important; }
+
+    .text-danger { color: #FF4D6D !important; }
+    .bg-danger { background-color: #FF4D6D !important; }
+    .bg-danger\/10 { background-color: rgba(255, 77, 109, 0.1) !important; }
+    .bg-danger\/20 { background-color: rgba(255, 77, 109, 0.2) !important; }
+
+    /* Accent Glow */
+    .text-accent-glow { color: #00F2EA !important; }
+    .bg-accent-glow { background-color: #00F2EA !important; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #14162b; }
+    ::-webkit-scrollbar-thumb { background: #21264a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2d3356; }
+
+    /* Sparkline */
+    .sparkline { height: 40px; }
+
+    /* Animation for glow pulse */
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(0, 242, 234, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(0, 242, 234, 0.5); }
+    }
+    .animate-glow-pulse {
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+
+    /* ============================================
+       THEME VARIATIONS
+       ============================================ */
 
     /* Nextmind Theme - Purple to Cyan AI Theme */
     .theme-nextmind {
-      --theme-primary: #A855F7;
-      --theme-secondary: #06B6D4;
-      --theme-accent: #A855F7;
-      --theme-bg: #0a0a1a;
-      --theme-surface: #12122a;
-      --theme-card: #1a1a35;
-      --theme-border: #2d2d5a;
+      --primary: #A855F7;
+      --glow-accent: #06B6D4;
     }
     .theme-nextmind .gradient-stratum { background: linear-gradient(135deg, #A855F7 0%, #06B6D4 100%); }
     .theme-nextmind .shadow-glow { box-shadow: 0 0 30px rgba(168, 85, 247, 0.4), 0 0 60px rgba(6, 182, 212, 0.2); }
-    .theme-nextmind .bg-dark-950 { background-color: #0a0a1a; }
-    .theme-nextmind .bg-dark-900 { background-color: #12122a; }
-    .theme-nextmind .bg-dark-800 { background-color: #1a1a35; }
-    .theme-nextmind .border-dark-700 { border-color: #2d2d5a; }
-    .theme-nextmind .text-primary { color: #A855F7; }
-    .theme-nextmind .bg-primary { background-color: #A855F7; }
-    .theme-nextmind .bg-primary\/20 { background-color: rgba(168, 85, 247, 0.2); }
-    .theme-nextmind .border-primary { border-color: #A855F7; }
-    .theme-nextmind .border-primary\/30 { border-color: rgba(168, 85, 247, 0.3); }
+    .theme-nextmind .text-primary { color: #A855F7 !important; }
+    .theme-nextmind .bg-primary { background-color: #A855F7 !important; }
+    .theme-nextmind .bg-primary\/20 { background-color: rgba(168, 85, 247, 0.2) !important; }
+    .theme-nextmind .border-primary { border-color: #A855F7 !important; }
 
-    /* Ocean Theme - Blue to Cyan */
+    /* Ocean Theme */
     .theme-ocean .gradient-stratum { background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%); }
     .theme-ocean .shadow-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-    .theme-ocean .text-primary { color: #3B82F6; }
-    .theme-ocean .bg-primary { background-color: #3B82F6; }
-    .theme-ocean .bg-primary\/20 { background-color: rgba(59, 130, 246, 0.2); }
+    .theme-ocean .text-primary { color: #3B82F6 !important; }
+    .theme-ocean .bg-primary { background-color: #3B82F6 !important; }
+    .theme-ocean .bg-primary\/20 { background-color: rgba(59, 130, 246, 0.2) !important; }
 
-    /* Forest Theme - Green */
-    .theme-forest .gradient-stratum { background: linear-gradient(135deg, #10B981 0%, #34D399 100%); }
-    .theme-forest .shadow-glow { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-    .theme-forest .text-primary { color: #10B981; }
-    .theme-forest .bg-primary { background-color: #10B981; }
-    .theme-forest .bg-primary\/20 { background-color: rgba(16, 185, 129, 0.2); }
+    /* Forest Theme */
+    .theme-forest .gradient-stratum { background: linear-gradient(135deg, #2EE59D 0%, #2CFFC8 100%); }
+    .theme-forest .shadow-glow { box-shadow: 0 0 20px rgba(46, 229, 157, 0.3); }
+    .theme-forest .text-primary { color: #2EE59D !important; }
+    .theme-forest .bg-primary { background-color: #2EE59D !important; }
+    .theme-forest .bg-primary\/20 { background-color: rgba(46, 229, 157, 0.2) !important; }
 
-    /* Sunset Theme - Orange to Red */
-    .theme-sunset .gradient-stratum { background: linear-gradient(135deg, #F97316 0%, #EF4444 100%); }
-    .theme-sunset .shadow-glow { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
-    .theme-sunset .text-primary { color: #F97316; }
-    .theme-sunset .bg-primary { background-color: #F97316; }
-    .theme-sunset .bg-primary\/20 { background-color: rgba(249, 115, 22, 0.2); }
-
-    .gradient-stratum { background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); }
-    .gradient-profit { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
-    .gradient-risk { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); }
-    .shadow-glow { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
-    .card { @apply bg-dark-800 border border-dark-700 rounded-xl; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1e293b; }
-    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-    .sparkline { height: 40px; }
+    /* Sunset Theme */
+    .theme-sunset .gradient-stratum { background: linear-gradient(135deg, #FFC857 0%, #FF4D6D 100%); }
+    .theme-sunset .shadow-glow { box-shadow: 0 0 20px rgba(255, 200, 87, 0.3); }
+    .theme-sunset .text-primary { color: #FFC857 !important; }
+    .theme-sunset .bg-primary { background-color: #FFC857 !important; }
+    .theme-sunset .bg-primary\/20 { background-color: rgba(255, 200, 87, 0.2) !important; }
   </style>
 </head>
 <body class="bg-dark-950 text-white font-sans antialiased" x-data="stratumApp()" x-cloak :class="'theme-' + activeTheme">
@@ -1183,15 +1350,16 @@
           <div class="card p-6">
             <h3 class="font-semibold mb-4">Installed Themes</h3>
             <div class="grid grid-cols-3 gap-4">
-              <!-- Default Theme -->
-              <div :class="activeTheme === 'default' ? 'border-primary ring-2 ring-primary/30' : 'border-dark-700'" class="card p-4 cursor-pointer hover:border-primary/50 transition-all" @click="setTheme('default')">
+              <!-- Default Theme - Professional Blue -->
+              <div :class="activeTheme === 'default' ? 'border-primary ring-2 ring-primary/30' : 'border-dark-700'" class="card p-4 cursor-pointer hover:border-primary/50 transition-all relative" @click="setTheme('default')">
+                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-accent-glow/20 text-accent-glow text-xs font-medium">Pro</div>
                 <div class="h-20 rounded-lg mb-3 overflow-hidden">
-                  <div class="h-full bg-gradient-to-br from-primary to-pink-500"></div>
+                  <div class="h-full" style="background: linear-gradient(135deg, #4DA3FF 0%, #00F2EA 100%);"></div>
                 </div>
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="font-medium">Default</p>
-                    <p class="text-xs text-dark-200">Stratum Purple</p>
+                    <p class="text-xs text-dark-200">Professional Blue</p>
                   </div>
                   <span x-show="activeTheme === 'default'" class="text-primary">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
