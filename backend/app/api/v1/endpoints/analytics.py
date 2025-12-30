@@ -441,3 +441,189 @@ async def get_performance_trends(
         })
 
     return APIResponse(success=True, data={"metric": metric, "trends": trends})
+
+
+@router.get("/tenant-overview")
+async def get_tenant_overview(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get analytics overview for all tenants (superadmin view).
+    Returns ROAS, EMQ, status, and key metrics per tenant.
+    """
+    from app.models import Tenant, UserRole
+
+    user_role = getattr(request.state, "role", None)
+
+    # Only superadmin can see all tenants
+    if user_role != UserRole.ADMIN.value:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
+    # Get all active tenants
+    tenant_result = await db.execute(
+        select(Tenant).where(Tenant.is_deleted == False)
+    )
+    tenants = tenant_result.scalars().all()
+
+    tenant_analytics = []
+
+    for tenant in tenants:
+        # Get aggregate metrics for this tenant
+        metrics_result = await db.execute(
+            select(
+                func.sum(CampaignMetric.spend_cents).label("spend"),
+                func.sum(CampaignMetric.revenue_cents).label("revenue"),
+                func.sum(CampaignMetric.conversions).label("conversions"),
+                func.sum(CampaignMetric.clicks).label("clicks"),
+                func.sum(CampaignMetric.impressions).label("impressions"),
+            )
+            .where(
+                CampaignMetric.tenant_id == tenant.id,
+                CampaignMetric.date >= date.today() - timedelta(days=30),
+            )
+        )
+        metrics = metrics_result.one()
+
+        # Calculate ROAS
+        spend = (metrics.spend or 0) / 100
+        revenue = (metrics.revenue or 0) / 100
+        roas = round(revenue / spend, 2) if spend > 0 else 0
+
+        # Calculate EMQ (Event Match Quality) - simulated based on conversion rate
+        # In production, this would come from platform CAPI data
+        conversions = metrics.conversions or 0
+        clicks = metrics.clicks or 0
+        emq = min(95, max(50, int(70 + (conversions / max(clicks, 1)) * 100))) if clicks > 0 else 75
+
+        # Determine status based on ROAS trend
+        if roas >= 4.0:
+            status = "scaling"
+        elif roas >= 2.5:
+            status = "stable"
+        else:
+            status = "at_risk"
+
+        tenant_analytics.append({
+            "id": tenant.id,
+            "name": tenant.name,
+            "slug": tenant.slug,
+            "plan": tenant.plan,
+            "roas": roas,
+            "emq": emq,
+            "status": status,
+            "spend": spend,
+            "revenue": revenue,
+            "conversions": conversions,
+            "impressions": metrics.impressions or 0,
+        })
+
+    # Sort by revenue descending
+    tenant_analytics.sort(key=lambda x: x["revenue"], reverse=True)
+
+    return APIResponse(success=True, data=tenant_analytics)
+
+
+@router.get("/executive-summary")
+async def get_executive_summary(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get executive summary for superadmin dashboard.
+    Aggregated metrics across all tenants.
+    """
+    from app.models import Tenant, UserRole
+
+    user_role = getattr(request.state, "role", None)
+
+    # Only superadmin can see executive summary
+    if user_role != UserRole.ADMIN.value:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
+    today = date.today()
+    start_30d = today - timedelta(days=30)
+    prev_start = today - timedelta(days=60)
+    prev_end = today - timedelta(days=31)
+
+    # Current period - all tenants
+    current_result = await db.execute(
+        select(
+            func.sum(CampaignMetric.spend_cents).label("spend"),
+            func.sum(CampaignMetric.revenue_cents).label("revenue"),
+            func.sum(CampaignMetric.conversions).label("conversions"),
+            func.sum(CampaignMetric.impressions).label("impressions"),
+            func.sum(CampaignMetric.clicks).label("clicks"),
+        )
+        .where(
+            CampaignMetric.date >= start_30d,
+            CampaignMetric.date <= today,
+        )
+    )
+    current = current_result.one()
+
+    # Previous period
+    prev_result = await db.execute(
+        select(
+            func.sum(CampaignMetric.spend_cents).label("spend"),
+            func.sum(CampaignMetric.revenue_cents).label("revenue"),
+            func.sum(CampaignMetric.conversions).label("conversions"),
+        )
+        .where(
+            CampaignMetric.date >= prev_start,
+            CampaignMetric.date <= prev_end,
+        )
+    )
+    prev = prev_result.one()
+
+    # Get tenant counts
+    tenant_count = await db.execute(
+        select(func.count(Tenant.id)).where(Tenant.is_deleted == False)
+    )
+    total_tenants = tenant_count.scalar()
+
+    # Get campaign counts
+    campaign_count = await db.execute(
+        select(func.count(Campaign.id)).where(
+            Campaign.is_deleted == False,
+            Campaign.status == CampaignStatus.ACTIVE,
+        )
+    )
+    active_campaigns = campaign_count.scalar()
+
+    # Calculate metrics
+    current_spend = (current.spend or 0) / 100
+    current_revenue = (current.revenue or 0) / 100
+    prev_spend = (prev.spend or 0) / 100
+    prev_revenue = (prev.revenue or 0) / 100
+
+    current_roas = current_revenue / current_spend if current_spend > 0 else 0
+    prev_roas = prev_revenue / prev_spend if prev_spend > 0 else 0
+
+    def calc_change(curr, previous):
+        if not previous or previous == 0:
+            return 0
+        return round(((curr - previous) / previous) * 100, 1)
+
+    return APIResponse(success=True, data={
+        "total_revenue": current_revenue,
+        "revenue_change": calc_change(current_revenue, prev_revenue),
+        "total_spend": current_spend,
+        "spend_change": calc_change(current_spend, prev_spend),
+        "platform_roas": round(current_roas, 2),
+        "roas_change": calc_change(current_roas, prev_roas),
+        "total_tenants": total_tenants,
+        "active_campaigns": active_campaigns,
+        "total_conversions": current.conversions or 0,
+        "conversions_change": calc_change(current.conversions or 0, prev.conversions or 0),
+        "total_impressions": current.impressions or 0,
+        "period": "30d",
+    })

@@ -89,11 +89,18 @@ class TenantMixin:
 
     @declared_attr
     def tenant_id(cls) -> Mapped[int]:
+        from sqlalchemy import ForeignKey
         return mapped_column(
             Integer,
+            ForeignKey("tenants.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         )
+
+    @declared_attr
+    def tenant(cls):
+        from sqlalchemy.orm import relationship
+        return relationship("Tenant", foreign_keys=[cls.tenant_id])
 
 
 # =============================================================================

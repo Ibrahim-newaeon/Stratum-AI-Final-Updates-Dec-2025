@@ -321,6 +321,22 @@ export const analyticsApi = {
     const response = await apiClient.get(`/analytics/sync/${taskId}/status`)
     return response.data
   },
+
+  // New endpoints for Dashboard v2
+  getTenantOverview: async () => {
+    const response = await apiClient.get('/analytics/tenant-overview')
+    return response.data
+  },
+
+  getExecutiveSummary: async () => {
+    const response = await apiClient.get('/analytics/executive-summary')
+    return response.data
+  },
+
+  getTrends: async (params?: { metric?: string; days?: number }) => {
+    const response = await apiClient.get('/analytics/trends', { params })
+    return response.data
+  },
 }
 
 // Simulator API

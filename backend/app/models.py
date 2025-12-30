@@ -161,14 +161,20 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     max_campaigns: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
 
     # Relationships
-    users: Mapped[List["User"]] = relationship("User", back_populates="tenant")
-    campaigns: Mapped[List["Campaign"]] = relationship("Campaign", back_populates="tenant")
-    assets: Mapped[List["CreativeAsset"]] = relationship(
-        "CreativeAsset", back_populates="tenant"
+    users: Mapped[List["User"]] = relationship(
+        "User", back_populates="tenant", foreign_keys="[User.tenant_id]"
     )
-    rules: Mapped[List["Rule"]] = relationship("Rule", back_populates="tenant")
+    campaigns: Mapped[List["Campaign"]] = relationship(
+        "Campaign", back_populates="tenant", foreign_keys="[Campaign.tenant_id]"
+    )
+    assets: Mapped[List["CreativeAsset"]] = relationship(
+        "CreativeAsset", back_populates="tenant", foreign_keys="[CreativeAsset.tenant_id]"
+    )
+    rules: Mapped[List["Rule"]] = relationship(
+        "Rule", back_populates="tenant", foreign_keys="[Rule.tenant_id]"
+    )
     competitors: Mapped[List["CompetitorBenchmark"]] = relationship(
-        "CompetitorBenchmark", back_populates="tenant"
+        "CompetitorBenchmark", back_populates="tenant", foreign_keys="[CompetitorBenchmark.tenant_id]"
     )
 
     __table_args__ = (
