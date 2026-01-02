@@ -49,34 +49,47 @@
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    /* Analytics Design System - Dark-first surfaces */
+    --background: 0 0% 2.4%;           /* #060606 - primary bg */
+    --foreground: 0 0% 100%;           /* #FFFFFF - text primary */
 
-    --card: 224 71% 6%;
-    --card-foreground: 213 31% 91%;
+    --card: 0 0% 3.9%;                 /* #0A0A0A - secondary surface */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 224 71% 6%;
-    --popover-foreground: 213 31% 91%;
+    --popover: 0 0% 7.1%;              /* #121212 - tertiary/elevated */
+    --popover-foreground: 0 0% 100%;
 
-    /* Stratum AI Brand - Vivid in dark mode */
-    --primary: 262 83% 65%;
+    /* Stratum AI Brand - Purple/Cyan gradient system */
+    --primary: 271 91% 65%;            /* #a855f7 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 213 31% 91%;
+    --secondary: 0 0% 3.9%;            /* #0A0A0A */
+    --secondary-foreground: 228 14% 70%; /* #A7AABB - text secondary */
 
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 7.1%;                /* #121212 */
+    --muted-foreground: 223 10% 47%;   /* #6E7482 - text muted */
 
-    --accent: 262 50% 20%;
-    --accent-foreground: 262 83% 75%;
+    --accent: 271 91% 65% / 0.10;      /* Purple at 10% */
+    --accent-foreground: 271 91% 75%;
 
-    --destructive: 0 63% 31%;
+    --destructive: 0 84% 60%;          /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 28% 17%;
-    --input: 215 28% 17%;
-    --ring: 262 83% 65%;
+    /* Borders - subtle transparency */
+    --border: 0 0% 100% / 0.10;        /* rgba(255,255,255,0.10) */
+    --input: 0 0% 100% / 0.08;         /* rgba(255,255,255,0.08) */
+    --ring: 271 91% 65%;               /* #a855f7 */
+
+    /* Data/Status colors from design system */
+    --success: 142 71% 45%;            /* #22C55E */
+    --warning: 48 97% 54%;             /* #FACC15 */
+    --danger: 0 84% 60%;               /* #EF4444 */
+    --info: 217 91% 60%;               /* #3B82F6 */
+    --insight: 25 95% 53%;             /* #F97316 - Quantum Ember */
+
+    /* Brand glow */
+    --glow-brand: 271 91% 65% / 0.18;
+    --glow-insight: 25 95% 53% / 0.22;
   }
 }
 
@@ -173,31 +186,138 @@
   @apply bg-muted-foreground/40;
 }
 
-/* Enhanced card styles */
+/* ===== Analytics Design System Motion Classes ===== */
+:root {
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+  --dur-xl: 420ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+  --glow-brand: rgba(168, 85, 247, 0.18);
+  --glow-insight: rgba(249, 115, 22, 0.22);
+}
+
+/* A) Page & Section Entrance */
+.motion-enter {
+  animation: fadeUp var(--dur-slow) var(--ease-enter) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* B) Card Hover Lift (premium) */
+.motion-card {
+  transition: transform var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard),
+              border-color var(--dur-base) var(--ease-standard);
+  will-change: transform, box-shadow;
+}
+.motion-card:hover {
+  transform: translateY(-1px);
+}
+
+/* C) Glow Focus Ring (brand fingerprint) */
+.motion-glow:focus-visible {
+  outline: none;
+  animation: glowPulse var(--dur-xl) var(--ease-enter) both;
+}
+
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+  60% { box-shadow: 0 0 22px var(--glow-brand); }
+  100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+}
+
+/* D) KPI Delta Tick (micro feedback) */
+.motion-delta {
+  animation: deltaPop var(--dur-base) var(--ease-standard) both;
+}
+
+@keyframes deltaPop {
+  from { transform: scale(0.98); opacity: 0.6; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* E) Chart Highlight Sweep */
+.motion-chart-sweep {
+  animation: sweep var(--dur-slow) var(--ease-enter) both;
+}
+
+@keyframes sweep {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* F) Insight Badge Signature (Quantum Ember) */
+.motion-insight {
+  animation: emberGlow var(--dur-xl) var(--ease-enter) both;
+}
+
+@keyframes emberGlow {
+  0% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+  50% { box-shadow: 0 0 18px var(--glow-insight); }
+  100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+}
+
+/* G) Alert Shake (only for critical) */
+.motion-critical {
+  animation: microShake var(--dur-base) var(--ease-standard) both;
+}
+
+@keyframes microShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+}
+
+/* H) Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .motion-enter, .motion-delta, .motion-chart-sweep, .motion-insight, .motion-critical {
+    animation: none !important;
+  }
+  .motion-card {
+    transition: none !important;
+  }
+}
+
+/* ===== Enhanced Card Styles (Analytics Design System) ===== */
 @layer components {
   .card-elevated {
-    @apply bg-card border rounded-xl shadow-sm transition-all duration-200;
+    @apply bg-card border rounded-lg shadow-card;
+    transition: transform var(--dur-base) var(--ease-standard),
+                box-shadow var(--dur-base) var(--ease-standard),
+                border-color var(--dur-base) var(--ease-standard);
   }
 
   .card-elevated:hover {
-    @apply shadow-md border-primary/20;
+    @apply shadow-card-hover;
+    transform: translateY(-1px);
+    border-color: rgba(168, 85, 247, 0.30);
   }
 
   .card-glass {
-    @apply bg-card/80 backdrop-blur-sm border rounded-xl;
+    background: rgba(6, 6, 6, 0.80);
+    backdrop-filter: blur(12px);
+    @apply border rounded-lg;
   }
 
-  /* Gradient backgrounds */
+  /* Gradient backgrounds - Brand signature */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(199 89% 48%) 100%);
+    background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
   }
 
   .gradient-primary-soft {
-    background: linear-gradient(135deg, hsl(262 83% 58% / 0.1) 0%, hsl(199 89% 48% / 0.1) 100%);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
   }
 
   .dark .gradient-primary-soft {
-    background: linear-gradient(135deg, hsl(262 83% 65% / 0.15) 0%, hsl(199 89% 58% / 0.15) 100%);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
   }
 
   /* Stat card animations */
@@ -312,9 +432,30 @@
   }
 }
 
-/* Skeleton loading */
+/* Skeleton loading - Analytics Design System */
 .skeleton {
-  @apply bg-muted animate-pulse rounded;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  background-size: 200% 100%;
+  animation: shimmer 900ms linear infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Insight Badge - Quantum Ember signature */
+.badge-insight {
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.40);
+  color: #F97316;
+}
+
+/* Nav Active State - Analytics Design System */
+.nav-item-active {
+  background: rgba(168, 85, 247, 0.10);
+  border-left: 3px solid rgba(168, 85, 247, 0.30);
 }
 
 /* Joyride custom styles */

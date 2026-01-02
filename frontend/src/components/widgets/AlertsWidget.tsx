@@ -12,29 +12,36 @@ const mockAlerts = [
   { id: 4, type: 'info', message: 'New competitor detected: AcmeCorp', time: '1d ago' },
 ]
 
+// Analytics Design System status colors
 const alertConfig = {
-  warning: { icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  success: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
-  error: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
-  info: { icon: Info, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  warning: { icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10' },
+  success: { icon: CheckCircle, color: 'text-success', bg: 'bg-success/10' },
+  error: { icon: XCircle, color: 'text-danger', bg: 'bg-danger/10', motion: 'motion-critical' },
+  info: { icon: Info, color: 'text-info', bg: 'bg-info/10' },
 }
 
 export function AlertsWidget({ className }: AlertsWidgetProps) {
   return (
     <div className={cn('h-full p-4 overflow-auto', className)}>
       <div className="space-y-3">
-        {mockAlerts.map((alert) => {
+        {mockAlerts.map((alert, index) => {
           const config = alertConfig[alert.type as keyof typeof alertConfig]
           const Icon = config.icon
+          const motionClass = 'motion' in config ? config.motion : 'motion-enter'
           return (
             <div
               key={alert.id}
-              className={cn('flex items-start gap-3 p-3 rounded-lg', config.bg)}
+              className={cn(
+                'flex items-start gap-3 p-3 rounded-lg border border-transparent',
+                config.bg,
+                motionClass
+              )}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <Icon className={cn('w-5 h-5 flex-shrink-0 mt-0.5', config.color)} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm">{alert.message}</p>
-                <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
+                <p className="text-sm text-body">{alert.message}</p>
+                <p className="text-xs text-text-muted mt-1">{alert.time}</p>
               </div>
             </div>
           )

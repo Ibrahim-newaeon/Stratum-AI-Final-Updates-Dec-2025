@@ -100,6 +100,48 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute="*"),
         "options": {"queue": "default"},
     },
+
+    # Cost allocation daily at 2 AM UTC
+    "calculate-cost-allocation": {
+        "task": "app.workers.tasks.calculate_cost_allocation",
+        "schedule": crontab(minute=0, hour=2),
+        "options": {"queue": "default"},
+    },
+
+    # Usage rollup daily at 1 AM UTC
+    "calculate-usage-rollup": {
+        "task": "app.workers.tasks.calculate_usage_rollup",
+        "schedule": crontab(minute=0, hour=1),
+        "options": {"queue": "default"},
+    },
+
+    # Pipeline health check hourly
+    "check-pipeline-health": {
+        "task": "app.workers.tasks.check_pipeline_health",
+        "schedule": crontab(minute=30),
+        "options": {"queue": "default"},
+    },
+
+    # Daily scoring at 4 AM UTC
+    "calculate-daily-scores": {
+        "task": "app.workers.tasks.calculate_daily_scores",
+        "schedule": crontab(minute=0, hour=4),
+        "options": {"queue": "default"},
+    },
+
+    # Live predictions every 30 minutes
+    "run-all-predictions": {
+        "task": "app.workers.tasks.run_all_tenant_predictions",
+        "schedule": crontab(minute="*/30"),
+        "options": {"queue": "ml"},
+    },
+
+    # Process scheduled WhatsApp messages every minute
+    "process-scheduled-whatsapp": {
+        "task": "app.workers.tasks.process_scheduled_whatsapp_messages",
+        "schedule": crontab(minute="*"),
+        "options": {"queue": "default"},
+    },
 }
 
 

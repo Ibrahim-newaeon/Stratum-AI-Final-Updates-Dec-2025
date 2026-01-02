@@ -32,41 +32,47 @@ interface ROASAlertsWidgetProps {
   limit?: number
 }
 
+// Analytics Design System severity config
 const severityConfig = {
   critical: {
     icon: AlertCircle,
-    bg: 'bg-red-500/10',
-    border: 'border-red-500',
-    text: 'text-red-500',
+    bg: 'bg-danger/10',
+    border: 'border-danger',
+    text: 'text-danger',
     label: 'Critical',
+    motion: 'motion-critical',
   },
   high: {
     icon: AlertTriangle,
-    bg: 'bg-orange-500/10',
-    border: 'border-orange-500',
-    text: 'text-orange-500',
+    bg: 'bg-insight/10',
+    border: 'border-insight',
+    text: 'text-insight',
     label: 'High',
+    motion: 'motion-insight',
   },
   medium: {
     icon: AlertTriangle,
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500',
-    text: 'text-amber-500',
+    bg: 'bg-warning/10',
+    border: 'border-warning',
+    text: 'text-warning',
     label: 'Medium',
+    motion: 'motion-enter',
   },
   low: {
     icon: Info,
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500',
-    text: 'text-blue-500',
+    bg: 'bg-info/10',
+    border: 'border-info',
+    text: 'text-info',
     label: 'Low',
+    motion: 'motion-enter',
   },
   info: {
     icon: TrendingUp,
-    bg: 'bg-green-500/10',
-    border: 'border-green-500',
-    text: 'text-green-500',
+    bg: 'bg-success/10',
+    border: 'border-success',
+    text: 'text-success',
     label: 'Opportunity',
+    motion: 'motion-enter',
   },
 }
 
@@ -130,7 +136,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
   }
 
   return (
-    <div className={cn('rounded-xl border bg-card overflow-hidden', className)}>
+    <div className={cn('rounded-lg border bg-card overflow-hidden motion-enter shadow-card', className)}>
       {/* Header */}
       <div className="px-6 py-4 border-b">
         <div className="flex items-center justify-between">
@@ -204,10 +210,12 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
               <div
                 key={`${alert.campaign_id}-${index}`}
                 className={cn(
-                  'p-4 rounded-lg border-l-4 transition-all hover:shadow-md cursor-pointer',
+                  'p-4 rounded-lg border-l-4 motion-card hover:shadow-card-hover cursor-pointer',
                   config.bg,
-                  config.border
+                  config.border,
+                  config.motion
                 )}
+                style={{ animationDelay: `${index * 60}ms` }}
               >
                 <div className="flex items-start gap-3">
                   <Icon className={cn('w-5 h-5 mt-0.5 flex-shrink-0', config.text)} />

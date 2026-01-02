@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
 import DashboardLayout from './views/DashboardLayout'
+import TenantLayout from './views/TenantLayout'
 import { Toaster } from './components/ui/toaster'
 import { JoyrideProvider } from './components/guide/JoyrideWrapper'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -25,6 +26,16 @@ const CAPISetup = lazy(() => import('./views/CAPISetup'))
 const DataQuality = lazy(() => import('./views/DataQuality'))
 const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'))
 const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'))
+
+// Tenant-scoped views (Campaign Builder)
+const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'))
+const AdAccounts = lazy(() => import('./views/tenant/AdAccounts'))
+const CampaignBuilder = lazy(() => import('./views/tenant/CampaignBuilder'))
+const CampaignDrafts = lazy(() => import('./views/tenant/CampaignDrafts'))
+const PublishLogs = lazy(() => import('./views/tenant/PublishLogs'))
+const TenantOverview = lazy(() => import('./views/tenant/TenantOverview'))
+const TenantCampaigns = lazy(() => import('./views/tenant/TenantCampaigns'))
+const TenantSettings = lazy(() => import('./views/tenant/TenantSettings'))
 
 function App() {
   return (
@@ -174,6 +185,104 @@ function App() {
                         <SuperadminDashboard />
                       </Suspense>
                     </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              {/* Tenant-scoped routes with :tenantId parameter */}
+              <Route
+                path="/app/:tenantId"
+                element={
+                  <ProtectedRoute>
+                    <TenantLayout />
+                  </ProtectedRoute>
+                }
+              >
+                {/* Tenant Dashboard */}
+                <Route
+                  index
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantOverview />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="overview"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantOverview />
+                    </Suspense>
+                  }
+                />
+
+                {/* Campaigns Management */}
+                <Route
+                  path="campaigns"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantCampaigns />
+                    </Suspense>
+                  }
+                />
+
+                {/* Campaign Builder Routes */}
+                <Route
+                  path="campaigns/connect"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ConnectPlatforms />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/accounts"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <AdAccounts />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/new"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CampaignBuilder />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/drafts"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CampaignDrafts />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/drafts/:draftId"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CampaignBuilder />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/logs"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <PublishLogs />
+                    </Suspense>
+                  }
+                />
+
+                {/* Tenant Settings */}
+                <Route
+                  path="settings"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantSettings />
+                    </Suspense>
                   }
                 />
               </Route>

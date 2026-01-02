@@ -1,48 +1,49 @@
 /**
  * Centralized Chart Theme Configuration
- * Stratum AI Brand Colors and Styling for Recharts
+ * Analytics Design System + Stratum AI Brand
  */
 
 export const chartTheme = {
-  // Brand colors
+  // Brand colors - Analytics Design System
   colors: {
-    primary: 'hsl(262 83% 58%)',      // Stratum purple
-    primaryLight: 'hsl(262 83% 70%)',
-    secondary: 'hsl(199 89% 48%)',    // Cyan accent
-    secondaryLight: 'hsl(199 89% 60%)',
+    primary: '#a855f7',               // Stratum purple
+    primaryLight: '#c084fc',
+    secondary: '#06b6d4',             // Cyan accent
+    secondaryLight: '#22d3ee',
 
     // Metrics
     spend: '#f97316',                  // Orange
     revenue: '#0ea5e9',                // Sky blue
-    roas: '#10b981',                   // Emerald
+    roas: '#22C55E',                   // Success green (design system)
     conversions: '#8b5cf6',            // Violet
     ctr: '#ec4899',                    // Pink
-    cpa: '#f59e0b',                    // Amber
+    cpa: '#FACC15',                    // Warning (design system)
     impressions: '#6366f1',            // Indigo
     clicks: '#14b8a6',                 // Teal
 
-    // Platforms
-    meta: '#1877F2',
-    google: '#EA4335',
+    // Platforms - Analytics Design System
+    meta: '#0866FF',
+    google: '#4285F4',
     tiktok: '#00F2EA',
     snapchat: '#FFFC00',
     linkedin: '#0A66C2',
     whatsapp: '#25D366',
 
-    // Status
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
+    // Status - Analytics Design System data colors
+    success: '#22C55E',
+    warning: '#FACC15',
+    error: '#EF4444',
+    info: '#3B82F6',
+    insight: '#F97316',               // Quantum Ember
 
     // Neutral
-    muted: 'hsl(var(--muted-foreground))',
-    border: 'hsl(var(--border))',
-    grid: 'hsl(var(--muted))',
+    muted: '#6E7482',
+    border: 'rgba(255,255,255,0.10)',
+    grid: 'rgba(255,255,255,0.08)',
   },
 
-  // Platform color palette (ordered)
-  platformColors: ['#1877F2', '#EA4335', '#00F2EA', '#FFFC00', '#0A66C2', '#25D366'],
+  // Platform color palette (ordered) - Analytics Design System
+  platformColors: ['#0866FF', '#4285F4', '#00F2EA', '#FFFC00', '#0A66C2', '#25D366'],
 
   // Regional breakdown colors
   regionColors: ['#6366f1', '#ec4899', '#f97316', '#14b8a6', '#8b5cf6', '#f43f5e'],
@@ -59,43 +60,43 @@ export const chartTheme = {
     '#f97316', // Orange
   ],
 
-  // Tooltip styling
+  // Tooltip styling - Analytics Design System
   tooltip: {
     contentStyle: {
-      backgroundColor: 'hsl(var(--card))',
-      border: '1px solid hsl(var(--border))',
-      borderRadius: '0.5rem',
-      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+      backgroundColor: '#0A0A0A',
+      border: '1px solid rgba(255,255,255,0.10)',
+      borderRadius: '12px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.20)',
       padding: '12px 16px',
     },
     labelStyle: {
-      color: 'hsl(var(--foreground))',
+      color: '#FFFFFF',
       fontWeight: 600,
       marginBottom: '4px',
     },
     itemStyle: {
-      color: 'hsl(var(--muted-foreground))',
+      color: '#A7AABB',
       fontSize: '14px',
     },
     cursor: {
-      fill: 'hsl(var(--primary) / 0.1)',
+      fill: 'rgba(168, 85, 247, 0.10)',
     },
   },
 
-  // Axis styling
+  // Axis styling - Analytics Design System
   axis: {
     tick: {
       fontSize: 12,
-      fill: 'hsl(var(--muted-foreground))',
+      fill: '#A7AABB',
     },
     tickLine: false,
     axisLine: false,
   },
 
-  // Grid styling
+  // Grid styling - Analytics Design System
   grid: {
     strokeDasharray: '3 3',
-    stroke: 'hsl(var(--border))',
+    stroke: 'rgba(255,255,255,0.08)',
     opacity: 0.5,
   },
 
@@ -114,7 +115,7 @@ export const chartTheme = {
     easing: 'ease-out',
   },
 
-  // Gradient definitions
+  // Gradient definitions - Analytics Design System
   gradients: {
     revenue: {
       id: 'colorRevenue',
@@ -145,27 +146,38 @@ export const chartTheme = {
       x2: '0',
       y2: '1',
       stops: [
-        { offset: '5%', color: 'hsl(262 83% 58%)', opacity: 0.3 },
-        { offset: '95%', color: 'hsl(262 83% 58%)', opacity: 0 },
+        { offset: '5%', color: '#a855f7', opacity: 0.3 },
+        { offset: '95%', color: '#a855f7', opacity: 0 },
+      ],
+    },
+    brand: {
+      id: 'colorBrand',
+      x1: '0',
+      y1: '0',
+      x2: '1',
+      y2: '1',
+      stops: [
+        { offset: '0%', color: '#a855f7', opacity: 1 },
+        { offset: '100%', color: '#06b6d4', opacity: 1 },
       ],
     },
   },
 }
 
-// Helper function to get platform color
+// Helper function to get platform color - Analytics Design System
 export function getPlatformChartColor(platform: string): string {
   const platformMap: Record<string, string> = {
-    'meta ads': chartTheme.colors.meta,
-    'meta': chartTheme.colors.meta,
-    'google ads': chartTheme.colors.google,
-    'google': chartTheme.colors.google,
-    'tiktok ads': chartTheme.colors.tiktok,
-    'tiktok': chartTheme.colors.tiktok,
-    'snapchat ads': chartTheme.colors.snapchat,
-    'snapchat': chartTheme.colors.snapchat,
-    'linkedin ads': chartTheme.colors.linkedin,
-    'linkedin': chartTheme.colors.linkedin,
-    'whatsapp': chartTheme.colors.whatsapp,
+    'meta ads': '#0866FF',
+    'meta': '#0866FF',
+    'google ads': '#4285F4',
+    'google': '#4285F4',
+    'tiktok ads': '#00F2EA',
+    'tiktok': '#00F2EA',
+    'snapchat ads': '#FFFC00',
+    'snapchat': '#FFFC00',
+    'linkedin ads': '#0A66C2',
+    'linkedin': '#0A66C2',
+    'whatsapp': '#25D366',
   }
   return platformMap[platform.toLowerCase()] || chartTheme.seriesColors[0]
 }

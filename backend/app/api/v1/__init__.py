@@ -19,10 +19,16 @@ from app.api.v1.endpoints import (
     users,
     whatsapp,
     tenants,
+    tenant_dashboard,
     linkedin,
     ml_training,
     predictions,
     capi,
+    meta_capi,
+    landing_cms,
+    qa_fixes,
+    analytics_ai,
+    superadmin,
 )
 
 api_router = APIRouter()
@@ -130,4 +136,43 @@ api_router.include_router(
     capi.router,
     prefix="/capi",
     tags=["Conversion API"],
+)
+
+# Meta CAPI QA (Event collection with quality tracking)
+api_router.include_router(
+    meta_capi.router,
+    tags=["Meta CAPI QA"],
+)
+
+# Landing Page CMS (Multi-language content management)
+api_router.include_router(
+    landing_cms.router,
+    tags=["Landing CMS"],
+)
+
+# EMQ One-Click Fix System
+api_router.include_router(
+    qa_fixes.router,
+    tags=["QA Fixes"],
+)
+
+# AI-Powered Analytics (Scaling scores, fatigue, anomalies, recommendations)
+api_router.include_router(
+    analytics_ai.router,
+    prefix="/analytics/ai",
+    tags=["AI Analytics"],
+)
+
+# Super Admin Dashboard (Platform-level management)
+api_router.include_router(
+    superadmin.router,
+    prefix="/superadmin",
+    tags=["Super Admin"],
+)
+
+# Tenant Dashboard (Tenant-scoped analytics and settings)
+api_router.include_router(
+    tenant_dashboard.router,
+    prefix="/tenant",
+    tags=["Tenant Dashboard"],
 )

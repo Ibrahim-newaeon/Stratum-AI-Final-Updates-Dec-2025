@@ -57,12 +57,12 @@ export const KPICard: React.FC<KPICardProps> = ({
   // Determine if trend is positive based on context
   const isPositiveTrend = trendIsGood ? trend === 'up' : trend === 'down'
 
-  // Color classes for delta
+  // Color classes for delta - using design system colors
   const deltaColorClass =
     delta !== undefined
       ? isPositiveTrend
-        ? 'text-green-600 dark:text-green-400'
-        : 'text-red-600 dark:text-red-400'
+        ? 'text-success'
+        : 'text-danger'
       : 'text-muted-foreground'
 
   // Parse numeric value from string if needed
@@ -105,10 +105,10 @@ export const KPICard: React.FC<KPICardProps> = ({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-xl border transition-all duration-200 hover:shadow-lg group',
+        'relative overflow-hidden rounded-lg border motion-card motion-enter group',
         highlight
-          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-xl'
-          : 'bg-card shadow hover:border-primary/20',
+          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-glow'
+          : 'bg-card shadow-card hover:shadow-card-hover hover:border-[rgba(168,85,247,0.30)]',
         size === 'small' ? 'p-4' : 'p-6',
         className
       )}
@@ -223,9 +223,9 @@ export const KPICard: React.FC<KPICardProps> = ({
           )}
         </div>
 
-        {/* Delta (change indicator) */}
+        {/* Delta (change indicator) - with motion-delta animation */}
         {delta !== undefined && (
-          <div className={cn('mt-2 flex items-center text-sm', deltaColorClass)}>
+          <div className={cn('mt-2 flex items-center text-sm motion-delta', deltaColorClass)}>
             {trend === 'up' && <TrendingUp className="h-4 w-4 mr-1" aria-hidden="true" />}
             {trend === 'down' && <TrendingDown className="h-4 w-4 mr-1" aria-hidden="true" />}
             <span className="font-semibold">
@@ -234,8 +234,8 @@ export const KPICard: React.FC<KPICardProps> = ({
             </span>
             <span
               className={cn(
-                'ml-1',
-                highlight ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                'ml-1 text-meta',
+                highlight ? 'text-primary-foreground/70' : 'text-text-muted'
               )}
             >
               {deltaText}

@@ -36,24 +36,29 @@ const mockPerformanceData = [
   { name: 'Sun', clicks: 4000, conversions: 290 },
 ]
 
+// Analytics Design System chart styling
+const chartStyle = {
+  grid: { stroke: 'rgba(255,255,255,0.08)', strokeDasharray: '3 3' },
+  axis: { fill: '#A7AABB', fontSize: 12 },
+  tooltip: {
+    backgroundColor: '#0A0A0A',
+    border: '1px solid rgba(255,255,255,0.10)',
+    borderRadius: '12px',
+  },
+}
+
 export function ChartWidget({ type, className }: ChartWidgetProps) {
   if (type === 'performance') {
     return (
-      <div className={cn('h-full p-4', className)}>
+      <div className={cn('h-full p-4 motion-chart-sweep', className)}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={mockPerformanceData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis dataKey="name" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-            <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-              }}
-            />
-            <Bar dataKey="clicks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="conversions" fill="#22c55e" radius={[4, 4, 0, 0]} />
+            <CartesianGrid {...chartStyle.grid} />
+            <XAxis dataKey="name" tick={chartStyle.axis} tickLine={false} axisLine={false} />
+            <YAxis tick={chartStyle.axis} tickLine={false} axisLine={false} />
+            <Tooltip contentStyle={chartStyle.tooltip} />
+            <Bar dataKey="clicks" fill="#a855f7" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="conversions" fill="#22C55E" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -61,10 +66,10 @@ export function ChartWidget({ type, className }: ChartWidgetProps) {
   }
 
   const data = type === 'revenue' ? mockRevenueData : mockSpendData
-  const color = type === 'revenue' ? '#22c55e' : 'hsl(var(--primary))'
+  const color = type === 'revenue' ? '#22C55E' : '#a855f7'
 
   return (
-    <div className={cn('h-full p-4', className)}>
+    <div className={cn('h-full p-4 motion-chart-sweep', className)}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}>
           <defs>
@@ -73,15 +78,11 @@ export function ChartWidget({ type, className }: ChartWidgetProps) {
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis dataKey="name" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-          <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+          <CartesianGrid {...chartStyle.grid} />
+          <XAxis dataKey="name" tick={chartStyle.axis} tickLine={false} axisLine={false} />
+          <YAxis tick={chartStyle.axis} tickLine={false} axisLine={false} />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-            }}
+            contentStyle={chartStyle.tooltip}
             formatter={(value: number) => [`$${value.toLocaleString()}`, type === 'revenue' ? 'Revenue' : 'Spend']}
           />
           <Area
