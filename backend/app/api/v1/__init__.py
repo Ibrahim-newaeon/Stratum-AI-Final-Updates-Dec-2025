@@ -29,6 +29,12 @@ from app.api.v1.endpoints import (
     qa_fixes,
     analytics_ai,
     superadmin,
+    superadmin_analytics,
+    autopilot,
+    campaign_builder,
+    feature_flags,
+    insights,
+    trust_layer,
 )
 
 api_router = APIRouter()
@@ -175,4 +181,46 @@ api_router.include_router(
     tenant_dashboard.router,
     prefix="/tenant",
     tags=["Tenant Dashboard"],
+)
+
+# Superadmin Analytics (Platform-wide analytics)
+api_router.include_router(
+    superadmin_analytics.router,
+    prefix="/superadmin/analytics",
+    tags=["Superadmin Analytics"],
+)
+
+# Autopilot (Automated campaign optimization)
+api_router.include_router(
+    autopilot.router,
+    prefix="/autopilot",
+    tags=["Autopilot"],
+)
+
+# Campaign Builder (Multi-platform campaign creation)
+api_router.include_router(
+    campaign_builder.router,
+    prefix="/campaign-builder",
+    tags=["Campaign Builder"],
+)
+
+# Feature Flags (Feature toggles and rollouts)
+api_router.include_router(
+    feature_flags.router,
+    prefix="/features",
+    tags=["Feature Flags"],
+)
+
+# AI Insights (Intelligent recommendations)
+api_router.include_router(
+    insights.router,
+    prefix="/insights",
+    tags=["AI Insights"],
+)
+
+# Trust Layer (Data quality and signal health)
+api_router.include_router(
+    trust_layer.router,
+    prefix="/trust",
+    tags=["Trust Layer"],
 )
