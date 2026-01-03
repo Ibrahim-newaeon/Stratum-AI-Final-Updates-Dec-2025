@@ -246,7 +246,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       {/* Collapsible Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors rounded-t-lg"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors rounded-t-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        aria-expanded={isExpanded}
+        aria-controls="filter-content"
       >
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg">
@@ -296,24 +298,26 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       {/* Collapsible Content */}
       <div
+        id="filter-content"
         className={cn(
           'overflow-hidden transition-all duration-300 ease-in-out',
-          isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+          isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
         )}
+        aria-hidden={!isExpanded}
       >
         <div className="px-4 pb-4 pt-2 border-t">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {/* Date Range */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
 
               {/* Quick Presets */}
-              <div className="flex flex-wrap gap-2 mb-3">
+              <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Date range presets">
                 {['7days', '30days', '90days'].map((preset) => (
                   <button
                     key={preset}
                     onClick={() => applyDatePreset(preset)}
-                    className="px-3 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                    className="px-3 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {preset === '7days'
                       ? 'Last 7 Days'
@@ -331,7 +335,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   value={filters.dateRange.start.toISOString().split('T')[0]}
                   onChange={(e) => handleDateChange('start', e.target.value)}
                   max={filters.dateRange.end.toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  aria-label="Start date"
                 />
                 <input
                   type="date"
@@ -339,7 +344,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   onChange={(e) => handleDateChange('end', e.target.value)}
                   min={filters.dateRange.start.toISOString().split('T')[0]}
                   max={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  aria-label="End date"
                 />
               </div>
             </div>
@@ -351,13 +357,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 <div className="flex gap-2">
                   <button
                     onClick={selectAllPlatforms}
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-primary hover:underline focus:outline-none focus-visible:underline"
+                    aria-label="Select all platforms"
                   >
                     All
                   </button>
                   <button
                     onClick={clearAllPlatforms}
-                    className="text-xs text-muted-foreground hover:underline"
+                    className="text-xs text-muted-foreground hover:underline focus:outline-none focus-visible:underline"
+                    aria-label="Clear all platforms"
                   >
                     Clear
                   </button>
@@ -406,18 +414,20 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
               {/* Region Search */}
               <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <input
                   type="text"
                   placeholder="Search countries..."
                   value={regionSearch}
                   onChange={(e) => setRegionSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border rounded-md bg-background text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full pl-9 pr-9 py-2 border rounded-md bg-background text-foreground text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  aria-label="Search countries"
                 />
                 {regionSearch && (
                   <button
                     onClick={() => setRegionSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:text-foreground"
+                    aria-label="Clear search"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -525,9 +535,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 clearAllPlatforms()
                 clearAllRegions()
               }}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Clear all filters"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
               Clear All
             </button>
           </div>

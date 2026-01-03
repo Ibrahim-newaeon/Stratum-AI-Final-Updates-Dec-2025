@@ -73,12 +73,12 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
     }))
   }
 
-  // Get ROAS color
+  // Get ROAS color - uses semantic status colors from design system
   const getROASColor = (roas: number) => {
-    if (roas >= 3.0) return 'text-green-600 dark:text-green-400 font-bold'
-    if (roas >= 2.0) return 'text-green-500 dark:text-green-500'
-    if (roas >= 1.0) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-red-600 dark:text-red-400'
+    if (roas >= 3.0) return 'text-emerald-600 dark:text-emerald-400 font-bold'
+    if (roas >= 2.0) return 'text-emerald-500 dark:text-emerald-500'
+    if (roas >= 1.0) return 'text-amber-600 dark:text-amber-400'
+    return 'text-red-500 dark:text-red-400'
   }
 
   // Column header component
@@ -93,26 +93,30 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
 
     return (
       <th
-        onClick={() => handleSort(sortKey)}
         className={cn(
-          'px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted/50 transition-colors',
+          'px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider',
           alignClass
         )}
       >
-        <div
+        <button
+          type="button"
+          onClick={() => handleSort(sortKey)}
           className={cn(
-            'flex items-center gap-1',
+            'flex items-center gap-1 w-full hover:text-foreground transition-colors',
+            'focus:outline-none focus-visible:text-foreground focus-visible:underline',
             align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'
           )}
+          aria-label={`Sort by ${label} ${isSorted ? (sortConfig.direction === 'asc' ? 'descending' : 'ascending') : 'ascending'}`}
+          aria-sort={isSorted ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : undefined}
         >
           {label}
           {isSorted &&
             (sortConfig.direction === 'asc' ? (
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <ArrowDown className="h-4 w-4" />
+              <ArrowDown className="h-4 w-4" aria-hidden="true" />
             ))}
-        </div>
+        </button>
       </th>
     )
   }
@@ -132,11 +136,15 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
                 setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full pl-10 pr-4 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+              aria-label="Search campaigns by name or platform"
             />
           </div>
-          <button className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium text-foreground bg-background hover:bg-muted transition-colors">
-            <Filter className="h-5 w-5 mr-2" />
+          <button
+            className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium text-foreground bg-background hover:bg-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="Filter campaigns"
+          >
+            <Filter className="h-5 w-5 mr-2" aria-hidden="true" />
             Filter
           </button>
         </div>

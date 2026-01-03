@@ -95,14 +95,16 @@ export function EmptyState({
           <button
             onClick={action.onClick}
             className={cn(
-              'inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+              'inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              'active:scale-[0.98]',
               action.variant === 'secondary'
                 ? 'border bg-background hover:bg-muted'
                 : 'bg-primary text-primary-foreground hover:bg-primary/90'
             )}
           >
-            {variant === 'error' && <RefreshCw className="w-4 h-4 mr-2" />}
-            {variant === 'empty' && <Plus className="w-4 h-4 mr-2" />}
+            {variant === 'error' && <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />}
+            {variant === 'empty' && <Plus className="w-4 h-4 mr-2" aria-hidden="true" />}
             {action.label}
           </button>
         )}
@@ -110,7 +112,7 @@ export function EmptyState({
         {secondaryAction && (
           <button
             onClick={secondaryAction.onClick}
-            className="text-sm text-primary hover:underline"
+            className="text-sm text-primary hover:underline focus:outline-none focus-visible:underline transition-colors"
           >
             {secondaryAction.label}
           </button>

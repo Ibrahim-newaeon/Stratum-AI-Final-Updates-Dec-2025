@@ -416,6 +416,106 @@
     border-radius: 0 4px 4px 0;
     background: linear-gradient(180deg, hsl(262 83% 58%) 0%, hsl(199 89% 48%) 100%);
   }
+
+  /* ===== Standardized Button Components ===== */
+  .btn {
+    @apply inline-flex items-center justify-center font-medium transition-all duration-200;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply active:scale-[0.98];
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-md gap-1.5;
+  }
+
+  .btn-md {
+    @apply px-4 py-2 text-sm rounded-lg gap-2;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base rounded-lg gap-2;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-foreground hover:bg-muted;
+  }
+
+  .btn-outline {
+    @apply border bg-transparent text-foreground hover:bg-muted;
+  }
+
+  .btn-secondary {
+    @apply bg-muted text-foreground hover:bg-muted/80;
+  }
+
+  .btn-destructive {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+
+  /* ===== Standardized Status Badges ===== */
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-success {
+    @apply bg-emerald-500/15 text-emerald-700 dark:text-emerald-400;
+  }
+
+  .status-warning {
+    @apply bg-amber-500/15 text-amber-700 dark:text-amber-400;
+  }
+
+  .status-error {
+    @apply bg-red-500/15 text-red-700 dark:text-red-400;
+  }
+
+  .status-info {
+    @apply bg-blue-500/15 text-blue-700 dark:text-blue-400;
+  }
+
+  .status-neutral {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  /* ===== Standardized Card Components ===== */
+  .card {
+    @apply bg-card border border-border rounded-lg;
+  }
+
+  .card-interactive {
+    @apply card transition-all duration-200;
+    @apply hover:shadow-md hover:border-primary/20;
+    @apply focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2;
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b border-border;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  .card-footer {
+    @apply px-6 py-4 border-t border-border bg-muted/30;
+  }
+
+  /* ===== Input Components ===== */
+  .input {
+    @apply w-full px-3 py-2 border rounded-md bg-background text-foreground;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply placeholder:text-muted-foreground;
+    @apply transition-colors duration-200;
+  }
+
+  .input-sm {
+    @apply px-2.5 py-1.5 text-sm;
+  }
+
+  .input-error {
+    @apply border-red-500 focus-visible:ring-red-500;
+  }
 }
 
 /* Loading animations */

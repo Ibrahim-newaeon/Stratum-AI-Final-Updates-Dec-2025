@@ -31,15 +31,15 @@ interface BannerAlertProps {
 
 const BannerAlert: React.FC<BannerAlertProps> = ({ banner, onDismiss }) => {
   const bgColors = {
-    info: 'bg-blue-50 border-blue-200',
-    warning: 'bg-yellow-50 border-yellow-200',
-    error: 'bg-red-50 border-red-200',
+    info: 'bg-blue-500/10 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/20',
+    warning: 'bg-amber-500/10 border-amber-500/30 dark:bg-amber-500/10 dark:border-amber-500/20',
+    error: 'bg-red-500/10 border-red-500/30 dark:bg-red-500/10 dark:border-red-500/20',
   }
 
   const iconColors = {
-    info: 'text-blue-500',
-    warning: 'text-yellow-500',
-    error: 'text-red-500',
+    info: 'text-blue-500 dark:text-blue-400',
+    warning: 'text-amber-500 dark:text-amber-400',
+    error: 'text-red-500 dark:text-red-400',
   }
 
   const icons = {
@@ -67,14 +67,14 @@ const BannerAlert: React.FC<BannerAlertProps> = ({ banner, onDismiss }) => {
           {icons[banner.type]}
         </div>
         <div className="ml-3 flex-1">
-          <h3 className="text-sm font-medium text-gray-800">{banner.title}</h3>
-          <p className="mt-1 text-sm text-gray-600">{banner.message}</p>
+          <h3 className="text-sm font-medium text-foreground">{banner.title}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{banner.message}</p>
           {banner.actions.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
               {banner.actions.map((action, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-white border border-gray-200 text-gray-700"
+                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-card border border-border text-foreground"
                 >
                   {action}
                 </span>
@@ -85,7 +85,8 @@ const BannerAlert: React.FC<BannerAlertProps> = ({ banner, onDismiss }) => {
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="flex-shrink-0 ml-4 text-gray-400 hover:text-gray-600"
+            className="flex-shrink-0 ml-4 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            aria-label="Dismiss alert"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -99,32 +100,36 @@ const BannerAlert: React.FC<BannerAlertProps> = ({ banner, onDismiss }) => {
 
 const StatusIndicator: React.FC<{ status: string; label: string }> = ({ status, label }) => {
   const colorClasses: Record<string, string> = {
-    ok: 'bg-green-100 text-green-800',
-    healthy: 'bg-green-100 text-green-800',
-    risk: 'bg-yellow-100 text-yellow-800',
-    minor_variance: 'bg-yellow-100 text-yellow-800',
-    degraded: 'bg-orange-100 text-orange-800',
-    moderate_variance: 'bg-orange-100 text-orange-800',
-    critical: 'bg-red-100 text-red-800',
-    high_variance: 'bg-red-100 text-red-800',
-    no_data: 'bg-gray-100 text-gray-800',
+    ok: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+    healthy: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+    risk: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+    minor_variance: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+    degraded: 'bg-orange-500/15 text-orange-700 dark:text-orange-400',
+    moderate_variance: 'bg-orange-500/15 text-orange-700 dark:text-orange-400',
+    critical: 'bg-red-500/15 text-red-700 dark:text-red-400',
+    high_variance: 'bg-red-500/15 text-red-700 dark:text-red-400',
+    no_data: 'bg-muted text-muted-foreground',
   }
 
   const dotColors: Record<string, string> = {
-    ok: 'bg-green-400',
-    healthy: 'bg-green-400',
-    risk: 'bg-yellow-400',
-    minor_variance: 'bg-yellow-400',
-    degraded: 'bg-orange-400',
-    moderate_variance: 'bg-orange-400',
-    critical: 'bg-red-400',
-    high_variance: 'bg-red-400',
-    no_data: 'bg-gray-400',
+    ok: 'bg-emerald-500',
+    healthy: 'bg-emerald-500',
+    risk: 'bg-amber-500',
+    minor_variance: 'bg-amber-500',
+    degraded: 'bg-orange-500',
+    moderate_variance: 'bg-orange-500',
+    critical: 'bg-red-500',
+    high_variance: 'bg-red-500',
+    no_data: 'bg-muted-foreground',
   }
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClasses[status] || 'bg-gray-100 text-gray-800'}`}>
-      <span className={`w-2 h-2 rounded-full mr-1.5 ${dotColors[status] || 'bg-gray-400'}`} />
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClasses[status] || 'bg-muted text-muted-foreground'}`}
+      role="status"
+      aria-label={`Status: ${label}`}
+    >
+      <span className={`w-2 h-2 rounded-full mr-1.5 ${dotColors[status] || 'bg-muted-foreground'}`} aria-hidden="true" />
       {label}
     </span>
   )
@@ -152,11 +157,11 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+      <div className="bg-card rounded-lg border border-border p-4 animate-pulse">
         <div className="flex items-center space-x-4">
-          <div className="h-4 bg-gray-200 rounded w-24" />
-          <div className="h-4 bg-gray-200 rounded w-32" />
-          <div className="h-4 bg-gray-200 rounded w-20" />
+          <div className="h-4 skeleton w-24" />
+          <div className="h-4 skeleton w-32" />
+          <div className="h-4 skeleton w-20" />
         </div>
       </div>
     )
@@ -172,11 +177,11 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
   return (
     <div className="space-y-3">
       {/* Summary Bar */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="bg-card rounded-lg border border-border p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Trust Status:</span>
+              <span className="text-sm font-medium text-foreground">Trust Status:</span>
               <StatusIndicator
                 status={trustStatus.overall_status}
                 label={getStatusLabel(trustStatus.overall_status)}
@@ -184,8 +189,8 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
             </div>
 
             {trustStatus.signal_health && canSignalHealth && (
-              <div className="flex items-center space-x-2 pl-4 border-l border-gray-200">
-                <span className="text-sm text-gray-600">Signal Health:</span>
+              <div className="flex items-center space-x-2 pl-4 border-l border-border">
+                <span className="text-sm text-muted-foreground">Signal Health:</span>
                 <StatusIndicator
                   status={trustStatus.signal_health.status}
                   label={getStatusLabel(trustStatus.signal_health.status)}
@@ -194,8 +199,8 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
             )}
 
             {trustStatus.attribution_variance && canAttributionVariance && (
-              <div className="flex items-center space-x-2 pl-4 border-l border-gray-200">
-                <span className="text-sm text-gray-600">Attribution:</span>
+              <div className="flex items-center space-x-2 pl-4 border-l border-border">
+                <span className="text-sm text-muted-foreground">Attribution:</span>
                 <StatusIndicator
                   status={trustStatus.attribution_variance.status}
                   label={getStatusLabel(trustStatus.attribution_variance.status)}
@@ -206,8 +211,12 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
 
           <div className="flex items-center space-x-4">
             {!trustStatus.automation_allowed && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <span
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/15 text-red-700 dark:text-red-400"
+                role="alert"
+                aria-label="Automation is blocked due to trust status"
+              >
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                   <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>
                 Automation Blocked
@@ -217,7 +226,7 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
             {onViewDetails && (
               <button
                 onClick={onViewDetails}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-primary hover:text-primary/80 font-medium transition-colors focus:outline-none focus-visible:underline"
               >
                 View Details
               </button>
@@ -226,7 +235,7 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
         </div>
 
         {/* Date indicator */}
-        <div className="mt-2 text-xs text-gray-500">
+        <div className="mt-2 text-xs text-muted-foreground">
           Data as of: {new Date(trustStatus.date).toLocaleDateString()}
         </div>
       </div>
@@ -271,31 +280,32 @@ export const TrustBannerCompact: React.FC<TrustBannerProps> = ({
   }
 
   return (
-    <div
-      className={`rounded-lg px-4 py-2 flex items-center justify-between cursor-pointer hover:opacity-90 transition-opacity ${
+    <button
+      className={`w-full rounded-lg px-4 py-2 flex items-center justify-between cursor-pointer hover:opacity-90 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         trustStatus.overall_status === 'critical'
-          ? 'bg-red-50 border border-red-200'
+          ? 'bg-red-500/10 border border-red-500/30 dark:border-red-500/20'
           : trustStatus.overall_status === 'degraded'
-          ? 'bg-orange-50 border border-orange-200'
-          : 'bg-yellow-50 border border-yellow-200'
+          ? 'bg-orange-500/10 border border-orange-500/30 dark:border-orange-500/20'
+          : 'bg-amber-500/10 border border-amber-500/30 dark:border-amber-500/20'
       }`}
       onClick={onViewDetails}
+      aria-label="View trust status details"
     >
       <div className="flex items-center space-x-2">
         <StatusIndicator
           status={trustStatus.overall_status}
           label={getStatusLabel(trustStatus.overall_status)}
         />
-        <span className="text-sm text-gray-700">
+        <span className="text-sm text-foreground">
           {trustStatus.banners.length > 0
             ? trustStatus.banners[0].title
             : 'Trust status requires attention'}
         </span>
       </div>
-      <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+      <svg className="w-4 h-4 text-muted-foreground" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
       </svg>
-    </div>
+    </button>
   )
 }
 
