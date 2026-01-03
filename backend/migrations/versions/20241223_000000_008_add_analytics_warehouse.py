@@ -8,7 +8,7 @@ Based on Data_Schema_Events_and_Tables.md and schema.sql from the
 claude_code_analytics_docs_pack.
 
 Revision ID: 008
-Revises: 007
+Revises: 002
 Create Date: 2024-12-23 00:00:00.000000
 """
 
@@ -18,7 +18,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers
 revision = '008'
-down_revision = '007'
+down_revision = '002'
 branch_labels = None
 depends_on = None
 
