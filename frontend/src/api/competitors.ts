@@ -13,10 +13,16 @@ export interface Competitor {
   tenantId: number
   name: string
   domain: string
+  country: string
   platforms: string[]
   createdAt: string
   updatedAt: string
   lastRefreshedAt: string | null
+  isActive?: boolean
+  estimatedSpend?: number
+  shareOfVoice?: number
+  activeCreatives?: number
+  lastUpdated?: string
 }
 
 export interface CompetitorMetrics {
@@ -62,6 +68,7 @@ export interface CompetitorFilters {
 export interface CreateCompetitorRequest {
   name: string
   domain: string
+  country?: string
   platforms?: string[]
 }
 

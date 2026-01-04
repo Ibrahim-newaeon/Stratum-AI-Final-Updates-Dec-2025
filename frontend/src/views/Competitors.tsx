@@ -2,12 +2,13 @@
  * Competitor Intelligence Page
  *
  * Track competitors, share of voice, keyword overlap, and market trends
+ * Integrates with Meta Ads Library and Google Ads Transparency Center
  */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { useCompetitors, useShareOfVoice } from '@/api/hooks'
+import { useCompetitors, useShareOfVoice, useCreateCompetitor, useDeleteCompetitor } from '@/api/hooks'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -19,6 +20,10 @@ import {
   ArrowPathIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
+  XMarkIcon,
+  CheckIcon,
+  TrashIcon,
+  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline'
 
 interface Competitor {
@@ -33,6 +38,8 @@ interface Competitor {
   creativesTracked: number
   lastRefresh: Date
   status: 'active' | 'paused'
+  country?: string
+  platforms?: string[]
 }
 
 interface KeywordOverlap {
@@ -44,13 +51,111 @@ interface KeywordOverlap {
   competitor: string
 }
 
+// Countries for Meta Ads Library and Google Transparency
+const COUNTRIES = [
+  { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪' },
+  { code: 'EG', name: 'Egypt', flag: '🇪🇬' },
+  { code: 'KW', name: 'Kuwait', flag: '🇰🇼' },
+  { code: 'QA', name: 'Qatar', flag: '🇶🇦' },
+  { code: 'BH', name: 'Bahrain', flag: '🇧🇭' },
+  { code: 'OM', name: 'Oman', flag: '🇴🇲' },
+  { code: 'JO', name: 'Jordan', flag: '🇯🇴' },
+  { code: 'LB', name: 'Lebanon', flag: '🇱🇧' },
+  { code: 'US', name: 'United States', flag: '🇺🇸' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+  { code: 'FR', name: 'France', flag: '🇫🇷' },
+  { code: 'IN', name: 'India', flag: '🇮🇳' },
+  { code: 'PK', name: 'Pakistan', flag: '🇵🇰' },
+  { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
+]
+
+const PLATFORMS = [
+  { id: 'meta', name: 'Meta (Facebook/Instagram)', icon: 'M' },
+  { id: 'google', name: 'Google Ads', icon: 'G' },
+  { id: 'tiktok', name: 'TikTok', icon: 'T' },
+  { id: 'snapchat', name: 'Snapchat', icon: 'S' },
+  { id: 'linkedin', name: 'LinkedIn', icon: 'L' },
+]
+
 export function Competitors() {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { data: competitorsData } = useCompetitors()
-  const { data: sovData } = useShareOfVoice()
+  // Form state for new competitor
+  const [newCompetitor, setNewCompetitor] = useState({
+    name: '',
+    domain: '',
+    country: 'SA',
+    platforms: ['meta', 'google'] as string[],
+  })
+
+  const { data: competitorsData, refetch: refetchCompetitors } = useCompetitors()
+  // Get last 30 days for share of voice
+  const endDate = new Date().toISOString().split('T')[0]
+  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const { data: sovData } = useShareOfVoice(startDate, endDate)
+  const createCompetitor = useCreateCompetitor()
+  const deleteCompetitor = useDeleteCompetitor()
+
+  // Generate Meta Ads Library URL
+  const getMetaAdsLibraryUrl = (domain: string, country: string) => {
+    const searchTerm = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(searchTerm)}&search_type=keyword_unordered`
+  }
+
+  // Generate Google Ads Transparency URL
+  const getGoogleTransparencyUrl = (domain: string) => {
+    const searchTerm = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]
+    return `https://adstransparency.google.com/?domain=${encodeURIComponent(searchTerm)}`
+  }
+
+  // Handle form submission
+  const handleAddCompetitor = async () => {
+    if (!newCompetitor.name || !newCompetitor.domain) return
+
+    setIsSubmitting(true)
+    try {
+      await createCompetitor.mutateAsync({
+        name: newCompetitor.name,
+        domain: newCompetitor.domain,
+        country: newCompetitor.country,
+        platforms: newCompetitor.platforms,
+      })
+      setIsModalOpen(false)
+      setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] })
+      refetchCompetitors()
+    } catch (error) {
+      console.error('Failed to add competitor:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Handle delete competitor
+  const handleDeleteCompetitor = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this competitor?')) return
+    try {
+      await deleteCompetitor.mutateAsync(id)
+      refetchCompetitors()
+    } catch (error) {
+      console.error('Failed to delete competitor:', error)
+    }
+  }
+
+  // Toggle platform selection
+  const togglePlatform = (platformId: string) => {
+    setNewCompetitor(prev => ({
+      ...prev,
+      platforms: prev.platforms.includes(platformId)
+        ? prev.platforms.filter(p => p !== platformId)
+        : [...prev.platforms, platformId]
+    }))
+  }
 
   // Sample competitors
   const competitors: Competitor[] = competitorsData?.map((c) => ({
@@ -173,7 +278,10 @@ export function Competitors() {
           <h1 className="text-2xl font-bold text-foreground">Competitor Intelligence</h1>
           <p className="text-muted-foreground">Track competitor activity and market share</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
           <PlusIcon className="w-4 h-4" />
           Add Competitor
         </button>
@@ -329,6 +437,42 @@ export function Competitors() {
                 Updated {formatLastRefresh(competitor.lastRefresh)}
               </span>
             </div>
+
+            {/* Quick Links to Ad Libraries */}
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+              <a
+                href={getMetaAdsLibraryUrl(competitor.domain, competitor.country || 'SA')}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
+              >
+                <span className="font-bold">M</span>
+                Meta Ads Library
+                <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+              </a>
+              <a
+                href={getGoogleTransparencyUrl(competitor.domain)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+              >
+                <span className="font-bold">G</span>
+                Google Transparency
+                <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+              </a>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteCompetitor(competitor.id)
+                }}
+                className="ml-auto p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors"
+                title="Delete competitor"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -394,6 +538,175 @@ export function Competitors() {
         <div className="text-center py-12">
           <EyeIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">No competitors found</p>
+        </div>
+      )}
+
+      {/* Add Competitor Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsModalOpen(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-lg mx-4 bg-card rounded-2xl shadow-2xl border overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-xl font-semibold">Add Competitor</h2>
+                <p className="text-sm text-muted-foreground">
+                  Track competitor ads via Meta Ads Library & Google Transparency
+                </p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-6 space-y-5">
+              {/* Competitor Name */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Competitor Name *
+                </label>
+                <input
+                  type="text"
+                  value={newCompetitor.name}
+                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Competitor Inc"
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              {/* Domain/Website */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Website / Domain *
+                </label>
+                <input
+                  type="text"
+                  value={newCompetitor.domain}
+                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, domain: e.target.value }))}
+                  placeholder="e.g., competitor.com"
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Used to search ads in Meta Ads Library and Google Transparency
+                </p>
+              </div>
+
+              {/* Country Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Competitor's Country *
+                </label>
+                <select
+                  value={newCompetitor.country}
+                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, country: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  {COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.flag} {country.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select the country where competitor runs ads (for Meta Ads Library filter)
+                </p>
+              </div>
+
+              {/* Platform Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Platforms to Track
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORMS.map((platform) => (
+                    <button
+                      key={platform.id}
+                      type="button"
+                      onClick={() => togglePlatform(platform.id)}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all',
+                        newCompetitor.platforms.includes(platform.id)
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/50'
+                      )}
+                    >
+                      <span className="w-5 h-5 rounded bg-muted flex items-center justify-center text-xs font-bold">
+                        {platform.icon}
+                      </span>
+                      <span className="text-sm">{platform.name}</span>
+                      {newCompetitor.platforms.includes(platform.id) && (
+                        <CheckIcon className="w-4 h-4" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Links Preview */}
+              {newCompetitor.domain && (
+                <div className="p-4 rounded-lg bg-muted/50 space-y-3">
+                  <p className="text-sm font-medium">Preview Ad Library Links:</p>
+                  <div className="space-y-2">
+                    <a
+                      href={getMetaAdsLibraryUrl(newCompetitor.domain, newCompetitor.country)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                      View in Meta Ads Library ({COUNTRIES.find(c => c.code === newCompetitor.country)?.name})
+                    </a>
+                    <a
+                      href={getGoogleTransparencyUrl(newCompetitor.domain)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                      View in Google Ads Transparency
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/30">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddCompetitor}
+                disabled={!newCompetitor.name || !newCompetitor.domain || isSubmitting}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <PlusIcon className="w-4 h-4" />
+                    Add Competitor
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
