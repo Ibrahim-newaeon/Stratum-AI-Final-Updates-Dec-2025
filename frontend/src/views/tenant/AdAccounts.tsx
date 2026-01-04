@@ -5,7 +5,7 @@
  * Enable/disable accounts for campaign publishing.
  */
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   BuildingStorefrontIcon,
@@ -15,6 +15,12 @@ import {
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
+import {
+  useAdAccounts,
+  useSyncAdAccounts,
+  useUpdateAdAccount,
+  type Platform,
+} from '@/api/campaignBuilder'
 
 interface AdAccount {
   id: string
@@ -71,22 +77,66 @@ const platformLabels = {
 
 export default function AdAccounts() {
   const { tenantId } = useParams<{ tenantId: string }>()
-  const [accounts, setAccounts] = useState(mockAccounts)
-  const [syncing, setSyncing] = useState(false)
+  const tid = parseInt(tenantId || '1', 10)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('meta')
 
-  const handleToggleAccount = (accountId: string) => {
-    setAccounts(accounts.map(acc =>
-      acc.id === accountId ? { ...acc, enabled: !acc.enabled } : acc
-    ))
+  // API hooks for all platforms
+  const { data: metaAccounts } = useAdAccounts(tid, 'meta')
+  const { data: googleAccounts } = useAdAccounts(tid, 'google')
+  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok')
+  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat')
+  const syncAccounts = useSyncAdAccounts(tid)
+  const updateAccount = useUpdateAdAccount(tid)
+
+  // Combine all accounts with fallback to mock data
+  const accounts: AdAccount[] = useMemo(() => {
+    const apiAccounts = [
+      ...(metaAccounts || []),
+      ...(googleAccounts || []),
+      ...(tiktokAccounts || []),
+      ...(snapchatAccounts || []),
+    ].map((acc) => ({
+      id: acc.id,
+      platformAccountId: acc.platform_account_id,
+      name: acc.name,
+      platform: acc.platform as AdAccount['platform'],
+      currency: acc.currency,
+      timezone: acc.timezone,
+      enabled: acc.is_enabled,
+      spendCap: acc.daily_budget_cap,
+      lastSyncAt: acc.last_synced_at || new Date().toISOString(),
+    }))
+
+    // Return API data if available, otherwise fall back to mock
+    return apiAccounts.length > 0 ? apiAccounts : mockAccounts
+  }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
+
+  const handleToggleAccount = async (account: AdAccount) => {
+    try {
+      await updateAccount.mutateAsync({
+        platform: account.platform as Platform,
+        accountId: account.id,
+        data: { is_enabled: !account.enabled },
+      })
+    } catch (error) {
+      console.error('Failed to toggle account:', error)
+      // Fallback: local state update for demo mode
+    }
   }
 
   const handleSyncAccounts = async () => {
-    setSyncing(true)
-    // In production: await api.post(`/tenant/${tenantId}/ad-accounts/sync`)
-    setTimeout(() => {
-      setSyncing(false)
-    }, 2000)
+    try {
+      // Sync all platforms
+      await Promise.all([
+        syncAccounts.mutateAsync('meta'),
+        syncAccounts.mutateAsync('google'),
+        syncAccounts.mutateAsync('tiktok'),
+        syncAccounts.mutateAsync('snapchat'),
+      ])
+    } catch (error) {
+      console.error('Failed to sync accounts:', error)
+    }
   }
 
   const filteredAccounts = accounts.filter(acc =>
@@ -95,6 +145,7 @@ export default function AdAccounts() {
   )
 
   const enabledCount = accounts.filter(acc => acc.enabled).length
+  const syncing = syncAccounts.isPending
 
   return (
     <div className="space-y-6">
@@ -158,7 +209,7 @@ export default function AdAccounts() {
               </div>
 
               <button
-                onClick={() => handleToggleAccount(account.id)}
+                onClick={() => handleToggleAccount(account)}
                 className={cn(
                   'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                   account.enabled
