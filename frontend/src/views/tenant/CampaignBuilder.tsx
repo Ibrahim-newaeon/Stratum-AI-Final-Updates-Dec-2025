@@ -5,7 +5,7 @@
  * Supports Meta, Google, TikTok, and Snapchat platforms.
  */
 
-import { useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ChevronRightIcon,
@@ -13,12 +13,31 @@ import {
   CheckIcon,
   SparklesIcon,
   ExclamationTriangleIcon,
+  PhotoIcon,
+  VideoCameraIcon,
+  XMarkIcon,
+  CloudArrowUpIcon,
+  DocumentIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 
 type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat'
 type BudgetType = 'daily' | 'lifetime'
 type Objective = 'sales' | 'leads' | 'traffic' | 'awareness' | 'engagement'
+type AssetType = 'image' | 'video' | 'carousel'
+
+interface CreativeAsset {
+  id: string
+  file: File
+  name: string
+  type: AssetType
+  preview: string
+  size: number
+  status: 'uploading' | 'ready' | 'error'
+  headline?: string
+  description?: string
+  callToAction?: string
+}
 
 interface CampaignDraft {
   platform: Platform | null
@@ -40,6 +59,7 @@ interface CampaignDraft {
     ageMax: number
     genders: string[]
   }
+  creatives: CreativeAsset[]
 }
 
 const steps = [
@@ -47,8 +67,23 @@ const steps = [
   { id: 'basics', name: 'Campaign Basics' },
   { id: 'budget', name: 'Budget & Schedule' },
   { id: 'targeting', name: 'Targeting' },
+  { id: 'creatives', name: 'Ad Creatives' },
   { id: 'review', name: 'Review & Submit' },
 ]
+
+const callToActionOptions = [
+  { value: 'shop_now', label: 'Shop Now' },
+  { value: 'learn_more', label: 'Learn More' },
+  { value: 'sign_up', label: 'Sign Up' },
+  { value: 'contact_us', label: 'Contact Us' },
+  { value: 'get_offer', label: 'Get Offer' },
+  { value: 'download', label: 'Download' },
+  { value: 'book_now', label: 'Book Now' },
+]
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
+const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
 const objectives: { value: Objective; label: string; description: string }[] = [
   { value: 'sales', label: 'Sales', description: 'Drive purchases and conversions' },
@@ -88,7 +123,11 @@ export default function CampaignBuilder() {
       ageMax: 65,
       genders: ['all'],
     },
+    creatives: [],
   })
+  const [isDragging, setIsDragging] = useState(false)
+  const [editingAsset, setEditingAsset] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isEditing = !!draftId
 
@@ -98,6 +137,93 @@ export default function CampaignBuilder() {
   ) => {
     setDraft(prev => ({ ...prev, [field]: value }))
   }
+
+  // File upload handlers
+  const getAssetType = (file: File): AssetType => {
+    if (ACCEPTED_VIDEO_TYPES.includes(file.type)) return 'video'
+    return 'image'
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  const processFiles = useCallback((files: FileList | File[]) => {
+    const fileArray = Array.from(files)
+    const validFiles = fileArray.filter(file => {
+      const isValidType = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES].includes(file.type)
+      const isValidSize = file.size <= MAX_FILE_SIZE
+      return isValidType && isValidSize
+    })
+
+    const newAssets: CreativeAsset[] = validFiles.map(file => ({
+      id: `asset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      file,
+      name: file.name,
+      type: getAssetType(file),
+      preview: URL.createObjectURL(file),
+      size: file.size,
+      status: 'ready' as const,
+      headline: '',
+      description: '',
+      callToAction: 'learn_more',
+    }))
+
+    setDraft(prev => ({
+      ...prev,
+      creatives: [...prev.creatives, ...newAssets],
+    }))
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files.length) {
+      processFiles(e.dataTransfer.files)
+    }
+  }, [processFiles])
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) {
+      processFiles(e.target.files)
+    }
+    // Reset input value to allow selecting the same file again
+    e.target.value = ''
+  }, [processFiles])
+
+  const removeAsset = useCallback((id: string) => {
+    setDraft(prev => {
+      const asset = prev.creatives.find(a => a.id === id)
+      if (asset) {
+        URL.revokeObjectURL(asset.preview)
+      }
+      return {
+        ...prev,
+        creatives: prev.creatives.filter(a => a.id !== id),
+      }
+    })
+  }, [])
+
+  const updateAsset = useCallback((id: string, updates: Partial<CreativeAsset>) => {
+    setDraft(prev => ({
+      ...prev,
+      creatives: prev.creatives.map(asset =>
+        asset.id === id ? { ...asset, ...updates } : asset
+      ),
+    }))
+  }, [])
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -353,6 +479,220 @@ export default function CampaignBuilder() {
           </div>
         )
 
+      case 'creatives':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Upload Ad Creatives</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Upload images or videos for your ad. Supported formats: JPEG, PNG, GIF, WebP, MP4, WebM.
+              </p>
+
+              {/* Drag & Drop Zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={cn(
+                  'border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all',
+                  isDragging
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                )}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={[...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES].join(',')}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <CloudArrowUpIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="font-medium">Drag and drop files here</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  or click to browse
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Max file size: 100MB
+                </p>
+              </div>
+            </div>
+
+            {/* Uploaded Assets */}
+            {draft.creatives.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-3">Uploaded Assets ({draft.creatives.length})</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {draft.creatives.map((asset) => (
+                    <div
+                      key={asset.id}
+                      className="rounded-xl border bg-card overflow-hidden"
+                    >
+                      {/* Asset Preview */}
+                      <div className="relative aspect-video bg-muted">
+                        {asset.type === 'video' ? (
+                          <video
+                            src={asset.preview}
+                            className="w-full h-full object-cover"
+                            controls
+                          />
+                        ) : (
+                          <img
+                            src={asset.preview}
+                            alt={asset.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        <button
+                          onClick={() => removeAsset(asset.id)}
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+                          <span className="px-2 py-0.5 rounded-full bg-black/60 text-white text-xs flex items-center gap-1">
+                            {asset.type === 'video' ? (
+                              <VideoCameraIcon className="h-3 w-3" />
+                            ) : (
+                              <PhotoIcon className="h-3 w-3" />
+                            )}
+                            {asset.type}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-black/60 text-white text-xs">
+                            {formatFileSize(asset.size)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Asset Details */}
+                      <div className="p-4 space-y-3">
+                        <p className="text-sm font-medium truncate" title={asset.name}>
+                          {asset.name}
+                        </p>
+
+                        {editingAsset === asset.id ? (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Headline</label>
+                              <input
+                                type="text"
+                                value={asset.headline || ''}
+                                onChange={(e) => updateAsset(asset.id, { headline: e.target.value })}
+                                placeholder="Enter headline..."
+                                maxLength={40}
+                                className="w-full px-3 py-1.5 text-sm rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                              />
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {(asset.headline || '').length}/40 characters
+                              </p>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Description</label>
+                              <textarea
+                                value={asset.description || ''}
+                                onChange={(e) => updateAsset(asset.id, { description: e.target.value })}
+                                placeholder="Enter description..."
+                                maxLength={125}
+                                rows={2}
+                                className="w-full px-3 py-1.5 text-sm rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                              />
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {(asset.description || '').length}/125 characters
+                              </p>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Call to Action</label>
+                              <select
+                                value={asset.callToAction || 'learn_more'}
+                                onChange={(e) => updateAsset(asset.id, { callToAction: e.target.value })}
+                                className="w-full px-3 py-1.5 text-sm rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                              >
+                                {callToActionOptions.map((cta) => (
+                                  <option key={cta.value} value={cta.value}>
+                                    {cta.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <button
+                              onClick={() => setEditingAsset(null)}
+                              className="w-full py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90"
+                            >
+                              Done
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {asset.headline && (
+                              <p className="text-sm text-muted-foreground">
+                                <span className="font-medium">Headline:</span> {asset.headline}
+                              </p>
+                            )}
+                            {asset.callToAction && (
+                              <p className="text-xs text-muted-foreground">
+                                CTA: {callToActionOptions.find(c => c.value === asset.callToAction)?.label || asset.callToAction}
+                              </p>
+                            )}
+                            <button
+                              onClick={() => setEditingAsset(asset.id)}
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Edit ad copy
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Platform-specific Tips */}
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                <SparklesIcon className="h-4 w-4 text-primary" />
+                Platform Recommendations for {draft.platform ? draft.platform.charAt(0).toUpperCase() + draft.platform.slice(1) : 'Ads'}
+              </h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                {draft.platform === 'meta' && (
+                  <>
+                    <li>- Image: 1080x1080px (1:1) or 1200x628px (1.91:1)</li>
+                    <li>- Video: 15-60 seconds, vertical (9:16) performs best</li>
+                    <li>- Keep text overlay under 20% of image area</li>
+                  </>
+                )}
+                {draft.platform === 'google' && (
+                  <>
+                    <li>- Responsive display: 1200x628px, 300x250px, 728x90px</li>
+                    <li>- Video: 15-30 seconds, horizontal (16:9)</li>
+                    <li>- Include clear branding and call-to-action</li>
+                  </>
+                )}
+                {draft.platform === 'tiktok' && (
+                  <>
+                    <li>- Video: 9:16 aspect ratio, 9-15 seconds optimal</li>
+                    <li>- Use native-looking content for better engagement</li>
+                    <li>- Add captions as 80% of users watch without sound</li>
+                  </>
+                )}
+                {draft.platform === 'snapchat' && (
+                  <>
+                    <li>- Full screen vertical: 1080x1920px (9:16)</li>
+                    <li>- Video: 3-10 seconds for Story Ads</li>
+                    <li>- Keep branding subtle and authentic</li>
+                  </>
+                )}
+                {!draft.platform && (
+                  <li>- Select a platform to see specific recommendations</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )
+
       case 'review':
         return (
           <div className="space-y-6">
@@ -387,8 +727,44 @@ export default function CampaignBuilder() {
                     {draft.schedule.start} - {draft.schedule.end || 'Ongoing'}
                   </dd>
                 </div>
+                <div>
+                  <dt className="text-sm text-muted-foreground">Ad Creatives</dt>
+                  <dd className="font-medium">
+                    {draft.creatives.length} asset{draft.creatives.length !== 1 ? 's' : ''} uploaded
+                  </dd>
+                </div>
               </dl>
             </div>
+
+            {/* Creative Assets Preview */}
+            {draft.creatives.length > 0 && (
+              <div className="rounded-xl border bg-card p-6">
+                <h3 className="text-lg font-semibold mb-4">Ad Creatives Preview</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {draft.creatives.map((asset) => (
+                    <div key={asset.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                      {asset.type === 'video' ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <VideoCameraIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <img
+                          src={asset.preview}
+                          alt={asset.name}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors" />
+                      {asset.headline && (
+                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                          <p className="text-xs text-white truncate">{asset.headline}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* AI Insights */}
             <div className="rounded-xl border bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 p-6">
