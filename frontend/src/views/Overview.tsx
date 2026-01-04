@@ -54,6 +54,8 @@ import {
   PlatformSummary,
   DailyPerformance,
 } from '@/types/dashboard'
+import { useCampaigns, useAnomalies, useTenantOverview } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
 // Mock data for demonstration
 const mockCampaigns: Campaign[] = [
@@ -231,6 +233,14 @@ export function Overview() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [showKeyboardHints, setShowKeyboardHints] = useState(false)
 
+  // Get tenant ID from tenant store
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+
+  // Fetch data from API with fallback to mock data
+  const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns(tenantId)
+  const { data: overviewData } = useTenantOverview(tenantId)
+  const { data: anomaliesData } = useAnomalies(tenantId)
+
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
     dateRange: {
@@ -242,17 +252,63 @@ export function Overview() {
     campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
   })
 
-  // Memoized: Calculate KPI metrics from campaigns
+  // Use API campaigns or fall back to mock data
+  const campaigns = useMemo(() => {
+    if (campaignsData?.items && campaignsData.items.length > 0) {
+      return campaignsData.items.map((c: any) => ({
+        campaign_id: c.id?.toString() || c.campaign_id,
+        campaign_name: c.name || c.campaign_name,
+        platform: c.platform || 'Unknown',
+        region: c.region || 'Unknown',
+        campaign_type: c.campaign_type || 'Conversion',
+        spend: c.spend || 0,
+        revenue: c.revenue || 0,
+        conversions: c.conversions || 0,
+        impressions: c.impressions || 0,
+        clicks: c.clicks || 0,
+        ctr: c.ctr || 0,
+        cpm: c.cpm || 0,
+        cpa: c.cpa || 0,
+        roas: c.roas || 0,
+        status: c.status || 'Active',
+        start_date: c.start_date || c.startDate || new Date().toISOString(),
+      })) as Campaign[]
+    }
+    return mockCampaigns
+  }, [campaignsData])
+
+  // Memoized: Calculate KPI metrics from campaigns (API or mock)
   const kpis = useMemo((): KPIMetrics => {
-    const totalSpend = mockCampaigns.reduce((sum, c) => sum + c.spend, 0)
-    const totalRevenue = mockCampaigns.reduce((sum, c) => sum + c.revenue, 0)
-    const totalConversions = mockCampaigns.reduce((sum, c) => sum + c.conversions, 0)
+    // Use API overview data if available
+    if (overviewData?.kpis) {
+      const apiKpis = overviewData.kpis
+      return {
+        totalSpend: apiKpis.total_spend ?? apiKpis.totalSpend ?? 0,
+        totalRevenue: apiKpis.total_revenue ?? apiKpis.totalRevenue ?? 0,
+        overallROAS: apiKpis.roas ?? 0,
+        totalConversions: apiKpis.conversions ?? 0,
+        overallCPA: apiKpis.cpa ?? 0,
+        avgCTR: apiKpis.ctr ?? 2.0,
+        avgCPM: apiKpis.cpm ?? 10.0,
+        totalImpressions: apiKpis.impressions ?? 0,
+        totalClicks: apiKpis.clicks ?? 0,
+        spendDelta: apiKpis.spendDelta ?? 12.5,
+        revenueDelta: apiKpis.revenueDelta ?? 23.4,
+        roasDelta: apiKpis.roasDelta ?? 9.7,
+        conversionsDelta: apiKpis.conversionsDelta ?? 21.5,
+      }
+    }
+
+    // Fall back to calculating from campaigns
+    const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0)
+    const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0)
+    const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0)
     const overallROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0
     const overallCPA = totalConversions > 0 ? totalSpend / totalConversions : 0
-    const avgCTR = mockCampaigns.reduce((sum, c) => sum + c.ctr, 0) / mockCampaigns.length
-    const avgCPM = mockCampaigns.reduce((sum, c) => sum + c.cpm, 0) / mockCampaigns.length
-    const totalImpressions = mockCampaigns.reduce((sum, c) => sum + c.impressions, 0)
-    const totalClicks = mockCampaigns.reduce((sum, c) => sum + c.clicks, 0)
+    const avgCTR = campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length : 0
+    const avgCPM = campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.cpm, 0) / campaigns.length : 0
+    const totalImpressions = campaigns.reduce((sum, c) => sum + c.impressions, 0)
+    const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0)
 
     return {
       totalSpend,
@@ -269,11 +325,11 @@ export function Overview() {
       roasDelta: 9.7,
       conversionsDelta: 21.5,
     }
-  }, [])
+  }, [campaigns, overviewData])
 
   // Memoized: Filter campaigns based on current filters
   const filteredCampaigns = useMemo(() => {
-    return mockCampaigns.filter((campaign) => {
+    return campaigns.filter((campaign) => {
       if (filters.platforms.length > 0 && !filters.platforms.includes(campaign.platform)) {
         return false
       }
@@ -285,19 +341,19 @@ export function Overview() {
       }
       return true
     })
-  }, [filters])
+  }, [filters, campaigns])
 
   // Check if filters resulted in empty data
-  const hasNoFilterResults = filteredCampaigns.length === 0 && mockCampaigns.length > 0
+  const hasNoFilterResults = filteredCampaigns.length === 0 && campaigns.length > 0
 
   // Refresh data
   const handleRefresh = useCallback(async () => {
     setLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Refetch API data
+    await refetchCampaigns()
     setLastUpdated(new Date())
     setLoading(false)
-  }, [])
+  }, [refetchCampaigns])
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: Partial<DashboardFilters>) => {
@@ -367,13 +423,12 @@ export function Overview() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleRefresh, handleExport])
 
-  // Simulate initial data loading
+  // Set initial loading based on API loading state
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (!campaignsLoading) {
       setInitialLoading(false)
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [])
+    }
+  }, [campaignsLoading])
 
   // Auto-refresh every 5 minutes
   useEffect(() => {

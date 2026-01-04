@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   LineChart,
@@ -25,9 +25,12 @@ import {
   ArrowRight,
   RefreshCw,
   Settings,
+  Loader2,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
+import { useInsights, useRecommendations, useAnomalies, useLivePredictions } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
 // Mock AI insights
 const mockInsights = [
@@ -93,6 +96,51 @@ export function Stratum() {
   const { t } = useTranslation()
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d')
 
+  // Get tenant ID from tenant store
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+
+  // Fetch data from API
+  const { data: insightsData, isLoading: insightsLoading, refetch: refetchInsights } = useInsights(tenantId)
+  const { data: recommendationsData } = useRecommendations(tenantId)
+  const { data: anomaliesData, isLoading: anomaliesLoading } = useAnomalies(tenantId)
+  const { data: predictionsData } = useLivePredictions(tenantId)
+
+  // Transform API insights or fall back to mock
+  const insights = useMemo(() => {
+    if (insightsData?.items && insightsData.items.length > 0) {
+      return insightsData.items.slice(0, 3).map((i: any, idx: number) => ({
+        id: i.id || idx + 1,
+        type: i.type || i.insight_type || 'suggestion',
+        priority: i.priority || 'medium',
+        title: i.title || '',
+        description: i.description || '',
+        impact: i.impact || i.expected_impact || '+$0 estimated',
+        campaign: i.campaign || i.campaign_name || 'All campaigns',
+      }))
+    }
+    return mockInsights
+  }, [insightsData])
+
+  // Transform API anomalies or fall back to mock
+  const anomalies = useMemo(() => {
+    if (anomaliesData?.items && anomaliesData.items.length > 0) {
+      return anomaliesData.items.slice(0, 3).map((a: any) => ({
+        date: new Date(a.detected_at || a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        metric: a.metric || a.metric_name || 'Unknown',
+        value: a.actual_value || a.value || 0,
+        expected: a.expected_value || a.expected || 0,
+        deviation: a.deviation ? `${a.deviation > 0 ? '+' : ''}${(a.deviation * 100).toFixed(0)}%` : '0%',
+        type: a.is_positive || a.type === 'positive' ? 'positive' : 'negative',
+      }))
+    }
+    return mockAnomalies
+  }, [anomaliesData])
+
+  // Handle refresh
+  const handleRefresh = () => {
+    refetchInsights()
+  }
+
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'opportunity':
@@ -148,8 +196,12 @@ export function Stratum() {
               </button>
             ))}
           </div>
-          <button className="p-2 rounded-lg border hover:bg-muted transition-colors">
-            <RefreshCw className="w-4 h-4" />
+          <button
+            onClick={handleRefresh}
+            disabled={insightsLoading}
+            className="p-2 rounded-lg border hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {insightsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           </button>
           <button className="p-2 rounded-lg border hover:bg-muted transition-colors">
             <Settings className="w-4 h-4" />
@@ -170,7 +222,7 @@ export function Stratum() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {mockInsights.map((insight) => (
+          {insights.map((insight) => (
             <div
               key={insight.id}
               className="p-4 rounded-lg border bg-background hover:shadow-md transition-shadow cursor-pointer"
@@ -369,7 +421,7 @@ export function Stratum() {
           </div>
 
           <div className="space-y-3">
-            {mockAnomalies.map((anomaly, i) => (
+            {anomalies.map((anomaly, i) => (
               <div
                 key={i}
                 className={cn(

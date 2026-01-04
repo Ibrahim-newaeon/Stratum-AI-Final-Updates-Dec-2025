@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -20,8 +20,11 @@ import {
   DollarSign,
   Settings,
   MessageCircle,
+  Loader2,
 } from 'lucide-react'
 import { cn, formatCompactNumber } from '@/lib/utils'
+import { useRules, useToggleRule, useDeleteRule, useCreateRule } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
 type RuleStatus = 'active' | 'paused' | 'draft'
 type RuleAction = 'apply_label' | 'send_alert' | 'pause_campaign' | 'adjust_budget' | 'notify_slack' | 'notify_whatsapp'
@@ -145,7 +148,42 @@ export function Rules() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  const filteredRules = mockRules.filter((rule) => {
+  // Get tenant ID from tenant store
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+
+  // Fetch rules from API
+  const { data: rulesData, isLoading } = useRules(tenantId)
+  const toggleRule = useToggleRule(tenantId)
+  const deleteRule = useDeleteRule(tenantId)
+  const createRule = useCreateRule(tenantId)
+
+  // Transform API data or fall back to mock
+  const rules = useMemo((): Rule[] => {
+    if (rulesData?.items && rulesData.items.length > 0) {
+      return rulesData.items.map((r: any) => ({
+        id: Number(r.id) || 0,
+        name: r.name || '',
+        description: r.description || '',
+        status: r.status || r.is_active ? 'active' : 'paused',
+        condition: r.condition || r.conditions?.[0] || { field: 'roas', operator: 'less_than', value: '2.0' },
+        action: r.action || r.actions?.[0] || { type: 'send_alert', config: {} },
+        appliesTo: r.applies_to || r.campaigns || [],
+        triggerCount: r.trigger_count || r.triggerCount || 0,
+        lastTriggered: r.last_triggered || r.lastTriggered || null,
+        cooldownHours: r.cooldown_hours || r.cooldownHours || 24,
+        createdAt: r.created_at || r.createdAt || new Date().toISOString(),
+      }))
+    }
+    return mockRules
+  }, [rulesData])
+
+  // Handle toggle rule status
+  const handleToggleRule = async (ruleId: number, currentStatus: RuleStatus) => {
+    const enabled = currentStatus !== 'active'
+    await toggleRule.mutateAsync({ ruleId: ruleId.toString(), enabled })
+  }
+
+  const filteredRules = rules.filter((rule) => {
     if (searchQuery && !rule.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false
     }
@@ -240,12 +278,12 @@ export function Rules() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.totalRules')}</p>
-          <p className="text-2xl font-bold">{mockRules.length}</p>
+          <p className="text-2xl font-bold">{isLoading ? '...' : rules.length}</p>
         </div>
         <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.activeRules')}</p>
           <p className="text-2xl font-bold text-green-500">
-            {mockRules.filter((r) => r.status === 'active').length}
+            {isLoading ? '...' : rules.filter((r) => r.status === 'active').length}
           </p>
         </div>
         <div className="p-4 rounded-xl border bg-card">
@@ -255,7 +293,7 @@ export function Rules() {
         <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.actionsExecuted')}</p>
           <p className="text-2xl font-bold">
-            {mockRules.reduce((acc, r) => acc + r.triggerCount, 0)}
+            {isLoading ? '...' : rules.reduce((acc, r) => acc + r.triggerCount, 0)}
           </p>
         </div>
       </div>
@@ -308,12 +346,22 @@ export function Rules() {
 
               <div className="flex items-center gap-2">
                 {rule.status === 'active' ? (
-                  <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Pause">
-                    <Pause className="w-4 h-4" />
+                  <button
+                    onClick={() => handleToggleRule(rule.id, rule.status)}
+                    disabled={toggleRule.isPending}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                    title="Pause"
+                  >
+                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
                   </button>
                 ) : (
-                  <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Activate">
-                    <Play className="w-4 h-4" />
+                  <button
+                    onClick={() => handleToggleRule(rule.id, rule.status)}
+                    disabled={toggleRule.isPending}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                    title="Activate"
+                  >
+                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                   </button>
                 )}
                 <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Edit">

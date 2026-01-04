@@ -4,7 +4,7 @@
  * Lists all campaigns for the tenant with filtering and actions.
  */
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   PlusIcon,
@@ -13,6 +13,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
+import { useCampaigns } from '@/api/hooks'
 
 interface Campaign {
   id: string
@@ -42,10 +43,43 @@ const statusColors = {
 
 export default function TenantCampaigns() {
   const { tenantId } = useParams<{ tenantId: string }>()
+  const tid = parseInt(tenantId || '1', 10)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
-  const filteredCampaigns = mockCampaigns.filter((campaign) => {
+  // Fetch campaigns from API
+  const { data: campaignsData, isLoading } = useCampaigns(tid)
+
+  // Transform API data or fall back to mock
+  const campaigns = useMemo((): Campaign[] => {
+    if (campaignsData?.items && campaignsData.items.length > 0) {
+      return campaignsData.items.map((c: any) => ({
+        id: c.id?.toString() || c.campaign_id?.toString() || '',
+        name: c.name || c.campaign_name || '',
+        platform: c.platform || 'Unknown',
+        status: c.status?.toLowerCase() || 'active',
+        spend: c.spend || 0,
+        roas: c.roas || (c.spend > 0 ? c.revenue / c.spend : 0),
+        conversions: c.conversions || 0,
+        lastUpdated: c.updated_at ? getRelativeTime(c.updated_at) : '—',
+      }))
+    }
+    return mockCampaigns
+  }, [campaignsData])
+
+  // Helper function to get relative time
+  function getRelativeTime(dateStr: string): string {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    if (diffHours < 1) return 'just now'
+    if (diffHours < 24) return `${diffHours}h ago`
+    const diffDays = Math.floor(diffHours / 24)
+    return `${diffDays}d ago`
+  }
+
+  const filteredCampaigns = campaigns.filter((campaign) => {
     const matchesSearch = campaign.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter
     return matchesSearch && matchesStatus

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -18,8 +18,11 @@ import {
   Trash2,
   Copy,
   Tag,
+  Loader2,
 } from 'lucide-react'
 import { cn, formatCompactNumber, formatPercent } from '@/lib/utils'
+import { useAssets, useDeleteAsset, useBulkArchiveAssets } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
 type AssetType = 'image' | 'video' | 'copy'
 type AssetStatus = 'active' | 'paused' | 'fatigued' | 'draft'
@@ -129,7 +132,42 @@ export function Assets() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedAssets, setSelectedAssets] = useState<number[]>([])
 
-  const filteredAssets = mockAssets.filter((asset) => {
+  // Get tenant ID from tenant store
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+
+  // Fetch assets from API
+  const { data: assetsData, isLoading } = useAssets(tenantId)
+  const deleteAsset = useDeleteAsset(tenantId)
+  const bulkArchive = useBulkArchiveAssets(tenantId)
+
+  // Transform API data or fall back to mock
+  const assets = useMemo((): Asset[] => {
+    if (assetsData?.items && assetsData.items.length > 0) {
+      return assetsData.items.map((a: any) => ({
+        id: Number(a.id) || 0,
+        name: a.name || a.filename || '',
+        type: a.type || a.asset_type || 'image',
+        status: a.status || 'active',
+        thumbnail: a.thumbnail_url || a.url || `https://placehold.co/300x250/0ea5e9/white?text=${encodeURIComponent(a.name || 'Asset')}`,
+        impressions: a.impressions || 0,
+        ctr: a.ctr || 0,
+        fatigueScore: a.fatigue_score || a.fatigueScore || 0,
+        campaigns: a.campaigns || [],
+        createdAt: a.created_at || a.createdAt || new Date().toISOString(),
+        dimensions: a.dimensions || a.width && a.height ? `${a.width}x${a.height}` : undefined,
+        duration: a.duration,
+      }))
+    }
+    return mockAssets
+  }, [assetsData])
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    await bulkArchive.mutateAsync(selectedAssets.map(id => id.toString()))
+    setSelectedAssets([])
+  }
+
+  const filteredAssets = assets.filter((asset) => {
     if (searchQuery && !asset.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false
     }
@@ -271,8 +309,12 @@ export function Assets() {
               <Download className="w-4 h-4" />
               {t('assets.download')}
             </button>
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-sm">
-              <Trash2 className="w-4 h-4" />
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkArchive.isPending}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-sm disabled:opacity-50"
+            >
+              {bulkArchive.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               {t('assets.delete')}
             </button>
           </div>

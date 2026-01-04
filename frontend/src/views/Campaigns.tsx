@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -14,9 +14,12 @@ import {
   Edit,
   Trash2,
   ExternalLink,
+  Loader2,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
 import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal'
+import { useCampaigns, usePauseCampaign, useActivateCampaign, useDeleteCampaign } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
 interface Campaign {
   id: number
@@ -140,6 +143,37 @@ export function Campaigns() {
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([])
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
+  // Get tenant ID from tenant store
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+
+  // Fetch campaigns from API
+  const { data: campaignsData, isLoading } = useCampaigns(tenantId)
+  const pauseCampaign = usePauseCampaign(tenantId)
+  const activateCampaign = useActivateCampaign(tenantId)
+  const deleteCampaign = useDeleteCampaign(tenantId)
+
+  // Transform API data or fall back to mock
+  const campaigns = useMemo((): Campaign[] => {
+    if (campaignsData?.items && campaignsData.items.length > 0) {
+      return campaignsData.items.map((c: any) => ({
+        id: Number(c.id) || Number(c.campaign_id) || 0,
+        name: c.name || c.campaign_name || '',
+        platform: c.platform?.toLowerCase() || 'google',
+        status: c.status?.toLowerCase() || 'active',
+        spend: c.spend || 0,
+        budget: c.budget || c.daily_budget || 10000,
+        revenue: c.revenue || 0,
+        roas: c.roas || (c.spend > 0 ? c.revenue / c.spend : 0),
+        impressions: c.impressions || 0,
+        clicks: c.clicks || 0,
+        conversions: c.conversions || 0,
+        ctr: c.ctr || (c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0),
+        trend: c.trend || (c.roas >= 3.5 ? 'up' : c.roas < 2.5 ? 'down' : 'stable'),
+      }))
+    }
+    return mockCampaigns
+  }, [campaignsData])
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
@@ -149,7 +183,7 @@ export function Campaigns() {
     }
   }
 
-  const filteredCampaigns = mockCampaigns
+  const filteredCampaigns = campaigns
     .filter((campaign) => {
       if (searchQuery && !campaign.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false
@@ -171,6 +205,30 @@ export function Campaigns() {
       }
       return ((aValue as number) - (bValue as number)) * direction
     })
+
+  // Handle bulk pause
+  const handleBulkPause = async () => {
+    for (const id of selectedCampaigns) {
+      await pauseCampaign.mutateAsync(id.toString())
+    }
+    setSelectedCampaigns([])
+  }
+
+  // Handle bulk activate
+  const handleBulkActivate = async () => {
+    for (const id of selectedCampaigns) {
+      await activateCampaign.mutateAsync(id.toString())
+    }
+    setSelectedCampaigns([])
+  }
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    for (const id of selectedCampaigns) {
+      await deleteCampaign.mutateAsync(id.toString())
+    }
+    setSelectedCampaigns([])
+  }
 
   const toggleSelectAll = () => {
     if (selectedCampaigns.length === filteredCampaigns.length) {
@@ -290,16 +348,28 @@ export function Campaigns() {
             {selectedCampaigns.length} {t('campaigns.selected')}
           </span>
           <div className="flex gap-2">
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm">
-              <Pause className="w-4 h-4" />
+            <button
+              onClick={handleBulkPause}
+              disabled={pauseCampaign.isPending}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm disabled:opacity-50"
+            >
+              {pauseCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
               {t('campaigns.pauseSelected')}
             </button>
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm">
-              <Play className="w-4 h-4" />
+            <button
+              onClick={handleBulkActivate}
+              disabled={activateCampaign.isPending}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm disabled:opacity-50"
+            >
+              {activateCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {t('campaigns.activateSelected')}
             </button>
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-sm">
-              <Trash2 className="w-4 h-4" />
+            <button
+              onClick={handleBulkDelete}
+              disabled={deleteCampaign.isPending}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-sm disabled:opacity-50"
+            >
+              {deleteCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               {t('campaigns.deleteSelected')}
             </button>
           </div>
@@ -452,10 +522,17 @@ export function Campaigns() {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {t('campaigns.showing', {
-            count: filteredCampaigns.length,
-            total: mockCampaigns.length,
-          })}
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading campaigns...
+            </span>
+          ) : (
+            t('campaigns.showing', {
+              count: filteredCampaigns.length,
+              total: campaigns.length,
+            })
+          )}
         </p>
         <div className="flex items-center gap-2">
           <button className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50" disabled>
