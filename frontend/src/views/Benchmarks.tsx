@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import {
   BarChart,
   Bar,
@@ -28,18 +29,15 @@ import {
   Download,
   RefreshCw,
   Info,
+  ExternalLink,
+  Plus,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SmartTooltip } from '@/components/guide/SmartTooltip'
+import { useCompetitors } from '@/api/hooks'
 
-// Mock competitor data
-const mockCompetitors = [
-  { name: 'Your Brand', roas: 3.5, ctr: 2.8, cpc: 1.2, share: 18, color: '#0ea5e9', isYou: true },
-  { name: 'Competitor A', roas: 3.2, ctr: 2.5, cpc: 1.4, share: 24, color: '#8b5cf6' },
-  { name: 'Competitor B', roas: 2.9, ctr: 2.2, cpc: 1.6, share: 21, color: '#f59e0b' },
-  { name: 'Competitor C', roas: 3.8, ctr: 3.1, cpc: 1.0, share: 15, color: '#10b981' },
-  { name: 'Industry Avg', roas: 3.0, ctr: 2.4, cpc: 1.3, share: 22, color: '#6b7280', isAvg: true },
-]
+// Colors for competitors in charts
+const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899']
 
 // Mock radar data
 const mockRadarData = [
@@ -83,6 +81,39 @@ export function Benchmarks() {
   const { t } = useTranslation()
   const [selectedIndustry, setSelectedIndustry] = useState('ecommerce')
   const [selectedPlatform, setSelectedPlatform] = useState('all')
+
+  // Fetch competitors from API
+  const { data: competitorsData, isLoading: isLoadingCompetitors } = useCompetitors()
+
+  // Generate Meta Ads Library URL
+  const getMetaAdsLibraryUrl = (name: string, country: string = 'SA') => {
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`
+  }
+
+  // Generate Google Ads Transparency URL
+  const getGoogleTransparencyUrl = (name: string) => {
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
+  }
+
+  // Build competitor data for charts - combine user's competitors with "Your Brand" and "Industry Avg"
+  const chartCompetitors = [
+    { name: 'Your Brand', roas: 3.5, ctr: 2.8, cpc: 1.2, share: 18, color: '#0ea5e9', isYou: true },
+    // Add real competitors from API
+    ...(competitorsData?.items || []).slice(0, 5).map((comp, index) => ({
+      name: comp.name,
+      domain: comp.domain,
+      country: comp.country || 'SA',
+      roas: 2.5 + Math.random() * 2, // Simulated data - would come from real metrics
+      ctr: 1.8 + Math.random() * 1.5,
+      cpc: 0.8 + Math.random() * 1,
+      share: 10 + Math.random() * 20,
+      color: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length],
+    })),
+    { name: 'Industry Avg', roas: 3.0, ctr: 2.4, cpc: 1.3, share: 22, color: '#6b7280', isAvg: true },
+  ]
+
+  // Check if user has competitors
+  const hasCompetitors = (competitorsData?.items?.length || 0) > 0
 
   const benchmarkMetrics = [
     {
@@ -233,6 +264,78 @@ export function Benchmarks() {
         })}
       </div>
 
+      {/* Your Competitors Section */}
+      <div className="rounded-xl border bg-card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
+              Your Tracked Competitors
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Click to view their ads in Meta Ads Library or Google Transparency
+            </p>
+          </div>
+          <Link
+            to="/app/1/competitors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Competitor
+          </Link>
+        </div>
+
+        {isLoadingCompetitors ? (
+          <div className="text-center py-8 text-muted-foreground">Loading competitors...</div>
+        ) : !hasCompetitors ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-3">No competitors tracked yet</p>
+            <Link
+              to="/app/1/competitors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Your First Competitor
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {(competitorsData?.items || []).slice(0, 6).map((competitor) => (
+              <div key={competitor.id} className="p-3 rounded-lg border bg-background">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="font-medium text-sm">{competitor.name}</p>
+                    <p className="text-xs text-muted-foreground">{competitor.domain}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={getMetaAdsLibraryUrl(competitor.name, competitor.country || 'SA')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
+                  >
+                    <span className="font-bold">M</span>
+                    Meta
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <a
+                    href={getGoogleTransparencyUrl(competitor.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                  >
+                    <span className="font-bold">G</span>
+                    Google
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Competitor Comparison */}
@@ -240,7 +343,7 @@ export function Benchmarks() {
           <h3 className="font-semibold mb-4">{t('benchmarks.competitorComparison')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockCompetitors} layout="vertical">
+              <BarChart data={chartCompetitors} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis
@@ -257,10 +360,10 @@ export function Benchmarks() {
                   }}
                 />
                 <Bar dataKey="roas" name="ROAS" radius={[0, 4, 4, 0]}>
-                  {mockCompetitors.map((entry, index) => (
+                  {chartCompetitors.map((entry: any, index: number) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : '#94a3b8'}
+                      fill={entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : entry.color || '#94a3b8'}
                     />
                   ))}
                 </Bar>

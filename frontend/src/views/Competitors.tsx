@@ -102,16 +102,14 @@ export function Competitors() {
   const createCompetitor = useCreateCompetitor()
   const deleteCompetitor = useDeleteCompetitor()
 
-  // Generate Meta Ads Library URL
-  const getMetaAdsLibraryUrl = (domain: string, country: string) => {
-    const searchTerm = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]
-    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(searchTerm)}&search_type=keyword_unordered`
+  // Generate Meta Ads Library URL - search by name (brand name works better)
+  const getMetaAdsLibraryUrl = (name: string, country: string) => {
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`
   }
 
-  // Generate Google Ads Transparency URL
-  const getGoogleTransparencyUrl = (domain: string) => {
-    const searchTerm = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]
-    return `https://adstransparency.google.com/?domain=${encodeURIComponent(searchTerm)}`
+  // Generate Google Ads Transparency URL - search by name
+  const getGoogleTransparencyUrl = (name: string) => {
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
   }
 
   // Handle form submission
@@ -439,24 +437,27 @@ export function Competitors() {
             </div>
 
             {/* Quick Links to Ad Libraries */}
+            {/* Quick Links - Search by competitor name */}
             <div className="flex items-center gap-2 mt-3 pt-3 border-t">
               <a
-                href={getMetaAdsLibraryUrl(competitor.domain, competitor.country || 'SA')}
+                href={getMetaAdsLibraryUrl(competitor.name, competitor.country || 'SA')}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
+                title={`Search "${competitor.name}" in Meta Ads Library`}
               >
                 <span className="font-bold">M</span>
                 Meta Ads Library
                 <ArrowTopRightOnSquareIcon className="w-3 h-3" />
               </a>
               <a
-                href={getGoogleTransparencyUrl(competitor.domain)}
+                href={getGoogleTransparencyUrl(competitor.name)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                title={`Search "${competitor.name}" in Google Transparency`}
               >
                 <span className="font-bold">G</span>
                 Google Transparency
@@ -652,28 +653,28 @@ export function Competitors() {
                 </div>
               </div>
 
-              {/* Quick Links Preview */}
-              {newCompetitor.domain && (
+              {/* Quick Links Preview - shows when name is entered */}
+              {newCompetitor.name && (
                 <div className="p-4 rounded-lg bg-muted/50 space-y-3">
-                  <p className="text-sm font-medium">Preview Ad Library Links:</p>
+                  <p className="text-sm font-medium">Preview Ad Library Links for "{newCompetitor.name}":</p>
                   <div className="space-y-2">
                     <a
-                      href={getMetaAdsLibraryUrl(newCompetitor.domain, newCompetitor.country)}
+                      href={getMetaAdsLibraryUrl(newCompetitor.name, newCompetitor.country)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 text-sm text-primary hover:underline"
                     >
                       <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                      View in Meta Ads Library ({COUNTRIES.find(c => c.code === newCompetitor.country)?.name})
+                      Search "{newCompetitor.name}" in Meta Ads Library ({COUNTRIES.find(c => c.code === newCompetitor.country)?.name})
                     </a>
                     <a
-                      href={getGoogleTransparencyUrl(newCompetitor.domain)}
+                      href={getGoogleTransparencyUrl(newCompetitor.name)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 text-sm text-primary hover:underline"
                     >
                       <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                      View in Google Ads Transparency
+                      Search "{newCompetitor.name}" in Google Ads Transparency
                     </a>
                   </div>
                 </div>

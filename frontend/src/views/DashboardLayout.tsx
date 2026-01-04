@@ -30,14 +30,14 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
-  { name: 'nav.overview', href: '/overview', icon: HomeIcon, tourId: 'nav-overview', dataTour: 'overview' },
+  { name: 'nav.overview', href: '/dashboard/overview', icon: HomeIcon, tourId: 'nav-overview', dataTour: 'overview' },
   { name: 'nav.dashboard', href: '/dashboard', icon: Squares2X2Icon, tourId: 'nav-dashboard' },
-  { name: 'nav.campaigns', href: '/campaigns', icon: ChartBarIcon, tourId: 'nav-campaigns' },
-  { name: 'nav.stratum', href: '/stratum', icon: TrophyIcon, tourId: 'nav-stratum' },
-  { name: 'nav.benchmarks', href: '/benchmarks', icon: FolderIcon, tourId: 'nav-benchmarks' },
-  { name: 'nav.assets', href: '/assets', icon: PhotoIcon, tourId: 'nav-assets' },
-  { name: 'nav.rules', href: '/rules', icon: BoltIcon, tourId: 'nav-rules' },
-  { name: 'nav.whatsapp', href: '/whatsapp', icon: ChatBubbleLeftRightIcon, tourId: 'nav-whatsapp' },
+  { name: 'nav.campaigns', href: '/dashboard/campaigns', icon: ChartBarIcon, tourId: 'nav-campaigns' },
+  { name: 'nav.stratum', href: '/dashboard/stratum', icon: TrophyIcon, tourId: 'nav-stratum' },
+  { name: 'nav.benchmarks', href: '/dashboard/benchmarks', icon: FolderIcon, tourId: 'nav-benchmarks' },
+  { name: 'nav.assets', href: '/dashboard/assets', icon: PhotoIcon, tourId: 'nav-assets' },
+  { name: 'nav.rules', href: '/dashboard/rules', icon: BoltIcon, tourId: 'nav-rules' },
+  { name: 'nav.whatsapp', href: '/dashboard/whatsapp', icon: ChatBubbleLeftRightIcon, tourId: 'nav-whatsapp' },
 ]
 
 export default function DashboardLayout() {
@@ -132,10 +132,10 @@ export default function DashboardLayout() {
             {/* Superadmin Dashboard - only for superadmins */}
             {user?.role === 'superadmin' && (
               <NavLink
-                to="/superadmin"
+                to="/dashboard/superadmin"
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  location.pathname === '/superadmin'
+                  location.pathname.startsWith('/dashboard/superadmin')
                     ? 'bg-gradient-stratum text-white shadow-glow-sm'
                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                 )}
@@ -145,10 +145,10 @@ export default function DashboardLayout() {
               </NavLink>
             )}
             <NavLink
-              to="/tenants"
+              to="/dashboard/tenants"
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/tenants'
+                location.pathname === '/dashboard/tenants'
                   ? 'bg-gradient-stratum text-white shadow-glow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
@@ -157,10 +157,10 @@ export default function DashboardLayout() {
               {t('nav.tenants')}
             </NavLink>
             <NavLink
-              to="/ml-training"
+              to="/dashboard/ml-training"
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/ml-training'
+                location.pathname === '/dashboard/ml-training'
                   ? 'bg-gradient-stratum text-white shadow-glow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
@@ -169,10 +169,10 @@ export default function DashboardLayout() {
               {t('nav.mlTraining')}
             </NavLink>
             <NavLink
-              to="/capi-setup"
+              to="/dashboard/capi-setup"
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/capi-setup'
+                location.pathname === '/dashboard/capi-setup'
                   ? 'bg-gradient-stratum text-white shadow-glow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
@@ -181,10 +181,10 @@ export default function DashboardLayout() {
               {t('nav.capiSetup')}
             </NavLink>
             <NavLink
-              to="/data-quality"
+              to="/dashboard/data-quality"
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/data-quality'
+                location.pathname === '/dashboard/data-quality'
                   ? 'bg-gradient-stratum text-white shadow-glow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
@@ -193,10 +193,10 @@ export default function DashboardLayout() {
               {t('nav.dataQuality')}
             </NavLink>
             <NavLink
-              to="/emq-dashboard"
+              to="/dashboard/emq-dashboard"
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/emq-dashboard'
+                location.pathname === '/dashboard/emq-dashboard'
                   ? 'bg-gradient-stratum text-white shadow-glow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
@@ -205,11 +205,11 @@ export default function DashboardLayout() {
               {t('nav.emqDashboard')}
             </NavLink>
             <NavLink
-              to="/settings"
+              to="/dashboard/settings"
               data-tour="settings"
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/settings'
+                location.pathname === '/dashboard/settings'
                   ? 'bg-gradient-stratum text-white shadow-glow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
@@ -290,7 +290,7 @@ export default function DashboardLayout() {
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                     <NavLink
-                      to="/settings"
+                      to="/dashboard/settings"
                       className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
                       onClick={() => setUserMenuOpen(false)}
                     >

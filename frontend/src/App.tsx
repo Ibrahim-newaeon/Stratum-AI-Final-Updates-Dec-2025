@@ -480,6 +480,56 @@ function App() {
                     </Suspense>
                   }
                 />
+
+                {/* Competitors */}
+                <Route
+                  path="competitors"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Competitors />
+                    </Suspense>
+                  }
+                />
+
+                {/* Benchmarks */}
+                <Route
+                  path="benchmarks"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Benchmarks />
+                    </Suspense>
+                  }
+                />
+
+                {/* Assets */}
+                <Route
+                  path="assets"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Assets />
+                    </Suspense>
+                  }
+                />
+
+                {/* Rules */}
+                <Route
+                  path="rules"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Rules />
+                    </Suspense>
+                  }
+                />
+
+                {/* Predictions */}
+                <Route
+                  path="predictions"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Predictions />
+                    </Suspense>
+                  }
+                />
               </Route>
 
               {/* Legacy route redirects */}

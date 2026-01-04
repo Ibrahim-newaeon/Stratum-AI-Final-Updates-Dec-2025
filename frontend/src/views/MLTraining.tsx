@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Upload,
   Brain,
@@ -6,20 +6,18 @@ import {
   FileSpreadsheet,
   Play,
   Trash2,
-  Download,
   CheckCircle,
   XCircle,
-  Clock,
   AlertCircle,
   RefreshCw,
   BarChart3,
   Target,
   TrendingUp,
   Cpu,
-  HardDrive,
   Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/api/client'
 
 // Types
 interface ModelInfo {
@@ -71,9 +69,8 @@ export default function MLTraining() {
 
   const fetchModels = async () => {
     try {
-      const response = await fetch('/api/v1/ml/models')
-      const data = await response.json()
-      setModels(data.models || [])
+      const response = await apiClient.get('/ml/models')
+      setModels(response.data.models || [])
     } catch (err) {
       console.error('Failed to fetch models:', err)
     }
@@ -81,9 +78,8 @@ export default function MLTraining() {
 
   const fetchTrainingData = async () => {
     try {
-      const response = await fetch('/api/v1/ml/training-data')
-      const data = await response.json()
-      setTrainingFiles(data.files || [])
+      const response = await apiClient.get('/ml/training-data')
+      setTrainingFiles(response.data.files || [])
     } catch (err) {
       console.error('Failed to fetch training data:', err)
     }
@@ -106,16 +102,18 @@ export default function MLTraining() {
     formData.append('file', file)
 
     try {
-      const response = await fetch('/api/v1/ml/upload?train_after_upload=false', {
-        method: 'POST',
-        body: formData,
+      const response = await apiClient.post('/ml/upload?train_after_upload=false', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(progress)
+          }
+        },
       })
 
-      if (!response.ok) {
-        throw new Error('Upload failed')
-      }
-
-      const data = await response.json()
       setUploadProgress(100)
 
       // Refresh training data list
@@ -123,9 +121,10 @@ export default function MLTraining() {
 
       // Show success
       setError(null)
-      alert(`Successfully uploaded ${data.rows_processed} rows of training data`)
-    } catch (err) {
-      setError('Failed to upload file. Please try again.')
+      alert(`Successfully uploaded ${response.data.rows_processed || 'N/A'} rows of training data`)
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Failed to upload file. Please try again.'
+      setError(errorMessage)
       console.error('Upload error:', err)
     } finally {
       setIsLoading(false)
@@ -140,24 +139,16 @@ export default function MLTraining() {
     setError(null)
 
     try {
-      const response = await fetch('/api/v1/ml/generate-sample', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          num_campaigns: 100,
-          days_per_campaign: 30,
-        }),
+      const response = await apiClient.post('/ml/generate-sample', {
+        num_campaigns: 100,
+        days_per_campaign: 30,
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to generate sample data')
-      }
-
-      const data = await response.json()
       await fetchTrainingData()
-      alert(`Generated ${data.rows} rows of sample training data`)
-    } catch (err) {
-      setError('Failed to generate sample data')
+      alert(`Generated ${response.data.rows} rows of sample training data`)
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Failed to generate sample data'
+      setError(errorMessage)
       console.error('Generate sample error:', err)
     } finally {
       setIsLoading(false)
@@ -171,20 +162,16 @@ export default function MLTraining() {
 
     try {
       const url = useSampleData
-        ? '/api/v1/ml/train?use_sample_data=true&num_campaigns=100&days=30'
-        : '/api/v1/ml/train'
+        ? '/ml/train?use_sample_data=true&num_campaigns=100&days=30'
+        : '/ml/train'
 
-      const response = await fetch(url, { method: 'POST' })
+      const response = await apiClient.post(url)
 
-      if (!response.ok) {
-        throw new Error('Training failed')
-      }
-
-      const data = await response.json()
-      setTrainingResult(data)
+      setTrainingResult(response.data)
       await fetchModels()
-    } catch (err) {
-      setError('Training failed. Please ensure you have uploaded training data.')
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Training failed. Please ensure you have uploaded training data.'
+      setError(errorMessage)
       console.error('Training error:', err)
     } finally {
       setIsTraining(false)
@@ -197,17 +184,11 @@ export default function MLTraining() {
     }
 
     try {
-      const response = await fetch(`/api/v1/ml/models/${modelName}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        throw new Error('Delete failed')
-      }
-
+      await apiClient.delete(`/ml/models/${modelName}`)
       await fetchModels()
-    } catch (err) {
-      setError('Failed to delete model')
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Failed to delete model'
+      setError(errorMessage)
       console.error('Delete error:', err)
     }
   }
