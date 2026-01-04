@@ -198,7 +198,7 @@ export function useUpdateAdAccount(tenantId: number) {
       accountId: string
       data: { is_enabled?: boolean; daily_budget_cap?: number }
     }) => {
-      const response = await api.put<{ data: AdAccount }>(
+      const response = await apiClient.put<{ data: AdAccount }>(
         `/tenant/${tenantId}/ad-accounts/${platform}/${accountId}`,
         data
       )
@@ -270,7 +270,7 @@ export function useUpdateCampaignDraft(tenantId: number, draftId: string) {
 
   return useMutation({
     mutationFn: async (data: UpdateDraftPayload) => {
-      const response = await api.put<{ data: CampaignDraft }>(
+      const response = await apiClient.put<{ data: CampaignDraft }>(
         `/tenant/${tenantId}/campaign-drafts/${draftId}`,
         data
       )
