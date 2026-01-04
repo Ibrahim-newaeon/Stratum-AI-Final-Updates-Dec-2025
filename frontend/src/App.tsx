@@ -10,7 +10,12 @@ import LoadingSpinner from './components/common/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 
 // Lazy load pages for code splitting
+const Landing = lazy(() => import('./views/Landing'))
 const Login = lazy(() => import('./views/Login'))
+const Signup = lazy(() => import('./views/Signup'))
+const ForgotPassword = lazy(() => import('./views/ForgotPassword'))
+const ResetPassword = lazy(() => import('./views/ResetPassword'))
+const VerifyEmail = lazy(() => import('./views/VerifyEmail'))
 const Overview = lazy(() => import('./views/Overview'))
 const CustomDashboard = lazy(() => import('./views/CustomDashboard'))
 const Campaigns = lazy(() => import('./views/Campaigns'))
@@ -18,6 +23,8 @@ const Stratum = lazy(() => import('./views/Stratum'))
 const Benchmarks = lazy(() => import('./views/Benchmarks'))
 const Assets = lazy(() => import('./views/Assets'))
 const Rules = lazy(() => import('./views/Rules'))
+const Competitors = lazy(() => import('./views/Competitors'))
+const Predictions = lazy(() => import('./views/Predictions'))
 const WhatsApp = lazy(() => import('./views/WhatsApp'))
 const Settings = lazy(() => import('./views/Settings'))
 const Tenants = lazy(() => import('./views/Tenants'))
@@ -26,6 +33,15 @@ const CAPISetup = lazy(() => import('./views/CAPISetup'))
 const DataQuality = lazy(() => import('./views/DataQuality'))
 const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'))
 const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'))
+
+// Super Admin views
+const ControlTower = lazy(() => import('./views/superadmin/ControlTower'))
+const SuperAdminTenantsList = lazy(() => import('./views/superadmin/TenantsList'))
+const SuperAdminTenantProfile = lazy(() => import('./views/superadmin/TenantProfile'))
+const SuperAdminBenchmarks = lazy(() => import('./views/superadmin/Benchmarks'))
+const SuperAdminAudit = lazy(() => import('./views/superadmin/Audit'))
+const SuperAdminBilling = lazy(() => import('./views/superadmin/Billing'))
+const SuperAdminSystem = lazy(() => import('./views/superadmin/System'))
 
 // Tenant-scoped views (Campaign Builder)
 const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'))
@@ -37,6 +53,15 @@ const TenantOverview = lazy(() => import('./views/tenant/TenantOverview'))
 const TenantCampaigns = lazy(() => import('./views/tenant/TenantCampaigns'))
 const TenantSettings = lazy(() => import('./views/tenant/TenantSettings'))
 
+// Role-based tenant views
+const TenantAdminOverview = lazy(() => import('./views/tenant/Overview'))
+const MediaBuyerConsole = lazy(() => import('./views/tenant/Console'))
+const SignalHub = lazy(() => import('./views/tenant/SignalHub'))
+
+// Account Manager views
+const AMPortfolio = lazy(() => import('./views/am/Portfolio'))
+const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'))
+
 function App() {
   return (
     <ThemeProvider>
@@ -46,6 +71,14 @@ function App() {
             <Routes>
               {/* Public routes */}
               <Route
+                path="/"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Landing />
+                  </Suspense>
+                }
+              />
+              <Route
                 path="/login"
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
@@ -53,17 +86,49 @@ function App() {
                   </Suspense>
                 }
               />
-
-              {/* Protected routes */}
               <Route
-                path="/"
+                path="/signup"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Signup />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ForgotPassword />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ResetPassword />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/verify-email"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <VerifyEmail />
+                  </Suspense>
+                }
+              />
+
+              {/* Protected dashboard routes */}
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <DashboardLayout />
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/overview" replace />} />
+                <Route index element={<Navigate to="/dashboard/overview" replace />} />
                 <Route
                   path="overview"
                   element={
@@ -117,6 +182,22 @@ function App() {
               element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <Rules />
+                </Suspense>
+              }
+            />
+            <Route
+              path="competitors"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Competitors />
+                </Suspense>
+              }
+            />
+            <Route
+              path="predictions"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Predictions />
                 </Suspense>
               }
             />
@@ -187,6 +268,94 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="superadmin/control-tower"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <ControlTower />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/tenants"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminTenantsList />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/tenants/:tenantId"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminTenantProfile />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/benchmarks"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminBenchmarks />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/audit"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminAudit />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/billing"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminBilling />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/system"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminSystem />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Account Manager routes */}
+                <Route
+                  path="am/portfolio"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <AMPortfolio />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="am/tenant/:tenantId"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <AMTenantNarrative />
+                    </Suspense>
+                  }
+                />
               </Route>
 
               {/* Tenant-scoped routes with :tenantId parameter */}
@@ -212,6 +381,32 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <TenantOverview />
+                    </Suspense>
+                  }
+                />
+
+                {/* Role-based views */}
+                <Route
+                  path="trust"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantAdminOverview />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="console"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <MediaBuyerConsole />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="signal-hub"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SignalHub />
                     </Suspense>
                   }
                 />
@@ -287,8 +482,11 @@ function App() {
                 />
               </Route>
 
-              {/* Catch all - redirect to overview */}
-              <Route path="*" element={<Navigate to="/overview" replace />} />
+              {/* Legacy route redirects */}
+              <Route path="/overview" element={<Navigate to="/dashboard/overview" replace />} />
+
+              {/* Catch all - redirect to landing for unauthenticated, dashboard for authenticated */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <Toaster />
           </div>

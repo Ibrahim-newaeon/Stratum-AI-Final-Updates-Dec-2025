@@ -9,18 +9,22 @@ interface InfoIconProps {
 }
 
 export function InfoIcon({ className, size = 16, tooltip, onClick }: InfoIconProps) {
+  const Component = onClick ? 'button' : 'span'
+
   return (
-    <span
+    <Component
       className={cn(
-        'inline-flex items-center justify-center cursor-help text-gray-400 hover:text-gray-300 transition-colors',
-        onClick && 'cursor-pointer',
+        'inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors',
+        onClick ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded' : 'cursor-help',
         className
       )}
       title={tooltip}
       onClick={onClick}
+      aria-label={tooltip || 'More information'}
+      {...(onClick ? { type: 'button' as const } : {})}
     >
-      <Info size={size} />
-    </span>
+      <Info size={size} aria-hidden="true" />
+    </Component>
   )
 }
 

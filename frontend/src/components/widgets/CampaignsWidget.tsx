@@ -37,15 +37,15 @@ export function CampaignsWidget({ className }: CampaignsWidgetProps) {
             <div className="flex items-center gap-2">
               <span className={cn(
                 'font-semibold text-sm',
-                campaign.roas >= 4 && 'text-green-500',
+                campaign.roas >= 4 && 'text-emerald-500 dark:text-emerald-400',
                 campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
-                campaign.roas < 3 && 'text-amber-500'
+                campaign.roas < 3 && 'text-amber-500 dark:text-amber-400'
               )}>
                 {campaign.roas.toFixed(1)}x
               </span>
-              {campaign.trend === 'up' && <TrendingUp className="w-4 h-4 text-green-500" />}
-              {campaign.trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500" />}
-              {campaign.trend === 'stable' && <div className="w-4 h-0.5 bg-muted-foreground" />}
+              {campaign.trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" aria-label="Trending up" />}
+              {campaign.trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500 dark:text-red-400" aria-label="Trending down" />}
+              {campaign.trend === 'stable' && <div className="w-4 h-0.5 bg-muted-foreground" aria-label="Stable" />}
             </div>
           </div>
         ))}

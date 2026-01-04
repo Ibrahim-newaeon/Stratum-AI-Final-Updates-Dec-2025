@@ -112,7 +112,7 @@ const InsightCard: React.FC<{
     <div
       className={`
         motion-enter relative overflow-hidden rounded-xl border-l-4 ${config.borderColor}
-        bg-white dark:bg-gray-800 shadow-card hover:shadow-lg transition-all duration-300
+        bg-card shadow-card hover:shadow-lg transition-all duration-300
         ${isExpanded ? 'ring-2 ring-primary/20' : ''}
       `}
       style={{
@@ -136,23 +136,24 @@ const InsightCard: React.FC<{
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priority.color}`}>
                 {priority.label}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{config.label}</span>
+              <span className="text-xs text-muted-foreground">{config.label}</span>
             </div>
 
-            <h4 className="font-medium text-gray-900 dark:text-white line-clamp-1">
+            <h4 className="font-medium text-foreground line-clamp-1">
               {recommendation.title}
             </h4>
 
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
               {recommendation.description}
             </p>
           </div>
 
           <button
             onClick={() => onDismiss?.(recommendation.id)}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            aria-label="Dismiss insight"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -168,12 +169,12 @@ const InsightCard: React.FC<{
               </div>
             )}
             {recommendation.impact_estimate && (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-muted-foreground">
                 {recommendation.impact_estimate}
               </span>
             )}
-            <div className="flex items-center gap-1 ml-auto text-xs text-gray-400">
-              <Clock className="h-3 w-3" />
+            <div className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" aria-hidden="true" />
               <span>{new Date(recommendation.created_at).toLocaleDateString()}</span>
             </div>
           </div>
@@ -183,15 +184,19 @@ const InsightCard: React.FC<{
         {recommendation.confidence > 0 && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-gray-500 dark:text-gray-400">Confidence</span>
-              <span className="font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-muted-foreground">Confidence</span>
+              <span className="font-medium text-foreground">
                 {(recommendation.confidence * 100).toFixed(0)}%
               </span>
             </div>
-            <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full bg-gradient-to-r ${quantumEmberAccent.primary}`}
                 style={{ width: `${recommendation.confidence * 100}%` }}
+                role="progressbar"
+                aria-valuenow={recommendation.confidence * 100}
+                aria-valuemin={0}
+                aria-valuemax={100}
               />
             </div>
           </div>
@@ -200,18 +205,20 @@ const InsightCard: React.FC<{
         {/* Expand/collapse toggle */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-3 flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
+          className="mt-3 flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors focus:outline-none focus-visible:underline"
+          aria-expanded={isExpanded}
         >
           <ChevronRight
-            className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+            className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+            aria-hidden="true"
           />
           {isExpanded ? 'Hide actions' : 'Show actions'}
         </button>
 
         {/* Expanded actions */}
         {isExpanded && recommendation.actions && recommendation.actions.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 motion-card">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <div className="mt-4 pt-4 border-t border-border motion-enter">
+            <p className="text-xs font-medium text-muted-foreground mb-2">
               Recommended Actions
             </p>
             <div className="space-y-2">
@@ -222,18 +229,19 @@ const InsightCard: React.FC<{
                   disabled={isApplying}
                   className={`
                     w-full flex items-center justify-between px-3 py-2 rounded-lg
-                    border border-gray-200 dark:border-gray-600
-                    hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors
+                    border border-border bg-background
+                    hover:bg-muted transition-colors
                     disabled:opacity-50 disabled:cursor-not-allowed
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
                   `}
                 >
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-foreground">
                     {action.label}
                   </span>
                   {isApplying ? (
-                    <RefreshCw className="h-4 w-4 text-gray-400 animate-spin" />
+                    <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" aria-label="Applying..." />
                   ) : (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                   )}
                 </button>
               ))}
@@ -275,14 +283,12 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
     return (
       <div className={`rounded-xl border bg-card shadow-card p-6 ${className}`}>
         <div className="flex items-center gap-2 mb-4">
-          <Lightbulb className="h-5 w-5 text-amber-500" />
-          <h3 className="text-lg font-semibold">AI Insights</h3>
+          <Lightbulb className="h-5 w-5 text-amber-500" aria-hidden="true" />
+          <h3 className="text-lg font-semibold text-foreground">AI Insights</h3>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4" aria-busy="true" aria-label="Loading insights">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl" />
-            </div>
+            <div key={i} className="skeleton h-24 rounded-xl" />
           ))}
         </div>
       </div>
@@ -292,12 +298,12 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   if (error) {
     return (
       <div className={`rounded-xl border bg-card shadow-card p-6 ${className}`}>
-        <div className="text-center py-8">
-          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-          <p className="text-gray-500 dark:text-gray-400">Failed to load insights</p>
+        <div className="text-center py-8" role="alert">
+          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" aria-hidden="true" />
+          <p className="text-muted-foreground">Failed to load insights</p>
           <button
             onClick={() => refetch()}
-            className="mt-2 text-sm text-primary hover:underline"
+            className="mt-2 text-sm text-primary hover:underline focus:outline-none focus-visible:underline"
           >
             Try again
           </button>
@@ -309,20 +315,20 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   return (
     <div className={`rounded-xl border bg-card shadow-card overflow-hidden ${className}`}>
       {/* Header with Quantum Ember gradient */}
-      <div className="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="relative px-6 py-4 border-b border-border">
         <div
           className={`absolute inset-0 bg-gradient-to-r ${quantumEmberAccent.primary} opacity-5`}
         />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={`p-1.5 rounded-lg bg-gradient-to-br ${quantumEmberAccent.primary}`}>
-              <Lightbulb className="h-5 w-5 text-white" />
+              <Lightbulb className="h-5 w-5 text-white" aria-hidden="true" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-foreground">
                 AI Insights
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Powered by Quantum Ember Analytics
               </p>
             </div>
@@ -330,10 +336,10 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
 
           <button
             onClick={() => refetch()}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            title="Refresh insights"
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            aria-label="Refresh insights"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -352,9 +358,9 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
           ))
         ) : (
           <div className="text-center py-8">
-            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-3" />
-            <p className="text-gray-600 dark:text-gray-400 font-medium">All caught up!</p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-3" aria-hidden="true" />
+            <p className="text-foreground font-medium">All caught up!</p>
+            <p className="text-sm text-muted-foreground mt-1">
               No new insights at this time
             </p>
           </div>
@@ -363,8 +369,8 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
 
       {/* Footer */}
       {visibleRecommendations && visibleRecommendations.length > 0 && (
-        <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <button className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">
+        <div className="px-6 py-3 border-t border-border bg-muted/30">
+          <button className="text-sm text-primary hover:text-primary/80 font-medium transition-colors focus:outline-none focus-visible:underline">
             View all insights
           </button>
         </div>

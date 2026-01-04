@@ -30,7 +30,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
-  { name: 'nav.overview', href: '/overview', icon: HomeIcon, tourId: 'nav-overview' },
+  { name: 'nav.overview', href: '/overview', icon: HomeIcon, tourId: 'nav-overview', dataTour: 'overview' },
   { name: 'nav.dashboard', href: '/dashboard', icon: Squares2X2Icon, tourId: 'nav-dashboard' },
   { name: 'nav.campaigns', href: '/campaigns', icon: ChartBarIcon, tourId: 'nav-campaigns' },
   { name: 'nav.stratum', href: '/stratum', icon: TrophyIcon, tourId: 'nav-stratum' },
@@ -79,6 +79,7 @@ export default function DashboardLayout() {
 
       {/* Sidebar */}
       <aside
+        data-tour="sidebar"
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-64 transform bg-card border-r transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -110,6 +111,7 @@ export default function DashboardLayout() {
                   key={item.name}
                   to={item.href}
                   id={item.tourId}
+                  data-tour={item.dataTour}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                     isActive
@@ -204,6 +206,7 @@ export default function DashboardLayout() {
             </NavLink>
             <NavLink
               to="/settings"
+              data-tour="settings"
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 location.pathname === '/settings'

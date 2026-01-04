@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -24,7 +24,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false)
 
   // Get the redirect path from location state
-  const from = (location.state as any)?.from?.pathname || '/overview'
+  const from = (location.state as any)?.from?.pathname || '/dashboard/overview'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -140,7 +140,16 @@ export default function Login() {
 
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">Welcome back</h2>
-            <p className="text-muted-foreground">Enter your credentials to access your account</p>
+            <p className="text-muted-foreground">
+              Enter your credentials to access your account
+              <br />
+              <span className="mt-2 inline-block">
+                Don't have an account?{' '}
+                <Link to="/signup" className="text-primary hover:underline font-medium">
+                  Sign up
+                </Link>
+              </span>
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -178,13 +187,12 @@ export default function Login() {
                 <label htmlFor="password" className="text-sm font-medium">
                   Password
                 </label>
-                <button
-                  type="button"
+                <Link
+                  to="/forgot-password"
                   className="text-sm text-primary hover:underline"
-                  onClick={() => {/* TODO: Implement forgot password */}}
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
