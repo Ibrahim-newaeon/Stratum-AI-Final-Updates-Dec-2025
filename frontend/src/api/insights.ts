@@ -9,7 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { api } from './client'
+import { apiClient } from './client'
 
 // =============================================================================
 // Types
@@ -154,7 +154,7 @@ export function useInsights(tenantId: number, date?: string) {
     queryKey: ['insights', tenantId, date],
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
-      const response = await api.get<{ data: InsightsData }>(
+      const response = await apiClient.get<{ data: InsightsData }>(
         `/insights/tenant/${tenantId}/insights${params}`
       )
       return response.data.data
@@ -186,7 +186,7 @@ export function useRecommendations(
       if (options?.priority) params.append('priority', options.priority)
       if (options?.limit) params.append('limit', options.limit.toString())
 
-      const response = await api.get<{ data: RecommendationsData }>(
+      const response = await apiClient.get<{ data: RecommendationsData }>(
         `/insights/tenant/${tenantId}/recommendations?${params}`
       )
       return response.data.data
@@ -215,7 +215,7 @@ export function useAnomalies(
       if (options?.days) params.append('days', options.days.toString())
       if (options?.severity) params.append('severity', options.severity)
 
-      const response = await api.get<{ data: AnomaliesData }>(
+      const response = await apiClient.get<{ data: AnomaliesData }>(
         `/insights/tenant/${tenantId}/anomalies?${params}`
       )
       return response.data.data
@@ -242,7 +242,7 @@ export function useKPIs(
       if (options?.date) params.append('date', options.date)
       if (options?.comparison) params.append('comparison', options.comparison)
 
-      const response = await api.get<{ data: KPIsData }>(
+      const response = await apiClient.get<{ data: KPIsData }>(
         `/insights/tenant/${tenantId}/kpis?${params}`
       )
       return response.data.data

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from './client'
+import { apiClient } from './client'
 
 // =============================================================================
 // Types
@@ -90,7 +90,7 @@ export function useAutopilotStatus(tenantId: number) {
   return useQuery({
     queryKey: ['autopilot-status', tenantId],
     queryFn: async () => {
-      const response = await api.get<{ data: AutopilotStatus }>(
+      const response = await apiClient.get<{ data: AutopilotStatus }>(
         `/autopilot/tenant/${tenantId}/autopilot/status`
       )
       return response.data.data
@@ -122,7 +122,7 @@ export function useAutopilotActions(
       if (filters?.platform) params.append('platform', filters.platform)
       if (filters?.limit) params.append('limit', filters.limit.toString())
 
-      const response = await api.get<{
+      const response = await apiClient.get<{
         data: { actions: AutopilotAction[]; count: number }
       }>(`/autopilot/tenant/${tenantId}/autopilot/actions?${params}`)
       return response.data.data
@@ -140,7 +140,7 @@ export function useActionsSummary(tenantId: number, days: number = 7) {
   return useQuery({
     queryKey: ['autopilot-summary', tenantId, days],
     queryFn: async () => {
-      const response = await api.get<{ data: ActionsSummary }>(
+      const response = await apiClient.get<{ data: ActionsSummary }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/summary?days=${days}`
       )
       return response.data.data
@@ -157,7 +157,7 @@ export function useAutopilotAction(tenantId: number, actionId: string) {
   return useQuery({
     queryKey: ['autopilot-action', tenantId, actionId],
     queryFn: async () => {
-      const response = await api.get<{ data: { action: AutopilotAction } }>(
+      const response = await apiClient.get<{ data: { action: AutopilotAction } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}`
       )
       return response.data.data.action
@@ -178,7 +178,7 @@ export function useQueueAction(tenantId: number) {
 
   return useMutation({
     mutationFn: async (request: QueueActionRequest) => {
-      const response = await api.post<{
+      const response = await apiClient.post<{
         data: {
           action: AutopilotAction
           auto_approved: boolean
@@ -204,7 +204,7 @@ export function useApproveAction(tenantId: number) {
 
   return useMutation({
     mutationFn: async (actionId: string) => {
-      const response = await api.post<{ data: { action: AutopilotAction } }>(
+      const response = await apiClient.post<{ data: { action: AutopilotAction } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}/approve`
       )
       return response.data.data.action
@@ -224,7 +224,7 @@ export function useApproveAllActions(tenantId: number) {
 
   return useMutation({
     mutationFn: async (actionIds?: string[]) => {
-      const response = await api.post<{ data: { approved_count: number } }>(
+      const response = await apiClient.post<{ data: { approved_count: number } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/approve-all`,
         actionIds ? { action_ids: actionIds } : undefined
       )
@@ -246,7 +246,7 @@ export function useDismissAction(tenantId: number) {
 
   return useMutation({
     mutationFn: async (actionId: string) => {
-      const response = await api.post<{ data: { action: AutopilotAction } }>(
+      const response = await apiClient.post<{ data: { action: AutopilotAction } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}/dismiss`
       )
       return response.data.data.action

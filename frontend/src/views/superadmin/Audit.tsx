@@ -63,21 +63,21 @@ export default function Audit() {
     action: categoryFilter !== 'all' ? categoryFilter : undefined,
   })
 
-  // Sample audit logs
-  const auditLogs: AuditLog[] = auditLogsData?.map((log) => ({
+  // Map API data to component format
+  const auditLogs: AuditLog[] = auditLogsData?.items?.map((log) => ({
     id: log.id,
     timestamp: new Date(log.timestamp),
-    category: 'user' as LogCategory,
-    severity: 'info' as LogSeverity,
+    category: (log.severity === 'critical' || log.severity === 'error' ? 'security' : 'user') as LogCategory,
+    severity: log.severity as LogSeverity,
     action: log.action,
     description: log.details,
     actor: {
       type: 'user' as const,
       id: log.userId,
-      name: 'User',
+      name: log.userName ?? 'User',
     },
-    target: null,
-    metadata: {},
+    target: log.tenantId ? { type: 'tenant', id: String(log.tenantId), name: log.tenantName ?? 'Unknown' } : null,
+    metadata: log.metadata ?? {},
     ipAddress: log.ipAddress ?? null,
     userAgent: log.userAgent ?? null,
   })) ?? [

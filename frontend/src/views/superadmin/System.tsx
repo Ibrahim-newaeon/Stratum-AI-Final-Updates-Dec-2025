@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { useSystemHealth } from '@/api/hooks'
 import {
   ServerIcon,
   CpuChipIcon,
@@ -57,175 +58,95 @@ export default function System() {
   const [refreshing, setRefreshing] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(new Date())
 
+  // Fetch system health from API
+  const { data: healthData, refetch, isLoading } = useSystemHealth()
+
   // Auto-refresh every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setLastRefresh(new Date())
+      refetch()
     }, 30000)
     return () => clearInterval(interval)
-  }, [])
+  }, [refetch])
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true)
-    setTimeout(() => {
+    try {
+      await refetch()
       setLastRefresh(new Date())
+    } finally {
       setRefreshing(false)
-    }, 1000)
+    }
   }
 
-  // Sample data
-  const services: Service[] = [
-    {
-      id: 'api',
-      name: 'API Gateway',
-      status: 'healthy',
-      uptime: 99.99,
-      latency: 45,
-      lastCheck: new Date(),
-      version: '2.4.1',
-    },
-    {
-      id: 'auth',
-      name: 'Auth Service',
-      status: 'healthy',
-      uptime: 99.95,
-      latency: 32,
-      lastCheck: new Date(),
-      version: '1.8.0',
-    },
-    {
-      id: 'sync',
-      name: 'Sync Engine',
-      status: 'degraded',
-      uptime: 98.5,
-      latency: 1250,
-      lastCheck: new Date(),
-      version: '3.1.2',
-    },
-    {
-      id: 'ml',
-      name: 'ML Pipeline',
-      status: 'healthy',
-      uptime: 99.8,
-      latency: 890,
-      lastCheck: new Date(),
-      version: '2.0.0',
-    },
-    {
-      id: 'db',
-      name: 'Database Cluster',
-      status: 'healthy',
-      uptime: 99.99,
-      latency: 12,
-      lastCheck: new Date(),
-      version: 'PostgreSQL 15',
-    },
-    {
-      id: 'cache',
-      name: 'Cache Layer',
-      status: 'healthy',
-      uptime: 99.99,
-      latency: 2,
-      lastCheck: new Date(),
-      version: 'Redis 7.0',
-    },
+  // Default mock data for fallback
+  const mockServices: Service[] = [
+    { id: 'api', name: 'API Gateway', status: 'healthy', uptime: 99.99, latency: 45, lastCheck: new Date(), version: '2.4.1' },
+    { id: 'auth', name: 'Auth Service', status: 'healthy', uptime: 99.95, latency: 32, lastCheck: new Date(), version: '1.8.0' },
+    { id: 'sync', name: 'Sync Engine', status: 'degraded', uptime: 98.5, latency: 1250, lastCheck: new Date(), version: '3.1.2' },
+    { id: 'ml', name: 'ML Pipeline', status: 'healthy', uptime: 99.8, latency: 890, lastCheck: new Date(), version: '2.0.0' },
+    { id: 'db', name: 'Database Cluster', status: 'healthy', uptime: 99.99, latency: 12, lastCheck: new Date(), version: 'PostgreSQL 15' },
+    { id: 'cache', name: 'Cache Layer', status: 'healthy', uptime: 99.99, latency: 2, lastCheck: new Date(), version: 'Redis 7.0' },
   ]
 
-  const queues: QueueInfo[] = [
-    {
-      id: 'sync',
-      name: 'Platform Sync',
-      status: 'running',
-      pending: 45,
-      processing: 12,
-      completed: 15420,
-      failed: 3,
-      avgProcessTime: 2.5,
-    },
-    {
-      id: 'notifications',
-      name: 'Notifications',
-      status: 'running',
-      pending: 8,
-      processing: 2,
-      completed: 8932,
-      failed: 0,
-      avgProcessTime: 0.3,
-    },
-    {
-      id: 'reports',
-      name: 'Report Generation',
-      status: 'running',
-      pending: 15,
-      processing: 3,
-      completed: 1245,
-      failed: 2,
-      avgProcessTime: 45,
-    },
-    {
-      id: 'ml-inference',
-      name: 'ML Inference',
-      status: 'running',
-      pending: 120,
-      processing: 8,
-      completed: 45678,
-      failed: 12,
-      avgProcessTime: 1.2,
-    },
+  const mockQueues: QueueInfo[] = [
+    { id: 'sync', name: 'Platform Sync', status: 'running', pending: 45, processing: 12, completed: 15420, failed: 3, avgProcessTime: 2.5 },
+    { id: 'notifications', name: 'Notifications', status: 'running', pending: 8, processing: 2, completed: 8932, failed: 0, avgProcessTime: 0.3 },
+    { id: 'reports', name: 'Report Generation', status: 'running', pending: 15, processing: 3, completed: 1245, failed: 2, avgProcessTime: 45 },
+    { id: 'ml-inference', name: 'ML Inference', status: 'running', pending: 120, processing: 8, completed: 45678, failed: 12, avgProcessTime: 1.2 },
   ]
 
-  const connectors: PlatformConnector[] = [
-    {
-      platform: 'Meta',
-      status: 'healthy',
-      lastSync: new Date(Date.now() - 5 * 60 * 1000),
-      syncDuration: 45,
-      errors: 0,
-      recordsProcessed: 125000,
-    },
-    {
-      platform: 'Google',
-      status: 'healthy',
-      lastSync: new Date(Date.now() - 3 * 60 * 1000),
-      syncDuration: 32,
-      errors: 0,
-      recordsProcessed: 89000,
-    },
-    {
-      platform: 'TikTok',
-      status: 'degraded',
-      lastSync: new Date(Date.now() - 15 * 60 * 1000),
-      syncDuration: 180,
-      errors: 5,
-      recordsProcessed: 45000,
-    },
-    {
-      platform: 'Snapchat',
-      status: 'down',
-      lastSync: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      syncDuration: 0,
-      errors: 15,
-      recordsProcessed: 0,
-    },
-    {
-      platform: 'LinkedIn',
-      status: 'healthy',
-      lastSync: new Date(Date.now() - 8 * 60 * 1000),
-      syncDuration: 28,
-      errors: 0,
-      recordsProcessed: 12000,
-    },
+  const mockConnectors: PlatformConnector[] = [
+    { platform: 'Meta', status: 'healthy', lastSync: new Date(Date.now() - 5 * 60 * 1000), syncDuration: 45, errors: 0, recordsProcessed: 125000 },
+    { platform: 'Google', status: 'healthy', lastSync: new Date(Date.now() - 3 * 60 * 1000), syncDuration: 32, errors: 0, recordsProcessed: 89000 },
+    { platform: 'TikTok', status: 'degraded', lastSync: new Date(Date.now() - 15 * 60 * 1000), syncDuration: 180, errors: 5, recordsProcessed: 45000 },
+    { platform: 'Snapchat', status: 'down', lastSync: new Date(Date.now() - 2 * 60 * 60 * 1000), syncDuration: 0, errors: 15, recordsProcessed: 0 },
+    { platform: 'LinkedIn', status: 'healthy', lastSync: new Date(Date.now() - 8 * 60 * 1000), syncDuration: 28, errors: 0, recordsProcessed: 12000 },
   ]
 
-  const systemMetrics = {
+  const mockSystemMetrics = {
     cpu: 42,
     memory: 68,
     disk: 35,
-    network: 125, // Mbps
+    network: 125,
     activeConnections: 1250,
     requestsPerMinute: 4520,
     errorRate: 0.02,
   }
+
+  // Use API data or fallback to mock data
+  const services: Service[] = healthData?.services?.map(s => ({
+    id: s.name.toLowerCase().replace(/\s+/g, '-'),
+    name: s.name,
+    status: s.status,
+    uptime: s.uptime,
+    latency: s.latency,
+    lastCheck: new Date(),
+    version: s.version,
+  })) ?? mockServices
+
+  const queues: QueueInfo[] = healthData?.queues?.map(q => ({
+    id: q.name.toLowerCase().replace(/\s+/g, '-'),
+    name: q.name,
+    status: q.status,
+    pending: q.pending,
+    processing: q.processing,
+    completed: q.completed,
+    failed: q.failed,
+    avgProcessTime: q.avgProcessTime,
+  })) ?? mockQueues
+
+  const connectors: PlatformConnector[] = healthData?.connectors?.map(c => ({
+    platform: c.platform,
+    status: c.status,
+    lastSync: new Date(c.lastSync),
+    syncDuration: 0,
+    errors: c.errors,
+    recordsProcessed: c.recordsProcessed,
+  })) ?? mockConnectors
+
+  const systemMetrics = healthData?.metrics ?? mockSystemMetrics
 
   const getStatusColor = (status: ServiceStatus | QueueStatus) => {
     switch (status) {

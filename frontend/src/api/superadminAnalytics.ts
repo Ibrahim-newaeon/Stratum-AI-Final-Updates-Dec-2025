@@ -9,7 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { api } from './client'
+import { apiClient } from './client'
 
 // =============================================================================
 // Types
@@ -84,7 +84,7 @@ export function usePlatformOverview(days: number = 7) {
   return useQuery({
     queryKey: ['superadmin-platform-overview', days],
     queryFn: async () => {
-      const response = await api.get<{ data: PlatformOverview }>(
+      const response = await apiClient.get<{ data: PlatformOverview }>(
         `/superadmin/platform-overview?days=${days}`
       )
       return response.data.data
@@ -100,7 +100,7 @@ export function useTenantProfitability(days: number = 30) {
   return useQuery({
     queryKey: ['superadmin-tenant-profitability', days],
     queryFn: async () => {
-      const response = await api.get<{ data: TenantProfitabilityResponse }>(
+      const response = await apiClient.get<{ data: TenantProfitabilityResponse }>(
         `/superadmin/tenant-profitability?days=${days}`
       )
       return response.data.data
@@ -116,7 +116,7 @@ export function useSignalHealthTrends(days: number = 14) {
   return useQuery({
     queryKey: ['superadmin-signal-health-trends', days],
     queryFn: async () => {
-      const response = await api.get<{ data: SignalHealthTrendsResponse }>(
+      const response = await apiClient.get<{ data: SignalHealthTrendsResponse }>(
         `/superadmin/signal-health-trends?days=${days}`
       )
       return response.data.data
@@ -132,7 +132,7 @@ export function useActionsAnalytics(days: number = 7) {
   return useQuery({
     queryKey: ['superadmin-actions-analytics', days],
     queryFn: async () => {
-      const response = await api.get<{ data: ActionsAnalytics }>(
+      const response = await apiClient.get<{ data: ActionsAnalytics }>(
         `/superadmin/actions-analytics?days=${days}`
       )
       return response.data.data

@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from './client'
+import { apiClient } from './client'
 
 // =============================================================================
 // Types
@@ -96,7 +96,7 @@ export function useConnectorStatus(tenantId: number, platform: Platform) {
   return useQuery({
     queryKey: ['connector-status', tenantId, platform],
     queryFn: async () => {
-      const response = await api.get<{ data: ConnectorStatus }>(
+      const response = await apiClient.get<{ data: ConnectorStatus }>(
         `/tenant/${tenantId}/connect/${platform}/status`
       )
       return response.data.data
@@ -110,7 +110,7 @@ export function useStartConnection(tenantId: number) {
 
   return useMutation({
     mutationFn: async (platform: Platform) => {
-      const response = await api.post<{ data: { oauth_url: string } }>(
+      const response = await apiClient.post<{ data: { oauth_url: string } }>(
         `/tenant/${tenantId}/connect/${platform}/start`
       )
       return response.data.data
@@ -126,7 +126,7 @@ export function useRefreshToken(tenantId: number) {
 
   return useMutation({
     mutationFn: async (platform: Platform) => {
-      const response = await api.post(`/tenant/${tenantId}/connect/${platform}/refresh`)
+      const response = await apiClient.post(`/tenant/${tenantId}/connect/${platform}/refresh`)
       return response.data
     },
     onSuccess: (_, platform) => {
@@ -140,7 +140,7 @@ export function useDisconnectPlatform(tenantId: number) {
 
   return useMutation({
     mutationFn: async (platform: Platform) => {
-      const response = await api.delete(`/tenant/${tenantId}/connect/${platform}`)
+      const response = await apiClient.delete(`/tenant/${tenantId}/connect/${platform}`)
       return response.data
     },
     onSuccess: (_, platform) => {
@@ -158,7 +158,7 @@ export function useAdAccounts(tenantId: number, platform: Platform, enabledOnly 
   return useQuery({
     queryKey: ['ad-accounts', tenantId, platform, enabledOnly],
     queryFn: async () => {
-      const response = await api.get<{ data: AdAccount[] }>(
+      const response = await apiClient.get<{ data: AdAccount[] }>(
         `/tenant/${tenantId}/ad-accounts/${platform}`,
         { params: { enabled_only: enabledOnly } }
       )
@@ -173,7 +173,7 @@ export function useSyncAdAccounts(tenantId: number) {
 
   return useMutation({
     mutationFn: async (platform: Platform) => {
-      const response = await api.post(`/tenant/${tenantId}/ad-accounts/${platform}/sync`)
+      const response = await apiClient.post(`/tenant/${tenantId}/ad-accounts/${platform}/sync`)
       return response.data
     },
     onSuccess: (_, platform) => {
@@ -225,7 +225,7 @@ export function useCampaignDrafts(
   return useQuery({
     queryKey: ['campaign-drafts', tenantId, filters],
     queryFn: async () => {
-      const response = await api.get<{ data: CampaignDraft[] }>(
+      const response = await apiClient.get<{ data: CampaignDraft[] }>(
         `/tenant/${tenantId}/campaign-drafts`,
         { params: filters }
       )
@@ -239,7 +239,7 @@ export function useCampaignDraft(tenantId: number, draftId: string) {
   return useQuery({
     queryKey: ['campaign-draft', tenantId, draftId],
     queryFn: async () => {
-      const response = await api.get<{ data: CampaignDraft }>(
+      const response = await apiClient.get<{ data: CampaignDraft }>(
         `/tenant/${tenantId}/campaign-drafts/${draftId}`
       )
       return response.data.data
@@ -253,7 +253,7 @@ export function useCreateCampaignDraft(tenantId: number) {
 
   return useMutation({
     mutationFn: async (data: CreateDraftPayload) => {
-      const response = await api.post<{ data: CampaignDraft }>(
+      const response = await apiClient.post<{ data: CampaignDraft }>(
         `/tenant/${tenantId}/campaign-drafts`,
         data
       )
@@ -288,7 +288,7 @@ export function useSubmitDraft(tenantId: number) {
 
   return useMutation({
     mutationFn: async (draftId: string) => {
-      const response = await api.post<{ data: CampaignDraft }>(
+      const response = await apiClient.post<{ data: CampaignDraft }>(
         `/tenant/${tenantId}/campaign-drafts/${draftId}/submit`
       )
       return response.data.data
@@ -305,7 +305,7 @@ export function useApproveDraft(tenantId: number) {
 
   return useMutation({
     mutationFn: async (draftId: string) => {
-      const response = await api.post<{ data: CampaignDraft }>(
+      const response = await apiClient.post<{ data: CampaignDraft }>(
         `/tenant/${tenantId}/campaign-drafts/${draftId}/approve`
       )
       return response.data.data
@@ -322,7 +322,7 @@ export function useRejectDraft(tenantId: number) {
 
   return useMutation({
     mutationFn: async ({ draftId, reason }: { draftId: string; reason: string }) => {
-      const response = await api.post<{ data: CampaignDraft }>(
+      const response = await apiClient.post<{ data: CampaignDraft }>(
         `/tenant/${tenantId}/campaign-drafts/${draftId}/reject`,
         null,
         { params: { reason } }
@@ -341,7 +341,7 @@ export function usePublishDraft(tenantId: number) {
 
   return useMutation({
     mutationFn: async (draftId: string) => {
-      const response = await api.post<{ data: CampaignDraft }>(
+      const response = await apiClient.post<{ data: CampaignDraft }>(
         `/tenant/${tenantId}/campaign-drafts/${draftId}/publish`
       )
       return response.data.data
@@ -369,7 +369,7 @@ export function usePublishLogs(
   return useQuery({
     queryKey: ['publish-logs', tenantId, filters],
     queryFn: async () => {
-      const response = await api.get<{ data: PublishLog[] }>(
+      const response = await apiClient.get<{ data: PublishLog[] }>(
         `/tenant/${tenantId}/campaign-publish-logs`,
         { params: filters }
       )
@@ -384,7 +384,7 @@ export function useRetryPublish(tenantId: number) {
 
   return useMutation({
     mutationFn: async (logId: string) => {
-      const response = await api.post(`/tenant/${tenantId}/campaign-publish-logs/${logId}/retry`)
+      const response = await apiClient.post(`/tenant/${tenantId}/campaign-publish-logs/${logId}/retry`)
       return response.data
     },
     onSuccess: () => {

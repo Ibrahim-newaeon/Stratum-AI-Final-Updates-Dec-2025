@@ -15,8 +15,11 @@ import {
 import {
   useEmqBenchmarks,
   useEmqPortfolio,
+  useSuperAdminOverview,
+  useSuperAdminTenants,
+  useRevenue,
+  useChurnRisks,
 } from '@/api/hooks'
-import { useSuperAdminOverview, useSuperAdminTenants } from '@/api/hooks'
 import {
   BuildingOffice2Icon,
   CurrencyDollarIcon,
@@ -43,19 +46,21 @@ interface TenantHealthCard {
 export default function ControlTower() {
   const navigate = useNavigate()
 
-  // Fetch data
+  // Fetch data from multiple endpoints
   const { data: portfolioData } = useEmqPortfolio()
   const { data: benchmarksData } = useEmqBenchmarks()
   const { data: overviewData } = useSuperAdminOverview()
   const { data: tenantsData } = useSuperAdminTenants()
+  const { data: revenueData } = useRevenue()
+  const { data: churnRisksData } = useChurnRisks({ minRisk: 0.3, limit: 10 })
 
-  // Sample KPIs
+  // KPIs - use API data with fallbacks
   const portfolioKpis = {
-    mrr: overviewData?.totalRevenue ?? 125000,
-    arr: (overviewData?.totalRevenue ?? 125000) * 12,
-    churnRisk: 3,
+    mrr: revenueData?.mrr ?? overviewData?.totalRevenue ?? 125000,
+    arr: revenueData?.arr ?? (overviewData?.totalRevenue ?? 125000) * 12,
+    churnRisk: churnRisksData?.length ?? overviewData?.atRiskTenants ?? 3,
     margin: 68,
-    totalBudgetAtRisk: portfolioData?.atRiskBudget ?? 45000,
+    totalBudgetAtRisk: portfolioData?.atRiskBudget ?? overviewData?.totalBudgetAtRisk ?? 45000,
   }
 
   // Tenant health data

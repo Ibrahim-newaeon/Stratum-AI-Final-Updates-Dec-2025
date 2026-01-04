@@ -14,7 +14,7 @@ import {
   BudgetAtRiskChip,
   type AutopilotMode,
 } from '@/components/shared'
-import { useTenants } from '@/api/hooks'
+import { useSuperAdminTenants } from '@/api/hooks'
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -52,23 +52,11 @@ export default function TenantsList() {
   const [sortField, setSortField] = useState<SortField>('emq')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
-  const { data: tenantsData } = useTenants()
+  // Fetch tenants from superadmin API
+  const { data: tenantsData, isLoading } = useSuperAdminTenants()
 
-  // Sample tenants data (would come from API)
-  const tenants: TenantListItem[] = tenantsData?.map((t) => ({
-    id: t.id,
-    name: t.name,
-    industry: t.industry || 'E-commerce',
-    emqScore: Math.floor(Math.random() * 40) + 60, // 60-100
-    emqStatus: (['ok', 'risk', 'degraded', 'critical'] as EmqStatus[])[Math.floor(Math.random() * 4)],
-    autopilotMode: (['normal', 'limited', 'cuts_only', 'frozen'] as AutopilotMode[])[Math.floor(Math.random() * 4)],
-    budgetAtRisk: Math.floor(Math.random() * 15000),
-    activeIncidents: Math.floor(Math.random() * 5),
-    totalSpend: Math.floor(Math.random() * 100000) + 10000,
-    platforms: ['Meta', 'Google', 'TikTok'].slice(0, Math.floor(Math.random() * 3) + 1),
-    lastActivity: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-    accountManager: Math.random() > 0.3 ? 'John Smith' : null,
-  })) ?? [
+  // Default mock tenants
+  const mockTenants: TenantListItem[] = [
     {
       id: '1',
       name: 'Acme Corporation',
@@ -140,6 +128,39 @@ export default function TenantsList() {
       accountManager: 'Mike Chen',
     },
   ]
+
+  // Helper to determine EMQ status from score
+  const getEmqStatus = (score: number | null): EmqStatus => {
+    if (score === null) return 'risk'
+    if (score >= 80) return 'ok'
+    if (score >= 60) return 'risk'
+    if (score >= 40) return 'degraded'
+    return 'critical'
+  }
+
+  // Helper to determine autopilot mode from churn risk
+  const getAutopilotMode = (churnRisk: number): AutopilotMode => {
+    if (churnRisk >= 0.8) return 'frozen'
+    if (churnRisk >= 0.6) return 'cuts_only'
+    if (churnRisk >= 0.4) return 'limited'
+    return 'normal'
+  }
+
+  // Map API data to tenant list items
+  const tenants: TenantListItem[] = tenantsData?.items?.map((t) => ({
+    id: String(t.id),
+    name: t.name,
+    industry: 'E-commerce', // Not in API, use default
+    emqScore: t.emqScore ?? 0,
+    emqStatus: getEmqStatus(t.emqScore),
+    autopilotMode: getAutopilotMode(t.churnRisk),
+    budgetAtRisk: t.budgetAtRisk,
+    activeIncidents: t.activeIncidents,
+    totalSpend: t.monthlySpend,
+    platforms: ['Meta', 'Google'], // Not in API, use defaults
+    lastActivity: t.lastActivityAt ? new Date(t.lastActivityAt) : new Date(),
+    accountManager: null, // Not in API
+  })) ?? mockTenants
 
   // Filter and sort tenants
   const filteredTenants = useMemo(() => {

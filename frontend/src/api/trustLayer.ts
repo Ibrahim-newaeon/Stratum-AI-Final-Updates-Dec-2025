@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { api } from './client'
+import { apiClient } from './client'
 
 // =============================================================================
 // Types
@@ -95,7 +95,7 @@ export function useSignalHealth(tenantId: number, date?: string) {
     queryKey: ['signal-health', tenantId, date],
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
-      const response = await api.get<{ data: SignalHealthData }>(
+      const response = await apiClient.get<{ data: SignalHealthData }>(
         `/trust-layer/tenant/${tenantId}/signal-health${params}`
       )
       return response.data.data
@@ -120,7 +120,7 @@ export function useSignalHealthHistory(
       const params = new URLSearchParams({ days: days.toString() })
       if (platform) params.append('platform', platform)
 
-      const response = await api.get<{ data: { history: SignalHealthData[] } }>(
+      const response = await apiClient.get<{ data: { history: SignalHealthData[] } }>(
         `/trust-layer/tenant/${tenantId}/signal-health/history?${params}`
       )
       return response.data.data.history
@@ -138,7 +138,7 @@ export function useAttributionVariance(tenantId: number, date?: string) {
     queryKey: ['attribution-variance', tenantId, date],
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
-      const response = await api.get<{ data: AttributionVarianceData }>(
+      const response = await apiClient.get<{ data: AttributionVarianceData }>(
         `/trust-layer/tenant/${tenantId}/attribution-variance${params}`
       )
       return response.data.data
@@ -158,7 +158,7 @@ export function useTrustStatus(tenantId: number, date?: string) {
     queryKey: ['trust-status', tenantId, date],
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
-      const response = await api.get<{ data: TrustStatusData }>(
+      const response = await apiClient.get<{ data: TrustStatusData }>(
         `/trust-layer/tenant/${tenantId}/trust-status${params}`
       )
       return response.data.data

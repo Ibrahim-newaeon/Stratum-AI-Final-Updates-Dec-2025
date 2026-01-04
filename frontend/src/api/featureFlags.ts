@@ -6,7 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { api } from './client'
+import { apiClient } from './client'
 import { useFeatureFlagsStore, FeatureFlags } from '@/stores/featureFlagsStore'
 
 // =============================================================================
@@ -46,7 +46,7 @@ export function useFeatureFlags(tenantId: number) {
   const query = useQuery({
     queryKey: ['feature-flags', tenantId],
     queryFn: async () => {
-      const response = await api.get<{ data: FeatureFlagsResponse }>(
+      const response = await apiClient.get<{ data: FeatureFlagsResponse }>(
         `/tenant/${tenantId}/features`
       )
       return response.data.data
@@ -80,7 +80,7 @@ export function useUpdateFeatureFlags(tenantId: number) {
 
   return useMutation({
     mutationFn: async (updates: FeatureFlagsUpdate) => {
-      const response = await api.put<{ data: { features: FeatureFlags } }>(
+      const response = await apiClient.put<{ data: { features: FeatureFlags } }>(
         `/tenant/${tenantId}/features`,
         updates
       )
@@ -99,7 +99,7 @@ export function useSuperadminFeatureFlags(tenantId: number) {
   return useQuery({
     queryKey: ['superadmin-feature-flags', tenantId],
     queryFn: async () => {
-      const response = await api.get<{ data: FeatureFlagsResponse }>(
+      const response = await apiClient.get<{ data: FeatureFlagsResponse }>(
         `/superadmin/tenants/${tenantId}/features`
       )
       return response.data.data
@@ -116,7 +116,7 @@ export function useSuperadminUpdateFeatureFlags(tenantId: number) {
 
   return useMutation({
     mutationFn: async (updates: FeatureFlagsUpdate) => {
-      const response = await api.put<{ data: { features: FeatureFlags } }>(
+      const response = await apiClient.put<{ data: { features: FeatureFlags } }>(
         `/superadmin/tenants/${tenantId}/features`,
         updates
       )
@@ -136,7 +136,7 @@ export function useSuperadminResetFeatureFlags(tenantId: number) {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await api.post<{ data: { features: FeatureFlags } }>(
+      const response = await apiClient.post<{ data: { features: FeatureFlags } }>(
         `/superadmin/tenants/${tenantId}/features/reset`
       )
       return response.data.data

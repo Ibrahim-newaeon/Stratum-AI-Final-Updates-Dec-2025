@@ -8,6 +8,13 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
+  useRevenue,
+  useBillingPlans,
+  useBillingInvoices,
+  useBillingSubscriptions,
+  useRetryPayment,
+} from '@/api/hooks'
+import {
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -49,8 +56,15 @@ interface Invoice {
 export default function Billing() {
   const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'invoices' | 'plans'>('overview')
 
-  // Sample data
-  const metrics = {
+  // Fetch data from API
+  const { data: revenueData, isLoading: revenueLoading } = useRevenue()
+  const { data: plansData, isLoading: plansLoading } = useBillingPlans()
+  const { data: invoicesData, isLoading: invoicesLoading } = useBillingInvoices()
+  const { data: subscriptionsData, isLoading: subscriptionsLoading } = useBillingSubscriptions()
+  const retryPaymentMutation = useRetryPayment()
+
+  // Default mock data
+  const mockMetrics = {
     mrr: 45890,
     mrrGrowth: 8.5,
     arr: 550680,
@@ -60,108 +74,75 @@ export default function Billing() {
     totalRevenue: 1250000,
   }
 
-  const subscriptions: Subscription[] = [
-    {
-      id: 's1',
-      tenantId: 't1',
-      tenantName: 'Acme Corporation',
-      plan: 'enterprise',
-      status: 'active',
-      mrr: 1999,
-      startDate: new Date('2024-01-15'),
-      nextBilling: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Visa ****4242',
-      failedPayments: 0,
-    },
-    {
-      id: 's2',
-      tenantId: 't2',
-      tenantName: 'TechStart Inc',
-      plan: 'pro',
-      status: 'active',
-      mrr: 499,
-      startDate: new Date('2024-03-01'),
-      nextBilling: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Mastercard ****5555',
-      failedPayments: 0,
-    },
-    {
-      id: 's3',
-      tenantId: 't3',
-      tenantName: 'Fashion Forward',
-      plan: 'pro',
-      status: 'past_due',
-      mrr: 499,
-      startDate: new Date('2024-02-15'),
-      nextBilling: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Visa ****1234',
-      failedPayments: 2,
-    },
-    {
-      id: 's4',
-      tenantId: 't4',
-      tenantName: 'HealthPlus',
-      plan: 'starter',
-      status: 'trialing',
-      mrr: 0,
-      startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      nextBilling: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Not set',
-      failedPayments: 0,
-    },
+  // Use API data or fallback to mock
+  const metrics = {
+    mrr: revenueData?.mrr ?? mockMetrics.mrr,
+    mrrGrowth: revenueData?.mrrGrowth ?? mockMetrics.mrrGrowth,
+    arr: revenueData?.arr ?? mockMetrics.arr,
+    activeSubscriptions: subscriptionsData?.items?.filter(s => s.status === 'active').length ?? mockMetrics.activeSubscriptions,
+    churnRate: revenueData?.churnRate ?? mockMetrics.churnRate,
+    pastDue: subscriptionsData?.items?.filter(s => s.status === 'past_due').length ?? mockMetrics.pastDue,
+    totalRevenue: mockMetrics.totalRevenue,
+  }
+
+  const mockSubscriptions: Subscription[] = [
+    { id: 's1', tenantId: 't1', tenantName: 'Acme Corporation', plan: 'enterprise', status: 'active', mrr: 1999, startDate: new Date('2024-01-15'), nextBilling: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), paymentMethod: 'Visa ****4242', failedPayments: 0 },
+    { id: 's2', tenantId: 't2', tenantName: 'TechStart Inc', plan: 'pro', status: 'active', mrr: 499, startDate: new Date('2024-03-01'), nextBilling: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), paymentMethod: 'Mastercard ****5555', failedPayments: 0 },
+    { id: 's3', tenantId: 't3', tenantName: 'Fashion Forward', plan: 'pro', status: 'past_due', mrr: 499, startDate: new Date('2024-02-15'), nextBilling: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), paymentMethod: 'Visa ****1234', failedPayments: 2 },
+    { id: 's4', tenantId: 't4', tenantName: 'HealthPlus', plan: 'starter', status: 'trialing', mrr: 0, startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), nextBilling: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), paymentMethod: 'Not set', failedPayments: 0 },
   ]
 
-  const invoices: Invoice[] = [
-    {
-      id: 'inv-001',
-      tenantName: 'Acme Corporation',
-      amount: 1999,
-      status: 'paid',
-      dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      paidAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: 'inv-002',
-      tenantName: 'TechStart Inc',
-      amount: 499,
-      status: 'pending',
-      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      paidAt: null,
-    },
-    {
-      id: 'inv-003',
-      tenantName: 'Fashion Forward',
-      amount: 499,
-      status: 'overdue',
-      dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      paidAt: null,
-    },
+  const mockInvoices: Invoice[] = [
+    { id: 'inv-001', tenantName: 'Acme Corporation', amount: 1999, status: 'paid', dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), paidAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000) },
+    { id: 'inv-002', tenantName: 'TechStart Inc', amount: 499, status: 'pending', dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), paidAt: null },
+    { id: 'inv-003', tenantName: 'Fashion Forward', amount: 499, status: 'overdue', dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), paidAt: null },
   ]
 
-  const plans = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      price: 99,
-      features: ['2 platforms', '5 campaigns', 'Basic analytics', 'Email support'],
-      subscribers: 23,
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: 499,
-      features: ['5 platforms', 'Unlimited campaigns', 'Advanced analytics', 'Priority support', 'Autopilot'],
-      subscribers: 52,
-      highlighted: true,
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 1999,
-      features: ['Unlimited platforms', 'Unlimited campaigns', 'Custom analytics', 'Dedicated support', 'Full Autopilot', 'SLA'],
-      subscribers: 14,
-    },
+  const mockPlans = [
+    { id: 'starter', name: 'Starter', price: 99, features: ['2 platforms', '5 campaigns', 'Basic analytics', 'Email support'], subscribers: 23 },
+    { id: 'pro', name: 'Pro', price: 499, features: ['5 platforms', 'Unlimited campaigns', 'Advanced analytics', 'Priority support', 'Autopilot'], subscribers: 52, highlighted: true },
+    { id: 'enterprise', name: 'Enterprise', price: 1999, features: ['Unlimited platforms', 'Unlimited campaigns', 'Custom analytics', 'Dedicated support', 'Full Autopilot', 'SLA'], subscribers: 14 },
   ]
+
+  // Use API data or fallback to mock
+  const subscriptions: Subscription[] = subscriptionsData?.items?.map(s => ({
+    id: s.id,
+    tenantId: String(s.tenantId),
+    tenantName: s.tenantName,
+    plan: s.plan as PlanType,
+    status: s.status,
+    mrr: s.mrr,
+    startDate: new Date(s.startDate),
+    nextBilling: new Date(s.nextBillingDate),
+    paymentMethod: s.paymentMethod,
+    failedPayments: s.failedPayments,
+  })) ?? mockSubscriptions
+
+  const invoices: Invoice[] = invoicesData?.items?.map(i => ({
+    id: i.id,
+    tenantName: i.tenantName,
+    amount: i.amount,
+    status: i.status,
+    dueDate: new Date(i.dueDate),
+    paidAt: i.paidAt ? new Date(i.paidAt) : null,
+  })) ?? mockInvoices
+
+  const plans = plansData?.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    features: p.features,
+    subscribers: p.subscriberCount,
+    highlighted: p.name === 'Pro',
+  })) ?? mockPlans
+
+  const handleRetryPayment = async (subscriptionId: string) => {
+    try {
+      await retryPaymentMutation.mutateAsync(subscriptionId)
+    } catch (error) {
+      console.error('Failed to retry payment:', error)
+    }
+  }
 
   const getStatusColor = (status: SubscriptionStatus | InvoiceStatus) => {
     switch (status) {
@@ -334,8 +315,12 @@ export default function Billing() {
                       <button className="px-3 py-1 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white text-sm transition-colors">
                         Contact
                       </button>
-                      <button className="px-3 py-1 rounded-lg bg-danger/10 text-danger hover:bg-danger/20 text-sm transition-colors">
-                        Retry Payment
+                      <button
+                        onClick={() => handleRetryPayment(sub.id)}
+                        disabled={retryPaymentMutation.isPending}
+                        className="px-3 py-1 rounded-lg bg-danger/10 text-danger hover:bg-danger/20 text-sm transition-colors disabled:opacity-50"
+                      >
+                        {retryPaymentMutation.isPending ? 'Retrying...' : 'Retry Payment'}
                       </button>
                     </div>
                   </div>
