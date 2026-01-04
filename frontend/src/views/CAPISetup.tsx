@@ -19,8 +19,11 @@ import {
   Copy,
   ExternalLink,
   Settings,
+  Loader2,
+  Play,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/api/client'
 
 // Platform configurations
 const PLATFORMS = [
@@ -102,6 +105,12 @@ interface PlatformStatus {
   matchQuality?: number
 }
 
+interface TestResult {
+  platform: string
+  status: 'success' | 'error'
+  message: string
+}
+
 export function CAPISetup() {
   const { t } = useTranslation()
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
@@ -111,6 +120,9 @@ export function CAPISetup() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [showHelp, setShowHelp] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isTesting, setIsTesting] = useState(false)
+  const [testResults, setTestResults] = useState<TestResult[]>([])
 
   // Fetch platform statuses
   useEffect(() => {
@@ -118,18 +130,26 @@ export function CAPISetup() {
   }, [])
 
   const fetchStatuses = async () => {
+    setIsLoading(true)
     try {
-      const response = await fetch('/api/v1/capi/platforms/status')
-      const data = await response.json()
+      const response = await apiClient.get('/capi/platforms/status')
+      const data = response.data
       if (data.success) {
         const statuses: Record<string, PlatformStatus> = {}
-        Object.keys(data.data.connected_platforms || {}).forEach(platform => {
-          statuses[platform] = { connected: true }
+        const connectedPlatforms = data.data?.connected_platforms || {}
+        Object.keys(connectedPlatforms).forEach(platform => {
+          statuses[platform] = {
+            connected: true,
+            ...connectedPlatforms[platform]
+          }
         })
         setPlatformStatuses(statuses)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch statuses:', err)
+      // Don't show error on initial load - platforms just aren't connected yet
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -141,16 +161,12 @@ export function CAPISetup() {
     setSuccess(null)
 
     try {
-      const response = await fetch('/api/v1/capi/platforms/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: selectedPlatform,
-          credentials,
-        }),
+      const response = await apiClient.post('/capi/platforms/connect', {
+        platform: selectedPlatform,
+        credentials,
       })
 
-      const data = await response.json()
+      const data = response.data
 
       if (data.success) {
         setSuccess(`Successfully connected to ${PLATFORMS.find(p => p.id === selectedPlatform)?.name}!`)
@@ -163,8 +179,8 @@ export function CAPISetup() {
       } else {
         setError(data.data?.message || 'Connection failed')
       }
-    } catch (err) {
-      setError('Failed to connect. Please check your credentials.')
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to connect. Please check your credentials.')
     } finally {
       setConnecting(false)
     }
@@ -172,10 +188,8 @@ export function CAPISetup() {
 
   const handleDisconnect = async (platform: string) => {
     try {
-      const response = await fetch(`/api/v1/capi/platforms/${platform}/disconnect`, {
-        method: 'DELETE',
-      })
-      const data = await response.json()
+      const response = await apiClient.delete(`/capi/platforms/${platform}/disconnect`)
+      const data = response.data
 
       if (data.success) {
         setPlatformStatuses(prev => {
@@ -183,13 +197,49 @@ export function CAPISetup() {
           delete updated[platform]
           return updated
         })
+        setSuccess(`Disconnected from ${PLATFORMS.find(p => p.id === platform)?.name}`)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to disconnect:', err)
+      setError(err.response?.data?.detail || 'Failed to disconnect')
+    }
+  }
+
+  const handleTestConnections = async () => {
+    setIsTesting(true)
+    setTestResults([])
+    try {
+      const response = await apiClient.post('/capi/platforms/test')
+      const data = response.data
+
+      if (data.success && data.data) {
+        const results: TestResult[] = Object.entries(data.data).map(([platform, result]: [string, any]) => ({
+          platform,
+          status: result.status === 'connected' ? 'success' : 'error',
+          message: result.message || (result.status === 'connected' ? 'Connection OK' : 'Connection failed'),
+        }))
+        setTestResults(results)
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to test connections')
+    } finally {
+      setIsTesting(false)
     }
   }
 
   const connectedCount = Object.keys(platformStatuses).length
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading platform connections...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -201,14 +251,58 @@ export function CAPISetup() {
             Connect ad platforms to stream first-party data and boost ROAS by 30-50%
           </p>
         </div>
-        <button
-          onClick={fetchStatuses}
-          className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          {connectedCount > 0 && (
+            <button
+              onClick={handleTestConnections}
+              disabled={isTesting}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {isTesting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+              Test Connections
+            </button>
+          )}
+          <button
+            onClick={fetchStatuses}
+            className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+        </div>
       </div>
+
+      {/* Test Results */}
+      {testResults.length > 0 && (
+        <div className="rounded-xl border bg-card p-4">
+          <h3 className="font-semibold mb-3">Connection Test Results</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {testResults.map((result) => (
+              <div
+                key={result.platform}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border',
+                  result.status === 'success' ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'
+                )}
+              >
+                {result.status === 'success' ? (
+                  <Check className="w-5 h-5 text-green-500" />
+                ) : (
+                  <X className="w-5 h-5 text-red-500" />
+                )}
+                <div>
+                  <span className="font-medium capitalize">{result.platform}</span>
+                  <p className="text-xs text-muted-foreground">{result.message}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Benefits Banner */}
       <div className="bg-gradient-to-r from-primary/10 via-purple-500/10 to-pink-500/10 rounded-xl p-6 border">

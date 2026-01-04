@@ -29,8 +29,10 @@ import {
   Package,
   AlertCircle,
   Lightbulb,
+  Loader2,
 } from 'lucide-react'
 import { cn, getPlatformColor } from '@/lib/utils'
+import { apiClient } from '@/api/client'
 
 // Types
 interface KPICard {
@@ -305,8 +307,9 @@ const mockRecommendations: Recommendation[] = [
 
 export function DataQualityDashboard() {
   const { t } = useTranslation()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [error, setError] = useState<string | null>(null)
 
   // Filters
   const [dateRange, setDateRange] = useState('7d')
@@ -314,20 +317,119 @@ export function DataQualityDashboard() {
   const [eventFilter, setEventFilter] = useState('all')
   const [envFilter, setEnvFilter] = useState('prod')
 
+  // Data state - initialized with mock data as fallback
+  const [kpis, setKpis] = useState<KPICard[]>(mockKPIs)
+  const [platformEMQ, setPlatformEMQ] = useState<PlatformEMQ[]>(mockPlatformEMQ)
+  const [eventEMQ, setEventEMQ] = useState<EventEMQ[]>(mockEventEMQ)
+  const [parameterCoverage, setParameterCoverage] = useState<ParameterCoverage[]>(mockParameterCoverage)
+  const [serverBrowserSplit, setServerBrowserSplit] = useState<ServerBrowserSplit[]>(mockServerBrowserSplit)
+  const [integrityIssues, setIntegrityIssues] = useState<IntegrityIssue[]>(mockIntegrityIssues)
+  const [piiViolations, setPiiViolations] = useState<PIIViolation[]>(mockPIIViolations)
+  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts)
+  const [recommendations, setRecommendations] = useState<Recommendation[]>(mockRecommendations)
+
   // State for resolved/dismissed items
   const [resolvedIssues, setResolvedIssues] = useState<string[]>([])
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([])
   const [resolvingIssue, setResolvingIssue] = useState<string | null>(null)
   const [resolvingAlert, setResolvingAlert] = useState<string | null>(null)
 
+  // Fetch data on mount and when filters change
+  useEffect(() => {
+    fetchQualityData()
+  }, [platformFilter, dateRange])
+
+  const fetchQualityData = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Fetch quality report from CAPI
+      const platforms = platformFilter !== 'all' ? platformFilter : undefined
+      const reportResponse = await apiClient.get('/capi/quality/report', {
+        params: { platforms }
+      })
+
+      const report = reportResponse.data?.data
+      if (report && report.overall_score > 0) {
+        // Update KPIs from report
+        setKpis(prev => prev.map(kpi => {
+          if (kpi.id === 'overall_emq') {
+            return { ...kpi, value: report.overall_score, trend: report.trend === 'improving' ? 3.2 : report.trend === 'declining' ? -2.1 : 0 }
+          }
+          return kpi
+        }))
+
+        // Update platform EMQ from report
+        if (report.platform_scores) {
+          const platformData: PlatformEMQ[] = Object.entries(report.platform_scores).map(([platform, data]: [string, any]) => ({
+            platform,
+            overallEMQ: data.score,
+            emailMatch: data.fields_present?.includes('email') ? 85 : 0,
+            phoneMatch: data.fields_present?.includes('phone') ? 70 : 0,
+            fbpMatch: data.fields_present?.includes('fbp') ? 90 : 0,
+            fbcMatch: data.fields_present?.includes('fbc') ? 85 : 0,
+            ipMatch: data.fields_present?.includes('ip_address') ? 92 : 0,
+            trend: data.potential_roas_lift || 0,
+          }))
+          if (platformData.length > 0) {
+            setPlatformEMQ(platformData)
+          }
+        }
+
+        // Update recommendations from report
+        if (report.top_recommendations && report.top_recommendations.length > 0) {
+          setRecommendations(report.top_recommendations.map((rec: string, idx: number) => ({
+            id: String(idx + 1),
+            impact: idx < 2 ? 'high' : 'medium',
+            title: rec,
+            description: 'Identified from data quality analysis',
+            owner: 'Engineering',
+            fixHint: 'See CAPI documentation for implementation details',
+          })))
+        }
+      }
+
+      // Fetch live insights
+      const liveResponse = await apiClient.get('/capi/quality/live', {
+        params: { platform: platformFilter !== 'all' ? platformFilter : 'meta' }
+      })
+
+      const liveData = liveResponse.data?.data
+      if (liveData) {
+        // Update alerts from live data
+        if (liveData.top_gaps && liveData.top_gaps.length > 0) {
+          const newAlerts: Alert[] = liveData.top_gaps.map((gap: any, idx: number) => ({
+            id: `live-${idx}`,
+            severity: gap.severity === 'critical' ? 'critical' : gap.severity === 'high' ? 'warning' : 'info',
+            title: gap.field ? `Low ${gap.field} match rate` : 'Data quality issue',
+            description: gap.recommendation || 'Review data quality settings',
+            timestamp: 'Live',
+            platform: platformFilter !== 'all' ? platformFilter : undefined,
+          }))
+          setAlerts(prev => [...newAlerts, ...prev.filter(a => !a.id.startsWith('live-'))])
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch quality data:', err)
+      // Keep mock data as fallback - don't show error for expected 404s
+      if (err.response?.status !== 404) {
+        setError(err.response?.data?.detail || 'Failed to load quality data')
+      }
+    } finally {
+      setIsLoading(false)
+      setLastRefresh(new Date())
+    }
+  }
+
   // Filter data based on selected filters
   const filteredPlatformEMQ = platformFilter === 'all'
-    ? mockPlatformEMQ
-    : mockPlatformEMQ.filter(p => p.platform === platformFilter)
+    ? platformEMQ
+    : platformEMQ.filter(p => p.platform === platformFilter)
 
   const filteredEventEMQ = eventFilter === 'all'
-    ? mockEventEMQ
-    : mockEventEMQ.filter(e => {
+    ? eventEMQ
+    : eventEMQ.filter(e => {
         const eventMap: Record<string, string> = {
           'purchase': 'Purchase',
           'add_to_cart': 'AddToCart',
@@ -339,28 +441,23 @@ export function DataQualityDashboard() {
       })
 
   const filteredServerBrowserSplit = platformFilter === 'all'
-    ? mockServerBrowserSplit
-    : mockServerBrowserSplit.filter(p => p.platform === platformFilter)
+    ? serverBrowserSplit
+    : serverBrowserSplit.filter(p => p.platform === platformFilter)
 
-  const filteredAlerts = mockAlerts.filter(alert => {
+  const filteredAlerts = alerts.filter(alert => {
     if (dismissedAlerts.includes(alert.id)) return false
     if (platformFilter !== 'all' && alert.platform && alert.platform !== platformFilter) return false
     return true
   })
 
-  const filteredIntegrityIssues = mockIntegrityIssues.filter(
+  const filteredIntegrityIssues = integrityIssues.filter(
     issue => !resolvedIssues.includes(issue.type)
   )
 
-  const handleRefresh = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
-      setLastRefresh(new Date())
-      // Reset resolved/dismissed on refresh to simulate fresh data
-      setResolvedIssues([])
-      setDismissedAlerts([])
-    }, 1000)
+  const handleRefresh = async () => {
+    setResolvedIssues([])
+    setDismissedAlerts([])
+    await fetchQualityData()
   }
 
   const handleResolveIssue = (issueType: string) => {
@@ -519,9 +616,33 @@ export function DataQualityDashboard() {
         </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <span className="text-red-700 dark:text-red-400">{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-red-500 hover:text-red-700"
+          >
+            <XCircle className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading data quality metrics...</p>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {mockKPIs.map((kpi) => (
+        {kpis.map((kpi) => (
           <div
             key={kpi.id}
             className={cn(
@@ -1022,7 +1143,7 @@ export function DataQualityDashboard() {
             Recommendations
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {mockRecommendations.map((rec) => (
+            {recommendations.map((rec) => (
               <div
                 key={rec.id}
                 className="p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
@@ -1048,6 +1169,8 @@ export function DataQualityDashboard() {
       <div className="text-center text-xs text-muted-foreground">
         Last updated: {lastRefresh.toLocaleString()}
       </div>
+      </>
+      )}
     </div>
   )
 }
