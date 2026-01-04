@@ -127,6 +127,20 @@ class WhatsAppMessageSend(BaseModel):
     scheduled_at: Optional[datetime] = None
 
 
+class WhatsAppBroadcastRequest(BaseModel):
+    contact_ids: List[int] = Field(..., description="List of contact IDs to send to")
+    template_name: str = Field(..., description="Template name to use")
+    template_variables: dict = Field(default={}, description="Variables for the template")
+
+
+class WhatsAppBroadcastResponse(BaseModel):
+    success: bool
+    total_recipients: int
+    messages_queued: int
+    failed_contacts: List[int]
+    message: str
+
+
 class WhatsAppMessageResponse(BaseModel):
     id: int
     contact_id: int
@@ -614,6 +628,97 @@ async def send_message(
         success=True,
         data=WhatsAppMessageResponse.model_validate(message),
         message="Message queued for sending",
+    )
+
+
+@router.post("/messages/broadcast", response_model=APIResponse[WhatsAppBroadcastResponse])
+async def send_broadcast(
+    request: Request,
+    broadcast_data: WhatsAppBroadcastRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Send a broadcast message to multiple contacts using a template."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    # Verify template exists and is approved
+    template_result = await db.execute(
+        select(WhatsAppTemplate).where(
+            WhatsAppTemplate.tenant_id == tenant_id,
+            WhatsAppTemplate.name == broadcast_data.template_name,
+            WhatsAppTemplate.status == WhatsAppTemplateStatus.APPROVED,
+        )
+    )
+    template = template_result.scalar_one_or_none()
+
+    if not template:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Template not found or not approved",
+        )
+
+    # Fetch all contacts
+    contacts_result = await db.execute(
+        select(WhatsAppContact).where(
+            WhatsAppContact.tenant_id == tenant_id,
+            WhatsAppContact.id.in_(broadcast_data.contact_ids),
+        )
+    )
+    contacts = contacts_result.scalars().all()
+
+    messages_queued = 0
+    failed_contacts = []
+
+    for contact in contacts:
+        # Skip contacts that haven't opted in
+        if contact.opt_in_status != WhatsAppOptInStatus.OPTED_IN:
+            failed_contacts.append(contact.id)
+            continue
+
+        # Create message record
+        message = WhatsAppMessage(
+            tenant_id=tenant_id,
+            contact_id=contact.id,
+            message_type="template",
+            template_name=broadcast_data.template_name,
+            template_variables=broadcast_data.template_variables,
+            status=WhatsAppMessageStatus.PENDING,
+        )
+        db.add(message)
+
+        # Update contact stats
+        contact.message_count += 1
+        contact.last_message_at = datetime.now(timezone.utc)
+
+        messages_queued += 1
+
+    await db.commit()
+
+    # Queue messages for async sending
+    if messages_queued > 0:
+        from app.workers.tasks import send_whatsapp_broadcast
+        send_whatsapp_broadcast.delay(
+            tenant_id=tenant_id,
+            template_name=broadcast_data.template_name,
+            template_variables=broadcast_data.template_variables,
+            contact_ids=[c.id for c in contacts if c.opt_in_status == WhatsAppOptInStatus.OPTED_IN],
+        )
+
+    # Update template usage count
+    template.usage_count += messages_queued
+    await db.commit()
+
+    logger.info(f"Broadcast queued: {messages_queued} messages to {len(broadcast_data.contact_ids)} contacts")
+
+    return APIResponse(
+        success=True,
+        data=WhatsAppBroadcastResponse(
+            success=True,
+            total_recipients=len(broadcast_data.contact_ids),
+            messages_queued=messages_queued,
+            failed_contacts=failed_contacts,
+            message=f"Broadcast queued: {messages_queued} messages",
+        ),
+        message=f"Broadcast queued successfully",
     )
 
 

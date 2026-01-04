@@ -30,17 +30,54 @@ import {
   X,
   ChevronDown,
   Globe,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { whatsappApi } from '@/services/api'
-import type {
-  WhatsAppContact,
-  WhatsAppTemplate,
-  WhatsAppMessage,
-  OptInStatus,
-  MessageStatus,
-  TemplateStatus,
-} from '@/types/whatsapp'
+import { apiClient } from '@/api/client'
+
+// Types
+interface WhatsAppContact {
+  id: number
+  phone_number: string
+  country_code: string
+  display_name: string | null
+  is_verified: boolean
+  opt_in_status: 'opted_in' | 'pending' | 'opted_out'
+  wa_id: string | null
+  profile_name: string | null
+  message_count: number
+  last_message_at: string | null
+  created_at: string
+}
+
+interface WhatsAppTemplate {
+  id: number
+  name: string
+  language: string
+  category: string
+  body_text: string
+  status: 'approved' | 'pending' | 'rejected' | 'paused'
+  usage_count: number
+  created_at: string
+}
+
+interface WhatsAppMessage {
+  id: number
+  contact_id: number
+  direction: 'inbound' | 'outbound'
+  message_type: string
+  status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
+  content: string | null
+  template_name: string | null
+  sent_at: string | null
+  delivered_at: string | null
+  read_at: string | null
+  created_at: string
+}
+
+type OptInStatus = 'opted_in' | 'pending' | 'opted_out'
+type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
+type TemplateStatus = 'approved' | 'pending' | 'rejected' | 'paused'
 
 type TabType = 'inbox' | 'contacts' | 'templates' | 'messages'
 type AddContactTab = 'single' | 'csv'
@@ -58,379 +95,30 @@ interface CSVContact {
 interface Conversation {
   id: number
   contact: WhatsAppContact
-  lastMessage: WhatsAppMessage
+  lastMessage: WhatsAppMessage | null
   unreadCount: number
   isActive: boolean
 }
 
-// Mock data for demonstration - these represent the USER'S contacts
-const mockContacts: WhatsAppContact[] = [
-  {
-    id: 1,
-    phone_number: '+1234567890',
-    country_code: 'US',
-    display_name: 'John Smith',
-    is_verified: true,
-    opt_in_status: 'opted_in',
-    wa_id: '1234567890',
-    profile_name: 'John S.',
-    message_count: 45,
-    last_message_at: '2024-12-07T10:30:00Z',
-    created_at: '2024-11-15T08:00:00Z',
-  },
-  {
-    id: 2,
-    phone_number: '+9876543210',
-    country_code: 'UK',
-    display_name: 'Jane Doe',
-    is_verified: true,
-    opt_in_status: 'opted_in',
-    wa_id: '9876543210',
-    profile_name: 'Jane D.',
-    message_count: 23,
-    last_message_at: '2024-12-06T15:45:00Z',
-    created_at: '2024-11-20T12:00:00Z',
-  },
-  {
-    id: 3,
-    phone_number: '+1122334455',
-    country_code: 'DE',
-    display_name: 'Hans Mueller',
-    is_verified: false,
-    opt_in_status: 'pending',
-    wa_id: null,
-    profile_name: null,
-    message_count: 0,
-    last_message_at: null,
-    created_at: '2024-12-01T09:00:00Z',
-  },
-  {
-    id: 4,
-    phone_number: '+5544332211',
-    country_code: 'BR',
-    display_name: 'Maria Silva',
-    is_verified: true,
-    opt_in_status: 'opted_out',
-    wa_id: '5544332211',
-    profile_name: 'Maria S.',
-    message_count: 12,
-    last_message_at: '2024-11-28T18:20:00Z',
-    created_at: '2024-10-10T14:00:00Z',
-  },
-  {
-    id: 5,
-    phone_number: '+1555666777',
-    country_code: 'US',
-    display_name: 'Sarah Johnson',
-    is_verified: true,
-    opt_in_status: 'opted_in',
-    wa_id: '1555666777',
-    profile_name: 'Sarah J.',
-    message_count: 8,
-    last_message_at: '2024-12-05T14:20:00Z',
-    created_at: '2024-11-25T10:00:00Z',
-  },
-  {
-    id: 6,
-    phone_number: '+4477788899',
-    country_code: 'UK',
-    display_name: 'Michael Brown',
-    is_verified: true,
-    opt_in_status: 'opted_in',
-    wa_id: '4477788899',
-    profile_name: 'Mike B.',
-    message_count: 15,
-    last_message_at: '2024-12-04T09:00:00Z',
-    created_at: '2024-11-10T08:00:00Z',
-  },
-]
-
-const mockTemplates: WhatsAppTemplate[] = [
-  {
-    id: 1,
-    name: 'welcome_message',
-    language: 'en',
-    category: 'MARKETING',
-    body_text: 'Welcome to {{1}}! We\'re excited to have you. Use code {{2}} for 10% off.',
-    status: 'approved',
-    usage_count: 1250,
-    created_at: '2024-10-01T08:00:00Z',
-  },
-  {
-    id: 2,
-    name: 'order_confirmation',
-    language: 'en',
-    category: 'UTILITY',
-    body_text: 'Your order #{{1}} has been confirmed. Estimated delivery: {{2}}.',
-    status: 'approved',
-    usage_count: 890,
-    created_at: '2024-10-15T10:00:00Z',
-  },
-  {
-    id: 3,
-    name: 'appointment_reminder',
-    language: 'en',
-    category: 'UTILITY',
-    body_text: 'Reminder: Your appointment is scheduled for {{1}} at {{2}}. Reply YES to confirm.',
-    status: 'approved',
-    usage_count: 456,
-    created_at: '2024-11-01T12:00:00Z',
-  },
-  {
-    id: 4,
-    name: 'flash_sale',
-    language: 'en',
-    category: 'MARKETING',
-    body_text: 'Flash Sale! {{1}}% off everything for the next {{2}} hours. Shop now!',
-    status: 'pending',
-    usage_count: 0,
-    created_at: '2024-12-05T14:00:00Z',
-  },
-  {
-    id: 5,
-    name: 'rule_alert',
-    language: 'en',
-    category: 'UTILITY',
-    body_text: 'Alert: Rule "{{1}}" triggered for campaign "{{2}}". Condition: {{3}}',
-    status: 'approved',
-    usage_count: 32,
-    created_at: '2024-12-01T10:00:00Z',
-  },
-]
-
-const mockMessages: WhatsAppMessage[] = [
-  {
-    id: 1,
-    contact_id: 1,
-    direction: 'outbound',
-    message_type: 'template',
-    status: 'read',
-    content: null,
-    template_name: 'welcome_message',
-    sent_at: '2024-12-07T10:30:00Z',
-    delivered_at: '2024-12-07T10:30:05Z',
-    read_at: '2024-12-07T10:35:00Z',
-    created_at: '2024-12-07T10:30:00Z',
-  },
-  {
-    id: 2,
-    contact_id: 2,
-    direction: 'outbound',
-    message_type: 'template',
-    status: 'delivered',
-    content: null,
-    template_name: 'order_confirmation',
-    sent_at: '2024-12-06T15:45:00Z',
-    delivered_at: '2024-12-06T15:45:10Z',
-    read_at: null,
-    created_at: '2024-12-06T15:45:00Z',
-  },
-  {
-    id: 3,
-    contact_id: 1,
-    direction: 'inbound',
-    message_type: 'text',
-    status: 'delivered',
-    content: 'Thanks for the welcome!',
-    template_name: null,
-    sent_at: null,
-    delivered_at: '2024-12-07T10:36:00Z',
-    read_at: null,
-    created_at: '2024-12-07T10:36:00Z',
-  },
-  {
-    id: 4,
-    contact_id: 1,
-    direction: 'outbound',
-    message_type: 'text',
-    status: 'sent',
-    content: 'You\'re welcome! Let us know if you need anything.',
-    template_name: null,
-    sent_at: '2024-12-07T10:40:00Z',
-    delivered_at: null,
-    read_at: null,
-    created_at: '2024-12-07T10:40:00Z',
-  },
-  {
-    id: 5,
-    contact_id: 3,
-    direction: 'outbound',
-    message_type: 'template',
-    status: 'failed',
-    content: null,
-    template_name: 'welcome_message',
-    sent_at: null,
-    delivered_at: null,
-    read_at: null,
-    created_at: '2024-12-01T09:05:00Z',
-  },
-]
-
-// Mock conversations for inbox
-const mockConversations: Conversation[] = [
-  {
-    id: 1,
-    contact: mockContacts[0],
-    lastMessage: {
-      id: 3,
-      contact_id: 1,
-      direction: 'inbound',
-      message_type: 'text',
-      status: 'delivered',
-      content: 'Thanks for the welcome!',
-      template_name: null,
-      sent_at: null,
-      delivered_at: '2024-12-07T10:36:00Z',
-      read_at: null,
-      created_at: '2024-12-07T10:36:00Z',
-    },
-    unreadCount: 2,
-    isActive: true,
-  },
-  {
-    id: 2,
-    contact: mockContacts[1],
-    lastMessage: {
-      id: 6,
-      contact_id: 2,
-      direction: 'inbound',
-      message_type: 'text',
-      status: 'delivered',
-      content: 'When will my order arrive?',
-      template_name: null,
-      sent_at: null,
-      delivered_at: '2024-12-07T09:15:00Z',
-      read_at: null,
-      created_at: '2024-12-07T09:15:00Z',
-    },
-    unreadCount: 1,
-    isActive: true,
-  },
-  {
-    id: 3,
-    contact: mockContacts[4],
-    lastMessage: {
-      id: 7,
-      contact_id: 5,
-      direction: 'inbound',
-      message_type: 'text',
-      status: 'delivered',
-      content: 'Hi, I have a question about my subscription',
-      template_name: null,
-      sent_at: null,
-      delivered_at: '2024-12-06T16:20:00Z',
-      read_at: '2024-12-06T16:25:00Z',
-      created_at: '2024-12-06T16:20:00Z',
-    },
-    unreadCount: 0,
-    isActive: true,
-  },
-  {
-    id: 4,
-    contact: mockContacts[5],
-    lastMessage: {
-      id: 8,
-      contact_id: 6,
-      direction: 'outbound',
-      message_type: 'template',
-      status: 'read',
-      content: null,
-      template_name: 'order_confirmation',
-      sent_at: '2024-12-05T11:00:00Z',
-      delivered_at: '2024-12-05T11:00:05Z',
-      read_at: '2024-12-05T11:05:00Z',
-      created_at: '2024-12-05T11:00:00Z',
-    },
-    unreadCount: 0,
-    isActive: false,
-  },
-]
-
-// Mock chat messages for a conversation
-const mockChatMessages: WhatsAppMessage[] = [
-  {
-    id: 101,
-    contact_id: 1,
-    direction: 'outbound',
-    message_type: 'template',
-    status: 'read',
-    content: 'Welcome to Stratum AI! We\'re excited to have you. Use code WELCOME10 for 10% off.',
-    template_name: 'welcome_message',
-    sent_at: '2024-12-07T10:30:00Z',
-    delivered_at: '2024-12-07T10:30:05Z',
-    read_at: '2024-12-07T10:35:00Z',
-    created_at: '2024-12-07T10:30:00Z',
-  },
-  {
-    id: 102,
-    contact_id: 1,
-    direction: 'inbound',
-    message_type: 'text',
-    status: 'delivered',
-    content: 'Thanks for the welcome!',
-    template_name: null,
-    sent_at: null,
-    delivered_at: '2024-12-07T10:36:00Z',
-    read_at: null,
-    created_at: '2024-12-07T10:36:00Z',
-  },
-  {
-    id: 103,
-    contact_id: 1,
-    direction: 'outbound',
-    message_type: 'text',
-    status: 'read',
-    content: 'You\'re welcome! Let us know if you need anything.',
-    template_name: null,
-    sent_at: '2024-12-07T10:40:00Z',
-    delivered_at: '2024-12-07T10:40:05Z',
-    read_at: '2024-12-07T10:45:00Z',
-    created_at: '2024-12-07T10:40:00Z',
-  },
-  {
-    id: 104,
-    contact_id: 1,
-    direction: 'inbound',
-    message_type: 'text',
-    status: 'delivered',
-    content: 'Actually, I have a question about pricing. What plans do you offer?',
-    template_name: null,
-    sent_at: null,
-    delivered_at: '2024-12-07T14:20:00Z',
-    read_at: null,
-    created_at: '2024-12-07T14:20:00Z',
-  },
-  {
-    id: 105,
-    contact_id: 1,
-    direction: 'inbound',
-    message_type: 'text',
-    status: 'delivered',
-    content: 'Also, do you have any enterprise options?',
-    template_name: null,
-    sent_at: null,
-    delivered_at: '2024-12-07T14:21:00Z',
-    read_at: null,
-    created_at: '2024-12-07T14:21:00Z',
-  },
-]
-
 export function WhatsApp() {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState<TabType>('inbox')
+  const [activeTab, setActiveTab] = useState<TabType>('contacts')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [contacts, setContacts] = useState<WhatsAppContact[]>(mockContacts)
-  const [templates, setTemplates] = useState<WhatsAppTemplate[]>(mockTemplates)
-  const [messages, setMessages] = useState<WhatsAppMessage[]>(mockMessages)
-  const [conversations, setConversations] = useState<Conversation[]>(mockConversations)
+  const [contacts, setContacts] = useState<WhatsAppContact[]>([])
+  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([])
+  const [messages, setMessages] = useState<WhatsAppMessage[]>([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
   const [showNewContactModal, setShowNewContactModal] = useState(false)
   const [showBroadcastModal, setShowBroadcastModal] = useState(false)
   const [selectedContactIds, setSelectedContactIds] = useState<number[]>([])
   const [broadcastTemplate, setBroadcastTemplate] = useState<string>('')
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
-  const [chatMessages, setChatMessages] = useState<WhatsAppMessage[]>(mockChatMessages)
+  const [chatMessages, setChatMessages] = useState<WhatsAppMessage[]>([])
   const [replyText, setReplyText] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSending, setIsSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // New contact modal state
   const [addContactTab, setAddContactTab] = useState<AddContactTab>('single')
@@ -445,6 +133,76 @@ export function WhatsApp() {
   const [newContactPhone, setNewContactPhone] = useState('')
   const [newContactCountry, setNewContactCountry] = useState('')
   const [newContactName, setNewContactName] = useState('')
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const [contactsRes, templatesRes, messagesRes] = await Promise.all([
+        apiClient.get('/whatsapp/contacts'),
+        apiClient.get('/whatsapp/templates'),
+        apiClient.get('/whatsapp/messages'),
+      ])
+
+      const contactsList = contactsRes.data?.data?.items || []
+      const templatesList = templatesRes.data?.data?.items || []
+      const messagesList = messagesRes.data?.data?.items || []
+
+      setContacts(contactsList)
+      setTemplates(templatesList)
+      setMessages(messagesList)
+
+      // Build conversations from contacts and messages
+      const convos: Conversation[] = contactsList
+        .filter((c: WhatsAppContact) => c.message_count > 0)
+        .map((contact: WhatsAppContact) => {
+          const contactMessages = messagesList.filter((m: WhatsAppMessage) => m.contact_id === contact.id)
+          const lastMessage = contactMessages.length > 0
+            ? contactMessages.sort((a: WhatsAppMessage, b: WhatsAppMessage) =>
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              )[0]
+            : null
+          const unreadCount = contactMessages.filter(
+            (m: WhatsAppMessage) => m.direction === 'inbound' && m.status !== 'read'
+          ).length
+
+          return {
+            id: contact.id,
+            contact,
+            lastMessage,
+            unreadCount,
+            isActive: contact.last_message_at
+              ? new Date().getTime() - new Date(contact.last_message_at).getTime() < 24 * 60 * 60 * 1000
+              : false,
+          }
+        })
+
+      setConversations(convos)
+    } catch (err: any) {
+      console.error('Failed to fetch WhatsApp data:', err)
+      setError(err.response?.data?.detail || 'Failed to load data')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fetch messages for a specific contact
+  const fetchContactMessages = async (contactId: number) => {
+    try {
+      const response = await apiClient.get(`/whatsapp/messages?contact_id=${contactId}`)
+      const messages = response.data?.data?.items || []
+      setChatMessages(messages.sort((a: WhatsAppMessage, b: WhatsAppMessage) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      ))
+    } catch (err) {
+      console.error('Failed to fetch messages:', err)
+    }
+  }
 
   // Toggle single contact selection
   const toggleContactSelection = (contactId: number) => {
@@ -471,16 +229,33 @@ export function WhatsApp() {
   const selectedContacts = contacts.filter((c) => selectedContactIds.includes(c.id))
 
   // Send broadcast
-  const handleSendBroadcast = () => {
+  const handleSendBroadcast = async () => {
     if (selectedContactIds.length === 0 || !broadcastTemplate) return
 
-    // TODO: Call API to send broadcast
-    console.log('Sending broadcast to:', selectedContactIds, 'with template:', broadcastTemplate)
+    setIsSending(true)
+    try {
+      const response = await apiClient.post('/whatsapp/messages/broadcast', {
+        contact_ids: selectedContactIds,
+        template_name: broadcastTemplate,
+        template_variables: {},
+      })
 
-    // Reset state
-    setShowBroadcastModal(false)
-    setSelectedContactIds([])
-    setBroadcastTemplate('')
+      const result = response.data?.data
+      alert(`Broadcast sent! ${result?.messages_queued || 0} messages queued.`)
+
+      // Refresh data
+      await fetchData()
+
+      // Reset state
+      setShowBroadcastModal(false)
+      setSelectedContactIds([])
+      setBroadcastTemplate('')
+    } catch (err: any) {
+      console.error('Failed to send broadcast:', err)
+      alert(err.response?.data?.detail || 'Failed to send broadcast')
+    } finally {
+      setIsSending(false)
+    }
   }
 
   // Validate phone number format
@@ -594,25 +369,27 @@ export function WhatsApp() {
   }
 
   // Handle single contact submission
-  const handleAddSingleContact = () => {
+  const handleAddSingleContact = async () => {
     if (!newContactPhone || !newContactCountry) return
 
-    const newContact: WhatsAppContact = {
-      id: contacts.length + 1,
-      phone_number: newContactPhone.startsWith('+') ? newContactPhone : `+${newContactPhone}`,
-      country_code: newContactCountry.toUpperCase(),
-      display_name: newContactName || null,
-      is_verified: false,
-      opt_in_status: 'pending',
-      wa_id: null,
-      profile_name: null,
-      message_count: 0,
-      last_message_at: null,
-      created_at: new Date().toISOString(),
-    }
+    setIsImporting(true)
+    try {
+      await apiClient.post('/whatsapp/contacts', {
+        phone_number: newContactPhone.startsWith('+') ? newContactPhone : `+${newContactPhone}`,
+        country_code: newContactCountry.toUpperCase(),
+        display_name: newContactName || undefined,
+        opt_in_method: 'web_form',
+      })
 
-    setContacts(prev => [...prev, newContact])
-    resetContactModal()
+      // Refresh contacts
+      await fetchData()
+      resetContactModal()
+    } catch (err: any) {
+      console.error('Failed to add contact:', err)
+      alert(err.response?.data?.detail || 'Failed to add contact')
+    } finally {
+      setIsImporting(false)
+    }
   }
 
   // Handle CSV import
@@ -621,27 +398,36 @@ export function WhatsApp() {
     if (validContacts.length === 0) return
 
     setIsImporting(true)
+    let successCount = 0
+    let failCount = 0
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      // Import contacts one by one
+      for (const contact of validContacts) {
+        try {
+          await apiClient.post('/whatsapp/contacts', {
+            phone_number: contact.phone_number,
+            country_code: contact.country_code,
+            display_name: contact.display_name || undefined,
+            opt_in_method: 'csv_import',
+          })
+          successCount++
+        } catch (err) {
+          failCount++
+        }
+      }
 
-    const newContacts: WhatsAppContact[] = validContacts.map((c, index) => ({
-      id: contacts.length + index + 1,
-      phone_number: c.phone_number,
-      country_code: c.country_code,
-      display_name: c.display_name || null,
-      is_verified: false,
-      opt_in_status: 'pending' as const,
-      wa_id: null,
-      profile_name: null,
-      message_count: 0,
-      last_message_at: null,
-      created_at: new Date().toISOString(),
-    }))
+      alert(`Imported ${successCount} contacts. ${failCount > 0 ? `${failCount} failed.` : ''}`)
 
-    setContacts(prev => [...prev, ...newContacts])
-    setIsImporting(false)
-    resetContactModal()
+      // Refresh contacts
+      await fetchData()
+      resetContactModal()
+    } catch (err: any) {
+      console.error('Failed to import contacts:', err)
+      alert('Failed to import contacts')
+    } finally {
+      setIsImporting(false)
+    }
   }
 
   // Reset contact modal state
@@ -801,8 +587,34 @@ export function WhatsApp() {
   const allOptedInSelected = optedInFilteredContacts.length > 0 &&
     optedInFilteredContacts.every((c) => selectedContactIds.includes(c.id))
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading WhatsApp data...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <span className="text-red-700 dark:text-red-400">{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-red-500 hover:text-red-700"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -1027,7 +839,10 @@ export function WhatsApp() {
               .map((conv) => (
                 <div
                   key={conv.id}
-                  onClick={() => setSelectedConversation(conv)}
+                  onClick={() => {
+                    setSelectedConversation(conv)
+                    fetchContactMessages(conv.contact.id)
+                  }}
                   className={cn(
                     'flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors',
                     conv.unreadCount > 0 && 'bg-green-500/5'
@@ -1176,12 +991,40 @@ export function WhatsApp() {
             <div className="p-4 border-t bg-muted/30">
               {selectedConversation.isActive ? (
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault()
-                    if (!replyText.trim()) return
-                    // TODO: Send message via API
-                    console.log('Sending reply:', replyText)
-                    setReplyText('')
+                    if (!replyText.trim() || isSending) return
+
+                    setIsSending(true)
+                    try {
+                      await apiClient.post('/whatsapp/messages/send', {
+                        contact_id: selectedConversation.contact.id,
+                        message_type: 'text',
+                        content: replyText.trim(),
+                      })
+
+                      // Add message to local state for immediate feedback
+                      const newMessage: WhatsAppMessage = {
+                        id: Date.now(),
+                        contact_id: selectedConversation.contact.id,
+                        direction: 'outbound',
+                        message_type: 'text',
+                        status: 'sent',
+                        content: replyText.trim(),
+                        template_name: null,
+                        sent_at: new Date().toISOString(),
+                        delivered_at: null,
+                        read_at: null,
+                        created_at: new Date().toISOString(),
+                      }
+                      setChatMessages(prev => [...prev, newMessage])
+                      setReplyText('')
+                    } catch (err: any) {
+                      console.error('Failed to send message:', err)
+                      alert(err.response?.data?.detail || 'Failed to send message')
+                    } finally {
+                      setIsSending(false)
+                    }
                   }}
                   className="flex items-center gap-2"
                 >
@@ -1197,16 +1040,17 @@ export function WhatsApp() {
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Type a message..."
                     className="flex-1 px-4 py-2 rounded-full border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    disabled={isSending}
                   />
                   <button type="button" className="p-2 rounded-lg hover:bg-muted transition-colors">
                     <Smile className="w-5 h-5 text-muted-foreground" />
                   </button>
                   <button
                     type="submit"
-                    disabled={!replyText.trim()}
+                    disabled={!replyText.trim() || isSending}
                     className="p-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors disabled:opacity-50"
                   >
-                    <Send className="w-5 h-5" />
+                    {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                   </button>
                 </form>
               ) : (
@@ -1815,11 +1659,20 @@ export function WhatsApp() {
                 </button>
                 <button
                   type="submit"
-                  disabled={!broadcastTemplate}
+                  disabled={!broadcastTemplate || isSending}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-4 h-4" />
-                  Send to {selectedContactIds.length} Contact{selectedContactIds.length > 1 ? 's' : ''}
+                  {isSending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Send to {selectedContactIds.length} Contact{selectedContactIds.length > 1 ? 's' : ''}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
