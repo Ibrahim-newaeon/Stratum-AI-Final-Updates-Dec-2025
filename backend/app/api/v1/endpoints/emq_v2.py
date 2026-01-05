@@ -47,7 +47,7 @@ from app.schemas.emq_v2 import (
 )
 
 
-router = APIRouter(prefix="/emq/v2", tags=["EMQ v2"])
+router = APIRouter(tags=["EMQ v2"])
 
 
 # =============================================================================
@@ -106,7 +106,7 @@ def generate_mock_drivers() -> List[EmqDriver]:
 # Tenant-Scoped Endpoints
 # =============================================================================
 @router.get(
-    "/tenants/{tenant_id}/score",
+    "/tenants/{tenant_id}/emq/score",
     response_model=APIResponse[EmqScoreResponse],
     summary="Get EMQ Score",
     description="Get the current EMQ score and drivers for a tenant.",
@@ -148,7 +148,7 @@ async def get_emq_score(
 
 
 @router.get(
-    "/tenants/{tenant_id}/confidence",
+    "/tenants/{tenant_id}/emq/confidence",
     response_model=APIResponse[ConfidenceDataResponse],
     summary="Get Confidence Band Details",
     description="Get detailed confidence band information and contributing factors.",
@@ -188,7 +188,7 @@ async def get_confidence(
 
 
 @router.get(
-    "/tenants/{tenant_id}/playbook",
+    "/tenants/{tenant_id}/emq/playbook",
     response_model=APIResponse[List[PlaybookItemResponse]],
     summary="Get Fix Playbook",
     description="Get prioritized list of recommended fixes to improve EMQ score.",
@@ -274,7 +274,7 @@ async def get_playbook(
 
 
 @router.patch(
-    "/tenants/{tenant_id}/playbook/{item_id}",
+    "/tenants/{tenant_id}/emq/playbook/{item_id}",
     response_model=APIResponse[PlaybookItemResponse],
     summary="Update Playbook Item",
     description="Update the status or owner of a playbook item.",
@@ -311,7 +311,7 @@ async def update_playbook_item(
 
 
 @router.get(
-    "/tenants/{tenant_id}/incidents",
+    "/tenants/{tenant_id}/emq/incidents",
     response_model=APIResponse[List[EmqIncidentResponse]],
     summary="Get Incident Timeline",
     description="Get EMQ-related incidents and events within a date range.",
@@ -397,7 +397,7 @@ async def get_incidents(
 
 
 @router.get(
-    "/tenants/{tenant_id}/impact",
+    "/tenants/{tenant_id}/emq/impact",
     response_model=APIResponse[EmqImpactResponse],
     summary="Get ROAS Impact",
     description="Get estimated ROAS impact due to EMQ issues.",
@@ -450,7 +450,7 @@ async def get_impact(
 
 
 @router.get(
-    "/tenants/{tenant_id}/volatility",
+    "/tenants/{tenant_id}/emq/volatility",
     response_model=APIResponse[EmqVolatilityResponse],
     summary="Get Signal Volatility",
     description="Get signal volatility index and trend data.",
@@ -493,7 +493,7 @@ async def get_volatility(
 
 
 @router.get(
-    "/tenants/{tenant_id}/autopilot",
+    "/tenants/{tenant_id}/emq/autopilot-state",
     response_model=APIResponse[AutopilotStateResponse],
     summary="Get Autopilot State",
     description="Get current autopilot mode and restrictions based on EMQ.",
@@ -535,7 +535,7 @@ async def get_autopilot_state(
 
 
 @router.put(
-    "/tenants/{tenant_id}/autopilot",
+    "/tenants/{tenant_id}/emq/autopilot-mode",
     response_model=APIResponse[AutopilotStateResponse],
     summary="Update Autopilot Mode",
     description="Manually override autopilot mode (requires elevated permissions).",
