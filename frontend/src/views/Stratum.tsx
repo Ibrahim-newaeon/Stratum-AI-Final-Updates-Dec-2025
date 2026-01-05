@@ -35,6 +35,9 @@ import {
   Bell,
   Mail,
   MessageSquare,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
@@ -1385,6 +1388,18 @@ export function Stratum() {
     console.log('Alert rule created:', ruleWithId)
   }
 
+  // Handle toggle alert enabled/disabled
+  const handleToggleAlert = (alertId: string) => {
+    setCreatedAlerts(prev => prev.map(alert =>
+      alert.id === alertId ? { ...alert, enabled: !alert.enabled } : alert
+    ))
+  }
+
+  // Handle delete alert
+  const handleDeleteAlert = (alertId: string) => {
+    setCreatedAlerts(prev => prev.filter(alert => alert.id !== alertId))
+  }
+
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'opportunity':
@@ -1745,6 +1760,109 @@ export function Stratum() {
           </div>
         </div>
       </div>
+
+      {/* Active Alerts Section */}
+      {createdAlerts.length > 0 && (
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Bell className="w-5 h-5 text-primary" />
+              Active Alerts
+              <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                {createdAlerts.length}
+              </span>
+            </h3>
+          </div>
+
+          <div className="space-y-3">
+            {createdAlerts.map((alert) => {
+              const conditionLabel = {
+                above: 'goes above',
+                below: 'goes below',
+                change_above: 'changes by more than +',
+                change_below: 'changes by more than -',
+              }[alert.condition]
+
+              const activeChannels = Object.entries(alert.channels)
+                .filter(([_, enabled]) => enabled)
+                .map(([channel]) => channel)
+
+              return (
+                <div
+                  key={alert.id}
+                  className={cn(
+                    'p-4 rounded-lg border transition-all',
+                    alert.enabled ? 'bg-background' : 'bg-muted/50 opacity-60'
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-sm truncate">{alert.name}</h4>
+                        <span className={cn(
+                          'px-2 py-0.5 rounded-full text-xs font-medium',
+                          alert.enabled ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'
+                        )}>
+                          {alert.enabled ? 'Active' : 'Paused'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">{alert.metric}</span>
+                        {' '}{conditionLabel}{' '}
+                        <span className="font-medium text-foreground">
+                          {alert.threshold}{alert.condition.includes('change') ? '%' : ''}
+                        </span>
+                      </p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {alert.frequency === 'realtime' ? 'Real-time' :
+                           alert.frequency === 'hourly' ? 'Hourly' : 'Daily'}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {activeChannels.map(channel => (
+                            <span
+                              key={channel}
+                              className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted capitalize"
+                            >
+                              {channel === 'inApp' ? 'In-App' : channel}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleToggleAlert(alert.id!)}
+                        className={cn(
+                          'p-2 rounded-lg transition-colors',
+                          alert.enabled
+                            ? 'text-green-500 hover:bg-green-500/10'
+                            : 'text-muted-foreground hover:bg-muted'
+                        )}
+                        title={alert.enabled ? 'Pause alert' : 'Enable alert'}
+                      >
+                        {alert.enabled ? (
+                          <ToggleRight className="w-5 h-5" />
+                        ) : (
+                          <ToggleLeft className="w-5 h-5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAlert(alert.id!)}
+                        className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                        title="Delete alert"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Insight Detail Modal */}
       {selectedInsight && (
