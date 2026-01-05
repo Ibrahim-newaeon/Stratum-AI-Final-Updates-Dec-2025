@@ -6,8 +6,8 @@ test.describe('Authentication', () => {
   })
 
   test('should display landing page', async ({ page }) => {
-    await expect(page.locator('text=Stratum AI')).toBeVisible()
-    await expect(page.locator('text=Get Started')).toBeVisible()
+    await expect(page.locator('text=Stratum AI').first()).toBeVisible()
+    await expect(page.locator('text=Get Started').first()).toBeVisible()
   })
 
   test('should navigate to login page', async ({ page }) => {

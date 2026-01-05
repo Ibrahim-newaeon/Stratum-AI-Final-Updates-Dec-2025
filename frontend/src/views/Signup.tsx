@@ -104,14 +104,15 @@ export default function Signup() {
       {
         onSuccess: (response) => {
           // OTP verified, now complete registration
-          setVerificationToken(response.data?.verification_token || '');
+          const token = response.verification_token || '';
+          setVerificationToken(token);
 
           signupMutation.mutate({
             name: formData.name,
             email: formData.email,
             password: formData.password,
             phone: formData.phone,
-            verification_token: response.data?.verification_token,
+            verification_token: token,
           });
         },
         onError: (error) => {
