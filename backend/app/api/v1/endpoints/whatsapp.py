@@ -727,6 +727,64 @@ async def create_template(
     )
 
 
+@router.get("/templates/{template_id}", response_model=APIResponse[WhatsAppTemplateResponse])
+async def get_template(
+    request: Request,
+    template_id: int,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get a specific template by ID."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(WhatsAppTemplate).where(
+            WhatsAppTemplate.id == template_id,
+            WhatsAppTemplate.tenant_id == tenant_id,
+        )
+    )
+    template = result.scalar_one_or_none()
+
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    return APIResponse(
+        success=True,
+        data=WhatsAppTemplateResponse.model_validate(template),
+    )
+
+
+@router.delete("/templates/{template_id}", response_model=APIResponse)
+async def delete_template(
+    request: Request,
+    template_id: int,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Delete a template."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(WhatsAppTemplate).where(
+            WhatsAppTemplate.id == template_id,
+            WhatsAppTemplate.tenant_id == tenant_id,
+        )
+    )
+    template = result.scalar_one_or_none()
+
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    # Delete the template
+    await db.delete(template)
+    await db.commit()
+
+    logger.info(f"Deleted WhatsApp template {template_id} for tenant {tenant_id}")
+
+    return APIResponse(
+        success=True,
+        message="Template deleted successfully",
+    )
+
+
 # =============================================================================
 # Message Endpoints
 # =============================================================================

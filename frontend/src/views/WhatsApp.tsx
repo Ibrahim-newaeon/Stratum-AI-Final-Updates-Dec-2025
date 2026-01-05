@@ -336,19 +336,40 @@ export function WhatsApp() {
   const [editName, setEditName] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
 
+  // Template management state
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [templateDropdown, setTemplateDropdown] = useState<number | null>(null)
+  const [viewingTemplate, setViewingTemplate] = useState<WhatsAppTemplate | null>(null)
+  const [newTemplate, setNewTemplate] = useState({
+    name: '',
+    language: 'en',
+    category: 'marketing',
+    body_text: '',
+    footer_text: '',
+  })
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false)
+
+  // Message view state
+  const [messageDropdown, setMessageDropdown] = useState<number | null>(null)
+  const [viewingMessage, setViewingMessage] = useState<WhatsAppMessage | null>(null)
+
   // Fetch data on mount
   useEffect(() => {
     fetchData()
   }, [])
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => setActiveDropdown(null)
-    if (activeDropdown !== null) {
+    const handleClickOutside = () => {
+      setActiveDropdown(null)
+      setTemplateDropdown(null)
+      setMessageDropdown(null)
+    }
+    if (activeDropdown !== null || templateDropdown !== null || messageDropdown !== null) {
       document.addEventListener('click', handleClickOutside)
       return () => document.removeEventListener('click', handleClickOutside)
     }
-  }, [activeDropdown])
+  }, [activeDropdown, templateDropdown, messageDropdown])
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -728,6 +749,63 @@ export function WhatsApp() {
     }
   }
 
+  // Template handlers
+  const handleCreateTemplate = async () => {
+    if (!newTemplate.name || !newTemplate.body_text) {
+      alert('Template name and body text are required')
+      return
+    }
+
+    setIsCreatingTemplate(true)
+    try {
+      await apiClient.post('/whatsapp/templates', {
+        name: newTemplate.name.toLowerCase().replace(/\s+/g, '_'),
+        language: newTemplate.language,
+        category: newTemplate.category,
+        body_text: newTemplate.body_text,
+        footer_text: newTemplate.footer_text || undefined,
+      })
+
+      await fetchData()
+      setShowTemplateModal(false)
+      setNewTemplate({
+        name: '',
+        language: 'en',
+        category: 'marketing',
+        body_text: '',
+        footer_text: '',
+      })
+    } catch (err: any) {
+      console.error('Failed to create template:', err)
+      alert(err.response?.data?.detail || 'Failed to create template')
+    } finally {
+      setIsCreatingTemplate(false)
+    }
+  }
+
+  const handleDeleteTemplate = async (template: WhatsAppTemplate) => {
+    if (!confirm(`Are you sure you want to delete the template "${template.name}"?`)) return
+    setTemplateDropdown(null)
+    try {
+      await apiClient.delete(`/whatsapp/templates/${template.id}`)
+      await fetchData()
+    } catch (err: any) {
+      console.error('Failed to delete template:', err)
+      alert(err.response?.data?.detail || 'Failed to delete template')
+    }
+  }
+
+  const handleViewTemplate = (template: WhatsAppTemplate) => {
+    setViewingTemplate(template)
+    setTemplateDropdown(null)
+  }
+
+  // Message handlers
+  const handleViewMessage = (message: WhatsAppMessage) => {
+    setViewingMessage(message)
+    setMessageDropdown(null)
+  }
+
   const getOptInBadge = (status: OptInStatus) => {
     const styles = {
       opted_in: 'bg-green-500/10 text-green-500',
@@ -903,6 +981,13 @@ export function WhatsApp() {
           >
             <Plus className="w-4 h-4" />
             <span>Add Contact</span>
+          </button>
+          <button
+            onClick={() => setShowTemplateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Create Template</span>
           </button>
         </div>
       </div>
@@ -1537,9 +1622,41 @@ export function WhatsApp() {
                     <td className="p-4 text-right font-medium">{template.usage_count.toLocaleString()}</td>
                     <td className="p-4 text-sm text-muted-foreground">{formatDate(template.created_at)}</td>
                     <td className="p-4 text-right">
-                      <button className="p-2 rounded-lg hover:bg-muted transition-colors">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setTemplateDropdown(templateDropdown === template.id ? null : template.id)
+                          }}
+                          className="p-2 rounded-lg hover:bg-muted transition-colors"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        {templateDropdown === template.id && (
+                          <div
+                            className="absolute right-0 top-full mt-1 w-40 rounded-lg border bg-card shadow-lg z-50"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="py-1">
+                              <button
+                                onClick={() => handleViewTemplate(template)}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+                              >
+                                <Eye className="w-4 h-4" />
+                                View Details
+                              </button>
+                              <hr className="my-1 border-muted" />
+                              <button
+                                onClick={() => handleDeleteTemplate(template)}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1594,7 +1711,11 @@ export function WhatsApp() {
                     <td className="p-4">{getMessageStatusBadge(message.status)}</td>
                     <td className="p-4 text-sm text-muted-foreground">{formatDate(message.sent_at || message.created_at)}</td>
                     <td className="p-4 text-right">
-                      <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                      <button
+                        onClick={() => handleViewMessage(message)}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                        title="View Details"
+                      >
                         <Eye className="w-4 h-4" />
                       </button>
                     </td>
@@ -2066,6 +2187,294 @@ export function WhatsApp() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Template Modal */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowTemplateModal(false)}>
+          <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Create Template</h2>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Template Name *</label>
+                <input
+                  type="text"
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                  placeholder="e.g., welcome_message"
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Lowercase letters, numbers, and underscores only</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Language</label>
+                  <select
+                    value={newTemplate.language}
+                    onChange={(e) => setNewTemplate({ ...newTemplate, language: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                  >
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ar">Arabic</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ja">Japanese</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <select
+                    value={newTemplate.category}
+                    onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                  >
+                    <option value="marketing">Marketing</option>
+                    <option value="utility">Utility</option>
+                    <option value="authentication">Authentication</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Body Text *</label>
+                <textarea
+                  value={newTemplate.body_text}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, body_text: e.target.value })}
+                  placeholder="Enter your message template..."
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20 resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Use {'{{1}}'}, {'{{2}}'} etc. for variables</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Footer Text (Optional)</label>
+                <input
+                  type="text"
+                  value={newTemplate.footer_text}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, footer_text: e.target.value })}
+                  placeholder="e.g., Reply STOP to unsubscribe"
+                  maxLength={60}
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateTemplate}
+                disabled={isCreatingTemplate || !newTemplate.name || !newTemplate.body_text}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {isCreatingTemplate ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Template'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Template Modal */}
+      {viewingTemplate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setViewingTemplate(null)}>
+          <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Template Details</h2>
+              <button
+                onClick={() => setViewingTemplate(null)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
+                <p className="font-mono text-lg">{viewingTemplate.name}</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Language</label>
+                  <p className="uppercase">{viewingTemplate.language}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Category</label>
+                  {getCategoryBadge(viewingTemplate.category)}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Status</label>
+                  {getTemplateStatusBadge(viewingTemplate.status)}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Body Text</label>
+                <div className="p-3 rounded-lg bg-muted/50 border">
+                  <p className="text-sm whitespace-pre-wrap">{viewingTemplate.body_text}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Usage Count</label>
+                  <p className="text-lg font-bold">{viewingTemplate.usage_count.toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Created</label>
+                  <p className="text-sm">{formatDate(viewingTemplate.created_at)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setViewingTemplate(null)}
+                className="flex-1 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setViewingTemplate(null)
+                  setSelectedContactIds([])
+                  setBroadcastTemplate(viewingTemplate.name)
+                  setShowBroadcastModal(true)
+                }}
+                disabled={viewingTemplate.status !== 'approved'}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+                Use Template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Message Modal */}
+      {viewingMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setViewingMessage(null)}>
+          <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Message Details</h2>
+              <button
+                onClick={() => setViewingMessage(null)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Contact</label>
+                  <p className="font-medium">{getContactName(viewingMessage.contact_id)}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Direction</label>
+                  <span
+                    className={cn(
+                      'px-2 py-1 rounded-full text-xs font-medium',
+                      viewingMessage.direction === 'outbound'
+                        ? 'bg-blue-500/10 text-blue-500'
+                        : 'bg-green-500/10 text-green-500'
+                    )}
+                  >
+                    {viewingMessage.direction === 'outbound' ? 'Sent' : 'Received'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Type</label>
+                  <p className="capitalize">{viewingMessage.message_type}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Status</label>
+                  {getMessageStatusBadge(viewingMessage.status)}
+                </div>
+              </div>
+
+              {viewingMessage.template_name && (
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Template</label>
+                  <p className="font-mono">{viewingMessage.template_name}</p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Content</label>
+                <div className="p-3 rounded-lg bg-muted/50 border">
+                  <p className="text-sm whitespace-pre-wrap">
+                    {viewingMessage.content || (viewingMessage.template_name ? `[Template: ${viewingMessage.template_name}]` : 'No content')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Sent At</label>
+                  <p className="text-sm">{viewingMessage.sent_at ? formatDate(viewingMessage.sent_at) : '-'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Created</label>
+                  <p className="text-sm">{formatDate(viewingMessage.created_at)}</p>
+                </div>
+              </div>
+
+              {viewingMessage.direction === 'outbound' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">Delivered At</label>
+                    <p className="text-sm">{viewingMessage.delivered_at ? formatDate(viewingMessage.delivered_at) : '-'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">Read At</label>
+                    <p className="text-sm">{viewingMessage.read_at ? formatDate(viewingMessage.read_at) : '-'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={() => setViewingMessage(null)}
+                className="w-full px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
