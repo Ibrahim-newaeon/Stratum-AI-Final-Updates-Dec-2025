@@ -1,9 +1,17 @@
 import { test, expect, devices } from '@playwright/test'
 
-test.describe('Mobile Responsiveness', () => {
-  test.use({ ...devices['iPhone 12'] })
+// Mobile tests using iPhone 12 viewport
+const mobileTest = test.extend({
+  ...devices['iPhone 12'],
+})
 
-  test('should show mobile menu toggle', async ({ page }) => {
+// Tablet tests using iPad Mini viewport
+const tabletTest = test.extend({
+  ...devices['iPad Mini'],
+})
+
+mobileTest.describe('Mobile Responsiveness', () => {
+  mobileTest('should show mobile menu toggle', async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => {
       localStorage.setItem('auth_token', 'test-token')
@@ -24,7 +32,7 @@ test.describe('Mobile Responsiveness', () => {
     await expect(menuButton.first()).toBeVisible()
   })
 
-  test('should open mobile sidebar on toggle', async ({ page }) => {
+  mobileTest('should open mobile sidebar on toggle', async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => {
       localStorage.setItem('auth_token', 'test-token')
@@ -44,7 +52,7 @@ test.describe('Mobile Responsiveness', () => {
     }
   })
 
-  test('landing page should be responsive', async ({ page }) => {
+  mobileTest('landing page should be responsive', async ({ page }) => {
     await page.goto('/')
 
     // Hero should be visible
@@ -56,10 +64,8 @@ test.describe('Mobile Responsiveness', () => {
   })
 })
 
-test.describe('Tablet Responsiveness', () => {
-  test.use({ ...devices['iPad Mini'] })
-
-  test('should display sidebar properly on tablet', async ({ page }) => {
+tabletTest.describe('Tablet Responsiveness', () => {
+  tabletTest('should display sidebar properly on tablet', async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => {
       localStorage.setItem('auth_token', 'test-token')
