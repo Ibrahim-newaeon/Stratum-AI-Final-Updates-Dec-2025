@@ -398,33 +398,27 @@ export function WhatsApp() {
     if (validContacts.length === 0) return
 
     setIsImporting(true)
-    let successCount = 0
-    let failCount = 0
 
     try {
-      // Import contacts one by one
-      for (const contact of validContacts) {
-        try {
-          await apiClient.post('/whatsapp/contacts', {
-            phone_number: contact.phone_number,
-            country_code: contact.country_code,
-            display_name: contact.display_name || undefined,
-            opt_in_method: 'csv_import',
-          })
-          successCount++
-        } catch (err) {
-          failCount++
-        }
-      }
+      // Use bulk import endpoint
+      const response = await apiClient.post('/whatsapp/contacts/bulk', {
+        contacts: validContacts.map(contact => ({
+          phone_number: contact.phone_number,
+          country_code: contact.country_code,
+          display_name: contact.display_name || undefined,
+          opt_in_method: 'csv_import',
+        })),
+      })
 
-      alert(`Imported ${successCount} contacts. ${failCount > 0 ? `${failCount} failed.` : ''}`)
+      const result = response.data.data
+      alert(`Imported ${result.success} contacts. ${result.failed > 0 ? `${result.failed} failed.` : ''}`)
 
       // Refresh contacts
       await fetchData()
       resetContactModal()
     } catch (err: any) {
       console.error('Failed to import contacts:', err)
-      alert('Failed to import contacts')
+      alert('Failed to import contacts: ' + (err.response?.data?.detail || err.message))
     } finally {
       setIsImporting(false)
     }

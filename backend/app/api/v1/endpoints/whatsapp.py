@@ -269,6 +269,98 @@ async def create_contact(
     )
 
 
+class BulkContactCreate(BaseModel):
+    """Schema for bulk contact import."""
+    contacts: List[WhatsAppContactCreate]
+
+
+class BulkImportResult(BaseModel):
+    """Result of bulk import operation."""
+    total: int
+    success: int
+    failed: int
+    errors: List[dict] = []
+    created_ids: List[int] = []
+
+
+@router.post("/contacts/bulk", response_model=APIResponse[BulkImportResult])
+async def bulk_import_contacts(
+    request: Request,
+    bulk_data: BulkContactCreate,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Bulk import WhatsApp contacts.
+
+    Imports multiple contacts in a single request.
+    Skips duplicates and returns success/failure counts.
+    """
+    tenant_id = getattr(request.state, "tenant_id", None)
+    user_id = getattr(request.state, "user_id", None)
+
+    success_count = 0
+    failed_count = 0
+    errors = []
+    created_ids = []
+
+    for idx, contact_data in enumerate(bulk_data.contacts):
+        try:
+            # Check for duplicate phone number
+            existing = await db.execute(
+                select(WhatsAppContact).where(
+                    WhatsAppContact.tenant_id == tenant_id,
+                    WhatsAppContact.phone_number == contact_data.phone_number,
+                )
+            )
+            if existing.scalar_one_or_none():
+                errors.append({
+                    "index": idx,
+                    "phone": contact_data.phone_number,
+                    "error": "Duplicate phone number"
+                })
+                failed_count += 1
+                continue
+
+            contact = WhatsAppContact(
+                tenant_id=tenant_id,
+                user_id=user_id,
+                phone_number=contact_data.phone_number,
+                country_code=contact_data.country_code,
+                display_name=contact_data.display_name,
+                opt_in_method=contact_data.opt_in_method,
+            )
+
+            db.add(contact)
+            await db.flush()  # Flush to get the ID without committing
+            created_ids.append(contact.id)
+            success_count += 1
+
+        except Exception as e:
+            errors.append({
+                "index": idx,
+                "phone": contact_data.phone_number,
+                "error": str(e)
+            })
+            failed_count += 1
+
+    # Commit all successful inserts
+    await db.commit()
+
+    logger.info(f"Bulk imported {success_count} contacts for tenant {tenant_id}, {failed_count} failed")
+
+    return APIResponse(
+        success=True,
+        data=BulkImportResult(
+            total=len(bulk_data.contacts),
+            success=success_count,
+            failed=failed_count,
+            errors=errors,
+            created_ids=created_ids,
+        ),
+        message=f"Imported {success_count} contacts, {failed_count} failed",
+    )
+
+
 @router.post("/contacts/{contact_id}/verify", response_model=APIResponse)
 async def verify_contact(
     request: Request,

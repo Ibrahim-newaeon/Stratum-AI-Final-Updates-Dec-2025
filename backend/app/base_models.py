@@ -900,8 +900,8 @@ class WhatsAppContact(Base, TimestampMixin, TenantMixin):
     __tablename__ = "whatsapp_contacts"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
     # Contact Info (E.164 format)
@@ -921,7 +921,8 @@ class WhatsAppContact(Base, TimestampMixin, TenantMixin):
 
     # Opt-in Status (REQUIRED for WhatsApp Business)
     opt_in_status: Mapped[WhatsAppOptInStatus] = mapped_column(
-        Enum(WhatsAppOptInStatus), default=WhatsAppOptInStatus.PENDING, nullable=False
+        Enum(WhatsAppOptInStatus, values_callable=lambda x: [e.value for e in x]),
+        default=WhatsAppOptInStatus.PENDING, nullable=False
     )
     opt_in_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -984,7 +985,7 @@ class WhatsAppTemplate(Base, TimestampMixin, TenantMixin):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     category: Mapped[WhatsAppTemplateCategory] = mapped_column(
-        Enum(WhatsAppTemplateCategory), nullable=False
+        Enum(WhatsAppTemplateCategory, values_callable=lambda x: [e.value for e in x]), nullable=False
     )
 
     # Template Content
@@ -1005,7 +1006,7 @@ class WhatsAppTemplate(Base, TimestampMixin, TenantMixin):
     # Meta Approval Status
     meta_template_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     status: Mapped[WhatsAppTemplateStatus] = mapped_column(
-        Enum(WhatsAppTemplateStatus), default=WhatsAppTemplateStatus.PENDING, nullable=False
+        Enum(WhatsAppTemplateStatus, values_callable=lambda x: [e.value for e in x]), default=WhatsAppTemplateStatus.PENDING, nullable=False
     )
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
@@ -1043,7 +1044,7 @@ class WhatsAppMessage(Base, TenantMixin):
 
     # Message Details
     direction: Mapped[WhatsAppMessageDirection] = mapped_column(
-        Enum(WhatsAppMessageDirection), default=WhatsAppMessageDirection.OUTBOUND, nullable=False
+        Enum(WhatsAppMessageDirection, values_callable=lambda x: [e.value for e in x]), default=WhatsAppMessageDirection.OUTBOUND, nullable=False
     )
     message_type: Mapped[str] = mapped_column(
         String(20), nullable=False
@@ -1062,7 +1063,7 @@ class WhatsAppMessage(Base, TenantMixin):
 
     # Status Tracking
     status: Mapped[WhatsAppMessageStatus] = mapped_column(
-        Enum(WhatsAppMessageStatus), default=WhatsAppMessageStatus.PENDING, nullable=False
+        Enum(WhatsAppMessageStatus, values_callable=lambda x: [e.value for e in x]), default=WhatsAppMessageStatus.PENDING, nullable=False
     )
     status_history: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
 
