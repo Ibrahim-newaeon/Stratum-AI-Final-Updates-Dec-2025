@@ -1,7 +1,7 @@
 """Add USP Layer tables (Trust Layer, Actions Queue)
 
 Revision ID: 011_add_usp_layer_tables
-Revises: 010_add_cost_allocation
+Revises: 010
 Create Date: 2026-01-02 00:00:00.000000
 
 This migration adds:
