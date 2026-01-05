@@ -30,7 +30,9 @@ import {
   SignalIcon,
   WifiIcon,
   CloudIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
+import { useToast } from '@/components/ui/use-toast'
 
 interface PlatformSignal {
   platform: string
@@ -60,9 +62,15 @@ interface IncidentDetail {
 export default function SignalHub() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const tid = parseInt(tenantId || '1', 10)
+  const { toast } = useToast()
 
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null)
+  const [resolvedIncidents, setResolvedIncidents] = useState<Set<string>>(new Set())
+  const [incidentNotes, setIncidentNotes] = useState<Record<string, string[]>>({})
+  const [noteModalOpen, setNoteModalOpen] = useState<string | null>(null)
+  const [noteInput, setNoteInput] = useState('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Date range
   const dateRange = {
@@ -71,9 +79,9 @@ export default function SignalHub() {
   }
 
   // Fetch data
-  const { data: emqData } = useEmqScore(tid)
-  const { data: volatilityData } = useEmqVolatility(tid)
-  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
+  const { data: emqData, refetch: refetchEmq } = useEmqScore(tid)
+  const { data: volatilityData, refetch: refetchVolatility } = useEmqVolatility(tid)
+  const { data: incidentsData, refetch: refetchIncidents } = useEmqIncidents(tid, dateRange.start, dateRange.end)
 
   const emqScore = emqData?.score ?? 85
   const svi = volatilityData?.svi ?? 25
@@ -197,6 +205,60 @@ export default function SignalHub() {
     return `${Math.floor(hours / 24)}d ago`
   }
 
+  // Handler: Mark incident as resolved
+  const handleMarkResolved = (incidentId: string, incidentTitle: string) => {
+    setResolvedIncidents((prev) => {
+      const next = new Set(prev)
+      next.add(incidentId)
+      return next
+    })
+    setSelectedIncident(null)
+    toast({
+      title: 'Incident Resolved',
+      description: `"${incidentTitle}" has been marked as resolved.`,
+    })
+  }
+
+  // Handler: Add note to incident
+  const handleAddNote = (incidentId: string) => {
+    if (!noteInput.trim()) return
+    setIncidentNotes((prev) => ({
+      ...prev,
+      [incidentId]: [...(prev[incidentId] || []), noteInput.trim()],
+    }))
+    setNoteInput('')
+    setNoteModalOpen(null)
+    toast({
+      title: 'Note Added',
+      description: 'Your note has been added to the incident.',
+    })
+  }
+
+  // Handler: Refresh all data
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.all([refetchEmq(), refetchVolatility(), refetchIncidents()])
+      toast({
+        title: 'Data Refreshed',
+        description: 'All signal data has been refreshed.',
+      })
+    } catch {
+      toast({
+        title: 'Refresh Failed',
+        description: 'Failed to refresh data. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  // Filter out resolved incidents from display
+  const activeIncidents = incidents.filter(
+    (i) => !i.resolvedAt && !resolvedIncidents.has(i.id)
+  )
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -214,9 +276,13 @@ export default function SignalHub() {
           <div data-tour="volatility-badge">
             <VolatilityBadge svi={svi} showValue />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors">
-            <ArrowPathIcon className="w-4 h-4" />
-            Refresh All
+          <button
+            onClick={handleRefreshAll}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ArrowPathIcon className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh All'}
           </button>
         </div>
       </div>
@@ -303,14 +369,14 @@ export default function SignalHub() {
                 <div>
                   <h3 className="font-semibold text-white">Active Incidents</h3>
                   <p className="text-sm text-text-muted">
-                    {incidents.filter(i => !i.resolvedAt).length} open
+                    {activeIncidents.length} open
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="divide-y divide-white/5">
-              {incidents.filter(i => !i.resolvedAt).map((incident) => (
+              {activeIncidents.map((incident) => (
                 <div
                   key={incident.id}
                   className={cn(
@@ -369,13 +435,38 @@ export default function SignalHub() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 py-2 rounded-lg bg-success/10 text-success text-sm font-medium hover:bg-success/20 transition-colors">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleMarkResolved(incident.id, incident.title)
+                          }}
+                          className="flex-1 py-2 rounded-lg bg-success/10 text-success text-sm font-medium hover:bg-success/20 transition-colors"
+                        >
                           Mark Resolved
                         </button>
-                        <button className="py-2 px-4 rounded-lg bg-surface-tertiary text-text-secondary text-sm hover:text-white transition-colors">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setNoteModalOpen(incident.id)
+                          }}
+                          className="py-2 px-4 rounded-lg bg-surface-tertiary text-text-secondary text-sm hover:text-white transition-colors"
+                        >
                           Add Note
                         </button>
                       </div>
+                      {/* Display existing notes */}
+                      {incidentNotes[incident.id]?.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <span className="text-sm text-text-muted block mb-2">Notes:</span>
+                          <div className="space-y-1">
+                            {incidentNotes[incident.id].map((note, idx) => (
+                              <div key={idx} className="text-sm text-white bg-surface-tertiary px-3 py-2 rounded">
+                                {note}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -424,6 +515,51 @@ export default function SignalHub() {
           <EmqTimeline events={timeline} maxEvents={8} />
         </div>
       </div>
+
+      {/* Add Note Modal */}
+      {noteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-surface-secondary rounded-xl border border-white/10 p-6 w-full max-w-md mx-4 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Add Note</h3>
+              <button
+                onClick={() => {
+                  setNoteModalOpen(null)
+                  setNoteInput('')
+                }}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5 text-text-muted" />
+              </button>
+            </div>
+            <textarea
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
+              placeholder="Enter your note..."
+              className="w-full h-32 px-3 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white placeholder:text-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-stratum-500"
+              autoFocus
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setNoteModalOpen(null)
+                  setNoteInput('')
+                }}
+                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleAddNote(noteModalOpen)}
+                disabled={!noteInput.trim()}
+                className="flex-1 py-2 rounded-lg bg-stratum-500 text-white font-medium hover:bg-stratum-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Note
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -5,7 +5,7 @@
  * Shows user actions, system events, and API activity
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuditLogs } from '@/api/hooks'
 import {
@@ -56,6 +56,9 @@ export default function Audit() {
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null)
+  const itemsPerPage = 10
 
   const { data: auditLogsData, isLoading } = useAuditLogs({
     startDate: dateRange.start,
@@ -236,9 +239,64 @@ export default function Audit() {
   }
 
   const handleExport = () => {
-    console.log('Exporting audit logs...')
-    // Would export to CSV/JSON
+    try {
+      // Prepare CSV content
+      const headers = ['Timestamp', 'Category', 'Severity', 'Action', 'Description', 'Actor', 'Target', 'IP Address', 'User Agent']
+      const csvRows = [headers.join(',')]
+
+      filteredLogs.forEach((log) => {
+        const row = [
+          log.timestamp.toISOString(),
+          log.category,
+          log.severity,
+          log.action,
+          `"${log.description.replace(/"/g, '""')}"`,
+          `"${log.actor.name}"`,
+          log.target ? `"${log.target.type}: ${log.target.name}"` : '',
+          log.ipAddress || '',
+          `"${(log.userAgent || '').replace(/"/g, '""')}"`,
+        ]
+        csvRows.push(row.join(','))
+      })
+
+      const csvContent = csvRows.join('\n')
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      setExportFeedback(`Successfully exported ${filteredLogs.length} logs`)
+      setTimeout(() => setExportFeedback(null), 3000)
+    } catch (error) {
+      setExportFeedback('Failed to export logs. Please try again.')
+      setTimeout(() => setExportFeedback(null), 3000)
+    }
   }
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage)
+  const paginatedLogs = filteredLogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+  }
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, categoryFilter, severityFilter, dateRange.start, dateRange.end])
 
   // Stats
   const stats = {
@@ -256,13 +314,23 @@ export default function Audit() {
           <h1 className="text-2xl font-bold text-white">Audit Logs</h1>
           <p className="text-text-muted">System-wide activity and security logs</p>
         </div>
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
-        >
-          <ArrowDownTrayIcon className="w-4 h-4" />
-          Export
-        </button>
+        <div className="flex items-center gap-3">
+          {exportFeedback && (
+            <span className={cn(
+              'text-sm px-3 py-1 rounded-lg',
+              exportFeedback.includes('Successfully') ? 'text-success bg-success/10' : 'text-danger bg-danger/10'
+            )}>
+              {exportFeedback}
+            </span>
+          )}
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+          >
+            <ArrowDownTrayIcon className="w-4 h-4" />
+            Export
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -354,7 +422,7 @@ export default function Audit() {
           <div className="p-8 text-center text-text-muted">No logs found matching your filters.</div>
         ) : (
           <div className="divide-y divide-white/5">
-            {filteredLogs.map((log) => (
+            {paginatedLogs.map((log) => (
               <div key={log.id} className="hover:bg-white/5 transition-colors">
                 <button
                   onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
@@ -468,14 +536,38 @@ export default function Audit() {
         )}
       </div>
 
-      {/* Pagination placeholder */}
+      {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-text-muted">
-        <span>Showing {filteredLogs.length} of {auditLogs.length} logs</span>
+        <span>
+          Showing {paginatedLogs.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-
+          {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of {filteredLogs.length} logs
+        </span>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1 rounded bg-surface-secondary hover:bg-surface-tertiary transition-colors">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className={cn(
+              'px-3 py-1 rounded bg-surface-secondary transition-colors',
+              currentPage === 1
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-surface-tertiary'
+            )}
+          >
             Previous
           </button>
-          <button className="px-3 py-1 rounded bg-surface-secondary hover:bg-surface-tertiary transition-colors">
+          <span className="px-2">
+            Page {currentPage} of {totalPages || 1}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage >= totalPages}
+            className={cn(
+              'px-3 py-1 rounded bg-surface-secondary transition-colors',
+              currentPage >= totalPages
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-surface-tertiary'
+            )}
+          >
             Next
           </button>
         </div>

@@ -175,6 +175,11 @@ export {
   useCancelDeletion,
 } from './gdpr'
 
+// Tenant Dashboard hooks
+export {
+  useUpdateTenantSettings,
+} from './hooks/useTenantDashboard'
+
 // =============================================================================
 // Tenant Overview Hooks (for tenant dashboard)
 // =============================================================================

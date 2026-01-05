@@ -16,6 +16,12 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui/use-toast'
+import {
+  useSubmitDraft,
+  usePublishDraft,
+  useDeleteCampaignDraft,
+} from '@/api/campaignBuilder'
 
 type DraftStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'publishing' | 'published' | 'failed'
 
@@ -99,29 +105,80 @@ export default function CampaignDrafts() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const [drafts, setDrafts] = useState(mockDrafts)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const { toast } = useToast()
 
-  const handleDelete = (draftId: string) => {
+  // API hooks
+  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
+  const submitDraft = useSubmitDraft(tenantIdNum)
+  const publishDraft = usePublishDraft(tenantIdNum)
+  const deleteDraft = useDeleteCampaignDraft(tenantIdNum)
+
+  const handleDelete = async (draftId: string) => {
     if (confirm('Are you sure you want to delete this draft?')) {
-      setDrafts(drafts.filter(d => d.id !== draftId))
+      try {
+        await deleteDraft.mutateAsync(draftId)
+        // Update local state optimistically
+        setDrafts(drafts.filter(d => d.id !== draftId))
+        toast({
+          title: 'Draft deleted',
+          description: 'The campaign draft has been deleted successfully.',
+        })
+      } catch (error) {
+        toast({
+          title: 'Delete failed',
+          description: error instanceof Error ? error.message : 'Failed to delete draft. Please try again.',
+          variant: 'destructive',
+        })
+      }
     }
   }
 
-  const handleSubmit = (draftId: string) => {
-    setDrafts(drafts.map(d =>
-      d.id === draftId ? { ...d, status: 'submitted' as DraftStatus } : d
-    ))
+  const handleSubmit = async (draftId: string) => {
+    try {
+      await submitDraft.mutateAsync(draftId)
+      // Update local state optimistically
+      setDrafts(drafts.map(d =>
+        d.id === draftId ? { ...d, status: 'submitted' as DraftStatus } : d
+      ))
+      toast({
+        title: 'Draft submitted',
+        description: 'The campaign draft has been submitted for approval.',
+      })
+    } catch (error) {
+      toast({
+        title: 'Submit failed',
+        description: error instanceof Error ? error.message : 'Failed to submit draft. Please try again.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handlePublish = async (draftId: string) => {
+    // Set publishing status optimistically
     setDrafts(drafts.map(d =>
       d.id === draftId ? { ...d, status: 'publishing' as DraftStatus } : d
     ))
-    // In production: await api.post(`/tenant/${tenantId}/campaign-drafts/${draftId}/publish`)
-    setTimeout(() => {
+    try {
+      await publishDraft.mutateAsync(draftId)
+      // Update local state on success
       setDrafts(drafts.map(d =>
         d.id === draftId ? { ...d, status: 'published' as DraftStatus } : d
       ))
-    }, 2000)
+      toast({
+        title: 'Campaign published',
+        description: 'The campaign has been published successfully.',
+      })
+    } catch (error) {
+      // Revert to approved status on failure
+      setDrafts(drafts.map(d =>
+        d.id === draftId ? { ...d, status: 'failed' as DraftStatus } : d
+      ))
+      toast({
+        title: 'Publish failed',
+        description: error instanceof Error ? error.message : 'Failed to publish campaign. Please try again.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const filteredDrafts = drafts.filter(d =>

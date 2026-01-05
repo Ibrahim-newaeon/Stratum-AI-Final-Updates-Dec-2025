@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Lightbulb,
   TrendingUp,
@@ -21,11 +22,15 @@ import {
   X,
 } from 'lucide-react'
 import { useTenantRecommendations, type Recommendation } from '../api/hooks'
+import { useToast } from '@/components/ui/use-toast'
 
 interface InsightsPanelProps {
   tenantId: number
   className?: string
   maxItems?: number
+  onApply?: (recommendationId: string, action: string) => void | Promise<void>
+  onViewAllInsights?: () => void
+  insightsPath?: string
 }
 
 // Quantum Ember accent colors
@@ -257,8 +262,13 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   tenantId,
   className = '',
   maxItems = 5,
+  onApply,
+  onViewAllInsights,
+  insightsPath = '/insights',
 }) => {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
+  const navigate = useNavigate()
+  const { toast } = useToast()
 
   const { data: recommendations, isLoading, error, refetch } = useTenantRecommendations(
     tenantId,
@@ -268,11 +278,36 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
 
   const handleDismiss = (id: string) => {
     setDismissedIds((prev) => new Set([...prev, id]))
+    toast({
+      title: 'Insight dismissed',
+      description: 'The insight has been removed from your list.',
+    })
   }
 
-  const handleApply = (id: string, action: string) => {
-    console.log(`Applying action ${action} for recommendation ${id}`)
-    // In production, this would call the API
+  const handleApply = async (id: string, action: string) => {
+    try {
+      if (onApply) {
+        await onApply(id, action)
+      }
+      toast({
+        title: 'Action applied',
+        description: `Successfully applied "${action}" for the recommendation.`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Action failed',
+        description: error instanceof Error ? error.message : 'Failed to apply action. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleViewAllInsights = () => {
+    if (onViewAllInsights) {
+      onViewAllInsights()
+    } else {
+      navigate(insightsPath)
+    }
   }
 
   const visibleRecommendations = recommendations
@@ -370,7 +405,10 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
       {/* Footer */}
       {visibleRecommendations && visibleRecommendations.length > 0 && (
         <div className="px-6 py-3 border-t border-border bg-muted/30">
-          <button className="text-sm text-primary hover:text-primary/80 font-medium transition-colors focus:outline-none focus-visible:underline">
+          <button
+            onClick={handleViewAllInsights}
+            className="text-sm text-primary hover:text-primary/80 font-medium transition-colors focus:outline-none focus-visible:underline"
+          >
             View all insights
           </button>
         </div>

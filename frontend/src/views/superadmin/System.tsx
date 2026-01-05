@@ -57,6 +57,14 @@ interface PlatformConnector {
 export default function System() {
   const [refreshing, setRefreshing] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [queueStates, setQueueStates] = useState<Record<string, QueueStatus>>({})
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({})
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean
+    type: 'pause' | 'resume' | 'retry'
+    queueId: string
+    queueName: string
+  } | null>(null)
 
   // Fetch system health from API
   const { data: healthData, refetch, isLoading } = useSystemHealth()
@@ -78,6 +86,64 @@ export default function System() {
     } finally {
       setRefreshing(false)
     }
+  }
+
+  // Handle queue pause/resume toggle
+  const handleQueueToggle = (queueId: string, queueName: string, currentStatus: QueueStatus) => {
+    const actionType = currentStatus === 'running' ? 'pause' : 'resume'
+    setConfirmDialog({
+      open: true,
+      type: actionType,
+      queueId,
+      queueName,
+    })
+  }
+
+  // Handle retry failed jobs
+  const handleRetryFailed = (queueId: string, queueName: string) => {
+    setConfirmDialog({
+      open: true,
+      type: 'retry',
+      queueId,
+      queueName,
+    })
+  }
+
+  // Execute confirmed action
+  const handleConfirmAction = async () => {
+    if (!confirmDialog) return
+
+    const { type, queueId, queueName } = confirmDialog
+    const loadingKey = `${type}-${queueId}`
+
+    setActionLoading(prev => ({ ...prev, [loadingKey]: true }))
+    setConfirmDialog(null)
+
+    try {
+      // Simulate API call - replace with actual API integration
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      if (type === 'pause') {
+        setQueueStates(prev => ({ ...prev, [queueId]: 'paused' }))
+        console.log(`Queue "${queueName}" paused successfully`)
+      } else if (type === 'resume') {
+        setQueueStates(prev => ({ ...prev, [queueId]: 'running' }))
+        console.log(`Queue "${queueName}" resumed successfully`)
+      } else if (type === 'retry') {
+        console.log(`Retrying failed jobs in queue "${queueName}"`)
+        // Trigger refetch to get updated queue status
+        await refetch()
+      }
+    } catch (error) {
+      console.error(`Failed to ${type} queue "${queueName}":`, error)
+    } finally {
+      setActionLoading(prev => ({ ...prev, [loadingKey]: false }))
+    }
+  }
+
+  // Get effective queue status (local override or from data)
+  const getEffectiveQueueStatus = (queue: QueueInfo): QueueStatus => {
+    return queueStates[queue.id] ?? queue.status
   }
 
   // Default mock data for fallback
@@ -422,47 +488,152 @@ export default function System() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {queues.map((queue) => (
-                <tr key={queue.id} className="hover:bg-white/5 transition-colors">
-                  <td className="p-4 font-medium text-white">{queue.name}</td>
-                  <td className="p-4">
-                    <span
-                      className={cn(
-                        'px-2 py-1 rounded-full text-xs font-medium',
-                        getStatusColor(queue.status),
-                        getStatusBg(queue.status)
-                      )}
-                    >
-                      {queue.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right text-white">{queue.pending}</td>
-                  <td className="p-4 text-right text-stratum-400">{queue.processing}</td>
-                  <td className="p-4 text-right text-success">{queue.completed.toLocaleString()}</td>
-                  <td className="p-4 text-right">
-                    <span className={queue.failed > 0 ? 'text-danger' : 'text-text-muted'}>
-                      {queue.failed}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right text-text-muted">{formatDuration(queue.avgProcessTime)}</td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <button className="text-text-muted hover:text-white text-sm">
-                        {queue.status === 'running' ? 'Pause' : 'Resume'}
-                      </button>
-                      {queue.failed > 0 && (
-                        <button className="text-warning hover:text-white text-sm">
-                          Retry Failed
+              {queues.map((queue) => {
+                const effectiveStatus = getEffectiveQueueStatus(queue)
+                const isPauseLoading = actionLoading[`pause-${queue.id}`]
+                const isResumeLoading = actionLoading[`resume-${queue.id}`]
+                const isRetryLoading = actionLoading[`retry-${queue.id}`]
+                const isToggleLoading = isPauseLoading || isResumeLoading
+
+                return (
+                  <tr key={queue.id} className="hover:bg-white/5 transition-colors">
+                    <td className="p-4 font-medium text-white">{queue.name}</td>
+                    <td className="p-4">
+                      <span
+                        className={cn(
+                          'px-2 py-1 rounded-full text-xs font-medium',
+                          getStatusColor(effectiveStatus),
+                          getStatusBg(effectiveStatus)
+                        )}
+                      >
+                        {effectiveStatus}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right text-white">{queue.pending}</td>
+                    <td className="p-4 text-right text-stratum-400">{queue.processing}</td>
+                    <td className="p-4 text-right text-success">{queue.completed.toLocaleString()}</td>
+                    <td className="p-4 text-right">
+                      <span className={queue.failed > 0 ? 'text-danger' : 'text-text-muted'}>
+                        {queue.failed}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right text-text-muted">{formatDuration(queue.avgProcessTime)}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleQueueToggle(queue.id, queue.name, effectiveStatus)}
+                          disabled={isToggleLoading}
+                          className={cn(
+                            'text-text-muted hover:text-white text-sm transition-colors',
+                            isToggleLoading && 'opacity-50 cursor-not-allowed'
+                          )}
+                        >
+                          {isToggleLoading ? (
+                            <span className="flex items-center gap-1">
+                              <ArrowPathIcon className="w-3 h-3 animate-spin" />
+                              {isPauseLoading ? 'Pausing...' : 'Resuming...'}
+                            </span>
+                          ) : (
+                            effectiveStatus === 'running' ? 'Pause' : 'Resume'
+                          )}
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {queue.failed > 0 && (
+                          <button
+                            onClick={() => handleRetryFailed(queue.id, queue.name)}
+                            disabled={isRetryLoading}
+                            className={cn(
+                              'text-warning hover:text-white text-sm transition-colors',
+                              isRetryLoading && 'opacity-50 cursor-not-allowed'
+                            )}
+                          >
+                            {isRetryLoading ? (
+                              <span className="flex items-center gap-1">
+                                <ArrowPathIcon className="w-3 h-3 animate-spin" />
+                                Retrying...
+                              </span>
+                            ) : (
+                              'Retry Failed'
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setConfirmDialog(null)}
+          />
+          {/* Dialog */}
+          <div className="relative bg-surface-secondary border border-white/10 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              {confirmDialog.type === 'retry' ? (
+                <ArrowPathIcon className="w-6 h-6 text-warning" />
+              ) : confirmDialog.type === 'pause' ? (
+                <ExclamationTriangleIcon className="w-6 h-6 text-warning" />
+              ) : (
+                <CheckCircleIcon className="w-6 h-6 text-success" />
+              )}
+              <h3 className="text-lg font-semibold text-white">
+                {confirmDialog.type === 'pause' && 'Pause Queue'}
+                {confirmDialog.type === 'resume' && 'Resume Queue'}
+                {confirmDialog.type === 'retry' && 'Retry Failed Jobs'}
+              </h3>
+            </div>
+            <p className="text-text-secondary mb-6">
+              {confirmDialog.type === 'pause' && (
+                <>
+                  Are you sure you want to pause the <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
+                  This will stop processing new jobs until resumed.
+                </>
+              )}
+              {confirmDialog.type === 'resume' && (
+                <>
+                  Are you sure you want to resume the <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
+                  Job processing will continue immediately.
+                </>
+              )}
+              {confirmDialog.type === 'retry' && (
+                <>
+                  Are you sure you want to retry all failed jobs in the <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
+                  This will re-queue all failed jobs for processing.
+                </>
+              )}
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="px-4 py-2 rounded-lg text-text-secondary hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAction}
+                className={cn(
+                  'px-4 py-2 rounded-lg font-medium transition-colors',
+                  confirmDialog.type === 'pause' && 'bg-warning/20 text-warning hover:bg-warning/30',
+                  confirmDialog.type === 'resume' && 'bg-success/20 text-success hover:bg-success/30',
+                  confirmDialog.type === 'retry' && 'bg-stratum-500/20 text-stratum-400 hover:bg-stratum-500/30'
+                )}
+              >
+                {confirmDialog.type === 'pause' && 'Pause Queue'}
+                {confirmDialog.type === 'resume' && 'Resume Queue'}
+                {confirmDialog.type === 'retry' && 'Retry Jobs'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

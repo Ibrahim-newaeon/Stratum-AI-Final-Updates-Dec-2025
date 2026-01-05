@@ -15,6 +15,7 @@ import {
   FunnelIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
+import { useRetryPublish } from '@/api/campaignBuilder'
 
 type PublishStatus = 'success' | 'failed' | 'pending' | 'retrying'
 
@@ -90,13 +91,20 @@ export default function PublishLogs() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedLog, setSelectedLog] = useState<PublishLog | null>(null)
 
+  const retryPublish = useRetryPublish(Number(tenantId))
+
   const filteredLogs = logs.filter(log =>
     statusFilter === 'all' || log.status === statusFilter
   )
 
   const handleRetry = async (logId: string) => {
-    // In production: await api.post(`/tenant/${tenantId}/campaign-publish-logs/${logId}/retry`)
-    alert(`Retrying publish for log ${logId}`)
+    try {
+      await retryPublish.mutateAsync(logId)
+      alert('Retry initiated successfully')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      alert(`Failed to retry publish: ${errorMessage}`)
+    }
   }
 
   return (
@@ -204,10 +212,11 @@ export default function PublishLogs() {
                         {log.status === 'failed' && (
                           <button
                             onClick={() => handleRetry(log.id)}
-                            className="p-1.5 rounded-lg hover:bg-accent transition-colors"
+                            disabled={retryPublish.isPending}
+                            className="p-1.5 rounded-lg hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Retry"
                           >
-                            <ArrowPathIcon className="h-4 w-4" />
+                            <ArrowPathIcon className={cn('h-4 w-4', retryPublish.isPending && 'animate-spin')} />
                           </button>
                         )}
                       </div>

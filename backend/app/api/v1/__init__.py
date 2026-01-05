@@ -35,6 +35,7 @@ from app.api.v1.endpoints import (
     feature_flags,
     insights,
     trust_layer,
+    emq_v2,
 )
 
 api_router = APIRouter()
@@ -223,4 +224,10 @@ api_router.include_router(
     trust_layer.router,
     prefix="/trust",
     tags=["Trust Layer"],
+)
+
+# EMQ v2 (Event Measurement Quality - Enhanced)
+api_router.include_router(
+    emq_v2.router,
+    tags=["EMQ v2"],
 )

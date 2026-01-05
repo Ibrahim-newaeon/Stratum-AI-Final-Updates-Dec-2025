@@ -23,6 +23,8 @@ import { useCommandCenter, type CommandCenterItem } from '../api/hooks'
 interface CommandCenterProps {
   tenantId: number
   className?: string
+  onApply?: (item: CommandCenterItem) => void
+  onDismiss?: (item: CommandCenterItem) => void
 }
 
 type ActionFilter = 'all' | 'scale' | 'watch' | 'fix'
@@ -100,7 +102,7 @@ const SignalIndicator: React.FC<{ value: number; label: string }> = ({ value, la
   )
 }
 
-export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, className = '' }) => {
+export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, className = '', onApply, onDismiss }) => {
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all')
   const [sortField, setSortField] = useState<SortField>('scaling_score')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
@@ -317,10 +319,34 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <button className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity">
+                          <button
+                            className={`px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg transition-opacity ${
+                              onApply ? 'hover:opacity-90 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (onApply) {
+                                onApply(item)
+                              }
+                            }}
+                            disabled={!onApply}
+                            title={onApply ? 'Apply this action' : 'Action handler not configured'}
+                          >
                             Apply Action
                           </button>
-                          <button className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                          <button
+                            className={`px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg transition-colors ${
+                              onDismiss ? 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (onDismiss) {
+                                onDismiss(item)
+                              }
+                            }}
+                            disabled={!onDismiss}
+                            title={onDismiss ? 'Dismiss this recommendation' : 'Dismiss handler not configured'}
+                          >
                             Dismiss
                           </button>
                         </div>

@@ -25,7 +25,10 @@ import {
   useAutopilotState,
   useEmqPlaybook,
   useEmqIncidents,
+  useUpdateAutopilotMode,
+  useSuspendTenant,
 } from '@/api/hooks'
+import { useToast } from '@/components/ui/use-toast'
 import {
   ArrowLeftIcon,
   BuildingOfficeIcon,
@@ -39,15 +42,109 @@ import {
   ArrowPathIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 
 type AdminAction = 'restrict' | 'support' | 'override'
+
+// Confirmation dialog component
+interface ConfirmDialogProps {
+  isOpen: boolean
+  title: string
+  message: string
+  confirmLabel: string
+  confirmVariant?: 'danger' | 'warning' | 'primary'
+  onConfirm: () => void
+  onCancel: () => void
+  isLoading?: boolean
+}
+
+function ConfirmDialog({
+  isOpen,
+  title,
+  message,
+  confirmLabel,
+  confirmVariant = 'primary',
+  onConfirm,
+  onCancel,
+  isLoading = false,
+}: ConfirmDialogProps) {
+  if (!isOpen) return null
+
+  const variantStyles = {
+    danger: 'bg-danger hover:bg-danger/80 text-white',
+    warning: 'bg-warning hover:bg-warning/80 text-black',
+    primary: 'bg-stratum-500 hover:bg-stratum-600 text-white',
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
+      <div className="relative bg-surface-primary border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+        <button
+          onClick={onCancel}
+          className="absolute top-4 right-4 text-text-muted hover:text-white transition-colors"
+        >
+          <XMarkIcon className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+        <p className="text-text-muted mb-6">{message}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isLoading}
+            className="px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className={cn(
+              'px-4 py-2 rounded-lg transition-colors disabled:opacity-50',
+              variantStyles[confirmVariant]
+            )}
+          >
+            {isLoading ? 'Processing...' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function TenantProfile() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const tid = parseInt(tenantId || '1', 10)
 
+  const { toast } = useToast()
+
   const [activeTab, setActiveTab] = useState<'overview' | 'incidents' | 'actions' | 'settings'>('overview')
+
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    confirmLabel: string
+    confirmVariant: 'danger' | 'warning' | 'primary'
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmLabel: '',
+    confirmVariant: 'primary',
+    onConfirm: () => {},
+  })
+
+  // Local feature flags state (for UI toggle)
+  const [localFeatures, setLocalFeatures] = useState<Record<string, boolean>>({
+    autopilot: true,
+    campaignBuilder: true,
+    competitorIntel: false,
+    predictions: true,
+  })
 
   // Date range
   const dateRange = {
@@ -58,9 +155,13 @@ export default function TenantProfile() {
   // Fetch data
   const { data: tenantData } = useTenant(tenantId || '')
   const { data: emqData } = useEmqScore(tid)
-  const { data: autopilotData } = useAutopilotState(tid)
+  const { data: autopilotData, refetch: refetchAutopilot } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
-  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
+  const { data: incidentsData, refetch: refetchIncidents } = useEmqIncidents(tid, dateRange.start, dateRange.end)
+
+  // Mutations
+  const updateAutopilotModeMutation = useUpdateAutopilotMode(tid)
+  const suspendTenantMutation = useSuspendTenant()
 
   const emqScore = emqData?.score ?? 72
   const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'limited'
@@ -79,13 +180,113 @@ export default function TenantProfile() {
     monthlySpend: 120000,
     mrr: 499,
     status: 'active' as const,
-    features: {
-      autopilot: true,
-      campaignBuilder: true,
-      competitorIntel: false,
-      predictions: true,
-    },
+    features: localFeatures,
     restrictions: [] as string[],
+  }
+
+  // Close confirmation dialog
+  const closeConfirmDialog = () => {
+    setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+  }
+
+  // Handle feature toggle with confirmation
+  const handleFeatureToggle = (feature: string, currentEnabled: boolean) => {
+    const action = currentEnabled ? 'disable' : 'enable'
+    setConfirmDialog({
+      isOpen: true,
+      title: `${action.charAt(0).toUpperCase() + action.slice(1)} ${feature.replace(/([A-Z])/g, ' $1').trim()}?`,
+      message: `Are you sure you want to ${action} the ${feature.replace(/([A-Z])/g, ' $1').trim().toLowerCase()} feature for this tenant?`,
+      confirmLabel: action.charAt(0).toUpperCase() + action.slice(1),
+      confirmVariant: currentEnabled ? 'warning' : 'primary',
+      onConfirm: () => {
+        setLocalFeatures((prev) => ({ ...prev, [feature]: !currentEnabled }))
+        toast({
+          title: 'Feature Updated',
+          description: `${feature.replace(/([A-Z])/g, ' $1').trim()} has been ${action}d for this tenant.`,
+        })
+        closeConfirmDialog()
+      },
+    })
+  }
+
+  // Handle autopilot mode override with confirmation
+  const handleModeOverride = (newMode: AutopilotMode) => {
+    if (newMode === autopilotMode) return
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Override Autopilot Mode?',
+      message: `Are you sure you want to change the autopilot mode from "${autopilotMode.replace('_', ' ')}" to "${newMode.replace('_', ' ')}"? This will override the automated mode selection.`,
+      confirmLabel: 'Override Mode',
+      confirmVariant: 'warning',
+      onConfirm: async () => {
+        try {
+          await updateAutopilotModeMutation.mutateAsync({
+            mode: newMode,
+            reason: 'Admin manual override',
+          })
+          toast({
+            title: 'Mode Updated',
+            description: `Autopilot mode has been changed to ${newMode.replace('_', ' ')}.`,
+          })
+          refetchAutopilot()
+        } catch (error) {
+          toast({
+            title: 'Error',
+            description: error instanceof Error ? error.message : 'Failed to update autopilot mode',
+            variant: 'destructive',
+          })
+        }
+        closeConfirmDialog()
+      },
+    })
+  }
+
+  // Handle suspend tenant with confirmation
+  const handleSuspendTenant = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Suspend Tenant?',
+      message: `Are you sure you want to suspend "${tenant.name}"? This will temporarily disable all access and automation for this tenant.`,
+      confirmLabel: 'Suspend Tenant',
+      confirmVariant: 'danger',
+      onConfirm: async () => {
+        try {
+          await suspendTenantMutation.mutateAsync({
+            id: tid,
+            reason: 'Admin manual suspension',
+          })
+          toast({
+            title: 'Tenant Suspended',
+            description: `${tenant.name} has been suspended.`,
+          })
+        } catch (error) {
+          toast({
+            title: 'Error',
+            description: error instanceof Error ? error.message : 'Failed to suspend tenant',
+            variant: 'destructive',
+          })
+        }
+        closeConfirmDialog()
+      },
+    })
+  }
+
+  // Handle refresh action log
+  const handleRefreshActionLog = async () => {
+    try {
+      await refetchIncidents()
+      toast({
+        title: 'Refreshed',
+        description: 'Action log has been refreshed.',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to refresh action log.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const kpis: Kpi[] = [
@@ -192,7 +393,29 @@ export default function TenantProfile() {
   ]
 
   const handleAdminAction = (action: AdminAction) => {
-    console.log('Admin action:', action)
+    switch (action) {
+      case 'support':
+        toast({
+          title: 'Contact Support',
+          description: 'Opening support ticket system...',
+        })
+        // In production, this would open a support modal or redirect
+        break
+      case 'override':
+        setActiveTab('settings')
+        toast({
+          title: 'Mode Override',
+          description: 'Navigate to Admin Controls to override autopilot mode.',
+        })
+        break
+      case 'restrict':
+        toast({
+          title: 'Apply Restriction',
+          description: 'Navigate to Admin Controls to manage restrictions.',
+        })
+        setActiveTab('settings')
+        break
+    }
   }
 
   const tabs = [
@@ -426,7 +649,10 @@ export default function TenantProfile() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">Action Log</h2>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors">
+            <button
+              onClick={handleRefreshActionLog}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+            >
               <ArrowPathIcon className="w-4 h-4" />
               Refresh
             </button>
@@ -462,6 +688,7 @@ export default function TenantProfile() {
                     </p>
                   </div>
                   <button
+                    onClick={() => handleFeatureToggle(feature, enabled)}
                     className={cn(
                       'relative w-12 h-6 rounded-full transition-colors',
                       enabled ? 'bg-stratum-500' : 'bg-surface-tertiary'
@@ -489,8 +716,10 @@ export default function TenantProfile() {
               {(['normal', 'limited', 'cuts_only', 'frozen'] as AutopilotMode[]).map((mode) => (
                 <button
                   key={mode}
+                  onClick={() => handleModeOverride(mode)}
+                  disabled={updateAutopilotModeMutation.isPending}
                   className={cn(
-                    'px-4 py-2 rounded-lg border transition-colors',
+                    'px-4 py-2 rounded-lg border transition-colors disabled:opacity-50',
                     autopilotMode === mode
                       ? 'bg-stratum-500/10 border-stratum-500 text-stratum-400'
                       : 'bg-surface-tertiary border-white/10 text-text-muted hover:text-white'
@@ -532,13 +761,29 @@ export default function TenantProfile() {
                   Temporarily disable all access and automation
                 </p>
               </div>
-              <button className="px-4 py-2 rounded-lg bg-danger/10 border border-danger/20 text-danger hover:bg-danger/20 transition-colors">
-                Suspend
+              <button
+                onClick={handleSuspendTenant}
+                disabled={suspendTenantMutation.isPending}
+                className="px-4 py-2 rounded-lg bg-danger/10 border border-danger/20 text-danger hover:bg-danger/20 transition-colors disabled:opacity-50"
+              >
+                {suspendTenantMutation.isPending ? 'Suspending...' : 'Suspend'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmLabel={confirmDialog.confirmLabel}
+        confirmVariant={confirmDialog.confirmVariant}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={closeConfirmDialog}
+        isLoading={updateAutopilotModeMutation.isPending || suspendTenantMutation.isPending}
+      />
     </div>
   )
 }

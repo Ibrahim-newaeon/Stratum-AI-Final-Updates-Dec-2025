@@ -14,6 +14,7 @@ import {
   useBillingSubscriptions,
   useRetryPayment,
 } from '@/api/hooks'
+import { useToast } from '@/components/ui/use-toast'
 import {
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
@@ -25,6 +26,10 @@ import {
   DocumentTextIcon,
   CreditCardIcon,
   UserGroupIcon,
+  XMarkIcon,
+  EnvelopeIcon,
+  ArrowDownTrayIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline'
 
 type PlanType = 'starter' | 'pro' | 'enterprise'
@@ -55,6 +60,15 @@ interface Invoice {
 
 export default function Billing() {
   const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'invoices' | 'plans'>('overview')
+  const { toast } = useToast()
+
+  // Modal states
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<typeof mockPlans[0] | null>(null)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [showEditPlanModal, setShowEditPlanModal] = useState(false)
 
   // Fetch data from API
   const { data: revenueData, isLoading: revenueLoading } = useRevenue()
@@ -139,9 +153,122 @@ export default function Billing() {
   const handleRetryPayment = async (subscriptionId: string) => {
     try {
       await retryPaymentMutation.mutateAsync(subscriptionId)
+      toast({
+        title: 'Success',
+        description: 'Payment retry initiated successfully',
+      })
     } catch (error) {
       console.error('Failed to retry payment:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to retry payment. Please try again.',
+        variant: 'destructive',
+      })
     }
+  }
+
+  // Export billing report to CSV
+  const handleExportReport = () => {
+    try {
+      const csvData = [
+        ['Invoice ID', 'Tenant', 'Amount', 'Status', 'Due Date', 'Paid At'],
+        ...invoices.map(inv => [
+          inv.id,
+          inv.tenantName,
+          `$${inv.amount}`,
+          inv.status,
+          inv.dueDate.toLocaleDateString(),
+          inv.paidAt ? inv.paidAt.toLocaleDateString() : 'N/A',
+        ]),
+      ]
+      const csvContent = csvData.map(row => row.join(',')).join('\n')
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `billing-report-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      toast({
+        title: 'Export Successful',
+        description: 'Billing report downloaded as CSV',
+      })
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: 'Unable to export billing report',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Contact customer - open email client
+  const handleContactCustomer = (tenantName: string) => {
+    // In production, this would fetch actual email from backend
+    const email = `billing@${tenantName.toLowerCase().replace(/\s+/g, '')}.com`
+    window.location.href = `mailto:${email}?subject=Payment%20Issue%20-%20${encodeURIComponent(tenantName)}&body=Dear%20${encodeURIComponent(tenantName)}%20Team,%0A%0AWe%20noticed%20there%20is%20an%20issue%20with%20your%20payment.%20Please%20contact%20us%20to%20resolve%20this.`
+    toast({
+      title: 'Email Client Opened',
+      description: `Opening email to contact ${tenantName}`,
+    })
+  }
+
+  // Manage subscription - show modal
+  const handleManageSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription)
+    setShowSubscriptionModal(true)
+  }
+
+  // View invoice - show modal
+  const handleViewInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice)
+    setShowInvoiceModal(true)
+  }
+
+  // Download invoice as PDF (placeholder)
+  const handleDownloadInvoice = (invoice: Invoice) => {
+    try {
+      // In production, this would call an API to generate actual PDF
+      const invoiceContent = `
+INVOICE
+=======
+Invoice ID: ${invoice.id}
+Tenant: ${invoice.tenantName}
+Amount: $${invoice.amount.toLocaleString()}
+Status: ${invoice.status}
+Due Date: ${invoice.dueDate.toLocaleDateString()}
+${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
+      `.trim()
+
+      const blob = new Blob([invoiceContent], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `invoice-${invoice.id}.txt`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast({
+        title: 'Invoice Downloaded',
+        description: `Invoice ${invoice.id} has been downloaded`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Download Failed',
+        description: 'Unable to download invoice',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Edit plan - show modal
+  const handleEditPlan = (plan: typeof mockPlans[0]) => {
+    setSelectedPlan(plan)
+    setShowEditPlanModal(true)
   }
 
   const getStatusColor = (status: SubscriptionStatus | InvoiceStatus) => {
@@ -194,7 +321,10 @@ export default function Billing() {
           <p className="text-text-muted">Revenue and subscription management</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors">
+          <button
+            onClick={handleExportReport}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+          >
             <DocumentTextIcon className="w-4 h-4" />
             Export Report
           </button>
@@ -312,7 +442,10 @@ export default function Billing() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="px-3 py-1 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white text-sm transition-colors">
+                      <button
+                        onClick={() => handleContactCustomer(sub.tenantName)}
+                        className="px-3 py-1 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white text-sm transition-colors"
+                      >
                         Contact
                       </button>
                       <button
@@ -386,7 +519,10 @@ export default function Billing() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <button className="text-stratum-400 hover:text-stratum-300 text-sm">
+                    <button
+                      onClick={() => handleManageSubscription(sub)}
+                      className="text-stratum-400 hover:text-stratum-300 text-sm"
+                    >
                       Manage
                     </button>
                   </td>
@@ -431,10 +567,16 @@ export default function Billing() {
                   <td className="p-4 text-text-muted">{invoice.dueDate.toLocaleDateString()}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <button className="text-stratum-400 hover:text-stratum-300 text-sm">
+                      <button
+                        onClick={() => handleViewInvoice(invoice)}
+                        className="text-stratum-400 hover:text-stratum-300 text-sm"
+                      >
                         View
                       </button>
-                      <button className="text-text-muted hover:text-white text-sm">
+                      <button
+                        onClick={() => handleDownloadInvoice(invoice)}
+                        className="text-text-muted hover:text-white text-sm"
+                      >
                         Download
                       </button>
                     </div>
@@ -479,11 +621,255 @@ export default function Billing() {
                 ))}
               </ul>
 
-              <button className="w-full mt-6 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors">
+              <button
+                onClick={() => handleEditPlan(plan)}
+                className="w-full mt-6 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+              >
                 Edit Plan
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Invoice Detail Modal */}
+      {showInvoiceModal && selectedInvoice && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-surface-secondary rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-white">Invoice Details</h2>
+              <button
+                onClick={() => {
+                  setShowInvoiceModal(false)
+                  setSelectedInvoice(null)
+                }}
+                className="text-text-muted hover:text-white"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-text-muted">Invoice ID</span>
+                <span className="text-white font-mono">{selectedInvoice.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Tenant</span>
+                <span className="text-white">{selectedInvoice.tenantName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Amount</span>
+                <span className="text-white font-semibold">${selectedInvoice.amount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Status</span>
+                <span className={cn('px-2 py-1 rounded-full text-xs font-medium', getStatusColor(selectedInvoice.status))}>
+                  {selectedInvoice.status}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Due Date</span>
+                <span className="text-white">{selectedInvoice.dueDate.toLocaleDateString()}</span>
+              </div>
+              {selectedInvoice.paidAt && (
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Paid At</span>
+                  <span className="text-white">{selectedInvoice.paidAt.toLocaleDateString()}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => handleDownloadInvoice(selectedInvoice)}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-stratum-500 text-white hover:bg-stratum-600 transition-colors"
+              >
+                <ArrowDownTrayIcon className="w-4 h-4" />
+                Download
+              </button>
+              <button
+                onClick={() => {
+                  setShowInvoiceModal(false)
+                  setSelectedInvoice(null)
+                }}
+                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Management Modal */}
+      {showSubscriptionModal && selectedSubscription && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-surface-secondary rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-white">Manage Subscription</h2>
+              <button
+                onClick={() => {
+                  setShowSubscriptionModal(false)
+                  setSelectedSubscription(null)
+                }}
+                className="text-text-muted hover:text-white"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-text-muted">Tenant</span>
+                <span className="text-white font-semibold">{selectedSubscription.tenantName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Plan</span>
+                <span className="px-2 py-1 rounded bg-stratum-500/10 text-stratum-400 text-sm capitalize">
+                  {selectedSubscription.plan}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Status</span>
+                <span className={cn('px-2 py-1 rounded-full text-xs font-medium', getStatusColor(selectedSubscription.status))}>
+                  {selectedSubscription.status.replace('_', ' ')}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">MRR</span>
+                <span className="text-white font-semibold">${selectedSubscription.mrr.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Payment Method</span>
+                <span className="text-white">{selectedSubscription.paymentMethod}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Next Billing</span>
+                <span className="text-white">{selectedSubscription.nextBilling.toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Start Date</span>
+                <span className="text-white">{selectedSubscription.startDate.toLocaleDateString()}</span>
+              </div>
+              {selectedSubscription.failedPayments > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Failed Payments</span>
+                  <span className="text-danger font-semibold">{selectedSubscription.failedPayments}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => handleContactCustomer(selectedSubscription.tenantName)}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+              >
+                <EnvelopeIcon className="w-4 h-4" />
+                Contact
+              </button>
+              {selectedSubscription.status === 'past_due' && (
+                <button
+                  onClick={() => {
+                    handleRetryPayment(selectedSubscription.id)
+                    setShowSubscriptionModal(false)
+                    setSelectedSubscription(null)
+                  }}
+                  disabled={retryPaymentMutation.isPending}
+                  className="flex-1 py-2 rounded-lg bg-danger/10 text-danger hover:bg-danger/20 transition-colors disabled:opacity-50"
+                >
+                  {retryPaymentMutation.isPending ? 'Retrying...' : 'Retry Payment'}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowSubscriptionModal(false)
+                  setSelectedSubscription(null)
+                }}
+                className="flex-1 py-2 rounded-lg bg-stratum-500 text-white hover:bg-stratum-600 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Plan Modal */}
+      {showEditPlanModal && selectedPlan && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-surface-secondary rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-white">Edit Plan: {selectedPlan.name}</h2>
+              <button
+                onClick={() => {
+                  setShowEditPlanModal(false)
+                  setSelectedPlan(null)
+                }}
+                className="text-text-muted hover:text-white"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-text-muted mb-2">Plan Name</label>
+                <input
+                  type="text"
+                  defaultValue={selectedPlan.name}
+                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-text-muted mb-2">Price ($/month)</label>
+                <input
+                  type="number"
+                  defaultValue={selectedPlan.price}
+                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-text-muted mb-2">Features (one per line)</label>
+                <textarea
+                  defaultValue={selectedPlan.features.join('\n')}
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50 resize-none"
+                />
+              </div>
+              <div className="pt-2 border-t border-white/10">
+                <div className="text-sm text-text-muted">
+                  Current Subscribers: <span className="text-white font-semibold">{selectedPlan.subscribers}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  toast({
+                    title: 'Plan Updated',
+                    description: `${selectedPlan.name} plan has been updated successfully`,
+                  })
+                  setShowEditPlanModal(false)
+                  setSelectedPlan(null)
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-stratum-500 text-white hover:bg-stratum-600 transition-colors"
+              >
+                <PencilSquareIcon className="w-4 h-4" />
+                Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditPlanModal(false)
+                  setSelectedPlan(null)
+                }}
+                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -354,6 +354,22 @@ export function usePublishDraft(tenantId: number) {
   })
 }
 
+export function useDeleteCampaignDraft(tenantId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (draftId: string) => {
+      const response = await apiClient.delete(
+        `/tenant/${tenantId}/campaign-drafts/${draftId}`
+      )
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaign-drafts', tenantId] })
+    },
+  })
+}
+
 // =============================================================================
 // Publish Log Hooks
 // =============================================================================

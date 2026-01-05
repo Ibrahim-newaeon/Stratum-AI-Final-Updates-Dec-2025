@@ -7,6 +7,8 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTenantStore } from '@/stores/tenantStore'
+import { useUpdateTenantSettings } from '@/api/hooks'
+import { useToast } from '@/components/ui/use-toast'
 import {
   CogIcon,
   BellIcon,
@@ -33,6 +35,7 @@ const sections: SettingsSection[] = [
 export default function TenantSettings() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const { tenant } = useTenantStore()
+  const { toast } = useToast()
   const [activeSection, setActiveSection] = useState('general')
   const [settings, setSettings] = useState({
     name: tenant?.name || '',
@@ -47,9 +50,37 @@ export default function TenantSettings() {
     approvalRequired: true,
   })
 
-  const handleSave = () => {
-    // In production: await api.put(`/tenant/${tenantId}/settings`, settings)
-    alert('Settings saved!')
+  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
+  const updateSettingsMutation = useUpdateTenantSettings(tenantIdNum)
+
+  const handleSave = async () => {
+    if (!tenantIdNum) {
+      toast({
+        title: 'Error',
+        description: 'Invalid tenant ID',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      await updateSettingsMutation.mutateAsync({
+        timezone: settings.timezone,
+        currency: settings.currency,
+        email_notifications: settings.emailNotifications,
+        slack_notifications: settings.slackNotifications,
+      })
+      toast({
+        title: 'Success',
+        description: 'Settings saved successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save settings',
+        variant: 'destructive',
+      })
+    }
   }
 
   const renderContent = () => {
@@ -255,9 +286,15 @@ export default function TenantSettings() {
               <p className="text-sm text-muted-foreground mt-2">
                 Invite team members and manage their access to this tenant.
               </p>
-              <button className="mt-4 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
+              {/* TODO: Implement team management navigation when /app/:tenantId/team route is available */}
+              <button
+                disabled
+                className="mt-4 px-4 py-2 rounded-lg bg-primary text-primary-foreground opacity-50 cursor-not-allowed"
+                title="Team management coming soon"
+              >
                 Manage Team
               </button>
+              <p className="text-xs text-muted-foreground mt-2">Coming soon</p>
             </div>
           </div>
         )
@@ -314,9 +351,15 @@ export default function TenantSettings() {
           <div className="mt-6 flex justify-end">
             <button
               onClick={handleSave}
-              className="px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              disabled={updateSettingsMutation.isPending}
+              className={cn(
+                'px-6 py-2 rounded-lg bg-primary text-primary-foreground transition-opacity',
+                updateSettingsMutation.isPending
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:opacity-90'
+              )}
             >
-              Save Changes
+              {updateSettingsMutation.isPending ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
