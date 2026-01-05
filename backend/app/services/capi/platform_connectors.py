@@ -655,3 +655,185 @@ class LinkedInCAPIConnector(BaseCAPIConnector):
                 "amount": str(event.get("parameters", {}).get("value", "0")),
             },
         }
+
+
+class WhatsAppCAPIConnector(BaseCAPIConnector):
+    """
+    WhatsApp Business Cloud API connector.
+
+    Required credentials:
+    - phone_number_id: WhatsApp Business phone number ID
+    - business_account_id: WhatsApp Business Account ID
+    - access_token: Meta Graph API access token
+    - webhook_verify_token: Custom token for webhook verification
+    """
+
+    PLATFORM_NAME = "whatsapp"
+    API_VERSION = "v18.0"
+    BASE_URL = "https://graph.facebook.com"
+
+    def __init__(self):
+        super().__init__()
+        self.phone_number_id: Optional[str] = None
+        self.business_account_id: Optional[str] = None
+        self.access_token: Optional[str] = None
+        self.webhook_verify_token: Optional[str] = None
+
+    async def connect(self, credentials: Dict[str, str]) -> ConnectionResult:
+        """Connect to WhatsApp Business Cloud API."""
+        self.phone_number_id = credentials.get("phone_number_id")
+        self.business_account_id = credentials.get("business_account_id")
+        self.access_token = credentials.get("access_token")
+        self.webhook_verify_token = credentials.get("webhook_verify_token")
+
+        if not self.phone_number_id or not self.access_token:
+            return ConnectionResult(
+                status=ConnectionStatus.ERROR,
+                platform=self.PLATFORM_NAME,
+                message="Missing phone_number_id or access_token",
+            )
+
+        return await self.test_connection()
+
+    async def test_connection(self) -> ConnectionResult:
+        """Test connection to WhatsApp Business API."""
+        if not self.phone_number_id or not self.access_token:
+            return ConnectionResult(
+                status=ConnectionStatus.DISCONNECTED,
+                platform=self.PLATFORM_NAME,
+                message="Not configured",
+            )
+
+        try:
+            async with httpx.AsyncClient() as client:
+                # Test with a phone number info request
+                url = f"{self.BASE_URL}/{self.API_VERSION}/{self.phone_number_id}"
+                response = await client.get(
+                    url,
+                    params={"access_token": self.access_token},
+                    timeout=10.0,
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    self._connected = True
+                    return ConnectionResult(
+                        status=ConnectionStatus.CONNECTED,
+                        platform=self.PLATFORM_NAME,
+                        message="Successfully connected to WhatsApp Business API",
+                        details={
+                            "display_phone_number": data.get("display_phone_number"),
+                            "verified_name": data.get("verified_name"),
+                        },
+                    )
+                else:
+                    error = response.json().get("error", {})
+                    return ConnectionResult(
+                        status=ConnectionStatus.ERROR,
+                        platform=self.PLATFORM_NAME,
+                        message=error.get("message", "Connection failed"),
+                    )
+
+        except Exception as e:
+            logger.error(f"WhatsApp API connection error: {e}")
+            return ConnectionResult(
+                status=ConnectionStatus.ERROR,
+                platform=self.PLATFORM_NAME,
+                message=str(e),
+            )
+
+    async def send_events(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+        """
+        Send messages/events via WhatsApp Business API.
+
+        Note: WhatsApp is primarily a messaging platform, not a conversion tracking platform.
+        This connector allows sending template messages for marketing/notification purposes.
+        """
+        if not self._connected:
+            return CAPIResponse(
+                success=False,
+                events_received=len(events),
+                events_processed=0,
+                errors=[{"message": "Not connected"}],
+                platform=self.PLATFORM_NAME,
+            )
+
+        processed = 0
+        errors = []
+
+        for event in events:
+            try:
+                result = await self._send_message(event)
+                if result:
+                    processed += 1
+                else:
+                    errors.append({"message": f"Failed to send event: {event.get('event_name')}"})
+            except Exception as e:
+                errors.append({"message": str(e)})
+
+        return CAPIResponse(
+            success=len(errors) == 0,
+            events_received=len(events),
+            events_processed=processed,
+            errors=errors,
+            platform=self.PLATFORM_NAME,
+        )
+
+    async def _send_message(self, event: Dict[str, Any]) -> bool:
+        """Send a WhatsApp message based on event data."""
+        user_data = event.get("user_data", {})
+        phone = user_data.get("phone") or user_data.get("ph")
+
+        if not phone:
+            return False
+
+        # Clean phone number (remove + and spaces)
+        phone = phone.replace("+", "").replace(" ", "").replace("-", "")
+
+        try:
+            async with httpx.AsyncClient() as client:
+                url = f"{self.BASE_URL}/{self.API_VERSION}/{self.phone_number_id}/messages"
+                headers = {
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                }
+
+                # Build message payload
+                template_name = event.get("parameters", {}).get("template_name", "hello_world")
+                language = event.get("parameters", {}).get("language", "en")
+
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": phone,
+                    "type": "template",
+                    "template": {
+                        "name": template_name,
+                        "language": {"code": language},
+                    },
+                }
+
+                # Add template components if provided
+                components = event.get("parameters", {}).get("components")
+                if components:
+                    payload["template"]["components"] = components
+
+                response = await client.post(url, json=payload, headers=headers, timeout=30.0)
+
+                if response.status_code == 200:
+                    return True
+                else:
+                    logger.error(f"WhatsApp send error: {response.json()}")
+                    return False
+
+        except Exception as e:
+            logger.error(f"WhatsApp message send error: {e}")
+            return False
+
+    def _format_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Format event for WhatsApp API."""
+        return {
+            "event_name": event.get("event_name"),
+            "event_time": event.get("event_time", int(time.time())),
+            "user_data": event.get("user_data", {}),
+            "parameters": event.get("parameters", {}),
+        }

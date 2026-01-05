@@ -19,6 +19,7 @@ from .platform_connectors import (
     TikTokCAPIConnector,
     SnapchatCAPIConnector,
     LinkedInCAPIConnector,
+    WhatsAppCAPIConnector,
     ConnectionStatus,
     CAPIResponse,
     ConnectionResult,
@@ -59,6 +60,7 @@ class CAPIService:
         "tiktok": TikTokCAPIConnector,
         "snapchat": SnapchatCAPIConnector,
         "linkedin": LinkedInCAPIConnector,
+        "whatsapp": WhatsAppCAPIConnector,
     }
 
     def __init__(self):
@@ -433,6 +435,18 @@ class CAPIService:
                 "documentation": "https://learn.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/conversion-tracking",
                 "key_fields": ["email", "first_name", "last_name", "external_id"],
                 "events_supported": ["purchase", "lead", "sign_up", "view_content"],
+            },
+            "whatsapp": {
+                "name": "WhatsApp Business Cloud API",
+                "credentials_needed": [
+                    {"field": "phone_number_id", "label": "Phone Number ID", "help": "From WhatsApp Business Manager > Phone Numbers"},
+                    {"field": "business_account_id", "label": "Business Account ID", "help": "WhatsApp Business Account ID from Meta Business Suite"},
+                    {"field": "access_token", "label": "Access Token", "help": "Permanent token from System User in Business Settings"},
+                    {"field": "webhook_verify_token", "label": "Webhook Verify Token", "help": "Custom token for webhook verification"},
+                ],
+                "documentation": "https://developers.facebook.com/docs/whatsapp/cloud-api",
+                "key_fields": ["phone"],
+                "events_supported": ["template_message", "text_message", "media_message"],
             },
         }
 
