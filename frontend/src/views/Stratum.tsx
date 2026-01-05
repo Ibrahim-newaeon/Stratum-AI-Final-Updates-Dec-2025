@@ -967,37 +967,96 @@ interface AlertRule {
 // Alert Configuration Modal Component
 function AlertConfigurationModal({
   anomaly,
+  existingAlert,
+  mode = 'create',
   onClose,
   onSave
 }: {
-  anomaly: Anomaly | null
+  anomaly?: Anomaly | null
+  existingAlert?: AlertRule | null
+  mode?: 'create' | 'edit' | 'duplicate'
   onClose: () => void
-  onSave: (rule: AlertRule) => void
+  onSave: (rule: AlertRule, isEdit: boolean) => void
 }) {
   const [isSaving, setIsSaving] = useState(false)
-  const [alertRule, setAlertRule] = useState<AlertRule>({
-    name: anomaly ? `${anomaly.metric} Alert` : 'New Alert',
-    metric: anomaly?.metric || 'CTR',
-    condition: anomaly?.type === 'negative' ? 'below' : 'above',
-    threshold: anomaly?.expected || 0,
-    frequency: 'realtime',
-    channels: {
-      email: true,
-      whatsapp: false,
-      inApp: true,
-      slack: false,
-    },
-    enabled: true,
-  })
+  const [hasChanges, setHasChanges] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!anomaly) return null
+  // Initialize alert rule based on mode
+  const getInitialAlertRule = (): AlertRule => {
+    if (existingAlert) {
+      if (mode === 'duplicate') {
+        return {
+          ...existingAlert,
+          id: undefined, // Remove ID for duplicate
+          name: `Copy of ${existingAlert.name}`,
+        }
+      }
+      return { ...existingAlert }
+    }
+    if (anomaly) {
+      return {
+        name: `${anomaly.metric} Alert`,
+        metric: anomaly.metric || 'CTR',
+        condition: anomaly.type === 'negative' ? 'below' : 'above',
+        threshold: anomaly.expected || 0,
+        frequency: 'realtime',
+        channels: {
+          email: true,
+          whatsapp: false,
+          inApp: true,
+          slack: false,
+        },
+        enabled: true,
+      }
+    }
+    return {
+      name: 'New Alert',
+      metric: 'CTR',
+      condition: 'above',
+      threshold: 0,
+      frequency: 'realtime',
+      channels: {
+        email: true,
+        whatsapp: false,
+        inApp: true,
+        slack: false,
+      },
+      enabled: true,
+    }
+  }
+
+  const [alertRule, setAlertRule] = useState<AlertRule>(getInitialAlertRule())
+  const [originalName] = useState(existingAlert?.name || '')
+
+  if (!anomaly && !existingAlert) return null
 
   const handleSave = async () => {
+    // Validate duplicate - must have changes
+    if (mode === 'duplicate' && !hasChanges) {
+      setError('Please modify the alert before saving. Duplicate rules are not allowed.')
+      return
+    }
+
+    // Check if name is still the same as original for duplicates
+    if (mode === 'duplicate' && alertRule.name === `Copy of ${originalName}`) {
+      setError('Please change the alert name before saving.')
+      return
+    }
+
+    setError(null)
     setIsSaving(true)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
-    onSave(alertRule)
+    onSave(alertRule, mode === 'edit')
     setIsSaving(false)
+  }
+
+  // Track changes for duplicate validation
+  const handleFieldChange = (updates: Partial<AlertRule>) => {
+    setAlertRule(prev => ({ ...prev, ...updates }))
+    setHasChanges(true)
+    setError(null)
   }
 
   const updateChannel = (channel: keyof AlertRule['channels']) => {
@@ -1008,6 +1067,24 @@ function AlertConfigurationModal({
         [channel]: !prev.channels[channel],
       }
     }))
+    setHasChanges(true)
+    setError(null)
+  }
+
+  const getModalTitle = () => {
+    switch (mode) {
+      case 'edit': return 'Edit Alert Rule'
+      case 'duplicate': return 'Duplicate Alert Rule'
+      default: return 'Create Alert Rule'
+    }
+  }
+
+  const getButtonText = () => {
+    switch (mode) {
+      case 'edit': return 'Save Changes'
+      case 'duplicate': return 'Create Duplicate'
+      default: return 'Create Alert Rule'
+    }
   }
 
   const metrics = [
@@ -1045,9 +1122,11 @@ function AlertConfigurationModal({
               <Bell className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-semibold text-lg">Create Alert Rule</h2>
+              <h2 className="font-semibold text-lg">{getModalTitle()}</h2>
               <p className="text-xs text-muted-foreground">
-                Get notified when metrics exceed thresholds
+                {mode === 'duplicate'
+                  ? 'Modify the alert before saving'
+                  : 'Get notified when metrics exceed thresholds'}
               </p>
             </div>
           </div>
@@ -1061,13 +1140,27 @@ function AlertConfigurationModal({
 
         {/* Content */}
         <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Duplicate Warning */}
+          {mode === 'duplicate' && (
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 text-sm">
+              You must modify the alert name or settings before saving to avoid duplicate rules.
+            </div>
+          )}
+
           {/* Alert Name */}
           <div>
             <label className="block text-sm font-medium mb-2">Alert Name</label>
             <input
               type="text"
               value={alertRule.name}
-              onChange={(e) => setAlertRule(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => handleFieldChange({ name: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
               placeholder="e.g., CTR Drop Alert"
             />
@@ -1078,7 +1171,7 @@ function AlertConfigurationModal({
             <label className="block text-sm font-medium mb-2">Metric to Monitor</label>
             <select
               value={alertRule.metric}
-              onChange={(e) => setAlertRule(prev => ({ ...prev, metric: e.target.value }))}
+              onChange={(e) => handleFieldChange({ metric: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
             >
               {metrics.map(metric => (
@@ -1093,10 +1186,9 @@ function AlertConfigurationModal({
               <label className="block text-sm font-medium mb-2">Condition</label>
               <select
                 value={alertRule.condition}
-                onChange={(e) => setAlertRule(prev => ({
-                  ...prev,
+                onChange={(e) => handleFieldChange({
                   condition: e.target.value as AlertRule['condition']
-                }))}
+                })}
                 className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
               >
                 {conditions.map(cond => (
@@ -1111,10 +1203,9 @@ function AlertConfigurationModal({
               <input
                 type="number"
                 value={alertRule.threshold}
-                onChange={(e) => setAlertRule(prev => ({
-                  ...prev,
+                onChange={(e) => handleFieldChange({
                   threshold: parseFloat(e.target.value) || 0
-                }))}
+                })}
                 className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
                 step={alertRule.condition.includes('change') ? '1' : '0.1'}
               />
@@ -1142,10 +1233,9 @@ function AlertConfigurationModal({
               {frequencies.map(freq => (
                 <button
                   key={freq.value}
-                  onClick={() => setAlertRule(prev => ({
-                    ...prev,
-                    frequency: freq.value as AlertRule['frequency']
-                  }))}
+                  onClick={() => {
+                    handleFieldChange({ frequency: freq.value as AlertRule['frequency'] })
+                  }}
                   className={cn(
                     'p-3 rounded-lg border text-center transition-all',
                     alertRule.frequency === freq.value
@@ -1279,12 +1369,12 @@ function AlertConfigurationModal({
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Creating...
+                {mode === 'edit' ? 'Saving...' : 'Creating...'}
               </>
             ) : (
               <>
                 <Bell className="w-4 h-4" />
-                Create Alert Rule
+                {getButtonText()}
               </>
             )}
           </button>
@@ -1302,6 +1392,8 @@ export function Stratum() {
   const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null)
   const [reviewedAnomalies, setReviewedAnomalies] = useState<number[]>([])
   const [alertConfigAnomaly, setAlertConfigAnomaly] = useState<Anomaly | null>(null)
+  const [editingAlert, setEditingAlert] = useState<AlertRule | null>(null)
+  const [alertModalMode, setAlertModalMode] = useState<'create' | 'edit' | 'duplicate'>('create')
   const [createdAlerts, setCreatedAlerts] = useState<AlertRule[]>([])
 
   // Get tenant ID from tenant store
@@ -1380,12 +1472,35 @@ export function Stratum() {
   }
 
   // Handle alert rule save
-  const handleSaveAlertRule = (rule: AlertRule) => {
-    const ruleWithId = { ...rule, id: `alert-${Date.now()}` }
-    setCreatedAlerts(prev => [...prev, ruleWithId])
+  const handleSaveAlertRule = (rule: AlertRule, isEdit: boolean) => {
+    if (isEdit && rule.id) {
+      // Update existing alert
+      setCreatedAlerts(prev => prev.map(alert =>
+        alert.id === rule.id ? rule : alert
+      ))
+      console.log('Alert rule updated:', rule)
+    } else {
+      // Create new alert
+      const ruleWithId = { ...rule, id: `alert-${Date.now()}` }
+      setCreatedAlerts(prev => [...prev, ruleWithId])
+      console.log('Alert rule created:', ruleWithId)
+    }
+    // Close modal and reset state
     setAlertConfigAnomaly(null)
-    // Here you would typically make an API call to save the alert rule
-    console.log('Alert rule created:', ruleWithId)
+    setEditingAlert(null)
+    setAlertModalMode('create')
+  }
+
+  // Handle edit alert
+  const handleEditAlert = (alert: AlertRule) => {
+    setEditingAlert(alert)
+    setAlertModalMode('edit')
+  }
+
+  // Handle duplicate alert
+  const handleDuplicateAlert = (alert: AlertRule) => {
+    setEditingAlert(alert)
+    setAlertModalMode('duplicate')
   }
 
   // Handle toggle alert enabled/disabled
@@ -1835,6 +1950,24 @@ export function Stratum() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
+                          handleEditAlert(alert)
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-primary/30 text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDuplicateAlert(alert)
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-blue-500/30 text-blue-500 bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
+                      >
+                        Duplicate
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
                           handleToggleAlert(alert.id!)
                         }}
                         className={cn(
@@ -1883,10 +2016,16 @@ export function Stratum() {
       )}
 
       {/* Alert Configuration Modal */}
-      {alertConfigAnomaly && (
+      {(alertConfigAnomaly || editingAlert) && (
         <AlertConfigurationModal
           anomaly={alertConfigAnomaly}
-          onClose={() => setAlertConfigAnomaly(null)}
+          existingAlert={editingAlert}
+          mode={alertModalMode}
+          onClose={() => {
+            setAlertConfigAnomaly(null)
+            setEditingAlert(null)
+            setAlertModalMode('create')
+          }}
           onSave={handleSaveAlertRule}
         />
       )}
