@@ -9,7 +9,7 @@ import { useParams } from 'react-router-dom'
 import {
   useAttributionSummary,
   useTopConversionPaths,
-  useAttributionComparison,
+  useCompareModels,
   useTrainedModels,
   useTrainMarkovModel,
   useTrainShapleyModel,
@@ -51,7 +51,7 @@ export default function Attribution() {
     model: selectedModel,
   })
   const { data: topPaths } = useTopConversionPaths({ ...dateRange, limit: 10 })
-  const { data: comparison } = useAttributionComparison({
+  const { data: comparison } = useCompareModels({
     ...dateRange,
     models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'],
   })

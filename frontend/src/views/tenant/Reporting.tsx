@@ -12,8 +12,8 @@ import {
   useReportExecutions,
   useDeliveryChannelConfigs,
   useGenerateReport,
-  usePauseSchedule,
-  useResumeSchedule,
+  usePauseReportSchedule,
+  useResumeReportSchedule,
   useCreateReportTemplate,
 } from '@/api/hooks'
 import {
@@ -42,8 +42,8 @@ export default function Reporting() {
   const { data: executions } = useReportExecutions({ limit: 20 })
   const { data: deliveryConfigs } = useDeliveryChannelConfigs()
   const generateReport = useGenerateReport()
-  const pauseSchedule = usePauseSchedule()
-  const resumeSchedule = useResumeSchedule()
+  const pauseSchedule = usePauseReportSchedule()
+  const resumeSchedule = useResumeReportSchedule()
 
   const tabs = [
     { id: 'templates' as TabType, label: 'Templates' },

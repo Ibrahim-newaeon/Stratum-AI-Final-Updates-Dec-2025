@@ -246,19 +246,18 @@ export {
 // Attribution hooks
 export {
   useAttributionSummary,
-  useAttributionTimeSeries,
-  useChannelInteractions,
+  useDailyAttributedRevenue,
+  useChannelTransitions,
   useTopConversionPaths,
-  useAttributionComparison,
-  useRevenueByChannel,
+  useAssistedConversions,
+  useTimeLagReport,
   useTrainedModels,
   useTrainedModel,
   useTrainMarkovModel,
   useTrainShapleyModel,
   useCompareModels,
-  useApplyAttributionModel,
-  useDeleteTrainedModel,
-  useModelPerformance,
+  useArchiveModel,
+  useActivateModel,
 } from './attribution'
 
 // Reporting hooks
@@ -273,15 +272,15 @@ export {
   useCreateReportSchedule,
   useUpdateReportSchedule,
   useDeleteReportSchedule,
-  usePauseSchedule,
-  useResumeSchedule,
+  usePauseReportSchedule,
+  useResumeReportSchedule,
   useGenerateReport,
   useReportExecutions,
   useReportExecution,
-  useReportDeliveries,
+  useDeliveryStatus,
   useDeliveryChannelConfigs,
   useUpdateDeliveryChannelConfig,
-  useTestDeliveryChannel,
+  useVerifyDeliveryChannel,
 } from './reporting'
 
 // Tenant Dashboard hooks
