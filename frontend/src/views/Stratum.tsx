@@ -173,12 +173,161 @@ const mockAttributionData = [
   { name: 'Time Decay', value: 15, color: '#8b5cf6' },
 ]
 
-// Mock anomaly data
+// Mock anomaly data with extended details
 const mockAnomalies = [
-  { date: 'Nov 28', metric: 'CTR', value: 4.2, expected: 2.8, deviation: '+50%', type: 'positive' },
-  { date: 'Nov 26', metric: 'CPA', value: 28.5, expected: 18.2, deviation: '+56%', type: 'negative' },
-  { date: 'Nov 24', metric: 'Conversions', value: 156, expected: 89, deviation: '+75%', type: 'positive' },
+  {
+    id: 1,
+    date: 'Nov 28',
+    metric: 'CTR',
+    value: 4.2,
+    expected: 2.8,
+    deviation: '+50%',
+    type: 'positive',
+    // Extended details
+    fullDescription: 'Click-through rate spiked significantly above the expected baseline. This anomaly was detected across multiple ad groups in your "Summer Sale 2024" campaign. The spike correlates with a viral social media mention of your brand.',
+    campaign: 'Summer Sale 2024',
+    adGroup: 'Urban Millennials',
+    platform: 'Meta',
+    severity: 'high',
+    historicalData: [
+      { date: 'Nov 22', value: 2.6 },
+      { date: 'Nov 23', value: 2.7 },
+      { date: 'Nov 24', value: 2.9 },
+      { date: 'Nov 25', value: 2.8 },
+      { date: 'Nov 26', value: 3.1 },
+      { date: 'Nov 27', value: 3.4 },
+      { date: 'Nov 28', value: 4.2 },
+    ],
+    possibleCauses: [
+      'Viral social media mention detected on Twitter/X',
+      'Competitor went offline during this period',
+      'New creative variant showing strong engagement',
+      'Seasonal trend alignment',
+    ],
+    suggestedActions: [
+      'Scale budget by 25% to capitalize on momentum',
+      'Create lookalike audience from engaged users',
+      'Document successful creative for future campaigns',
+      'Set up automated scaling rules for similar events',
+    ],
+    relatedMetrics: {
+      impressions: { value: 125000, change: 12 },
+      clicks: { value: 5250, change: 68 },
+      conversions: { value: 312, change: 45 },
+      spend: { value: 2450, change: 15 },
+    },
+    detectedAt: '2 hours ago',
+    confidence: 94,
+  },
+  {
+    id: 2,
+    date: 'Nov 26',
+    metric: 'CPA',
+    value: 28.5,
+    expected: 18.2,
+    deviation: '+56%',
+    type: 'negative',
+    fullDescription: 'Cost per acquisition increased sharply, indicating potential issues with audience targeting or ad relevance. This spike occurred primarily in the "Brand Awareness Q4" campaign, specifically in the retargeting ad group.',
+    campaign: 'Brand Awareness Q4',
+    adGroup: 'Retargeting - Cart Abandoners',
+    platform: 'Google Ads',
+    severity: 'critical',
+    historicalData: [
+      { date: 'Nov 20', value: 17.8 },
+      { date: 'Nov 21', value: 18.1 },
+      { date: 'Nov 22', value: 18.5 },
+      { date: 'Nov 23', value: 19.2 },
+      { date: 'Nov 24', value: 22.1 },
+      { date: 'Nov 25', value: 25.3 },
+      { date: 'Nov 26', value: 28.5 },
+    ],
+    possibleCauses: [
+      'Audience fatigue in retargeting segment',
+      'Increased competition during Black Friday period',
+      'Landing page performance degradation detected',
+      'Ad relevance score dropped from 8 to 5',
+    ],
+    suggestedActions: [
+      'Pause underperforming ad groups immediately',
+      'Refresh creative assets in retargeting campaigns',
+      'Review and optimize landing page load time',
+      'Adjust bid strategy to target CPA mode',
+    ],
+    relatedMetrics: {
+      impressions: { value: 89000, change: -5 },
+      clicks: { value: 1890, change: -18 },
+      conversions: { value: 66, change: -34 },
+      spend: { value: 1881, change: 8 },
+    },
+    detectedAt: '1 day ago',
+    confidence: 89,
+  },
+  {
+    id: 3,
+    date: 'Nov 24',
+    metric: 'Conversions',
+    value: 156,
+    expected: 89,
+    deviation: '+75%',
+    type: 'positive',
+    fullDescription: 'Conversion volume exceeded expectations by a significant margin. This surge was driven by strong performance in the "Holiday Promotions" campaign, particularly from email retargeting and organic search traffic.',
+    campaign: 'Holiday Promotions',
+    adGroup: 'Email Retargeting',
+    platform: 'Multi-channel',
+    severity: 'medium',
+    historicalData: [
+      { date: 'Nov 18', value: 78 },
+      { date: 'Nov 19', value: 82 },
+      { date: 'Nov 20', value: 85 },
+      { date: 'Nov 21', value: 91 },
+      { date: 'Nov 22', value: 112 },
+      { date: 'Nov 23', value: 134 },
+      { date: 'Nov 24', value: 156 },
+    ],
+    possibleCauses: [
+      'Black Friday early access promotion launched',
+      'Email campaign achieved 45% open rate',
+      'Organic search rankings improved for key terms',
+      'Referral traffic spike from partner website',
+    ],
+    suggestedActions: [
+      'Extend promotion period by 48 hours',
+      'Increase inventory allocation for top products',
+      'Send follow-up email to engaged non-converters',
+      'Document winning email subject lines',
+    ],
+    relatedMetrics: {
+      impressions: { value: 234000, change: 28 },
+      clicks: { value: 12400, change: 42 },
+      revenue: { value: 18720, change: 82 },
+      roas: { value: 4.8, change: 35 },
+    },
+    detectedAt: '3 days ago',
+    confidence: 91,
+  },
 ]
+
+// Type for anomaly
+interface Anomaly {
+  id: number
+  date: string
+  metric: string
+  value: number
+  expected: number
+  deviation: string
+  type: string
+  fullDescription?: string
+  campaign?: string
+  adGroup?: string
+  platform?: string
+  severity?: string
+  historicalData?: Array<{ date: string; value: number }>
+  possibleCauses?: string[]
+  suggestedActions?: string[]
+  relatedMetrics?: Record<string, { value: number; change: number }>
+  detectedAt?: string
+  confidence?: number
+}
 
 // Insight Detail Modal Component
 function InsightDetailModal({
@@ -480,11 +629,325 @@ function InsightDetailModal({
   )
 }
 
+// Anomaly Detail Modal Component
+function AnomalyDetailModal({
+  anomaly,
+  onClose,
+  onAction
+}: {
+  anomaly: Anomaly | null
+  onClose: () => void
+  onAction: (anomaly: Anomaly, action: string) => void
+}) {
+  const [selectedAction, setSelectedAction] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  if (!anomaly) return null
+
+  const handleAction = async (action: string) => {
+    setSelectedAction(action)
+    setIsProcessing(true)
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    onAction(anomaly, action)
+    setIsProcessing(false)
+    setSelectedAction(null)
+  }
+
+  const isPositive = anomaly.type === 'positive'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-end">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Slide-over Panel */}
+      <div className="relative w-full max-w-xl h-full bg-background shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
+        {/* Header */}
+        <div className={cn(
+          'sticky top-0 border-b px-6 py-4 flex items-start justify-between',
+          isPositive ? 'bg-green-500/5' : 'bg-red-500/5'
+        )}>
+          <div className="flex items-start gap-3">
+            <div className={cn(
+              'p-2 rounded-lg',
+              isPositive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+            )}>
+              {isPositive ? (
+                <TrendingUp className="w-5 h-5" />
+              ) : (
+                <AlertTriangle className="w-5 h-5" />
+              )}
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg">
+                {anomaly.metric} Anomaly Detected
+              </h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn(
+                  'px-2 py-0.5 rounded-full text-xs font-medium',
+                  isPositive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                )}>
+                  {isPositive ? 'Positive' : 'Negative'} Anomaly
+                </span>
+                <span className={cn(
+                  'px-2 py-0.5 rounded-full text-xs font-medium',
+                  anomaly.severity === 'critical' ? 'bg-red-500/10 text-red-500' :
+                  anomaly.severity === 'high' ? 'bg-amber-500/10 text-amber-500' :
+                  'bg-blue-500/10 text-blue-500'
+                )}>
+                  {anomaly.severity?.charAt(0).toUpperCase()}{anomaly.severity?.slice(1)} Severity
+                </span>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Detection Info */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground">Detected</p>
+              <p className="font-medium flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {anomaly.detectedAt || anomaly.date}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground">Platform</p>
+              <p className="font-medium">{anomaly.platform || 'Multi-channel'}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground">Campaign</p>
+              <p className="font-medium">{anomaly.campaign || 'All Campaigns'}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground">Ad Group</p>
+              <p className="font-medium">{anomaly.adGroup || 'All Ad Groups'}</p>
+            </div>
+          </div>
+
+          {/* Metric Comparison */}
+          <div className={cn(
+            'p-4 rounded-lg border',
+            isPositive ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'
+          )}>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium">{anomaly.metric} Value</span>
+              <span className={cn(
+                'text-2xl font-bold',
+                isPositive ? 'text-green-500' : 'text-red-500'
+              )}>
+                {anomaly.deviation}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Actual</p>
+                <p className="text-lg font-semibold">{anomaly.value}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Expected</p>
+                <p className="text-lg font-semibold text-muted-foreground">{anomaly.expected}</p>
+              </div>
+            </div>
+            {anomaly.confidence && (
+              <div className="mt-3 pt-3 border-t border-current/10">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Detection Confidence</span>
+                  <span className="font-medium">{anomaly.confidence}%</span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-background overflow-hidden">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      isPositive ? 'bg-green-500' : 'bg-red-500'
+                    )}
+                    style={{ width: `${anomaly.confidence}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Full Description */}
+          <div>
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              <Brain className="w-4 h-4 text-primary" />
+              AI Analysis
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {anomaly.fullDescription || `${anomaly.metric} showed a ${anomaly.deviation} deviation from expected values.`}
+            </p>
+          </div>
+
+          {/* Historical Trend */}
+          {anomaly.historicalData && (
+            <div>
+              <h3 className="font-medium mb-3 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                7-Day Trend
+              </h3>
+              <div className="h-[140px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={anomaly.historicalData}>
+                    <defs>
+                      <linearGradient id={`gradient-${anomaly.id}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={isPositive ? '#10b981' : '#ef4444'} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={isPositive ? '#10b981' : '#ef4444'} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '0.5rem',
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke={isPositive ? '#10b981' : '#ef4444'}
+                      strokeWidth={2}
+                      fill={`url(#gradient-${anomaly.id})`}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Related Metrics */}
+          {anomaly.relatedMetrics && (
+            <div>
+              <h3 className="font-medium mb-3 flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                Related Metrics
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(anomaly.relatedMetrics).map(([key, data]) => (
+                  <div key={key} className="p-3 rounded-lg border bg-card">
+                    <p className="text-xs text-muted-foreground capitalize">{key}</p>
+                    <p className="text-lg font-semibold">
+                      {key === 'spend' || key === 'revenue' ? '$' : ''}{formatCompactNumber(data.value)}
+                    </p>
+                    <p className={cn(
+                      'text-xs',
+                      data.change > 0 ? 'text-green-500' : 'text-red-500'
+                    )}>
+                      {data.change > 0 ? '+' : ''}{data.change}%
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Possible Causes */}
+          {anomaly.possibleCauses && (
+            <div>
+              <h3 className="font-medium mb-3 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                Possible Causes
+              </h3>
+              <ul className="space-y-2">
+                {anomaly.possibleCauses.map((cause, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm">
+                    <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs flex-shrink-0">
+                      {idx + 1}
+                    </span>
+                    <span>{cause}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Suggested Actions */}
+          {anomaly.suggestedActions && (
+            <div>
+              <h3 className="font-medium mb-3 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" />
+                Suggested Actions
+              </h3>
+              <ul className="space-y-2">
+                {anomaly.suggestedActions.map((action, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className={cn(
+                      'w-4 h-4 mt-0.5 flex-shrink-0',
+                      isPositive ? 'text-green-500' : 'text-amber-500'
+                    )} />
+                    <span>{action}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="sticky bottom-0 bg-background border-t px-6 py-4 flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-lg border hover:bg-muted transition-colors"
+          >
+            Dismiss
+          </button>
+          <button
+            onClick={() => handleAction('reviewed')}
+            disabled={isProcessing}
+            className="flex-1 px-4 py-2.5 rounded-lg border hover:bg-muted transition-colors flex items-center justify-center gap-2"
+          >
+            {isProcessing && selectedAction === 'reviewed' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4" />
+            )}
+            Mark Reviewed
+          </button>
+          <button
+            onClick={() => handleAction('alert')}
+            disabled={isProcessing}
+            className={cn(
+              'flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2',
+              isPositive
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-amber-500 hover:bg-amber-600 text-white'
+            )}
+          >
+            {isProcessing && selectedAction === 'alert' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Zap className="w-4 h-4" />
+            )}
+            Create Alert Rule
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Stratum() {
   const { t } = useTranslation()
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d')
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null)
   const [appliedInsights, setAppliedInsights] = useState<number[]>([])
+  const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null)
+  const [reviewedAnomalies, setReviewedAnomalies] = useState<number[]>([])
 
   // Get tenant ID from tenant store
   const tenantId = useTenantStore((state) => state.tenantId) ?? 1
@@ -542,6 +1005,20 @@ export function Stratum() {
     setSelectedInsight(null)
     // Here you would typically make an API call to apply the recommendation
     // For now, we just track it locally
+  }
+
+  // Handle anomaly card click
+  const handleAnomalyClick = (anomaly: Anomaly) => {
+    setSelectedAnomaly(anomaly)
+  }
+
+  // Handle anomaly action
+  const handleAnomalyAction = (anomaly: Anomaly, action: string) => {
+    if (action === 'reviewed') {
+      setReviewedAnomalies(prev => [...prev, anomaly.id])
+    }
+    setSelectedAnomaly(null)
+    // Here you would typically make an API call to create alert rule or mark as reviewed
   }
 
   const getInsightIcon = (type: string) => {
@@ -843,47 +1320,64 @@ export function Stratum() {
           </div>
 
           <div className="space-y-3">
-            {anomalies.map((anomaly, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'p-3 rounded-lg border-l-4',
-                  anomaly.type === 'positive'
-                    ? 'bg-green-500/10 border-green-500'
-                    : 'bg-red-500/10 border-red-500'
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {anomaly.type === 'positive' ? (
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className="font-medium text-sm">{anomaly.metric}</span>
+            {anomalies.map((anomaly, i) => {
+              const isReviewed = reviewedAnomalies.includes(anomaly.id)
+              return (
+                <div
+                  key={anomaly.id || i}
+                  onClick={() => !isReviewed && handleAnomalyClick(anomaly as Anomaly)}
+                  className={cn(
+                    'p-3 rounded-lg border-l-4 transition-all',
+                    anomaly.type === 'positive'
+                      ? 'bg-green-500/10 border-green-500'
+                      : 'bg-red-500/10 border-red-500',
+                    isReviewed
+                      ? 'opacity-60 cursor-default'
+                      : 'cursor-pointer hover:shadow-md'
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isReviewed ? (
+                        <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+                      ) : anomaly.type === 'positive' ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                      )}
+                      <span className="font-medium text-sm">{anomaly.metric}</span>
+                      {isReviewed && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
+                          Reviewed
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{anomaly.date}</span>
+                      {!isReviewed && <ArrowRight className="w-3 h-3 text-muted-foreground" />}
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">{anomaly.date}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Actual: </span>
-                    <span className="font-medium">{anomaly.value}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Expected: </span>
-                    <span className="font-medium">{anomaly.expected}</span>
-                  </div>
-                  <span
-                    className={cn(
-                      'font-semibold',
-                      anomaly.type === 'positive' ? 'text-green-500' : 'text-red-500'
-                    )}
-                  >
+                  <div className="mt-2 flex items-center justify-between text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Actual: </span>
+                      <span className="font-medium">{anomaly.value}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Expected: </span>
+                      <span className="font-medium">{anomaly.expected}</span>
+                    </div>
+                    <span
+                      className={cn(
+                        'font-semibold',
+                        anomaly.type === 'positive' ? 'text-green-500' : 'text-red-500'
+                      )}
+                    >
                     {anomaly.deviation}
                   </span>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
@@ -894,6 +1388,15 @@ export function Stratum() {
           insight={selectedInsight}
           onClose={() => setSelectedInsight(null)}
           onApply={handleApplyRecommendation}
+        />
+      )}
+
+      {/* Anomaly Detail Modal */}
+      {selectedAnomaly && (
+        <AnomalyDetailModal
+          anomaly={selectedAnomaly}
+          onClose={() => setSelectedAnomaly(null)}
+          onAction={handleAnomalyAction}
         />
       )}
     </div>
