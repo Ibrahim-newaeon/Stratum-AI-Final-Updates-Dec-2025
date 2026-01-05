@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI - Complete Feature Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1a1a2e;
+            background: #fff;
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        @media print {
+            body {
+                padding: 20px;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #0f0f23;
+            border-bottom: 4px solid #6366f1;
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            color: #1e293b;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        h3 {
+            font-size: 1.3em;
+            color: #334155;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            font-size: 1.1em;
+            color: #475569;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: #be185d;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .feature-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+            border-left: 4px solid #eab308;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left: 4px solid #22c55e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            border-radius: 16px;
+        }
+
+        .header-section h1 {
+            color: white;
+            border-bottom: none;
+        }
+
+        .header-section .subtitle {
+            color: #c7d2fe;
+        }
+
+        .version-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .version-info span {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .toc {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+
+        .toc h2 {
+            margin-top: 0;
+            border-bottom: none;
+        }
+
+        .toc ol {
+            columns: 2;
+            column-gap: 40px;
+        }
+
+        .toc li {
+            margin-bottom: 12px;
+        }
+
+        .toc a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .architecture-diagram {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 30px;
+            border-radius: 12px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85em;
+            line-height: 1.4;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metric-card .value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .metric-card .label {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef9c3; color: #854d0e; }
+        .badge-orange { background: #ffedd5; color: #9a3412; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-purple { background: #f3e8ff; color: #6b21a8; }
+
+        .workflow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .workflow-step {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .workflow-arrow {
+            color: #94a3b8;
+            font-size: 1.5em;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-section">
+        <h1>Stratum AI</h1>
+        <p class="subtitle">Complete Feature Documentation</p>
+        <div class="version-info">
+            <span>Version 2.0.0</span>
+            <span>January 2, 2026</span>
+            <span>Multi-Tenant SaaS Platform</span>
+        </div>
+    </div>
+
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ol>
+            <li><a href="#executive-summary">Executive Summary</a></li>
+            <li><a href="#architecture">Architecture Overview</a></li>
+            <li><a href="#core-features">Core Platform Features</a></li>
+            <li><a href="#data-layer">Data Layer</a></li>
+            <li><a href="#trust-layer">Trust Layer (USP)</a></li>
+            <li><a href="#intelligence-layer">Intelligence Layer</a></li>
+            <li><a href="#autopilot">Autopilot System</a></li>
+            <li><a href="#campaign-builder">Campaign Builder</a></li>
+            <li><a href="#meta-capi">Meta CAPI Integration</a></li>
+            <li><a href="#emq-fix">EMQ Fix System</a></li>
+            <li><a href="#cms">Landing Page CMS</a></li>
+            <li><a href="#admin">Admin & Superadmin</a></li>
+            <li><a href="#security">Security & Access Control</a></li>
+            <li><a href="#api">API Reference</a></li>
+            <li><a href="#deployment">Deployment Guide</a></li>
+        </ol>
+    </div>
+
+    <section id="executive-summary">
+        <h2>1. Executive Summary</h2>
+        <p>Stratum AI is an enterprise-grade marketing intelligence platform designed for agencies and brands managing multi-platform advertising campaigns.</p>
+
+        <div class="feature-box">
+            <h4>Key Capabilities</h4>
+            <ul>
+                <li><strong>Unified Campaign Management</strong> across Meta, Google, TikTok, and Snapchat</li>
+                <li><strong>AI-Powered Recommendations</strong> with confidence scoring and guardrails</li>
+                <li><strong>Signal Health Monitoring</strong> ensuring data quality for automation</li>
+                <li><strong>Autopilot Actions</strong> with approval workflows and budget caps</li>
+                <li><strong>Attribution Variance Tracking</strong> comparing platform vs GA4 data</li>
+                <li><strong>Multi-Tenant Architecture</strong> with plan-based feature gating</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="architecture" class="page-break">
+        <h2>2. Architecture Overview</h2>
+
+        <h3>Technology Stack</h3>
+        <table>
+            <tr><th>Component</th><th>Technology</th></tr>
+            <tr><td>Backend API</td><td>FastAPI (Python 3.11+)</td></tr>
+            <tr><td>Database</td><td>PostgreSQL 15+ with TimescaleDB</td></tr>
+            <tr><td>Cache</td><td>Redis 7+</td></tr>
+            <tr><td>Task Queue</td><td>Celery with Redis broker</td></tr>
+            <tr><td>Frontend</td><td>React 18 + TypeScript + Vite</td></tr>
+            <tr><td>State Management</td><td>Zustand + React Query</td></tr>
+            <tr><td>Authentication</td><td>JWT with refresh tokens</td></tr>
+            <tr><td>Container</td><td>Docker + Docker Compose</td></tr>
+        </table>
+
+        <h3>System Architecture</h3>
+        <div class="architecture-diagram">
++---------------------------------------------------------------------+
+|                        STRATUM AI PLATFORM                           |
++---------------------------------------------------------------------+
+|  +---------------+  +---------------+  +---------------+            |
+|  |    React      |  |    FastAPI    |  |    Celery     |            |
+|  |   Frontend    |--|    Backend    |--|    Workers    |            |
+|  +---------------+  +---------------+  +---------------+            |
+|         |                  |                  |                      |
+|         +------------------+------------------+                      |
+|                            |                                         |
+|  +---------------+  +---------------+  +---------------+            |
+|  |  PostgreSQL   |  |     Redis     |  |   Platform    |            |
+|  |   Database    |  |     Cache     |  |     APIs      |            |
+|  +---------------+  +---------------+  +---------------+            |
++---------------------------------------------------------------------+
+        </div>
+    </section>
+
+    <section id="core-features" class="page-break">
+        <h2>3. Core Platform Features</h2>
+
+        <h3>Multi-Tenant System</h3>
+        <ul>
+            <li><strong>Tenant Isolation:</strong> Complete data separation between tenants</li>
+            <li><strong>Plan-Based Tiers:</strong> Starter, Growth, Professional, Enterprise</li>
+            <li><strong>Feature Flags:</strong> Per-tenant feature gating</li>
+            <li><strong>White-Label Ready:</strong> Customizable branding per tenant</li>
+        </ul>
+
+        <h3>Role-Based Access Control</h3>
+        <table>
+            <tr><th>Role</th><th>Description</th><th>Permissions</th></tr>
+            <tr><td><span class="badge badge-purple">superadmin</span></td><td>Platform-wide access</td><td>All permissions</td></tr>
+            <tr><td><span class="badge badge-blue">admin</span></td><td>Tenant management</td><td>Manage users, settings, campaigns</td></tr>
+            <tr><td><span class="badge badge-green">analyst</span></td><td>Read + limited write</td><td>View analytics, create reports</td></tr>
+            <tr><td><span class="badge badge-yellow">viewer</span></td><td>Read-only access</td><td>View dashboards only</td></tr>
+        </table>
+
+        <h3>Permission System</h3>
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="value">campaigns:*</div>
+                <div class="label">Campaign Management</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">analytics:*</div>
+                <div class="label">Analytics Access</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">autopilot:*</div>
+                <div class="label">Autopilot Control</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="trust-layer" class="page-break">
+        <h2>5. Trust Layer (USP)</h2>
+        <p>The Trust Layer ensures data quality before enabling automation.</p>
+
+        <h3>Signal Health Monitoring</h3>
+        <div class="feature-box">
+            <h4>Metrics Tracked</h4>
+            <ul>
+                <li>EMQ Score (Event Match Quality)</li>
+                <li>Event Loss Percentage</li>
+                <li>Data Freshness (minutes since last sync)</li>
+                <li>API Error Rate</li>
+            </ul>
+        </div>
+
+        <h3>Health Status Levels</h3>
+        <table>
+            <tr><th>Status</th><th>Description</th><th>Automation</th></tr>
+            <tr><td><span class="badge badge-green">OK</span></td><td>All metrics healthy</td><td>Enabled</td></tr>
+            <tr><td><span class="badge badge-yellow">Risk</span></td><td>Minor issues detected</td><td>Enabled with warnings</td></tr>
+            <tr><td><span class="badge badge-orange">Degraded</span></td><td>Significant problems</td><td>Blocked</td></tr>
+            <tr><td><span class="badge badge-red">Critical</span></td><td>System failure</td><td>Blocked</td></tr>
+        </table>
+
+        <h3>EMQ Score Thresholds</h3>
+        <pre>
+EMQ Score:
+  - ok: >= 8.0
+  - risk: >= 6.0
+  - degraded: >= 4.0
+  - critical: < 4.0
+
+Event Loss:
+  - ok: < 5%
+  - risk: < 10%
+  - degraded: < 25%
+  - critical: >= 25%
+
+Freshness:
+  - ok: < 60 minutes
+  - risk: < 120 minutes
+  - degraded: < 360 minutes
+  - critical: >= 360 minutes</pre>
+
+        <h3>Attribution Variance</h3>
+        <p>Compares platform-reported conversions with GA4 data:</p>
+        <table>
+            <tr><th>Variance</th><th>Status</th><th>Indicator</th></tr>
+            <tr><td>&lt; 5%</td><td>Healthy</td><td><span class="badge badge-green">Green</span></td></tr>
+            <tr><td>5-15%</td><td>Minor</td><td><span class="badge badge-yellow">Yellow</span></td></tr>
+            <tr><td>15-30%</td><td>Moderate</td><td><span class="badge badge-orange">Orange</span></td></tr>
+            <tr><td>&gt; 30%</td><td>High</td><td><span class="badge badge-red">Red</span></td></tr>
+        </table>
+    </section>
+
+    <section id="intelligence-layer" class="page-break">
+        <h2>6. Intelligence Layer</h2>
+
+        <h3>AI Recommendations Engine</h3>
+        <table>
+            <tr><th>Type</th><th>Description</th></tr>
+            <tr><td>Budget Shift</td><td>Reallocate spend to high-performing entities</td></tr>
+            <tr><td>Creative Refresh</td><td>Flag fatigued creatives for replacement</td></tr>
+            <tr><td>Fix Campaign</td><td>Address underperforming campaigns</td></tr>
+            <tr><td>Scaling Opportunity</td><td>Identify candidates for budget increase</td></tr>
+            <tr><td>Anomaly Investigation</td><td>Alert on unusual patterns</td></tr>
+        </table>
+
+        <h3>Priority Levels</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+            <span class="badge badge-red">Critical</span>
+            <span class="badge badge-orange">High</span>
+            <span class="badge badge-yellow">Medium</span>
+            <span class="badge badge-blue">Low</span>
+            <span class="badge badge-green">Info</span>
+        </div>
+
+        <h3>Confidence Scoring</h3>
+        <table>
+            <tr><th>Range</th><th>Level</th><th>Description</th></tr>
+            <tr><td>0.8 - 1.0</td><td>Very High</td><td>Strong data support, recommended action</td></tr>
+            <tr><td>0.6 - 0.8</td><td>High</td><td>Good data support, likely beneficial</td></tr>
+            <tr><td>0.3 - 0.6</td><td>Medium</td><td>Mixed signals, review recommended</td></tr>
+            <tr><td>0.0 - 0.3</td><td>Low</td><td>Limited data, use with caution</td></tr>
+        </table>
+    </section>
+
+    <section id="autopilot" class="page-break">
+        <h2>7. Autopilot System</h2>
+
+        <h3>Autopilot Levels</h3>
+        <table>
+            <tr><th>Level</th><th>Name</th><th>Description</th></tr>
+            <tr><td>0</td><td>Suggest Only</td><td>Recommendations shown, manual action required</td></tr>
+            <tr><td>1</td><td>Guarded Auto</td><td>Safe actions auto-execute within caps</td></tr>
+            <tr><td>2</td><td>Approval Required</td><td>All actions need explicit approval</td></tr>
+        </table>
+
+        <h3>Action Queue Workflow</h3>
+        <div class="workflow-diagram">
+            <div class="workflow-step">Queued</div>
+            <span class="workflow-arrow">&rarr;</span>
+            <div class="workflow-step">Approved</div>
+            <span class="workflow-arrow">&rarr;</span>
+            <div class="workflow-step">Applied</div>
+        </div>
+
+        <h3>Guardrails & Caps</h3>
+        <div class="warning-box">
+            <h4>Budget Caps</h4>
+            <ul>
+                <li><strong>Max Budget % Change:</strong> 30%</li>
+                <li><strong>Max Daily Budget Change:</strong> $500</li>
+                <li><strong>Min Budget Floor:</strong> $10</li>
+            </ul>
+            <h4>Safety Rules</h4>
+            <ul>
+                <li>No action if signal_health = degraded/critical</li>
+                <li>Daily spend limit per tenant enforced</li>
+                <li>Cooldown period between same-entity actions</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="meta-capi" class="page-break">
+        <h2>9. Meta CAPI Integration</h2>
+
+        <h3>Conversions API Features</h3>
+        <ul>
+            <li>Server-side event tracking</li>
+            <li>Event deduplication</li>
+            <li>EMQ score optimization</li>
+            <li>Real-time event streaming</li>
+        </ul>
+
+        <h3>Supported Event Types</h3>
+        <table>
+            <tr><th>Event</th><th>Description</th></tr>
+            <tr><td>Purchase</td><td>Completed transactions</td></tr>
+            <tr><td>AddToCart</td><td>Cart additions</td></tr>
+            <tr><td>InitiateCheckout</td><td>Checkout starts</td></tr>
+            <tr><td>Lead</td><td>Lead form submissions</td></tr>
+            <tr><td>ViewContent</td><td>Page/product views</td></tr>
+            <tr><td>Search</td><td>Search queries</td></tr>
+            <tr><td>CompleteRegistration</td><td>Account signups</td></tr>
+        </table>
+    </section>
+
+    <section id="emq-fix" class="page-break">
+        <h2>10. EMQ Fix System</h2>
+
+        <h3>One-Click Fixes</h3>
+        <div class="success-box">
+            <h4>Available Fixes</h4>
+            <ol>
+                <li><strong>Add Customer Information Parameters</strong>
+                    <ul>
+                        <li>Email hash enhancement</li>
+                        <li>Phone number normalization</li>
+                        <li>External ID mapping</li>
+                    </ul>
+                </li>
+                <li><strong>Fix Event Timestamp Issues</strong>
+                    <ul>
+                        <li>Timezone correction</li>
+                        <li>Deduplication window adjustment</li>
+                    </ul>
+                </li>
+                <li><strong>Improve Match Keys</strong>
+                    <ul>
+                        <li>FBC (Facebook Click ID) capture</li>
+                        <li>FBP (Facebook Pixel) enhancement</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <h3>ROAS Impact Predictions</h3>
+        <table>
+            <tr><th>Fix</th><th>ROAS Improvement</th><th>Confidence</th></tr>
+            <tr><td>Add email hash</td><td>+12-18%</td><td><span class="badge badge-green">High</span></td></tr>
+            <tr><td>Add phone hash</td><td>+8-12%</td><td><span class="badge badge-green">High</span></td></tr>
+            <tr><td>Fix timestamps</td><td>+5-10%</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+            <tr><td>Add FBC/FBP</td><td>+15-25%</td><td><span class="badge badge-green">High</span></td></tr>
+        </table>
+    </section>
+
+    <section id="api" class="page-break">
+        <h2>14. API Reference</h2>
+
+        <h3>Base URLs</h3>
+        <pre>
+Production:  https://api.stratum.ai/api/v1
+Development: http://localhost:8000/api/v1</pre>
+
+        <h3>Authentication</h3>
+        <pre>Header: Authorization: Bearer &lt;jwt_token&gt;</pre>
+
+        <h3>Key Endpoints</h3>
+
+        <h4>Insights API</h4>
+        <pre>
+GET /insights/tenant/{tenant_id}/insights
+GET /insights/tenant/{tenant_id}/recommendations
+GET /insights/tenant/{tenant_id}/anomalies
+GET /insights/tenant/{tenant_id}/kpis</pre>
+
+        <h4>Trust Layer API</h4>
+        <pre>
+GET /trust-layer/tenant/{tenant_id}/signal-health
+GET /trust-layer/tenant/{tenant_id}/attribution-variance
+GET /trust-layer/tenant/{tenant_id}/status</pre>
+
+        <h4>Autopilot API</h4>
+        <pre>
+GET  /autopilot/tenant/{tenant_id}/status
+GET  /autopilot/tenant/{tenant_id}/actions
+POST /autopilot/tenant/{tenant_id}/actions/{id}/approve
+POST /autopilot/tenant/{tenant_id}/actions/{id}/dismiss</pre>
+
+        <h3>Response Format</h3>
+        <pre>
+{
+  "success": true,
+  "data": { ... },
+  "error": null,
+  "meta": {
+    "timestamp": "2026-01-02T12:00:00Z",
+    "request_id": "uuid"
+  }
+}</pre>
+    </section>
+
+    <section id="deployment" class="page-break">
+        <h2>15. Deployment Guide</h2>
+
+        <h3>Prerequisites</h3>
+        <ul>
+            <li>Docker 24+</li>
+            <li>Docker Compose 2.20+</li>
+            <li>PostgreSQL 15+ (or use Docker)</li>
+            <li>Redis 7+ (or use Docker)</li>
+        </ul>
+
+        <h3>Quick Start</h3>
+        <pre>
+# Build and start all services
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Scale workers
+docker-compose up -d --scale celery-worker=3
+
+# Run database migrations
+docker-compose exec backend alembic upgrade head</pre>
+
+        <h3>Environment Variables</h3>
+        <pre>
+# Database
+DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/stratum
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# JWT
+JWT_SECRET_KEY=your-secret-key
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Platform APIs
+META_APP_ID=your-meta-app-id
+META_APP_SECRET=your-meta-app-secret</pre>
+    </section>
+
+    <footer>
+        <p><strong>Stratum AI</strong> - Marketing Intelligence Platform</p>
+        <p>Copyright 2026 Stratum AI. All Rights Reserved.</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            Documentation | API Reference | Support: support@stratum.ai
+        </p>
+    </footer>
+</body>
+</html>

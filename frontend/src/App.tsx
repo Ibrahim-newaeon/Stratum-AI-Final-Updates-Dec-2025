@@ -1,0 +1,560 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { Suspense, lazy } from 'react'
+import DashboardLayout from './views/DashboardLayout'
+import TenantLayout from './views/TenantLayout'
+import { Toaster } from './components/ui/toaster'
+import { JoyrideProvider } from './components/guide/JoyrideWrapper'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { AuthProvider } from './contexts/AuthContext'
+import LoadingSpinner from './components/common/LoadingSpinner'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+
+// Lazy load pages for code splitting
+const Landing = lazy(() => import('./views/Landing'))
+const Login = lazy(() => import('./views/Login'))
+const Signup = lazy(() => import('./views/Signup'))
+const ForgotPassword = lazy(() => import('./views/ForgotPassword'))
+const ResetPassword = lazy(() => import('./views/ResetPassword'))
+const VerifyEmail = lazy(() => import('./views/VerifyEmail'))
+const Overview = lazy(() => import('./views/Overview'))
+const CustomDashboard = lazy(() => import('./views/CustomDashboard'))
+const Campaigns = lazy(() => import('./views/Campaigns'))
+const Stratum = lazy(() => import('./views/Stratum'))
+const Benchmarks = lazy(() => import('./views/Benchmarks'))
+const Assets = lazy(() => import('./views/Assets'))
+const Rules = lazy(() => import('./views/Rules'))
+const Competitors = lazy(() => import('./views/Competitors'))
+const Predictions = lazy(() => import('./views/Predictions'))
+const WhatsApp = lazy(() => import('./views/WhatsApp'))
+const Settings = lazy(() => import('./views/Settings'))
+const Tenants = lazy(() => import('./views/Tenants'))
+const MLTraining = lazy(() => import('./views/MLTraining'))
+const CAPISetup = lazy(() => import('./views/CAPISetup'))
+const DataQuality = lazy(() => import('./views/DataQuality'))
+const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'))
+const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'))
+
+// Super Admin views
+const ControlTower = lazy(() => import('./views/superadmin/ControlTower'))
+const SuperAdminTenantsList = lazy(() => import('./views/superadmin/TenantsList'))
+const SuperAdminTenantProfile = lazy(() => import('./views/superadmin/TenantProfile'))
+const SuperAdminBenchmarks = lazy(() => import('./views/superadmin/Benchmarks'))
+const SuperAdminAudit = lazy(() => import('./views/superadmin/Audit'))
+const SuperAdminBilling = lazy(() => import('./views/superadmin/Billing'))
+const SuperAdminSystem = lazy(() => import('./views/superadmin/System'))
+
+// Tenant-scoped views (Campaign Builder)
+const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'))
+const AdAccounts = lazy(() => import('./views/tenant/AdAccounts'))
+const CampaignBuilder = lazy(() => import('./views/tenant/CampaignBuilder'))
+const CampaignDrafts = lazy(() => import('./views/tenant/CampaignDrafts'))
+const PublishLogs = lazy(() => import('./views/tenant/PublishLogs'))
+const TenantOverview = lazy(() => import('./views/tenant/TenantOverview'))
+const TenantCampaigns = lazy(() => import('./views/tenant/TenantCampaigns'))
+const TenantSettings = lazy(() => import('./views/tenant/TenantSettings'))
+const TeamManagement = lazy(() => import('./views/tenant/TeamManagement'))
+
+// Role-based tenant views
+const TenantAdminOverview = lazy(() => import('./views/tenant/Overview'))
+const MediaBuyerConsole = lazy(() => import('./views/tenant/Console'))
+const SignalHub = lazy(() => import('./views/tenant/SignalHub'))
+
+// Account Manager views
+const AMPortfolio = lazy(() => import('./views/am/Portfolio'))
+const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'))
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <JoyrideProvider>
+          <div className="min-h-screen bg-background">
+            <Routes>
+              {/* Public routes */}
+              <Route
+                path="/"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Landing />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Login />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Signup />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ForgotPassword />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ResetPassword />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/verify-email"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <VerifyEmail />
+                  </Suspense>
+                }
+              />
+
+              {/* Protected dashboard routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/dashboard/overview" replace />} />
+                <Route
+                  path="overview"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Overview />
+                    </Suspense>
+                  }
+                />
+            <Route
+              path="dashboard"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <CustomDashboard />
+                </Suspense>
+              }
+            />
+            <Route
+              path="campaigns"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Campaigns />
+                </Suspense>
+              }
+            />
+            <Route
+              path="stratum"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Stratum />
+                </Suspense>
+              }
+            />
+            <Route
+              path="benchmarks"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Benchmarks />
+                </Suspense>
+              }
+            />
+            <Route
+              path="assets"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Assets />
+                </Suspense>
+              }
+            />
+            <Route
+              path="rules"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Rules />
+                </Suspense>
+              }
+            />
+            <Route
+              path="competitors"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Competitors />
+                </Suspense>
+              }
+            />
+            <Route
+              path="predictions"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Predictions />
+                </Suspense>
+              }
+            />
+            <Route
+              path="whatsapp"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <WhatsApp />
+                </Suspense>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Settings />
+                </Suspense>
+              }
+            />
+            <Route
+              path="tenants"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Tenants />
+                </Suspense>
+              }
+            />
+            <Route
+              path="ml-training"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <MLTraining />
+                </Suspense>
+              }
+            />
+            <Route
+              path="capi-setup"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <CAPISetup />
+                </Suspense>
+              }
+            />
+            <Route
+              path="data-quality"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <DataQuality />
+                </Suspense>
+              }
+            />
+                <Route
+                  path="emq-dashboard"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <DataQualityDashboard />
+                    </Suspense>
+                  }
+                />
+                {/* Superadmin only routes */}
+                <Route
+                  path="superadmin"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperadminDashboard />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/control-tower"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <ControlTower />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/tenants"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminTenantsList />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/tenants/:tenantId"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminTenantProfile />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/benchmarks"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminBenchmarks />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/audit"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminAudit />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/billing"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminBilling />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/system"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminSystem />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Account Manager routes */}
+                <Route
+                  path="am/portfolio"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <AMPortfolio />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="am/tenant/:tenantId"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <AMTenantNarrative />
+                    </Suspense>
+                  }
+                />
+              </Route>
+
+              {/* Tenant-scoped routes with :tenantId parameter */}
+              <Route
+                path="/app/:tenantId"
+                element={
+                  <ProtectedRoute>
+                    <TenantLayout />
+                  </ProtectedRoute>
+                }
+              >
+                {/* Tenant Dashboard */}
+                <Route
+                  index
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantOverview />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="overview"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantOverview />
+                    </Suspense>
+                  }
+                />
+
+                {/* Role-based views */}
+                <Route
+                  path="trust"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantAdminOverview />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="console"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <MediaBuyerConsole />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="signal-hub"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SignalHub />
+                    </Suspense>
+                  }
+                />
+
+                {/* Campaigns Management */}
+                <Route
+                  path="campaigns"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantCampaigns />
+                    </Suspense>
+                  }
+                />
+
+                {/* Campaign Builder Routes */}
+                <Route
+                  path="campaigns/connect"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ConnectPlatforms />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/accounts"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <AdAccounts />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/new"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CampaignBuilder />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/drafts"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CampaignDrafts />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/drafts/:draftId"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CampaignBuilder />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="campaigns/logs"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <PublishLogs />
+                    </Suspense>
+                  }
+                />
+
+                {/* Tenant Settings */}
+                <Route
+                  path="settings"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TenantSettings />
+                    </Suspense>
+                  }
+                />
+
+                {/* Team Management */}
+                <Route
+                  path="team"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TeamManagement />
+                    </Suspense>
+                  }
+                />
+
+                {/* Competitors */}
+                <Route
+                  path="competitors"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Competitors />
+                    </Suspense>
+                  }
+                />
+
+                {/* Benchmarks */}
+                <Route
+                  path="benchmarks"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Benchmarks />
+                    </Suspense>
+                  }
+                />
+
+                {/* Assets */}
+                <Route
+                  path="assets"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Assets />
+                    </Suspense>
+                  }
+                />
+
+                {/* Rules */}
+                <Route
+                  path="rules"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Rules />
+                    </Suspense>
+                  }
+                />
+
+                {/* Predictions */}
+                <Route
+                  path="predictions"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Predictions />
+                    </Suspense>
+                  }
+                />
+              </Route>
+
+              {/* Legacy route redirects */}
+              <Route path="/overview" element={<Navigate to="/dashboard/overview" replace />} />
+
+              {/* Catch all - redirect to landing for unauthenticated, dashboard for authenticated */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <Toaster />
+          </div>
+        </JoyrideProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  )
+}
+
+export default App
