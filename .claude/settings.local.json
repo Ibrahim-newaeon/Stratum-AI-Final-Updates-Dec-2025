@@ -55,7 +55,11 @@
       "Bash(__NEW_LINE__ echo \"\")",
       "WebFetch(domain:localhost)",
       "Bash(grep:*)",
-      "Bash(docker-compose build:*)"
+      "Bash(docker-compose build:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
