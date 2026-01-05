@@ -35,7 +35,6 @@ import {
   Bell,
   Mail,
   MessageSquare,
-  Smartphone,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
@@ -955,7 +954,7 @@ interface AlertRule {
   frequency: 'realtime' | 'hourly' | 'daily'
   channels: {
     email: boolean
-    sms: boolean
+    whatsapp: boolean
     inApp: boolean
     slack: boolean
   }
@@ -981,7 +980,7 @@ function AlertConfigurationModal({
     frequency: 'realtime',
     channels: {
       email: true,
-      sms: false,
+      whatsapp: false,
       inApp: true,
       slack: false,
     },
@@ -1187,26 +1186,26 @@ function AlertConfigurationModal({
               </button>
 
               <button
-                onClick={() => updateChannel('sms')}
+                onClick={() => updateChannel('whatsapp')}
                 className={cn(
                   'flex items-center gap-3 p-3 rounded-lg border transition-all',
-                  alertRule.channels.sms
+                  alertRule.channels.whatsapp
                     ? 'border-primary bg-primary/10'
                     : 'hover:bg-muted'
                 )}
               >
                 <div className={cn(
                   'p-2 rounded-lg',
-                  alertRule.channels.sms ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  alertRule.channels.whatsapp ? 'bg-green-500 text-white' : 'bg-muted'
                 )}>
-                  <Smartphone className="w-4 h-4" />
+                  <MessageSquare className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-sm">SMS</p>
-                  <p className="text-xs text-muted-foreground">Text messages</p>
+                  <p className="font-medium text-sm">WhatsApp</p>
+                  <p className="text-xs text-muted-foreground">WhatsApp messages</p>
                 </div>
-                {alertRule.channels.sms && (
-                  <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
+                {alertRule.channels.whatsapp && (
+                  <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />
                 )}
               </button>
 
