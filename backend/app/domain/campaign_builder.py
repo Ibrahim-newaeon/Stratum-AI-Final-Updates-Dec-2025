@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 import enum
 
-from app.db.base_class import Base
+from app.db.base import Base
 
 
 # =============================================================================
@@ -73,7 +73,7 @@ class TenantPlatformConnection(Base):
     __tablename__ = "tenant_platform_connection"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False, index=True)
     platform = Column(SQLEnum(AdPlatform), nullable=False)
     status = Column(SQLEnum(ConnectionStatus), nullable=False, default=ConnectionStatus.DISCONNECTED)
 
@@ -85,7 +85,7 @@ class TenantPlatformConnection(Base):
 
     # OAuth metadata
     scopes = Column(JSONB, nullable=True, default=list)
-    granted_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    granted_by_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
 
     # Timestamps
     connected_at = Column(DateTime(timezone=True), nullable=True)
@@ -98,7 +98,7 @@ class TenantPlatformConnection(Base):
     error_count = Column(Integer, default=0)
 
     # Relationships
-    tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="platform_connections")
+    tenant = relationship("Tenant", back_populates="platform_connections")
     granted_by = relationship("User", foreign_keys=[granted_by_user_id])
     ad_accounts = relationship("TenantAdAccount", back_populates="connection", cascade="all, delete-orphan")
 
@@ -116,7 +116,7 @@ class TenantAdAccount(Base):
     __tablename__ = "tenant_ad_account"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False, index=True)
     connection_id = Column(UUID(as_uuid=True), ForeignKey("tenant_platform_connection.id", ondelete="CASCADE"), nullable=False)
     platform = Column(SQLEnum(AdPlatform), nullable=False)
 
@@ -147,7 +147,7 @@ class TenantAdAccount(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="ad_accounts")
+    tenant = relationship("Tenant", back_populates="ad_accounts")
     connection = relationship("TenantPlatformConnection", back_populates="ad_accounts")
     campaign_drafts = relationship("CampaignDraft", back_populates="ad_account")
 
@@ -165,7 +165,7 @@ class CampaignDraft(Base):
     __tablename__ = "campaign_draft"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False, index=True)
     ad_account_id = Column(UUID(as_uuid=True), ForeignKey("tenant_ad_account.id", ondelete="SET NULL"), nullable=True)
     platform = Column(SQLEnum(AdPlatform), nullable=False)
 
@@ -178,10 +178,10 @@ class CampaignDraft(Base):
     draft_json = Column(JSONB, nullable=False, default=dict)
 
     # Workflow tracking
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    submitted_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    approved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    rejected_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    submitted_by_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    approved_by_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    rejected_by_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
 
     submitted_at = Column(DateTime(timezone=True), nullable=True)
     approved_at = Column(DateTime(timezone=True), nullable=True)
@@ -197,7 +197,7 @@ class CampaignDraft(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="campaign_drafts")
+    tenant = relationship("Tenant", back_populates="campaign_drafts")
     ad_account = relationship("TenantAdAccount", back_populates="campaign_drafts")
     created_by = relationship("User", foreign_keys=[created_by_user_id])
     submitted_by = relationship("User", foreign_keys=[submitted_by_user_id])
@@ -219,13 +219,13 @@ class CampaignPublishLog(Base):
     __tablename__ = "campaign_publish_log"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False, index=True)
     draft_id = Column(UUID(as_uuid=True), ForeignKey("campaign_draft.id", ondelete="SET NULL"), nullable=True)
     platform = Column(SQLEnum(AdPlatform), nullable=False)
     platform_account_id = Column(String(255), nullable=False)
 
     # Actor
-    published_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    published_by_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
 
     # Event timing
     event_time = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
@@ -247,7 +247,7 @@ class CampaignPublishLog(Base):
     last_retry_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="publish_logs")
+    tenant = relationship("Tenant", back_populates="publish_logs")
     draft = relationship("CampaignDraft", back_populates="publish_logs")
     published_by = relationship("User", foreign_keys=[published_by_user_id])
 

@@ -220,6 +220,23 @@ def can(features: Dict[str, Any], feature_name: str) -> bool:
     return bool(value)
 
 
+def get_autopilot_caps() -> Dict[str, Any]:
+    """
+    Get default caps for autopilot actions.
+
+    Returns:
+        Dict with cap values:
+        - max_daily_budget_change: Max absolute budget change per day
+        - max_budget_pct_change: Max percentage budget change per action
+        - max_actions_per_day: Max automated actions per day
+    """
+    return {
+        "max_daily_budget_change": 500.0,  # Max $500 per day
+        "max_budget_pct_change": 30.0,     # Max 30% change per action
+        "max_actions_per_day": 10,         # Max 10 automated actions per day
+    }
+
+
 def get_autopilot_level(features: Dict[str, Any]) -> AutopilotLevel:
     """
     Get the autopilot level from features.

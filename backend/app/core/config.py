@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         default="local",
         description="ML inference provider: 'local' for scikit-learn or 'vertex' for Google Vertex AI",
     )
-    ml_models_path: str = Field(default="/app/ml_service/models")
+    ml_models_path: str = Field(default="./ml_models")
     google_cloud_project: Optional[str] = Field(default=None)
     vertex_ai_endpoint: Optional[str] = Field(default=None)
     google_application_credentials: Optional[str] = Field(default=None)

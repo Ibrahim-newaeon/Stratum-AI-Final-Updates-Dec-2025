@@ -16,7 +16,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '011_add_usp_layer_tables'
-down_revision = '010_add_cost_allocation'
+down_revision = '010'
 branch_labels = None
 depends_on = None
 
@@ -72,7 +72,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('NOW()')),
 
         sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['tenant_id'], ['tenant.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ondelete='CASCADE'),
     )
 
     # Indexes for signal_health_daily
@@ -121,7 +121,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('NOW()')),
 
         sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['tenant_id'], ['tenant.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ondelete='CASCADE'),
     )
 
     # Indexes for attribution_variance_daily
@@ -176,10 +176,10 @@ def upgrade() -> None:
         sa.Column('platform_response', sa.Text(), nullable=True),
 
         sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['tenant_id'], ['tenant.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['created_by_user_id'], ['user.id'], ondelete='SET NULL'),
-        sa.ForeignKeyConstraint(['approved_by_user_id'], ['user.id'], ondelete='SET NULL'),
-        sa.ForeignKeyConstraint(['applied_by_user_id'], ['user.id'], ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['created_by_user_id'], ['users.id'], ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['approved_by_user_id'], ['users.id'], ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['applied_by_user_id'], ['users.id'], ondelete='SET NULL'),
     )
 
     # Indexes for actions_queue
@@ -196,9 +196,9 @@ def upgrade() -> None:
         BEGIN
             IF NOT EXISTS (
                 SELECT 1 FROM information_schema.columns
-                WHERE table_name = 'tenant' AND column_name = 'feature_flags'
+                WHERE table_name = 'tenants' AND column_name = 'feature_flags'
             ) THEN
-                ALTER TABLE tenant ADD COLUMN feature_flags JSONB DEFAULT '{}';
+                ALTER TABLE tenants ADD COLUMN feature_flags JSONB DEFAULT '{}';
             END IF;
         END $$;
     """)

@@ -130,9 +130,10 @@ class WhatIfSimulator:
 
         # Add confidence intervals
         if include_confidence:
+            base_confidence = roas_prediction.get("confidence") or 0.8
             confidence = self._calculate_confidence_intervals(
                 predicted_metrics,
-                roas_prediction.get("confidence", 0.8),
+                base_confidence,
                 budget_change_percent,
             )
             result["confidence_interval"] = confidence
@@ -178,6 +179,10 @@ class WhatIfSimulator:
 
         Wider intervals for larger budget changes (more uncertainty).
         """
+        # Ensure base_confidence is a valid float
+        if base_confidence is None:
+            base_confidence = 0.8
+
         # Increase uncertainty for larger changes
         uncertainty_factor = 1 + abs(budget_change_percent) / 200
 

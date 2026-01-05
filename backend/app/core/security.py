@@ -231,3 +231,40 @@ def verify_api_key(api_key: str, stored_hash: str) -> bool:
 def hash_api_key(api_key: str) -> str:
     """Hash an API key for storage."""
     return hashlib.sha256(api_key.encode()).hexdigest()
+
+
+# =============================================================================
+# Permission Decorator
+# =============================================================================
+
+def require_permission(permission: str):
+    """
+    Dependency factory that checks if the current user has the required permission.
+
+    Args:
+        permission: The permission string to check (e.g., "CAMPAIGN_APPROVE")
+
+    Returns:
+        A FastAPI dependency that validates the permission
+    """
+    from fastapi import Depends, HTTPException, Request
+
+    async def permission_checker(request: Request):
+        # Get user permissions from request state (set by auth middleware)
+        user_permissions = getattr(request.state, "permissions", [])
+        user_role = getattr(request.state, "role", None)
+
+        # Superadmins have all permissions
+        if user_role == "superadmin":
+            return True
+
+        # Check if user has the required permission
+        if permission not in user_permissions:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Permission denied: {permission} required"
+            )
+
+        return True
+
+    return Depends(permission_checker)

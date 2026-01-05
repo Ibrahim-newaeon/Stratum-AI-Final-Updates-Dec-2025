@@ -19,7 +19,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
 
-from app.db.base_class import Base
+from app.db.base import Base
 
 
 # =============================================================================
@@ -54,7 +54,7 @@ class FactSignalHealthDaily(Base):
     __tablename__ = "fact_signal_health_daily"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False)
     platform = Column(String(50), nullable=False)  # meta, google, tiktok, snapchat
     account_id = Column(String(255), nullable=True)  # Optional, for account-level tracking
@@ -95,7 +95,7 @@ class FactAttributionVarianceDaily(Base):
     __tablename__ = "fact_attribution_variance_daily"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False)
     platform = Column(String(50), nullable=False)
 
@@ -139,7 +139,7 @@ class FactActionsQueue(Base):
     __tablename__ = "fact_actions_queue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False)
 
     # Action details

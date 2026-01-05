@@ -195,3 +195,12 @@ async def get_feature_metadata(request: Request):
             "descriptions": FEATURE_DESCRIPTIONS,
         },
     )
+
+
+# =============================================================================
+# Combined Router for API Registration
+# =============================================================================
+
+router = APIRouter()
+router.include_router(tenant_router)
+router.include_router(superadmin_router)

@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
-from app.models.tenant import Tenant
+from app.models import Tenant
 from app.features.flags import (
     get_default_features,
     merge_features,
