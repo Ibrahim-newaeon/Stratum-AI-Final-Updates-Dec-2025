@@ -29,6 +29,7 @@ interface EmqFixPlaybookPanelProps {
   items: PlaybookItem[]
   onItemClick?: (item: PlaybookItem) => void
   onAssign?: (item: PlaybookItem) => void
+  onApply?: (item: PlaybookItem) => void
   maxItems?: number
   showEstimates?: boolean
   className?: string
@@ -65,6 +66,7 @@ export function EmqFixPlaybookPanel({
   items,
   onItemClick,
   onAssign,
+  onApply,
   maxItems = 5,
   showEstimates = true,
   className,
@@ -196,6 +198,19 @@ export function EmqFixPlaybookPanel({
                       >
                         <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
                       </a>
+                    )}
+
+                    {/* Apply button */}
+                    {!isCompleted && onApply && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onApply(item)
+                        }}
+                        className="ml-auto px-3 py-1 text-xs font-medium rounded-lg bg-stratum-500 text-white hover:bg-stratum-600 transition-colors"
+                      >
+                        Apply Fix
+                      </button>
                     )}
                   </div>
                 </div>

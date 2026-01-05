@@ -24,6 +24,7 @@ import {
   useAutopilotState,
   useEmqPlaybook,
   useEmqIncidents,
+  useUpdatePlaybookItem,
 } from '@/api/hooks'
 import { useTenantOverview, useTenantRecommendations } from '@/api/hooks'
 import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopilot'
@@ -47,6 +48,7 @@ export default function TenantOverview() {
   const approveAction = useApproveAction(tid)
   const dismissAction = useDismissAction(tid)
   const queueAction = useQueueAction(tid)
+  const updatePlaybookItem = useUpdatePlaybookItem(tid)
 
   // Fetch data
   const { data: emqData, isLoading: emqLoading } = useEmqScore(tid)
@@ -223,6 +225,26 @@ export default function TenantOverview() {
     })
   }
 
+  // Handler: Apply playbook fix
+  const handlePlaybookApply = async (item: PlaybookItem) => {
+    try {
+      await updatePlaybookItem.mutateAsync({
+        itemId: item.id,
+        updates: { status: 'completed' },
+      })
+      toast({
+        title: 'Fix Applied',
+        description: `Successfully applied: ${item.title}. Expected EMQ improvement: +${item.estimatedImpact}`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to apply fix',
+        variant: 'destructive',
+      })
+    }
+  }
+
   // Handler: Apply action
   const handleApplyAction = async (action: Action) => {
     try {
@@ -372,6 +394,7 @@ export default function TenantOverview() {
               items={playbook}
               onItemClick={handlePlaybookItemClick}
               onAssign={handlePlaybookAssign}
+              onApply={handlePlaybookApply}
               maxItems={5}
             />
           </div>
