@@ -1831,29 +1831,29 @@ export function Stratum() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <button
-                        onClick={() => handleToggleAlert(alert.id!)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleToggleAlert(alert.id!)
+                        }}
                         className={cn(
-                          'p-2 rounded-lg transition-colors',
+                          'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
                           alert.enabled
-                            ? 'text-green-500 hover:bg-green-500/10'
-                            : 'text-muted-foreground hover:bg-muted'
+                            ? 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20'
+                            : 'bg-muted text-muted-foreground border-muted hover:bg-muted/80'
                         )}
-                        title={alert.enabled ? 'Pause alert' : 'Enable alert'}
                       >
-                        {alert.enabled ? (
-                          <ToggleRight className="w-5 h-5" />
-                        ) : (
-                          <ToggleLeft className="w-5 h-5" />
-                        )}
+                        {alert.enabled ? 'Pause' : 'Resume'}
                       </button>
                       <button
-                        onClick={() => handleDeleteAlert(alert.id!)}
-                        className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                        title="Delete alert"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteAlert(alert.id!)
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        Delete
                       </button>
                     </div>
                   </div>
