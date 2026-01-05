@@ -379,13 +379,13 @@ export function DataQualityDashboard() {
 
         // Update recommendations from report
         if (report.top_recommendations && report.top_recommendations.length > 0) {
-          setRecommendations(report.top_recommendations.map((rec: string, idx: number) => ({
+          setRecommendations(report.top_recommendations.map((rec: any, idx: number) => ({
             id: String(idx + 1),
-            impact: idx < 2 ? 'high' : 'medium',
-            title: rec,
-            description: 'Identified from data quality analysis',
+            impact: rec.severity === 'critical' ? 'high' : rec.severity === 'high' ? 'medium' : 'low',
+            title: rec.action || rec.field || 'Recommendation',
+            description: rec.how_to_fix || rec.impact || 'Identified from data quality analysis',
             owner: 'Engineering',
-            fixHint: 'See CAPI documentation for implementation details',
+            fixHint: rec.how_to_fix || 'See CAPI documentation for implementation details',
           })))
         }
       }
