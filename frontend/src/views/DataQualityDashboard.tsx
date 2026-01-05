@@ -331,8 +331,10 @@ export function DataQualityDashboard() {
   // State for resolved/dismissed items
   const [resolvedIssues, setResolvedIssues] = useState<string[]>([])
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([])
+  const [resolvedPIIViolations, setResolvedPIIViolations] = useState<string[]>([])
   const [resolvingIssue, setResolvingIssue] = useState<string | null>(null)
   const [resolvingAlert, setResolvingAlert] = useState<string | null>(null)
+  const [resolvingPII, setResolvingPII] = useState<string | null>(null)
 
   // Fetch data on mount and when filters change
   useEffect(() => {
@@ -457,6 +459,7 @@ export function DataQualityDashboard() {
   const handleRefresh = async () => {
     setResolvedIssues([])
     setDismissedAlerts([])
+    setResolvedPIIViolations([])
     await fetchQualityData()
   }
 
@@ -485,6 +488,15 @@ export function DataQualityDashboard() {
       setDismissedAlerts(prev => [...prev, alertId])
       setResolvingAlert(null)
     }, 2000)
+  }
+
+  const handleResolvePIIViolation = (field: string) => {
+    setResolvingPII(field)
+    // Simulate backend resolution - in real app would call API to apply fix
+    setTimeout(() => {
+      setResolvedPIIViolations(prev => [...prev, field])
+      setResolvingPII(null)
+    }, 1500)
   }
 
   const getStatusColor = (status: 'good' | 'warning' | 'critical') => {
@@ -974,36 +986,62 @@ export function DataQualityDashboard() {
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Lock className="w-5 h-5 text-primary" />
             PII Compliance Monitor
+            {resolvedPIIViolations.length > 0 && (
+              <span className="text-xs font-normal text-green-500 ml-2">
+                ({resolvedPIIViolations.length} resolved)
+              </span>
+            )}
           </h3>
-          {mockPIIViolations.length > 0 ? (
-            <div className="space-y-3">
-              {mockPIIViolations.map((violation, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 border border-red-500/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="w-4 h-4 text-red-500" />
-                    <div>
-                      <p className="font-medium text-sm">{violation.field}: {violation.violationType}</p>
-                      <p className="text-xs text-muted-foreground">Last seen: {violation.lastSeen}</p>
+          {(() => {
+            const filteredPIIViolations = piiViolations.filter(
+              v => !resolvedPIIViolations.includes(v.field)
+            )
+            return filteredPIIViolations.length > 0 ? (
+              <div className="space-y-3">
+                {filteredPIIViolations.map((violation, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 border border-red-500/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <div>
+                        <p className="font-medium text-sm">{violation.field}: {violation.violationType}</p>
+                        <p className="text-xs text-muted-foreground">Last seen: {violation.lastSeen}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-red-500 font-bold">{violation.count}</span>
+                      <button
+                        onClick={() => handleResolvePIIViolation(violation.field)}
+                        disabled={resolvingPII === violation.field}
+                        className="px-3 py-1 rounded-md text-xs font-medium bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400 transition-colors"
+                      >
+                        {resolvingPII === violation.field ? (
+                          <span className="flex items-center gap-1">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            Fixing...
+                          </span>
+                        ) : (
+                          'Auto-Fix'
+                        )}
+                      </button>
                     </div>
                   </div>
-                  <span className="text-red-500 font-bold">{violation.count}</span>
-                </div>
-              ))}
-              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <Info className="w-3 h-3" />
-                Raw PII values are never displayed for compliance
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
-              <p className="font-medium text-green-500">All Clear</p>
-              <p className="text-sm text-muted-foreground">No PII violations detected</p>
-            </div>
-          )}
+                ))}
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Raw PII values are never displayed for compliance
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+                <p className="font-medium text-green-500">All Clear</p>
+                <p className="text-sm text-muted-foreground">No PII violations detected</p>
+              </div>
+            )
+          })()}
         </div>
       </div>
 
