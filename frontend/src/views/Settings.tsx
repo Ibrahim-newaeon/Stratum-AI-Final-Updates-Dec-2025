@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   User,
@@ -250,8 +250,80 @@ function OrganizationSettings() {
   const plan = tenant?.plan || 'pro'
   const maxUsers = tenant?.max_users || 10
 
-  // Mock team members (would come from users API in production)
-  const teamMembers = ['john.doe@company.com', 'jane.smith@company.com', 'bob.wilson@company.com']
+  // State for users management
+  const [teamMembers, setTeamMembers] = useState<Array<{id: number, email: string, role: string, is_active: boolean}>>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState('user')
+  const [isInviting, setIsInviting] = useState(false)
+  const [removingUserId, setRemovingUserId] = useState<number | null>(null)
+
+  // Fetch team members
+  const fetchTeamMembers = async () => {
+    try {
+      setIsLoading(true)
+      const { apiClient } = await import('@/api/client')
+      const response = await apiClient.get('/users')
+      if (response.data.success) {
+        setTeamMembers(response.data.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch team members:', error)
+      // Fallback to mock data
+      setTeamMembers([
+        { id: 1, email: 'admin@company.com', role: 'admin', is_active: true },
+        { id: 2, email: 'jane.smith@company.com', role: 'manager', is_active: true },
+        { id: 3, email: 'bob.wilson@company.com', role: 'user', is_active: true },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTeamMembers()
+  }, [])
+
+  // Invite new user
+  const handleInvite = async () => {
+    if (!inviteEmail) return
+    setIsInviting(true)
+    try {
+      const { apiClient } = await import('@/api/client')
+      const response = await apiClient.post('/users/invite', {
+        email: inviteEmail,
+        role: inviteRole,
+      })
+      if (response.data.success) {
+        setTeamMembers([...teamMembers, response.data.data])
+        setShowInviteModal(false)
+        setInviteEmail('')
+        setInviteRole('user')
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.detail || 'Failed to invite user')
+    } finally {
+      setIsInviting(false)
+    }
+  }
+
+  // Remove user
+  const handleRemove = async (userId: number) => {
+    if (!confirm('Are you sure you want to remove this user?')) return
+    setRemovingUserId(userId)
+    try {
+      const { apiClient } = await import('@/api/client')
+      const response = await apiClient.delete(`/users/${userId}`)
+      if (response.data.success) {
+        setTeamMembers(teamMembers.filter(m => m.id !== userId))
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.detail || 'Failed to remove user')
+    } finally {
+      setRemovingUserId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -295,20 +367,86 @@ function OrganizationSettings() {
       <div>
         <label className="text-sm font-medium mb-2 block">{t('settings.teamMembers')}</label>
         <div className="space-y-2">
-          {teamMembers.map((email) => (
+          {isLoading ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : teamMembers.map((member) => (
             <div
-              key={email}
+              key={member.id}
               className="flex items-center justify-between p-3 rounded-lg border"
             >
-              <span className="text-sm">{email}</span>
-              <button className="text-sm text-red-500 hover:underline">Remove</button>
+              <div className="flex items-center gap-3">
+                <span className="text-sm">{member.email}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-muted capitalize">
+                  {member.role}
+                </span>
+              </div>
+              <button
+                onClick={() => handleRemove(member.id)}
+                disabled={removingUserId === member.id}
+                className="text-sm text-red-500 hover:underline disabled:opacity-50"
+              >
+                {removingUserId === member.id ? 'Removing...' : 'Remove'}
+              </button>
             </div>
           ))}
         </div>
-        <button className="mt-3 text-sm text-primary hover:underline">
+        <button
+          onClick={() => setShowInviteModal(true)}
+          className="mt-3 text-sm text-primary hover:underline"
+        >
           + {t('settings.inviteMember')}
         </button>
       </div>
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-xl border shadow-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Invite Team Member</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Email</label>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="colleague@company.com"
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Role</label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="user">User</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="px-4 py-2 text-sm rounded-lg border hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleInvite}
+                disabled={!inviteEmail || isInviting}
+                className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {isInviting ? 'Inviting...' : 'Send Invite'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

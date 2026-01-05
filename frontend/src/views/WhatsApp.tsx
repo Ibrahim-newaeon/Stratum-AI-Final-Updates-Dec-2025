@@ -31,6 +31,9 @@ import {
   ChevronDown,
   Globe,
   Loader2,
+  Edit2,
+  UserMinus,
+  UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/api/client'
@@ -134,10 +137,26 @@ export function WhatsApp() {
   const [newContactCountry, setNewContactCountry] = useState('')
   const [newContactName, setNewContactName] = useState('')
 
+  // Contact actions state
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingContact, setEditingContact] = useState<WhatsAppContact | null>(null)
+  const [editName, setEditName] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
+
   // Fetch data on mount
   useEffect(() => {
     fetchData()
   }, [])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveDropdown(null)
+    if (activeDropdown !== null) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [activeDropdown])
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -458,6 +477,63 @@ export function WhatsApp() {
   // Remove a contact from CSV preview
   const removeCSVContact = (index: number) => {
     setCsvContacts(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // Handle edit contact
+  const handleEditContact = (contact: WhatsAppContact) => {
+    setEditingContact(contact)
+    setEditName(contact.display_name || '')
+    setShowEditModal(true)
+    setActiveDropdown(null)
+  }
+
+  // Save contact edit
+  const handleSaveEdit = async () => {
+    if (!editingContact) return
+    setIsUpdating(true)
+    try {
+      await apiClient.patch(`/whatsapp/contacts/${editingContact.id}`, {
+        display_name: editName || null,
+      })
+      await fetchData()
+      setShowEditModal(false)
+      setEditingContact(null)
+      setEditName('')
+    } catch (err: any) {
+      console.error('Failed to update contact:', err)
+      alert(err.response?.data?.detail || 'Failed to update contact')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  // Handle delete contact
+  const handleDeleteContact = async (contact: WhatsAppContact) => {
+    if (!confirm(`Are you sure you want to delete ${contact.display_name || contact.phone_number}?`)) return
+    setActiveDropdown(null)
+    try {
+      await apiClient.delete(`/whatsapp/contacts/${contact.id}`)
+      await fetchData()
+    } catch (err: any) {
+      console.error('Failed to delete contact:', err)
+      alert(err.response?.data?.detail || 'Failed to delete contact')
+    }
+  }
+
+  // Handle opt-in/opt-out
+  const handleToggleOptIn = async (contact: WhatsAppContact) => {
+    setActiveDropdown(null)
+    try {
+      if (contact.opt_in_status === 'opted_in') {
+        await apiClient.post(`/whatsapp/contacts/${contact.id}/opt-out`)
+      } else {
+        await apiClient.post(`/whatsapp/contacts/${contact.id}/opt-in`)
+      }
+      await fetchData()
+    } catch (err: any) {
+      console.error('Failed to update opt-in status:', err)
+      alert(err.response?.data?.detail || 'Failed to update opt-in status')
+    }
   }
 
   const getOptInBadge = (status: OptInStatus) => {
@@ -1160,9 +1236,57 @@ export function WhatsApp() {
                               <Send className="w-4 h-4" />
                             </button>
                           )}
-                          <button className="p-2 rounded-lg hover:bg-muted transition-colors">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setActiveDropdown(activeDropdown === contact.id ? null : contact.id)
+                              }}
+                              className="p-2 rounded-lg hover:bg-muted transition-colors"
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                            {activeDropdown === contact.id && (
+                              <div
+                                className="absolute right-0 top-full mt-1 w-48 rounded-lg border bg-card shadow-lg z-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="py-1">
+                                  <button
+                                    onClick={() => handleEditContact(contact)}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                    Edit Contact
+                                  </button>
+                                  <button
+                                    onClick={() => handleToggleOptIn(contact)}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+                                  >
+                                    {contact.opt_in_status === 'opted_in' ? (
+                                      <>
+                                        <UserMinus className="w-4 h-4" />
+                                        Opt Out
+                                      </>
+                                    ) : (
+                                      <>
+                                        <UserPlus className="w-4 h-4" />
+                                        Opt In
+                                      </>
+                                    )}
+                                  </button>
+                                  <hr className="my-1 border-muted" />
+                                  <button
+                                    onClick={() => handleDeleteContact(contact)}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete Contact
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -1576,6 +1700,79 @@ export function WhatsApp() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Contact Modal */}
+      {showEditModal && editingContact && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowEditModal(false)}>
+          <div className="bg-card rounded-xl border shadow-lg w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Edit Contact</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  value={editingContact.phone_number}
+                  disabled
+                  className="w-full px-4 py-2 rounded-lg border bg-muted text-muted-foreground"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Display Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Enter display name"
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <div className="flex items-center gap-2">
+                  {getOptInBadge(editingContact.opt_in_status)}
+                  {editingContact.is_verified && (
+                    <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-500 text-xs font-medium">
+                      Verified
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isUpdating}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

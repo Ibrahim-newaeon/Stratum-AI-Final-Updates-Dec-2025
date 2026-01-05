@@ -361,6 +361,84 @@ async def bulk_import_contacts(
     )
 
 
+class WhatsAppContactUpdate(BaseModel):
+    """Schema for updating a contact."""
+    display_name: Optional[str] = None
+    country_code: Optional[str] = None
+
+
+@router.patch("/contacts/{contact_id}", response_model=APIResponse[WhatsAppContactResponse])
+async def update_contact(
+    request: Request,
+    contact_id: int,
+    update_data: WhatsAppContactUpdate,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Update a WhatsApp contact's details."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(WhatsAppContact).where(
+            WhatsAppContact.id == contact_id,
+            WhatsAppContact.tenant_id == tenant_id,
+        )
+    )
+    contact = result.scalar_one_or_none()
+
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    # Update fields
+    if update_data.display_name is not None:
+        contact.display_name = update_data.display_name
+    if update_data.country_code is not None:
+        contact.country_code = update_data.country_code
+
+    await db.commit()
+    await db.refresh(contact)
+
+    logger.info(f"Updated WhatsApp contact {contact_id}")
+
+    return APIResponse(
+        success=True,
+        data=WhatsAppContactResponse.model_validate(contact),
+        message="Contact updated successfully",
+    )
+
+
+@router.delete("/contacts/{contact_id}", response_model=APIResponse)
+async def delete_contact(
+    request: Request,
+    contact_id: int,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Delete a WhatsApp contact (soft delete)."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(WhatsAppContact).where(
+            WhatsAppContact.id == contact_id,
+            WhatsAppContact.tenant_id == tenant_id,
+        )
+    )
+    contact = result.scalar_one_or_none()
+
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    # Soft delete
+    contact.is_active = False
+
+    await db.commit()
+
+    logger.info(f"Deleted WhatsApp contact {contact_id}")
+
+    return APIResponse(
+        success=True,
+        message="Contact deleted successfully",
+    )
+
+
 @router.post("/contacts/{contact_id}/verify", response_model=APIResponse)
 async def verify_contact(
     request: Request,
