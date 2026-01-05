@@ -410,9 +410,9 @@ class TestCreativeFatigue:
         results = batch_creative_fatigue(creatives, baselines)
 
         assert len(results) == 5
-        # Later creatives should have higher fatigue
+        # Results are sorted by fatigue score descending (most fatigued first)
         for i in range(1, len(results)):
-            assert results[i].fatigue_score >= results[i - 1].fatigue_score - 0.1
+            assert results[i].fatigue_score <= results[i - 1].fatigue_score
 
 
 # =============================================================================
