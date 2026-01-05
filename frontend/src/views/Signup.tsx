@@ -9,14 +9,16 @@ import {
   EnvelopeIcon,
   LockClosedIcon,
   UserIcon,
+  PhoneIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useSignup, useResendVerification } from '@/api/auth';
+import { useSignup, useResendVerification, useSendWhatsAppOTP, useVerifyWhatsAppOTP } from '@/api/auth';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
+  phone: z.string().min(10, 'Please enter a valid phone number with country code'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
   acceptTerms: z.boolean().refine(val => val === true, 'You must accept the terms'),
@@ -27,34 +29,111 @@ const signupSchema = z.object({
 
 type SignupForm = z.infer<typeof signupSchema>;
 
+type SignupStep = 'details' | 'verify-phone' | 'success';
+
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
+  const [step, setStep] = useState<SignupStep>('details');
+  const [formData, setFormData] = useState<SignupForm | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [otpCountdown, setOtpCountdown] = useState(0);
 
   const signupMutation = useSignup();
   const resendMutation = useResendVerification();
+  const sendOTPMutation = useSendWhatsAppOTP();
+  const verifyOTPMutation = useVerifyWhatsAppOTP();
 
-  const isLoading = signupMutation.isPending;
+  const isLoading = signupMutation.isPending || sendOTPMutation.isPending;
   const isSuccess = signupMutation.isSuccess;
-  const apiError = signupMutation.error?.message;
+  const apiError = signupMutation.error?.message || sendOTPMutation.error?.message;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
   });
 
+  // Start countdown timer for OTP resend
+  const startOTPCountdown = () => {
+    setOtpCountdown(60);
+    const timer = setInterval(() => {
+      setOtpCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const onSubmit = async (data: SignupForm) => {
+    setFormData(data);
     setSubmittedEmail(data.email);
-    signupMutation.mutate({
-      name: data.name,
-      email: data.email,
-      password: data.password,
-    });
+
+    // Send WhatsApp OTP
+    sendOTPMutation.mutate(
+      { phone_number: data.phone },
+      {
+        onSuccess: () => {
+          setStep('verify-phone');
+          startOTPCountdown();
+        },
+      }
+    );
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!formData || otpCode.length !== 6) {
+      setOtpError('Please enter a valid 6-digit code');
+      return;
+    }
+
+    setOtpError('');
+
+    verifyOTPMutation.mutate(
+      { phone_number: formData.phone, otp_code: otpCode },
+      {
+        onSuccess: (response) => {
+          // OTP verified, now complete registration
+          setVerificationToken(response.data?.verification_token || '');
+
+          signupMutation.mutate({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+            verification_token: response.data?.verification_token,
+          });
+        },
+        onError: (error) => {
+          setOtpError(error.message || 'Invalid OTP code');
+        },
+      }
+    );
+  };
+
+  const handleResendOTP = () => {
+    if (formData && otpCountdown === 0) {
+      sendOTPMutation.mutate(
+        { phone_number: formData.phone },
+        {
+          onSuccess: () => {
+            startOTPCountdown();
+            setOtpCode('');
+            setOtpError('');
+          },
+        }
+      );
+    }
   };
 
   const handleResendVerification = () => {
@@ -62,6 +141,93 @@ export default function Signup() {
       resendMutation.mutate({ email: submittedEmail });
     }
   };
+
+  // OTP Verification Step
+  if (step === 'verify-phone') {
+    return (
+      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
+        <div className="max-w-md w-full">
+          <div className="motion-enter text-center">
+            <div className="w-20 h-20 rounded-full bg-stratum-500/10 flex items-center justify-center mx-auto mb-6">
+              <PhoneIcon className="w-10 h-10 text-stratum-400" />
+            </div>
+            <h1 className="text-h1 text-white mb-4">Verify your WhatsApp</h1>
+            <p className="text-body text-text-secondary mb-2">
+              We've sent a 6-digit code to your WhatsApp
+            </p>
+            <p className="text-body text-stratum-400 font-medium mb-8">
+              {formData?.phone}
+            </p>
+
+            {/* OTP Input */}
+            <div className="mb-6">
+              <input
+                type="text"
+                value={otpCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setOtpCode(value);
+                  setOtpError('');
+                }}
+                placeholder="Enter 6-digit code"
+                className="w-full text-center text-2xl tracking-[0.5em] py-4 rounded-xl bg-surface-secondary border border-white/10
+                           text-white placeholder-text-muted
+                           focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                           transition-all duration-base outline-none"
+                maxLength={6}
+              />
+              {otpError && (
+                <p className="mt-2 text-meta text-danger">{otpError}</p>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={handleVerifyOTP}
+                disabled={verifyOTPMutation.isPending || otpCode.length !== 6}
+                className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
+                           hover:shadow-glow transition-all duration-base
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {verifyOTPMutation.isPending ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Verifying...
+                  </span>
+                ) : (
+                  'Verify & Create Account'
+                )}
+              </button>
+
+              <button
+                onClick={handleResendOTP}
+                disabled={otpCountdown > 0 || sendOTPMutation.isPending}
+                className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendOTPMutation.isPending ? (
+                  'Sending...'
+                ) : otpCountdown > 0 ? (
+                  `Resend code in ${otpCountdown}s`
+                ) : (
+                  'Resend code'
+                )}
+              </button>
+
+              <button
+                onClick={() => setStep('details')}
+                className="block w-full text-meta text-text-muted hover:text-text-secondary transition-colors"
+              >
+                ← Back to signup
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
@@ -71,9 +237,9 @@ export default function Signup() {
             <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
               <CheckCircleIcon className="w-10 h-10 text-success" />
             </div>
-            <h1 className="text-h1 text-white mb-4">Check your email</h1>
+            <h1 className="text-h1 text-white mb-4">Account Created!</h1>
             <p className="text-body text-text-secondary mb-8">
-              We've sent a verification link to your email address. Please click the link to verify your account.
+              Your account has been created successfully. You can now sign in to access Stratum AI.
             </p>
             <div className="space-y-4">
               <button
@@ -83,16 +249,6 @@ export default function Signup() {
               >
                 Go to Login
               </button>
-              <button
-                onClick={handleResendVerification}
-                disabled={resendMutation.isPending}
-                className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors disabled:opacity-50"
-              >
-                {resendMutation.isPending ? 'Sending...' : 'Resend verification email'}
-              </button>
-              {resendMutation.isSuccess && (
-                <p className="text-meta text-success mt-2">Verification email sent!</p>
-              )}
             </div>
           </div>
         </div>
@@ -211,6 +367,27 @@ export default function Signup() {
                 </div>
                 {errors.email && (
                   <p className="mt-2 text-meta text-danger">{errors.email.message}</p>
+                )}
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-meta text-text-secondary mb-2">WhatsApp number</label>
+                <div className="relative">
+                  <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                  <input
+                    {...register('phone')}
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-secondary border border-white/10
+                               text-white placeholder-text-muted text-body
+                               focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                               transition-all duration-base outline-none"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-text-muted">Include country code for WhatsApp verification</p>
+                {errors.phone && (
+                  <p className="mt-2 text-meta text-danger">{errors.phone.message}</p>
                 )}
               </div>
 

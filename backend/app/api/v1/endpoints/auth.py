@@ -3,17 +3,22 @@
 # =============================================================================
 """
 Authentication and authorization endpoints.
-Handles login, registration, token refresh, and password reset.
+Handles login, registration, token refresh, password reset, and WhatsApp verification.
 """
 
-from datetime import datetime, timezone
-from typing import Annotated
+import random
+import string
+from datetime import datetime, timezone, timedelta
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import redis.asyncio as redis
 
 from app.core.logging import get_logger
+from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -32,9 +37,182 @@ from app.schemas import (
     UserCreate,
     UserResponse,
 )
+from app.services.whatsapp_client import get_whatsapp_client, WhatsAppAPIError
 
 logger = get_logger(__name__)
 router = APIRouter()
+
+# Redis connection for OTP storage
+OTP_EXPIRY_SECONDS = 300  # 5 minutes
+OTP_PREFIX = "whatsapp_otp:"
+
+
+# Pydantic schemas for WhatsApp OTP
+class SendOTPRequest(BaseModel):
+    """Request to send WhatsApp OTP."""
+    phone_number: str = Field(..., description="Phone number with country code (e.g., +1234567890)")
+
+
+class SendOTPResponse(BaseModel):
+    """Response after sending OTP."""
+    message: str
+    expires_in: int = OTP_EXPIRY_SECONDS
+
+
+class VerifyOTPRequest(BaseModel):
+    """Request to verify WhatsApp OTP."""
+    phone_number: str = Field(..., description="Phone number that received OTP")
+    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+
+
+class VerifyOTPResponse(BaseModel):
+    """Response after verifying OTP."""
+    verified: bool
+    verification_token: Optional[str] = None  # Token to use during registration
+
+
+def generate_otp(length: int = 6) -> str:
+    """Generate a random numeric OTP code."""
+    return ''.join(random.choices(string.digits, k=length))
+
+
+async def get_redis_client() -> redis.Redis:
+    """Get Redis client for OTP storage."""
+    return redis.from_url(settings.redis_url, decode_responses=True)
+
+
+@router.post("/whatsapp/send-otp", response_model=APIResponse[SendOTPResponse])
+async def send_whatsapp_otp(
+    request: SendOTPRequest,
+    background_tasks: BackgroundTasks,
+):
+    """
+    Send a WhatsApp OTP verification code to the specified phone number.
+
+    The OTP is valid for 5 minutes and must be verified before registration.
+    """
+    phone_number = request.phone_number.strip()
+
+    # Normalize phone number (ensure it starts with +)
+    if not phone_number.startswith('+'):
+        phone_number = '+' + phone_number
+
+    # Generate OTP
+    otp_code = generate_otp()
+
+    # Store OTP in Redis with expiry
+    try:
+        redis_client = await get_redis_client()
+        otp_key = f"{OTP_PREFIX}{phone_number}"
+        await redis_client.setex(otp_key, OTP_EXPIRY_SECONDS, otp_code)
+        await redis_client.close()
+    except Exception as e:
+        logger.error(f"Redis error storing OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate verification code",
+        )
+
+    # Send OTP via WhatsApp (in background to not block response)
+    async def send_whatsapp_message():
+        try:
+            whatsapp_client = get_whatsapp_client()
+            # Send template message with OTP
+            # Note: You need to create an approved WhatsApp template for OTP
+            await whatsapp_client.send_template_message(
+                recipient_phone=phone_number.replace('+', ''),  # Remove + for API
+                template_name="verification_code",  # Must be pre-approved template
+                language_code="en",
+                components=[
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {"type": "text", "text": otp_code}
+                        ]
+                    }
+                ]
+            )
+            logger.info(f"WhatsApp OTP sent to {phone_number[:6]}***")
+        except WhatsAppAPIError as e:
+            logger.error(f"WhatsApp API error sending OTP: {e.message}")
+        except Exception as e:
+            logger.error(f"Error sending WhatsApp OTP: {e}")
+
+    background_tasks.add_task(send_whatsapp_message)
+
+    logger.info(f"OTP generated for phone {phone_number[:6]}***")
+
+    return APIResponse(
+        success=True,
+        data=SendOTPResponse(
+            message="Verification code sent to your WhatsApp",
+            expires_in=OTP_EXPIRY_SECONDS,
+        ),
+        message="OTP sent successfully",
+    )
+
+
+@router.post("/whatsapp/verify-otp", response_model=APIResponse[VerifyOTPResponse])
+async def verify_whatsapp_otp(request: VerifyOTPRequest):
+    """
+    Verify the WhatsApp OTP code.
+
+    Returns a verification token that must be included during registration.
+    """
+    phone_number = request.phone_number.strip()
+
+    # Normalize phone number
+    if not phone_number.startswith('+'):
+        phone_number = '+' + phone_number
+
+    try:
+        redis_client = await get_redis_client()
+        otp_key = f"{OTP_PREFIX}{phone_number}"
+        stored_otp = await redis_client.get(otp_key)
+
+        if not stored_otp:
+            await redis_client.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OTP expired or not found. Please request a new code.",
+            )
+
+        if stored_otp != request.otp_code:
+            await redis_client.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid OTP code. Please try again.",
+            )
+
+        # OTP is valid - delete it and create verification token
+        await redis_client.delete(otp_key)
+
+        # Create a verification token (valid for 30 minutes)
+        verification_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        verification_key = f"phone_verified:{phone_number}"
+        await redis_client.setex(verification_key, 1800, verification_token)  # 30 min expiry
+
+        await redis_client.close()
+
+        logger.info(f"OTP verified for phone {phone_number[:6]}***")
+
+        return APIResponse(
+            success=True,
+            data=VerifyOTPResponse(
+                verified=True,
+                verification_token=verification_token,
+            ),
+            message="Phone number verified successfully",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify code",
+        )
 
 
 @router.post("/login", response_model=APIResponse[TokenResponse])

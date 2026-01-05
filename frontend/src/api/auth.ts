@@ -43,7 +43,9 @@ export interface SignupRequest {
   name: string
   email: string
   password: string
+  phone?: string
   company?: string
+  verification_token?: string
 }
 
 export interface SignupResponse {
@@ -86,6 +88,26 @@ export interface ResendVerificationRequest {
 export interface ResendVerificationResponse {
   success: boolean
   message: string
+}
+
+// WhatsApp OTP Types
+export interface SendWhatsAppOTPRequest {
+  phone_number: string
+}
+
+export interface SendWhatsAppOTPResponse {
+  message: string
+  expires_in: number
+}
+
+export interface VerifyWhatsAppOTPRequest {
+  phone_number: string
+  otp_code: string
+}
+
+export interface VerifyWhatsAppOTPResponse {
+  verified: boolean
+  verification_token: string | null
 }
 
 // API Functions
@@ -135,6 +157,22 @@ export const authApi = {
    */
   resendVerification: async (data: ResendVerificationRequest): Promise<ResendVerificationResponse> => {
     const response = await apiClient.post<ApiResponse<ResendVerificationResponse>>('/auth/resend-verification', data)
+    return response.data.data
+  },
+
+  /**
+   * Send WhatsApp OTP for phone verification
+   */
+  sendWhatsAppOTP: async (data: SendWhatsAppOTPRequest): Promise<SendWhatsAppOTPResponse> => {
+    const response = await apiClient.post<ApiResponse<SendWhatsAppOTPResponse>>('/auth/whatsapp/send-otp', data)
+    return response.data.data
+  },
+
+  /**
+   * Verify WhatsApp OTP code
+   */
+  verifyWhatsAppOTP: async (data: VerifyWhatsAppOTPRequest): Promise<VerifyWhatsAppOTPResponse> => {
+    const response = await apiClient.post<ApiResponse<VerifyWhatsAppOTPResponse>>('/auth/whatsapp/verify-otp', data)
     return response.data.data
   },
 
@@ -258,5 +296,23 @@ export function useCurrentUser(enabled = true) {
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
+  })
+}
+
+/**
+ * Hook for sending WhatsApp OTP
+ */
+export function useSendWhatsAppOTP() {
+  return useMutation({
+    mutationFn: authApi.sendWhatsAppOTP,
+  })
+}
+
+/**
+ * Hook for verifying WhatsApp OTP
+ */
+export function useVerifyWhatsAppOTP() {
+  return useMutation({
+    mutationFn: authApi.verifyWhatsAppOTP,
   })
 }
