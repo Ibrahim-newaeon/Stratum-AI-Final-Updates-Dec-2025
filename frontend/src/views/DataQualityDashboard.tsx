@@ -332,9 +332,11 @@ export function DataQualityDashboard() {
   const [resolvedIssues, setResolvedIssues] = useState<string[]>([])
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([])
   const [resolvedPIIViolations, setResolvedPIIViolations] = useState<string[]>([])
+  const [appliedRecommendations, setAppliedRecommendations] = useState<string[]>([])
   const [resolvingIssue, setResolvingIssue] = useState<string | null>(null)
   const [resolvingAlert, setResolvingAlert] = useState<string | null>(null)
   const [resolvingPII, setResolvingPII] = useState<string | null>(null)
+  const [applyingRecommendation, setApplyingRecommendation] = useState<string | null>(null)
 
   // Fetch data on mount and when filters change
   useEffect(() => {
@@ -460,6 +462,7 @@ export function DataQualityDashboard() {
     setResolvedIssues([])
     setDismissedAlerts([])
     setResolvedPIIViolations([])
+    setAppliedRecommendations([])
     await fetchQualityData()
   }
 
@@ -497,6 +500,15 @@ export function DataQualityDashboard() {
       setResolvedPIIViolations(prev => [...prev, field])
       setResolvingPII(null)
     }, 1500)
+  }
+
+  const handleApplyRecommendation = (recId: string) => {
+    setApplyingRecommendation(recId)
+    // Simulate backend applying the recommendation fix
+    setTimeout(() => {
+      setAppliedRecommendations(prev => [...prev, recId])
+      setApplyingRecommendation(null)
+    }, 2000)
   }
 
   const getStatusColor = (status: 'good' | 'warning' | 'critical') => {
@@ -1179,26 +1191,67 @@ export function DataQualityDashboard() {
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-primary" />
             Recommendations
+            {appliedRecommendations.length > 0 && (
+              <span className="text-xs font-normal text-green-500 ml-2">
+                ({appliedRecommendations.length} applied)
+              </span>
+            )}
           </h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {recommendations.map((rec) => (
-              <div
-                key={rec.id}
-                className="p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h4 className="font-medium text-sm">{rec.title}</h4>
-                  {getImpactBadge(rec.impact)}
+            {(() => {
+              const filteredRecommendations = recommendations.filter(
+                rec => !appliedRecommendations.includes(rec.id)
+              )
+              return filteredRecommendations.length > 0 ? (
+                filteredRecommendations.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h4 className="font-medium text-sm">{rec.title}</h4>
+                      {getImpactBadge(rec.impact)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">{rec.description}</p>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Owner: <span className="font-medium text-foreground">{rec.owner}</span></span>
+                    </div>
+                    <div className="mt-2 p-2 rounded bg-primary/5 border border-primary/10">
+                      <p className="text-xs text-primary font-medium">Fix: {rec.fixHint}</p>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => handleApplyRecommendation(rec.id)}
+                        disabled={applyingRecommendation === rec.id}
+                        className={cn(
+                          'px-4 py-1.5 rounded-md text-xs font-medium transition-colors',
+                          rec.impact === 'high'
+                            ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
+                            : rec.impact === 'medium'
+                            ? 'bg-amber-500 text-white hover:bg-amber-600 disabled:bg-amber-400'
+                            : 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-400'
+                        )}
+                      >
+                        {applyingRecommendation === rec.id ? (
+                          <span className="flex items-center gap-1">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            Applying...
+                          </span>
+                        ) : (
+                          'Apply Fix'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <CheckCircle2 className="w-12 h-12 text-green-500 mb-2" />
+                  <p className="font-medium text-green-500">All Recommendations Applied</p>
+                  <p className="text-sm text-muted-foreground">Great job! All fixes have been implemented</p>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">{rec.description}</p>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Owner: <span className="font-medium text-foreground">{rec.owner}</span></span>
-                </div>
-                <div className="mt-2 p-2 rounded bg-primary/5 border border-primary/10">
-                  <p className="text-xs text-primary font-medium">Fix: {rec.fixHint}</p>
-                </div>
-              </div>
-            ))}
+              )
+            })()}
           </div>
         </div>
       </div>
