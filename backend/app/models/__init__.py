@@ -58,6 +58,76 @@ from app.models.campaign_builder import (
     CampaignPublishLog,
 )
 
+# CRM Integration models
+from app.models.crm import (
+    CRMProvider,
+    CRMConnectionStatus,
+    DealStage,
+    AttributionModel,
+    WritebackStatus,
+    CRMConnection,
+    CRMContact,
+    CRMDeal,
+    Touchpoint,
+    DailyPipelineMetrics,
+    CRMWritebackConfig,
+    CRMWritebackSync,
+)
+
+# Pacing & Forecasting models
+from app.models.pacing import (
+    TargetPeriod,
+    TargetMetric,
+    AlertSeverity,
+    AlertType,
+    AlertStatus,
+    Target,
+    DailyKPI,
+    PacingAlert,
+    Forecast,
+    PacingSummary,
+)
+
+# Profit ROAS models
+from app.models.profit import (
+    MarginType,
+    ProductStatus,
+    COGSSource,
+    ProductCatalog,
+    ProductMargin,
+    MarginRule,
+    DailyProfitMetrics,
+    ProfitROASReport,
+    COGSUpload,
+)
+
+# Multi-Touch Attribution models
+from app.models.attribution import (
+    DailyAttributedRevenue,
+    ConversionPath,
+    AttributionSnapshot,
+    ChannelInteraction,
+    DataDrivenModelType,
+    ModelStatus,
+    TrainedAttributionModel,
+    ModelTrainingRun,
+)
+
+# Automated Reporting models
+from app.models.reporting import (
+    ReportType,
+    ReportFormat,
+    ScheduleFrequency,
+    DeliveryChannel,
+    ExecutionStatus,
+    DeliveryStatus,
+    ReportTemplate,
+    ScheduledReport,
+    ReportExecution,
+    ReportDelivery,
+    DeliveryChannelConfig,
+)
+
 __all__ = [
     # Enums
     "UserRole",
@@ -102,4 +172,60 @@ __all__ = [
     "TenantAdAccount",
     "CampaignDraft",
     "CampaignPublishLog",
+    # CRM Integration
+    "CRMProvider",
+    "CRMConnectionStatus",
+    "DealStage",
+    "AttributionModel",
+    "WritebackStatus",
+    "CRMConnection",
+    "CRMContact",
+    "CRMDeal",
+    "Touchpoint",
+    "DailyPipelineMetrics",
+    "CRMWritebackConfig",
+    "CRMWritebackSync",
+    # Pacing & Forecasting
+    "TargetPeriod",
+    "TargetMetric",
+    "AlertSeverity",
+    "AlertType",
+    "AlertStatus",
+    "Target",
+    "DailyKPI",
+    "PacingAlert",
+    "Forecast",
+    "PacingSummary",
+    # Profit ROAS
+    "MarginType",
+    "ProductStatus",
+    "COGSSource",
+    "ProductCatalog",
+    "ProductMargin",
+    "MarginRule",
+    "DailyProfitMetrics",
+    "ProfitROASReport",
+    "COGSUpload",
+    # Multi-Touch Attribution
+    "DailyAttributedRevenue",
+    "ConversionPath",
+    "AttributionSnapshot",
+    "ChannelInteraction",
+    # Data-Driven Attribution
+    "DataDrivenModelType",
+    "ModelStatus",
+    "TrainedAttributionModel",
+    "ModelTrainingRun",
+    # Automated Reporting
+    "ReportType",
+    "ReportFormat",
+    "ScheduleFrequency",
+    "DeliveryChannel",
+    "ExecutionStatus",
+    "DeliveryStatus",
+    "ReportTemplate",
+    "ScheduledReport",
+    "ReportExecution",
+    "ReportDelivery",
+    "DeliveryChannelConfig",
 ]

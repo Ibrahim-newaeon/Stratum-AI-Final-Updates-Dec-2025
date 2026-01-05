@@ -134,6 +134,19 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # HubSpot CRM Configuration
+    # -------------------------------------------------------------------------
+    hubspot_client_id: Optional[str] = Field(
+        default=None, description="HubSpot OAuth App Client ID"
+    )
+    hubspot_client_secret: Optional[str] = Field(
+        default=None, description="HubSpot OAuth App Client Secret"
+    )
+    hubspot_api_key: Optional[str] = Field(
+        default=None, description="HubSpot API Key (legacy, prefer OAuth)"
+    )
+
+    # -------------------------------------------------------------------------
     # Market Intelligence Configuration
     # -------------------------------------------------------------------------
     market_intel_provider: Literal["mock", "serpapi", "dataforseo"] = Field(

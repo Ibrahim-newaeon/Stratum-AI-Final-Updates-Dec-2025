@@ -36,6 +36,12 @@ from app.api.v1.endpoints import (
     insights,
     trust_layer,
     emq_v2,
+    integrations,
+    pacing,
+    profit,
+    attribution,
+    data_driven_attribution,
+    reporting,
 )
 
 api_router = APIRouter()
@@ -230,4 +236,43 @@ api_router.include_router(
 api_router.include_router(
     emq_v2.router,
     tags=["EMQ v2"],
+)
+
+# Integrations (HubSpot, CRM, Attribution)
+api_router.include_router(
+    integrations.router,
+    tags=["Integrations"],
+)
+
+# Pacing & Forecasting (Targets, Pacing Alerts, EOM Projections)
+api_router.include_router(
+    pacing.router,
+    prefix="/pacing",
+    tags=["Pacing & Forecasting"],
+)
+
+# Profit ROAS (Products, COGS, Profit Calculations)
+api_router.include_router(
+    profit.router,
+    prefix="/profit",
+    tags=["Profit ROAS"],
+)
+
+# Multi-Touch Attribution (MTA)
+api_router.include_router(
+    attribution.router,
+    tags=["Attribution"],
+)
+
+# Data-Driven Attribution (ML-based)
+api_router.include_router(
+    data_driven_attribution.router,
+    tags=["Data-Driven Attribution"],
+)
+
+# Automated Reporting (Scheduled reports, PDF generation, multi-channel delivery)
+api_router.include_router(
+    reporting.router,
+    prefix="/reporting",
+    tags=["Automated Reporting"],
 )
