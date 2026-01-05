@@ -32,6 +32,10 @@ import {
   BarChart3,
   Clock,
   Zap,
+  Bell,
+  Mail,
+  MessageSquare,
+  Smartphone,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
@@ -941,6 +945,353 @@ function AnomalyDetailModal({
   )
 }
 
+// Alert Rule interface
+interface AlertRule {
+  id?: string
+  name: string
+  metric: string
+  condition: 'above' | 'below' | 'change_above' | 'change_below'
+  threshold: number
+  frequency: 'realtime' | 'hourly' | 'daily'
+  channels: {
+    email: boolean
+    sms: boolean
+    inApp: boolean
+    slack: boolean
+  }
+  enabled: boolean
+}
+
+// Alert Configuration Modal Component
+function AlertConfigurationModal({
+  anomaly,
+  onClose,
+  onSave
+}: {
+  anomaly: Anomaly | null
+  onClose: () => void
+  onSave: (rule: AlertRule) => void
+}) {
+  const [isSaving, setIsSaving] = useState(false)
+  const [alertRule, setAlertRule] = useState<AlertRule>({
+    name: anomaly ? `${anomaly.metric} Alert` : 'New Alert',
+    metric: anomaly?.metric || 'CTR',
+    condition: anomaly?.type === 'negative' ? 'below' : 'above',
+    threshold: anomaly?.expected || 0,
+    frequency: 'realtime',
+    channels: {
+      email: true,
+      sms: false,
+      inApp: true,
+      slack: false,
+    },
+    enabled: true,
+  })
+
+  if (!anomaly) return null
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    onSave(alertRule)
+    setIsSaving(false)
+  }
+
+  const updateChannel = (channel: keyof AlertRule['channels']) => {
+    setAlertRule(prev => ({
+      ...prev,
+      channels: {
+        ...prev.channels,
+        [channel]: !prev.channels[channel],
+      }
+    }))
+  }
+
+  const metrics = [
+    'CTR', 'CPA', 'CPC', 'CPM', 'ROAS', 'Conversions',
+    'Impressions', 'Clicks', 'Spend', 'Revenue'
+  ]
+
+  const conditions = [
+    { value: 'above', label: 'Goes above' },
+    { value: 'below', label: 'Goes below' },
+    { value: 'change_above', label: 'Changes by more than +' },
+    { value: 'change_below', label: 'Changes by more than -' },
+  ]
+
+  const frequencies = [
+    { value: 'realtime', label: 'Real-time', description: 'Instant notification' },
+    { value: 'hourly', label: 'Hourly', description: 'Digest every hour' },
+    { value: 'daily', label: 'Daily', description: 'Daily summary' },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal Panel */}
+      <div className="relative w-full max-w-lg bg-background rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="border-b px-6 py-4 flex items-center justify-between bg-primary/5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg">Create Alert Rule</h2>
+              <p className="text-xs text-muted-foreground">
+                Get notified when metrics exceed thresholds
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
+          {/* Alert Name */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Alert Name</label>
+            <input
+              type="text"
+              value={alertRule.name}
+              onChange={(e) => setAlertRule(prev => ({ ...prev, name: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+              placeholder="e.g., CTR Drop Alert"
+            />
+          </div>
+
+          {/* Metric Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Metric to Monitor</label>
+            <select
+              value={alertRule.metric}
+              onChange={(e) => setAlertRule(prev => ({ ...prev, metric: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+            >
+              {metrics.map(metric => (
+                <option key={metric} value={metric}>{metric}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Condition and Threshold */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Condition</label>
+              <select
+                value={alertRule.condition}
+                onChange={(e) => setAlertRule(prev => ({
+                  ...prev,
+                  condition: e.target.value as AlertRule['condition']
+                }))}
+                className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+              >
+                {conditions.map(cond => (
+                  <option key={cond.value} value={cond.value}>{cond.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Threshold {alertRule.condition.includes('change') ? '(%)' : ''}
+              </label>
+              <input
+                type="number"
+                value={alertRule.threshold}
+                onChange={(e) => setAlertRule(prev => ({
+                  ...prev,
+                  threshold: parseFloat(e.target.value) || 0
+                }))}
+                className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                step={alertRule.condition.includes('change') ? '1' : '0.1'}
+              />
+            </div>
+          </div>
+
+          {/* Alert Preview */}
+          <div className="p-4 rounded-lg border bg-muted/50">
+            <p className="text-sm text-muted-foreground mb-1">Alert will trigger when:</p>
+            <p className="font-medium">
+              {alertRule.metric}{' '}
+              <span className="text-primary">
+                {conditions.find(c => c.value === alertRule.condition)?.label.toLowerCase()}
+              </span>{' '}
+              <span className="text-primary font-bold">
+                {alertRule.threshold}{alertRule.condition.includes('change') ? '%' : ''}
+              </span>
+            </p>
+          </div>
+
+          {/* Notification Frequency */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Check Frequency</label>
+            <div className="grid grid-cols-3 gap-2">
+              {frequencies.map(freq => (
+                <button
+                  key={freq.value}
+                  onClick={() => setAlertRule(prev => ({
+                    ...prev,
+                    frequency: freq.value as AlertRule['frequency']
+                  }))}
+                  className={cn(
+                    'p-3 rounded-lg border text-center transition-all',
+                    alertRule.frequency === freq.value
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'hover:bg-muted'
+                  )}
+                >
+                  <p className="font-medium text-sm">{freq.label}</p>
+                  <p className="text-xs text-muted-foreground">{freq.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notification Channels */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Notification Channels</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => updateChannel('email')}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  alertRule.channels.email
+                    ? 'border-primary bg-primary/10'
+                    : 'hover:bg-muted'
+                )}
+              >
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  alertRule.channels.email ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                )}>
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-sm">Email</p>
+                  <p className="text-xs text-muted-foreground">Get email alerts</p>
+                </div>
+                {alertRule.channels.email && (
+                  <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
+                )}
+              </button>
+
+              <button
+                onClick={() => updateChannel('sms')}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  alertRule.channels.sms
+                    ? 'border-primary bg-primary/10'
+                    : 'hover:bg-muted'
+                )}
+              >
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  alertRule.channels.sms ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                )}>
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-sm">SMS</p>
+                  <p className="text-xs text-muted-foreground">Text messages</p>
+                </div>
+                {alertRule.channels.sms && (
+                  <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
+                )}
+              </button>
+
+              <button
+                onClick={() => updateChannel('inApp')}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  alertRule.channels.inApp
+                    ? 'border-primary bg-primary/10'
+                    : 'hover:bg-muted'
+                )}
+              >
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  alertRule.channels.inApp ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                )}>
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-sm">In-App</p>
+                  <p className="text-xs text-muted-foreground">Push notifications</p>
+                </div>
+                {alertRule.channels.inApp && (
+                  <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
+                )}
+              </button>
+
+              <button
+                onClick={() => updateChannel('slack')}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  alertRule.channels.slack
+                    ? 'border-primary bg-primary/10'
+                    : 'hover:bg-muted'
+                )}
+              >
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  alertRule.channels.slack ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                )}>
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-sm">Slack</p>
+                  <p className="text-xs text-muted-foreground">Channel alerts</p>
+                </div>
+                {alertRule.channels.slack && (
+                  <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="border-t px-6 py-4 flex items-center gap-3 bg-muted/30">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-lg border hover:bg-muted transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSaving || !alertRule.name.trim()}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Bell className="w-4 h-4" />
+                Create Alert Rule
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Stratum() {
   const { t } = useTranslation()
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d')
@@ -948,6 +1299,8 @@ export function Stratum() {
   const [appliedInsights, setAppliedInsights] = useState<number[]>([])
   const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null)
   const [reviewedAnomalies, setReviewedAnomalies] = useState<number[]>([])
+  const [alertConfigAnomaly, setAlertConfigAnomaly] = useState<Anomaly | null>(null)
+  const [createdAlerts, setCreatedAlerts] = useState<AlertRule[]>([])
 
   // Get tenant ID from tenant store
   const tenantId = useTenantStore((state) => state.tenantId) ?? 1
@@ -1016,9 +1369,21 @@ export function Stratum() {
   const handleAnomalyAction = (anomaly: Anomaly, action: string) => {
     if (action === 'reviewed') {
       setReviewedAnomalies(prev => [...prev, anomaly.id])
+      setSelectedAnomaly(null)
+    } else if (action === 'alert') {
+      // Close anomaly modal and open alert configuration modal
+      setSelectedAnomaly(null)
+      setAlertConfigAnomaly(anomaly)
     }
-    setSelectedAnomaly(null)
-    // Here you would typically make an API call to create alert rule or mark as reviewed
+  }
+
+  // Handle alert rule save
+  const handleSaveAlertRule = (rule: AlertRule) => {
+    const ruleWithId = { ...rule, id: `alert-${Date.now()}` }
+    setCreatedAlerts(prev => [...prev, ruleWithId])
+    setAlertConfigAnomaly(null)
+    // Here you would typically make an API call to save the alert rule
+    console.log('Alert rule created:', ruleWithId)
   }
 
   const getInsightIcon = (type: string) => {
@@ -1397,6 +1762,15 @@ export function Stratum() {
           anomaly={selectedAnomaly}
           onClose={() => setSelectedAnomaly(null)}
           onAction={handleAnomalyAction}
+        />
+      )}
+
+      {/* Alert Configuration Modal */}
+      {alertConfigAnomaly && (
+        <AlertConfigurationModal
+          anomaly={alertConfigAnomaly}
+          onClose={() => setAlertConfigAnomaly(null)}
+          onSave={handleSaveAlertRule}
         />
       )}
     </div>
