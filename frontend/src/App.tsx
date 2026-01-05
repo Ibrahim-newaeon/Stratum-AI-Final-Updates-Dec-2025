@@ -59,6 +59,13 @@ const TenantAdminOverview = lazy(() => import('./views/tenant/Overview'))
 const MediaBuyerConsole = lazy(() => import('./views/tenant/Console'))
 const SignalHub = lazy(() => import('./views/tenant/SignalHub'))
 
+// Sprint feature views
+const Integrations = lazy(() => import('./views/tenant/Integrations'))
+const Pacing = lazy(() => import('./views/tenant/Pacing'))
+const ProfitROAS = lazy(() => import('./views/tenant/ProfitROAS'))
+const Attribution = lazy(() => import('./views/tenant/Attribution'))
+const Reporting = lazy(() => import('./views/tenant/Reporting'))
+
 // Account Manager views
 const AMPortfolio = lazy(() => import('./views/am/Portfolio'))
 const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'))
@@ -538,6 +545,57 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <Predictions />
+                    </Suspense>
+                  }
+                />
+
+                {/* Sprint Feature Routes */}
+                {/* CRM Integrations */}
+                <Route
+                  path="integrations"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Integrations />
+                    </Suspense>
+                  }
+                />
+
+                {/* Pacing & Forecasting */}
+                <Route
+                  path="pacing"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Pacing />
+                    </Suspense>
+                  }
+                />
+
+                {/* Profit ROAS */}
+                <Route
+                  path="profit"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ProfitROAS />
+                    </Suspense>
+                  }
+                />
+
+                {/* Attribution */}
+                <Route
+                  path="attribution"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Attribution />
+                    </Suspense>
+                  }
+                />
+
+                {/* Reporting */}
+                <Route
+                  path="reporting"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Reporting />
                     </Suspense>
                   }
                 />

@@ -23,6 +23,12 @@ import {
   ClipboardDocumentListIcon,
   ArrowLeftIcon,
   ArrowRightOnRectangleIcon,
+  // Sprint feature icons
+  CircleStackIcon,
+  ChartPieIcon,
+  CurrencyDollarIcon,
+  ArrowTrendingUpIcon,
+  DocumentChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
@@ -42,6 +48,15 @@ const getCampaignBuilderNav = (tenantId: string) => [
   { name: 'Create Campaign', href: `/app/${tenantId}/campaigns/new`, icon: PlusCircleIcon },
   { name: 'Drafts', href: `/app/${tenantId}/campaigns/drafts`, icon: DocumentTextIcon },
   { name: 'Publish Logs', href: `/app/${tenantId}/campaigns/logs`, icon: ClipboardDocumentListIcon },
+]
+
+// Analytics & Insights sub-navigation
+const getAnalyticsNav = (tenantId: string) => [
+  { name: 'Attribution', href: `/app/${tenantId}/attribution`, icon: ChartPieIcon },
+  { name: 'Profit ROAS', href: `/app/${tenantId}/profit`, icon: CurrencyDollarIcon },
+  { name: 'Pacing', href: `/app/${tenantId}/pacing`, icon: ArrowTrendingUpIcon },
+  { name: 'Reporting', href: `/app/${tenantId}/reporting`, icon: DocumentChartBarIcon },
+  { name: 'Integrations', href: `/app/${tenantId}/integrations`, icon: CircleStackIcon },
 ]
 
 export default function TenantLayout() {
@@ -64,6 +79,7 @@ export default function TenantLayout() {
 
   const navigation = tenantId ? getNavigation(tenantId) : []
   const campaignBuilderNav = tenantId ? getCampaignBuilderNav(tenantId) : []
+  const analyticsNav = tenantId ? getAnalyticsNav(tenantId) : []
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'ar' : 'en'
@@ -167,6 +183,34 @@ export default function TenantLayout() {
               </h3>
               <div className="space-y-1">
                 {campaignBuilderNav.map((item) => {
+                  const isActive = location.pathname === item.href
+                  return (
+                    <NavLink
+                      key={item.name}
+                      to={item.href}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                        isActive
+                          ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      )}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.name}
+                    </NavLink>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Analytics & Insights Section */}
+            <div className="mt-6">
+              <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Analytics & Insights
+              </h3>
+              <div className="space-y-1">
+                {analyticsNav.map((item) => {
                   const isActive = location.pathname === item.href
                   return (
                     <NavLink

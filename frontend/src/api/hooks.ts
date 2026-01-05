@@ -175,6 +175,115 @@ export {
   useCancelDeletion,
 } from './gdpr'
 
+// CRM/HubSpot Integration hooks
+export {
+  useCRMConnections,
+  useCRMConnection,
+  useConnectHubSpot,
+  useDisconnectCRM,
+  useTriggerCRMSync,
+  useCRMContacts,
+  useCRMContact,
+  useContactJourney,
+  useCRMDeals,
+  useCRMDeal,
+  usePipelineMetrics,
+  usePipelineSummary,
+  useWritebackConfig,
+  useUpdateWritebackConfig,
+  useWritebackHistory,
+  useRetryWriteback,
+} from './crm'
+
+// Pacing & Forecasting hooks
+export {
+  useTargets,
+  useTarget,
+  useCreateTarget,
+  useUpdateTarget,
+  useDeleteTarget,
+  usePacingStatus,
+  useAllPacingStatus,
+  usePacingSummary,
+  useDailyKPIs,
+  useForecast,
+  useMetricForecast,
+  useGenerateForecast,
+  usePacingAlerts,
+  usePacingAlert,
+  useAcknowledgeAlert,
+  useResolveAlert,
+  useDismissAlert,
+  useAlertStats,
+} from './pacing'
+
+// Profit ROAS hooks
+export {
+  useProducts,
+  useProduct,
+  useCreateProduct,
+  useUpdateProduct,
+  useDeleteProduct,
+  useImportProducts,
+  useProductMargins,
+  useSetProductMargin,
+  useMarginRules,
+  useMarginRule,
+  useCreateMarginRule,
+  useUpdateMarginRule,
+  useDeleteMarginRule,
+  useUploadCOGS,
+  useCOGSUploads,
+  useCOGSUpload,
+  useDailyProfitMetrics,
+  useProfitSummary,
+  useGenerateProfitReport,
+  useProfitReports,
+  useProfitReport,
+  useTrueROAS,
+} from './profit'
+
+// Attribution hooks
+export {
+  useAttributionSummary,
+  useAttributionTimeSeries,
+  useChannelInteractions,
+  useTopConversionPaths,
+  useAttributionComparison,
+  useRevenueByChannel,
+  useTrainedModels,
+  useTrainedModel,
+  useTrainMarkovModel,
+  useTrainShapleyModel,
+  useCompareModels,
+  useApplyAttributionModel,
+  useDeleteTrainedModel,
+  useModelPerformance,
+} from './attribution'
+
+// Reporting hooks
+export {
+  useReportTemplates,
+  useReportTemplate,
+  useCreateReportTemplate,
+  useUpdateReportTemplate,
+  useDeleteReportTemplate,
+  useReportSchedules,
+  useReportSchedule,
+  useCreateReportSchedule,
+  useUpdateReportSchedule,
+  useDeleteReportSchedule,
+  usePauseSchedule,
+  useResumeSchedule,
+  useGenerateReport,
+  useReportExecutions,
+  useReportExecution,
+  useReportDeliveries,
+  useDeliveryChannelConfigs,
+  useUpdateDeliveryChannelConfig,
+  useTestDeliveryChannel,
+} from './reporting'
+
 // Tenant Dashboard hooks
 export {
   useUpdateTenantSettings,
