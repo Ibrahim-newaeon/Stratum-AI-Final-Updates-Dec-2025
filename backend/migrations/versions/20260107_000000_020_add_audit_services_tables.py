@@ -1,19 +1,35 @@
 """Add audit services tables
 
 Revision ID: 020_audit_services
-Revises: 019_automated_reporting
+Revises: 019_reporting
 Create Date: 2026-01-07 00:00:00.000000
 
 """
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision = '020_audit_services'
-down_revision = '019_automated_reporting'
+down_revision = '019_reporting'
 branch_labels = None
 depends_on = None
+
+
+def table_exists(table_name):
+    """Check if a table exists in the database."""
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    return table_name in inspector.get_table_names()
+
+
+def index_exists(index_name, table_name):
+    """Check if an index exists on a table."""
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    indexes = inspector.get_indexes(table_name)
+    return any(idx['name'] == index_name for idx in indexes)
 
 
 def upgrade():
@@ -284,28 +300,29 @@ def upgrade():
     op.create_index('ix_fatigue_alert_tenant', 'creative_fatigue_alerts', ['tenant_id', 'created_at'])
     op.create_index('ix_fatigue_alert_creative', 'creative_fatigue_alerts', ['creative_id'])
 
-    # Competitor Benchmarks
-    op.create_table(
-        'competitor_benchmarks',
-        sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('tenant_id', sa.Integer(), nullable=False),
-        sa.Column('date', sa.Date(), nullable=False),
-        sa.Column('industry', sa.String(100), nullable=False),
-        sa.Column('region', sa.String(50), nullable=False),
-        sa.Column('platform', sa.String(50), nullable=False),
-        sa.Column('your_metrics', postgresql.JSONB(), nullable=False),
-        sa.Column('industry_metrics', postgresql.JSONB(), nullable=False),
-        sa.Column('percentile_rankings', postgresql.JSONB(), nullable=False),
-        sa.Column('overall_score', sa.Float(), nullable=True),
-        sa.Column('metrics_above_median', sa.Integer(), default=0, nullable=False),
-        sa.Column('metrics_below_median', sa.Integer(), default=0, nullable=False),
-        sa.Column('recommendations', postgresql.JSONB(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_benchmark_tenant', 'competitor_benchmarks', ['tenant_id', 'date'])
-    op.create_index('ix_benchmark_industry', 'competitor_benchmarks', ['tenant_id', 'industry', 'platform'])
+    # Competitor Benchmarks (skip if already exists)
+    if not table_exists('competitor_benchmarks'):
+        op.create_table(
+            'competitor_benchmarks',
+            sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
+            sa.Column('tenant_id', sa.Integer(), nullable=False),
+            sa.Column('date', sa.Date(), nullable=False),
+            sa.Column('industry', sa.String(100), nullable=False),
+            sa.Column('region', sa.String(50), nullable=False),
+            sa.Column('platform', sa.String(50), nullable=False),
+            sa.Column('your_metrics', postgresql.JSONB(), nullable=False),
+            sa.Column('industry_metrics', postgresql.JSONB(), nullable=False),
+            sa.Column('percentile_rankings', postgresql.JSONB(), nullable=False),
+            sa.Column('overall_score', sa.Float(), nullable=True),
+            sa.Column('metrics_above_median', sa.Integer(), default=0, nullable=False),
+            sa.Column('metrics_below_median', sa.Integer(), default=0, nullable=False),
+            sa.Column('recommendations', postgresql.JSONB(), nullable=True),
+            sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+            sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ondelete='CASCADE'),
+            sa.PrimaryKeyConstraint('id')
+        )
+        op.create_index('ix_benchmark_tenant', 'competitor_benchmarks', ['tenant_id', 'date'])
+        op.create_index('ix_benchmark_industry', 'competitor_benchmarks', ['tenant_id', 'industry', 'platform'])
 
     # Budget Reallocation Plans
     op.create_table(
