@@ -327,6 +327,14 @@ def calculate_data_freshness(metrics: PlatformMetrics, now: Optional[datetime] =
         details = "Last update time unknown"
         status = DriverStatus.WARNING
     else:
+        # Handle timezone-aware vs naive datetime comparison
+        if last_update.tzinfo is not None and now.tzinfo is None:
+            # last_update is timezone-aware, now is naive - make now naive by using last_update's timezone
+            now = now.replace(tzinfo=last_update.tzinfo)
+        elif last_update.tzinfo is None and now.tzinfo is not None:
+            # last_update is naive, now is timezone-aware - strip timezone from now
+            now = now.replace(tzinfo=None)
+
         hours_since_update = (now - last_update).total_seconds() / 3600
 
         if hours_since_update <= 1:
