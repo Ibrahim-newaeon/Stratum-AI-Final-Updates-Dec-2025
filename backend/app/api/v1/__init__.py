@@ -42,6 +42,7 @@ from app.api.v1.endpoints import (
     attribution,
     data_driven_attribution,
     reporting,
+    audit_services,
 )
 
 api_router = APIRouter()
@@ -275,4 +276,11 @@ api_router.include_router(
     reporting.router,
     prefix="/reporting",
     tags=["Automated Reporting"],
+)
+
+# Audit Services (EMQ, Offline Conversions, A/B Testing, LTV, etc.)
+api_router.include_router(
+    audit_services.router,
+    prefix="/audit",
+    tags=["Audit Services"],
 )
