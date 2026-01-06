@@ -39,7 +39,7 @@ from app.core.logging import get_logger
 from app.models import User
 
 # Import services
-from app.services.emq_measurement_service import EMQMeasurementService
+from app.services.emq_measurement_service import RealEMQService as EMQMeasurementService
 from app.services.offline_conversion_service import OfflineConversionService
 from app.ml.ab_testing import ModelABTestingService
 from app.services.conversion_latency_service import ConversionLatencyTracker
@@ -53,7 +53,7 @@ from app.services.budget_reallocation_service import (
 from app.services.audience_insights_service import AudienceInsightsService, AudienceType
 from app.ml.ltv_predictor import LTVPredictor, CustomerBehavior
 from app.ml.explainability import ModelExplainer
-from app.ml.retraining_pipeline import ModelRetrainingPipeline
+from app.ml.retraining_pipeline import RetrainingPipeline as ModelRetrainingPipeline
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/audit-services", tags=["audit-services"])
