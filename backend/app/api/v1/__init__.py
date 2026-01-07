@@ -31,6 +31,7 @@ from app.api.v1.endpoints import (
     superadmin,
     superadmin_analytics,
     autopilot,
+    autopilot_enforcement,
     campaign_builder,
     feature_flags,
     insights,
@@ -203,6 +204,13 @@ api_router.include_router(
     autopilot.router,
     prefix="/autopilot",
     tags=["Autopilot"],
+)
+
+# Autopilot Enforcement (Budget/ROAS restrictions)
+api_router.include_router(
+    autopilot_enforcement.router,
+    prefix="/autopilot/enforcement",
+    tags=["Autopilot Enforcement"],
 )
 
 # Campaign Builder (Multi-platform campaign creation)
