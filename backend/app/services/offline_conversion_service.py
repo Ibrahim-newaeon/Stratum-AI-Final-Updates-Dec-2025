@@ -889,6 +889,50 @@ class OfflineConversionService:
             for b in batches[:limit]
         ]
 
+    def list_batches(
+        self,
+        tenant_id: str,
+        platform: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
+        """
+        List offline conversion batches.
+
+        Args:
+            tenant_id: Tenant ID (for filtering in production)
+            platform: Filter by platform
+            status: Filter by status
+            limit: Maximum number of results
+
+        Returns:
+            List of batch information
+        """
+        batches = list(self._batches.values())
+
+        if platform:
+            batches = [b for b in batches if b.platform == platform]
+
+        if status:
+            batches = [b for b in batches if b.status.value == status]
+
+        # Sort by created_at descending
+        batches.sort(key=lambda b: b.created_at, reverse=True)
+
+        return [
+            {
+                "batch_id": b.batch_id,
+                "platform": b.platform,
+                "status": b.status.value,
+                "created_at": b.created_at.isoformat(),
+                "total_records": b.total_records,
+                "successful_records": b.successful_records,
+                "failed_records": b.failed_records,
+                "error_summary": b.error_summary,
+            }
+            for b in batches[:limit]
+        ]
+
 
 # Create singleton instance
 offline_conversion_service = OfflineConversionService()

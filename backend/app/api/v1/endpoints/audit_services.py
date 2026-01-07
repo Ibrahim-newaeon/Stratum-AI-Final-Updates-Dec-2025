@@ -541,28 +541,31 @@ async def upload_offline_conversions(
     """
     Upload offline conversions to ad platforms.
     """
+    from app.services.offline_conversion_service import OfflineConversion
+    import uuid
+
     try:
         service = OfflineConversionService()
 
-        # Convert to service format
+        # Convert to OfflineConversion objects
         conversions = []
-        for conv in request.conversions:
-            conversions.append({
-                "event_name": conv.event_name,
-                "event_time": conv.event_time,
-                "value": conv.value,
-                "currency": conv.currency,
-                "email": conv.email,
-                "phone": conv.phone,
-                "external_id": conv.external_id,
-                "click_id": conv.click_id,
-            })
+        for i, conv in enumerate(request.conversions):
+            conversions.append(OfflineConversion(
+                conversion_id=f"{request.batch_name or 'batch'}_{tenant_id}_{i}_{uuid.uuid4().hex[:8]}",
+                platform=request.platform,
+                event_name=conv.event_name,
+                event_time=conv.event_time,
+                conversion_value=conv.value or 0.0,
+                currency=conv.currency or "USD",
+                email=conv.email,
+                phone=conv.phone,
+                external_id=conv.external_id,
+                click_id=conv.click_id,
+            ))
 
-        result = service.upload_conversions(
-            platform=request.platform,
+        result = await service.upload_conversions(
             conversions=conversions,
-            tenant_id=str(tenant_id),
-            batch_name=request.batch_name,
+            platform=request.platform,
         )
 
         return OfflineConversionUploadResponse(
@@ -571,7 +574,7 @@ async def upload_offline_conversions(
             total_records=result.total_records,
             successful=result.successful_records,
             failed=result.failed_records,
-            errors=result.errors if result.errors else None,
+            errors=[e.get("message", str(e)) for e in result.errors] if result.errors else None,
         )
     except Exception as e:
         logger.error(f"Offline conversion upload failed: {e}")
@@ -734,11 +737,11 @@ async def get_latency_stats(
     for p in platforms:
         for et in event_types:
             stats = tracker.get_stats(p, et, period_hours)
-            if stats and stats.event_count > 0:
+            if stats and stats.count > 0:
                 stats_list.append(LatencyStatsResponse(
                     platform=p,
                     event_type=et,
-                    event_count=stats.event_count,
+                    event_count=stats.count,
                     avg_latency_ms=stats.avg_ms,
                     median_latency_ms=stats.median_ms,
                     p95_latency_ms=stats.p95_ms,
