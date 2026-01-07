@@ -744,3 +744,500 @@ def predict_creative_fatigue(
         "estimated_loss_percent": prediction.estimated_performance_loss_if_not_refreshed,
         "recommendations": prediction.recommendations,
     }
+
+
+# =============================================================================
+# Creative Clustering by Decay Pattern
+# =============================================================================
+
+@dataclass
+class CreativeDecayPattern:
+    """Extracted decay pattern from a creative's history."""
+    creative_id: str
+    peak_day: int
+    peak_ctr: float
+    decay_rate: float
+    floor_ctr: float
+    days_to_50_percent: float  # Days to reach 50% of peak
+    days_to_fatigue: int
+    total_lifetime_ctr: float  # Area under curve
+
+
+class CreativeClusterAnalyzer:
+    """
+    Cluster creatives by their decay patterns to learn optimal strategies.
+
+    Enables:
+    - Identify which creative types last longest
+    - Learn platform-specific decay patterns
+    - Transfer learning for new creatives
+    - Benchmark against similar creatives
+    """
+
+    def __init__(self, n_clusters: int = 5):
+        self.n_clusters = n_clusters
+        self._kmeans: Optional[Any] = None
+        self._scaler: Optional[Any] = None
+        self._patterns: List[CreativeDecayPattern] = []
+        self._clusters: Dict[int, List[str]] = {}
+
+    def extract_pattern(self, history: CreativePerformanceHistory) -> Optional[CreativeDecayPattern]:
+        """Extract decay pattern features from creative history."""
+        if len(history.ctr) < 7:
+            return None
+
+        ctr_arr = np.array(history.ctr)
+
+        # Find peak
+        peak_idx = np.argmax(ctr_arr)
+        peak_day = int(peak_idx + 1)
+        peak_ctr = float(ctr_arr[peak_idx])
+
+        if peak_ctr <= 0:
+            return None
+
+        # Calculate decay rate
+        if peak_idx < len(ctr_arr) - 3:
+            post_peak = ctr_arr[peak_idx:]
+            if len(post_peak) > 1:
+                # Fit exponential decay
+                days_post = np.arange(len(post_peak))
+                # Simple estimation: find when we hit 50%
+                half_peak = peak_ctr * 0.5
+                below_half = np.where(post_peak < half_peak)[0]
+                if len(below_half) > 0:
+                    days_to_50 = float(below_half[0])
+                    decay_rate = math.log(2) / max(days_to_50, 1)
+                else:
+                    days_to_50 = len(post_peak) * 2  # Estimate
+                    decay_rate = math.log(2) / days_to_50
+            else:
+                decay_rate = 0.05
+                days_to_50 = 14
+        else:
+            decay_rate = 0.05
+            days_to_50 = 14
+
+        # Floor CTR (last 3 days average)
+        floor_ctr = float(np.mean(ctr_arr[-3:]))
+
+        # Days to fatigue (when CTR drops to 35% of peak)
+        fatigue_threshold = peak_ctr * 0.35
+        below_fatigue = np.where(ctr_arr < fatigue_threshold)[0]
+        if len(below_fatigue) > 0:
+            days_to_fatigue = int(below_fatigue[0])
+        else:
+            days_to_fatigue = len(ctr_arr) + 7
+
+        # Total lifetime CTR (area under curve, proxy for total value)
+        total_ctr = float(np.sum(ctr_arr))
+
+        return CreativeDecayPattern(
+            creative_id=history.creative_id,
+            peak_day=peak_day,
+            peak_ctr=round(peak_ctr, 6),
+            decay_rate=round(decay_rate, 4),
+            floor_ctr=round(floor_ctr, 6),
+            days_to_50_percent=round(days_to_50, 1),
+            days_to_fatigue=days_to_fatigue,
+            total_lifetime_ctr=round(total_ctr, 4),
+        )
+
+    def fit(self, histories: List[CreativePerformanceHistory]) -> "CreativeClusterAnalyzer":
+        """
+        Fit clustering model on creative histories.
+
+        Clusters creatives by their decay pattern similarities.
+        """
+        if not ML_AVAILABLE:
+            logger.warning("ML libraries not available for clustering")
+            return self
+
+        # Extract patterns
+        self._patterns = []
+        for h in histories:
+            pattern = self.extract_pattern(h)
+            if pattern:
+                self._patterns.append(pattern)
+
+        if len(self._patterns) < self.n_clusters:
+            logger.warning(f"Not enough patterns for clustering: {len(self._patterns)}")
+            return self
+
+        # Create feature matrix
+        features = np.array([
+            [p.peak_day, p.peak_ctr, p.decay_rate, p.days_to_50_percent, p.days_to_fatigue]
+            for p in self._patterns
+        ])
+
+        # Scale features
+        self._scaler = StandardScaler()
+        features_scaled = self._scaler.fit_transform(features)
+
+        # Cluster
+        self._kmeans = KMeans(n_clusters=min(self.n_clusters, len(self._patterns)), random_state=42)
+        labels = self._kmeans.fit_predict(features_scaled)
+
+        # Store clusters
+        self._clusters = {}
+        for pattern, label in zip(self._patterns, labels):
+            if label not in self._clusters:
+                self._clusters[label] = []
+            self._clusters[label].append(pattern.creative_id)
+
+        logger.info(f"Clustered {len(self._patterns)} creatives into {len(self._clusters)} groups")
+
+        return self
+
+    def get_cluster_profiles(self) -> List[Dict[str, Any]]:
+        """Get profile of each cluster."""
+        profiles = []
+
+        for cluster_id, creative_ids in self._clusters.items():
+            cluster_patterns = [p for p in self._patterns if p.creative_id in creative_ids]
+
+            if not cluster_patterns:
+                continue
+
+            avg_peak_day = np.mean([p.peak_day for p in cluster_patterns])
+            avg_decay_rate = np.mean([p.decay_rate for p in cluster_patterns])
+            avg_days_to_fatigue = np.mean([p.days_to_fatigue for p in cluster_patterns])
+            avg_lifetime_ctr = np.mean([p.total_lifetime_ctr for p in cluster_patterns])
+
+            # Determine cluster type
+            if avg_decay_rate > 0.1:
+                cluster_type = "fast_burner"
+                description = "High initial impact, rapid decay - best for short campaigns"
+            elif avg_decay_rate < 0.03:
+                cluster_type = "evergreen"
+                description = "Slow decay, long lifespan - good for always-on campaigns"
+            elif avg_peak_day > 10:
+                cluster_type = "slow_starter"
+                description = "Takes time to peak, but maintains well"
+            else:
+                cluster_type = "balanced"
+                description = "Moderate peak and decay - versatile performer"
+
+            profiles.append({
+                "cluster_id": int(cluster_id),
+                "cluster_type": cluster_type,
+                "description": description,
+                "creative_count": len(cluster_patterns),
+                "avg_peak_day": round(avg_peak_day, 1),
+                "avg_decay_rate": round(avg_decay_rate, 4),
+                "avg_days_to_fatigue": round(avg_days_to_fatigue, 0),
+                "avg_lifetime_value": round(avg_lifetime_ctr, 4),
+                "creative_ids": creative_ids[:10],  # Sample
+            })
+
+        return sorted(profiles, key=lambda x: x["avg_lifetime_value"], reverse=True)
+
+    def predict_cluster(self, history: CreativePerformanceHistory) -> Optional[Dict[str, Any]]:
+        """Predict which cluster a new creative belongs to."""
+        if not self._kmeans or not self._scaler:
+            return None
+
+        pattern = self.extract_pattern(history)
+        if not pattern:
+            return None
+
+        features = np.array([[
+            pattern.peak_day, pattern.peak_ctr, pattern.decay_rate,
+            pattern.days_to_50_percent, pattern.days_to_fatigue
+        ]])
+        features_scaled = self._scaler.transform(features)
+        cluster_id = int(self._kmeans.predict(features_scaled)[0])
+
+        # Get cluster profile
+        profiles = self.get_cluster_profiles()
+        matching_profile = next((p for p in profiles if p["cluster_id"] == cluster_id), None)
+
+        return {
+            "creative_id": history.creative_id,
+            "predicted_cluster": cluster_id,
+            "cluster_profile": matching_profile,
+            "pattern": {
+                "peak_day": pattern.peak_day,
+                "decay_rate": pattern.decay_rate,
+                "days_to_fatigue": pattern.days_to_fatigue,
+            },
+        }
+
+
+# =============================================================================
+# Cross-Creative Learning (Transfer Learning)
+# =============================================================================
+
+class CrossCreativeLearner:
+    """
+    Learn from historical creatives to improve predictions for new ones.
+
+    Enables "cold start" predictions using transfer learning from
+    similar creatives.
+    """
+
+    def __init__(self):
+        self._historical_data: List[Tuple[CreativePerformanceHistory, FatiguePrediction]] = []
+        self._platform_benchmarks: Dict[str, Dict[str, float]] = {}
+        self._type_benchmarks: Dict[str, Dict[str, float]] = {}
+
+    def learn(
+        self,
+        histories: List[CreativePerformanceHistory],
+        predictions: List[FatiguePrediction],
+    ) -> "CrossCreativeLearner":
+        """
+        Learn from historical creative data.
+
+        Builds benchmarks for platforms and creative types.
+        """
+        self._historical_data = list(zip(histories, predictions))
+
+        # Calculate platform benchmarks
+        platform_data: Dict[str, List[FatiguePrediction]] = {}
+        for h, p in self._historical_data:
+            platform = h.platform.lower()
+            if platform not in platform_data:
+                platform_data[platform] = []
+            platform_data[platform].append(p)
+
+        for platform, preds in platform_data.items():
+            self._platform_benchmarks[platform] = {
+                "avg_days_to_fatigue": np.mean([p.days_until_fatigue for p in preds]),
+                "avg_fatigue_score": np.mean([p.current_fatigue_score for p in preds]),
+                "avg_decay_rate": np.mean([p.decay_rate or 0.05 for p in preds]),
+                "sample_count": len(preds),
+            }
+
+        # Calculate type benchmarks
+        type_data: Dict[str, List[FatiguePrediction]] = {}
+        for h, p in self._historical_data:
+            ctype = h.creative_type.lower()
+            if ctype not in type_data:
+                type_data[ctype] = []
+            type_data[ctype].append(p)
+
+        for ctype, preds in type_data.items():
+            self._type_benchmarks[ctype] = {
+                "avg_days_to_fatigue": np.mean([p.days_until_fatigue for p in preds]),
+                "avg_fatigue_score": np.mean([p.current_fatigue_score for p in preds]),
+                "avg_decay_rate": np.mean([p.decay_rate or 0.05 for p in preds]),
+                "sample_count": len(preds),
+            }
+
+        logger.info(
+            f"Learned from {len(histories)} creatives: "
+            f"{len(self._platform_benchmarks)} platforms, "
+            f"{len(self._type_benchmarks)} types"
+        )
+
+        return self
+
+    def get_cold_start_prediction(
+        self,
+        platform: str,
+        creative_type: str,
+    ) -> Dict[str, Any]:
+        """
+        Get prediction for a new creative with no history.
+
+        Uses learned benchmarks from similar creatives.
+        """
+        platform = platform.lower()
+        creative_type = creative_type.lower()
+
+        # Get platform benchmark
+        platform_bench = self._platform_benchmarks.get(platform, {})
+        type_bench = self._type_benchmarks.get(creative_type, {})
+
+        # Blend benchmarks (prefer type-specific if available)
+        if type_bench and platform_bench:
+            days_to_fatigue = (type_bench["avg_days_to_fatigue"] + platform_bench["avg_days_to_fatigue"]) / 2
+            decay_rate = (type_bench["avg_decay_rate"] + platform_bench["avg_decay_rate"]) / 2
+        elif type_bench:
+            days_to_fatigue = type_bench["avg_days_to_fatigue"]
+            decay_rate = type_bench["avg_decay_rate"]
+        elif platform_bench:
+            days_to_fatigue = platform_bench["avg_days_to_fatigue"]
+            decay_rate = platform_bench["avg_decay_rate"]
+        else:
+            # Default fallback
+            days_to_fatigue = 14
+            decay_rate = 0.05
+
+        return {
+            "predicted_days_to_fatigue": round(days_to_fatigue, 0),
+            "predicted_decay_rate": round(decay_rate, 4),
+            "confidence": 0.4,  # Lower confidence for cold start
+            "basis": {
+                "platform_benchmark": platform_bench,
+                "type_benchmark": type_bench,
+            },
+            "recommendation": (
+                f"Based on similar {creative_type} creatives on {platform}, "
+                f"expect ~{int(days_to_fatigue)} days until fatigue. "
+                f"Monitor closely and update predictions as data accumulates."
+            ),
+        }
+
+    def find_similar_creatives(
+        self,
+        history: CreativePerformanceHistory,
+        top_n: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """
+        Find historically similar creatives for benchmarking.
+
+        Matches on platform, type, and performance profile.
+        """
+        candidates = []
+
+        for hist, pred in self._historical_data:
+            # Score similarity
+            similarity = 0
+
+            # Platform match
+            if hist.platform.lower() == history.platform.lower():
+                similarity += 0.3
+
+            # Type match
+            if hist.creative_type.lower() == history.creative_type.lower():
+                similarity += 0.3
+
+            # Performance similarity (if enough data)
+            if len(history.ctr) >= 3 and len(hist.ctr) >= 3:
+                # Compare early CTR patterns
+                early_ctr_this = np.mean(history.ctr[:3])
+                early_ctr_that = np.mean(hist.ctr[:3])
+                if early_ctr_that > 0:
+                    ctr_ratio = min(early_ctr_this, early_ctr_that) / max(early_ctr_this, early_ctr_that)
+                    similarity += 0.4 * ctr_ratio
+
+            candidates.append({
+                "creative_id": hist.creative_id,
+                "creative_name": hist.creative_name,
+                "platform": hist.platform,
+                "creative_type": hist.creative_type,
+                "similarity_score": round(similarity, 3),
+                "days_to_fatigue": pred.days_until_fatigue,
+                "final_phase": pred.current_phase.value,
+            })
+
+        # Sort by similarity and return top N
+        candidates.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return candidates[:top_n]
+
+
+# =============================================================================
+# Creative A/B Test Suggestions
+# =============================================================================
+
+class CreativeTestSuggester:
+    """
+    Suggest A/B test variations for creatives based on fatigue patterns.
+
+    Analyzes what makes creatives last longer and suggests variations
+    to test for improved longevity.
+    """
+
+    VARIATION_STRATEGIES = {
+        "hook_change": {
+            "description": "Change the opening hook (first 3 seconds for video, headline for image)",
+            "expected_impact": "Can extend lifecycle by 20-40% if new hook resonates",
+            "effort": "medium",
+        },
+        "cta_variation": {
+            "description": "Test different call-to-action text and design",
+            "expected_impact": "Typically 5-15% improvement in conversion rate",
+            "effort": "low",
+        },
+        "format_switch": {
+            "description": "Convert between formats (image to video, single to carousel)",
+            "expected_impact": "Can reset fatigue and add 1-2 weeks of runway",
+            "effort": "high",
+        },
+        "color_refresh": {
+            "description": "Update color scheme while keeping core creative concept",
+            "expected_impact": "Light refresh can add 3-7 days of performance",
+            "effort": "low",
+        },
+        "copy_iteration": {
+            "description": "Test new body copy and value propositions",
+            "expected_impact": "10-20% variation in CTR common",
+            "effort": "low",
+        },
+        "audience_segment": {
+            "description": "Test same creative on different audience segments",
+            "expected_impact": "Can find segments where creative has fresh appeal",
+            "effort": "medium",
+        },
+    }
+
+    def suggest_tests(
+        self,
+        prediction: FatiguePrediction,
+        history: CreativePerformanceHistory,
+        max_suggestions: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """
+        Suggest A/B test variations based on fatigue prediction.
+        """
+        suggestions = []
+
+        # Priority based on urgency
+        if prediction.refresh_urgency == RefreshUrgency.IMMEDIATE:
+            # Urgent - suggest high-impact changes
+            strategies = ["format_switch", "hook_change", "audience_segment"]
+        elif prediction.refresh_urgency == RefreshUrgency.SOON:
+            # Preparing - test variations before crisis
+            strategies = ["hook_change", "cta_variation", "copy_iteration"]
+        else:
+            # Healthy - optimize incrementally
+            strategies = ["cta_variation", "color_refresh", "copy_iteration"]
+
+        for strategy in strategies[:max_suggestions]:
+            strategy_info = self.VARIATION_STRATEGIES.get(strategy, {})
+
+            suggestions.append({
+                "strategy": strategy,
+                "description": strategy_info.get("description", ""),
+                "expected_impact": strategy_info.get("expected_impact", ""),
+                "effort_level": strategy_info.get("effort", "medium"),
+                "priority": "high" if strategy in ["format_switch", "hook_change"] else "medium",
+                "rationale": self._get_rationale(strategy, prediction, history),
+            })
+
+        return suggestions
+
+    def _get_rationale(
+        self,
+        strategy: str,
+        prediction: FatiguePrediction,
+        history: CreativePerformanceHistory,
+    ) -> str:
+        """Generate rationale for why this test is recommended."""
+        if strategy == "hook_change":
+            if prediction.current_phase == LifecyclePhase.DECLINE:
+                return "CTR is declining - a new hook can recapture attention"
+            return "Proactive hook testing before fatigue sets in"
+
+        elif strategy == "format_switch":
+            return f"Current {history.creative_type} format showing fatigue; switching formats can reset audience perception"
+
+        elif strategy == "cta_variation":
+            if history.cvr and np.mean(history.cvr[-3:]) < np.mean(history.cvr[:3]) * 0.8:
+                return "Conversion rate declining - test CTAs to improve click-to-conversion"
+            return "Standard optimization - always worth testing CTA variations"
+
+        elif strategy == "audience_segment":
+            if history.frequency and history.frequency[-1] > 3:
+                return f"High frequency ({history.frequency[-1]:.1f}) - finding new audiences can extend reach"
+            return "Test creative on new segments to find untapped potential"
+
+        return "Recommended based on lifecycle analysis"
+
+
+# Singleton instances
+cluster_analyzer = CreativeClusterAnalyzer()
+cross_creative_learner = CrossCreativeLearner()
+test_suggester = CreativeTestSuggester()

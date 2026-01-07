@@ -972,3 +972,389 @@ class AttributionService:
                 quality_bonus = max(quality_bonus, 0.1)
 
         return min(1.0, base_confidence + touch_bonus + quality_bonus)
+
+
+# =============================================================================
+# Data-Driven Attribution (Markov Chain Model)
+# =============================================================================
+
+class MarkovAttributionModel:
+    """
+    Data-Driven Attribution using Markov Chain modeling.
+
+    This model learns the probability of conversion based on actual
+    customer journey paths, providing more accurate attribution than
+    rule-based models.
+    """
+
+    def __init__(self):
+        self.transition_matrix: Dict[str, Dict[str, float]] = {}
+        self.conversion_probs: Dict[str, float] = {}
+        self.removal_effects: Dict[str, float] = {}
+        self._is_fitted = False
+
+    def fit(self, journeys: List[List[str]], converted: List[bool]) -> "MarkovAttributionModel":
+        """
+        Fit the Markov chain model on customer journey data.
+
+        Args:
+            journeys: List of journeys, each journey is a list of channel names
+            converted: List of booleans indicating if journey converted
+        """
+        # Count transitions
+        transitions: Dict[str, Dict[str, int]] = {}
+
+        for journey, did_convert in zip(journeys, converted):
+            # Add start and end states
+            path = ["(start)"] + journey + ["(conversion)" if did_convert else "(null)"]
+
+            for i in range(len(path) - 1):
+                from_state = path[i]
+                to_state = path[i + 1]
+
+                if from_state not in transitions:
+                    transitions[from_state] = {}
+                transitions[from_state][to_state] = transitions[from_state].get(to_state, 0) + 1
+
+        # Convert to probabilities
+        for from_state, to_states in transitions.items():
+            total = sum(to_states.values())
+            self.transition_matrix[from_state] = {
+                to_state: count / total
+                for to_state, count in to_states.items()
+            }
+
+        # Calculate baseline conversion probability
+        self.conversion_probs["baseline"] = self._calculate_conversion_prob()
+
+        # Calculate removal effect for each channel
+        channels = set()
+        for journey in journeys:
+            channels.update(journey)
+
+        for channel in channels:
+            self.removal_effects[channel] = self._calculate_removal_effect(channel)
+
+        self._is_fitted = True
+        return self
+
+    def _calculate_conversion_prob(self, removed_channel: Optional[str] = None) -> float:
+        """Calculate overall conversion probability (optionally with channel removed)."""
+        if not self.transition_matrix:
+            return 0.0
+
+        # Simulate random walks to estimate conversion probability
+        num_simulations = 10000
+        conversions = 0
+
+        for _ in range(num_simulations):
+            state = "(start)"
+            visited = set()
+            max_steps = 20
+
+            for _ in range(max_steps):
+                if state == "(conversion)":
+                    conversions += 1
+                    break
+                elif state == "(null)" or state in visited:
+                    break
+
+                visited.add(state)
+
+                if state not in self.transition_matrix:
+                    break
+
+                # Get next state probabilities
+                next_states = self.transition_matrix[state].copy()
+
+                # Remove channel if specified
+                if removed_channel and removed_channel in next_states:
+                    del next_states[removed_channel]
+                    # Renormalize
+                    total = sum(next_states.values())
+                    if total > 0:
+                        next_states = {k: v/total for k, v in next_states.items()}
+                    else:
+                        break
+
+                if not next_states:
+                    break
+
+                # Sample next state
+                states = list(next_states.keys())
+                probs = list(next_states.values())
+                state = states[int(sum(p < sum(probs[:i+1]) for i, p in enumerate([hash(str(_)) % 1000 / 1000])))]
+
+        return conversions / num_simulations
+
+    def _calculate_removal_effect(self, channel: str) -> float:
+        """Calculate the removal effect for a channel."""
+        if not self._is_fitted and "baseline" not in self.conversion_probs:
+            return 0.0
+
+        baseline = self.conversion_probs.get("baseline", 0)
+        if baseline == 0:
+            return 0.0
+
+        prob_without = self._calculate_conversion_prob(removed_channel=channel)
+        removal_effect = (baseline - prob_without) / baseline
+
+        return max(0, removal_effect)
+
+    def get_attribution_weights(self, channels: List[str]) -> Dict[str, float]:
+        """
+        Get attribution weights for channels based on removal effects.
+
+        Returns weights normalized to sum to 1.0
+        """
+        if not self._is_fitted:
+            # Equal weights if not fitted
+            weight = 1.0 / len(channels) if channels else 0
+            return {ch: weight for ch in channels}
+
+        # Get removal effects for channels in this journey
+        effects = {ch: self.removal_effects.get(ch, 0) for ch in channels}
+
+        total = sum(effects.values())
+        if total == 0:
+            weight = 1.0 / len(channels) if channels else 0
+            return {ch: weight for ch in channels}
+
+        return {ch: effect / total for ch, effect in effects.items()}
+
+
+class ShapleyAttributionModel:
+    """
+    Shapley Value Attribution for fair multi-channel attribution.
+
+    Computes the marginal contribution of each channel across all
+    possible orderings, providing a game-theoretic fair attribution.
+    """
+
+    def __init__(self):
+        self.channel_values: Dict[str, float] = {}
+        self._conversion_cache: Dict[frozenset, float] = {}
+
+    def compute_shapley_values(
+        self,
+        channels: List[str],
+        conversion_function: callable,
+    ) -> Dict[str, float]:
+        """
+        Compute Shapley values for attribution.
+
+        Args:
+            channels: List of channels in the journey
+            conversion_function: Function that takes a set of channels
+                               and returns conversion probability
+
+        Returns:
+            Dict of channel -> Shapley value (sums to 1.0)
+        """
+        n = len(channels)
+        if n == 0:
+            return {}
+
+        shapley_values = {ch: 0.0 for ch in channels}
+
+        # For each channel, compute marginal contribution
+        for channel in channels:
+            other_channels = [c for c in channels if c != channel]
+
+            # Iterate over all subsets of other channels
+            for subset_size in range(len(other_channels) + 1):
+                for subset in self._get_subsets(other_channels, subset_size):
+                    subset_set = frozenset(subset)
+                    with_channel = frozenset(subset + [channel])
+
+                    # Get conversion probabilities
+                    conv_without = self._get_cached_conversion(subset_set, conversion_function)
+                    conv_with = self._get_cached_conversion(with_channel, conversion_function)
+
+                    # Marginal contribution
+                    marginal = conv_with - conv_without
+
+                    # Shapley weight
+                    weight = (math.factorial(subset_size) *
+                             math.factorial(n - subset_size - 1) /
+                             math.factorial(n))
+
+                    shapley_values[channel] += weight * marginal
+
+        # Normalize to sum to 1
+        total = sum(shapley_values.values())
+        if total > 0:
+            shapley_values = {k: v / total for k, v in shapley_values.items()}
+
+        return shapley_values
+
+    def _get_subsets(self, items: List[str], size: int) -> List[List[str]]:
+        """Generate all subsets of given size."""
+        if size == 0:
+            return [[]]
+        if size > len(items):
+            return []
+
+        result = []
+        for i, item in enumerate(items):
+            for subset in self._get_subsets(items[i+1:], size - 1):
+                result.append([item] + subset)
+        return result
+
+    def _get_cached_conversion(
+        self,
+        channel_set: frozenset,
+        conversion_function: callable,
+    ) -> float:
+        """Get cached conversion probability."""
+        if channel_set not in self._conversion_cache:
+            self._conversion_cache[channel_set] = conversion_function(set(channel_set))
+        return self._conversion_cache[channel_set]
+
+
+# =============================================================================
+# Cross-Platform Attribution Aggregator
+# =============================================================================
+
+class CrossPlatformAttributor:
+    """
+    Aggregates and reconciles attribution across multiple ad platforms.
+
+    Handles the challenge of platforms over-claiming conversions by
+    using a neutral measurement approach.
+    """
+
+    def __init__(self, db: AsyncSession, tenant_id: int):
+        self.db = db
+        self.tenant_id = tenant_id
+
+    async def get_unified_attribution(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        normalization_method: str = "linear",  # linear, shapley, or proportional
+    ) -> Dict[str, Any]:
+        """
+        Get unified attribution across all platforms.
+
+        Args:
+            start_date: Start of attribution window
+            end_date: End of attribution window
+            normalization_method: How to handle overlapping claims
+
+        Returns:
+            Unified attribution report with platform breakdown
+        """
+        # Get all platform-reported conversions
+        platform_claims = await self._get_platform_claims(start_date, end_date)
+
+        # Get actual conversions from source of truth (GA4/CRM)
+        actual_conversions = await self._get_actual_conversions(start_date, end_date)
+
+        # Calculate overlap and reconcile
+        reconciled = self._reconcile_claims(
+            platform_claims,
+            actual_conversions,
+            normalization_method,
+        )
+
+        return {
+            "period": {
+                "start": start_date.isoformat(),
+                "end": end_date.isoformat(),
+            },
+            "actual_conversions": actual_conversions["count"],
+            "actual_revenue": actual_conversions["revenue"],
+            "platform_claims": platform_claims,
+            "reconciled_attribution": reconciled,
+            "over_claim_rate": self._calculate_over_claim_rate(
+                platform_claims, actual_conversions
+            ),
+            "methodology": normalization_method,
+        }
+
+    async def _get_platform_claims(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> Dict[str, Dict[str, float]]:
+        """Get conversion claims from each platform."""
+        # This would query platform-specific metrics tables
+        # Returning structure for now
+        return {
+            "meta": {"conversions": 0, "revenue": 0, "spend": 0},
+            "google": {"conversions": 0, "revenue": 0, "spend": 0},
+            "tiktok": {"conversions": 0, "revenue": 0, "spend": 0},
+        }
+
+    async def _get_actual_conversions(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> Dict[str, float]:
+        """Get actual conversions from source of truth."""
+        # Query CRM deals or GA4 conversions
+        result = await self.db.execute(
+            select(func.count(CRMDeal.id), func.sum(CRMDeal.amount))
+            .where(
+                and_(
+                    CRMDeal.tenant_id == self.tenant_id,
+                    CRMDeal.is_won == True,
+                    CRMDeal.won_at >= start_date,
+                    CRMDeal.won_at <= end_date,
+                )
+            )
+        )
+        row = result.first()
+        return {
+            "count": row[0] or 0,
+            "revenue": float(row[1] or 0),
+        }
+
+    def _reconcile_claims(
+        self,
+        platform_claims: Dict[str, Dict[str, float]],
+        actual: Dict[str, float],
+        method: str,
+    ) -> Dict[str, Dict[str, float]]:
+        """Reconcile platform claims against actual conversions."""
+        total_claimed = sum(p["conversions"] for p in platform_claims.values())
+
+        if total_claimed == 0:
+            return {p: {"conversions": 0, "revenue": 0, "share": 0}
+                   for p in platform_claims}
+
+        result = {}
+        for platform, claims in platform_claims.items():
+            if method == "proportional":
+                # Distribute actual based on claimed share
+                share = claims["conversions"] / total_claimed
+            elif method == "spend_weighted":
+                # Weight by spend
+                total_spend = sum(p["spend"] for p in platform_claims.values())
+                share = claims["spend"] / total_spend if total_spend > 0 else 0
+            else:  # linear
+                share = 1.0 / len(platform_claims)
+
+            result[platform] = {
+                "conversions": actual["count"] * share,
+                "revenue": actual["revenue"] * share,
+                "share": share,
+                "original_claim": claims["conversions"],
+            }
+
+        return result
+
+    def _calculate_over_claim_rate(
+        self,
+        claims: Dict[str, Dict[str, float]],
+        actual: Dict[str, float],
+    ) -> float:
+        """Calculate how much platforms over-claim."""
+        total_claimed = sum(p["conversions"] for p in claims.values())
+        actual_count = actual["count"]
+
+        if actual_count == 0:
+            return 0.0
+
+        return max(0, (total_claimed - actual_count) / actual_count * 100)

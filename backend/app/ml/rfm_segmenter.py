@@ -535,3 +535,405 @@ def get_customer_rfm_score(
             score.rfm_segment, "Analyze further"
         ),
     }
+
+
+# =============================================================================
+# Segment Transition Tracking
+# =============================================================================
+
+@dataclass
+class SegmentTransition:
+    """A customer's transition between segments."""
+    customer_id: str
+    from_segment: RFMSegment
+    to_segment: RFMSegment
+    transition_date: datetime
+    days_in_previous_segment: int
+    monetary_change: float
+    frequency_change: int
+
+
+class SegmentTransitionTracker:
+    """
+    Track how customers move between RFM segments over time.
+
+    Enables:
+    - Identifying at-risk customers before they churn
+    - Measuring campaign effectiveness on segment movement
+    - Predicting future segment transitions
+    """
+
+    # Transition sentiment: positive, negative, neutral
+    TRANSITION_SENTIMENT = {
+        (RFMSegment.LOST, RFMSegment.HIBERNATING): "positive",
+        (RFMSegment.HIBERNATING, RFMSegment.ABOUT_TO_SLEEP): "positive",
+        (RFMSegment.ABOUT_TO_SLEEP, RFMSegment.NEED_ATTENTION): "positive",
+        (RFMSegment.NEED_ATTENTION, RFMSegment.PROMISING): "positive",
+        (RFMSegment.PROMISING, RFMSegment.NEW_CUSTOMERS): "positive",
+        (RFMSegment.NEW_CUSTOMERS, RFMSegment.POTENTIAL_LOYALISTS): "positive",
+        (RFMSegment.POTENTIAL_LOYALISTS, RFMSegment.LOYAL_CUSTOMERS): "positive",
+        (RFMSegment.LOYAL_CUSTOMERS, RFMSegment.CHAMPIONS): "positive",
+        (RFMSegment.AT_RISK, RFMSegment.NEED_ATTENTION): "positive",
+        (RFMSegment.CANT_LOSE, RFMSegment.LOYAL_CUSTOMERS): "positive",
+
+        # Negative transitions
+        (RFMSegment.CHAMPIONS, RFMSegment.LOYAL_CUSTOMERS): "negative",
+        (RFMSegment.LOYAL_CUSTOMERS, RFMSegment.AT_RISK): "negative",
+        (RFMSegment.AT_RISK, RFMSegment.CANT_LOSE): "negative",
+        (RFMSegment.CANT_LOSE, RFMSegment.LOST): "negative",
+        (RFMSegment.POTENTIAL_LOYALISTS, RFMSegment.ABOUT_TO_SLEEP): "negative",
+        (RFMSegment.NEW_CUSTOMERS, RFMSegment.LOST): "negative",
+    }
+
+    def __init__(self):
+        self.transition_history: List[SegmentTransition] = []
+        self.customer_segment_history: Dict[str, List[Tuple[datetime, RFMSegment]]] = {}
+
+    def record_snapshot(
+        self,
+        snapshot_date: datetime,
+        customer_scores: List[RFMScore],
+    ) -> List[SegmentTransition]:
+        """
+        Record a snapshot of customer segments and detect transitions.
+
+        Call this periodically (e.g., weekly) to track segment movements.
+        """
+        transitions = []
+
+        for score in customer_scores:
+            customer_id = score.customer_id
+            current_segment = score.rfm_segment
+
+            # Check for transition
+            if customer_id in self.customer_segment_history:
+                history = self.customer_segment_history[customer_id]
+                if history:
+                    last_date, last_segment = history[-1]
+
+                    if last_segment != current_segment:
+                        transition = SegmentTransition(
+                            customer_id=customer_id,
+                            from_segment=last_segment,
+                            to_segment=current_segment,
+                            transition_date=snapshot_date,
+                            days_in_previous_segment=(snapshot_date - last_date).days,
+                            monetary_change=0,  # Would be calculated from full data
+                            frequency_change=0,
+                        )
+                        transitions.append(transition)
+                        self.transition_history.append(transition)
+
+            # Update history
+            if customer_id not in self.customer_segment_history:
+                self.customer_segment_history[customer_id] = []
+            self.customer_segment_history[customer_id].append((snapshot_date, current_segment))
+
+        return transitions
+
+    def get_transition_matrix(self) -> Dict[str, Dict[str, int]]:
+        """
+        Get transition counts between segments.
+
+        Returns a matrix showing how many customers moved from each segment to each other.
+        """
+        matrix: Dict[str, Dict[str, int]] = {}
+
+        for segment in RFMSegment:
+            matrix[segment.value] = {s.value: 0 for s in RFMSegment}
+
+        for transition in self.transition_history:
+            from_seg = transition.from_segment.value
+            to_seg = transition.to_segment.value
+            matrix[from_seg][to_seg] += 1
+
+        return matrix
+
+    def get_transition_probabilities(self) -> Dict[str, Dict[str, float]]:
+        """Get probability matrix for segment transitions."""
+        counts = self.get_transition_matrix()
+        probs: Dict[str, Dict[str, float]] = {}
+
+        for from_seg, to_counts in counts.items():
+            total = sum(to_counts.values())
+            if total > 0:
+                probs[from_seg] = {to_seg: count / total for to_seg, count in to_counts.items()}
+            else:
+                probs[from_seg] = {to_seg: 0 for to_seg in to_counts}
+
+        return probs
+
+    def get_at_risk_customers(
+        self,
+        customer_scores: List[RFMScore],
+        lookback_days: int = 30,
+    ) -> List[Dict[str, Any]]:
+        """
+        Identify customers likely to transition to worse segments.
+
+        Uses historical transition patterns to predict at-risk customers.
+        """
+        probs = self.get_transition_probabilities()
+        at_risk = []
+
+        for score in customer_scores:
+            segment = score.rfm_segment.value
+            if segment not in probs:
+                continue
+
+            # Calculate risk of negative transition
+            negative_prob = 0
+            for to_seg, prob in probs[segment].items():
+                transition_key = (score.rfm_segment, RFMSegment(to_seg))
+                sentiment = self.TRANSITION_SENTIMENT.get(transition_key, "neutral")
+                if sentiment == "negative":
+                    negative_prob += prob
+
+            if negative_prob > 0.3:  # >30% chance of negative transition
+                at_risk.append({
+                    "customer_id": score.customer_id,
+                    "current_segment": segment,
+                    "churn_risk": round(negative_prob, 2),
+                    "rfm_score": score.rfm_score,
+                    "recommended_action": RFMSegmenter.SEGMENT_ACTIONS.get(
+                        score.rfm_segment, "Engage proactively"
+                    ),
+                })
+
+        return sorted(at_risk, key=lambda x: x["churn_risk"], reverse=True)
+
+    def analyze_campaign_impact(
+        self,
+        campaign_start: datetime,
+        campaign_end: datetime,
+        target_segment: RFMSegment,
+    ) -> Dict[str, Any]:
+        """
+        Analyze how a campaign impacted segment transitions.
+
+        Returns metrics on segment movement during campaign period.
+        """
+        relevant_transitions = [
+            t for t in self.transition_history
+            if campaign_start <= t.transition_date <= campaign_end
+            and t.from_segment == target_segment
+        ]
+
+        positive = sum(
+            1 for t in relevant_transitions
+            if self.TRANSITION_SENTIMENT.get((t.from_segment, t.to_segment)) == "positive"
+        )
+        negative = sum(
+            1 for t in relevant_transitions
+            if self.TRANSITION_SENTIMENT.get((t.from_segment, t.to_segment)) == "negative"
+        )
+        neutral = len(relevant_transitions) - positive - negative
+
+        return {
+            "campaign_period": {
+                "start": campaign_start.isoformat(),
+                "end": campaign_end.isoformat(),
+            },
+            "target_segment": target_segment.value,
+            "total_transitions": len(relevant_transitions),
+            "positive_transitions": positive,
+            "negative_transitions": negative,
+            "neutral_transitions": neutral,
+            "net_positive_rate": (positive - negative) / len(relevant_transitions) if relevant_transitions else 0,
+        }
+
+
+# =============================================================================
+# Customer Lifetime Value Integration
+# =============================================================================
+
+@dataclass
+class CustomerCLV:
+    """Customer Lifetime Value calculation result."""
+    customer_id: str
+    rfm_segment: RFMSegment
+    historical_value: float
+    predicted_clv: float
+    clv_confidence: float
+    expected_lifetime_months: int
+    monthly_expected_value: float
+    acquisition_cost: Optional[float] = None
+    clv_to_cac_ratio: Optional[float] = None
+
+
+class CLVPredictor:
+    """
+    Predict Customer Lifetime Value using RFM segmentation.
+
+    Combines RFM segments with historical purchase patterns
+    to predict future customer value.
+    """
+
+    # Expected retention rates by segment
+    SEGMENT_RETENTION_RATES = {
+        RFMSegment.CHAMPIONS: 0.95,
+        RFMSegment.LOYAL_CUSTOMERS: 0.85,
+        RFMSegment.POTENTIAL_LOYALISTS: 0.70,
+        RFMSegment.NEW_CUSTOMERS: 0.40,
+        RFMSegment.PROMISING: 0.50,
+        RFMSegment.NEED_ATTENTION: 0.60,
+        RFMSegment.ABOUT_TO_SLEEP: 0.30,
+        RFMSegment.AT_RISK: 0.25,
+        RFMSegment.CANT_LOSE: 0.35,
+        RFMSegment.HIBERNATING: 0.15,
+        RFMSegment.LOST: 0.05,
+    }
+
+    # Average order multiplier by segment
+    SEGMENT_ORDER_MULTIPLIERS = {
+        RFMSegment.CHAMPIONS: 1.5,
+        RFMSegment.LOYAL_CUSTOMERS: 1.2,
+        RFMSegment.POTENTIAL_LOYALISTS: 1.0,
+        RFMSegment.NEW_CUSTOMERS: 0.8,
+        RFMSegment.PROMISING: 0.7,
+        RFMSegment.NEED_ATTENTION: 0.9,
+        RFMSegment.ABOUT_TO_SLEEP: 0.6,
+        RFMSegment.AT_RISK: 0.8,
+        RFMSegment.CANT_LOSE: 1.1,
+        RFMSegment.HIBERNATING: 0.4,
+        RFMSegment.LOST: 0.2,
+    }
+
+    def __init__(
+        self,
+        discount_rate: float = 0.10,  # 10% annual discount rate
+        prediction_horizon_months: int = 24,
+    ):
+        self.discount_rate = discount_rate
+        self.prediction_horizon_months = prediction_horizon_months
+        self.monthly_discount = (1 + discount_rate) ** (1/12) - 1
+
+    def predict_clv(
+        self,
+        customer: CustomerRFMData,
+        rfm_score: RFMScore,
+        acquisition_cost: Optional[float] = None,
+    ) -> CustomerCLV:
+        """
+        Predict lifetime value for a customer.
+
+        Uses segment-based retention rates and historical behavior
+        to project future value.
+        """
+        segment = rfm_score.rfm_segment
+        retention_rate = self.SEGMENT_RETENTION_RATES.get(segment, 0.5)
+        order_multiplier = self.SEGMENT_ORDER_MULTIPLIERS.get(segment, 1.0)
+
+        # Calculate historical metrics
+        months_as_customer = max(1, customer.days_since_last_order / 30) if customer.first_order_date else 12
+        avg_monthly_value = customer.total_revenue / months_as_customer
+        avg_order_value = customer.total_revenue / max(1, customer.total_orders)
+
+        # Project future value using geometric series
+        # CLV = Σ (retention^t * monthly_value) / (1 + discount)^t
+        predicted_clv = 0
+        for month in range(1, self.prediction_horizon_months + 1):
+            survival_prob = retention_rate ** month
+            expected_value = avg_monthly_value * order_multiplier * survival_prob
+            discounted_value = expected_value / ((1 + self.monthly_discount) ** month)
+            predicted_clv += discounted_value
+
+        # Estimate expected lifetime
+        if retention_rate > 0 and retention_rate < 1:
+            expected_lifetime = int(1 / (1 - retention_rate))
+        else:
+            expected_lifetime = self.prediction_horizon_months
+
+        # Calculate confidence based on data quality
+        confidence = self._calculate_confidence(customer, rfm_score)
+
+        # Calculate CLV:CAC ratio if acquisition cost provided
+        clv_cac_ratio = None
+        if acquisition_cost and acquisition_cost > 0:
+            clv_cac_ratio = (customer.total_revenue + predicted_clv) / acquisition_cost
+
+        return CustomerCLV(
+            customer_id=customer.customer_id,
+            rfm_segment=segment,
+            historical_value=customer.total_revenue,
+            predicted_clv=round(predicted_clv, 2),
+            clv_confidence=round(confidence, 2),
+            expected_lifetime_months=expected_lifetime,
+            monthly_expected_value=round(avg_monthly_value * order_multiplier, 2),
+            acquisition_cost=acquisition_cost,
+            clv_to_cac_ratio=round(clv_cac_ratio, 2) if clv_cac_ratio else None,
+        )
+
+    def _calculate_confidence(
+        self,
+        customer: CustomerRFMData,
+        score: RFMScore,
+    ) -> float:
+        """Calculate confidence in CLV prediction."""
+        confidence = 0.5
+
+        # More orders = higher confidence
+        if customer.total_orders >= 10:
+            confidence += 0.2
+        elif customer.total_orders >= 5:
+            confidence += 0.1
+
+        # Longer history = higher confidence
+        if customer.first_order_date:
+            days_as_customer = (datetime.now(timezone.utc) - customer.first_order_date).days
+            if days_as_customer >= 365:
+                confidence += 0.15
+            elif days_as_customer >= 180:
+                confidence += 0.1
+
+        # Higher RFM composite = more predictable behavior
+        if score.rfm_composite >= 4:
+            confidence += 0.1
+
+        return min(0.95, confidence)
+
+    def segment_clv_summary(
+        self,
+        customers: List[CustomerRFMData],
+        scores: List[RFMScore],
+    ) -> Dict[str, Any]:
+        """
+        Get CLV summary by segment.
+
+        Returns aggregate CLV metrics for each segment.
+        """
+        segment_data: Dict[RFMSegment, List[CustomerCLV]] = {}
+
+        for customer, score in zip(customers, scores):
+            clv = self.predict_clv(customer, score)
+            if clv.rfm_segment not in segment_data:
+                segment_data[clv.rfm_segment] = []
+            segment_data[clv.rfm_segment].append(clv)
+
+        summary = {}
+        for segment, clvs in segment_data.items():
+            total_historical = sum(c.historical_value for c in clvs)
+            total_predicted = sum(c.predicted_clv for c in clvs)
+            avg_clv = total_predicted / len(clvs) if clvs else 0
+            avg_lifetime = sum(c.expected_lifetime_months for c in clvs) / len(clvs) if clvs else 0
+
+            summary[segment.value] = {
+                "customer_count": len(clvs),
+                "total_historical_value": round(total_historical, 2),
+                "total_predicted_clv": round(total_predicted, 2),
+                "avg_predicted_clv": round(avg_clv, 2),
+                "avg_expected_lifetime_months": round(avg_lifetime, 1),
+                "total_portfolio_value": round(total_historical + total_predicted, 2),
+            }
+
+        return {
+            "segments": summary,
+            "total_portfolio_clv": round(
+                sum(s["total_portfolio_value"] for s in summary.values()), 2
+            ),
+        }
+
+
+# Singleton instances
+segment_tracker = SegmentTransitionTracker()
+clv_predictor = CLVPredictor()

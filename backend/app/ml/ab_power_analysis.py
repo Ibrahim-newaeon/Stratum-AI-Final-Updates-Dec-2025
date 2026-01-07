@@ -663,3 +663,449 @@ def check_test_power(
             f"Can reliably detect effects ≥{mde['relative_mde_percent']:.1f}%."
         ),
     }
+
+
+# =============================================================================
+# Bayesian A/B Testing
+# =============================================================================
+
+@dataclass
+class BayesianTestResult:
+    """Result of Bayesian A/B test analysis."""
+    probability_b_beats_a: float
+    probability_a_beats_b: float
+    expected_loss_choosing_b: float
+    expected_loss_choosing_a: float
+    credible_interval_a: Tuple[float, float]
+    credible_interval_b: Tuple[float, float]
+    lift_credible_interval: Tuple[float, float]
+    recommendation: str
+    samples_a: int
+    samples_b: int
+    posterior_mean_a: float
+    posterior_mean_b: float
+
+
+class BayesianABTester:
+    """
+    Bayesian A/B testing with Beta-Binomial model.
+
+    Provides probability-based interpretation of test results
+    and expected loss calculations for decision making.
+
+    Advantages over frequentist testing:
+    - Natural interpretation: "Probability B beats A"
+    - No fixed sample size required
+    - Incorporates prior knowledge
+    - Expected loss calculations for ROI decisions
+    """
+
+    def __init__(
+        self,
+        prior_alpha: float = 1.0,  # Beta prior: uniform by default
+        prior_beta: float = 1.0,
+        credible_level: float = 0.95,
+    ):
+        """
+        Initialize Bayesian tester.
+
+        Args:
+            prior_alpha: Alpha parameter of Beta prior
+            prior_beta: Beta parameter of Beta prior
+            credible_level: Credible interval level (default 95%)
+        """
+        self.prior_alpha = prior_alpha
+        self.prior_beta = prior_beta
+        self.credible_level = credible_level
+
+    def analyze(
+        self,
+        successes_a: int,
+        trials_a: int,
+        successes_b: int,
+        trials_b: int,
+        value_per_conversion: float = 1.0,
+        num_samples: int = 100000,
+    ) -> BayesianTestResult:
+        """
+        Perform Bayesian analysis of A/B test.
+
+        Args:
+            successes_a: Conversions in variant A
+            trials_a: Total samples in variant A
+            successes_b: Conversions in variant B
+            trials_b: Total samples in variant B
+            value_per_conversion: Revenue per conversion (for loss calculation)
+            num_samples: Monte Carlo samples for probability calculation
+
+        Returns:
+            BayesianTestResult with probabilities and recommendations
+        """
+        # Posterior parameters (Beta-Binomial conjugate)
+        alpha_a = self.prior_alpha + successes_a
+        beta_a = self.prior_beta + trials_a - successes_a
+        alpha_b = self.prior_alpha + successes_b
+        beta_b = self.prior_beta + trials_b - successes_b
+
+        # Monte Carlo sampling
+        samples_a = np.random.beta(alpha_a, beta_a, num_samples)
+        samples_b = np.random.beta(alpha_b, beta_b, num_samples)
+
+        # Probability B beats A
+        prob_b_beats_a = np.mean(samples_b > samples_a)
+        prob_a_beats_b = 1 - prob_b_beats_a
+
+        # Expected loss (opportunity cost of wrong decision)
+        # Loss of choosing B when A is better
+        loss_b = np.maximum(samples_a - samples_b, 0) * value_per_conversion
+        expected_loss_b = np.mean(loss_b)
+
+        # Loss of choosing A when B is better
+        loss_a = np.maximum(samples_b - samples_a, 0) * value_per_conversion
+        expected_loss_a = np.mean(loss_a)
+
+        # Posterior means
+        posterior_mean_a = alpha_a / (alpha_a + beta_a)
+        posterior_mean_b = alpha_b / (alpha_b + beta_b)
+
+        # Credible intervals
+        ci_level = (1 - self.credible_level) / 2
+        ci_a = (
+            float(np.percentile(samples_a, ci_level * 100)),
+            float(np.percentile(samples_a, (1 - ci_level) * 100)),
+        )
+        ci_b = (
+            float(np.percentile(samples_b, ci_level * 100)),
+            float(np.percentile(samples_b, (1 - ci_level) * 100)),
+        )
+
+        # Lift credible interval
+        lift_samples = (samples_b - samples_a) / samples_a
+        lift_ci = (
+            float(np.percentile(lift_samples, ci_level * 100)),
+            float(np.percentile(lift_samples, (1 - ci_level) * 100)),
+        )
+
+        # Generate recommendation
+        recommendation = self._generate_recommendation(
+            prob_b_beats_a, expected_loss_a, expected_loss_b, value_per_conversion
+        )
+
+        return BayesianTestResult(
+            probability_b_beats_a=round(prob_b_beats_a, 4),
+            probability_a_beats_b=round(prob_a_beats_b, 4),
+            expected_loss_choosing_b=round(expected_loss_b, 4),
+            expected_loss_choosing_a=round(expected_loss_a, 4),
+            credible_interval_a=ci_a,
+            credible_interval_b=ci_b,
+            lift_credible_interval=lift_ci,
+            recommendation=recommendation,
+            samples_a=trials_a,
+            samples_b=trials_b,
+            posterior_mean_a=round(posterior_mean_a, 6),
+            posterior_mean_b=round(posterior_mean_b, 6),
+        )
+
+    def _generate_recommendation(
+        self,
+        prob_b_beats_a: float,
+        loss_a: float,
+        loss_b: float,
+        value: float,
+    ) -> str:
+        """Generate actionable recommendation."""
+        if prob_b_beats_a >= 0.95:
+            return "Strong evidence B is better. Recommend implementing B."
+        elif prob_b_beats_a >= 0.90:
+            return "Good evidence B is better. Consider implementing B with monitoring."
+        elif prob_b_beats_a >= 0.75:
+            return "Moderate evidence B is better. Continue testing for more certainty."
+        elif prob_b_beats_a <= 0.05:
+            return "Strong evidence A is better. Recommend keeping A."
+        elif prob_b_beats_a <= 0.10:
+            return "Good evidence A is better. Consider keeping A."
+        elif prob_b_beats_a <= 0.25:
+            return "Moderate evidence A is better. Continue testing for more certainty."
+        else:
+            return "No clear winner yet. Continue testing."
+
+    def calculate_stopping_threshold(
+        self,
+        min_sample_per_variant: int = 100,
+        max_sample_per_variant: int = 10000,
+        probability_threshold: float = 0.95,
+        loss_threshold: float = 0.001,
+    ) -> Dict[str, Any]:
+        """
+        Calculate when to stop based on probability or loss thresholds.
+
+        Returns guidelines for early stopping decisions.
+        """
+        return {
+            "stop_for_winner": f"Stop when P(B beats A) ≥ {probability_threshold:.0%} or P(A beats B) ≥ {probability_threshold:.0%}",
+            "stop_for_no_difference": f"Stop when expected loss < {loss_threshold} for either choice",
+            "minimum_samples": min_sample_per_variant,
+            "maximum_samples": max_sample_per_variant,
+            "recommendation": (
+                f"Run until min {min_sample_per_variant} samples per variant, "
+                f"then evaluate weekly until threshold met or max reached."
+            ),
+        }
+
+
+# =============================================================================
+# CUPED Variance Reduction
+# =============================================================================
+
+@dataclass
+class CUPEDResult:
+    """Result of CUPED variance reduction."""
+    original_variance: float
+    adjusted_variance: float
+    variance_reduction_percent: float
+    original_effect: float
+    adjusted_effect: float
+    theta: float  # Adjustment coefficient
+    effective_sample_increase: float  # Equivalent sample size boost
+
+
+class CUPEDAnalyzer:
+    """
+    CUPED (Controlled-experiment Using Pre-Experiment Data) variance reduction.
+
+    Uses pre-experiment covariate data to reduce variance in A/B test metrics,
+    effectively increasing statistical power without more samples.
+
+    Based on Microsoft's CUPED paper: "Improving the Sensitivity of Online
+    Controlled Experiments by Utilizing Pre-Experiment Data"
+    """
+
+    def __init__(self):
+        pass
+
+    def apply_cuped(
+        self,
+        metric_a: np.ndarray,
+        metric_b: np.ndarray,
+        covariate_a: np.ndarray,
+        covariate_b: np.ndarray,
+    ) -> CUPEDResult:
+        """
+        Apply CUPED adjustment to reduce metric variance.
+
+        Args:
+            metric_a: Post-experiment metric values for variant A
+            metric_b: Post-experiment metric values for variant B
+            covariate_a: Pre-experiment covariate for variant A
+            covariate_b: Pre-experiment covariate for variant B
+
+        Returns:
+            CUPEDResult with variance reduction metrics
+        """
+        # Combine data
+        metric = np.concatenate([metric_a, metric_b])
+        covariate = np.concatenate([covariate_a, covariate_b])
+
+        # Calculate theta (optimal adjustment coefficient)
+        cov_xy = np.cov(covariate, metric)[0, 1]
+        var_x = np.var(covariate)
+        theta = cov_xy / var_x if var_x > 0 else 0
+
+        # Calculate global covariate mean
+        covariate_mean = np.mean(covariate)
+
+        # Adjust metrics
+        adjusted_a = metric_a - theta * (covariate_a - covariate_mean)
+        adjusted_b = metric_b - theta * (covariate_b - covariate_mean)
+
+        # Calculate variances
+        original_var_a = np.var(metric_a)
+        original_var_b = np.var(metric_b)
+        adjusted_var_a = np.var(adjusted_a)
+        adjusted_var_b = np.var(adjusted_b)
+
+        # Combined variance
+        n_a, n_b = len(metric_a), len(metric_b)
+        original_variance = (original_var_a / n_a + original_var_b / n_b)
+        adjusted_variance = (adjusted_var_a / n_a + adjusted_var_b / n_b)
+
+        # Variance reduction
+        reduction = (original_variance - adjusted_variance) / original_variance if original_variance > 0 else 0
+
+        # Effect estimates
+        original_effect = np.mean(metric_b) - np.mean(metric_a)
+        adjusted_effect = np.mean(adjusted_b) - np.mean(adjusted_a)
+
+        # Effective sample increase
+        # If variance reduced by X%, it's like having 1/(1-X) times the samples
+        effective_sample_increase = 1 / (1 - reduction) if reduction < 1 else 1
+
+        return CUPEDResult(
+            original_variance=round(original_variance, 6),
+            adjusted_variance=round(adjusted_variance, 6),
+            variance_reduction_percent=round(reduction * 100, 2),
+            original_effect=round(original_effect, 6),
+            adjusted_effect=round(adjusted_effect, 6),
+            theta=round(theta, 6),
+            effective_sample_increase=round(effective_sample_increase, 2),
+        )
+
+    def estimate_power_boost(
+        self,
+        correlation: float,
+    ) -> Dict[str, float]:
+        """
+        Estimate power boost from CUPED given covariate correlation.
+
+        Higher correlation = more variance reduction = higher power.
+        """
+        # Variance reduction is approximately r^2
+        variance_reduction = correlation ** 2
+
+        # Effective sample multiplier
+        sample_multiplier = 1 / (1 - variance_reduction) if variance_reduction < 1 else 1
+
+        return {
+            "correlation": correlation,
+            "expected_variance_reduction_percent": round(variance_reduction * 100, 1),
+            "effective_sample_multiplier": round(sample_multiplier, 2),
+            "recommendation": (
+                f"With correlation {correlation:.2f}, CUPED can reduce variance by ~{variance_reduction*100:.0f}%, "
+                f"equivalent to {sample_multiplier:.1f}x more samples."
+            ),
+        }
+
+
+# =============================================================================
+# Multi-Armed Bandit
+# =============================================================================
+
+@dataclass
+class BanditArm:
+    """State of a bandit arm."""
+    arm_id: str
+    successes: int
+    failures: int
+    total_pulls: int
+    estimated_value: float
+    ucb_value: float
+
+
+class ThompsonSamplingBandit:
+    """
+    Thompson Sampling multi-armed bandit for adaptive experimentation.
+
+    Unlike fixed-split A/B tests, Thompson Sampling:
+    - Adapts traffic allocation based on performance
+    - Minimizes regret (opportunity cost of suboptimal choices)
+    - Naturally handles many variants
+    """
+
+    def __init__(self, arm_ids: List[str], prior_alpha: float = 1.0, prior_beta: float = 1.0):
+        """
+        Initialize bandit with arm IDs.
+
+        Args:
+            arm_ids: List of variant identifiers
+            prior_alpha: Beta prior alpha (uniform by default)
+            prior_beta: Beta prior beta
+        """
+        self.arms: Dict[str, BanditArm] = {}
+        for arm_id in arm_ids:
+            self.arms[arm_id] = BanditArm(
+                arm_id=arm_id,
+                successes=int(prior_alpha),
+                failures=int(prior_beta),
+                total_pulls=0,
+                estimated_value=prior_alpha / (prior_alpha + prior_beta),
+                ucb_value=1.0,
+            )
+
+    def select_arm(self) -> str:
+        """
+        Select an arm using Thompson Sampling.
+
+        Returns the arm ID to show to the next user.
+        """
+        samples = {}
+        for arm_id, arm in self.arms.items():
+            # Sample from Beta posterior
+            sample = np.random.beta(arm.successes, arm.failures)
+            samples[arm_id] = sample
+
+        # Return arm with highest sample
+        return max(samples, key=samples.get)
+
+    def update(self, arm_id: str, success: bool) -> None:
+        """
+        Update arm with observation.
+
+        Args:
+            arm_id: The arm that was pulled
+            success: Whether the pull was successful (conversion)
+        """
+        if arm_id not in self.arms:
+            return
+
+        arm = self.arms[arm_id]
+        arm.total_pulls += 1
+
+        if success:
+            arm.successes += 1
+        else:
+            arm.failures += 1
+
+        # Update estimates
+        arm.estimated_value = arm.successes / (arm.successes + arm.failures)
+
+        # Update UCB (for reporting)
+        total_pulls = sum(a.total_pulls for a in self.arms.values())
+        if arm.total_pulls > 0:
+            arm.ucb_value = arm.estimated_value + math.sqrt(
+                2 * math.log(total_pulls + 1) / arm.total_pulls
+            )
+
+    def get_allocation_weights(self) -> Dict[str, float]:
+        """
+        Get current recommended traffic allocation.
+
+        Returns probability each arm should be shown.
+        """
+        num_samples = 10000
+        selections = {arm_id: 0 for arm_id in self.arms}
+
+        for _ in range(num_samples):
+            selected = self.select_arm()
+            selections[selected] += 1
+
+        total = sum(selections.values())
+        return {arm_id: count / total for arm_id, count in selections.items()}
+
+    def get_results(self) -> Dict[str, Any]:
+        """Get current bandit state and recommendations."""
+        allocations = self.get_allocation_weights()
+
+        # Find best arm
+        best_arm = max(self.arms.values(), key=lambda a: a.estimated_value)
+
+        return {
+            "arms": [
+                {
+                    "arm_id": arm.arm_id,
+                    "successes": arm.successes,
+                    "failures": arm.failures,
+                    "total_pulls": arm.total_pulls,
+                    "conversion_rate": round(arm.estimated_value, 4),
+                    "traffic_allocation": round(allocations[arm.arm_id], 4),
+                }
+                for arm in self.arms.values()
+            ],
+            "best_arm": best_arm.arm_id,
+            "best_conversion_rate": round(best_arm.estimated_value, 4),
+            "total_observations": sum(a.total_pulls for a in self.arms.values()),
+        }
+
+
+# Singleton instances
+bayesian_tester = BayesianABTester()
+cuped_analyzer = CUPEDAnalyzer()
