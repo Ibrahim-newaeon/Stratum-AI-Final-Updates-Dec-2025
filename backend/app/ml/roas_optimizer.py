@@ -114,6 +114,59 @@ class ROASOptimizer:
             "analyzed_at": datetime.now(timezone.utc).isoformat(),
         }
 
+    
+    def _compute_recommendation_confidence(
+        self,
+        campaign: Dict[str, Any],
+        recommendation_type: str,
+        base_confidence: float,
+    ) -> float:
+        """
+        Compute model-derived confidence for a recommendation.
+        
+        Factors:
+        - Data completeness (spend, revenue, conversions present)
+        - Data volume (higher spend/conversions = more reliable)
+        - Recommendation type (pause is more certain than scale)
+        
+        Args:
+            campaign: Campaign metrics dict
+            recommendation_type: Type of recommendation
+            base_confidence: Starting confidence for this recommendation type
+            
+        Returns:
+            Adjusted confidence score 0.0-0.95
+        """
+        # Data completeness factor
+        has_spend = campaign.get("spend", 0) > 0
+        has_revenue = campaign.get("revenue", 0) > 0
+        has_conversions = campaign.get("conversions", 0) > 0
+        has_impressions = campaign.get("impressions", 0) > 0
+        
+        completeness = sum([has_spend, has_revenue, has_conversions, has_impressions]) / 4
+        completeness_adj = completeness * 0.15
+        
+        # Data volume factor (more data = higher confidence)
+        spend = campaign.get("spend", 0)
+        conversions = campaign.get("conversions", 0)
+        volume_score = min(0.1, (spend / 10000) * 0.05 + (conversions / 100) * 0.05)
+        
+        # Recommendation type adjustment (some actions are more certain)
+        type_adjustments = {
+            "pause": 0.1,      # Pausing underperformers is high confidence
+            "decrease": 0.05,  # Decreasing budget is fairly certain
+            "increase": -0.05, # Scaling has more uncertainty
+            "scale": -0.1,     # Aggressive scaling is less certain
+        }
+        type_adj = type_adjustments.get(recommendation_type, 0)
+        
+        # Calculate final confidence
+        confidence = base_confidence + completeness_adj + volume_score + type_adj
+        
+        # Clamp to valid range
+        return round(max(0.3, min(0.95, confidence)), 2)
+
+
     async def analyze_portfolio(self, campaigns: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Analyze entire campaign portfolio and optimize budget allocation.
@@ -234,7 +287,7 @@ class ROASOptimizer:
                 },
                 "expected_impact": {
                     "revenue_increase": spend * 0.3 * roas * 0.9,
-                    "confidence": 0.75,
+                    "confidence": self._compute_recommendation_confidence(campaign, "scale", 0.65),
                 },
             })
 
@@ -250,7 +303,7 @@ class ROASOptimizer:
                 },
                 "expected_impact": {
                     "revenue_increase": spend * 0.15 * roas * 0.95,
-                    "confidence": 0.70,
+                    "confidence": self._compute_recommendation_confidence(campaign, "increase", 0.60),
                 },
             })
 
@@ -268,7 +321,7 @@ class ROASOptimizer:
                     },
                     "expected_impact": {
                         "cost_savings": spend * 0.8,
-                        "confidence": 0.90,
+                        "confidence": self._compute_recommendation_confidence(campaign, "pause", 0.85),
                     },
                 })
             else:
@@ -282,7 +335,7 @@ class ROASOptimizer:
                     },
                     "expected_impact": {
                         "cost_savings": spend * 0.4,
-                        "confidence": 0.80,
+                        "confidence": self._compute_recommendation_confidence(campaign, "decrease", 0.75),
                     },
                 })
 
@@ -300,7 +353,7 @@ class ROASOptimizer:
                 },
                 "expected_impact": {
                     "ctr_improvement": 0.5,  # 50% CTR improvement potential
-                    "confidence": 0.65,
+                    "confidence": self._compute_recommendation_confidence(campaign, "creative", 0.55),
                 },
             })
 
@@ -319,7 +372,7 @@ class ROASOptimizer:
                     },
                     "expected_impact": {
                         "cpa_reduction": 0.25,
-                        "confidence": 0.60,
+                        "confidence": self._compute_recommendation_confidence(campaign, "bidding", 0.50),
                     },
                 })
 
@@ -364,7 +417,7 @@ class ROASOptimizer:
             "optimal_daily_budget": optimal_budget / 30,
             "change_percent": round((optimal_multiplier - 1) * 100, 1),
             "expected_roas_at_optimal": round(current_roas * (1 - (optimal_multiplier - 1) * 0.1), 2),
-            "confidence": 0.70,
+            "confidence": self._compute_recommendation_confidence(campaign, "budget_opt", 0.60),
         }
 
     async def _simulate_budget_scenarios(self, campaign: Dict) -> List[Dict[str, Any]]:

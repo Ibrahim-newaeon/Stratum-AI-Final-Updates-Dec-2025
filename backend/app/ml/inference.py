@@ -149,32 +149,28 @@ class LocalInferenceStrategy(InferenceStrategy):
                 "inference_strategy": "local",
             }
 
+        except ModelUnavailableError:
+            raise  # Re-raise model unavailable errors
         except Exception as e:
             logger.error("local_inference_failed", model_name=model_name, error=str(e))
-            return self._mock_prediction(model_name, features)
+            raise ModelUnavailableError(
+                model_name=model_name,
+                message=f"Inference failed for model '{model_name}': {str(e)}",
+                retry_after=60,
+            )
 
     def _mock_prediction(self, model_name: str, features: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate a mock prediction when model is unavailable."""
-        # Create deterministic prediction based on features
-        feature_hash = hashlib.md5(json.dumps(features, sort_keys=True).encode()).hexdigest()
-        seed = int(feature_hash[:8], 16)
-        np.random.seed(seed)
-
-        # Generate reasonable prediction based on model type
-        if "roas" in model_name.lower():
-            value = np.random.uniform(1.5, 4.5)
-        elif "conversion" in model_name.lower():
-            value = np.random.uniform(0.01, 0.15)
-        else:
-            value = np.random.uniform(0, 100)
-
-        return {
-            "value": round(value, 4),
-            "confidence": round(np.random.uniform(0.7, 0.95), 2),
-            "feature_importances": None,
-            "model_version": "mock-1.0.0",
-            "inference_strategy": "local-mock",
-        }
+        """
+        Handle unavailable model - raises error instead of returning fake data.
+        
+        Mock predictions were removed as they corrupt downstream analytics
+        and mask model failures. Callers should handle ModelUnavailableError.
+        """
+        raise ModelUnavailableError(
+            model_name=model_name,
+            message=f"Model '{model_name}' is unavailable. No fallback data will be provided.",
+            retry_after=300,  # Suggest retry in 5 minutes
+        )
 
     def get_model_info(self) -> Dict[str, Any]:
         """Get information about available models."""

@@ -33,6 +33,36 @@ from app.models import (
 
 logger = get_task_logger(__name__)
 
+def _calculate_task_confidence(campaign_data: list, analysis_type: str = "portfolio") -> float:
+    """
+    Calculate model-derived confidence for background task predictions.
+    
+    Args:
+        campaign_data: List of campaign dicts with metrics
+        analysis_type: Type of analysis (portfolio, campaign, alerts)
+    
+    Returns:
+        Confidence score between 0.0 and 0.95
+    """
+    if not campaign_data:
+        return 0.3  # Minimum confidence for empty data
+    
+    n = len(campaign_data)
+    
+    # Base confidence from sample size
+    sample_conf = min(0.5, 0.25 + (n / 40))
+    
+    # Data completeness
+    complete = sum(1 for c in campaign_data if c.get("roas", 0) > 0 and c.get("spend", 0) > 0)
+    completeness_conf = (complete / n) * 0.25 if n > 0 else 0
+    
+    # Analysis type adjustments
+    type_bonus = {"portfolio": 0.1, "campaign": 0.15, "alerts": 0.2}.get(analysis_type, 0.1)
+    
+    return round(min(0.95, sample_conf + completeness_conf + type_bonus), 2)
+
+
+
 
 # =============================================================================
 # Data Synchronization Tasks
@@ -909,7 +939,7 @@ def run_live_predictions(self, tenant_id: int):
             prediction_type="portfolio_analysis",
             input_data={"campaign_count": len(campaigns)},
             prediction_result=analysis,
-            confidence_score=0.75,
+            confidence_score=_calculate_task_confidence(campaign_data, "portfolio"),
             model_version="roas_optimizer_v1.0",
         )
         db.add(prediction_record)
@@ -926,7 +956,7 @@ def run_live_predictions(self, tenant_id: int):
                     "recommendations": camp_analysis.get("recommendations"),
                     "optimal_budget": camp_analysis.get("optimal_budget"),
                 },
-                confidence_score=0.70,
+                confidence_score=_calculate_task_confidence([camp_analysis.get("current_metrics", {})], "campaign"),
                 model_version="roas_optimizer_v1.0",
             )
             db.add(camp_prediction)
@@ -1038,7 +1068,7 @@ def generate_roas_alerts(self, tenant_id: int):
                 prediction_type="roas_alerts",
                 input_data={"campaign_count": len(campaigns)},
                 prediction_result={"alerts": alerts, "alert_count": len(alerts)},
-                confidence_score=0.85,
+                confidence_score=_calculate_task_confidence([{"roas": c.roas, "spend": c.total_spend_cents} for c in campaigns], "alerts"),
                 model_version="alert_engine_v1.0",
             )
             db.add(alert_record)

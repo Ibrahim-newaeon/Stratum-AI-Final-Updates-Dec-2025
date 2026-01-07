@@ -80,7 +80,7 @@ class ConversionPredictor:
             "value": round(predicted_conversions, 1),
             "conversion_rate": round(conversion_rate * 100, 2),
             "click_to_conversion_rate": round(click_to_conversion * 100, 4),
-            "confidence": prediction.get("confidence", 0.75),
+            "confidence": prediction.get("confidence"),  # Model-derived, None if unavailable
             "contributing_factors": factors,
             "model_version": prediction.get("model_version", "1.0.0"),
         }
@@ -106,6 +106,52 @@ class ConversionPredictor:
                 prepared[key] = value
 
         return prepared
+
+    
+    def _calculate_heuristic_confidence(
+        self,
+        features: Dict[str, Any],
+        factors: List[Dict[str, Any]],
+    ) -> float:
+        """
+        Calculate confidence for heuristic predictions based on data quality.
+        
+        Heuristic predictions inherently have lower confidence than ML predictions.
+        Confidence is adjusted based on:
+        - Data completeness (more features = higher confidence)
+        - Data volume (more impressions/clicks = more reliable)
+        - Factor signals (clear positive/negative = higher confidence)
+        
+        Returns:
+            Confidence score between 0.3 and 0.75 (capped for heuristics)
+        """
+        # Base confidence for heuristic predictions
+        base_confidence = 0.45
+        
+        # Data completeness bonus
+        has_impressions = features.get("impressions", 0) > 0
+        has_clicks = features.get("clicks", 0) > 0
+        has_spend = features.get("spend", 0) > 0
+        has_ctr = features.get("ctr", 0) > 0
+        
+        completeness = sum([has_impressions, has_clicks, has_spend, has_ctr]) / 4
+        completeness_bonus = completeness * 0.15
+        
+        # Data volume bonus (more data = more reliable baseline)
+        impressions = features.get("impressions", 0)
+        clicks = features.get("clicks", 0)
+        volume_score = min(0.1, (impressions / 100000) * 0.05 + (clicks / 1000) * 0.05)
+        
+        # Factor clarity bonus (clear signals = higher confidence)
+        positive_factors = sum(1 for f in factors if f.get("impact") == "positive")
+        negative_factors = sum(1 for f in factors if f.get("impact") == "negative")
+        clarity_bonus = min(0.05, (positive_factors + negative_factors) * 0.02)
+        
+        confidence = base_confidence + completeness_bonus + volume_score + clarity_bonus
+        
+        # Cap at 0.75 for heuristic predictions (ML should be higher)
+        return round(min(0.75, max(0.3, confidence)), 2)
+
 
     def _heuristic_prediction(self, features: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -180,7 +226,7 @@ class ConversionPredictor:
             "value": round(predicted_conversions, 1),
             "conversion_rate": round(adjusted_cvr * 100, 2),
             "click_to_conversion_rate": round((predicted_conversions / impressions * 100) if impressions > 0 else 0, 4),
-            "confidence": 0.70,
+            "confidence": self._calculate_heuristic_confidence(features, factors),
             "contributing_factors": factors,
             "model_version": "heuristic-1.0.0",
         }

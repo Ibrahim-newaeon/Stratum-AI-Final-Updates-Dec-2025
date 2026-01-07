@@ -25,6 +25,57 @@ router = APIRouter()
 
 
 # =============================================================================
+# Confidence Calculation
+# =============================================================================
+def _calculate_prediction_confidence(
+    campaign_data: list,
+    analysis: dict,
+) -> float:
+    """
+    Calculate model-derived confidence score based on data quality.
+
+    Factors considered:
+    - Number of campaigns (more data = higher confidence)
+    - Data completeness (campaigns with ROAS, spend, revenue)
+    - Variance in campaign performance (lower variance = higher confidence)
+
+    Returns:
+        Confidence score between 0.0 and 1.0
+    """
+    if not campaign_data:
+        return 0.0
+
+    # Base confidence from sample size (more campaigns = more reliable)
+    # 1 campaign = 0.3, 5 campaigns = 0.5, 10+ campaigns = 0.6
+    n_campaigns = len(campaign_data)
+    sample_confidence = min(0.6, 0.3 + (n_campaigns / 20))
+
+    # Data completeness score
+    complete_count = sum(
+        1 for c in campaign_data
+        if c.get("spend", 0) > 0 and c.get("revenue", 0) > 0 and c.get("roas", 0) > 0
+    )
+    completeness_ratio = complete_count / n_campaigns if n_campaigns > 0 else 0
+    completeness_confidence = completeness_ratio * 0.2
+
+    # Variance penalty - high variance in ROAS indicates less predictable outcomes
+    roas_values = [c.get("roas", 0) for c in campaign_data if c.get("roas", 0) > 0]
+    if len(roas_values) >= 2:
+        mean_roas = sum(roas_values) / len(roas_values)
+        variance = sum((r - mean_roas) ** 2 for r in roas_values) / len(roas_values)
+        # Normalize variance penalty (high variance = lower confidence)
+        variance_penalty = min(0.2, variance / 10)
+        variance_confidence = 0.2 - variance_penalty
+    else:
+        variance_confidence = 0.1  # Low confidence if not enough data points
+
+    # Total confidence (capped at 0.95 - never claim 100% confidence)
+    total_confidence = min(0.95, sample_confidence + completeness_confidence + variance_confidence)
+
+    return round(total_confidence, 2)
+
+
+# =============================================================================
 # Schemas
 # =============================================================================
 class CampaignAnalysis(BaseModel):
@@ -165,7 +216,7 @@ async def get_live_predictions(
         prediction_type="portfolio_analysis",
         input_data={"campaign_count": len(campaigns)},
         prediction_result=analysis,
-        confidence_score=0.75,
+        confidence_score=_calculate_prediction_confidence(campaign_data, analysis),
         model_version="roas_optimizer_v1.0",
     )
     db.add(prediction_record)
