@@ -690,3 +690,444 @@ def get_ltv_based_max_cac(
     """Calculate maximum CAC based on predicted LTV."""
     result = ltv_predictor.calculate_max_cac(predicted_ltv, target_ratio)
     return result["recommended_max_cac"]
+
+
+# =============================================================================
+# Advanced LTV Features (P2 Enhancement)
+# =============================================================================
+
+@dataclass
+class SurvivalPrediction:
+    """Customer survival (retention) prediction."""
+    customer_id: str
+    survival_probability_30d: float
+    survival_probability_90d: float
+    survival_probability_180d: float
+    survival_probability_365d: float
+    median_lifetime_days: int
+    risk_level: str  # low, medium, high
+    factors: List[str]
+
+
+@dataclass
+class LTVConfidenceInterval:
+    """LTV prediction with uncertainty quantification."""
+    point_estimate: float
+    lower_bound_90: float
+    upper_bound_90: float
+    lower_bound_95: float
+    upper_bound_95: float
+    confidence_level: float
+    uncertainty_factors: List[str]
+
+
+@dataclass
+class CohortLTVTrajectory:
+    """LTV trajectory for a customer cohort."""
+    cohort_id: str
+    acquisition_period: str
+    customer_count: int
+    ltv_by_month: Dict[int, float]  # month -> cumulative LTV
+    projected_ltv: float
+    actual_vs_projected: Optional[float]
+
+
+class ParetoNBDModel:
+    """
+    Pareto/NBD (Negative Binomial Distribution) model for CLV prediction.
+
+    Implements the classic RFM-based probabilistic model for:
+    - Predicting future purchases
+    - Estimating customer lifetime
+    - Calculating expected transactions
+    """
+
+    def __init__(self):
+        # Model parameters (would be fitted from data in production)
+        self.r = 0.5  # Shape parameter for purchase frequency
+        self.alpha = 10.0  # Scale parameter for purchase frequency
+        self.s = 0.5  # Shape parameter for dropout
+        self.beta = 10.0  # Scale parameter for dropout
+
+    def fit(self, transactions: List[Dict[str, Any]]):
+        """Fit model parameters from transaction data."""
+        # In production, this would use MLE or MCMC
+        # Simplified: adjust parameters based on data characteristics
+
+        if not transactions:
+            return
+
+        # Calculate recency, frequency for each customer
+        customer_stats = {}
+        for t in transactions:
+            cid = t.get("customer_id")
+            if cid not in customer_stats:
+                customer_stats[cid] = {"count": 0, "first": None, "last": None}
+
+            customer_stats[cid]["count"] += 1
+            date = t.get("date")
+            if date:
+                if customer_stats[cid]["first"] is None or date < customer_stats[cid]["first"]:
+                    customer_stats[cid]["first"] = date
+                if customer_stats[cid]["last"] is None or date > customer_stats[cid]["last"]:
+                    customer_stats[cid]["last"] = date
+
+        # Adjust parameters based on observed patterns
+        frequencies = [s["count"] for s in customer_stats.values()]
+        avg_freq = statistics.mean(frequencies) if frequencies else 1
+
+        # Simple parameter adjustment
+        self.r = min(2, avg_freq / 5)
+        self.alpha = max(5, 20 / avg_freq)
+
+    def predict_transactions(
+        self,
+        frequency: int,
+        recency_days: int,
+        tenure_days: int,
+        future_days: int = 365,
+    ) -> float:
+        """Predict expected number of future transactions."""
+        if tenure_days <= 0:
+            return frequency * (future_days / 365)
+
+        # Simplified Pareto/NBD expected transactions
+        # E[X(t, t+T)] = (a / (r - 1)) * [1 - ((beta + t) / (beta + t + T))^(r-1)]
+
+        t = tenure_days / 365
+        T = future_days / 365
+        x = frequency
+
+        # Probability customer is still active
+        p_active = 1 - self._probability_alive(x, recency_days, tenure_days)
+
+        if p_active < 0.1:
+            return 0
+
+        # Expected transactions if active
+        lambda_estimate = (x + self.r) / (t + self.alpha)
+        expected = lambda_estimate * T * p_active
+
+        return max(0, expected)
+
+    def _probability_alive(self, frequency: int, recency_days: int, tenure_days: int) -> float:
+        """Calculate probability that customer has churned."""
+        if tenure_days <= 0:
+            return 0
+
+        # Simplified P(alive)
+        recency_ratio = recency_days / tenure_days
+        frequency_factor = min(1, frequency / 10)
+
+        # High recency = likely churned
+        # High frequency = likely still active
+        p_churned = recency_ratio * (1 - frequency_factor * 0.5)
+
+        return min(0.95, max(0.05, p_churned))
+
+
+class SurvivalAnalyzer:
+    """
+    Survival analysis for customer retention prediction.
+
+    Uses Kaplan-Meier style analysis to predict:
+    - Probability of customer remaining active
+    - Expected customer lifetime
+    - Churn risk factors
+    """
+
+    def __init__(self):
+        self._survival_curves: Dict[str, List[Tuple[int, float]]] = {}
+
+    def build_survival_curve(
+        self,
+        segment: str,
+        customer_lifetimes: List[int],  # Days until churn (or censored)
+        is_churned: List[bool],
+    ):
+        """Build survival curve from historical data."""
+        if len(customer_lifetimes) != len(is_churned):
+            return
+
+        # Sort by lifetime
+        data = sorted(zip(customer_lifetimes, is_churned))
+
+        n = len(data)
+        at_risk = n
+        survival_prob = 1.0
+        curve = [(0, 1.0)]
+
+        for lifetime, churned in data:
+            if churned:
+                survival_prob *= (at_risk - 1) / at_risk
+                curve.append((lifetime, survival_prob))
+            at_risk -= 1
+
+        self._survival_curves[segment] = curve
+
+    def predict_survival(
+        self,
+        customer_id: str,
+        segment: str,
+        current_tenure_days: int,
+    ) -> SurvivalPrediction:
+        """Predict customer survival probabilities."""
+        curve = self._survival_curves.get(segment)
+
+        if not curve:
+            # Default survival estimates
+            base = 0.9 ** (current_tenure_days / 90)
+            return SurvivalPrediction(
+                customer_id=customer_id,
+                survival_probability_30d=min(0.95, base * 0.95),
+                survival_probability_90d=min(0.90, base * 0.85),
+                survival_probability_180d=min(0.80, base * 0.70),
+                survival_probability_365d=min(0.60, base * 0.50),
+                median_lifetime_days=365,
+                risk_level="medium",
+                factors=["Using default model - segment data not available"],
+            )
+
+        # Interpolate from curve
+        def get_prob(target_days: int) -> float:
+            days_from_now = current_tenure_days + target_days
+            for i, (day, prob) in enumerate(curve):
+                if day >= days_from_now:
+                    if i == 0:
+                        return prob
+                    prev_day, prev_prob = curve[i-1]
+                    # Linear interpolation
+                    ratio = (days_from_now - prev_day) / max(1, day - prev_day)
+                    return prev_prob - ratio * (prev_prob - prob)
+            return curve[-1][1] if curve else 0.5
+
+        s30 = get_prob(30)
+        s90 = get_prob(90)
+        s180 = get_prob(180)
+        s365 = get_prob(365)
+
+        # Calculate median lifetime
+        median_days = 365
+        for day, prob in curve:
+            if prob <= 0.5:
+                median_days = day
+                break
+
+        # Determine risk level
+        risk_level = "low"
+        if s90 < 0.5:
+            risk_level = "high"
+        elif s90 < 0.7:
+            risk_level = "medium"
+
+        factors = []
+        if s30 < 0.9:
+            factors.append("High short-term churn risk")
+        if s365 < 0.3:
+            factors.append("Low long-term retention expected")
+        if not factors:
+            factors.append("Retention profile looks healthy")
+
+        return SurvivalPrediction(
+            customer_id=customer_id,
+            survival_probability_30d=round(s30, 3),
+            survival_probability_90d=round(s90, 3),
+            survival_probability_180d=round(s180, 3),
+            survival_probability_365d=round(s365, 3),
+            median_lifetime_days=median_days,
+            risk_level=risk_level,
+            factors=factors,
+        )
+
+
+class LTVUncertaintyQuantifier:
+    """
+    Quantifies uncertainty in LTV predictions.
+
+    Provides:
+    - Confidence intervals
+    - Prediction intervals
+    - Uncertainty sources
+    """
+
+    def __init__(self):
+        self._prediction_errors: List[float] = []
+
+    def record_prediction_error(self, predicted: float, actual: float):
+        """Record prediction error for calibration."""
+        error = actual - predicted
+        self._prediction_errors.append(error)
+
+        # Keep last 1000
+        if len(self._prediction_errors) > 1000:
+            self._prediction_errors = self._prediction_errors[-1000:]
+
+    def quantify_uncertainty(
+        self,
+        point_estimate: float,
+        data_points: int,
+        feature_completeness: float = 1.0,
+    ) -> LTVConfidenceInterval:
+        """Calculate confidence intervals for LTV prediction."""
+        # Base uncertainty from historical errors
+        if self._prediction_errors:
+            std_error = statistics.stdev(self._prediction_errors)
+        else:
+            # Default uncertainty: 30% of prediction
+            std_error = point_estimate * 0.3
+
+        # Adjust for data quality
+        data_multiplier = 1 + (1 / max(data_points, 1))
+        completeness_multiplier = 1 + (1 - feature_completeness)
+
+        adjusted_std = std_error * data_multiplier * completeness_multiplier
+
+        # Calculate intervals
+        z_90 = 1.645
+        z_95 = 1.96
+
+        lower_90 = max(0, point_estimate - z_90 * adjusted_std)
+        upper_90 = point_estimate + z_90 * adjusted_std
+
+        lower_95 = max(0, point_estimate - z_95 * adjusted_std)
+        upper_95 = point_estimate + z_95 * adjusted_std
+
+        # Confidence level based on data quality
+        confidence = min(0.95, 0.5 + data_points / 200 * 0.3 + feature_completeness * 0.15)
+
+        # Identify uncertainty factors
+        factors = []
+        if data_points < 10:
+            factors.append("Limited historical data")
+        if feature_completeness < 0.8:
+            factors.append("Missing customer features")
+        if std_error > point_estimate * 0.5:
+            factors.append("High historical prediction variance")
+        if not factors:
+            factors.append("Prediction confidence is high")
+
+        return LTVConfidenceInterval(
+            point_estimate=round(point_estimate, 2),
+            lower_bound_90=round(lower_90, 2),
+            upper_bound_90=round(upper_90, 2),
+            lower_bound_95=round(lower_95, 2),
+            upper_bound_95=round(upper_95, 2),
+            confidence_level=round(confidence, 3),
+            uncertainty_factors=factors,
+        )
+
+
+class CohortLTVTracker:
+    """
+    Tracks LTV trajectories for customer cohorts.
+
+    Enables:
+    - Cohort comparison
+    - LTV curve analysis
+    - Early vs late cohort performance
+    """
+
+    def __init__(self):
+        self._cohort_data: Dict[str, Dict[int, List[float]]] = {}
+
+    def record_cohort_ltv(
+        self,
+        cohort_id: str,
+        month_number: int,
+        ltv_values: List[float],
+    ):
+        """Record LTV values for a cohort at a specific month."""
+        if cohort_id not in self._cohort_data:
+            self._cohort_data[cohort_id] = {}
+
+        self._cohort_data[cohort_id][month_number] = ltv_values
+
+    def get_cohort_trajectory(
+        self,
+        cohort_id: str,
+        acquisition_period: str,
+    ) -> CohortLTVTrajectory:
+        """Get LTV trajectory for a cohort."""
+        data = self._cohort_data.get(cohort_id, {})
+
+        if not data:
+            return CohortLTVTrajectory(
+                cohort_id=cohort_id,
+                acquisition_period=acquisition_period,
+                customer_count=0,
+                ltv_by_month={},
+                projected_ltv=0,
+                actual_vs_projected=None,
+            )
+
+        # Calculate average LTV at each month
+        ltv_by_month = {}
+        for month, values in sorted(data.items()):
+            ltv_by_month[month] = round(statistics.mean(values), 2) if values else 0
+
+        customer_count = len(data.get(1, []))
+
+        # Project future LTV using growth rate
+        if len(ltv_by_month) >= 3:
+            months = sorted(ltv_by_month.keys())
+            recent_growth = []
+            for i in range(1, min(4, len(months))):
+                m1, m2 = months[i-1], months[i]
+                if ltv_by_month[m1] > 0:
+                    growth = (ltv_by_month[m2] - ltv_by_month[m1]) / ltv_by_month[m1]
+                    recent_growth.append(growth)
+
+            avg_growth = statistics.mean(recent_growth) if recent_growth else 0.05
+            last_ltv = ltv_by_month[months[-1]]
+            months_to_project = 12 - len(months)
+            projected_ltv = last_ltv * (1 + avg_growth) ** months_to_project
+        else:
+            projected_ltv = ltv_by_month.get(max(ltv_by_month.keys()), 0) * 1.5
+
+        return CohortLTVTrajectory(
+            cohort_id=cohort_id,
+            acquisition_period=acquisition_period,
+            customer_count=customer_count,
+            ltv_by_month=ltv_by_month,
+            projected_ltv=round(projected_ltv, 2),
+            actual_vs_projected=None,
+        )
+
+    def compare_cohorts(
+        self,
+        cohort_ids: List[str],
+        at_month: int = 6,
+    ) -> Dict[str, Any]:
+        """Compare LTV across cohorts at a specific month."""
+        comparison = {}
+
+        for cohort_id in cohort_ids:
+            data = self._cohort_data.get(cohort_id, {})
+            if at_month in data:
+                values = data[at_month]
+                comparison[cohort_id] = {
+                    "avg_ltv": round(statistics.mean(values), 2) if values else 0,
+                    "customer_count": len(values),
+                    "ltv_std": round(statistics.stdev(values), 2) if len(values) > 1 else 0,
+                }
+
+        if comparison:
+            best_cohort = max(comparison, key=lambda c: comparison[c]["avg_ltv"])
+            worst_cohort = min(comparison, key=lambda c: comparison[c]["avg_ltv"])
+
+            return {
+                "month": at_month,
+                "cohorts": comparison,
+                "best_performer": best_cohort,
+                "worst_performer": worst_cohort,
+                "ltv_range": comparison[best_cohort]["avg_ltv"] - comparison[worst_cohort]["avg_ltv"],
+            }
+
+        return {"month": at_month, "cohorts": {}, "message": "No data available"}
+
+
+# Singleton instances for P2 enhancements
+pareto_nbd_model = ParetoNBDModel()
+survival_analyzer = SurvivalAnalyzer()
+ltv_uncertainty_quantifier = LTVUncertaintyQuantifier()
+cohort_ltv_tracker = CohortLTVTracker()

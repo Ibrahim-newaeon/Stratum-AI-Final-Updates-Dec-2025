@@ -780,3 +780,435 @@ def get_audience_recommendations(tenant_id: str) -> List[Dict[str, Any]]:
         }
         for r in recommendations
     ]
+
+
+# =============================================================================
+# Advanced Audience Insights Features (P2 Enhancement)
+# =============================================================================
+
+@dataclass
+class AudienceLTVPrediction:
+    """LTV prediction for an audience segment."""
+    audience_id: str
+    predicted_avg_ltv: float
+    ltv_range_low: float
+    ltv_range_high: float
+    confidence: float
+    value_tier: str  # low, medium, high, premium
+    recommended_cac_limit: float
+
+
+@dataclass
+class AudienceDecayPrediction:
+    """Prediction of audience performance decay."""
+    audience_id: str
+    current_performance_score: float
+    predicted_score_30d: float
+    predicted_score_60d: float
+    predicted_score_90d: float
+    decay_rate: float  # % per month
+    time_to_refresh_days: int
+    factors: List[str]
+
+
+@dataclass
+class AudienceCluster:
+    """Cluster of similar audiences."""
+    cluster_id: str
+    cluster_name: str
+    audiences: List[str]
+    common_traits: List[str]
+    avg_performance: Dict[str, float]
+    recommendation: str
+
+
+class AudienceLTVPredictor:
+    """
+    Predicts LTV for audience segments.
+
+    Estimates:
+    - Average customer LTV for audience
+    - LTV distribution
+    - Recommended CAC limits
+    """
+
+    # LTV multipliers by audience type
+    LTV_MULTIPLIERS = {
+        AudienceType.FIRST_PARTY: 1.5,
+        AudienceType.LOOKALIKE: 1.0,
+        AudienceType.INTEREST: 0.7,
+        AudienceType.BEHAVIORAL: 0.9,
+        AudienceType.RETARGETING: 1.8,
+        AudienceType.CUSTOM: 1.2,
+    }
+
+    def __init__(self):
+        self._baseline_ltv: Dict[str, float] = {}
+
+    def set_baseline_ltv(self, tenant_id: str, baseline: float):
+        """Set baseline LTV for a tenant."""
+        self._baseline_ltv[tenant_id] = baseline
+
+    def predict(
+        self,
+        audience_id: str,
+        audience_type: AudienceType,
+        tenant_id: str,
+        historical_performance: Optional[Dict[str, float]] = None,
+    ) -> AudienceLTVPrediction:
+        """Predict LTV for an audience."""
+        baseline = self._baseline_ltv.get(tenant_id, 100)
+
+        # Apply type multiplier
+        multiplier = self.LTV_MULTIPLIERS.get(audience_type, 1.0)
+        base_ltv = baseline * multiplier
+
+        # Adjust based on historical performance
+        if historical_performance:
+            roas = historical_performance.get("roas", 2)
+            cvr = historical_performance.get("conversion_rate", 0.02)
+
+            # Higher ROAS/CVR suggests better quality customers
+            perf_multiplier = 0.8 + (min(roas, 5) / 5) * 0.3 + (min(cvr, 0.1) / 0.1) * 0.2
+            base_ltv *= perf_multiplier
+
+        predicted_ltv = round(base_ltv, 2)
+
+        # Calculate range
+        variance = 0.3 if audience_type in [AudienceType.LOOKALIKE, AudienceType.INTEREST] else 0.2
+        ltv_low = round(predicted_ltv * (1 - variance), 2)
+        ltv_high = round(predicted_ltv * (1 + variance), 2)
+
+        # Determine value tier
+        if predicted_ltv >= baseline * 1.5:
+            value_tier = "premium"
+        elif predicted_ltv >= baseline:
+            value_tier = "high"
+        elif predicted_ltv >= baseline * 0.5:
+            value_tier = "medium"
+        else:
+            value_tier = "low"
+
+        # Calculate confidence
+        confidence = 0.7 if historical_performance else 0.5
+
+        # Recommended CAC
+        recommended_cac = round(predicted_ltv / 3, 2)  # LTV:CAC ratio of 3:1
+
+        return AudienceLTVPrediction(
+            audience_id=audience_id,
+            predicted_avg_ltv=predicted_ltv,
+            ltv_range_low=ltv_low,
+            ltv_range_high=ltv_high,
+            confidence=confidence,
+            value_tier=value_tier,
+            recommended_cac_limit=recommended_cac,
+        )
+
+
+class AudienceDecayPredictor:
+    """
+    Predicts audience performance decay over time.
+
+    Factors:
+    - Audience fatigue
+    - Saturation
+    - Market changes
+    - Competition
+    """
+
+    # Base decay rates by audience type (% per month)
+    BASE_DECAY_RATES = {
+        AudienceType.FIRST_PARTY: 0.02,  # 2% per month
+        AudienceType.LOOKALIKE: 0.05,
+        AudienceType.INTEREST: 0.08,
+        AudienceType.BEHAVIORAL: 0.06,
+        AudienceType.RETARGETING: 0.10,  # Higher decay for retargeting
+        AudienceType.CUSTOM: 0.04,
+    }
+
+    def __init__(self):
+        self._performance_history: Dict[str, List[Tuple[datetime, float]]] = {}
+
+    def record_performance(self, audience_id: str, score: float):
+        """Record audience performance for decay tracking."""
+        if audience_id not in self._performance_history:
+            self._performance_history[audience_id] = []
+
+        self._performance_history[audience_id].append((
+            datetime.now(timezone.utc),
+            score,
+        ))
+
+        # Keep last 180 days
+        cutoff = datetime.now(timezone.utc) - timedelta(days=180)
+        self._performance_history[audience_id] = [
+            (t, s) for t, s in self._performance_history[audience_id] if t > cutoff
+        ]
+
+    def predict(
+        self,
+        audience_id: str,
+        audience_type: AudienceType,
+        current_score: float,
+        audience_age_days: int,
+    ) -> AudienceDecayPrediction:
+        """Predict audience decay."""
+        base_decay = self.BASE_DECAY_RATES.get(audience_type, 0.05)
+
+        # Adjust decay based on historical data
+        history = self._performance_history.get(audience_id, [])
+        if len(history) >= 3:
+            scores = [s for _, s in sorted(history)]
+            if scores[0] > 0:
+                observed_decay = (scores[0] - scores[-1]) / scores[0] / max(1, len(scores))
+                decay_rate = (base_decay + observed_decay) / 2
+            else:
+                decay_rate = base_decay
+        else:
+            decay_rate = base_decay
+
+        # Older audiences decay faster
+        age_multiplier = 1 + (audience_age_days / 365) * 0.5
+        adjusted_decay = decay_rate * age_multiplier
+
+        # Predict future scores
+        score_30d = current_score * (1 - adjusted_decay)
+        score_60d = current_score * (1 - adjusted_decay * 2)
+        score_90d = current_score * (1 - adjusted_decay * 3)
+
+        # Determine time to refresh (when score drops below 50% of current)
+        if adjusted_decay > 0:
+            time_to_refresh = int(0.5 / adjusted_decay * 30)
+        else:
+            time_to_refresh = 365
+
+        # Identify factors
+        factors = []
+        if audience_type == AudienceType.RETARGETING:
+            factors.append("Retargeting audiences decay faster due to user fatigue")
+        if audience_age_days > 90:
+            factors.append(f"Audience is {audience_age_days} days old - consider refresh")
+        if adjusted_decay > 0.08:
+            factors.append("High decay rate detected - monitor closely")
+        if not factors:
+            factors.append("Normal decay pattern")
+
+        return AudienceDecayPrediction(
+            audience_id=audience_id,
+            current_performance_score=round(current_score, 2),
+            predicted_score_30d=round(max(0, score_30d), 2),
+            predicted_score_60d=round(max(0, score_60d), 2),
+            predicted_score_90d=round(max(0, score_90d), 2),
+            decay_rate=round(adjusted_decay * 100, 2),
+            time_to_refresh_days=time_to_refresh,
+            factors=factors,
+        )
+
+
+class AudienceClusterAnalyzer:
+    """
+    Clusters audiences by similarity.
+
+    Groups audiences based on:
+    - Performance patterns
+    - Demographic signals
+    - Behavioral traits
+    """
+
+    def __init__(self):
+        self._audience_features: Dict[str, Dict[str, float]] = {}
+
+    def record_audience_features(
+        self,
+        audience_id: str,
+        features: Dict[str, float],
+    ):
+        """Record features for an audience."""
+        self._audience_features[audience_id] = features
+
+    def cluster_audiences(
+        self,
+        audience_ids: List[str],
+        n_clusters: int = 4,
+    ) -> List[AudienceCluster]:
+        """Cluster audiences into groups."""
+        if len(audience_ids) < n_clusters:
+            n_clusters = len(audience_ids)
+
+        if n_clusters < 2:
+            return []
+
+        # Get features for all audiences
+        audiences_with_features = [
+            (aid, self._audience_features.get(aid, {}))
+            for aid in audience_ids
+            if aid in self._audience_features
+        ]
+
+        if len(audiences_with_features) < n_clusters:
+            return []
+
+        # Simple k-means-style clustering
+        # In production, would use sklearn or similar
+        clusters: Dict[int, List[str]] = {i: [] for i in range(n_clusters)}
+
+        # Initial assignment based on performance buckets
+        sorted_audiences = sorted(
+            audiences_with_features,
+            key=lambda x: x[1].get("roas", 0),
+        )
+
+        bucket_size = len(sorted_audiences) // n_clusters
+        for i, (aid, _) in enumerate(sorted_audiences):
+            cluster_idx = min(i // max(1, bucket_size), n_clusters - 1)
+            clusters[cluster_idx].append(aid)
+
+        # Create cluster objects
+        result = []
+        cluster_names = ["Low Performers", "Below Average", "Above Average", "Top Performers"]
+
+        for cluster_idx, audience_list in clusters.items():
+            if not audience_list:
+                continue
+
+            # Calculate cluster stats
+            cluster_features = [
+                self._audience_features[aid]
+                for aid in audience_list
+                if aid in self._audience_features
+            ]
+
+            avg_performance = {}
+            if cluster_features:
+                for key in cluster_features[0]:
+                    values = [f.get(key, 0) for f in cluster_features]
+                    avg_performance[key] = round(statistics.mean(values), 3)
+
+            # Identify common traits
+            common_traits = self._identify_common_traits(cluster_features)
+
+            # Generate recommendation
+            recommendation = self._generate_cluster_recommendation(
+                cluster_idx, n_clusters, avg_performance
+            )
+
+            result.append(AudienceCluster(
+                cluster_id=f"cluster_{cluster_idx}",
+                cluster_name=cluster_names[cluster_idx] if cluster_idx < len(cluster_names) else f"Cluster {cluster_idx + 1}",
+                audiences=audience_list,
+                common_traits=common_traits,
+                avg_performance=avg_performance,
+                recommendation=recommendation,
+            ))
+
+        return result
+
+    def _identify_common_traits(
+        self,
+        features: List[Dict[str, float]],
+    ) -> List[str]:
+        """Identify common traits in cluster."""
+        if not features:
+            return []
+
+        traits = []
+
+        # Check for high/low patterns
+        avg_roas = statistics.mean([f.get("roas", 0) for f in features])
+        avg_ctr = statistics.mean([f.get("ctr", 0) for f in features])
+        avg_cvr = statistics.mean([f.get("conversion_rate", 0) for f in features])
+
+        if avg_roas > 3:
+            traits.append("High ROAS performers")
+        elif avg_roas < 1.5:
+            traits.append("Below-target ROAS")
+
+        if avg_ctr > 2:
+            traits.append("Strong engagement")
+        elif avg_ctr < 0.5:
+            traits.append("Low engagement")
+
+        if avg_cvr > 0.03:
+            traits.append("High conversion intent")
+
+        if not traits:
+            traits.append("Mixed performance patterns")
+
+        return traits
+
+    def _generate_cluster_recommendation(
+        self,
+        cluster_idx: int,
+        n_clusters: int,
+        performance: Dict[str, float],
+    ) -> str:
+        """Generate recommendation for cluster."""
+        if cluster_idx >= n_clusters - 1:  # Top cluster
+            return "Scale budget for these top-performing audiences"
+        elif cluster_idx == 0:  # Bottom cluster
+            return "Review and potentially pause low performers"
+        elif performance.get("roas", 0) > 2:
+            return "Good performers - test incremental budget increases"
+        else:
+            return "Monitor closely - optimize targeting before scaling"
+
+    def find_similar_audiences(
+        self,
+        target_audience_id: str,
+        candidate_ids: List[str],
+        top_n: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Find audiences similar to target."""
+        target_features = self._audience_features.get(target_audience_id)
+        if not target_features:
+            return []
+
+        similarities = []
+
+        for aid in candidate_ids:
+            if aid == target_audience_id:
+                continue
+
+            features = self._audience_features.get(aid)
+            if not features:
+                continue
+
+            # Calculate similarity
+            similarity = self._calculate_similarity(target_features, features)
+            similarities.append({
+                "audience_id": aid,
+                "similarity_score": round(similarity, 3),
+                "features": features,
+            })
+
+        # Sort by similarity
+        similarities.sort(key=lambda x: x["similarity_score"], reverse=True)
+
+        return similarities[:top_n]
+
+    def _calculate_similarity(
+        self,
+        features_a: Dict[str, float],
+        features_b: Dict[str, float],
+    ) -> float:
+        """Calculate similarity between feature sets."""
+        common_keys = set(features_a.keys()) & set(features_b.keys())
+        if not common_keys:
+            return 0
+
+        total_sim = 0
+        for key in common_keys:
+            val_a = features_a[key]
+            val_b = features_b[key]
+            max_val = max(abs(val_a), abs(val_b), 1)
+            diff = abs(val_a - val_b) / max_val
+            total_sim += 1 - min(diff, 1)
+
+        return total_sim / len(common_keys)
+
+
+# Singleton instances for P2 enhancements
+audience_ltv_predictor = AudienceLTVPredictor()
+audience_decay_predictor = AudienceDecayPredictor()
+audience_cluster_analyzer = AudienceClusterAnalyzer()

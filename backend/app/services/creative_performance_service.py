@@ -827,3 +827,506 @@ def get_top_performing_creatives(
         platform=platform,
         limit=limit,
     )
+
+
+# =============================================================================
+# Advanced Creative Performance Analytics (P0 Enhancement)
+# =============================================================================
+
+@dataclass
+class CreativeElement:
+    """Individual element of a creative."""
+    element_type: str  # headline, body, cta, image, video
+    content: str
+    position: Optional[str] = None
+
+
+@dataclass
+class CreativeElementAnalysis:
+    """Analysis of creative element performance."""
+    element_type: str
+    top_performers: List[Dict[str, Any]]
+    worst_performers: List[Dict[str, Any]]
+    recommendations: List[str]
+
+
+@dataclass
+class CreativeLifecyclePrediction:
+    """Prediction of creative lifecycle."""
+    creative_id: str
+    current_phase: str  # learning, growth, maturity, decline, fatigue
+    days_in_phase: int
+    predicted_phase_change_days: int
+    predicted_next_phase: str
+    confidence: float
+    factors: List[str]
+
+
+@dataclass
+class CrossPlatformCreativeInsight:
+    """Insight from cross-platform creative analysis."""
+    insight_type: str
+    platforms: List[str]
+    description: str
+    actionable_recommendation: str
+    potential_impact: str
+
+
+class CreativeElementAnalyzer:
+    """
+    Analyzes individual creative elements (headlines, CTAs, etc).
+
+    Identifies:
+    - Which headlines perform best
+    - Optimal CTA variations
+    - Image/video effectiveness patterns
+    """
+
+    def __init__(self):
+        self._element_performance: Dict[str, Dict[str, List[Dict[str, float]]]] = {}
+
+    def record_element_performance(
+        self,
+        creative_id: str,
+        element: CreativeElement,
+        metrics: CreativeMetrics,
+    ):
+        """Record performance for a creative element."""
+        key = f"{element.element_type}:{element.content[:50]}"
+
+        if element.element_type not in self._element_performance:
+            self._element_performance[element.element_type] = {}
+
+        if key not in self._element_performance[element.element_type]:
+            self._element_performance[element.element_type][key] = []
+
+        self._element_performance[element.element_type][key].append({
+            "creative_id": creative_id,
+            "ctr": metrics.ctr,
+            "conversion_rate": metrics.conversion_rate,
+            "roas": metrics.roas,
+            "impressions": metrics.impressions,
+        })
+
+    def analyze_element_type(
+        self,
+        element_type: str,
+        min_impressions: int = 1000,
+    ) -> CreativeElementAnalysis:
+        """Analyze performance of an element type."""
+        type_data = self._element_performance.get(element_type, {})
+
+        if not type_data:
+            return CreativeElementAnalysis(
+                element_type=element_type,
+                top_performers=[],
+                worst_performers=[],
+                recommendations=["Insufficient data for analysis"],
+            )
+
+        # Calculate aggregate metrics per element
+        element_scores = []
+        for element_key, performances in type_data.items():
+            total_impressions = sum(p["impressions"] for p in performances)
+            if total_impressions < min_impressions:
+                continue
+
+            avg_ctr = statistics.mean([p["ctr"] for p in performances])
+            avg_cvr = statistics.mean([p["conversion_rate"] for p in performances])
+            avg_roas = statistics.mean([p["roas"] for p in performances if p["roas"] > 0])
+
+            # Composite score
+            score = avg_ctr * 0.3 + avg_cvr * 0.4 + min(avg_roas / 10, 3) * 0.3
+
+            element_scores.append({
+                "element": element_key.split(":", 1)[1] if ":" in element_key else element_key,
+                "avg_ctr": round(avg_ctr, 2),
+                "avg_conversion_rate": round(avg_cvr, 2),
+                "avg_roas": round(avg_roas, 2),
+                "impressions": total_impressions,
+                "score": round(score, 3),
+            })
+
+        # Sort by score
+        element_scores.sort(key=lambda x: x["score"], reverse=True)
+
+        top_performers = element_scores[:5]
+        worst_performers = element_scores[-5:] if len(element_scores) > 5 else []
+
+        # Generate recommendations
+        recommendations = self._generate_element_recommendations(
+            element_type, top_performers, worst_performers
+        )
+
+        return CreativeElementAnalysis(
+            element_type=element_type,
+            top_performers=top_performers,
+            worst_performers=worst_performers,
+            recommendations=recommendations,
+        )
+
+    def _generate_element_recommendations(
+        self,
+        element_type: str,
+        top: List[Dict],
+        worst: List[Dict],
+    ) -> List[str]:
+        """Generate recommendations based on element analysis."""
+        recommendations = []
+
+        if not top:
+            return ["Collect more data to analyze element performance"]
+
+        if element_type == "headline":
+            # Analyze headline patterns
+            top_lengths = [len(e["element"]) for e in top]
+            avg_top_length = statistics.mean(top_lengths) if top_lengths else 0
+            recommendations.append(f"Optimal headline length appears to be ~{int(avg_top_length)} characters")
+
+            # Check for patterns in top performers
+            if any("?" in e["element"] for e in top):
+                recommendations.append("Questions in headlines tend to perform well")
+
+        elif element_type == "cta":
+            # Analyze CTA patterns
+            top_ctas = [e["element"].lower() for e in top]
+            if any("now" in cta for cta in top_ctas):
+                recommendations.append("Urgency words like 'Now' improve CTA performance")
+            if any("free" in cta for cta in top_ctas):
+                recommendations.append("'Free' in CTAs drives higher engagement")
+
+        elif element_type == "body":
+            recommendations.append("Test shorter vs longer body copy variations")
+
+        if worst:
+            avg_worst_score = statistics.mean([w["score"] for w in worst])
+            avg_top_score = statistics.mean([t["score"] for t in top])
+            if avg_top_score > avg_worst_score * 2:
+                recommendations.append(
+                    f"Consider pausing low performers - top elements score {avg_top_score/avg_worst_score:.1f}x better"
+                )
+
+        return recommendations
+
+
+class CreativeLifecyclePredictor:
+    """
+    Predicts creative lifecycle phases and transitions.
+
+    Phases:
+    - Learning: Initial data collection (0-3 days)
+    - Growth: Performance improving (3-14 days)
+    - Maturity: Stable performance (14-30 days)
+    - Decline: Performance dropping (30+ days)
+    - Fatigue: Severe degradation
+    """
+
+    PHASE_THRESHOLDS = {
+        "learning": {"min_days": 0, "max_days": 3, "min_impressions": 0},
+        "growth": {"min_days": 3, "max_days": 14, "ctr_trend": "increasing"},
+        "maturity": {"min_days": 14, "max_days": 45, "ctr_trend": "stable"},
+        "decline": {"min_days": 30, "ctr_drop_pct": 10},
+        "fatigue": {"ctr_drop_pct": 30},
+    }
+
+    def __init__(self):
+        self._creative_history: Dict[str, List[Tuple[datetime, CreativeMetrics]]] = {}
+
+    def record_metrics(self, creative_id: str, metrics: CreativeMetrics):
+        """Record metrics for lifecycle tracking."""
+        if creative_id not in self._creative_history:
+            self._creative_history[creative_id] = []
+
+        self._creative_history[creative_id].append((
+            datetime.now(timezone.utc),
+            metrics,
+        ))
+
+        # Keep last 90 days
+        cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+        self._creative_history[creative_id] = [
+            (t, m) for t, m in self._creative_history[creative_id] if t > cutoff
+        ]
+
+    def predict(self, creative_id: str) -> CreativeLifecyclePrediction:
+        """Predict lifecycle phase for a creative."""
+        history = self._creative_history.get(creative_id, [])
+
+        if not history:
+            return CreativeLifecyclePrediction(
+                creative_id=creative_id,
+                current_phase="unknown",
+                days_in_phase=0,
+                predicted_phase_change_days=0,
+                predicted_next_phase="learning",
+                confidence=0.0,
+                factors=["No historical data available"],
+            )
+
+        # Calculate creative age
+        first_date = min(t for t, _ in history)
+        age_days = (datetime.now(timezone.utc) - first_date).days
+
+        # Get recent and historical CTR
+        recent_metrics = [m for t, m in history[-7:]]
+        older_metrics = [m for t, m in history[:-7]] if len(history) > 7 else []
+
+        current_ctr = statistics.mean([m.ctr for m in recent_metrics]) if recent_metrics else 0
+        historical_ctr = statistics.mean([m.ctr for m in older_metrics]) if older_metrics else current_ctr
+
+        # Determine current phase
+        current_phase, factors = self._determine_phase(
+            age_days, current_ctr, historical_ctr, recent_metrics
+        )
+
+        # Predict next phase
+        next_phase, change_days, confidence = self._predict_transition(
+            current_phase, age_days, current_ctr, historical_ctr
+        )
+
+        # Calculate days in current phase
+        days_in_phase = self._calculate_days_in_phase(history, current_phase)
+
+        return CreativeLifecyclePrediction(
+            creative_id=creative_id,
+            current_phase=current_phase,
+            days_in_phase=days_in_phase,
+            predicted_phase_change_days=change_days,
+            predicted_next_phase=next_phase,
+            confidence=round(confidence, 2),
+            factors=factors,
+        )
+
+    def _determine_phase(
+        self,
+        age_days: int,
+        current_ctr: float,
+        historical_ctr: float,
+        recent_metrics: List[CreativeMetrics],
+    ) -> Tuple[str, List[str]]:
+        """Determine current lifecycle phase."""
+        factors = []
+
+        if age_days <= 3:
+            return "learning", ["Creative is new, in learning phase"]
+
+        # Calculate CTR change
+        ctr_change_pct = ((current_ctr - historical_ctr) / historical_ctr * 100) if historical_ctr > 0 else 0
+
+        if ctr_change_pct <= -30:
+            factors.append(f"CTR dropped {abs(ctr_change_pct):.1f}% - severe fatigue")
+            return "fatigue", factors
+
+        if ctr_change_pct <= -10:
+            factors.append(f"CTR declining by {abs(ctr_change_pct):.1f}%")
+            return "decline", factors
+
+        if age_days <= 14 and ctr_change_pct > 0:
+            factors.append("Performance improving during growth phase")
+            return "growth", factors
+
+        if abs(ctr_change_pct) <= 10:
+            factors.append("Performance stable")
+            return "maturity", factors
+
+        factors.append("Transitional performance pattern")
+        return "maturity", factors
+
+    def _predict_transition(
+        self,
+        current_phase: str,
+        age_days: int,
+        current_ctr: float,
+        historical_ctr: float,
+    ) -> Tuple[str, int, float]:
+        """Predict when phase will change and to what."""
+        transitions = {
+            "learning": ("growth", 3 - age_days, 0.9),
+            "growth": ("maturity", max(7, 14 - age_days), 0.8),
+            "maturity": ("decline", max(14, 45 - age_days), 0.6),
+            "decline": ("fatigue", 14, 0.7),
+            "fatigue": ("fatigue", 0, 0.9),  # Terminal state
+        }
+
+        return transitions.get(current_phase, ("unknown", 0, 0.5))
+
+    def _calculate_days_in_phase(
+        self,
+        history: List[Tuple[datetime, CreativeMetrics]],
+        current_phase: str,
+    ) -> int:
+        """Calculate how many days in current phase."""
+        # Simplified: assume phase started at certain age thresholds
+        if not history:
+            return 0
+
+        first_date = min(t for t, _ in history)
+        age = (datetime.now(timezone.utc) - first_date).days
+
+        phase_starts = {
+            "learning": 0,
+            "growth": 3,
+            "maturity": 14,
+            "decline": 30,
+            "fatigue": 45,
+        }
+
+        phase_start = phase_starts.get(current_phase, 0)
+        return max(0, age - phase_start)
+
+
+class CrossPlatformCreativeAnalyzer:
+    """
+    Analyzes creative performance across multiple platforms.
+
+    Identifies:
+    - Platform-specific performance patterns
+    - Creatives that work universally vs platform-specific
+    - Optimization opportunities
+    """
+
+    def __init__(self, service: CreativePerformanceService):
+        self.service = service
+
+    def analyze_creative_across_platforms(
+        self,
+        creative_name: str,
+        tenant_id: str,
+    ) -> List[CrossPlatformCreativeInsight]:
+        """Analyze a creative's performance across platforms."""
+        insights = []
+
+        # Get performance data for this creative across platforms
+        platform_performance = {}
+
+        for creative_id, record in self.service._creative_data.items():
+            if record.tenant_id != tenant_id:
+                continue
+
+            # Simple name matching (in production, use creative asset matching)
+            if creative_id.startswith(creative_name) or creative_name in creative_id:
+                latest = record.metrics_history[-1] if record.metrics_history else None
+                if latest:
+                    platform_performance[record.platform] = {
+                        "creative_id": creative_id,
+                        "ctr": latest.ctr,
+                        "conversion_rate": latest.conversion_rate,
+                        "roas": latest.roas,
+                        "spend": latest.spend,
+                    }
+
+        if len(platform_performance) < 2:
+            return [CrossPlatformCreativeInsight(
+                insight_type="insufficient_data",
+                platforms=list(platform_performance.keys()),
+                description="Creative only found on one platform",
+                actionable_recommendation="Consider expanding to more platforms",
+                potential_impact="Medium - diversification reduces risk",
+            )]
+
+        # Compare performance across platforms
+        platforms = list(platform_performance.keys())
+        performances = list(platform_performance.values())
+
+        # Find best and worst performing platforms
+        best_platform = max(platform_performance.items(), key=lambda x: x[1]["roas"])
+        worst_platform = min(platform_performance.items(), key=lambda x: x[1]["roas"])
+
+        if best_platform[1]["roas"] > worst_platform[1]["roas"] * 2:
+            insights.append(CrossPlatformCreativeInsight(
+                insight_type="performance_gap",
+                platforms=[best_platform[0], worst_platform[0]],
+                description=f"{best_platform[0]} outperforms {worst_platform[0]} by {best_platform[1]['roas']/worst_platform[1]['roas']:.1f}x ROAS",
+                actionable_recommendation=f"Consider reallocating budget from {worst_platform[0]} to {best_platform[0]}",
+                potential_impact="High - significant ROAS improvement potential",
+            ))
+
+        # Check for universal performers
+        avg_roas = statistics.mean([p["roas"] for p in performances if p["roas"] > 0])
+        if all(p["roas"] >= avg_roas * 0.8 for p in performances if p["roas"] > 0):
+            insights.append(CrossPlatformCreativeInsight(
+                insight_type="universal_performer",
+                platforms=platforms,
+                description="This creative performs consistently across all platforms",
+                actionable_recommendation="Scale budget across all platforms",
+                potential_impact="High - proven cross-platform effectiveness",
+            ))
+
+        # Check for platform-specific optimization
+        for platform, perf in platform_performance.items():
+            if perf["ctr"] > 0 and perf["conversion_rate"] < avg_roas * 0.5:
+                insights.append(CrossPlatformCreativeInsight(
+                    insight_type="conversion_opportunity",
+                    platforms=[platform],
+                    description=f"High CTR but low conversion on {platform}",
+                    actionable_recommendation=f"Optimize landing page or targeting for {platform}",
+                    potential_impact="Medium - improve conversion rate to match engagement",
+                ))
+
+        if not insights:
+            insights.append(CrossPlatformCreativeInsight(
+                insight_type="balanced_performance",
+                platforms=platforms,
+                description="Creative performs similarly across platforms",
+                actionable_recommendation="Maintain current allocation, test new variations",
+                potential_impact="Low - already optimized",
+            ))
+
+        return insights
+
+    def get_platform_creative_recommendations(
+        self,
+        tenant_id: str,
+    ) -> Dict[str, List[str]]:
+        """Get creative recommendations per platform."""
+        recommendations = {}
+
+        # Analyze each platform
+        platforms_data: Dict[str, List[CreativeMetrics]] = {}
+
+        for creative_id, record in self.service._creative_data.items():
+            if record.tenant_id != tenant_id:
+                continue
+
+            if record.platform not in platforms_data:
+                platforms_data[record.platform] = []
+
+            if record.metrics_history:
+                platforms_data[record.platform].append(record.metrics_history[-1])
+
+        for platform, metrics_list in platforms_data.items():
+            platform_recs = []
+
+            if not metrics_list:
+                platform_recs.append("No active creatives - launch test campaigns")
+            else:
+                avg_ctr = statistics.mean([m.ctr for m in metrics_list])
+                avg_roas = statistics.mean([m.roas for m in metrics_list if m.roas > 0])
+
+                # Platform-specific recommendations
+                if platform == "meta":
+                    if avg_ctr < 1.0:
+                        platform_recs.append("Test more engaging headlines and images")
+                    if avg_roas < 2.0:
+                        platform_recs.append("Review audience targeting for better quality")
+
+                elif platform == "google":
+                    if avg_ctr < 3.0:
+                        platform_recs.append("Improve ad relevance and keyword alignment")
+
+                elif platform == "tiktok":
+                    if avg_ctr < 2.0:
+                        platform_recs.append("Try more native, authentic creative styles")
+
+                if not platform_recs:
+                    platform_recs.append("Performance is strong - continue current strategy")
+
+            recommendations[platform] = platform_recs
+
+        return recommendations
+
+
+# Singleton instances for P0 enhancements
+creative_element_analyzer = CreativeElementAnalyzer()
+creative_lifecycle_predictor = CreativeLifecyclePredictor()
+cross_platform_creative_analyzer = CrossPlatformCreativeAnalyzer(creative_service)

@@ -1432,3 +1432,499 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
             "user_data": event.get("user_data", {}),
             "parameters": event.get("parameters", {}),
         }
+
+
+# =============================================================================
+# Advanced Platform Connector Features (P0 Enhancement)
+# =============================================================================
+
+@dataclass
+class ConnectorHealthStatus:
+    """Health status for a platform connector."""
+    platform: str
+    status: str  # healthy, degraded, unhealthy
+    last_check: datetime
+    success_rate_1h: float
+    avg_latency_ms: float
+    circuit_state: str
+    error_count_1h: int
+    events_processed_1h: int
+    issues: List[str]
+
+
+@dataclass
+class BatchOptimizationResult:
+    """Result of batch optimization."""
+    original_batch_size: int
+    optimized_batch_size: int
+    estimated_throughput_improvement: float
+    recommendation: str
+
+
+class ConnectorHealthMonitor:
+    """
+    Monitors health of all platform connectors.
+
+    Provides:
+    - Real-time health status for each connector
+    - Automated alerting on degradation
+    - Historical health tracking
+    - Recommendations for improvement
+    """
+
+    def __init__(self):
+        self._health_history: Dict[str, List[Tuple[datetime, ConnectorHealthStatus]]] = {}
+        self._alert_callbacks: List[Any] = []
+        self._last_alerts: Dict[str, datetime] = {}
+        self._alert_cooldown = timedelta(minutes=15)
+
+    def check_health(
+        self,
+        connector: BaseCAPIConnector,
+        delivery_logs: Optional[List[EventDeliveryLog]] = None,
+    ) -> ConnectorHealthStatus:
+        """Check health of a connector."""
+        platform = connector.PLATFORM_NAME
+        now = datetime.now(timezone.utc)
+        hour_ago = now - timedelta(hours=1)
+
+        # Get recent delivery logs
+        if delivery_logs is None:
+            delivery_logs = get_event_delivery_logs(platform, hour_ago)
+
+        # Calculate success rate
+        total = len(delivery_logs)
+        successes = sum(1 for log in delivery_logs if log.success)
+        success_rate = (successes / total * 100) if total > 0 else 100.0
+
+        # Calculate average latency
+        latencies = [log.latency_ms for log in delivery_logs if log.latency_ms > 0]
+        avg_latency = statistics.mean(latencies) if latencies else 0.0
+
+        # Count errors
+        error_count = sum(1 for log in delivery_logs if not log.success)
+
+        # Get circuit state
+        circuit_info = connector.get_circuit_state()
+        circuit_state = circuit_info.get("state", "unknown")
+
+        # Identify issues
+        issues = []
+        status = "healthy"
+
+        if circuit_state == "open":
+            issues.append("Circuit breaker is OPEN - service unavailable")
+            status = "unhealthy"
+        elif circuit_state == "half_open":
+            issues.append("Circuit breaker is recovering")
+            status = "degraded"
+
+        if success_rate < 90:
+            issues.append(f"Low success rate: {success_rate:.1f}%")
+            status = "degraded" if status != "unhealthy" else status
+
+        if success_rate < 70:
+            status = "unhealthy"
+
+        if avg_latency > 5000:
+            issues.append(f"High latency: {avg_latency:.0f}ms")
+            status = "degraded" if status == "healthy" else status
+
+        if avg_latency > 10000:
+            status = "unhealthy"
+
+        if error_count > 50:
+            issues.append(f"High error count: {error_count} errors in 1h")
+
+        health = ConnectorHealthStatus(
+            platform=platform,
+            status=status,
+            last_check=now,
+            success_rate_1h=round(success_rate, 1),
+            avg_latency_ms=round(avg_latency, 1),
+            circuit_state=circuit_state,
+            error_count_1h=error_count,
+            events_processed_1h=total,
+            issues=issues,
+        )
+
+        # Record history
+        if platform not in self._health_history:
+            self._health_history[platform] = []
+        self._health_history[platform].append((now, health))
+
+        # Keep only last 24 hours
+        cutoff = now - timedelta(hours=24)
+        self._health_history[platform] = [
+            (t, h) for t, h in self._health_history[platform] if t > cutoff
+        ]
+
+        # Trigger alerts if needed
+        self._check_alerts(health)
+
+        return health
+
+    def _check_alerts(self, health: ConnectorHealthStatus):
+        """Check if alerts should be triggered."""
+        if health.status == "unhealthy":
+            last_alert = self._last_alerts.get(health.platform)
+            if last_alert is None or (datetime.now(timezone.utc) - last_alert) > self._alert_cooldown:
+                self._last_alerts[health.platform] = datetime.now(timezone.utc)
+                for callback in self._alert_callbacks:
+                    try:
+                        callback(health)
+                    except Exception as e:
+                        logger.error(f"Alert callback error: {e}")
+
+    def register_alert_callback(self, callback: Any):
+        """Register a callback for health alerts."""
+        self._alert_callbacks.append(callback)
+
+    def get_health_summary(
+        self,
+        connectors: List[BaseCAPIConnector],
+    ) -> Dict[str, Any]:
+        """Get health summary for all connectors."""
+        statuses = {}
+        overall_status = "healthy"
+
+        for connector in connectors:
+            health = self.check_health(connector)
+            statuses[connector.PLATFORM_NAME] = {
+                "status": health.status,
+                "success_rate": health.success_rate_1h,
+                "avg_latency_ms": health.avg_latency_ms,
+                "issues": health.issues,
+            }
+
+            if health.status == "unhealthy":
+                overall_status = "unhealthy"
+            elif health.status == "degraded" and overall_status == "healthy":
+                overall_status = "degraded"
+
+        return {
+            "overall_status": overall_status,
+            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "platforms": statuses,
+        }
+
+    def get_health_history(
+        self,
+        platform: str,
+        hours: int = 24,
+    ) -> List[Dict[str, Any]]:
+        """Get health history for a platform."""
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        history = self._health_history.get(platform, [])
+
+        return [
+            {
+                "timestamp": t.isoformat(),
+                "status": h.status,
+                "success_rate": h.success_rate_1h,
+                "avg_latency_ms": h.avg_latency_ms,
+                "error_count": h.error_count_1h,
+            }
+            for t, h in history if t > cutoff
+        ]
+
+
+class BatchOptimizer:
+    """
+    Optimizes event batching for maximum throughput.
+
+    Analyzes historical performance to recommend optimal batch sizes
+    for each platform.
+    """
+
+    # Platform-specific default batch sizes
+    DEFAULT_BATCH_SIZES = {
+        "meta": 1000,
+        "google": 2000,
+        "tiktok": 500,
+        "snapchat": 1000,
+        "linkedin": 500,
+        "whatsapp": 100,
+    }
+
+    # Platform rate limits (events per minute)
+    RATE_LIMITS = {
+        "meta": 1000,
+        "google": 2000,
+        "tiktok": 600,
+        "snapchat": 500,
+        "linkedin": 300,
+        "whatsapp": 80,
+    }
+
+    def __init__(self):
+        self._performance_history: Dict[str, List[Dict[str, Any]]] = {}
+
+    def record_batch_performance(
+        self,
+        platform: str,
+        batch_size: int,
+        success: bool,
+        latency_ms: float,
+        events_processed: int,
+    ):
+        """Record batch performance for optimization."""
+        if platform not in self._performance_history:
+            self._performance_history[platform] = []
+
+        self._performance_history[platform].append({
+            "timestamp": datetime.now(timezone.utc),
+            "batch_size": batch_size,
+            "success": success,
+            "latency_ms": latency_ms,
+            "events_processed": events_processed,
+            "throughput": events_processed / (latency_ms / 1000) if latency_ms > 0 else 0,
+        })
+
+        # Keep last 1000 records
+        if len(self._performance_history[platform]) > 1000:
+            self._performance_history[platform] = self._performance_history[platform][-1000:]
+
+    def optimize_batch_size(
+        self,
+        platform: str,
+        current_batch_size: int,
+    ) -> BatchOptimizationResult:
+        """Calculate optimal batch size for a platform."""
+        history = self._performance_history.get(platform, [])
+
+        if len(history) < 10:
+            # Not enough data - use defaults
+            default = self.DEFAULT_BATCH_SIZES.get(platform, 500)
+            return BatchOptimizationResult(
+                original_batch_size=current_batch_size,
+                optimized_batch_size=default,
+                estimated_throughput_improvement=0,
+                recommendation=f"Using default batch size for {platform}. Collect more data for optimization.",
+            )
+
+        # Group by batch size ranges and calculate average throughput
+        size_performance: Dict[int, List[float]] = {}
+        for record in history:
+            if record["success"]:
+                size_bucket = (record["batch_size"] // 100) * 100
+                if size_bucket not in size_performance:
+                    size_performance[size_bucket] = []
+                size_performance[size_bucket].append(record["throughput"])
+
+        if not size_performance:
+            default = self.DEFAULT_BATCH_SIZES.get(platform, 500)
+            return BatchOptimizationResult(
+                original_batch_size=current_batch_size,
+                optimized_batch_size=default,
+                estimated_throughput_improvement=0,
+                recommendation="No successful batches recorded. Check connector health.",
+            )
+
+        # Find optimal batch size
+        avg_throughputs = {
+            size: statistics.mean(throughputs)
+            for size, throughputs in size_performance.items()
+            if len(throughputs) >= 3
+        }
+
+        if not avg_throughputs:
+            default = self.DEFAULT_BATCH_SIZES.get(platform, 500)
+            return BatchOptimizationResult(
+                original_batch_size=current_batch_size,
+                optimized_batch_size=default,
+                estimated_throughput_improvement=0,
+                recommendation="Insufficient data per batch size. Continue collecting metrics.",
+            )
+
+        optimal_size = max(avg_throughputs, key=avg_throughputs.get)
+        optimal_throughput = avg_throughputs[optimal_size]
+
+        # Calculate improvement
+        current_bucket = (current_batch_size // 100) * 100
+        current_throughput = avg_throughputs.get(current_bucket, optimal_throughput * 0.8)
+        improvement = ((optimal_throughput - current_throughput) / current_throughput * 100) if current_throughput > 0 else 0
+
+        # Apply rate limit constraints
+        rate_limit = self.RATE_LIMITS.get(platform, 500)
+        max_batch = int(rate_limit * 0.8)  # 80% of rate limit
+        optimal_size = min(optimal_size, max_batch)
+
+        recommendation = f"Optimal batch size: {optimal_size} events. "
+        if optimal_size > current_batch_size:
+            recommendation += "Increase batch size for better throughput."
+        elif optimal_size < current_batch_size:
+            recommendation += "Decrease batch size to reduce errors."
+        else:
+            recommendation += "Current batch size is optimal."
+
+        return BatchOptimizationResult(
+            original_batch_size=current_batch_size,
+            optimized_batch_size=optimal_size,
+            estimated_throughput_improvement=round(improvement, 1),
+            recommendation=recommendation,
+        )
+
+
+class ConnectionPool:
+    """
+    Manages a pool of HTTP connections for high-throughput scenarios.
+
+    Features:
+    - Pre-warmed connections
+    - Connection reuse
+    - Automatic reconnection
+    - Load balancing across connections
+    """
+
+    def __init__(self, max_connections: int = 10, timeout: float = 30.0):
+        self.max_connections = max_connections
+        self.timeout = timeout
+        self._clients: Dict[str, List[httpx.AsyncClient]] = {}
+        self._client_index: Dict[str, int] = {}
+        self._lock = asyncio.Lock()
+
+    async def get_client(self, platform: str) -> httpx.AsyncClient:
+        """Get a client from the pool for a platform."""
+        async with self._lock:
+            if platform not in self._clients:
+                self._clients[platform] = []
+                self._client_index[platform] = 0
+
+                # Create initial connections
+                for _ in range(min(3, self.max_connections)):
+                    client = httpx.AsyncClient(
+                        timeout=self.timeout,
+                        limits=httpx.Limits(max_connections=100),
+                    )
+                    self._clients[platform].append(client)
+
+            # Round-robin selection
+            clients = self._clients[platform]
+            index = self._client_index[platform]
+            client = clients[index % len(clients)]
+            self._client_index[platform] = (index + 1) % len(clients)
+
+            return client
+
+    async def scale_up(self, platform: str):
+        """Add more connections to the pool."""
+        async with self._lock:
+            if platform not in self._clients:
+                self._clients[platform] = []
+
+            if len(self._clients[platform]) < self.max_connections:
+                client = httpx.AsyncClient(
+                    timeout=self.timeout,
+                    limits=httpx.Limits(max_connections=100),
+                )
+                self._clients[platform].append(client)
+                logger.info(f"Scaled up connection pool for {platform} to {len(self._clients[platform])}")
+
+    async def scale_down(self, platform: str):
+        """Remove connections from the pool."""
+        async with self._lock:
+            if platform in self._clients and len(self._clients[platform]) > 1:
+                client = self._clients[platform].pop()
+                await client.aclose()
+                logger.info(f"Scaled down connection pool for {platform} to {len(self._clients[platform])}")
+
+    async def close_all(self):
+        """Close all connections in the pool."""
+        async with self._lock:
+            for platform, clients in self._clients.items():
+                for client in clients:
+                    await client.aclose()
+            self._clients.clear()
+            self._client_index.clear()
+
+    def get_pool_stats(self) -> Dict[str, Any]:
+        """Get statistics about the connection pool."""
+        return {
+            platform: {
+                "connections": len(clients),
+                "max_connections": self.max_connections,
+            }
+            for platform, clients in self._clients.items()
+        }
+
+
+class EventDeduplicator:
+    """
+    Deduplicates events before sending to prevent duplicate conversions.
+
+    Uses event_id and user data to identify duplicates.
+    """
+
+    def __init__(self, ttl_hours: int = 24, max_size: int = 100000):
+        self._seen_events: Dict[str, datetime] = {}
+        self._ttl = timedelta(hours=ttl_hours)
+        self._max_size = max_size
+        self._lock = threading.RLock()
+
+    def is_duplicate(self, event: Dict[str, Any]) -> bool:
+        """Check if an event is a duplicate."""
+        event_key = self._generate_key(event)
+
+        with self._lock:
+            self._cleanup_expired()
+
+            if event_key in self._seen_events:
+                return True
+
+            self._seen_events[event_key] = datetime.now(timezone.utc)
+            return False
+
+    def _generate_key(self, event: Dict[str, Any]) -> str:
+        """Generate a unique key for an event."""
+        # Use event_id if available
+        event_id = event.get("event_id")
+        if event_id:
+            return f"{event.get('platform', '')}:{event_id}"
+
+        # Generate from event content
+        user_data = event.get("user_data", {})
+        components = [
+            event.get("event_name", ""),
+            str(event.get("event_time", "")),
+            user_data.get("em", ""),
+            user_data.get("ph", ""),
+            str(event.get("parameters", {}).get("value", "")),
+        ]
+
+        content = "|".join(components)
+        return hashlib.md5(content.encode()).hexdigest()
+
+    def _cleanup_expired(self):
+        """Remove expired entries."""
+        now = datetime.now(timezone.utc)
+        expired = [
+            key for key, timestamp in self._seen_events.items()
+            if now - timestamp > self._ttl
+        ]
+
+        for key in expired:
+            del self._seen_events[key]
+
+        # If still too large, remove oldest
+        if len(self._seen_events) > self._max_size:
+            sorted_events = sorted(self._seen_events.items(), key=lambda x: x[1])
+            to_remove = len(self._seen_events) - self._max_size
+            for key, _ in sorted_events[:to_remove]:
+                del self._seen_events[key]
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get deduplication statistics."""
+        with self._lock:
+            return {
+                "tracked_events": len(self._seen_events),
+                "max_size": self._max_size,
+                "ttl_hours": self._ttl.total_seconds() / 3600,
+            }
+
+
+# Singleton instances for P0 enhancements
+connector_health_monitor = ConnectorHealthMonitor()
+batch_optimizer = BatchOptimizer()
+connection_pool = ConnectionPool()
+event_deduplicator = EventDeduplicator()

@@ -555,3 +555,377 @@ def get_conversion_latency_stats(
         "p95_latency_hours": stats.p95_ms / 3600000 if stats.count > 0 else 0,
         "sample_count": stats.count,
     }
+
+
+# =============================================================================
+# Advanced Conversion Latency Analytics (P0 Enhancement)
+# =============================================================================
+
+@dataclass
+class LatencyAnomaly:
+    """Detected anomaly in conversion latency."""
+    anomaly_id: str
+    platform: str
+    event_type: str
+    detected_at: datetime
+    severity: str  # low, medium, high, critical
+    current_latency_ms: float
+    expected_latency_ms: float
+    deviation_percent: float
+    description: str
+    impact: str
+    recommended_action: str
+
+
+@dataclass
+class LatencyForecast:
+    """Forecasted conversion latency."""
+    platform: str
+    event_type: str
+    forecast_date: datetime
+    predicted_p50_ms: float
+    predicted_p95_ms: float
+    confidence_interval_low: float
+    confidence_interval_high: float
+    trend: str  # increasing, stable, decreasing
+
+
+@dataclass
+class AttributionWindowRecommendation:
+    """Recommendation for attribution window settings."""
+    platform: str
+    current_window_days: int
+    recommended_window_days: int
+    coverage_at_current: float  # % of conversions captured
+    coverage_at_recommended: float
+    rationale: str
+
+
+class LatencyAnomalyDetector:
+    """
+    Detects anomalies in conversion latency patterns.
+
+    Uses statistical methods to identify:
+    - Sudden latency spikes
+    - Gradual latency drift
+    - Platform-specific issues
+    """
+
+    def __init__(self, sensitivity: float = 2.0):
+        self.sensitivity = sensitivity
+        self._baseline_stats: Dict[str, Dict[str, float]] = {}
+
+    def update_baseline(
+        self,
+        platform: str,
+        event_type: str,
+        stats: LatencyStats,
+    ):
+        """Update baseline statistics for anomaly detection."""
+        key = f"{platform}:{event_type}"
+        self._baseline_stats[key] = {
+            "avg_ms": stats.avg_ms,
+            "p95_ms": stats.p95_ms,
+            "std_dev_ms": stats.std_dev_ms,
+            "count": stats.count,
+            "updated_at": datetime.now(timezone.utc).timestamp(),
+        }
+
+    def detect_anomalies(
+        self,
+        platform: str,
+        event_type: str,
+        current_stats: LatencyStats,
+    ) -> List[LatencyAnomaly]:
+        """Detect anomalies in current latency vs baseline."""
+        key = f"{platform}:{event_type}"
+        baseline = self._baseline_stats.get(key)
+
+        if not baseline or baseline["count"] < 10:
+            return []
+
+        anomalies = []
+        now = datetime.now(timezone.utc)
+
+        # Check P95 latency
+        if baseline["std_dev_ms"] > 0:
+            z_score_p95 = (current_stats.p95_ms - baseline["p95_ms"]) / baseline["std_dev_ms"]
+
+            if z_score_p95 > self.sensitivity:
+                severity = self._calculate_severity(z_score_p95)
+                deviation = ((current_stats.p95_ms - baseline["p95_ms"]) / baseline["p95_ms"] * 100) if baseline["p95_ms"] > 0 else 0
+
+                anomalies.append(LatencyAnomaly(
+                    anomaly_id=f"latency_{platform}_{event_type}_{now.timestamp()}",
+                    platform=platform,
+                    event_type=event_type,
+                    detected_at=now,
+                    severity=severity,
+                    current_latency_ms=current_stats.p95_ms,
+                    expected_latency_ms=baseline["p95_ms"],
+                    deviation_percent=round(deviation, 1),
+                    description=f"P95 latency increased by {deviation:.1f}% from baseline",
+                    impact=self._estimate_impact(event_type, deviation),
+                    recommended_action=self._get_recommendation(event_type, z_score_p95),
+                ))
+
+        # Check average latency drift
+        if baseline["avg_ms"] > 0:
+            avg_drift = (current_stats.avg_ms - baseline["avg_ms"]) / baseline["avg_ms"] * 100
+
+            if avg_drift > 50:  # 50% increase in average
+                anomalies.append(LatencyAnomaly(
+                    anomaly_id=f"drift_{platform}_{event_type}_{now.timestamp()}",
+                    platform=platform,
+                    event_type=event_type,
+                    detected_at=now,
+                    severity="medium",
+                    current_latency_ms=current_stats.avg_ms,
+                    expected_latency_ms=baseline["avg_ms"],
+                    deviation_percent=round(avg_drift, 1),
+                    description=f"Average latency drifting upward (+{avg_drift:.1f}%)",
+                    impact="May affect attribution accuracy over time",
+                    recommended_action="Review event processing pipeline for bottlenecks",
+                ))
+
+        return anomalies
+
+    def _calculate_severity(self, z_score: float) -> str:
+        """Calculate anomaly severity from z-score."""
+        if z_score >= 4:
+            return "critical"
+        elif z_score >= 3:
+            return "high"
+        elif z_score >= 2.5:
+            return "medium"
+        return "low"
+
+    def _estimate_impact(self, event_type: str, deviation_percent: float) -> str:
+        """Estimate business impact of latency anomaly."""
+        if event_type == "click_to_conversion":
+            if deviation_percent > 100:
+                return "High risk of attribution misses - conversions may exceed attribution window"
+            elif deviation_percent > 50:
+                return "Moderate risk - some late conversions may be missed"
+            return "Low risk - within acceptable variance"
+
+        if event_type == "send_to_ack":
+            if deviation_percent > 200:
+                return "API reliability concerns - check platform status"
+            return "Normal API variability"
+
+        return "Impact varies by use case"
+
+    def _get_recommendation(self, event_type: str, z_score: float) -> str:
+        """Get recommendation based on event type and severity."""
+        if event_type == "click_to_conversion":
+            if z_score >= 3:
+                return "Consider extending attribution window temporarily; investigate campaign changes"
+            return "Monitor closely; check for external factors (holidays, promotions)"
+
+        if event_type == "send_to_ack":
+            if z_score >= 3:
+                return "Check platform API status; consider implementing request queuing"
+            return "Normal variance; continue monitoring"
+
+        return "Review related system components"
+
+
+class LatencyForecaster:
+    """
+    Forecasts future conversion latency using historical patterns.
+
+    Uses exponential smoothing and trend analysis.
+    """
+
+    def __init__(self):
+        self._history: Dict[str, List[Tuple[datetime, LatencyStats]]] = {}
+
+    def record_stats(self, platform: str, event_type: str, stats: LatencyStats):
+        """Record stats for forecasting."""
+        key = f"{platform}:{event_type}"
+        if key not in self._history:
+            self._history[key] = []
+
+        self._history[key].append((datetime.now(timezone.utc), stats))
+
+        # Keep last 90 days
+        cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+        self._history[key] = [(t, s) for t, s in self._history[key] if t > cutoff]
+
+    def forecast(
+        self,
+        platform: str,
+        event_type: str,
+        days_ahead: int = 7,
+    ) -> List[LatencyForecast]:
+        """Forecast latency for upcoming days."""
+        key = f"{platform}:{event_type}"
+        history = self._history.get(key, [])
+
+        if len(history) < 7:
+            return []
+
+        # Extract time series
+        p50_series = [s.median_ms for _, s in history]
+        p95_series = [s.p95_ms for _, s in history]
+
+        # Simple exponential smoothing
+        alpha = 0.3
+        smoothed_p50 = p50_series[0]
+        smoothed_p95 = p95_series[0]
+
+        for p50, p95 in zip(p50_series[1:], p95_series[1:]):
+            smoothed_p50 = alpha * p50 + (1 - alpha) * smoothed_p50
+            smoothed_p95 = alpha * p95 + (1 - alpha) * smoothed_p95
+
+        # Calculate trend
+        recent = p50_series[-7:]
+        older = p50_series[-14:-7] if len(p50_series) >= 14 else p50_series[:len(p50_series)//2]
+
+        trend = "stable"
+        if older:
+            avg_recent = statistics.mean(recent)
+            avg_older = statistics.mean(older)
+            if avg_recent > avg_older * 1.1:
+                trend = "increasing"
+            elif avg_recent < avg_older * 0.9:
+                trend = "decreasing"
+
+        # Calculate confidence intervals
+        std_p50 = statistics.stdev(p50_series) if len(p50_series) > 1 else smoothed_p50 * 0.1
+        std_p95 = statistics.stdev(p95_series) if len(p95_series) > 1 else smoothed_p95 * 0.1
+
+        forecasts = []
+        for d in range(1, days_ahead + 1):
+            # Widen confidence interval with time
+            ci_multiplier = 1 + (d * 0.1)
+
+            forecasts.append(LatencyForecast(
+                platform=platform,
+                event_type=event_type,
+                forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
+                predicted_p50_ms=round(smoothed_p50, 1),
+                predicted_p95_ms=round(smoothed_p95, 1),
+                confidence_interval_low=round(max(0, smoothed_p50 - std_p50 * ci_multiplier), 1),
+                confidence_interval_high=round(smoothed_p95 + std_p95 * ci_multiplier, 1),
+                trend=trend,
+            ))
+
+        return forecasts
+
+
+class AttributionWindowOptimizer:
+    """
+    Optimizes attribution window settings based on conversion latency data.
+
+    Analyzes historical latency distributions to recommend optimal
+    attribution windows that balance coverage with accuracy.
+    """
+
+    # Platform default attribution windows (days)
+    DEFAULT_WINDOWS = {
+        "meta": 7,
+        "google": 30,
+        "tiktok": 7,
+        "snapchat": 7,
+        "linkedin": 30,
+    }
+
+    def __init__(self, tracker: ConversionLatencyTracker):
+        self.tracker = tracker
+
+    def analyze_coverage(
+        self,
+        platform: str,
+        window_days: int,
+        period_hours: int = 168,  # 7 days
+    ) -> float:
+        """
+        Calculate what percentage of conversions would be captured
+        with a given attribution window.
+        """
+        stats = self.tracker.get_stats(
+            platform=platform,
+            event_type="click_to_conversion",
+            period_hours=period_hours,
+        )
+
+        if stats.count == 0:
+            return 100.0  # No data, assume full coverage
+
+        window_ms = window_days * 24 * 3600 * 1000
+
+        # Estimate coverage based on percentiles
+        # This is simplified - in production, we'd analyze raw data
+        if window_ms >= stats.p99_ms:
+            return 99.0
+        elif window_ms >= stats.p95_ms:
+            return 95.0
+        elif window_ms >= stats.p90_ms:
+            return 90.0
+        elif window_ms >= stats.p75_ms:
+            return 75.0
+        elif window_ms >= stats.median_ms:
+            return 50.0
+        else:
+            # Linear interpolation for small windows
+            return min(50.0, (window_ms / stats.median_ms) * 50.0)
+
+    def recommend_window(
+        self,
+        platform: str,
+        target_coverage: float = 95.0,
+    ) -> AttributionWindowRecommendation:
+        """
+        Recommend optimal attribution window for target coverage.
+        """
+        current_window = self.DEFAULT_WINDOWS.get(platform, 7)
+        current_coverage = self.analyze_coverage(platform, current_window)
+
+        # Try different window sizes
+        test_windows = [1, 3, 7, 14, 28, 30, 60, 90]
+        best_window = current_window
+        best_coverage = current_coverage
+
+        for window in test_windows:
+            coverage = self.analyze_coverage(platform, window)
+            if coverage >= target_coverage and window < best_window:
+                best_window = window
+                best_coverage = coverage
+            elif coverage > best_coverage:
+                best_window = window
+                best_coverage = coverage
+
+        # Generate rationale
+        if best_window < current_window:
+            rationale = f"Can reduce window from {current_window} to {best_window} days while maintaining {best_coverage:.1f}% coverage"
+        elif best_window > current_window:
+            rationale = f"Consider extending window to {best_window} days to capture {best_coverage:.1f}% of conversions"
+        else:
+            rationale = f"Current {current_window}-day window is optimal for {best_coverage:.1f}% coverage"
+
+        return AttributionWindowRecommendation(
+            platform=platform,
+            current_window_days=current_window,
+            recommended_window_days=best_window,
+            coverage_at_current=round(current_coverage, 1),
+            coverage_at_recommended=round(best_coverage, 1),
+            rationale=rationale,
+        )
+
+    def get_all_recommendations(self) -> List[AttributionWindowRecommendation]:
+        """Get attribution window recommendations for all platforms."""
+        recommendations = []
+
+        for platform in self.DEFAULT_WINDOWS.keys():
+            rec = self.recommend_window(platform)
+            recommendations.append(rec)
+
+        return recommendations
+
+
+# Singleton instances for P0 enhancements
+latency_anomaly_detector = LatencyAnomalyDetector()
+latency_forecaster = LatencyForecaster()
+attribution_optimizer = AttributionWindowOptimizer(latency_tracker)

@@ -737,3 +737,461 @@ def create_reallocation_plan(
             for c in plan.changes
         ],
     }
+
+
+# =============================================================================
+# Advanced Budget Reallocation Features (P2 Enhancement)
+# =============================================================================
+
+@dataclass
+class ParetoAllocation:
+    """Point on Pareto frontier for multi-objective optimization."""
+    allocation: Dict[str, float]  # campaign_id -> budget
+    expected_roas: float
+    expected_volume: float
+    expected_profit: float
+    trade_off_description: str
+
+
+@dataclass
+class PortfolioAllocation:
+    """Portfolio theory-based allocation."""
+    allocations: Dict[str, float]
+    expected_return: float
+    portfolio_risk: float
+    sharpe_ratio: float
+    diversification_score: float
+
+
+@dataclass
+class AllocationLearning:
+    """Learning from historical allocations."""
+    recommendation: str
+    confidence: float
+    supporting_evidence: List[str]
+    similar_past_allocations: List[Dict[str, Any]]
+
+
+class MultiObjectiveOptimizer:
+    """
+    Multi-objective optimization for budget allocation.
+
+    Optimizes for multiple objectives simultaneously:
+    - ROAS (efficiency)
+    - Volume (scale)
+    - Profit (absolute returns)
+
+    Uses Pareto frontier to present trade-offs.
+    """
+
+    def optimize(
+        self,
+        campaigns: List[CampaignState],
+        total_budget: float,
+        objectives: List[str] = None,
+    ) -> List[ParetoAllocation]:
+        """Find Pareto-optimal allocations."""
+        if objectives is None:
+            objectives = ["roas", "volume", "profit"]
+
+        pareto_frontier = []
+
+        # Generate allocation scenarios
+        scenarios = self._generate_scenarios(campaigns, total_budget)
+
+        # Evaluate each scenario
+        evaluated = []
+        for allocation in scenarios:
+            metrics = self._evaluate_allocation(campaigns, allocation)
+            evaluated.append((allocation, metrics))
+
+        # Find Pareto frontier
+        for alloc, metrics in evaluated:
+            is_dominated = False
+            for other_alloc, other_metrics in evaluated:
+                if self._dominates(other_metrics, metrics, objectives):
+                    is_dominated = True
+                    break
+
+            if not is_dominated:
+                pareto_frontier.append(ParetoAllocation(
+                    allocation=alloc,
+                    expected_roas=metrics["roas"],
+                    expected_volume=metrics["volume"],
+                    expected_profit=metrics["profit"],
+                    trade_off_description=self._describe_trade_off(metrics, objectives),
+                ))
+
+        return pareto_frontier[:5]  # Top 5 Pareto-optimal solutions
+
+    def _generate_scenarios(
+        self,
+        campaigns: List[CampaignState],
+        total_budget: float,
+    ) -> List[Dict[str, float]]:
+        """Generate allocation scenarios to evaluate."""
+        scenarios = []
+
+        # Scenario 1: Proportional (current allocation)
+        total_current = sum(c.current_daily_budget for c in campaigns)
+        if total_current > 0:
+            proportional = {
+                c.campaign_id: c.current_daily_budget / total_current * total_budget
+                for c in campaigns
+            }
+            scenarios.append(proportional)
+
+        # Scenario 2: ROAS-weighted
+        total_roas = sum(c.performance_metrics.get("roas", 1) for c in campaigns)
+        if total_roas > 0:
+            roas_weighted = {
+                c.campaign_id: c.performance_metrics.get("roas", 1) / total_roas * total_budget
+                for c in campaigns
+            }
+            scenarios.append(roas_weighted)
+
+        # Scenario 3: Volume-weighted (by conversions)
+        total_conv = sum(c.performance_metrics.get("conversions", 1) for c in campaigns)
+        if total_conv > 0:
+            volume_weighted = {
+                c.campaign_id: c.performance_metrics.get("conversions", 1) / total_conv * total_budget
+                for c in campaigns
+            }
+            scenarios.append(volume_weighted)
+
+        # Scenario 4: Equal split
+        equal_split = {
+            c.campaign_id: total_budget / len(campaigns)
+            for c in campaigns
+        }
+        scenarios.append(equal_split)
+
+        # Scenario 5: Top performers only (top 3 by ROAS)
+        sorted_by_roas = sorted(
+            campaigns,
+            key=lambda c: c.performance_metrics.get("roas", 0),
+            reverse=True,
+        )[:3]
+        top_performers = {c.campaign_id: total_budget / 3 for c in sorted_by_roas}
+        for c in campaigns:
+            if c.campaign_id not in top_performers:
+                top_performers[c.campaign_id] = 0
+        scenarios.append(top_performers)
+
+        return scenarios
+
+    def _evaluate_allocation(
+        self,
+        campaigns: List[CampaignState],
+        allocation: Dict[str, float],
+    ) -> Dict[str, float]:
+        """Evaluate expected metrics for an allocation."""
+        total_spend = sum(allocation.values())
+        total_revenue = 0
+        total_conversions = 0
+
+        for c in campaigns:
+            budget = allocation.get(c.campaign_id, 0)
+            roas = c.performance_metrics.get("roas", 1)
+            cvr = c.performance_metrics.get("cvr", 0.01)
+
+            # Simple projection
+            revenue = budget * roas
+            conversions = budget * cvr / 50  # Assume $50 avg CPA
+
+            total_revenue += revenue
+            total_conversions += conversions
+
+        return {
+            "roas": total_revenue / total_spend if total_spend > 0 else 0,
+            "volume": total_conversions,
+            "profit": total_revenue - total_spend,
+        }
+
+    def _dominates(
+        self,
+        metrics_a: Dict[str, float],
+        metrics_b: Dict[str, float],
+        objectives: List[str],
+    ) -> bool:
+        """Check if metrics_a dominates metrics_b."""
+        at_least_one_better = False
+        for obj in objectives:
+            if metrics_a[obj] < metrics_b[obj]:
+                return False
+            if metrics_a[obj] > metrics_b[obj]:
+                at_least_one_better = True
+        return at_least_one_better
+
+    def _describe_trade_off(
+        self,
+        metrics: Dict[str, float],
+        objectives: List[str],
+    ) -> str:
+        """Describe the trade-off of this allocation."""
+        descriptions = []
+
+        if metrics["roas"] > 3:
+            descriptions.append("High efficiency")
+        if metrics["volume"] > 100:
+            descriptions.append("High volume")
+        if metrics["profit"] > 10000:
+            descriptions.append("Strong profit")
+
+        if not descriptions:
+            descriptions.append("Balanced approach")
+
+        return " | ".join(descriptions)
+
+
+class PortfolioAllocator:
+    """
+    Portfolio theory-based budget allocation.
+
+    Applies Modern Portfolio Theory concepts:
+    - Expected returns (ROAS)
+    - Risk (variance in performance)
+    - Diversification benefits
+    - Sharpe ratio optimization
+    """
+
+    def __init__(self):
+        self._historical_returns: Dict[str, List[float]] = {}
+
+    def record_return(self, campaign_id: str, roas: float):
+        """Record historical ROAS for a campaign."""
+        if campaign_id not in self._historical_returns:
+            self._historical_returns[campaign_id] = []
+
+        self._historical_returns[campaign_id].append(roas)
+
+        # Keep last 90 days
+        if len(self._historical_returns[campaign_id]) > 90:
+            self._historical_returns[campaign_id] = self._historical_returns[campaign_id][-90:]
+
+    def optimize_portfolio(
+        self,
+        campaigns: List[CampaignState],
+        total_budget: float,
+        risk_tolerance: float = 0.5,  # 0 = conservative, 1 = aggressive
+    ) -> PortfolioAllocation:
+        """Optimize allocation using portfolio theory."""
+        # Calculate expected returns and risk for each campaign
+        campaign_stats = {}
+        for c in campaigns:
+            returns = self._historical_returns.get(c.campaign_id, [])
+            if returns:
+                expected = statistics.mean(returns)
+                risk = statistics.stdev(returns) if len(returns) > 1 else expected * 0.3
+            else:
+                expected = c.performance_metrics.get("roas", 1.5)
+                risk = expected * 0.4  # Assume 40% volatility
+
+            campaign_stats[c.campaign_id] = {
+                "expected": expected,
+                "risk": risk,
+                "sharpe": expected / risk if risk > 0 else 0,
+            }
+
+        # Simple mean-variance optimization
+        # Weight by risk-adjusted return (Sharpe ratio)
+        total_sharpe = sum(s["sharpe"] for s in campaign_stats.values())
+
+        allocations = {}
+        if total_sharpe > 0:
+            for cid, stats in campaign_stats.items():
+                # Blend between equal weight and Sharpe-weighted
+                sharpe_weight = stats["sharpe"] / total_sharpe
+                equal_weight = 1 / len(campaigns)
+                weight = risk_tolerance * sharpe_weight + (1 - risk_tolerance) * equal_weight
+                allocations[cid] = weight * total_budget
+        else:
+            # Equal allocation if no reliable data
+            for c in campaigns:
+                allocations[c.campaign_id] = total_budget / len(campaigns)
+
+        # Calculate portfolio metrics
+        portfolio_return = sum(
+            allocations[cid] / total_budget * campaign_stats[cid]["expected"]
+            for cid in allocations
+        )
+
+        # Portfolio risk (simplified - ignores correlation)
+        portfolio_risk = sum(
+            (allocations[cid] / total_budget) ** 2 * campaign_stats[cid]["risk"] ** 2
+            for cid in allocations
+        ) ** 0.5
+
+        # Diversification score
+        weights = [allocations[cid] / total_budget for cid in allocations]
+        herfindahl = sum(w ** 2 for w in weights)
+        diversification = 1 - herfindahl  # Higher = more diversified
+
+        return PortfolioAllocation(
+            allocations=allocations,
+            expected_return=round(portfolio_return, 3),
+            portfolio_risk=round(portfolio_risk, 3),
+            sharpe_ratio=round(portfolio_return / portfolio_risk if portfolio_risk > 0 else 0, 3),
+            diversification_score=round(diversification, 3),
+        )
+
+
+class AllocationLearner:
+    """
+    Learns from historical allocation outcomes.
+
+    Analyzes:
+    - Which allocation patterns worked well
+    - What to avoid based on past failures
+    - Similar situations and their outcomes
+    """
+
+    def __init__(self):
+        self._allocation_history: List[Dict[str, Any]] = []
+
+    def record_allocation(
+        self,
+        plan_id: str,
+        allocations: Dict[str, float],
+        context: Dict[str, Any],
+        outcome: Dict[str, float],  # actual results
+    ):
+        """Record allocation outcome for learning."""
+        self._allocation_history.append({
+            "plan_id": plan_id,
+            "timestamp": datetime.now(timezone.utc),
+            "allocations": allocations,
+            "context": context,
+            "outcome": outcome,
+        })
+
+        # Keep last 200 allocations
+        if len(self._allocation_history) > 200:
+            self._allocation_history = self._allocation_history[-200:]
+
+    def get_recommendation(
+        self,
+        proposed_allocation: Dict[str, float],
+        context: Dict[str, Any],
+    ) -> AllocationLearning:
+        """Get recommendation based on historical learning."""
+        if len(self._allocation_history) < 5:
+            return AllocationLearning(
+                recommendation="Insufficient historical data for learning-based recommendations",
+                confidence=0.3,
+                supporting_evidence=["Building historical baseline"],
+                similar_past_allocations=[],
+            )
+
+        # Find similar past allocations
+        similar = self._find_similar_allocations(proposed_allocation, context)
+
+        if not similar:
+            return AllocationLearning(
+                recommendation="No similar historical allocations found - proceed with caution",
+                confidence=0.4,
+                supporting_evidence=["Novel allocation pattern"],
+                similar_past_allocations=[],
+            )
+
+        # Analyze outcomes of similar allocations
+        outcomes = [s["outcome"] for s in similar]
+        avg_roas = statistics.mean([o.get("roas", 0) for o in outcomes])
+        success_rate = sum(1 for o in outcomes if o.get("roas", 0) > 2) / len(outcomes)
+
+        # Generate recommendation
+        if success_rate > 0.7:
+            recommendation = "Similar allocations performed well historically - recommended to proceed"
+            confidence = 0.8
+        elif success_rate > 0.4:
+            recommendation = "Mixed results from similar allocations - moderate confidence"
+            confidence = 0.5
+        else:
+            recommendation = "Similar allocations often underperformed - consider adjustments"
+            confidence = 0.7
+
+        evidence = [
+            f"Analyzed {len(similar)} similar past allocations",
+            f"Average ROAS: {avg_roas:.2f}",
+            f"Success rate (ROAS > 2): {success_rate * 100:.0f}%",
+        ]
+
+        return AllocationLearning(
+            recommendation=recommendation,
+            confidence=round(confidence, 2),
+            supporting_evidence=evidence,
+            similar_past_allocations=similar[:3],
+        )
+
+    def _find_similar_allocations(
+        self,
+        allocation: Dict[str, float],
+        context: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        """Find historically similar allocations."""
+        similar = []
+
+        total_budget = sum(allocation.values())
+        allocation_weights = {
+            k: v / total_budget if total_budget > 0 else 0
+            for k, v in allocation.items()
+        }
+
+        for hist in self._allocation_history:
+            hist_total = sum(hist["allocations"].values())
+            hist_weights = {
+                k: v / hist_total if hist_total > 0 else 0
+                for k, v in hist["allocations"].items()
+            }
+
+            # Calculate similarity (simplified cosine similarity)
+            common_keys = set(allocation_weights.keys()) & set(hist_weights.keys())
+            if not common_keys:
+                continue
+
+            similarity = sum(
+                allocation_weights.get(k, 0) * hist_weights.get(k, 0)
+                for k in common_keys
+            )
+
+            # Context similarity
+            context_match = self._context_similarity(context, hist["context"])
+
+            combined_similarity = similarity * 0.6 + context_match * 0.4
+
+            if combined_similarity > 0.5:
+                similar.append({
+                    **hist,
+                    "similarity_score": round(combined_similarity, 3),
+                })
+
+        # Sort by similarity
+        similar.sort(key=lambda x: x["similarity_score"], reverse=True)
+
+        return similar[:10]
+
+    def _context_similarity(
+        self,
+        context_a: Dict[str, Any],
+        context_b: Dict[str, Any],
+    ) -> float:
+        """Calculate context similarity."""
+        if not context_a or not context_b:
+            return 0.5
+
+        matches = 0
+        total = 0
+
+        for key in context_a:
+            if key in context_b:
+                total += 1
+                if context_a[key] == context_b[key]:
+                    matches += 1
+
+        return matches / total if total > 0 else 0.5
+
+
+# Singleton instances for P2 enhancements
+multi_objective_optimizer = MultiObjectiveOptimizer()
+portfolio_allocator = PortfolioAllocator()
+allocation_learner = AllocationLearner()

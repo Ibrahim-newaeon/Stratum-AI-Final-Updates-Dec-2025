@@ -669,3 +669,368 @@ def get_benchmark_comparison(
             for name, m in benchmark.metrics.items()
         },
     }
+
+
+# =============================================================================
+# Advanced Competitor Benchmarking Features (P2 Enhancement)
+# =============================================================================
+
+@dataclass
+class SeasonalBenchmark:
+    """Benchmark adjusted for seasonality."""
+    metric: str
+    base_benchmark: float
+    seasonal_adjustment: float
+    adjusted_benchmark: float
+    season: str
+    confidence: float
+
+
+@dataclass
+class BenchmarkTrend:
+    """Trend in benchmark metrics over time."""
+    metric: str
+    direction: str  # improving, declining, stable
+    change_rate: float  # % change per month
+    forecast_3m: float
+    forecast_6m: float
+    industry_context: str
+
+
+@dataclass
+class CompetitivePositionForecast:
+    """Forecast of competitive position."""
+    current_percentile: float
+    forecast_1m_percentile: float
+    forecast_3m_percentile: float
+    forecast_6m_percentile: float
+    trajectory: str  # gaining, losing, maintaining
+    key_drivers: List[str]
+
+
+class SeasonalBenchmarkAdjuster:
+    """
+    Adjusts benchmarks for seasonal patterns.
+
+    Different industries and metrics have seasonal variations:
+    - E-commerce peaks in Q4
+    - B2B SaaS peaks in Q1
+    - CPG varies by product type
+    """
+
+    # Seasonal multipliers by industry and quarter
+    SEASONAL_PATTERNS = {
+        Industry.ECOMMERCE: {
+            "Q1": 0.85, "Q2": 0.95, "Q3": 1.05, "Q4": 1.35,
+        },
+        Industry.SAAS: {
+            "Q1": 1.15, "Q2": 1.05, "Q3": 0.90, "Q4": 0.95,
+        },
+        Industry.FINANCE: {
+            "Q1": 1.10, "Q2": 0.95, "Q3": 0.90, "Q4": 1.05,
+        },
+        Industry.GAMING: {
+            "Q1": 0.90, "Q2": 0.85, "Q3": 0.95, "Q4": 1.30,
+        },
+    }
+
+    # Metric-specific seasonal variations
+    METRIC_SEASONALITY = {
+        "ctr": {"Q4": 0.95},  # More competition = lower CTR
+        "cpc": {"Q4": 1.25, "Q1": 0.80},  # Higher costs in Q4
+        "roas": {"Q4": 1.10},  # Better returns despite costs
+        "conversion_rate": {"Q4": 1.15},  # Higher purchase intent
+    }
+
+    def get_current_quarter(self) -> str:
+        """Get current quarter."""
+        month = datetime.now().month
+        if month <= 3:
+            return "Q1"
+        elif month <= 6:
+            return "Q2"
+        elif month <= 9:
+            return "Q3"
+        return "Q4"
+
+    def adjust_benchmark(
+        self,
+        metric: str,
+        base_value: float,
+        industry: Industry,
+        date: Optional[datetime] = None,
+    ) -> SeasonalBenchmark:
+        """Adjust benchmark for seasonality."""
+        if date:
+            month = date.month
+            quarter = f"Q{(month - 1) // 3 + 1}"
+        else:
+            quarter = self.get_current_quarter()
+
+        # Get industry seasonal factor
+        industry_patterns = self.SEASONAL_PATTERNS.get(industry, {})
+        industry_factor = industry_patterns.get(quarter, 1.0)
+
+        # Get metric-specific factor
+        metric_patterns = self.METRIC_SEASONALITY.get(metric, {})
+        metric_factor = metric_patterns.get(quarter, 1.0)
+
+        # Combined adjustment
+        total_adjustment = industry_factor * metric_factor
+        adjusted_value = base_value * total_adjustment
+
+        return SeasonalBenchmark(
+            metric=metric,
+            base_benchmark=round(base_value, 3),
+            seasonal_adjustment=round(total_adjustment, 3),
+            adjusted_benchmark=round(adjusted_value, 3),
+            season=quarter,
+            confidence=0.85 if industry in self.SEASONAL_PATTERNS else 0.6,
+        )
+
+    def get_seasonal_context(self, industry: Industry) -> str:
+        """Get seasonal context for current period."""
+        quarter = self.get_current_quarter()
+        patterns = self.SEASONAL_PATTERNS.get(industry, {})
+        factor = patterns.get(quarter, 1.0)
+
+        if factor > 1.2:
+            return f"Peak season for {industry.value} - benchmarks elevated"
+        elif factor < 0.9:
+            return f"Off-peak season for {industry.value} - benchmarks reduced"
+        return f"Normal season for {industry.value}"
+
+
+class BenchmarkTrendAnalyzer:
+    """
+    Analyzes trends in benchmark metrics over time.
+
+    Tracks:
+    - Historical benchmark changes
+    - Industry-wide trends
+    - Metric correlations
+    """
+
+    def __init__(self):
+        self._historical_benchmarks: Dict[str, List[Tuple[datetime, float]]] = {}
+
+    def record_benchmark(
+        self,
+        metric: str,
+        industry: str,
+        platform: str,
+        value: float,
+    ):
+        """Record historical benchmark."""
+        key = f"{metric}:{industry}:{platform}"
+        if key not in self._historical_benchmarks:
+            self._historical_benchmarks[key] = []
+
+        self._historical_benchmarks[key].append((
+            datetime.now(timezone.utc),
+            value,
+        ))
+
+        # Keep last 365 days
+        cutoff = datetime.now(timezone.utc) - timedelta(days=365)
+        self._historical_benchmarks[key] = [
+            (t, v) for t, v in self._historical_benchmarks[key] if t > cutoff
+        ]
+
+    def analyze_trend(
+        self,
+        metric: str,
+        industry: str,
+        platform: str,
+    ) -> BenchmarkTrend:
+        """Analyze trend for a metric."""
+        key = f"{metric}:{industry}:{platform}"
+        history = self._historical_benchmarks.get(key, [])
+
+        if len(history) < 3:
+            return BenchmarkTrend(
+                metric=metric,
+                direction="stable",
+                change_rate=0,
+                forecast_3m=0,
+                forecast_6m=0,
+                industry_context="Insufficient historical data",
+            )
+
+        # Calculate monthly change rate
+        values = [v for _, v in sorted(history)]
+        months = len(values)
+
+        if values[0] > 0:
+            total_change = (values[-1] - values[0]) / values[0]
+            monthly_rate = total_change / max(1, months / 30)
+        else:
+            monthly_rate = 0
+
+        # Determine direction
+        if monthly_rate > 0.02:
+            direction = "improving"
+        elif monthly_rate < -0.02:
+            direction = "declining"
+        else:
+            direction = "stable"
+
+        # Forecast
+        current_value = values[-1]
+        forecast_3m = current_value * (1 + monthly_rate * 3)
+        forecast_6m = current_value * (1 + monthly_rate * 6)
+
+        # Generate context
+        context = self._generate_industry_context(metric, direction, industry)
+
+        return BenchmarkTrend(
+            metric=metric,
+            direction=direction,
+            change_rate=round(monthly_rate * 100, 2),
+            forecast_3m=round(forecast_3m, 3),
+            forecast_6m=round(forecast_6m, 3),
+            industry_context=context,
+        )
+
+    def _generate_industry_context(
+        self,
+        metric: str,
+        direction: str,
+        industry: str,
+    ) -> str:
+        """Generate context for trend."""
+        contexts = {
+            ("ctr", "improving"): f"Click-through rates rising in {industry} - competition may be decreasing",
+            ("ctr", "declining"): f"CTR declining in {industry} - ad fatigue or competition increasing",
+            ("roas", "improving"): f"ROAS improving across {industry} - optimize for scale",
+            ("roas", "declining"): f"ROAS pressure in {industry} - focus on efficiency",
+            ("cpc", "improving"): f"CPCs falling in {industry} - opportunity to increase volume",
+            ("cpc", "declining"): f"CPCs rising in {industry} - expect margin pressure",
+        }
+
+        return contexts.get((metric, direction), f"{metric} {direction} in {industry}")
+
+
+class CompetitivePositionForecaster:
+    """
+    Forecasts future competitive position.
+
+    Uses current trends and momentum to predict:
+    - Future percentile ranking
+    - Trajectory direction
+    - Key improvement drivers
+    """
+
+    def __init__(self, service: CompetitorBenchmarkingService):
+        self.service = service
+        self._position_history: Dict[str, List[Tuple[datetime, float]]] = {}
+
+    def record_position(self, tenant_id: str, percentile: float):
+        """Record historical position."""
+        if tenant_id not in self._position_history:
+            self._position_history[tenant_id] = []
+
+        self._position_history[tenant_id].append((
+            datetime.now(timezone.utc),
+            percentile,
+        ))
+
+        # Keep last 180 days
+        cutoff = datetime.now(timezone.utc) - timedelta(days=180)
+        self._position_history[tenant_id] = [
+            (t, p) for t, p in self._position_history[tenant_id] if t > cutoff
+        ]
+
+    def forecast_position(
+        self,
+        tenant_id: str,
+        current_percentile: float,
+        metric_trends: Dict[str, float],  # metric -> monthly change rate
+    ) -> CompetitivePositionForecast:
+        """Forecast future competitive position."""
+        history = self._position_history.get(tenant_id, [])
+
+        # Calculate momentum
+        if len(history) >= 2:
+            recent = [p for _, p in history[-5:]]
+            momentum = (recent[-1] - recent[0]) / max(1, len(recent))
+        else:
+            momentum = 0
+
+        # Combine momentum with metric trends
+        avg_improvement = statistics.mean(metric_trends.values()) if metric_trends else 0
+        combined_rate = (momentum + avg_improvement * 2) / 3  # Weight recent trends more
+
+        # Forecast future positions
+        forecast_1m = min(99, max(1, current_percentile + combined_rate * 30))
+        forecast_3m = min(99, max(1, current_percentile + combined_rate * 90))
+        forecast_6m = min(99, max(1, current_percentile + combined_rate * 180))
+
+        # Determine trajectory
+        if combined_rate > 0.1:
+            trajectory = "gaining"
+        elif combined_rate < -0.1:
+            trajectory = "losing"
+        else:
+            trajectory = "maintaining"
+
+        # Identify key drivers
+        key_drivers = []
+        for metric, trend in sorted(metric_trends.items(), key=lambda x: abs(x[1]), reverse=True)[:3]:
+            if trend > 0:
+                key_drivers.append(f"Improving {metric}")
+            elif trend < 0:
+                key_drivers.append(f"Declining {metric} - needs attention")
+
+        if not key_drivers:
+            key_drivers.append("Performance is stable")
+
+        return CompetitivePositionForecast(
+            current_percentile=round(current_percentile, 1),
+            forecast_1m_percentile=round(forecast_1m, 1),
+            forecast_3m_percentile=round(forecast_3m, 1),
+            forecast_6m_percentile=round(forecast_6m, 1),
+            trajectory=trajectory,
+            key_drivers=key_drivers,
+        )
+
+    def get_improvement_opportunities(
+        self,
+        tenant_id: str,
+        current_metrics: Dict[str, float],
+        benchmarks: Dict[str, float],
+    ) -> List[Dict[str, Any]]:
+        """Identify biggest improvement opportunities."""
+        opportunities = []
+
+        for metric, your_value in current_metrics.items():
+            benchmark = benchmarks.get(metric)
+            if benchmark is None:
+                continue
+
+            gap = (benchmark - your_value) / benchmark * 100 if benchmark > 0 else 0
+
+            if gap > 10:  # More than 10% below benchmark
+                # Estimate impact of closing gap
+                potential_gain = min(gap * 0.5, 30)  # Can close ~50% of gap
+
+                opportunities.append({
+                    "metric": metric,
+                    "your_value": round(your_value, 3),
+                    "benchmark": round(benchmark, 3),
+                    "gap_percent": round(gap, 1),
+                    "potential_percentile_gain": round(potential_gain, 1),
+                    "priority": "high" if gap > 30 else "medium",
+                    "recommendation": f"Focus on improving {metric} - {gap:.0f}% below benchmark",
+                })
+
+        # Sort by potential gain
+        opportunities.sort(key=lambda x: x["potential_percentile_gain"], reverse=True)
+
+        return opportunities[:5]
+
+
+# Singleton instances for P2 enhancements
+seasonal_adjuster = SeasonalBenchmarkAdjuster()
+benchmark_trend_analyzer = BenchmarkTrendAnalyzer()
+position_forecaster = CompetitivePositionForecaster(benchmarking_service)

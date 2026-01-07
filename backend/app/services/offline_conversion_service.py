@@ -936,3 +936,462 @@ class OfflineConversionService:
 
 # Create singleton instance
 offline_conversion_service = OfflineConversionService()
+
+
+# =============================================================================
+# Advanced Offline Conversion Features (P0 Enhancement)
+# =============================================================================
+
+@dataclass
+class MatchRatePrediction:
+    """Prediction of match rate before upload."""
+    predicted_match_rate: float
+    confidence: float
+    risk_level: str  # low, medium, high
+    factors: List[Dict[str, Any]]
+    recommendations: List[str]
+
+
+@dataclass
+class DataQualityScore:
+    """Quality score for offline conversion data."""
+    overall_score: float  # 0-100
+    completeness_score: float
+    format_score: float
+    freshness_score: float
+    identifier_quality: float
+    issues: List[Dict[str, Any]]
+    passed_validation: bool
+
+
+@dataclass
+class ReconciliationResult:
+    """Result of reconciliation with platform reports."""
+    platform: str
+    batch_id: str
+    our_count: int
+    platform_count: int
+    matched_count: int
+    discrepancy_rate: float
+    discrepancies: List[Dict[str, Any]]
+    status: str  # matched, discrepancy, pending
+
+
+class MatchRatePredictor:
+    """
+    Predicts match rate before uploading offline conversions.
+
+    Uses historical match rates and data quality signals to predict
+    success rate, helping users optimize data before upload.
+    """
+
+    def __init__(self):
+        self._historical_rates: Dict[str, List[Tuple[datetime, float, Dict[str, Any]]]] = {}
+
+    def record_match_rate(
+        self,
+        platform: str,
+        match_rate: float,
+        data_characteristics: Dict[str, Any],
+    ):
+        """Record historical match rate for learning."""
+        if platform not in self._historical_rates:
+            self._historical_rates[platform] = []
+
+        self._historical_rates[platform].append((
+            datetime.now(timezone.utc),
+            match_rate,
+            data_characteristics,
+        ))
+
+        # Keep last 100 records
+        if len(self._historical_rates[platform]) > 100:
+            self._historical_rates[platform] = self._historical_rates[platform][-100:]
+
+    def predict(
+        self,
+        platform: str,
+        conversions: List[Dict[str, Any]],
+    ) -> MatchRatePrediction:
+        """Predict match rate for a batch of conversions."""
+        factors = []
+        recommendations = []
+
+        # Analyze data characteristics
+        total = len(conversions)
+        if total == 0:
+            return MatchRatePrediction(
+                predicted_match_rate=0.0,
+                confidence=0.0,
+                risk_level="high",
+                factors=[{"factor": "empty_batch", "impact": -100}],
+                recommendations=["Provide conversion data"],
+            )
+
+        # Check for email presence
+        email_count = sum(1 for c in conversions if c.get("user_data", {}).get("email"))
+        email_rate = email_count / total * 100
+        factors.append({
+            "factor": "email_presence",
+            "value": f"{email_rate:.1f}%",
+            "impact": email_rate * 0.4,  # Email is 40% of match potential
+        })
+
+        if email_rate < 50:
+            recommendations.append("Include email for more conversions - improves match rate significantly")
+
+        # Check for phone presence
+        phone_count = sum(1 for c in conversions if c.get("user_data", {}).get("phone"))
+        phone_rate = phone_count / total * 100
+        factors.append({
+            "factor": "phone_presence",
+            "value": f"{phone_rate:.1f}%",
+            "impact": phone_rate * 0.3,  # Phone is 30% of match potential
+        })
+
+        if phone_rate < 30:
+            recommendations.append("Add phone numbers where available for better matching")
+
+        # Check for address completeness
+        address_count = sum(1 for c in conversions if self._has_complete_address(c.get("user_data", {})))
+        address_rate = address_count / total * 100
+        factors.append({
+            "factor": "address_completeness",
+            "value": f"{address_rate:.1f}%",
+            "impact": address_rate * 0.2,
+        })
+
+        # Check data freshness
+        stale_count = sum(1 for c in conversions if self._is_stale(c))
+        freshness_rate = (total - stale_count) / total * 100
+        factors.append({
+            "factor": "data_freshness",
+            "value": f"{freshness_rate:.1f}% fresh",
+            "impact": freshness_rate * 0.1,
+        })
+
+        if stale_count > total * 0.2:
+            recommendations.append(f"{stale_count} conversions are >7 days old - may have lower match rates")
+
+        # Calculate predicted rate
+        base_rate = sum(f["impact"] for f in factors)
+
+        # Adjust based on historical data
+        history = self._historical_rates.get(platform, [])
+        if history:
+            historical_avg = statistics.mean([r for _, r, _ in history])
+            base_rate = (base_rate + historical_avg) / 2
+
+        predicted_rate = min(95, max(5, base_rate))
+
+        # Determine confidence
+        confidence = 0.5
+        if len(history) >= 10:
+            confidence = 0.8
+        elif len(history) >= 5:
+            confidence = 0.7
+
+        # Determine risk level
+        risk_level = "low"
+        if predicted_rate < 40:
+            risk_level = "high"
+        elif predicted_rate < 60:
+            risk_level = "medium"
+
+        if not recommendations:
+            recommendations.append("Data quality looks good for upload")
+
+        return MatchRatePrediction(
+            predicted_match_rate=round(predicted_rate, 1),
+            confidence=round(confidence, 2),
+            risk_level=risk_level,
+            factors=factors,
+            recommendations=recommendations,
+        )
+
+    def _has_complete_address(self, user_data: Dict[str, Any]) -> bool:
+        """Check if user has complete address data."""
+        required = ["first_name", "last_name", "postal_code", "country"]
+        return all(user_data.get(f) for f in required)
+
+    def _is_stale(self, conversion: Dict[str, Any]) -> bool:
+        """Check if conversion is stale (>7 days old)."""
+        event_time = conversion.get("event_time")
+        if not event_time:
+            return True
+
+        if isinstance(event_time, int):
+            event_dt = datetime.fromtimestamp(event_time, tz=timezone.utc)
+        else:
+            event_dt = event_time
+
+        return (datetime.now(timezone.utc) - event_dt).days > 7
+
+
+class DataQualityScorer:
+    """
+    Scores quality of offline conversion data.
+
+    Evaluates:
+    - Completeness of required fields
+    - Format correctness
+    - Data freshness
+    - Identifier quality
+    """
+
+    REQUIRED_FIELDS = ["event_name", "event_time", "user_data"]
+    RECOMMENDED_IDENTIFIERS = ["email", "phone", "external_id"]
+
+    def score(
+        self,
+        conversions: List[Dict[str, Any]],
+    ) -> DataQualityScore:
+        """Score the quality of conversion data."""
+        issues = []
+
+        if not conversions:
+            return DataQualityScore(
+                overall_score=0,
+                completeness_score=0,
+                format_score=0,
+                freshness_score=0,
+                identifier_quality=0,
+                issues=[{"severity": "critical", "message": "No conversions provided"}],
+                passed_validation=False,
+            )
+
+        total = len(conversions)
+
+        # Completeness score
+        complete_count = 0
+        for conv in conversions:
+            if all(conv.get(f) for f in self.REQUIRED_FIELDS):
+                complete_count += 1
+
+        completeness_score = complete_count / total * 100
+
+        if completeness_score < 90:
+            issues.append({
+                "severity": "warning",
+                "message": f"{total - complete_count} conversions missing required fields",
+            })
+
+        # Format score
+        format_issues = 0
+        for conv in conversions:
+            if not self._validate_format(conv):
+                format_issues += 1
+
+        format_score = (total - format_issues) / total * 100
+
+        if format_issues > 0:
+            issues.append({
+                "severity": "warning",
+                "message": f"{format_issues} conversions have format issues",
+            })
+
+        # Freshness score
+        stale_count = 0
+        very_stale_count = 0
+        now = datetime.now(timezone.utc)
+
+        for conv in conversions:
+            event_time = conv.get("event_time")
+            if event_time:
+                if isinstance(event_time, int):
+                    event_dt = datetime.fromtimestamp(event_time, tz=timezone.utc)
+                else:
+                    event_dt = event_time
+
+                age_days = (now - event_dt).days
+                if age_days > 30:
+                    very_stale_count += 1
+                elif age_days > 7:
+                    stale_count += 1
+
+        freshness_score = (total - stale_count - very_stale_count * 2) / total * 100
+        freshness_score = max(0, freshness_score)
+
+        if very_stale_count > 0:
+            issues.append({
+                "severity": "error",
+                "message": f"{very_stale_count} conversions are >30 days old - may not be accepted",
+            })
+
+        # Identifier quality
+        identifier_score = 0
+        for conv in conversions:
+            user_data = conv.get("user_data", {})
+            has_identifier = any(user_data.get(ident) for ident in self.RECOMMENDED_IDENTIFIERS)
+            if has_identifier:
+                identifier_score += 1
+
+        identifier_quality = identifier_score / total * 100
+
+        if identifier_quality < 80:
+            issues.append({
+                "severity": "warning",
+                "message": f"{total - identifier_score} conversions lack email/phone/external_id",
+            })
+
+        # Overall score (weighted average)
+        overall_score = (
+            completeness_score * 0.3 +
+            format_score * 0.2 +
+            freshness_score * 0.2 +
+            identifier_quality * 0.3
+        )
+
+        passed_validation = overall_score >= 60 and completeness_score >= 80
+
+        return DataQualityScore(
+            overall_score=round(overall_score, 1),
+            completeness_score=round(completeness_score, 1),
+            format_score=round(format_score, 1),
+            freshness_score=round(freshness_score, 1),
+            identifier_quality=round(identifier_quality, 1),
+            issues=issues,
+            passed_validation=passed_validation,
+        )
+
+    def _validate_format(self, conversion: Dict[str, Any]) -> bool:
+        """Validate format of a conversion."""
+        # Check event_time format
+        event_time = conversion.get("event_time")
+        if event_time:
+            if isinstance(event_time, int):
+                if event_time < 1000000000 or event_time > 2000000000:
+                    return False
+            elif not isinstance(event_time, datetime):
+                return False
+
+        # Check user_data structure
+        user_data = conversion.get("user_data", {})
+        if not isinstance(user_data, dict):
+            return False
+
+        # Check email format if present
+        email = user_data.get("email")
+        if email and "@" not in email:
+            return False
+
+        return True
+
+
+class PlatformReconciler:
+    """
+    Reconciles uploaded conversions with platform reports.
+
+    Compares our records with platform-reported data to identify
+    discrepancies and track match success.
+    """
+
+    def __init__(self):
+        self._reconciliation_history: Dict[str, List[ReconciliationResult]] = {}
+
+    def reconcile(
+        self,
+        batch_id: str,
+        platform: str,
+        our_conversions: List[Dict[str, Any]],
+        platform_report: Dict[str, Any],
+    ) -> ReconciliationResult:
+        """Reconcile our conversions with platform report."""
+        our_count = len(our_conversions)
+        platform_count = platform_report.get("total_conversions", 0)
+        matched_count = platform_report.get("matched_conversions", 0)
+
+        discrepancies = []
+
+        # Check for count discrepancy
+        if our_count != platform_count:
+            discrepancies.append({
+                "type": "count_mismatch",
+                "our_value": our_count,
+                "platform_value": platform_count,
+                "difference": our_count - platform_count,
+            })
+
+        # Check match rate
+        expected_match_rate = 0.7  # 70% expected
+        actual_match_rate = matched_count / our_count if our_count > 0 else 0
+
+        if actual_match_rate < expected_match_rate - 0.1:
+            discrepancies.append({
+                "type": "low_match_rate",
+                "expected": f"{expected_match_rate * 100:.0f}%",
+                "actual": f"{actual_match_rate * 100:.1f}%",
+                "message": "Match rate below expectations",
+            })
+
+        # Calculate discrepancy rate
+        discrepancy_rate = len(discrepancies) / 3 * 100  # Normalized
+
+        status = "matched"
+        if discrepancy_rate > 50:
+            status = "discrepancy"
+        elif platform_count == 0:
+            status = "pending"
+
+        result = ReconciliationResult(
+            platform=platform,
+            batch_id=batch_id,
+            our_count=our_count,
+            platform_count=platform_count,
+            matched_count=matched_count,
+            discrepancy_rate=round(discrepancy_rate, 1),
+            discrepancies=discrepancies,
+            status=status,
+        )
+
+        # Store result
+        if platform not in self._reconciliation_history:
+            self._reconciliation_history[platform] = []
+        self._reconciliation_history[platform].append(result)
+
+        return result
+
+    def get_reconciliation_summary(
+        self,
+        platform: Optional[str] = None,
+        days: int = 30,
+    ) -> Dict[str, Any]:
+        """Get reconciliation summary."""
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        if platform:
+            results = self._reconciliation_history.get(platform, [])
+        else:
+            results = []
+            for p_results in self._reconciliation_history.values():
+                results.extend(p_results)
+
+        if not results:
+            return {
+                "total_batches": 0,
+                "matched_batches": 0,
+                "discrepancy_batches": 0,
+                "avg_match_rate": 0,
+            }
+
+        matched = sum(1 for r in results if r.status == "matched")
+        discrepancy = sum(1 for r in results if r.status == "discrepancy")
+
+        total_conversions = sum(r.our_count for r in results)
+        total_matched = sum(r.matched_count for r in results)
+        avg_match_rate = total_matched / total_conversions * 100 if total_conversions > 0 else 0
+
+        return {
+            "total_batches": len(results),
+            "matched_batches": matched,
+            "discrepancy_batches": discrepancy,
+            "avg_match_rate": round(avg_match_rate, 1),
+            "total_conversions_uploaded": total_conversions,
+            "total_conversions_matched": total_matched,
+        }
+
+
+# Singleton instances for P0 enhancements
+match_rate_predictor = MatchRatePredictor()
+data_quality_scorer = DataQualityScorer()
+platform_reconciler = PlatformReconciler()

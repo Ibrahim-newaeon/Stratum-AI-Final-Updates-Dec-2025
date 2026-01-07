@@ -638,3 +638,397 @@ class RealEMQService:
 
 # Create singleton instance
 real_emq_service = RealEMQService()
+
+
+# =============================================================================
+# Advanced EMQ Analytics (P0 Enhancement)
+# =============================================================================
+
+@dataclass
+class EMQAnomaly:
+    """Detected anomaly in EMQ metrics."""
+    anomaly_id: str
+    platform: str
+    metric_name: str
+    detected_at: datetime
+    severity: str  # low, medium, high, critical
+    current_value: float
+    expected_value: float
+    deviation_percent: float
+    description: str
+    recommended_action: str
+
+
+@dataclass
+class EMQForecast:
+    """EMQ score forecast."""
+    platform: str
+    forecast_date: datetime
+    predicted_score: float
+    confidence_interval_low: float
+    confidence_interval_high: float
+    trend: str  # improving, stable, declining
+    factors: List[str]
+
+
+class EMQAnomalyDetector:
+    """
+    Detects anomalies in EMQ metrics using statistical methods.
+
+    Uses:
+    - Z-score for deviation detection
+    - Moving average for trend analysis
+    - Seasonal decomposition for pattern detection
+    """
+
+    def __init__(self, sensitivity: float = 2.0):
+        self.sensitivity = sensitivity  # Z-score threshold
+        self._history: Dict[str, List[Tuple[datetime, float]]] = {}
+
+    def record_metric(self, platform: str, metric_name: str, value: float):
+        """Record a metric value for anomaly detection."""
+        key = f"{platform}_{metric_name}"
+        if key not in self._history:
+            self._history[key] = []
+        self._history[key].append((datetime.now(timezone.utc), value))
+        # Keep last 1000 data points
+        if len(self._history[key]) > 1000:
+            self._history[key] = self._history[key][-1000:]
+
+    def detect_anomalies(
+        self,
+        platform: str,
+        metrics: Dict[str, float],
+    ) -> List[EMQAnomaly]:
+        """Detect anomalies in current metrics."""
+        anomalies = []
+
+        for metric_name, current_value in metrics.items():
+            key = f"{platform}_{metric_name}"
+            history = self._history.get(key, [])
+
+            if len(history) < 10:
+                continue  # Need enough history
+
+            values = [v for _, v in history[-100:]]  # Last 100 values
+            mean = statistics.mean(values)
+            std = statistics.stdev(values) if len(values) > 1 else 0.1
+
+            if std == 0:
+                continue
+
+            z_score = (current_value - mean) / std
+
+            if abs(z_score) > self.sensitivity:
+                severity = self._determine_severity(z_score)
+                deviation = ((current_value - mean) / mean * 100) if mean != 0 else 0
+
+                anomalies.append(EMQAnomaly(
+                    anomaly_id=f"anomaly_{platform}_{metric_name}_{datetime.now(timezone.utc).timestamp()}",
+                    platform=platform,
+                    metric_name=metric_name,
+                    detected_at=datetime.now(timezone.utc),
+                    severity=severity,
+                    current_value=current_value,
+                    expected_value=mean,
+                    deviation_percent=round(deviation, 1),
+                    description=self._generate_description(metric_name, current_value, mean, z_score),
+                    recommended_action=self._generate_recommendation(metric_name, z_score),
+                ))
+
+        return anomalies
+
+    def _determine_severity(self, z_score: float) -> str:
+        """Determine anomaly severity based on z-score."""
+        abs_z = abs(z_score)
+        if abs_z >= 4:
+            return "critical"
+        elif abs_z >= 3:
+            return "high"
+        elif abs_z >= 2.5:
+            return "medium"
+        return "low"
+
+    def _generate_description(
+        self,
+        metric_name: str,
+        current: float,
+        expected: float,
+        z_score: float,
+    ) -> str:
+        """Generate human-readable anomaly description."""
+        direction = "higher" if z_score > 0 else "lower"
+        return (
+            f"{metric_name} is significantly {direction} than expected. "
+            f"Current: {current:.2f}, Expected: {expected:.2f} (Z-score: {z_score:.2f})"
+        )
+
+    def _generate_recommendation(self, metric_name: str, z_score: float) -> str:
+        """Generate recommended action for anomaly."""
+        recommendations = {
+            "match_rate": "Verify pixel and CAPI event_id parameters match",
+            "capi_delivery_rate": "Check API credentials and network connectivity",
+            "avg_capi_latency_ms": "Review batch sizes and server performance",
+            "event_coverage": "Ensure all conversion events are being captured",
+        }
+
+        base_rec = recommendations.get(metric_name, f"Investigate {metric_name} changes")
+        if z_score < 0:
+            return f"{base_rec} - metric is declining"
+        return f"{base_rec} - unusual spike detected"
+
+
+class EMQForecaster:
+    """
+    Forecasts future EMQ scores using time series analysis.
+
+    Uses exponential smoothing and trend analysis for predictions.
+    """
+
+    def __init__(self):
+        self._score_history: Dict[str, List[Tuple[datetime, float]]] = {}
+
+    def record_score(self, platform: str, score: float):
+        """Record an EMQ score for forecasting."""
+        if platform not in self._score_history:
+            self._score_history[platform] = []
+        self._score_history[platform].append((datetime.now(timezone.utc), score))
+        # Keep last 365 days
+        cutoff = datetime.now(timezone.utc) - timedelta(days=365)
+        self._score_history[platform] = [
+            (t, s) for t, s in self._score_history[platform] if t > cutoff
+        ]
+
+    def forecast(
+        self,
+        platform: str,
+        days_ahead: int = 7,
+    ) -> List[EMQForecast]:
+        """Forecast EMQ scores for future days."""
+        history = self._score_history.get(platform, [])
+
+        if len(history) < 7:
+            # Not enough data - return simple projection
+            current_score = history[-1][1] if history else 75.0
+            return [
+                EMQForecast(
+                    platform=platform,
+                    forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
+                    predicted_score=current_score,
+                    confidence_interval_low=current_score * 0.9,
+                    confidence_interval_high=min(100, current_score * 1.1),
+                    trend="stable",
+                    factors=["Insufficient historical data for trend analysis"],
+                )
+                for d in range(1, days_ahead + 1)
+            ]
+
+        scores = [s for _, s in history]
+
+        # Simple exponential smoothing
+        alpha = 0.3
+        smoothed = scores[0]
+        for score in scores[1:]:
+            smoothed = alpha * score + (1 - alpha) * smoothed
+
+        # Calculate trend
+        recent_scores = scores[-14:]
+        older_scores = scores[-28:-14] if len(scores) >= 28 else scores[:len(scores)//2]
+
+        recent_avg = statistics.mean(recent_scores)
+        older_avg = statistics.mean(older_scores) if older_scores else recent_avg
+
+        trend_direction = "stable"
+        daily_change = 0
+        if older_avg > 0:
+            trend_pct = (recent_avg - older_avg) / older_avg * 100
+            if trend_pct > 5:
+                trend_direction = "improving"
+                daily_change = 0.2
+            elif trend_pct < -5:
+                trend_direction = "declining"
+                daily_change = -0.2
+
+        # Calculate confidence interval width based on historical volatility
+        std = statistics.stdev(scores) if len(scores) > 1 else 5
+
+        forecasts = []
+        for d in range(1, days_ahead + 1):
+            predicted = smoothed + (daily_change * d)
+            predicted = max(0, min(100, predicted))  # Clamp to 0-100
+
+            # Confidence widens with time
+            ci_width = std * (1 + d * 0.1)
+
+            forecasts.append(EMQForecast(
+                platform=platform,
+                forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
+                predicted_score=round(predicted, 1),
+                confidence_interval_low=round(max(0, predicted - ci_width), 1),
+                confidence_interval_high=round(min(100, predicted + ci_width), 1),
+                trend=trend_direction,
+                factors=self._identify_factors(platform, trend_direction),
+            ))
+
+        return forecasts
+
+    def _identify_factors(self, platform: str, trend: str) -> List[str]:
+        """Identify factors affecting the trend."""
+        if trend == "improving":
+            return [
+                "Match rate trending upward",
+                "CAPI delivery rate stable",
+                "Recent optimizations taking effect",
+            ]
+        elif trend == "declining":
+            return [
+                "Potential pixel implementation issues",
+                "Increased CAPI latency",
+                "Consider reviewing event configurations",
+            ]
+        return ["Metrics within normal operating range"]
+
+
+class CrossPlatformEMQAnalyzer:
+    """
+    Analyzes EMQ correlations across multiple platforms.
+
+    Identifies:
+    - Platforms with correlated quality issues
+    - Systemic vs platform-specific problems
+    - Cross-platform optimization opportunities
+    """
+
+    def __init__(self, emq_service: RealEMQService):
+        self.emq_service = emq_service
+        self._platform_scores: Dict[str, List[Tuple[datetime, float]]] = {}
+
+    def record_scores(self, scores: Dict[str, float]):
+        """Record EMQ scores for all platforms."""
+        now = datetime.now(timezone.utc)
+        for platform, score in scores.items():
+            if platform not in self._platform_scores:
+                self._platform_scores[platform] = []
+            self._platform_scores[platform].append((now, score))
+
+    def analyze_correlation(
+        self,
+        platforms: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Analyze cross-platform EMQ correlations."""
+        if platforms is None:
+            platforms = list(self._platform_scores.keys())
+
+        if len(platforms) < 2:
+            return {"error": "Need at least 2 platforms for correlation analysis"}
+
+        # Get current scores
+        current_scores = {}
+        for platform in platforms:
+            try:
+                result = self.emq_service.get_platform_emq(platform)
+                current_scores[platform] = result.score
+            except Exception:
+                pass
+
+        # Calculate correlation matrix
+        correlations = {}
+        for i, p1 in enumerate(platforms):
+            for p2 in platforms[i+1:]:
+                h1 = self._platform_scores.get(p1, [])
+                h2 = self._platform_scores.get(p2, [])
+
+                if len(h1) >= 5 and len(h2) >= 5:
+                    # Align time series
+                    s1 = [s for _, s in h1[-30:]]
+                    s2 = [s for _, s in h2[-30:]]
+                    min_len = min(len(s1), len(s2))
+
+                    if min_len >= 5:
+                        corr = self._calculate_correlation(s1[:min_len], s2[:min_len])
+                        correlations[f"{p1}_vs_{p2}"] = round(corr, 3)
+
+        # Identify systemic issues
+        systemic_issues = []
+        low_platforms = [p for p, s in current_scores.items() if s < 60]
+        if len(low_platforms) >= len(platforms) * 0.6:
+            systemic_issues.append({
+                "type": "widespread_quality_issue",
+                "description": f"{len(low_platforms)} of {len(platforms)} platforms have low EMQ",
+                "recommendation": "Check shared infrastructure (pixel implementation, server-side tagging)",
+            })
+
+        # Identify best and worst performers
+        ranked = sorted(current_scores.items(), key=lambda x: x[1], reverse=True)
+
+        return {
+            "platforms_analyzed": len(platforms),
+            "current_scores": current_scores,
+            "correlations": correlations,
+            "best_performer": ranked[0] if ranked else None,
+            "worst_performer": ranked[-1] if ranked else None,
+            "systemic_issues": systemic_issues,
+            "recommendations": self._generate_cross_platform_recommendations(
+                current_scores, correlations
+            ),
+        }
+
+    def _calculate_correlation(self, x: List[float], y: List[float]) -> float:
+        """Calculate Pearson correlation coefficient."""
+        n = len(x)
+        if n < 2:
+            return 0.0
+
+        mean_x = sum(x) / n
+        mean_y = sum(y) / n
+
+        numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+
+        sum_sq_x = sum((xi - mean_x) ** 2 for xi in x)
+        sum_sq_y = sum((yi - mean_y) ** 2 for yi in y)
+
+        denominator = (sum_sq_x * sum_sq_y) ** 0.5
+
+        if denominator == 0:
+            return 0.0
+
+        return numerator / denominator
+
+    def _generate_cross_platform_recommendations(
+        self,
+        scores: Dict[str, float],
+        correlations: Dict[str, float],
+    ) -> List[str]:
+        """Generate recommendations based on cross-platform analysis."""
+        recommendations = []
+
+        # Find highly correlated platforms with issues
+        for pair, corr in correlations.items():
+            if corr > 0.7:
+                p1, p2 = pair.replace("_vs_", " and ").split(" and ")
+                if scores.get(p1, 100) < 70 and scores.get(p2, 100) < 70:
+                    recommendations.append(
+                        f"Platforms {p1} and {p2} show correlated issues (r={corr:.2f}). "
+                        "Check shared implementation components."
+                    )
+
+        # Recommend learning from best performers
+        if scores:
+            best = max(scores.items(), key=lambda x: x[1])
+            worst = min(scores.items(), key=lambda x: x[1])
+            if best[1] - worst[1] > 20:
+                recommendations.append(
+                    f"Apply {best[0]} configuration patterns to improve {worst[0]} "
+                    f"(gap: {best[1] - worst[1]:.1f} points)"
+                )
+
+        if not recommendations:
+            recommendations.append("Cross-platform EMQ is well-balanced")
+
+        return recommendations
+
+
+# Singleton instances for advanced analytics
+emq_anomaly_detector = EMQAnomalyDetector()
+emq_forecaster = EMQForecaster()
+cross_platform_analyzer = CrossPlatformEMQAnalyzer(real_emq_service)

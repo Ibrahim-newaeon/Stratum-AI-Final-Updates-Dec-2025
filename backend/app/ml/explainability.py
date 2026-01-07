@@ -627,3 +627,416 @@ def get_model_feature_importance(
     """
     explainer = ModelExplainer(model_name, models_path)
     return explainer._fallback_importance()
+
+
+# =============================================================================
+# Advanced Explainability Features (P2 Enhancement)
+# =============================================================================
+
+@dataclass
+class CounterfactualExplanation:
+    """What-if scenario explanation."""
+    original_prediction: float
+    counterfactual_prediction: float
+    changed_features: Dict[str, Tuple[Any, Any]]  # feature -> (original, new)
+    impact: float
+    feasibility_score: float  # How realistic is this change
+    recommendation: str
+
+
+@dataclass
+class ModelDriftAlert:
+    """Alert for model drift detection."""
+    alert_id: str
+    model_name: str
+    drift_type: str  # data_drift, concept_drift, performance_drift
+    severity: str  # low, medium, high, critical
+    detected_at: datetime
+    affected_features: List[str]
+    drift_magnitude: float
+    recommended_action: str
+
+
+@dataclass
+class FeatureInteraction:
+    """Interaction between two features."""
+    feature_1: str
+    feature_2: str
+    interaction_strength: float
+    interaction_type: str  # synergistic, antagonistic, independent
+    example_explanation: str
+
+
+class CounterfactualExplainer:
+    """
+    Generates counterfactual explanations (what-if scenarios).
+
+    Answers questions like:
+    - "What would need to change to improve ROAS by 20%?"
+    - "Why did this campaign get a low prediction?"
+    """
+
+    def __init__(self):
+        self._feature_ranges: Dict[str, Tuple[float, float]] = {}
+        self._feature_types: Dict[str, str] = {}
+
+    def set_feature_constraints(
+        self,
+        feature_name: str,
+        min_value: float,
+        max_value: float,
+        feature_type: str = "continuous",
+    ):
+        """Set constraints for a feature."""
+        self._feature_ranges[feature_name] = (min_value, max_value)
+        self._feature_types[feature_name] = feature_type
+
+    def generate_counterfactual(
+        self,
+        original_features: Dict[str, float],
+        original_prediction: float,
+        target_prediction: float,
+        model_predict_fn: Optional[Any] = None,
+    ) -> CounterfactualExplanation:
+        """Generate a counterfactual explanation."""
+        changed_features = {}
+        current_prediction = original_prediction
+
+        # Simple greedy approach: change features to move toward target
+        direction = 1 if target_prediction > original_prediction else -1
+
+        # Priority features for marketing optimization
+        feature_priority = [
+            "spend", "ctr", "conversion_rate", "avg_order_value",
+            "impressions", "clicks", "audience_size"
+        ]
+
+        for feature in feature_priority:
+            if feature not in original_features:
+                continue
+
+            original_value = original_features[feature]
+            min_val, max_val = self._feature_ranges.get(feature, (0, original_value * 2))
+
+            # Calculate potential change
+            if direction > 0:
+                new_value = min(max_val, original_value * 1.2)  # 20% increase
+            else:
+                new_value = max(min_val, original_value * 0.8)  # 20% decrease
+
+            if new_value != original_value:
+                changed_features[feature] = (original_value, new_value)
+
+            # Check if we've reached target (simplified)
+            estimated_impact = abs(new_value - original_value) / max(original_value, 0.01) * 0.1
+            current_prediction += direction * estimated_impact * abs(target_prediction - original_prediction)
+
+            if (direction > 0 and current_prediction >= target_prediction) or \
+               (direction < 0 and current_prediction <= target_prediction):
+                break
+
+        # Calculate feasibility
+        feasibility = self._calculate_feasibility(changed_features)
+
+        # Generate recommendation
+        recommendation = self._generate_recommendation(
+            changed_features, original_prediction, target_prediction
+        )
+
+        return CounterfactualExplanation(
+            original_prediction=original_prediction,
+            counterfactual_prediction=round(current_prediction, 4),
+            changed_features=changed_features,
+            impact=round(current_prediction - original_prediction, 4),
+            feasibility_score=round(feasibility, 2),
+            recommendation=recommendation,
+        )
+
+    def _calculate_feasibility(self, changed_features: Dict[str, Tuple]) -> float:
+        """Calculate how feasible the proposed changes are."""
+        if not changed_features:
+            return 1.0
+
+        feasibility_scores = []
+        for feature, (old, new) in changed_features.items():
+            # Large changes are less feasible
+            if old != 0:
+                change_ratio = abs(new - old) / abs(old)
+                if change_ratio > 0.5:
+                    feasibility_scores.append(0.3)
+                elif change_ratio > 0.3:
+                    feasibility_scores.append(0.6)
+                else:
+                    feasibility_scores.append(0.9)
+            else:
+                feasibility_scores.append(0.5)
+
+        return statistics.mean(feasibility_scores) if feasibility_scores else 0.5
+
+    def _generate_recommendation(
+        self,
+        changed_features: Dict[str, Tuple],
+        original: float,
+        target: float,
+    ) -> str:
+        """Generate actionable recommendation."""
+        if not changed_features:
+            return "No feasible changes found to reach target prediction"
+
+        changes = []
+        for feature, (old, new) in changed_features.items():
+            direction = "increase" if new > old else "decrease"
+            pct_change = abs(new - old) / max(old, 0.01) * 100
+            changes.append(f"{direction} {feature} by {pct_change:.0f}%")
+
+        improvement = "improve" if target > original else "reduce"
+        return f"To {improvement} prediction: " + ", ".join(changes[:3])
+
+
+class ModelDriftDetector:
+    """
+    Detects drift in model inputs and performance.
+
+    Monitors:
+    - Data drift: Changes in input feature distributions
+    - Concept drift: Changes in feature-target relationships
+    - Performance drift: Degradation in prediction accuracy
+    """
+
+    def __init__(self):
+        self._baseline_stats: Dict[str, Dict[str, float]] = {}
+        self._performance_history: List[Tuple[datetime, float]] = []
+        self._alerts: List[ModelDriftAlert] = []
+
+    def set_baseline(
+        self,
+        model_name: str,
+        feature_stats: Dict[str, Dict[str, float]],
+    ):
+        """Set baseline statistics for drift detection."""
+        self._baseline_stats[model_name] = feature_stats
+
+    def record_performance(self, accuracy: float):
+        """Record model performance for drift detection."""
+        self._performance_history.append((datetime.now(timezone.utc), accuracy))
+
+        # Keep last 1000 records
+        if len(self._performance_history) > 1000:
+            self._performance_history = self._performance_history[-1000:]
+
+    def detect_drift(
+        self,
+        model_name: str,
+        current_features: Dict[str, List[float]],
+        current_performance: Optional[float] = None,
+    ) -> List[ModelDriftAlert]:
+        """Detect drift in current data vs baseline."""
+        alerts = []
+        now = datetime.now(timezone.utc)
+
+        baseline = self._baseline_stats.get(model_name, {})
+        if not baseline:
+            return alerts
+
+        # Check data drift for each feature
+        drifted_features = []
+        for feature_name, values in current_features.items():
+            if feature_name not in baseline:
+                continue
+
+            base = baseline[feature_name]
+            current_mean = statistics.mean(values) if values else 0
+            current_std = statistics.stdev(values) if len(values) > 1 else 0
+
+            # Check mean shift
+            base_mean = base.get("mean", current_mean)
+            base_std = base.get("std", 1)
+
+            if base_std > 0:
+                z_score = abs(current_mean - base_mean) / base_std
+                if z_score > 2:
+                    drifted_features.append(feature_name)
+
+        if drifted_features:
+            severity = "high" if len(drifted_features) > 3 else "medium"
+            alerts.append(ModelDriftAlert(
+                alert_id=f"data_drift_{model_name}_{now.timestamp()}",
+                model_name=model_name,
+                drift_type="data_drift",
+                severity=severity,
+                detected_at=now,
+                affected_features=drifted_features,
+                drift_magnitude=len(drifted_features) / len(current_features),
+                recommended_action="Review feature pipelines and retrain model if drift persists",
+            ))
+
+        # Check performance drift
+        if current_performance is not None and self._performance_history:
+            baseline_perf = statistics.mean([p for _, p in self._performance_history[-100:]])
+            perf_drop = baseline_perf - current_performance
+
+            if perf_drop > 0.1:  # 10% drop
+                severity = "critical" if perf_drop > 0.2 else "high"
+                alerts.append(ModelDriftAlert(
+                    alert_id=f"perf_drift_{model_name}_{now.timestamp()}",
+                    model_name=model_name,
+                    drift_type="performance_drift",
+                    severity=severity,
+                    detected_at=now,
+                    affected_features=[],
+                    drift_magnitude=perf_drop,
+                    recommended_action="Immediate model retraining recommended",
+                ))
+
+        self._alerts.extend(alerts)
+        return alerts
+
+    def get_drift_summary(self, model_name: str, days: int = 7) -> Dict[str, Any]:
+        """Get drift summary for a model."""
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        recent_alerts = [
+            a for a in self._alerts
+            if a.model_name == model_name and a.detected_at > cutoff
+        ]
+
+        return {
+            "model_name": model_name,
+            "period_days": days,
+            "total_alerts": len(recent_alerts),
+            "data_drift_alerts": sum(1 for a in recent_alerts if a.drift_type == "data_drift"),
+            "performance_drift_alerts": sum(1 for a in recent_alerts if a.drift_type == "performance_drift"),
+            "most_affected_features": self._get_most_affected_features(recent_alerts),
+            "status": "healthy" if not recent_alerts else "needs_attention",
+        }
+
+    def _get_most_affected_features(self, alerts: List[ModelDriftAlert]) -> List[str]:
+        """Get most frequently affected features."""
+        feature_counts: Dict[str, int] = {}
+        for alert in alerts:
+            for feature in alert.affected_features:
+                feature_counts[feature] = feature_counts.get(feature, 0) + 1
+
+        return sorted(feature_counts, key=feature_counts.get, reverse=True)[:5]
+
+
+class FeatureInteractionAnalyzer:
+    """
+    Analyzes interactions between features.
+
+    Helps understand:
+    - Which features work together
+    - Synergistic effects
+    - Antagonistic relationships
+    """
+
+    def __init__(self):
+        self._interaction_cache: Dict[str, FeatureInteraction] = {}
+
+    def analyze_interaction(
+        self,
+        feature_1: str,
+        feature_2: str,
+        data: List[Dict[str, float]],
+        target_column: str = "roas",
+    ) -> FeatureInteraction:
+        """Analyze interaction between two features."""
+        cache_key = f"{feature_1}:{feature_2}"
+        if cache_key in self._interaction_cache:
+            return self._interaction_cache[cache_key]
+
+        # Extract values
+        f1_values = [d.get(feature_1, 0) for d in data]
+        f2_values = [d.get(feature_2, 0) for d in data]
+        target_values = [d.get(target_column, 0) for d in data]
+
+        if len(data) < 10:
+            return FeatureInteraction(
+                feature_1=feature_1,
+                feature_2=feature_2,
+                interaction_strength=0,
+                interaction_type="unknown",
+                example_explanation="Insufficient data for interaction analysis",
+            )
+
+        # Calculate correlation between features
+        correlation = self._calculate_correlation(f1_values, f2_values)
+
+        # Determine interaction type based on correlation and target impact
+        # (Simplified - production would use SHAP interaction values)
+        interaction_type = "independent"
+        if correlation > 0.5:
+            interaction_type = "synergistic"
+        elif correlation < -0.5:
+            interaction_type = "antagonistic"
+
+        # Generate explanation
+        explanation = self._generate_interaction_explanation(
+            feature_1, feature_2, interaction_type, correlation
+        )
+
+        result = FeatureInteraction(
+            feature_1=feature_1,
+            feature_2=feature_2,
+            interaction_strength=round(abs(correlation), 3),
+            interaction_type=interaction_type,
+            example_explanation=explanation,
+        )
+
+        self._interaction_cache[cache_key] = result
+        return result
+
+    def _calculate_correlation(self, x: List[float], y: List[float]) -> float:
+        """Calculate Pearson correlation coefficient."""
+        if len(x) != len(y) or len(x) < 2:
+            return 0.0
+
+        n = len(x)
+        mean_x = sum(x) / n
+        mean_y = sum(y) / n
+
+        numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+        sum_sq_x = sum((xi - mean_x) ** 2 for xi in x)
+        sum_sq_y = sum((yi - mean_y) ** 2 for yi in y)
+
+        denominator = (sum_sq_x * sum_sq_y) ** 0.5
+
+        return numerator / denominator if denominator > 0 else 0.0
+
+    def _generate_interaction_explanation(
+        self,
+        f1: str,
+        f2: str,
+        interaction_type: str,
+        strength: float,
+    ) -> str:
+        """Generate human-readable interaction explanation."""
+        if interaction_type == "synergistic":
+            return f"When {f1} increases, {f2} tends to increase as well. Optimizing both together may yield better results."
+        elif interaction_type == "antagonistic":
+            return f"{f1} and {f2} tend to move in opposite directions. Focus on one at a time for optimization."
+        return f"{f1} and {f2} appear to be independent. They can be optimized separately."
+
+    def get_top_interactions(
+        self,
+        features: List[str],
+        data: List[Dict[str, float]],
+        top_n: int = 5,
+    ) -> List[FeatureInteraction]:
+        """Get top feature interactions by strength."""
+        interactions = []
+
+        for i, f1 in enumerate(features):
+            for f2 in features[i+1:]:
+                interaction = self.analyze_interaction(f1, f2, data)
+                interactions.append(interaction)
+
+        # Sort by strength
+        interactions.sort(key=lambda x: x.interaction_strength, reverse=True)
+
+        return interactions[:top_n]
+
+
+# Singleton instances for P2 enhancements
+counterfactual_explainer = CounterfactualExplainer()
+model_drift_detector = ModelDriftDetector()
+feature_interaction_analyzer = FeatureInteractionAnalyzer()
