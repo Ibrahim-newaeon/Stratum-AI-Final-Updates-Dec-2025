@@ -24,6 +24,36 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+# =============================================================================
+# Exceptions
+# =============================================================================
+class ModelUnavailableError(Exception):
+    """
+    Raised when a ML model is unavailable for inference.
+
+    This replaces silent mock fallbacks that corrupt downstream analytics.
+    Callers should handle this error appropriately.
+    """
+
+    def __init__(
+        self,
+        model_name: str,
+        message: str = None,
+        retry_after: int = 300,
+    ):
+        self.model_name = model_name
+        self.message = message or f"Model '{model_name}' is unavailable"
+        self.retry_after = retry_after  # Suggested retry in seconds
+        super().__init__(self.message)
+
+    def to_dict(self):
+        """Convert to dictionary for API responses."""
+        return {
+            "error": "model_unavailable",
+            "model_name": self.model_name,
+            "message": self.message,
+            "retry_after": self.retry_after,
+        }
 
 # =============================================================================
 # Strategy Interface
@@ -372,6 +402,121 @@ class ModelRegistry:
             "provider": settings.ml_provider,
             **self._strategy.get_model_info(),
         }
+
+
+
+    # Platform-specific model support
+    SUPPORTED_PLATFORMS = ["meta", "google", "tiktok", "snapchat", "linkedin"]
+
+    async def predict_roas(
+        self,
+        features: Dict[str, Any],
+        platform: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Run ROAS prediction with platform-specific model support.
+
+        Tries platform-specific model first, falls back to ensemble if unavailable.
+
+        Args:
+            features: Input features for prediction
+            platform: Ad platform (meta, google, tiktok, snapchat, linkedin)
+
+        Returns:
+            Prediction results with model metadata
+        """
+        platform = (platform or features.get("platform", "")).lower()
+        
+        # Try platform-specific model first
+        if platform in self.SUPPORTED_PLATFORMS:
+            platform_model = f"roas_predictor_{platform}"
+            try:
+                result = await self._strategy.predict(platform_model, features)
+                if not result.get("error"):
+                    result["model_type"] = "platform_specific"
+                    result["platform"] = platform
+                    logger.info(f"roas_prediction_platform_model", platform=platform)
+                    return result
+            except ModelUnavailableError:
+                logger.info(f"platform_model_unavailable_using_ensemble", platform=platform)
+            except Exception as e:
+                logger.warning(f"platform_model_error_using_ensemble", platform=platform, error=str(e))
+
+        # Fall back to ensemble model
+        try:
+            result = await self._strategy.predict("roas_predictor", features)
+            result["model_type"] = "ensemble"
+            result["platform"] = platform or "unknown"
+            result["fallback_used"] = platform in self.SUPPORTED_PLATFORMS
+            return result
+        except ModelUnavailableError:
+            raise
+        except Exception as e:
+            raise ModelUnavailableError(
+                model_name="roas_predictor",
+                message=f"ROAS prediction failed: {str(e)}",
+                retry_after=60,
+            )
+
+    async def predict_with_platform(
+        self,
+        base_model: str,
+        features: Dict[str, Any],
+        platform: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generic platform-aware prediction with fallback.
+
+        Args:
+            base_model: Base model name (e.g., "roas_predictor", "conversion_predictor")
+            features: Input features
+            platform: Platform for model selection
+
+        Returns:
+            Prediction with platform metadata
+        """
+        platform = (platform or features.get("platform", "")).lower()
+
+        # Try platform-specific model
+        if platform in self.SUPPORTED_PLATFORMS:
+            platform_model = f"{base_model}_{platform}"
+            try:
+                result = await self._strategy.predict(platform_model, features)
+                if not result.get("error"):
+                    result["model_type"] = "platform_specific"
+                    result["platform"] = platform
+                    return result
+            except (ModelUnavailableError, Exception):
+                pass  # Fall through to ensemble
+
+        # Use base model
+        result = await self._strategy.predict(base_model, features)
+        result["model_type"] = "ensemble"
+        result["platform"] = platform or "unknown"
+        return result
+
+    def get_available_platform_models(self) -> Dict[str, List[str]]:
+        """
+        Get list of available platform-specific models.
+
+        Returns:
+            Dict mapping base models to available platform variants
+        """
+        info = self._strategy.get_model_info()
+        models = info.get("models", {})
+        
+        platform_models = {}
+        for model_name in models:
+            for platform in self.SUPPORTED_PLATFORMS:
+                suffix = f"_{platform}"
+                if model_name.endswith(suffix):
+                    base = model_name[:-len(suffix)]
+                    if base not in platform_models:
+                        platform_models[base] = []
+                    platform_models[base].append(platform)
+        
+        return platform_models
+
 
     def health_check(self) -> bool:
         """Check if ML inference is healthy."""

@@ -13,7 +13,7 @@ from enum import Enum
 import numpy as np
 
 from app.core.logging import get_logger
-from app.ml.inference import ModelRegistry
+from app.ml.inference import ModelRegistry, ModelUnavailableError
 
 logger = get_logger(__name__)
 
@@ -382,6 +382,7 @@ class ROASOptimizer:
         """Predict the optimal budget for maximum ROAS."""
         current_spend = campaign.get("spend", 0)
         current_roas = campaign.get("roas", 0)
+        platform = campaign.get("platform", "meta").lower()
 
         if current_spend == 0:
             return {"error": "No spend data available"}
@@ -394,10 +395,17 @@ class ROASOptimizer:
             "clicks": campaign.get("clicks", 0),
             "conversions": campaign.get("conversions", 0),
             "ctr": campaign.get("ctr", 0),
+            "platform": platform,
         }
 
-        # Get prediction from model
-        prediction = await self.registry.predict("budget_impact", features)
+        # Get prediction from platform-aware model with fallback
+        try:
+            prediction = await self.registry.predict_with_platform(
+                "budget_impact", features, platform
+            )
+        except ModelUnavailableError:
+            # Use default elasticity if model unavailable
+            prediction = {"value": 0.8, "model_type": "fallback"}
 
         # Calculate optimal budget based on diminishing returns curve
         elasticity = prediction.get("value", 0.8)
