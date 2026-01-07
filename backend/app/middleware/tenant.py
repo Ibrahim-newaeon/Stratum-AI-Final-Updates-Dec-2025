@@ -59,6 +59,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # Try to extract tenant context
         tenant_id = await self._extract_tenant_id(request)
         user_id = await self._extract_user_id(request)
+        role = await self._extract_role(request)
 
         if tenant_id is None:
             # For development, use a default tenant
@@ -75,15 +76,16 @@ class TenantMiddleware(BaseHTTPMiddleware):
                     },
                 )
 
-        # Set tenant and user context on request state
+        # Set tenant, user, and role context on request state
         request.state.tenant_id = tenant_id
         request.state.user_id = user_id
+        request.state.role = role or "analyst"  # Default role if not in token
 
         # Bind to structured logging context
         import structlog
 
         structlog.contextvars.bind_contextvars(
-            tenant_id=tenant_id, user_id=user_id
+            tenant_id=tenant_id, user_id=user_id, role=role
         )
 
         return await call_next(request)
@@ -152,6 +154,24 @@ class TenantMiddleware(BaseHTTPMiddleware):
             sub = payload.get("sub")
             return int(sub) if sub else None
         except (JWTError, ValueError):
+            return None
+
+    async def _extract_role(self, request: Request) -> Optional[str]:
+        """Extract role from JWT token."""
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return None
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            payload = jwt.decode(
+                token,
+                settings.jwt_secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+            return payload.get("role")
+        except JWTError:
             return None
 
     def _extract_from_subdomain(self, request: Request) -> Optional[int]:

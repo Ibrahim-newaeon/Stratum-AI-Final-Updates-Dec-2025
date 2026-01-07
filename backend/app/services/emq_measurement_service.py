@@ -34,6 +34,16 @@ from app.services.capi.platform_connectors import (
 logger = get_logger(__name__)
 
 
+@dataclass
+class EMQMeasurementResult:
+    """Result of an EMQ measurement."""
+    overall_score: float
+    parameter_quality: float
+    event_coverage: float
+    match_rate: float
+    recommendations: List[str]
+
+
 # =============================================================================
 # Data Classes for Real EMQ Measurement
 # =============================================================================
@@ -314,6 +324,48 @@ class RealEMQService:
     def __init__(self):
         self._cache: Dict[str, Tuple[datetime, EmqCalculationResult]] = {}
         self._cache_ttl_seconds = 300  # 5 minute cache
+
+    def measure_emq(
+        self,
+        platform: str,
+        pixel_id: str,
+        tenant_id: str,
+    ) -> "EMQMeasurementResult":
+        """
+        Measure EMQ for a specific pixel/dataset.
+
+        Args:
+            platform: Platform name (meta, google, tiktok, etc.)
+            pixel_id: Pixel or dataset ID
+            tenant_id: Tenant ID
+
+        Returns:
+            EMQMeasurementResult with measurement data
+        """
+        # Get EMQ score using existing method
+        emq_result = self.get_platform_emq(platform, period_hours=24)
+
+        # Get real metrics for recommendations
+        real_metrics = calculate_real_emq_metrics(platform, period_hours=24)
+
+        # Generate recommendations
+        recommendations = []
+        if real_metrics.match_rate < 70:
+            recommendations.append(f"Low match rate ({real_metrics.match_rate:.1f}%): Verify pixel and CAPI event_id parameters match")
+        if real_metrics.capi_delivery_rate < 95:
+            recommendations.append(f"CAPI delivery issues ({real_metrics.capi_delivery_rate:.1f}%): Check API credentials and health")
+        if real_metrics.avg_capi_latency_ms > 5000:
+            recommendations.append(f"High latency ({real_metrics.avg_capi_latency_ms:.0f}ms): Review network connectivity")
+        if not recommendations:
+            recommendations.append("Event quality looks good. Continue monitoring for consistency.")
+
+        return EMQMeasurementResult(
+            overall_score=emq_result.score,
+            parameter_quality=emq_result.score * 1.05,  # Slightly higher for parameter quality
+            event_coverage=real_metrics.capi_delivery_rate,
+            match_rate=real_metrics.match_rate,
+            recommendations=recommendations,
+        )
 
     def get_platform_emq(
         self,

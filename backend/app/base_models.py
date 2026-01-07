@@ -235,7 +235,9 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Role & Permissions
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole), default=UserRole.ANALYST, nullable=False
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
+        default=UserRole.ANALYST,
+        nullable=False
     )
     permissions: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
@@ -448,7 +450,10 @@ class CreativeAsset(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Asset Info
     name: Mapped[str] = mapped_column(String(500), nullable=False)
-    asset_type: Mapped[AssetType] = mapped_column(Enum(AssetType), nullable=False)
+    asset_type: Mapped[AssetType] = mapped_column(
+        Enum(AssetType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
     file_url: Mapped[str] = mapped_column(String(1000), nullable=False)
     thumbnail_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
 
@@ -512,7 +517,9 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     status: Mapped[RuleStatus] = mapped_column(
-        Enum(RuleStatus), default=RuleStatus.DRAFT, nullable=False
+        Enum(RuleStatus, values_callable=lambda x: [e.value for e in x]),
+        default=RuleStatus.DRAFT,
+        nullable=False
     )
 
     # Condition (IF)
@@ -520,7 +527,8 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         String(100), nullable=False
     )  # e.g., 'roas', 'ctr', 'spend'
     condition_operator: Mapped[RuleOperator] = mapped_column(
-        Enum(RuleOperator), nullable=False
+        Enum(RuleOperator, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
     )
     condition_value: Mapped[str] = mapped_column(
         String(255), nullable=False
@@ -530,7 +538,10 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     )  # Time window
 
     # Action (THEN)
-    action_type: Mapped[RuleAction] = mapped_column(Enum(RuleAction), nullable=False)
+    action_type: Mapped[RuleAction] = mapped_column(
+        Enum(RuleAction, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
     action_config: Mapped[dict] = mapped_column(
         JSONB, default=dict, nullable=False
     )  # Action-specific config
@@ -690,7 +701,10 @@ class AuditLog(Base):
     )
 
     # Action Details
-    action: Mapped[AuditAction] = mapped_column(Enum(AuditAction), nullable=False)
+    action: Mapped[AuditAction] = mapped_column(
+        Enum(AuditAction, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
     resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
     resource_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
