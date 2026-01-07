@@ -35,6 +35,72 @@ from app.models.crm import (
 
 logger = get_logger(__name__)
 
+# =============================================================================
+# Platform-Specific Attribution Windows
+# =============================================================================
+# Default attribution windows (in days) per platform based on industry standards
+# and typical customer journey lengths for each advertising platform.
+PLATFORM_ATTRIBUTION_WINDOWS = {
+    "meta": {
+        "click_window": 7,       # Meta default: 7-day click
+        "view_window": 1,        # Meta default: 1-day view
+        "half_life_days": 3.5,   # Half-life for time decay
+        "max_lookback": 28,      # Maximum lookback period
+    },
+    "google": {
+        "click_window": 30,      # Google default: 30-day click
+        "view_window": 0,        # Google doesn't use view-through by default
+        "half_life_days": 7.0,   # Longer half-life for search intent
+        "max_lookback": 90,      # Google supports up to 90 days
+    },
+    "tiktok": {
+        "click_window": 7,       # TikTok default: 7-day click
+        "view_window": 1,        # TikTok default: 1-day view
+        "half_life_days": 2.0,   # Shorter - impulse purchases
+        "max_lookback": 28,
+    },
+    "snapchat": {
+        "click_window": 28,      # Snapchat default: 28-day click
+        "view_window": 1,        # Snapchat default: 1-day view
+        "half_life_days": 3.0,
+        "max_lookback": 28,
+    },
+    "linkedin": {
+        "click_window": 30,      # LinkedIn default: 30-day click
+        "view_window": 7,        # LinkedIn default: 7-day view
+        "half_life_days": 10.0,  # Longer B2B sales cycles
+        "max_lookback": 90,
+    },
+    "pinterest": {
+        "click_window": 30,      # Pinterest supports longer consideration
+        "view_window": 1,
+        "half_life_days": 7.0,
+        "max_lookback": 60,
+    },
+    "default": {
+        "click_window": 7,
+        "view_window": 1,
+        "half_life_days": 7.0,
+        "max_lookback": 30,
+    },
+}
+
+
+def get_platform_attribution_config(platform: str) -> Dict[str, Any]:
+    """
+    Get attribution window configuration for a specific platform.
+
+    Args:
+        platform: Platform name (meta, google, tiktok, etc.)
+
+    Returns:
+        Dict with click_window, view_window, half_life_days, max_lookback
+    """
+    platform_lower = (platform or "default").lower()
+    return PLATFORM_ATTRIBUTION_WINDOWS.get(
+        platform_lower,
+        PLATFORM_ATTRIBUTION_WINDOWS["default"]
+    )
 
 # =============================================================================
 # Attribution Weight Calculators
@@ -327,6 +393,171 @@ class AttributionService:
             "deal_id": str(deal_id),
             "model": model.value,
             "touchpoint_count": len(touchpoints),
+            "total_revenue": attributed_revenue,
+            "confidence": deal.attribution_confidence,
+            "breakdown": attribution_breakdown,
+        }
+
+
+
+    async def attribute_deal_with_platform_windows(
+        self,
+        deal_id: UUID,
+        model: AttributionModel = AttributionModel.TIME_DECAY,
+        platform: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Calculate attribution using platform-specific attribution windows.
+
+        This method automatically uses the appropriate attribution window
+        configuration based on the platform, providing more accurate attribution
+        that aligns with how each platform measures conversions.
+
+        Args:
+            deal_id: The deal to attribute
+            model: Attribution model to use (TIME_DECAY recommended)
+            platform: Override platform detection (auto-detected from touchpoints if not provided)
+
+        Returns:
+            Attribution breakdown with platform-specific window applied
+        """
+        # Get deal
+        deal_result = await self.db.execute(
+            select(CRMDeal)
+            .where(and_(CRMDeal.id == deal_id, CRMDeal.tenant_id == self.tenant_id))
+        )
+        deal = deal_result.scalar_one_or_none()
+
+        if not deal:
+            return {"success": False, "error": "deal_not_found"}
+
+        if not deal.contact_id:
+            return {"success": False, "error": "no_contact_linked"}
+
+        conversion_time = deal.won_at or deal.crm_updated_at or datetime.now(timezone.utc)
+
+        # Get all touchpoints first to determine primary platform
+        all_touchpoints = await self._get_contact_touchpoints(
+            deal.contact_id,
+            before_time=conversion_time,
+        )
+
+        if not all_touchpoints:
+            return {"success": False, "error": "no_touchpoints"}
+
+        # Determine primary platform from touchpoints or use override
+        if platform:
+            primary_platform = platform.lower()
+        else:
+            # Count touchpoints per platform, use most common
+            platform_counts = {}
+            for tp in all_touchpoints:
+                p = (tp.source or "unknown").lower()
+                platform_counts[p] = platform_counts.get(p, 0) + 1
+            primary_platform = max(platform_counts, key=platform_counts.get)
+
+        # Get platform-specific config
+        platform_config = get_platform_attribution_config(primary_platform)
+        click_window = platform_config["click_window"]
+        view_window = platform_config["view_window"]
+        half_life_days = platform_config["half_life_days"]
+        max_lookback = platform_config["max_lookback"]
+
+        # Filter touchpoints by platform-specific windows
+        filtered_touchpoints = []
+        for tp in all_touchpoints:
+            days_before = (conversion_time - tp.event_ts).total_seconds() / 86400
+
+            # Skip if beyond max lookback
+            if days_before > max_lookback:
+                continue
+
+            # Determine if this is a click or view touchpoint
+            is_click = tp.gclid or tp.fbclid or tp.ttclid or tp.sclid or tp.click_id
+
+            if is_click:
+                # Apply click window
+                if days_before <= click_window:
+                    filtered_touchpoints.append(tp)
+            else:
+                # Apply view window (view-through attribution)
+                if view_window > 0 and days_before <= view_window:
+                    filtered_touchpoints.append(tp)
+
+        if not filtered_touchpoints:
+            # Fall back to all touchpoints if filtering removes everything
+            filtered_touchpoints = all_touchpoints
+            logger.warning(
+                "platform_window_filter_fallback",
+                deal_id=str(deal_id),
+                platform=primary_platform,
+                original_count=len(all_touchpoints),
+            )
+
+        # Calculate weights with platform-specific half-life
+        touchpoint_times = [tp.event_ts for tp in filtered_touchpoints]
+
+        weights = AttributionCalculator.get_weights(
+            model=model,
+            touchpoint_count=len(filtered_touchpoints),
+            touchpoint_times=touchpoint_times,
+            conversion_time=conversion_time,
+            half_life_days=half_life_days,
+        )
+
+        # Apply weights
+        attributed_revenue = deal.amount or 0
+        attribution_breakdown = []
+
+        for i, (tp, weight) in enumerate(zip(filtered_touchpoints, weights)):
+            tp.attribution_weight = weight
+            tp.is_converting_touch = True
+
+            days_before = (conversion_time - tp.event_ts).total_seconds() / 86400
+            is_click = tp.gclid or tp.fbclid or tp.ttclid or tp.sclid or tp.click_id
+
+            attribution_breakdown.append({
+                "touchpoint_id": str(tp.id),
+                "position": i + 1,
+                "event_ts": tp.event_ts.isoformat(),
+                "source": tp.source,
+                "campaign_id": tp.campaign_id,
+                "campaign_name": tp.campaign_name,
+                "weight": round(weight, 4),
+                "attributed_revenue": round(attributed_revenue * weight, 2),
+                "days_before_conversion": round(days_before, 1),
+                "touchpoint_type": "click" if is_click else "view",
+            })
+
+        # Update deal attribution
+        if model == AttributionModel.FIRST_TOUCH:
+            primary_tp = filtered_touchpoints[0]
+        else:
+            primary_tp = filtered_touchpoints[-1]
+
+        deal.attributed_touchpoint_id = primary_tp.id
+        deal.attributed_campaign_id = primary_tp.campaign_id
+        deal.attributed_adset_id = primary_tp.adset_id
+        deal.attributed_ad_id = primary_tp.ad_id
+        deal.attributed_platform = primary_tp.source
+        deal.attribution_model = model
+        deal.attribution_confidence = self._calculate_confidence(filtered_touchpoints)
+
+        await self.db.commit()
+
+        return {
+            "success": True,
+            "deal_id": str(deal_id),
+            "model": model.value,
+            "platform": primary_platform,
+            "platform_config": {
+                "click_window_days": click_window,
+                "view_window_days": view_window,
+                "half_life_days": half_life_days,
+                "max_lookback_days": max_lookback,
+            },
+            "touchpoint_count": len(filtered_touchpoints),
+            "filtered_from": len(all_touchpoints),
             "total_revenue": attributed_revenue,
             "confidence": deal.attribution_confidence,
             "breakdown": attribution_breakdown,
