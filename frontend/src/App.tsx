@@ -66,6 +66,11 @@ const ProfitROAS = lazy(() => import('./views/tenant/ProfitROAS'))
 const Attribution = lazy(() => import('./views/tenant/Attribution'))
 const Reporting = lazy(() => import('./views/tenant/Reporting'))
 
+// P1 Feature views - A/B Testing, DLQ, Model Explainability
+const ABTesting = lazy(() => import('./views/tenant/ABTesting'))
+const DeadLetterQueue = lazy(() => import('./views/tenant/DeadLetterQueue'))
+const ModelExplainability = lazy(() => import('./views/tenant/ModelExplainability'))
+
 // Account Manager views
 const AMPortfolio = lazy(() => import('./views/am/Portfolio'))
 const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'))
@@ -596,6 +601,36 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <Reporting />
+                    </Suspense>
+                  }
+                />
+
+                {/* A/B Testing */}
+                <Route
+                  path="ab-testing"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ABTesting />
+                    </Suspense>
+                  }
+                />
+
+                {/* Dead Letter Queue (CAPI) */}
+                <Route
+                  path="dead-letter-queue"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <DeadLetterQueue />
+                    </Suspense>
+                  }
+                />
+
+                {/* Model Explainability (SHAP/LIME/LTV) */}
+                <Route
+                  path="explainability"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ModelExplainability />
                     </Suspense>
                   }
                 />

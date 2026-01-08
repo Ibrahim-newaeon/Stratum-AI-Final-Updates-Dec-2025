@@ -993,14 +993,21 @@ docker-compose exec api alembic upgrade head
 ### Frontend Statistics
 | Metric | Count |
 |--------|-------|
-| TypeScript/TSX files | 150+ |
-| View/page components | 45 |
+| TypeScript/TSX files | 155+ |
+| View/page components | 48 |
 | Reusable components | 56 |
-| API client modules | 26 |
+| API client modules | 27 |
 | Custom hooks | 3 |
 | Zustand stores | 2 |
 | E2E test files | 7 |
 | Supported languages | 3 (EN, AR, UK) |
+
+### Newly Added P1 Feature Views
+| View | Route | Purpose |
+|------|-------|---------|
+| `ABTesting.tsx` | `/app/:tenantId/ab-testing` | A/B testing framework with power analysis |
+| `DeadLetterQueue.tsx` | `/app/:tenantId/dead-letter-queue` | CAPI failed events management and retry |
+| `ModelExplainability.tsx` | `/app/:tenantId/explainability` | SHAP/LIME explanations and LTV predictions |
 
 ### Infrastructure Statistics
 | Metric | Count |
