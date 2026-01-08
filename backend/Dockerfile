@@ -34,6 +34,10 @@ RUN pip install --upgrade pip && \
 # Copy application code
 COPY --chown=appuser:appgroup . .
 
+# Create directories for file uploads and ML data
+RUN mkdir -p /app/ml_service/training_data /app/uploads /app/temp && \
+    chown -R appuser:appgroup /app/ml_service /app/uploads /app/temp
+
 # Switch to non-root user
 USER appuser
 

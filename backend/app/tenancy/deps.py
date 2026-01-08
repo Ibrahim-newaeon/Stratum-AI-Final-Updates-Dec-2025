@@ -18,9 +18,50 @@ from sqlalchemy.sql import Select
 
 from app.db.session import get_async_session
 from app.tenancy.context import TenantContext, get_tenant_context
+from app.models import User
 
 # Type variable for generic model queries
 T = TypeVar("T")
+
+
+# Re-export get_async_session as get_db for convenience
+async def get_db():
+    """
+    Dependency for database session.
+    Re-exports get_async_session for convenience.
+    """
+    async for session in get_async_session():
+        yield session
+
+
+async def get_current_user(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+) -> User:
+    """
+    FastAPI dependency that extracts the current authenticated user.
+
+    Raises 401 if not authenticated.
+    """
+    user_id = getattr(request.state, "user_id", None)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    return user
 
 
 async def get_tenant(request: Request) -> TenantContext:

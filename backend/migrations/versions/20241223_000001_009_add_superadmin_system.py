@@ -167,27 +167,36 @@ def upgrade():
     op.create_index('ix_platform_connectors_tenant', 'platform_connectors', ['tenant_id'])
 
     # =========================================================================
-    # Audit Log
+    # Audit Log - Skip if already exists (created in migration 001)
     # =========================================================================
-    op.create_table(
-        'audit_logs',
-        sa.Column('id', sa.BigInteger, primary_key=True, autoincrement=True),
-        sa.Column('timestamp', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column('tenant_id', sa.Integer, nullable=True),
-        sa.Column('user_id', sa.Integer, nullable=True),
-        sa.Column('user_email', sa.String(255), nullable=True),
-        sa.Column('action', sa.String(100), nullable=False),
-        sa.Column('resource_type', sa.String(50), nullable=True),
-        sa.Column('resource_id', sa.String(100), nullable=True),
-        sa.Column('details', postgresql.JSONB, nullable=True),
-        sa.Column('ip_address', sa.String(50), nullable=True),
-        sa.Column('user_agent', sa.String(500), nullable=True),
-        sa.Column('success', sa.Boolean, default=True),
-        sa.Column('error_message', sa.Text, nullable=True),
-    )
-    op.create_index('ix_audit_logs_tenant_timestamp', 'audit_logs', ['tenant_id', 'timestamp'])
-    op.create_index('ix_audit_logs_action', 'audit_logs', ['action'])
-    op.create_index('ix_audit_logs_user', 'audit_logs', ['user_id'])
+    # Note: audit_logs table is created in migration 001. We only add
+    # missing columns needed for superadmin functionality if they don't exist.
+    conn = op.get_bind()
+    result = conn.execute(sa.text(
+        "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'audit_logs')"
+    ))
+    audit_logs_exists = result.scalar()
+
+    if not audit_logs_exists:
+        op.create_table(
+            'audit_logs',
+            sa.Column('id', sa.BigInteger, primary_key=True, autoincrement=True),
+            sa.Column('timestamp', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+            sa.Column('tenant_id', sa.Integer, nullable=True),
+            sa.Column('user_id', sa.Integer, nullable=True),
+            sa.Column('user_email', sa.String(255), nullable=True),
+            sa.Column('action', sa.String(100), nullable=False),
+            sa.Column('resource_type', sa.String(50), nullable=True),
+            sa.Column('resource_id', sa.String(100), nullable=True),
+            sa.Column('details', postgresql.JSONB, nullable=True),
+            sa.Column('ip_address', sa.String(50), nullable=True),
+            sa.Column('user_agent', sa.String(500), nullable=True),
+            sa.Column('success', sa.Boolean, default=True),
+            sa.Column('error_message', sa.Text, nullable=True),
+        )
+        op.create_index('ix_audit_logs_tenant_timestamp', 'audit_logs', ['tenant_id', 'timestamp'])
+        op.create_index('ix_audit_logs_action', 'audit_logs', ['action'])
+        op.create_index('ix_audit_logs_user', 'audit_logs', ['user_id'])
 
     # =========================================================================
     # Invoices
@@ -262,7 +271,8 @@ def upgrade():
 def downgrade():
     op.drop_table('system_health_hourly')
     op.drop_table('invoices')
-    op.drop_table('audit_logs')
+    # Note: audit_logs is NOT dropped here since it was created in migration 001
+    # and should only be dropped by that migration's downgrade
     op.drop_table('platform_connectors')
     op.drop_table('tenant_usage_daily')
     op.drop_table('subscriptions')

@@ -45,7 +45,7 @@ def upgrade() -> None:
         'whatsapp_contacts',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('tenant_id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=True),
 
         # Contact Info (E.164 format)
         sa.Column('phone_number', sa.String(length=20), nullable=False),
@@ -84,7 +84,7 @@ def upgrade() -> None:
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
 
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_whatsapp_contacts_user_id_users', ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_whatsapp_contacts_user_id_users', ondelete='SET NULL'),
         sa.PrimaryKeyConstraint('id', name='pk_whatsapp_contacts')
     )
     op.create_index('ix_wa_contacts_tenant_phone', 'whatsapp_contacts', ['tenant_id', 'phone_number'])

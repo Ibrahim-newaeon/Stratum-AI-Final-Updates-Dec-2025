@@ -22,8 +22,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # Revision identifiers
-revision = '015_add_profit_roas_tables'
-down_revision = '014_add_pacing_forecasting'
+revision = '015_profit_roas'
+down_revision = '014_pacing'
 branch_labels = None
 depends_on = None
 

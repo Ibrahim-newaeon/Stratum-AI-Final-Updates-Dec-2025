@@ -23,8 +23,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '019_add_automated_reporting_tables'
-down_revision = '018_add_data_driven_attribution_tables'
+revision = '019_reporting'
+down_revision = '018_dd_attribution'
 branch_labels = None
 depends_on = None
 
@@ -112,8 +112,8 @@ def upgrade() -> None:
         sa.Column('config', postgresql.JSONB(), nullable=False, server_default='{}'),
 
         # Output settings
-        sa.Column('default_format', report_format, nullable=False, server_default="'pdf'"),
-        sa.Column('available_formats', postgresql.ARRAY(sa.String()), nullable=False, server_default="'{pdf,csv}'"),
+        sa.Column('default_format', report_format, nullable=False, server_default=sa.text("'pdf'")),
+        sa.Column('available_formats', postgresql.ARRAY(sa.String()), nullable=False, server_default=sa.text("'{pdf,csv}'")),
 
         # Styling
         sa.Column('template_html', sa.Text(), nullable=True),
@@ -157,7 +157,7 @@ def upgrade() -> None:
         # Schedule configuration
         sa.Column('frequency', schedule_frequency, nullable=False),
         sa.Column('cron_expression', sa.String(100), nullable=True),
-        sa.Column('timezone', sa.String(50), nullable=False, server_default="'UTC'"),
+        sa.Column('timezone', sa.String(50), nullable=False, server_default=sa.text("'UTC'")),
 
         # Schedule timing
         sa.Column('day_of_week', sa.Integer(), nullable=True),
@@ -170,10 +170,10 @@ def upgrade() -> None:
         sa.Column('config_override', postgresql.JSONB(), nullable=True),
 
         # Date range
-        sa.Column('date_range_type', sa.String(50), nullable=False, server_default="'last_30_days'"),
+        sa.Column('date_range_type', sa.String(50), nullable=False, server_default=sa.text("'last_30_days'")),
 
         # Delivery configuration
-        sa.Column('delivery_channels', postgresql.ARRAY(sa.String()), nullable=False, server_default="'{email}'"),
+        sa.Column('delivery_channels', postgresql.ARRAY(sa.String()), nullable=False, server_default=sa.text("'{email}'")),
         sa.Column('delivery_config', postgresql.JSONB(), nullable=False, server_default='{}'),
 
         # Execution tracking
@@ -217,7 +217,7 @@ def upgrade() -> None:
 
         # Execution details
         sa.Column('execution_type', sa.String(50), nullable=False),
-        sa.Column('status', execution_status, nullable=False, server_default="'pending'"),
+        sa.Column('status', execution_status, nullable=False, server_default=sa.text("'pending'")),
 
         # Timing
         sa.Column('started_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('NOW()')),
@@ -271,7 +271,7 @@ def upgrade() -> None:
 
         # Delivery details
         sa.Column('channel', delivery_channel, nullable=False),
-        sa.Column('status', delivery_status, nullable=False, server_default="'pending'"),
+        sa.Column('status', delivery_status, nullable=False, server_default=sa.text("'pending'")),
 
         # Recipient info
         sa.Column('recipient', sa.String(500), nullable=False),

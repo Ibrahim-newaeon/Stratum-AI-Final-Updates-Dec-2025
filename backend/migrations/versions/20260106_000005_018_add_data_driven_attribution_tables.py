@@ -16,8 +16,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '018_add_data_driven_attribution_tables'
-down_revision = '017'
+revision = '018_dd_attribution'
+down_revision = '017_attribution'
 branch_labels = None
 depends_on = None
 

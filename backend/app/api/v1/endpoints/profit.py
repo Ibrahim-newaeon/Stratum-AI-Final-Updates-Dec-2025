@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.tenancy.deps import get_current_user, get_db
 from app.core.logging import get_logger
 from app.models import User
 from app.models.profit import (

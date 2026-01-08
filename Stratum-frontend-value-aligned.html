@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI - The Revenue Intelligence + Trust Layer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            --gradient-glow: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(139, 92, 246, 0.5) 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-2%, 1%) rotate(-1deg); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+        }
+
+        .hero-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 span {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-glass);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-glass);
+            border-color: var(--accent-purple);
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .dashboard-preview {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            transform: rotateY(-5deg) rotateX(5deg);
+            transition: transform 0.5s;
+        }
+
+        .dashboard-preview:hover {
+            transform: rotateY(0) rotateX(0);
+        }
+
+        .dashboard-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dashboard-dot:nth-child(1) { background: #ef4444; }
+        .dashboard-dot:nth-child(2) { background: #f59e0b; }
+        .dashboard-dot:nth-child(3) { background: #10b981; }
+
+        .dashboard-content {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .mini-metric {
+            background: var(--bg-glass);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .mini-metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mini-metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .chart-placeholder {
+            height: 150px;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 20%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-primary);
+            clip-path: polygon(0 100%, 5% 80%, 15% 90%, 25% 60%, 35% 70%, 45% 40%, 55% 50%, 65% 30%, 75% 45%, 85% 20%, 95% 35%, 100% 10%, 100% 100%);
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 4rem 2rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-glass);
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        /* Value Proposition */
+        .value-prop {
+            padding: 8rem 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+        }
+
+        .section-label {
+            color: var(--accent-purple);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .value-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .value-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2.5rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .value-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .value-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .value-card:hover::before {
+            opacity: 1;
+        }
+
+        .value-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .value-icon.blue { background: rgba(59, 130, 246, 0.2); }
+        .value-icon.purple { background: rgba(139, 92, 246, 0.2); }
+        .value-icon.cyan { background: rgba(6, 182, 212, 0.2); }
+        .value-icon.green { background: rgba(16, 185, 129, 0.2); }
+        .value-icon.orange { background: rgba(245, 158, 11, 0.2); }
+        .value-icon.pink { background: rgba(236, 72, 153, 0.2); }
+
+        .value-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .value-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .value-metric {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .value-metric-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .value-metric-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Platform Modules */
+        .modules {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .modules-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .module-showcase {
+            position: relative;
+        }
+
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .module-card.active {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .module-card:hover {
+            border-color: var(--accent-purple);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .module-icon {
+            font-size: 1.5rem;
+        }
+
+        .module-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .module-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .module-visual {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2rem;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .visual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .visual-title {
+            font-weight: 600;
+        }
+
+        .visual-badge {
+            padding: 0.25rem 0.75rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Intelligence Section */
+        .intelligence {
+            padding: 8rem 2rem;
+            position: relative;
+        }
+
+        .intel-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .intel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+        }
+
+        .intel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intel-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .intel-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+        .intel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .intel-desc {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .intel-features {
+            list-style: none;
+        }
+
+        .intel-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+        }
+
+        .intel-features li::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        /* Integration Ecosystem */
+        .integrations {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .integration-logos {
+            max-width: 1000px;
+            margin: 3rem auto 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .integration-logo {
+            width: 120px;
+            height: 80px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .integration-logo:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-4px);
+        }
+
+        /* ROI Calculator */
+        .roi-section {
+            padding: 8rem 2rem;
+        }
+
+        .roi-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 32px;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .roi-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .roi-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .roi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .roi-input-group {
+            text-align: center;
+        }
+
+        .roi-input-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .roi-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: center;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .roi-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        .roi-results {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .roi-result {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg-glass);
+            border-radius: 16px;
+        }
+
+        .roi-result-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .roi-result-label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Testimonials / Social Proof */
+        .proof {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .proof-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .proof-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2rem;
+        }
+
+        .proof-quote {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .proof-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .proof-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .proof-name {
+            font-weight: 600;
+        }
+
+        .proof-role {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 8rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta p {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .hero-description {
+                margin: 0 auto 2rem;
+            }
+
+            .hero-cta {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .value-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .intel-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .roi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .proof-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 2.5rem;
+            }
+
+            .cta h2 {
+                font-size: 2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .footer-container {
+                flex-direction: column;
+                gap: 2rem;
+                text-align: center;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-glass);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-purple);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">STRATUM AI</div>
+            <ul class="nav-links">
+                <li><a href="#value">Value</a></li>
+                <li><a href="#trust">Trust</a></li>
+                <li><a href="#platform">Platform</a></li>
+                <li><a href="#intelligence">Intelligence</a></li>
+                <li><a href="#integrations">Integrations</a></li>
+                <li><a href="#roi">ROI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    Revenue Intelligence + Trust Layer
+                </div>
+                <h1>Turn Ad Spend Into <span>Predictable Revenue</span></h1>
+                <p class="hero-description">
+                    The platform that unifies attribution, profit tracking, and signal-quality diagnostics
+                    to maximize ROI across Meta, Google, TikTok, Snapchat & LinkedIn—without flying blind on tracking.
+                </p>
+                <div class="hero-cta">
+                    <a href="#roi" class="btn btn-primary">
+                        Calculate Your ROI
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <a href="#platform" class="btn btn-secondary">Explore Platform</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="dashboard-preview float">
+                    <div class="dashboard-header">
+                        <div class="dashboard-dot"></div>
+                        <div class="dashboard-dot"></div>
+                        <div class="dashboard-dot"></div>
+                    </div>
+                    <div class="dashboard-content">
+                        <div class="metric-row">
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">4.2x</div>
+                                <div class="mini-metric-label">Profit ROAS</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">92</div>
+                                <div class="mini-metric-label">Signal Health</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">+23%</div>
+                                <div class="mini-metric-label">vs Last Month</div>
+                            </div>
+                        </div>
+                        <div class="chart-placeholder">
+                            <div class="chart-line"></div>
+                        </div>
+                        <div class="metric-row">
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">$1.2M</div>
+                                <div class="mini-metric-label">Revenue</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">$285K</div>
+                                <div class="mini-metric-label">Ad Spend</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">$312K</div>
+                                <div class="mini-metric-label">Profit</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Ad Platforms Unified</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">67+</div>
+                <div class="stat-label">Database Tables</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">310+</div>
+                <div class="stat-label">API Endpoints</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">24/7</div>
+                <div class="stat-label">Automated Monitoring</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Value Proposition -->
+    <section class="value-prop" id="value">
+        <div class="section-header">
+            <div class="section-label">Why Stratum AI</div>
+            <h2 class="section-title">Stop Guessing. Start Knowing.</h2>
+            <p class="section-description">
+                Most platforms show you data. We show you what to do with it.
+                Every feature is designed to directly impact your bottom line.
+            </p>
+        </div>
+
+        <div class="value-grid">
+            <div class="value-card">
+                <div class="value-icon blue">💰</div>
+                <h3>True Profit Tracking</h3>
+                <p>Know your real ROAS after COGS, overhead, and operational costs. Not vanity metrics - actual profit per campaign.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">+34%</span>
+                    <span class="value-metric-label">profit visibility increase</span>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon purple">🎯</div>
+                <h3>Multi-Touch Attribution</h3>
+                <p>Markov Chain & Shapley models reveal the true value of each touchpoint. Stop over-crediting last-click.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">-28%</span>
+                    <span class="value-metric-label">wasted ad spend</span>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon cyan">📊</div>
+                <h3>Signal Health & Event Quality</h3>
+                <p>A unified Signal Health score that combines <strong>Meta EMQ</strong> with cross‑platform diagnostics (coverage, freshness, latency). Fix gaps before they cost conversions.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">+45%</span>
+                    <span class="value-metric-label">better signal quality</span>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon green">🤖</div>
+                <h3>AI Budget Optimization</h3>
+                <p>ML models predict performance and recommend budget shifts. Simulate scenarios before spending a dollar.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">+18%</span>
+                    <span class="value-metric-label">ROAS improvement</span>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon orange">⚡</div>
+                <h3>Automated Pacing</h3>
+                <p>Never overspend or underspend again. Smart alerts and auto-actions keep budgets on track 24/7.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">99.2%</span>
+                    <span class="value-metric-label">budget accuracy</span>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon pink">📱</div>
+                <h3>WhatsApp Alerts</h3>
+                <p>Critical updates delivered instantly to your phone. Performance drops, budget alerts, daily digests.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">&lt;5min</span>
+                    <span class="value-metric-label">response time</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <!-- Trust Layer (Agreed North Star) -->
+    <section class="value-prop" id="trust" style="padding-top: 0;">
+        <div class="section-header">
+            <div class="section-label">Trust Layer</div>
+            <h2 class="section-title">Know What’s True Before You Optimize</h2>
+            <p class="section-description">
+                Stratum AI doesn’t just report results. It shows <strong>data freshness</strong>, <strong>signal coverage</strong>,
+                and <strong>what’s broken</strong>—then guides the fix. <span style="color: var(--text-muted);">No fake data, no hardcoded confidence.</span>
+            </p>
+        </div>
+
+        <div class="value-grid">
+            <div class="value-card">
+                <div class="value-icon green">🔌</div>
+                <h3>Connection Health Center</h3>
+                <p>See exactly what’s connected, what’s partial, and what’s broken—plus missing permissions and last successful sync.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">✅/⚠️/❌</span>
+                    <span class="value-metric-label">clear connector status</span>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon cyan">📡</div>
+                <h3>Signal Quality Timeline</h3>
+                <p>Track measured signal inputs over time: coverage, freshness, latency, and dedupe—so you can explain KPI shifts with confidence.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">24/7</span>
+                    <span class="value-metric-label">signal monitoring</span>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon purple">🛡️</div>
+                <h3>Action With Guardrails</h3>
+                <p>Recommendations are useful only when safe. Use playbooks, approvals, audit logs, and rollback to manage change responsibly.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">1‑Click</span>
+                    <span class="value-metric-label">apply with controls</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="max-width: 1000px; margin: 2.5rem auto 0; padding: 1.25rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px;">
+            <div style="display:flex; gap: 1rem; align-items:flex-start;">
+                <div style="font-size: 1.5rem;">✅</div>
+                <div>
+                    <div style="font-weight: 700; margin-bottom: 0.25rem;">Principle: “No Fake Data”</div>
+                    <div style="color: var(--text-secondary);">
+                        If data is missing, Stratum AI should show <strong>Data Unavailable</strong> + a <strong>Remediation Checklist</strong> (permissions, token refresh, event delivery, diagnostics),
+                        not placeholder values.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Platform Modules -->
+    <section class="modules" id="platform">
+        <div class="section-header">
+            <div class="section-label">Platform Capabilities</div>
+            <h2 class="section-title">Everything You Need. Nothing You Don't.</h2>
+            <p class="section-description">
+                Core modules designed to maximize revenue—powered by a measurable Trust Layer.
+            </p>
+        </div>
+
+        <div class="modules-grid">
+            <div class="module-showcase">
+                <div class="module-card active">
+                    <div class="module-header">
+                        <span class="module-icon">📈</span>
+                        <span class="module-title">Analytics & Dashboards</span>
+                    </div>
+                    <div class="module-desc">Cross-platform metrics, custom KPIs, trend analysis</div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <span class="module-icon">🎯</span>
+                        <span class="module-title">Attribution Engine</span>
+                    </div>
+                    <div class="module-desc">Markov Chain, Shapley, First/Last Click models</div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <span class="module-icon">💵</span>
+                        <span class="module-title">Profit Intelligence</span>
+                    </div>
+                    <div class="module-desc">COGS tracking, overhead allocation, true profit</div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <span class="module-icon">🔮</span>
+                        <span class="module-title">ML Predictions</span>
+                    </div>
+                    <div class="module-desc">ROAS forecasting, conversion predictions, anomaly detection</div>
+                </div>
+
+                
+                <div class="module-card">
+                    <div class="module-header">
+                        <span class="module-icon">🔌</span>
+                        <span class="module-title">Connector Health Center</span>
+                    </div>
+                    <div class="module-desc">Connected/partial/broken, missing permissions, last sync, readable errors</div>
+                </div>
+
+<div class="module-card">
+                    <div class="module-header">
+                        <span class="module-icon">📡</span>
+                        <span class="module-title">EMQ & Signal Health</span>
+                    </div>
+                    <div class="module-desc">Event matching, pixel coverage, data freshness</div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-header">
+                        <span class="module-icon">⚙️</span>
+                        <span class="module-title">Campaign Automation</span>
+                    </div>
+                    <div class="module-desc">Rules, playbooks, auto-actions, scheduling</div>
+                </div>
+            </div>
+
+            <div class="module-visual">
+                <div class="visual-header">
+                    <span class="visual-title">Live Performance Dashboard</span>
+                    <span class="visual-badge">Real-time</span>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div style="background: var(--bg-glass); border-radius: 12px; padding: 1.25rem;">
+                            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.5rem;">Total Revenue</div>
+                            <div style="font-size: 1.75rem; font-weight: 700;">$2.4M</div>
+                            <div style="color: var(--accent-green); font-size: 0.85rem;">↑ 23% vs last period</div>
+                        </div>
+                        <div style="background: var(--bg-glass); border-radius: 12px; padding: 1.25rem;">
+                            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.5rem;">True Profit</div>
+                            <div style="font-size: 1.75rem; font-weight: 700;">$487K</div>
+                            <div style="color: var(--accent-green); font-size: 0.85rem;">↑ 31% vs last period</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; background: var(--bg-glass); border-radius: 12px; padding: 1.25rem;">
+                        <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">Platform Performance</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="width: 80px; font-size: 0.9rem;">Meta</span>
+                                <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: 78%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-weight: 600;">3.8x</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="width: 80px; font-size: 0.9rem;">Google</span>
+                                <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: 85%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-weight: 600;">4.2x</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="width: 80px; font-size: 0.9rem;">TikTok</span>
+                                <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: 62%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-weight: 600;">2.9x</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="width: 80px; font-size: 0.9rem;">Snapchat</span>
+                                <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: 55%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-weight: 600;">2.5x</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="width: 80px; font-size: 0.9rem;">LinkedIn</span>
+                                <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: 48%; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-weight: 600;">2.1x</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Intelligence Section -->
+    <section class="intelligence" id="intelligence">
+        <div class="intel-container">
+            <div class="section-header">
+                <div class="section-label">AI-Powered Intelligence</div>
+                <h2 class="section-title">Machine Learning You Can Trust</h2>
+                <p class="section-description">
+                    Production ML where it’s ready today, and transparent roadmap where it’s still improving.
+                </p>
+            </div>
+
+            <div class="intel-grid">
+                <div class="intel-card">
+                    <div class="intel-number">01</div>
+                    <h3 class="intel-title">Conversion Prediction</h3>
+                    <p class="intel-desc">Conversion predictor (R² ≈ 0.57) for forecasting conversion volume and pacing scenarios.</p>
+                    <ul class="intel-features">
+                        <li>CTR-weighted predictions</li>
+                        <li>Platform-specific baselines</li>
+                        <li>Daily recalculation</li>
+                        <li>Confidence scoring</li>
+                    </ul>
+                </div>
+
+                <div class="intel-card">
+                    <div class="intel-number">02</div>
+                    <h3 class="intel-title">Budget Impact Analysis</h3>
+                    <p class="intel-desc">Budget impact model estimates diminishing returns to support allocation decisions (best used with guardrails).</p>
+                    <ul class="intel-features">
+                        <li>What-if scenarios</li>
+                        <li>Diminishing returns modeling</li>
+                        <li>Cross-campaign optimization</li>
+                        <li>Reallocation recommendations</li>
+                    </ul>
+                </div>
+
+                <div class="intel-card">
+                    <div class="intel-number">03</div>
+                    <h3 class="intel-title">Anomaly Detection</h3>
+                    <p class="intel-desc">Always-on monitoring flags performance drops early with automated alerts and playbook guidance.</p>
+                    <ul class="intel-features">
+                        <li>20% ROAS drop alerts</li>
+                        <li>30% conversion drop alerts</li>
+                        <li>50% spend spike detection</li>
+                        <li>Instant WhatsApp notifications</li>
+                    </ul>
+                </div>
+
+                <div class="intel-card">
+                    <div class="intel-number">04</div>
+                    <h3 class="intel-title">Campaign Health Scoring</h3>
+                    <p class="intel-desc">0-100 health scores combine performance + pacing + signal quality into actionable insights.</p>
+                    <ul class="intel-features">
+                        <li>Automated recommendations</li>
+                        <li>Scale/pause triggers</li>
+                        <li>Creative improvement suggestions</li>
+                        <li>Portfolio optimization</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations -->
+    <section class="integrations" id="integrations">
+        <div class="section-header">
+            <div class="section-label">Ecosystem</div>
+            <h2 class="section-title">Connect Everything. Control Everything.</h2>
+            <p class="section-description">
+                Native integrations with every major advertising platform. OAuth-based, secure sync with health checks, last-sync timestamps, and clear error states.
+            </p>
+        </div>
+
+        <div class="integration-logos">
+            <div class="integration-logo">META</div>
+            <div class="integration-logo">GOOGLE</div>
+            <div class="integration-logo">TIKTOK</div>
+            <div class="integration-logo">SNAPCHAT</div>
+            <div class="integration-logo">LINKEDIN</div>
+            <div class="integration-logo">WHATSAPP</div>
+            <div class="integration-logo">GA4</div>
+            <div class="integration-logo">WEBHOOK</div>
+        </div>
+
+        <div style="max-width: 1000px; margin: 2.5rem auto 0; padding: 1.25rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px;">
+            <div style="display:flex; gap: 1rem; align-items:flex-start;">
+                <div style="font-size: 1.5rem;">ℹ️</div>
+                <div style="color: var(--text-secondary);">
+                    <strong>Note:</strong> “EMQ” is Meta-specific. For other platforms, Stratum AI tracks signal health using measurable diagnostics (coverage, freshness, latency, delivery errors).
+                    Conversions API (CAPI) support requires correct permissions and production connector hardening.
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ROI Calculator -->
+    <section class="roi-section" id="roi">
+        <div class="roi-container">
+            <div class="roi-header">
+                <div class="section-label">ROI Calculator</div>
+                <h2 class="section-title">See Your Potential Returns</h2>
+                
+                <p class="section-description">Enter your current metrics to estimate Stratum AI's impact.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+                    Estimates are directional. Real outcomes depend on baseline performance, signal quality, and implementation.
+                </p>
+
+            </div>
+
+            <div class="roi-grid">
+                <div class="roi-input-group">
+                    <label>Monthly Ad Spend</label>
+                    <input type="text" class="roi-input" id="adSpend" value="$100,000" oninput="calculateROI()">
+                </div>
+                <div class="roi-input-group">
+                    <label>Current ROAS</label>
+                    <input type="text" class="roi-input" id="currentRoas" value="2.5x" oninput="calculateROI()">
+                </div>
+                <div class="roi-input-group">
+                    <label>Gross Margin</label>
+                    <input type="text" class="roi-input" id="margin" value="40%" oninput="calculateROI()">
+                </div>
+            </div>
+
+            <div class="roi-results">
+                <div class="roi-result">
+                    <div class="roi-result-value" id="additionalRevenue">$45,000</div>
+                    <div class="roi-result-label">Additional Monthly Revenue</div>
+                </div>
+                <div class="roi-result">
+                    <div class="roi-result-value" id="additionalProfit">$18,000</div>
+                    <div class="roi-result-label">Additional Monthly Profit</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="proof">
+        <div class="section-header">
+            <div class="section-label">Built for Scale</div>
+            <h2 class="section-title">Enterprise-Grade Platform</h2>
+        </div>
+
+        <div class="proof-grid">
+            <div class="proof-card">
+                <div class="proof-quote">
+                    "Finally, a platform that shows us real profit, not just revenue. We discovered that some 'profitable' campaigns were losing money after COGS."
+                </div>
+                <div class="proof-author">
+                    <div class="proof-avatar">M</div>
+                    <div>
+                        <div class="proof-name">Marketing Director</div>
+                        <div class="proof-role">E-commerce, $5M/year spend</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proof-card">
+                <div class="proof-quote">
+                    "The multi-touch attribution changed everything. We were over-investing in bottom-funnel and starving our prospecting campaigns."
+                </div>
+                <div class="proof-author">
+                    <div class="proof-avatar">S</div>
+                    <div>
+                        <div class="proof-name">Performance Lead</div>
+                        <div class="proof-role">DTC Brand, GCC Region</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proof-card">
+                <div class="proof-quote">
+                    "WhatsApp alerts helped us catch issues fast—before they became expensive. A campaign went sideways at 2 AM and we caught it before breakfast."
+                </div>
+                <div class="proof-author">
+                    <div class="proof-avatar">A</div>
+                    <div>
+                        <div class="proof-name">Agency Owner</div>
+                        <div class="proof-role">Performance Agency, 20+ clients</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="cta-container">
+            <h2>Ready to Maximize Your Ad Revenue?</h2>
+            <p>Join the marketers who've stopped guessing and started knowing.</p>
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-primary">
+                    Request Demo
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="#" class="btn btn-secondary">View Documentation</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">STRATUM AI</div>
+            <div class="footer-links">
+                <a href="#">Platform</a>
+                <a href="#integrations">Documentation</a>
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ROI Calculator
+        function calculateROI() {
+            const spend = parseFloat(document.getElementById('adSpend').value.replace(/[$,]/g, '')) || 100000;
+            const roas = parseFloat(document.getElementById('currentRoas').value.replace('x', '')) || 2.5;
+            const margin = parseFloat(document.getElementById('margin').value.replace('%', '')) / 100 || 0.4;
+
+            // Assumption: Stratum AI impact varies; using a conservative default (12%) for this calculator.
+            const roasImprovement = 0.12;
+            const newRoas = roas * (1 + roasImprovement);
+
+            const currentRevenue = spend * roas;
+            const newRevenue = spend * newRoas;
+            const additionalRevenue = newRevenue - currentRevenue;
+            const additionalProfit = additionalRevenue * margin;
+
+            document.getElementById('additionalRevenue').textContent = '$' + Math.round(additionalRevenue).toLocaleString();
+            document.getElementById('additionalProfit').textContent = '$' + Math.round(additionalProfit).toLocaleString();
+        }
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Module card interaction
+        document.querySelectorAll('.module-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.module-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initialize ROI calculator
+        calculateROI();
+    </script>
+</body>
+</html>

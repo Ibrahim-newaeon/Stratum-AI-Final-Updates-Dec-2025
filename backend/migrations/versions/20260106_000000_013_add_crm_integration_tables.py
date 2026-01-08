@@ -1,7 +1,7 @@
 """Add CRM Integration tables (HubSpot, Attribution, Pipeline)
 
 Revision ID: 013_add_crm_integration_tables
-Revises: 012
+Revises: 012_add_ml_prediction_columns
 Create Date: 2026-01-06 00:00:00.000000
 
 This migration adds:
@@ -17,8 +17,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '013_add_crm_integration_tables'
-down_revision = '012'
+revision = '013_crm_integration'
+down_revision = '012_add_ml_prediction_columns'
 branch_labels = None
 depends_on = None
 
