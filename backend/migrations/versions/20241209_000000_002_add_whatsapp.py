@@ -1,4 +1,4 @@
-"""Add LinkedIn platform and WhatsApp models
+"""Add WhatsApp models
 
 Revision ID: 002
 Revises: 001
@@ -19,11 +19,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # =========================================================================
-    # Add LinkedIn to AdPlatform enum
-    # =========================================================================
-    op.execute("ALTER TYPE adplatform ADD VALUE 'linkedin'")
-
     # =========================================================================
     # Add NOTIFY_WHATSAPP to RuleAction enum (if not exists)
     # =========================================================================
@@ -232,4 +227,4 @@ def downgrade() -> None:
     op.execute("DROP TYPE whatsappoptinstatus")
 
     # Note: Cannot easily remove enum values in PostgreSQL
-    # The linkedin and notify_whatsapp enum values will remain
+    # The notify_whatsapp enum value will remain

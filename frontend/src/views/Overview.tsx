@@ -149,24 +149,6 @@ const mockCampaigns: Campaign[] = [
     status: 'Active',
     start_date: '2024-11-15',
   },
-  {
-    campaign_id: '6',
-    campaign_name: 'LinkedIn B2B Lead Gen',
-    platform: 'LinkedIn Ads',
-    region: 'United States',
-    campaign_type: 'Lead Generation',
-    spend: 9800,
-    revenue: 39200,
-    conversions: 196,
-    impressions: 420000,
-    clicks: 8400,
-    ctr: 2.0,
-    cpm: 23.33,
-    cpa: 50.0,
-    roas: 4.0,
-    status: 'Active',
-    start_date: '2024-10-20',
-  },
 ]
 
 const mockPlatformSummary: PlatformSummary[] = [
@@ -174,7 +156,6 @@ const mockPlatformSummary: PlatformSummary[] = [
   { platform: 'Google Ads', spend: 8200, revenue: 28700, conversions: 287, roas: 3.5, cpa: 28.57, impressions: 980000, clicks: 19600 },
   { platform: 'TikTok Ads', spend: 15000, revenue: 37500, conversions: 500, roas: 2.5, cpa: 30.0, impressions: 2500000, clicks: 50000 },
   { platform: 'Snapchat Ads', spend: 4500, revenue: 11250, conversions: 150, roas: 2.5, cpa: 30.0, impressions: 750000, clicks: 15000 },
-  { platform: 'LinkedIn Ads', spend: 9800, revenue: 39200, conversions: 196, roas: 4.0, cpa: 50.0, impressions: 420000, clicks: 8400 },
 ]
 
 const mockDailyPerformance: DailyPerformance[] = Array.from({ length: 30 }, (_, i) => {
@@ -247,7 +228,7 @@ export function Overview() {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
       end: new Date(),
     },
-    platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads', 'LinkedIn Ads'],
+    platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads'],
     regions: ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq'],
     campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
   })
@@ -367,7 +348,7 @@ export function Overview() {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         end: new Date(),
       },
-      platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads', 'LinkedIn Ads'],
+      platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads'],
       regions: ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq'],
       campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
     })
@@ -532,7 +513,7 @@ export function Overview() {
       <FilterBar
         filters={filters}
         onChange={handleFilterChange}
-        platforms={['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads', 'LinkedIn Ads']}
+        platforms={['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads']}
         regions={['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq']}
       />
 

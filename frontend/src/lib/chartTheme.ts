@@ -26,7 +26,6 @@ export const chartTheme = {
     google: '#4285F4',
     tiktok: '#00F2EA',
     snapchat: '#FFFC00',
-    linkedin: '#0A66C2',
     whatsapp: '#25D366',
 
     // Status - Analytics Design System data colors
@@ -175,8 +174,6 @@ export function getPlatformChartColor(platform: string): string {
     'tiktok': '#00F2EA',
     'snapchat ads': '#FFFC00',
     'snapchat': '#FFFC00',
-    'linkedin ads': '#0A66C2',
-    'linkedin': '#0A66C2',
     'whatsapp': '#25D366',
   }
   return platformMap[platform.toLowerCase()] || chartTheme.seriesColors[0]

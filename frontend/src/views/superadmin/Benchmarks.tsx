@@ -17,7 +17,7 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 
-type Platform = 'all' | 'meta' | 'google' | 'tiktok' | 'snapchat' | 'linkedin'
+type Platform = 'all' | 'meta' | 'google' | 'tiktok' | 'snapchat'
 type TimeRange = '7d' | '30d' | '90d'
 type Metric = 'emq' | 'freshness' | 'dataLoss' | 'variance' | 'errors'
 
@@ -52,7 +52,6 @@ export default function Benchmarks() {
     { platform: 'Google', p25: 78, p50: 86, p75: 93, trend: 1.8, sampleSize: 312 },
     { platform: 'TikTok', p25: 65, p50: 76, p75: 85, trend: -1.2, sampleSize: 156 },
     { platform: 'Snapchat', p25: 58, p50: 71, p75: 82, trend: 0.5, sampleSize: 89 },
-    { platform: 'LinkedIn', p25: 75, p50: 84, p75: 92, trend: 3.1, sampleSize: 67 },
   ]
 
   const driverBenchmarks: DriverBenchmark[] = [

@@ -115,7 +115,7 @@ export default function Login() {
               </div>
             </div>
             <p className="text-sm text-white/60">
-              Integrated with Meta, Google, TikTok, Snapchat, LinkedIn & more
+              Integrated with Meta, Google, TikTok, Snapchat & more
             </p>
           </div>
 

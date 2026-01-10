@@ -113,21 +113,6 @@ const mockCampaigns: Campaign[] = [
     ctr: 3.0,
     trend: 'up',
   },
-  {
-    id: 6,
-    name: 'LinkedIn B2B Lead Gen',
-    platform: 'linkedin',
-    status: 'completed',
-    spend: 4500,
-    budget: 4500,
-    revenue: 13500,
-    roas: 3.0,
-    impressions: 320000,
-    clicks: 6400,
-    conversions: 128,
-    ctr: 2.0,
-    trend: 'stable',
-  },
 ]
 
 type SortField = 'name' | 'spend' | 'revenue' | 'roas' | 'conversions'
@@ -331,7 +316,6 @@ export function Campaigns() {
             <option value="google">Google Ads</option>
             <option value="meta">Meta Ads</option>
             <option value="tiktok">TikTok Ads</option>
-            <option value="linkedin">LinkedIn Ads</option>
           </select>
 
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors">

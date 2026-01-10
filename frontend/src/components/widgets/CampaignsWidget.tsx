@@ -10,7 +10,6 @@ const mockCampaigns = [
   { id: 2, name: 'Brand Awareness Q4', platform: 'meta', roas: 3.8, spend: 8900, trend: 'up' },
   { id: 3, name: 'Retargeting - Cart', platform: 'meta', roas: 5.2, spend: 3200, trend: 'up' },
   { id: 4, name: 'TikTok Influencer', platform: 'tiktok', roas: 3.0, spend: 7800, trend: 'down' },
-  { id: 5, name: 'LinkedIn B2B', platform: 'linkedin', roas: 2.8, spend: 4500, trend: 'stable' },
 ]
 
 export function CampaignsWidget({ className }: CampaignsWidgetProps) {

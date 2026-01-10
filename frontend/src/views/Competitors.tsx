@@ -76,7 +76,6 @@ const PLATFORMS = [
   { id: 'google', name: 'Google Ads', icon: 'G' },
   { id: 'tiktok', name: 'TikTok', icon: 'T' },
   { id: 'snapchat', name: 'Snapchat', icon: 'S' },
-  { id: 'linkedin', name: 'LinkedIn', icon: 'L' },
 ]
 
 export function Competitors() {

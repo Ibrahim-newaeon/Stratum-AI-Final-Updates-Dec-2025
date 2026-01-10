@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # ===========================================================================
   # PostgreSQL 16 Database
@@ -122,6 +120,12 @@ services:
         condition: service_healthy
       api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - stratum_network
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
@@ -145,6 +149,12 @@ services:
       - ./backend:/app
     depends_on:
       - worker
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('celerybeat-schedule') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - stratum_network
     command: celery -A app.workers.celery_app beat --loglevel=info

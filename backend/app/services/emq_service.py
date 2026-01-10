@@ -40,7 +40,7 @@ from app.analytics.logic.emq_calculation import (
 class EmqService:
     """Service for EMQ operations."""
 
-    SUPPORTED_PLATFORMS = ["meta", "google", "tiktok", "snapchat", "linkedin"]
+    SUPPORTED_PLATFORMS = ["meta", "google", "tiktok", "snapchat"]
 
     def __init__(self, session: AsyncSession):
         self.session = session

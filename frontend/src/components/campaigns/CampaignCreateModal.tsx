@@ -59,13 +59,6 @@ const PLATFORMS = [
     color: 'bg-yellow-400',
     objectives: ['AWARENESS', 'CONSIDERATION', 'CONVERSIONS', 'CATALOG_SALES'],
   },
-  {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    description: 'B2B Advertising',
-    color: 'bg-blue-700',
-    objectives: ['BRAND_AWARENESS', 'WEBSITE_VISITS', 'ENGAGEMENT', 'VIDEO_VIEWS', 'LEAD_GENERATION', 'CONVERSIONS'],
-  },
 ]
 
 // Mock ad accounts per platform
@@ -85,10 +78,6 @@ const MOCK_AD_ACCOUNTS: Record<string, Array<{ id: string; name: string; currenc
   ],
   snapchat: [
     { id: 'snap_org_111', name: 'Snapchat Ad Account', currency: 'USD' },
-  ],
-  linkedin: [
-    { id: 'li_502123456', name: 'LinkedIn B2B Account', currency: 'USD' },
-    { id: 'li_502789012', name: 'LinkedIn - Enterprise', currency: 'EUR' },
   ],
 }
 
@@ -150,19 +139,6 @@ const MOCK_AUDIENCES: Record<string, {
     ],
     saved: [
       { id: 'ssa_001', name: 'Millennials & Gen Z', description: 'Age 18-35' },
-    ],
-  },
-  linkedin: {
-    custom: [
-      { id: 'lca_001', name: 'Website Retargeting', size: 8500 },
-      { id: 'lca_002', name: 'Company List - Enterprise', size: 2500 },
-    ],
-    lookalike: [
-      { id: 'lla_001', name: 'Lookalike - Decision Makers', size: 450000, source: 'Engaged Leads' },
-    ],
-    saved: [
-      { id: 'lsa_001', name: 'IT Decision Makers', description: 'IT Directors, CTOs, CIOs' },
-      { id: 'lsa_002', name: 'Marketing Professionals', description: 'Marketing Managers, CMOs' },
     ],
   },
 }

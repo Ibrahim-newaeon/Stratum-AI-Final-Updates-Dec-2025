@@ -18,7 +18,6 @@ from .platform_connectors import (
     GoogleCAPIConnector,
     TikTokCAPIConnector,
     SnapchatCAPIConnector,
-    LinkedInCAPIConnector,
     WhatsAppCAPIConnector,
     ConnectionStatus,
     CAPIResponse,
@@ -59,7 +58,6 @@ class CAPIService:
         "google": GoogleCAPIConnector,
         "tiktok": TikTokCAPIConnector,
         "snapchat": SnapchatCAPIConnector,
-        "linkedin": LinkedInCAPIConnector,
         "whatsapp": WhatsAppCAPIConnector,
     }
 
@@ -78,7 +76,7 @@ class CAPIService:
         Connect to a platform with the provided credentials.
 
         Args:
-            platform: Platform name (meta, google, tiktok, snapchat, linkedin)
+            platform: Platform name (meta, google, tiktok, snapchat)
             credentials: Platform-specific credentials
 
         Returns:
@@ -425,16 +423,6 @@ class CAPIService:
                 "documentation": "https://marketingapi.snapchat.com/docs/conversion.html",
                 "key_fields": ["email", "phone", "external_id", "ip_address"],
                 "events_supported": ["PURCHASE", "SIGN_UP", "ADD_CART", "VIEW_CONTENT"],
-            },
-            "linkedin": {
-                "name": "LinkedIn Conversion API",
-                "credentials_needed": [
-                    {"field": "conversion_id", "label": "Conversion Rule ID", "help": "From Campaign Manager > Analyze > Conversion Tracking"},
-                    {"field": "access_token", "label": "Access Token", "help": "OAuth 2.0 access token"},
-                ],
-                "documentation": "https://learn.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/conversion-tracking",
-                "key_fields": ["email", "first_name", "last_name", "external_id"],
-                "events_supported": ["purchase", "lead", "sign_up", "view_content"],
             },
             "whatsapp": {
                 "name": "WhatsApp Business Cloud API",

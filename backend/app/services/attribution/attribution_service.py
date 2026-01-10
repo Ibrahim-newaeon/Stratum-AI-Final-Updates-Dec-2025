@@ -65,12 +65,6 @@ PLATFORM_ATTRIBUTION_WINDOWS = {
         "half_life_days": 3.0,
         "max_lookback": 28,
     },
-    "linkedin": {
-        "click_window": 30,      # LinkedIn default: 30-day click
-        "view_window": 7,        # LinkedIn default: 7-day view
-        "half_life_days": 10.0,  # Longer B2B sales cycles
-        "max_lookback": 90,
-    },
     "pinterest": {
         "click_window": 30,      # Pinterest supports longer consideration
         "view_window": 1,

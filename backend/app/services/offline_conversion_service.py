@@ -510,104 +510,6 @@ class TikTokOfflineUploader(BaseOfflineUploader):
         }
 
 
-class LinkedInOfflineUploader(BaseOfflineUploader):
-    """LinkedIn Conversions API uploader for offline conversions."""
-
-    PLATFORM_NAME = "linkedin"
-    BASE_URL = "https://api.linkedin.com/rest"
-    API_VERSION = "202401"
-
-    async def upload(self, conversions: List[OfflineConversion]) -> UploadResult:
-        """Upload conversions to LinkedIn Conversions API."""
-        conversion_id = self._credentials.get("conversion_id")
-        access_token = self._credentials.get("access_token")
-
-        if not conversion_id or not access_token:
-            return UploadResult(
-                batch_id="",
-                platform=self.PLATFORM_NAME,
-                success=False,
-                total_records=len(conversions),
-                successful_records=0,
-                failed_records=len(conversions),
-                errors=[{"message": "Missing conversion_id or access_token"}],
-            )
-
-        # Format conversions
-        formatted_events = [self._format_conversion(conv, conversion_id) for conv in conversions]
-
-        try:
-            async with httpx.AsyncClient() as client:
-                url = f"{self.BASE_URL}/conversionEvents"
-                headers = {
-                    "Authorization": f"Bearer {access_token}",
-                    "LinkedIn-Version": self.API_VERSION,
-                    "Content-Type": "application/json",
-                }
-
-                payload = {"elements": formatted_events}
-
-                response = await client.post(url, json=payload, headers=headers, timeout=60.0)
-
-                if response.status_code in [200, 201]:
-                    return UploadResult(
-                        batch_id=f"linkedin_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                        platform=self.PLATFORM_NAME,
-                        success=True,
-                        total_records=len(conversions),
-                        successful_records=len(conversions),
-                        failed_records=0,
-                        errors=[],
-                        platform_response=response.json() if response.text else None,
-                    )
-                else:
-                    return UploadResult(
-                        batch_id="",
-                        platform=self.PLATFORM_NAME,
-                        success=False,
-                        total_records=len(conversions),
-                        successful_records=0,
-                        failed_records=len(conversions),
-                        errors=[{"message": f"HTTP {response.status_code}", "body": response.text}],
-                    )
-
-        except Exception as e:
-            logger.error(f"LinkedIn offline upload error: {e}")
-            return UploadResult(
-                batch_id="",
-                platform=self.PLATFORM_NAME,
-                success=False,
-                total_records=len(conversions),
-                successful_records=0,
-                failed_records=len(conversions),
-                errors=[{"message": str(e)}],
-            )
-
-    def _format_conversion(self, conv: OfflineConversion, conversion_id: str) -> Dict[str, Any]:
-        """Format conversion for LinkedIn API."""
-        event_time = conv.event_time or datetime.now(timezone.utc)
-        if isinstance(event_time, datetime):
-            event_time_ms = int(event_time.timestamp() * 1000)
-        else:
-            event_time_ms = int(event_time * 1000)
-
-        user_ids = []
-        if conv.email:
-            user_ids.append({"idType": "SHA256_EMAIL", "idValue": self._hash_email(conv.email)})
-        if conv.phone:
-            user_ids.append({"idType": "SHA256_PHONE_NUMBER", "idValue": self._hash_phone(conv.phone)})
-
-        return {
-            "conversion": f"urn:li:conversion:{conversion_id}",
-            "conversionHappenedAt": event_time_ms,
-            "user": {"userIds": user_ids},
-            "conversionValue": {
-                "currencyCode": conv.currency,
-                "amount": str(conv.conversion_value),
-            },
-        }
-
-
 # =============================================================================
 # Offline Conversion Service
 # =============================================================================
@@ -628,7 +530,6 @@ class OfflineConversionService:
             "meta": MetaOfflineUploader(),
             "google": GoogleOfflineUploader(),
             "tiktok": TikTokOfflineUploader(),
-            "linkedin": LinkedInOfflineUploader(),
         }
         self._batches: Dict[str, OfflineConversionBatch] = {}
 

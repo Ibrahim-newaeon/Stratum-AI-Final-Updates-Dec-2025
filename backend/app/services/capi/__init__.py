@@ -3,7 +3,7 @@
 # =============================================================================
 """
 Server-side Conversion API integration for streaming first-party data
-to ad platforms (Meta, Google, TikTok, Snapchat, LinkedIn).
+to ad platforms (Meta, Google, TikTok, Snapchat).
 
 Features:
 - No-code platform connection via API tokens
@@ -22,7 +22,6 @@ from .platform_connectors import (
     GoogleCAPIConnector,
     TikTokCAPIConnector,
     SnapchatCAPIConnector,
-    LinkedInCAPIConnector,
 )
 
 __all__ = [
@@ -34,5 +33,4 @@ __all__ = [
     "GoogleCAPIConnector",
     "TikTokCAPIConnector",
     "SnapchatCAPIConnector",
-    "LinkedInCAPIConnector",
 ]

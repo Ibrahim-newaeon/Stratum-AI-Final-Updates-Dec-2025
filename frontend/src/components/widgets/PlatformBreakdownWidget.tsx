@@ -9,8 +9,7 @@ const mockData = [
   { name: 'Google', value: 35, color: getPlatformColor('google') },
   { name: 'Meta', value: 30, color: getPlatformColor('meta') },
   { name: 'TikTok', value: 20, color: '#000000' },
-  { name: 'LinkedIn', value: 10, color: getPlatformColor('linkedin') },
-  { name: 'Snapchat', value: 5, color: '#FFFC00' },
+  { name: 'Snapchat', value: 15, color: '#FFFC00' },
 ]
 
 export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetProps) {

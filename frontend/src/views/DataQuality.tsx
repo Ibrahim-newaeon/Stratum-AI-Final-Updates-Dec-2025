@@ -67,7 +67,6 @@ const PLATFORM_NAMES: Record<string, string> = {
   google: 'Google Ads',
   tiktok: 'TikTok',
   snapchat: 'Snapchat',
-  linkedin: 'LinkedIn',
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -75,7 +74,6 @@ const PLATFORM_COLORS: Record<string, string> = {
   google: 'bg-red-500',
   tiktok: 'bg-black',
   snapchat: 'bg-yellow-400',
-  linkedin: 'bg-blue-700',
 }
 
 const getScoreColor = (score: number) => {

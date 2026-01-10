@@ -73,17 +73,6 @@ const PLATFORMS = [
     ],
   },
   {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    logo: '/platforms/linkedin.svg',
-    color: 'bg-blue-700',
-    description: 'LinkedIn Conversion API',
-    credentials: [
-      { field: 'conversion_id', label: 'Conversion Rule ID', placeholder: '', help: 'From Campaign Manager' },
-      { field: 'access_token', label: 'Access Token', placeholder: '', help: 'OAuth 2.0 access token', sensitive: true },
-    ],
-  },
-  {
     id: 'whatsapp',
     name: 'WhatsApp Business',
     logo: '/platforms/whatsapp.svg',

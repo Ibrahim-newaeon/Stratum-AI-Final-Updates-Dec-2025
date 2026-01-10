@@ -587,7 +587,6 @@ function IntegrationSettings() {
     { name: 'Google Ads', connected: true, icon: '🔵' },
     { name: 'Meta Ads', connected: true, icon: '🔷' },
     { name: 'TikTok Ads', connected: false, icon: '⬛' },
-    { name: 'LinkedIn Ads', connected: false, icon: '🔷' },
     { name: 'Slack', connected: true, icon: '💬' },
     { name: 'Google Analytics', connected: false, icon: '📊' },
   ]

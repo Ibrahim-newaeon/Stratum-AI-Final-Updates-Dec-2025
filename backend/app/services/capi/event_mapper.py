@@ -186,22 +186,6 @@ class AIEventMapper:
             StandardEvent.START_TRIAL: "START_TRIAL",
             StandardEvent.CUSTOM: "CUSTOM_EVENT_1",
         },
-        "linkedin": {
-            StandardEvent.PURCHASE: "purchase",
-            StandardEvent.ADD_TO_CART: "add_to_cart",
-            StandardEvent.INITIATE_CHECKOUT: "start_checkout",
-            StandardEvent.ADD_PAYMENT_INFO: "add_payment_info",
-            StandardEvent.LEAD: "lead",
-            StandardEvent.COMPLETE_REGISTRATION: "sign_up",
-            StandardEvent.SUBSCRIBE: "subscribe",
-            StandardEvent.VIEW_CONTENT: "view_content",
-            StandardEvent.SEARCH: "search",
-            StandardEvent.ADD_TO_WISHLIST: "add_to_wishlist",
-            StandardEvent.CONTACT: "contact",
-            StandardEvent.APP_INSTALL: "app_install",
-            StandardEvent.START_TRIAL: "start_trial",
-            StandardEvent.CUSTOM: "custom_event",
-        },
     }
 
     # Standard parameters for each event type

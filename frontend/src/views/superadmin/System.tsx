@@ -168,7 +168,6 @@ export default function System() {
     { platform: 'Google', status: 'healthy', lastSync: new Date(Date.now() - 3 * 60 * 1000), syncDuration: 32, errors: 0, recordsProcessed: 89000 },
     { platform: 'TikTok', status: 'degraded', lastSync: new Date(Date.now() - 15 * 60 * 1000), syncDuration: 180, errors: 5, recordsProcessed: 45000 },
     { platform: 'Snapchat', status: 'down', lastSync: new Date(Date.now() - 2 * 60 * 60 * 1000), syncDuration: 0, errors: 15, recordsProcessed: 0 },
-    { platform: 'LinkedIn', status: 'healthy', lastSync: new Date(Date.now() - 8 * 60 * 1000), syncDuration: 28, errors: 0, recordsProcessed: 12000 },
   ]
 
   const mockSystemMetrics = {

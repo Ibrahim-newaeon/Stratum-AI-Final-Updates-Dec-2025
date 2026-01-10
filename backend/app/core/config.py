@@ -99,17 +99,6 @@ class Settings(BaseSettings):
     snapchat_client_secret: Optional[str] = Field(default=None)
     snapchat_access_token: Optional[str] = Field(default=None)
 
-    # LinkedIn
-    linkedin_client_id: Optional[str] = Field(
-        default=None, description="LinkedIn App Client ID"
-    )
-    linkedin_client_secret: Optional[str] = Field(
-        default=None, description="LinkedIn App Client Secret"
-    )
-    linkedin_access_token: Optional[str] = Field(
-        default=None, description="LinkedIn Marketing API access token"
-    )
-
     # -------------------------------------------------------------------------
     # WhatsApp Business API Configuration
     # -------------------------------------------------------------------------

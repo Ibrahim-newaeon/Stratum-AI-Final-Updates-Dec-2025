@@ -473,7 +473,7 @@ class RealEMQService:
             Aggregated EmqCalculationResult
         """
         if platforms is None:
-            platforms = ["meta", "google", "tiktok", "snapchat", "linkedin"]
+            platforms = ["meta", "google", "tiktok", "snapchat"]
 
         platform_results = []
         for platform in platforms:

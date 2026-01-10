@@ -325,7 +325,7 @@ class PIIHasher:
 
         Args:
             data: Data dictionary to analyze
-            platform: Target platform (meta, google, tiktok, snapchat, linkedin)
+            platform: Target platform (meta, google, tiktok, snapchat)
 
         Returns:
             Completeness analysis with score and missing fields
@@ -378,17 +378,6 @@ class PIIHasher:
                 "weights": {
                     PIIField.EMAIL: 35, PIIField.PHONE: 30,
                     PIIField.EXTERNAL_ID: 20, PIIField.CLIENT_IP: 15
-                }
-            },
-            "linkedin": {
-                "required": set(),
-                "optional": {
-                    PIIField.EMAIL, PIIField.FIRST_NAME, PIIField.LAST_NAME,
-                    PIIField.EXTERNAL_ID
-                },
-                "weights": {
-                    PIIField.EMAIL: 40, PIIField.FIRST_NAME: 20,
-                    PIIField.LAST_NAME: 20, PIIField.EXTERNAL_ID: 20
                 }
             },
         }

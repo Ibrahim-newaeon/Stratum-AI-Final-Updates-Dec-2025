@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils'
 
 // Types
 type DLQStatus = 'pending' | 'retrying' | 'failed' | 'resolved'
-type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat' | 'linkedin'
+type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat'
 
 interface DLQEntry {
   id: string
@@ -168,7 +168,6 @@ const platformColors: Record<Platform, string> = {
   google: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300',
   tiktok: 'bg-pink-100 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300',
   snapchat: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300',
-  linkedin: 'bg-sky-100 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300',
 }
 
 export default function DeadLetterQueue() {
@@ -320,7 +319,6 @@ export default function DeadLetterQueue() {
           <option value="google">Google</option>
           <option value="tiktok">TikTok</option>
           <option value="snapchat">Snapchat</option>
-          <option value="linkedin">LinkedIn</option>
         </select>
       </div>
 

@@ -22,7 +22,6 @@ class Platform(str, Enum):
     GOOGLE = "google"
     TIKTOK = "tiktok"
     SNAPCHAT = "snapchat"
-    LINKEDIN = "linkedin"
     WHATSAPP = "whatsapp"
 
 

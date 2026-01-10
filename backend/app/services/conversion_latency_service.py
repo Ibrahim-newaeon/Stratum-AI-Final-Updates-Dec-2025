@@ -829,7 +829,6 @@ class AttributionWindowOptimizer:
         "google": 30,
         "tiktok": 7,
         "snapchat": 7,
-        "linkedin": 30,
     }
 
     def __init__(self, tracker: ConversionLatencyTracker):

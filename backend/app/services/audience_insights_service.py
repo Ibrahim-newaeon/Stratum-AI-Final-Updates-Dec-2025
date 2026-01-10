@@ -543,7 +543,6 @@ class AudienceInsightsService:
             "google": 15.0,
             "tiktok": 8.0,
             "snapchat": 10.0,
-            "linkedin": 25.0,
         }
 
         # Base CTR estimates by audience type

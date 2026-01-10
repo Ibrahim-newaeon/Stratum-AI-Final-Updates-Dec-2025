@@ -70,7 +70,6 @@ interface ParameterCoverage {
   google: number
   tiktok: number
   snapchat: number
-  linkedin: number
   required: boolean
 }
 
@@ -184,7 +183,6 @@ const mockPlatformEMQ: PlatformEMQ[] = [
   { platform: 'google', overallEMQ: 79, emailMatch: 85, phoneMatch: 72, fbpMatch: 0, fbcMatch: 0, ipMatch: 94, trend: 2.1 },
   { platform: 'tiktok', overallEMQ: 74, emailMatch: 81, phoneMatch: 68, fbpMatch: 0, fbcMatch: 0, ipMatch: 89, trend: -1.5 },
   { platform: 'snapchat', overallEMQ: 71, emailMatch: 78, phoneMatch: 64, fbpMatch: 0, fbcMatch: 0, ipMatch: 86, trend: 0.8 },
-  { platform: 'linkedin', overallEMQ: 68, emailMatch: 82, phoneMatch: 52, fbpMatch: 0, fbcMatch: 0, ipMatch: 78, trend: -0.3 },
 ]
 
 const mockEventEMQ: EventEMQ[] = [
@@ -197,15 +195,15 @@ const mockEventEMQ: EventEMQ[] = [
 ]
 
 const mockParameterCoverage: ParameterCoverage[] = [
-  { parameter: 'email', meta: 89, google: 85, tiktok: 81, snapchat: 78, linkedin: 82, required: true },
-  { parameter: 'phone', meta: 76, google: 72, tiktok: 68, snapchat: 64, linkedin: 52, required: true },
-  { parameter: 'external_id', meta: 92, google: 88, tiktok: 75, snapchat: 71, linkedin: 69, required: true },
-  { parameter: 'ip_address', meta: 94, google: 96, tiktok: 91, snapchat: 88, linkedin: 85, required: false },
-  { parameter: 'user_agent', meta: 97, google: 98, tiktok: 95, snapchat: 93, linkedin: 91, required: false },
-  { parameter: 'fbp', meta: 95, google: 0, tiktok: 0, snapchat: 0, linkedin: 0, required: false },
-  { parameter: 'fbc', meta: 88, google: 0, tiktok: 0, snapchat: 0, linkedin: 0, required: false },
-  { parameter: 'city', meta: 72, google: 68, tiktok: 65, snapchat: 61, linkedin: 58, required: false },
-  { parameter: 'country', meta: 96, google: 94, tiktok: 92, snapchat: 89, linkedin: 87, required: false },
+  { parameter: 'email', meta: 89, google: 85, tiktok: 81, snapchat: 78, required: true },
+  { parameter: 'phone', meta: 76, google: 72, tiktok: 68, snapchat: 64, required: true },
+  { parameter: 'external_id', meta: 92, google: 88, tiktok: 75, snapchat: 71, required: true },
+  { parameter: 'ip_address', meta: 94, google: 96, tiktok: 91, snapchat: 88, required: false },
+  { parameter: 'user_agent', meta: 97, google: 98, tiktok: 95, snapchat: 93, required: false },
+  { parameter: 'fbp', meta: 95, google: 0, tiktok: 0, snapchat: 0, required: false },
+  { parameter: 'fbc', meta: 88, google: 0, tiktok: 0, snapchat: 0, required: false },
+  { parameter: 'city', meta: 72, google: 68, tiktok: 65, snapchat: 61, required: false },
+  { parameter: 'country', meta: 96, google: 94, tiktok: 92, snapchat: 89, required: false },
 ]
 
 const mockServerBrowserSplit: ServerBrowserSplit[] = [
@@ -213,7 +211,6 @@ const mockServerBrowserSplit: ServerBrowserSplit[] = [
   { platform: 'google', serverPercent: 94, browserPercent: 6, trend: 1.8 },
   { platform: 'tiktok', serverPercent: 91, browserPercent: 9, trend: 3.5 },
   { platform: 'snapchat', serverPercent: 88, browserPercent: 12, trend: 2.2 },
-  { platform: 'linkedin', serverPercent: 85, browserPercent: 15, trend: -0.5 },
 ]
 
 const mockIntegrityIssues: IntegrityIssue[] = [
@@ -259,14 +256,6 @@ const mockAlerts: Alert[] = [
     title: 'Unhashed email detected',
     description: '12 events contained plaintext email addresses',
     timestamp: '4 hours ago',
-  },
-  {
-    id: '4',
-    severity: 'info',
-    title: 'LinkedIn EMQ improved',
-    description: 'Email match rate increased by 8% after implementing new hashing',
-    timestamp: '1 day ago',
-    platform: 'linkedin',
   },
 ]
 
@@ -604,7 +593,6 @@ export function DataQualityDashboard() {
             <option value="google">Google</option>
             <option value="tiktok">TikTok</option>
             <option value="snapchat">Snapchat</option>
-            <option value="linkedin">LinkedIn</option>
           </select>
 
           <select
@@ -825,7 +813,6 @@ export function DataQualityDashboard() {
                   <th className="text-center py-2 font-medium">Google</th>
                   <th className="text-center py-2 font-medium">TikTok</th>
                   <th className="text-center py-2 font-medium">Snap</th>
-                  <th className="text-center py-2 font-medium">LinkedIn</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -839,7 +826,7 @@ export function DataQualityDashboard() {
                         )}
                       </span>
                     </td>
-                    {[row.meta, row.google, row.tiktok, row.snapchat, row.linkedin].map((value, idx) => (
+                    {[row.meta, row.google, row.tiktok, row.snapchat].map((value, idx) => (
                       <td key={idx} className="text-center py-2">
                         {value > 0 ? (
                           <div className="flex items-center justify-center">
