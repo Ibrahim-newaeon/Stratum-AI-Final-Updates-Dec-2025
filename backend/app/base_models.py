@@ -1195,6 +1195,9 @@ class LandingPageSubscriber(Base):
 
     Stores email submissions from landing pages for superadmin review
     and eventual conversion to full platform users.
+
+    Includes full attribution tracking for ad platforms (Meta, Google, TikTok, Snapchat)
+    with platform-specific click IDs for CAPI conversion feedback.
     """
 
     __tablename__ = "landing_page_subscribers"
@@ -1203,8 +1206,10 @@ class LandingPageSubscriber(Base):
 
     # Contact Information
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    email_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)  # SHA256 for deduplication
     full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     company_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
 
     # Source tracking
     source_page: Mapped[str] = mapped_column(
@@ -1213,10 +1218,29 @@ class LandingPageSubscriber(Base):
     language: Mapped[str] = mapped_column(
         String(10), default="en", nullable=False
     )  # en, ar, etc.
+
+    # UTM tracking (works for all platforms)
     utm_source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     utm_medium: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     utm_campaign: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_term: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_content: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     referrer_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    landing_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+
+    # Platform-specific click IDs (CRITICAL for conversion attribution)
+    fbclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Meta/Facebook
+    gclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Google
+    ttclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # TikTok
+    sccid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Snapchat
+    fbc: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Meta browser cookie
+    fbp: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Meta pixel cookie
+
+    # Detected platform (derived from click IDs or utm_source)
+    attributed_platform: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)  # meta, google, tiktok, snapchat, organic
+
+    # Lead scoring
+    lead_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # 0-100 based on data completeness
 
     # Status
     status: Mapped[str] = mapped_column(
@@ -1232,11 +1256,18 @@ class LandingPageSubscriber(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # CAPI conversion tracking
+    capi_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    capi_results: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON string
+
     # Conversion tracking
     converted_to_tenant_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
     )
     converted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    verified_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -1261,6 +1292,8 @@ class LandingPageSubscriber(Base):
         Index("ix_subscriber_email", "email"),
         Index("ix_subscriber_status", "status", "created_at"),
         Index("ix_subscriber_source", "source_page", "language"),
+        Index("ix_subscriber_platform", "attributed_platform"),
+        Index("ix_subscriber_lead_score", "lead_score"),
     )
 
 
