@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI - Final Comprehensive Audit Report</title>
+    <style>
+        :root {
+            --primary: #a855f7;
+            --primary-dark: #7c3aed;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --bg-dark: #0f0f0f;
+            --bg-card: #1a1a1a;
+            --bg-surface: #252525;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        header .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        header .date {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: var(--bg-surface);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .section-header .badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .section-content {
+            padding: 1.5rem;
+        }
+
+        .subsection {
+            margin-bottom: 1.5rem;
+        }
+
+        .subsection:last-child {
+            margin-bottom: 0;
+        }
+
+        .subsection h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .subsection h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 1rem 0 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-surface);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:hover {
+            background: var(--bg-surface);
+        }
+
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+        .badge-primary { background: rgba(168, 85, 247, 0.2); color: var(--primary); }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        .code {
+            background: var(--bg-surface);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Monaco', monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre;
+            color: #e5e5e5;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .card h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            background: var(--bg-dark);
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .fill-success { background: var(--success); }
+        .fill-warning { background: var(--warning); }
+        .fill-danger { background: var(--danger); }
+        .fill-primary { background: var(--primary); }
+
+        .toc {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+
+        .toc a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .toc a:hover {
+            color: var(--primary);
+        }
+
+        .highlight {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .architecture-diagram {
+            background: var(--bg-surface);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.4;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.green { background: var(--success); }
+        .status-dot.yellow { background: var(--warning); }
+        .status-dot.red { background: var(--danger); }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stratum AI Platform</h1>
+            <div class="subtitle">Final Comprehensive Audit Report</div>
+            <div class="date">Generated: January 10, 2026 | Version 1.0.0</div>
+        </header>
+
+        <!-- Executive Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="value">215</div>
+                <div class="label">Python Files</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">175</div>
+                <div class="label">React Components</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">37</div>
+                <div class="label">API Endpoints</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">48</div>
+                <div class="label">Services</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">14</div>
+                <div class="label">ML Modules</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">5</div>
+                <div class="label">Ad Platforms</div>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#overview">1. Executive Overview</a></li>
+                <li><a href="#architecture">2. System Architecture</a></li>
+                <li><a href="#backend">3. Backend Analysis</a></li>
+                <li><a href="#frontend">4. Frontend Analysis</a></li>
+                <li><a href="#stratum">5. Stratum Integration Module</a></li>
+                <li><a href="#trust-engine">6. Trust Engine & Autopilot</a></li>
+                <li><a href="#security">7. Security & Compliance</a></li>
+                <li><a href="#infrastructure">8. Infrastructure & DevOps</a></li>
+                <li><a href="#recommendations">9. Recommendations</a></li>
+            </ul>
+        </div>
+
+        <!-- Section 1: Executive Overview -->
+        <section class="section" id="overview">
+            <div class="section-header">
+                <h2>1. Executive Overview</h2>
+                <span class="badge">Core</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>Platform Description</h3>
+                    <p>Stratum AI is a <strong>Revenue Operating System</strong> with <strong>Trust-Gated Autopilot</strong> architecture. The platform provides unified marketing intelligence across multiple advertising platforms with ML-driven predictions, real-time analytics, and automated campaign optimization.</p>
+
+                    <div class="grid-2" style="margin-top: 1rem;">
+                        <div class="card">
+                            <h4>Core Concept</h4>
+                            <div class="code">Signal Health Check -> Trust Gate -> Automation Decision
+       |                  |              |
+   [HEALTHY]         [PASS]         [EXECUTE]
+   [DEGRADED]        [HOLD]         [ALERT ONLY]
+   [UNHEALTHY]       [BLOCK]        [MANUAL REQUIRED]</div>
+                        </div>
+                        <div class="card">
+                            <h4>Key Differentiator</h4>
+                            <p>Automation executes <strong>ONLY</strong> when signal health passes safety thresholds. This protects advertisers from making costly mistakes based on unreliable data.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Technology Stack</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Layer</th>
+                                <th>Technology</th>
+                                <th>Version</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Backend Framework</td>
+                                <td>FastAPI</td>
+                                <td>0.109.2</td>
+                                <td>Async REST API with auto-docs</td>
+                            </tr>
+                            <tr>
+                                <td>Frontend Framework</td>
+                                <td>React + TypeScript</td>
+                                <td>18.2.0</td>
+                                <td>Modern SPA with type safety</td>
+                            </tr>
+                            <tr>
+                                <td>Database</td>
+                                <td>PostgreSQL</td>
+                                <td>16</td>
+                                <td>Primary data store with async driver</td>
+                            </tr>
+                            <tr>
+                                <td>Cache/Queue</td>
+                                <td>Redis + Celery</td>
+                                <td>7.x / 5.3.6</td>
+                                <td>Caching, background tasks, pub/sub</td>
+                            </tr>
+                            <tr>
+                                <td>ORM</td>
+                                <td>SQLAlchemy</td>
+                                <td>2.0.27</td>
+                                <td>Async database operations</td>
+                            </tr>
+                            <tr>
+                                <td>ML</td>
+                                <td>scikit-learn + Vertex AI</td>
+                                <td>1.4.0</td>
+                                <td>Local + cloud ML inference</td>
+                            </tr>
+                            <tr>
+                                <td>State Management</td>
+                                <td>Zustand + React Query</td>
+                                <td>4.5.1 / 5.20.5</td>
+                                <td>Client + server state</td>
+                            </tr>
+                            <tr>
+                                <td>Styling</td>
+                                <td>Tailwind CSS</td>
+                                <td>3.4.1</td>
+                                <td>Utility-first CSS with dark mode</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Supported Ad Platforms</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Meta (Facebook/Instagram)</h4>
+                            <ul>
+                                <li>Campaign management</li>
+                                <li>Conversion API (CAPI)</li>
+                                <li>EMQ score tracking</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Google Ads</h4>
+                            <ul>
+                                <li>Search/Display campaigns</li>
+                                <li>Performance Max</li>
+                                <li>Conversion tracking</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>TikTok Ads</h4>
+                            <ul>
+                                <li>Video campaigns</li>
+                                <li>Auction bidding</li>
+                                <li>Events API</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Snapchat Ads</h4>
+                            <ul>
+                                <li>Snap/Story ads</li>
+                                <li>AR Lenses</li>
+                                <li>Conversions API</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Architecture -->
+        <section class="section" id="architecture">
+            <div class="section-header">
+                <h2>2. System Architecture</h2>
+                <span class="badge">Infrastructure</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>High-Level Architecture</h3>
+                    <div class="architecture-diagram">
++------------------+     +------------------+     +------------------+
+|   React Frontend |     |   FastAPI Backend|     |   PostgreSQL DB  |
+|   (Vite + TS)    |<--->|   (Async Python) |<--->|   (16-alpine)    |
+|   Port: 5173     |     |   Port: 8000     |     |   Port: 5432     |
++------------------+     +--------+---------+     +------------------+
+                                  |
+                    +-------------+-------------+
+                    |             |             |
+              +-----v-----+ +-----v-----+ +-----v-----+
+              |   Redis   | |  Celery   | |  Celery   |
+              |   Cache   | |  Worker   | |   Beat    |
+              |  Port:6379| | (4 procs) | | (Scheduler|
+              +-----------+ +-----------+ +-----------+
+                    |
+              +-----v-----+
+              |  Flower   |
+              | Monitoring|
+              | Port:5555 |
+              +-----------+</div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Project Structure</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Backend Structure</h4>
+                            <div class="code">backend/
++-- app/
+|   +-- api/v1/endpoints/    # 37 API files
+|   +-- analytics/           # Analytics logic
+|   +-- auth/                # Authentication
+|   +-- autopilot/           # Autopilot service
+|   +-- core/                # Config, security
+|   +-- db/                  # Database setup
+|   +-- middleware/          # Audit, tenant, rate limit
+|   +-- ml/                  # 14 ML modules
+|   +-- models/              # SQLAlchemy models
+|   +-- services/            # 48 service modules
+|   +-- stratum/             # NEW: Multiplatform integration
+|   +-- workers/             # Celery tasks
++-- alembic/                 # Migrations
++-- requirements.txt</div>
+                        </div>
+                        <div class="card">
+                            <h4>Frontend Structure</h4>
+                            <div class="code">frontend/
++-- src/
+|   +-- api/                 # API client + hooks
+|   +-- components/          # 60+ React components
+|   |   +-- ui/              # Base UI components
+|   |   +-- charts/          # Chart components
+|   |   +-- dashboard/       # Dashboard widgets
+|   |   +-- shared/          # Shared components
+|   +-- contexts/            # Auth, Theme contexts
+|   +-- stores/              # Zustand stores
+|   +-- views/               # Page components
+|   |   +-- superadmin/      # Superadmin pages
+|   |   +-- tenant/          # Tenant pages
+|   +-- i18n/                # Translations
++-- e2e/                     # Playwright tests
++-- package.json</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Docker Services</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Container</th>
+                                <th>Port</th>
+                                <th>Health Check</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PostgreSQL 16</td>
+                                <td>stratum_db</td>
+                                <td>5432</td>
+                                <td><span class="status-indicator"><span class="status-dot green"></span> pg_isready</span></td>
+                            </tr>
+                            <tr>
+                                <td>Redis 7</td>
+                                <td>stratum_redis</td>
+                                <td>6379</td>
+                                <td><span class="status-indicator"><span class="status-dot green"></span> redis-cli ping</span></td>
+                            </tr>
+                            <tr>
+                                <td>FastAPI</td>
+                                <td>stratum_api</td>
+                                <td>8000</td>
+                                <td><span class="status-indicator"><span class="status-dot green"></span> /health endpoint</span></td>
+                            </tr>
+                            <tr>
+                                <td>Celery Worker</td>
+                                <td>stratum_worker</td>
+                                <td>-</td>
+                                <td><span class="status-indicator"><span class="status-dot green"></span> Process check</span></td>
+                            </tr>
+                            <tr>
+                                <td>Celery Beat</td>
+                                <td>stratum_scheduler</td>
+                                <td>-</td>
+                                <td><span class="status-indicator"><span class="status-dot green"></span> Process check</span></td>
+                            </tr>
+                            <tr>
+                                <td>React Frontend</td>
+                                <td>stratum_frontend</td>
+                                <td>5173</td>
+                                <td><span class="status-indicator"><span class="status-dot green"></span> HTTP check</span></td>
+                            </tr>
+                            <tr>
+                                <td>Flower (optional)</td>
+                                <td>stratum_flower</td>
+                                <td>5555</td>
+                                <td><span class="status-indicator"><span class="status-dot yellow"></span> Monitoring profile</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Backend Analysis -->
+        <section class="section" id="backend">
+            <div class="section-header">
+                <h2>3. Backend Analysis</h2>
+                <span class="badge">215 Python Files</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>API Endpoints Summary</h3>
+                    <p>37 endpoint files providing 100+ routes across functional domains:</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Endpoints</th>
+                                <th>Key Routes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-primary">Authentication</span></td>
+                                <td>auth.py</td>
+                                <td>/login, /register, /refresh, /logout, /whatsapp/send-otp</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Autopilot</span></td>
+                                <td>autopilot.py, autopilot_enforcement.py</td>
+                                <td>/status, /actions, /actions/{id}/approve, /actions/approve-all</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-info">Analytics</span></td>
+                                <td>analytics.py, analytics_ai.py</td>
+                                <td>/kpis, /demographics, /heatmap, /platform-breakdown, /trends</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-warning">Trust Layer</span></td>
+                                <td>trust_layer.py, emq_v2.py</td>
+                                <td>/signal-health, /attribution-variance, /trust-status</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-primary">Campaigns</span></td>
+                                <td>campaigns.py, campaign_builder.py</td>
+                                <td>/campaigns, /{id}/metrics, /{id}/sync, /drafts, /publish</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-info">ML/Predictions</span></td>
+                                <td>predictions.py, ml_training.py, simulator.py</td>
+                                <td>/conversion, /revenue, /ltv, /churn, /forecast/roas</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Reporting</span></td>
+                                <td>reporting.py, pacing.py, profit.py</td>
+                                <td>/templates, /schedules, /targets, /forecasts, /roi</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-warning">Integrations</span></td>
+                                <td>capi.py, meta_capi.py, linkedin.py, whatsapp.py</td>
+                                <td>/events, /contacts, /templates, /messages/send</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-danger">Admin</span></td>
+                                <td>superadmin.py, tenants.py, users.py</td>
+                                <td>/revenue, /tenants/portfolio, /system/health, /billing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Service Modules (48 Total)</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Budget & Revenue Services</h4>
+                            <ul>
+                                <li><strong>budget_reallocation_service.py</strong> (40.9 KB) - Multi-objective optimization</li>
+                                <li><strong>emq_service.py</strong> (29.1 KB) - Event Match Quality scoring</li>
+                                <li><strong>emq_measurement_service.py</strong> (38.3 KB) - EMQ calculation</li>
+                                <li><strong>profit/</strong> - Profit ROAS, COGS, margins</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Attribution Services</h4>
+                            <ul>
+                                <li><strong>attribution/markov.py</strong> - Markov chain attribution</li>
+                                <li><strong>attribution/shapley.py</strong> - Shapley value attribution</li>
+                                <li><strong>attribution/journey.py</strong> - Customer journey analysis</li>
+                                <li><strong>attribution/training.py</strong> - Model training pipeline</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>CAPI & Event Services</h4>
+                            <ul>
+                                <li><strong>capi/event_mapper.py</strong> - Platform normalization</li>
+                                <li><strong>capi/pii_hasher.py</strong> - SHA-256 PII hashing</li>
+                                <li><strong>capi/deduplication.py</strong> - Distributed dedup</li>
+                                <li><strong>capi/dead_letter_queue.py</strong> - Failed event retry</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Integration Services</h4>
+                            <ul>
+                                <li><strong>linkedin_client.py</strong> (21.8 KB) - LinkedIn API</li>
+                                <li><strong>whatsapp_service.py</strong> (13.4 KB) - WhatsApp Business</li>
+                                <li><strong>rules_engine.py</strong> (20.2 KB) - IFTTT automation</li>
+                                <li><strong>reporting/</strong> - PDF/CSV generation, scheduling</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>ML Module (14 Capabilities)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Size</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>roas_optimizer.py</td>
+                                <td>27.7 KB</td>
+                                <td>Budget allocation for maximum ROAS</td>
+                            </tr>
+                            <tr>
+                                <td>ltv_predictor.py</td>
+                                <td>37.8 KB</td>
+                                <td>Customer lifetime value prediction</td>
+                            </tr>
+                            <tr>
+                                <td>creative_lifecycle.py</td>
+                                <td>47.2 KB</td>
+                                <td>Creative fatigue detection</td>
+                            </tr>
+                            <tr>
+                                <td>explainability.py</td>
+                                <td>38.8 KB</td>
+                                <td>SHAP-based model interpretation</td>
+                            </tr>
+                            <tr>
+                                <td>ab_power_analysis.py</td>
+                                <td>37.7 KB</td>
+                                <td>Sample size and power calculations</td>
+                            </tr>
+                            <tr>
+                                <td>rfm_segmenter.py</td>
+                                <td>33.5 KB</td>
+                                <td>RFM customer segmentation</td>
+                            </tr>
+                            <tr>
+                                <td>train.py</td>
+                                <td>34.4 KB</td>
+                                <td>Training pipeline</td>
+                            </tr>
+                            <tr>
+                                <td>retraining_pipeline.py</td>
+                                <td>23.6 KB</td>
+                                <td>Automated model retraining</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Database Models</h3>
+                    <p>40+ SQLAlchemy models across 10 model files:</p>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Core Models</h4>
+                            <ul>
+                                <li><strong>Tenant</strong> - Multi-tenancy root</li>
+                                <li><strong>User</strong> - Encrypted PII, RBAC roles</li>
+                                <li><strong>Campaign</strong> - Unified campaign model</li>
+                                <li><strong>CampaignMetric</strong> - Daily metrics</li>
+                                <li><strong>CreativeAsset</strong> - DAM storage</li>
+                                <li><strong>Rule</strong> - Automation rules</li>
+                                <li><strong>AuditLog</strong> - Security trail</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Specialized Models</h4>
+                            <ul>
+                                <li><strong>FactSignalHealthDaily</strong> - Trust layer</li>
+                                <li><strong>FactAttributionVarianceDaily</strong> - Variance tracking</li>
+                                <li><strong>CampaignDraft</strong> - Campaign builder</li>
+                                <li><strong>Target/DailyKPI</strong> - Pacing</li>
+                                <li><strong>ProductCatalog</strong> - Profit ROAS</li>
+                                <li><strong>TrainedAttributionModel</strong> - ML models</li>
+                                <li><strong>WhatsAppContact/Template</strong> - WhatsApp</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Frontend Analysis -->
+        <section class="section" id="frontend">
+            <div class="section-header">
+                <h2>4. Frontend Analysis</h2>
+                <span class="badge">175 TSX Files</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>Component Architecture</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Count</th>
+                                <th>Key Components</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Core Components</td>
+                                <td>6</td>
+                                <td>SignalHealthPanel, TrustBanner, AutopilotPanel, CommandCenter</td>
+                            </tr>
+                            <tr>
+                                <td>UI Components</td>
+                                <td>8</td>
+                                <td>Skeleton, Toast, ThemeToggle, ErrorBoundary, EmptyState</td>
+                            </tr>
+                            <tr>
+                                <td>Chart Components</td>
+                                <td>4</td>
+                                <td>DailyTrendChart, PlatformPerformanceChart, ROASByPlatformChart</td>
+                            </tr>
+                            <tr>
+                                <td>Dashboard Widgets</td>
+                                <td>12</td>
+                                <td>KPIWidget, SimulatorWidget, BudgetOptimizerWidget, AlertsWidget</td>
+                            </tr>
+                            <tr>
+                                <td>Shared Components</td>
+                                <td>14</td>
+                                <td>EmqScoreCard, TrustStatusHeader, AutopilotModeBanner, ActionCard</td>
+                            </tr>
+                            <tr>
+                                <td>Landing Components</td>
+                                <td>7</td>
+                                <td>Hero, Features, Pricing, HowItWorks, Platforms, CTA, Footer</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Page Views</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Main Views (16 pages)</h4>
+                            <ul>
+                                <li>Overview, CustomDashboard</li>
+                                <li>Campaigns, Assets, Rules</li>
+                                <li>Predictions, Benchmarks</li>
+                                <li>WhatsApp (104 KB)</li>
+                                <li>Stratum (79 KB)</li>
+                                <li>DataQualityDashboard (52 KB)</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Tenant Views (18 pages)</h4>
+                            <ul>
+                                <li>CampaignBuilder (38 KB)</li>
+                                <li>Attribution, Pacing, ProfitROAS</li>
+                                <li>Reporting, ABTesting</li>
+                                <li>ModelExplainability</li>
+                                <li>ConnectPlatforms, AdAccounts</li>
+                                <li>TeamManagement</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Superadmin Views (7 pages)</h4>
+                            <ul>
+                                <li>SuperadminDashboard (62 KB)</li>
+                                <li>ControlTower, TenantsList</li>
+                                <li>Billing (37 KB)</li>
+                                <li>Audit, System, Benchmarks</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Auth Views (6 pages)</h4>
+                            <ul>
+                                <li>Login, Signup</li>
+                                <li>ForgotPassword, ResetPassword</li>
+                                <li>VerifyEmail</li>
+                                <li>Landing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>State Management</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Store/Context</th>
+                                <th>Purpose</th>
+                                <th>Key State</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-primary">AuthContext</span></td>
+                                <td>User authentication</td>
+                                <td>user, login(), logout(), updateUser()</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-primary">ThemeContext</span></td>
+                                <td>Dark/light mode</td>
+                                <td>theme, setTheme()</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">tenantStore</span></td>
+                                <td>Tenant & user context</td>
+                                <td>tenant, user, dateRange, platforms, isSuperAdmin()</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">featureFlagsStore</span></td>
+                                <td>Feature gating</td>
+                                <td>flags, can(), getAutopilotLevel()</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-info">React Query</span></td>
+                                <td>Server state</td>
+                                <td>5 min staleTime, 1 retry, cache</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>API Integration</h3>
+                    <p>20+ API modules with React Query hooks:</p>
+                    <div class="code">// API Client Configuration
+axios.create({
+  baseURL: VITE_API_URL || 'http://localhost:8000/api/v1',
+  timeout: 30000,
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'X-Tenant-ID': tenantId,
+    'X-Superadmin-Bypass': bypass
+  }
+})</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Stratum Integration Module -->
+        <section class="section" id="stratum">
+            <div class="section-header">
+                <h2>5. Stratum Integration Module</h2>
+                <span class="badge badge-success">NEW</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>Module Overview</h3>
+                    <p>The newly integrated Stratum module provides unified multiplatform management with trust-gated automation:</p>
+                    <div class="architecture-diagram">
++------------------------------------------------------------------+
+|                    EXISTING EMQ SERVICE                          |
+|  (Event Match Quality Calculation from Platform Data)            |
++-----------------------------+------------------------------------+
+                              | EMQ Response (5 drivers)
+                              v
+            +--------------------------------------+
+            |   StratumIntegration Bridge          |
+            |  - Receives EMQ data                 |
+            |  - Calculates signal health          |
+            |  - Evaluates trust gate              |
+            +------------------+-------------------+
+                               |
+            +------------------+-------------------+
+            |                                      |
+            v                                      v
+   +--------------------+              +--------------------+
+   | SignalHealth       |              |   TrustGate        |
+   | Calculator         |              |                    |
+   |                    |              | Decisions:         |
+   | 4 Components:      |              | - PASS (exec)      |
+   | - EMQ (40%)        |              | - HOLD (review)    |
+   | - Fresh (25%)      |              | - BLOCK (stop)     |
+   | - Variance (20%)   |              |                    |
+   | - Anomaly (15%)    |              | Action Classes:    |
+   |                    |              | - High risk (80+)  |
+   | Status:            |              | - Standard (70+)   |
+   | - Healthy (70+)    |              | - Conservative(60+)|
+   | - Degraded (40+)   |              | - Emergency (any)  |
+   | - Critical (&lt;40)   |              |                    |
+   +--------------------+              +--------------------+
+            |                                      |
+            +------------------+-------------------+
+                               |
+                   +-----------v-----------+
+                   |   AdapterRegistry     |
+                   |   + Platform Adapters |
+                   +-----------+-----------+
+                               |
+       +-----------+-----------+-----------+-----------+
+       |           |           |           |           |
+       v           v           v           v           v
+   [Meta]      [Google]    [TikTok]   [Snapchat]  [LinkedIn]</div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Module Files</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Purpose</th>
+                                <th>Key Features</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>models.py</td>
+                                <td>Unified data models</td>
+                                <td>Platform, UnifiedCampaign, EMQScore, SignalHealth, AutomationAction</td>
+                            </tr>
+                            <tr>
+                                <td>core/signal_health.py</td>
+                                <td>Signal health calculator</td>
+                                <td>4-component scoring, EMQ driver compatibility, configurable thresholds</td>
+                            </tr>
+                            <tr>
+                                <td>core/trust_gate.py</td>
+                                <td>Trust gate evaluation</td>
+                                <td>PASS/HOLD/BLOCK decisions, action risk classification</td>
+                            </tr>
+                            <tr>
+                                <td>adapters/base.py</td>
+                                <td>Base adapter interface</td>
+                                <td>Read/write operations, rate limiting, error handling</td>
+                            </tr>
+                            <tr>
+                                <td>adapters/meta_adapter.py</td>
+                                <td>Meta Marketing API</td>
+                                <td>Facebook SDK, CAPI, EMQ endpoint</td>
+                            </tr>
+                            <tr>
+                                <td>adapters/google_adapter.py</td>
+                                <td>Google Ads API</td>
+                                <td>GAQL queries, service accounts</td>
+                            </tr>
+                            <tr>
+                                <td>adapters/tiktok_adapter.py</td>
+                                <td>TikTok Business API</td>
+                                <td>OAuth 2.0, 24h token refresh</td>
+                            </tr>
+                            <tr>
+                                <td>adapters/snapchat_adapter.py</td>
+                                <td>Snapchat Marketing API</td>
+                                <td>30min token refresh, Ad Squad support</td>
+                            </tr>
+                            <tr>
+                                <td>integration.py</td>
+                                <td>Bridge to EMQ service</td>
+                                <td>calculate_signal_health_from_emq_response(), evaluate_action()</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Test Results</h3>
+                    <p>All integration tests passed:</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Test Suite</th>
+                                <th>Status</th>
+                                <th>Tests</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Models</td>
+                                <td><span class="badge badge-success">PASS</span></td>
+                                <td>Platform enum, EntityStatus, UnifiedCampaign, PerformanceMetrics, EMQScore, SignalHealth</td>
+                            </tr>
+                            <tr>
+                                <td>Signal Health Calculator</td>
+                                <td><span class="badge badge-success">PASS</span></td>
+                                <td>Good health (91.8), degraded detection (51.2), EMQ driver compatibility (83.8)</td>
+                            </tr>
+                            <tr>
+                                <td>Trust Gate</td>
+                                <td><span class="badge badge-success">PASS</span></td>
+                                <td>PASS/HOLD/BLOCK decisions, conservative actions, emergency bypass</td>
+                            </tr>
+                            <tr>
+                                <td>Integration Bridge</td>
+                                <td><span class="badge badge-success">PASS</span></td>
+                                <td>EMQ response processing, action evaluation, autopilot config</td>
+                            </tr>
+                            <tr>
+                                <td>Adapter Registry</td>
+                                <td><span class="badge badge-success">PASS</span></td>
+                                <td>Singleton pattern, registration, lookup</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Trust Engine -->
+        <section class="section" id="trust-engine">
+            <div class="section-header">
+                <h2>6. Trust Engine & Autopilot</h2>
+                <span class="badge badge-warning">Critical System</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>Signal Health Thresholds</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Score Range</th>
+                                <th>Color</th>
+                                <th>Autopilot Mode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>HEALTHY</td>
+                                <td>70-100</td>
+                                <td><span class="badge badge-success">Green</span></td>
+                                <td>Normal - Full autopilot enabled</td>
+                            </tr>
+                            <tr>
+                                <td>RISK</td>
+                                <td>60-69</td>
+                                <td><span class="badge badge-warning">Yellow</span></td>
+                                <td>Limited - Conservative actions only</td>
+                            </tr>
+                            <tr>
+                                <td>DEGRADED</td>
+                                <td>40-59</td>
+                                <td><span class="badge" style="background: rgba(249, 115, 22, 0.2); color: #f97316;">Orange</span></td>
+                                <td>Cuts Only - Pause/reduce only</td>
+                            </tr>
+                            <tr>
+                                <td>CRITICAL</td>
+                                <td>0-39</td>
+                                <td><span class="badge badge-danger">Red</span></td>
+                                <td>Frozen - No automation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Signal Health Components</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>EMQ Score (40% weight)</h4>
+                            <p>Event Match Quality from platform data. Measures how well conversion events match user data.</p>
+                            <div class="progress-bar">
+                                <div class="fill fill-primary" style="width: 40%;"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4>Freshness Score (25% weight)</h4>
+                            <p>How recent the data is. &lt;24h = 100%, 24-48h = decay, &gt;48h = 0%</p>
+                            <div class="progress-bar">
+                                <div class="fill fill-success" style="width: 25%;"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4>Variance Score (20% weight)</h4>
+                            <p>Platform vs GA4 revenue variance. Warning at 10%, critical at 15%.</p>
+                            <div class="progress-bar">
+                                <div class="fill fill-warning" style="width: 20%;"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4>Anomaly Score (15% weight)</h4>
+                            <p>Z-score analysis on spend, conversions, CPA, ROAS. Threshold: z &gt; 3.0</p>
+                            <div class="progress-bar">
+                                <div class="fill fill-danger" style="width: 15%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Action Risk Classification</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Risk Level</th>
+                                <th>Required Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-danger">High Risk</span></td>
+                                <td>80+</td>
+                                <td>increase_budget, launch_new_campaigns, expand_targeting, increase_bid</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-warning">Standard</span></td>
+                                <td>70+</td>
+                                <td>update_budget, update_bid, update_status, update_targeting</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Conservative</span></td>
+                                <td>60+</td>
+                                <td>pause_underperforming, reduce_budget, reduce_bid</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-info">Always Allowed</span></td>
+                                <td>Any</td>
+                                <td>pause_all, emergency_stop</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: Security -->
+        <section class="section" id="security">
+            <div class="section-header">
+                <h2>7. Security & Compliance</h2>
+                <span class="badge">Enterprise</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>Authentication & Authorization</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Implementation</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>JWT Tokens</td>
+                                <td>Access (30 min) + Refresh (7 days)</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>WhatsApp OTP</td>
+                                <td>6-digit, 5-min expiry</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>RBAC</td>
+                                <td>5 roles: SUPERADMIN, ADMIN, MANAGER, ANALYST, VIEWER</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>Multi-Tenancy</td>
+                                <td>TenantMiddleware + row-level isolation</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>API Keys</td>
+                                <td>Hashed storage, permission-scoped</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Data Protection</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Protection</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PII Encryption</td>
+                                <td>AES-256 at rest (email, full_name)</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>PII Hashing</td>
+                                <td>SHA-256 for lookup (no plaintext)</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>Password Hashing</td>
+                                <td>bcrypt with salt</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>Audit Logging</td>
+                                <td>All state-changing requests logged</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                            <tr>
+                                <td>GDPR Compliance</td>
+                                <td>Consent management, anonymization, data export</td>
+                                <td><span class="badge badge-success">Implemented</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Middleware Stack</h3>
+                    <div class="code">Request Flow:
+CORS -> GZip -> RateLimit -> Tenant -> Audit -> Handler
+
+Middleware:
+1. CORSMiddleware - Cross-origin requests
+2. GZipMiddleware - Response compression (>1KB)
+3. RateLimitMiddleware - API rate limiting
+4. TenantMiddleware - Multi-tenancy isolation
+5. AuditMiddleware - Security audit trail
+6. Error Handler - Global exception handling</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8: Infrastructure -->
+        <section class="section" id="infrastructure">
+            <div class="section-header">
+                <h2>8. Infrastructure & DevOps</h2>
+                <span class="badge">Docker</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>Dependencies Overview</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Backend (Python)</h4>
+                            <ul>
+                                <li>FastAPI 0.109.2</li>
+                                <li>SQLAlchemy 2.0.27 (async)</li>
+                                <li>Pydantic 2.6.1</li>
+                                <li>Celery 5.3.6</li>
+                                <li>Redis 5.0.1</li>
+                                <li>scikit-learn 1.4.0</li>
+                                <li>XGBoost 2.0.3</li>
+                                <li>Sentry SDK 1.40.4</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Frontend (Node.js)</h4>
+                            <ul>
+                                <li>React 18.2.0</li>
+                                <li>TypeScript 5.3.3</li>
+                                <li>Vite 5.1.3</li>
+                                <li>Tailwind CSS 3.4.1</li>
+                                <li>React Query 5.20.5</li>
+                                <li>Zustand 4.5.1</li>
+                                <li>Recharts 2.12.1</li>
+                                <li>Playwright 1.41.0</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Environment Configuration</h3>
+                    <div class="code"># Core Settings
+APP_ENV=development|staging|production
+DEBUG=true|false
+SECRET_KEY=&lt;min 32 chars&gt;
+
+# Database
+DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db
+REDIS_URL=redis://host:6379/0
+
+# ML
+ML_PROVIDER=local|vertex
+ML_MODELS_PATH=/app/ml_service/models
+
+# Ad Platforms
+USE_MOCK_AD_DATA=true|false
+META_APP_ID, META_APP_SECRET, META_ACCESS_TOKEN
+GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID
+TIKTOK_APP_ID, TIKTOK_SECRET
+SNAPCHAT_CLIENT_ID, SNAPCHAT_CLIENT_SECRET</div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Testing Infrastructure</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Framework</th>
+                                <th>Command</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Backend Unit Tests</td>
+                                <td>pytest + pytest-asyncio</td>
+                                <td><code>pytest --cov=app</code></td>
+                            </tr>
+                            <tr>
+                                <td>Frontend Unit Tests</td>
+                                <td>Vitest</td>
+                                <td><code>npm run test:coverage</code></td>
+                            </tr>
+                            <tr>
+                                <td>E2E Tests</td>
+                                <td>Playwright</td>
+                                <td><code>npm run test:e2e</code></td>
+                            </tr>
+                            <tr>
+                                <td>Stratum Integration</td>
+                                <td>Custom test suite</td>
+                                <td><code>python -m app.stratum.tests.test_integration</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 9: Recommendations -->
+        <section class="section" id="recommendations">
+            <div class="section-header">
+                <h2>9. Recommendations & Next Steps</h2>
+                <span class="badge badge-info">Action Items</span>
+            </div>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3>Immediate Actions</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Item</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-success">Done</span></td>
+                                <td>Integrate Stratum multiplatform module</td>
+                                <td>Completed - All tests passing</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Done</span></td>
+                                <td>Add unified data models for cross-platform compatibility</td>
+                                <td>Completed - 10+ models added</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Done</span></td>
+                                <td>Implement 4-component signal health calculator</td>
+                                <td>Completed - EMQ, Freshness, Variance, Anomaly</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Done</span></td>
+                                <td>Add trust gate evaluation system</td>
+                                <td>Completed - PASS/HOLD/BLOCK decisions</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Done</span></td>
+                                <td>Create platform adapters (Meta, Google, TikTok, Snapchat)</td>
+                                <td>Completed - Full CRUD operations</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection">
+                    <h3>Future Enhancements</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Platform Expansion</h4>
+                            <ul>
+                                <li>LinkedIn adapter with full bidirectional sync</li>
+                                <li>Pinterest Ads integration</li>
+                                <li>Twitter/X Ads integration</li>
+                                <li>Amazon Ads integration</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>ML Enhancements</h4>
+                            <ul>
+                                <li>AutoML for model selection</li>
+                                <li>Real-time prediction streaming</li>
+                                <li>Cross-platform performance forecasting</li>
+                                <li>Anomaly detection with deep learning</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Infrastructure</h4>
+                            <ul>
+                                <li>Kubernetes deployment manifests</li>
+                                <li>Terraform IaC modules</li>
+                                <li>GitHub Actions CI/CD pipeline</li>
+                                <li>Prometheus/Grafana observability stack</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h4>Features</h4>
+                            <ul>
+                                <li>Cross-platform creative duplication</li>
+                                <li>Unified audience management</li>
+                                <li>Multi-currency budget allocation</li>
+                                <li>White-label tenant branding</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>Code Quality Metrics</h3>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h4>Backend Quality</h4>
+                            <div class="metric-row">
+                                <span>Type Hints Coverage</span>
+                                <span><span class="badge badge-success">95%+</span></span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Async/Await Usage</span>
+                                <span><span class="badge badge-success">100%</span></span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Pydantic Validation</span>
+                                <span><span class="badge badge-success">All APIs</span></span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Documentation</span>
+                                <span><span class="badge badge-success">Comprehensive</span></span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4>Frontend Quality</h4>
+                            <div class="metric-row">
+                                <span>TypeScript Strict Mode</span>
+                                <span><span class="badge badge-success">Enabled</span></span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Component Reusability</span>
+                                <span><span class="badge badge-success">High</span></span>
+                            </div>
+                            <div class="metric-row">
+                                <span>E2E Test Coverage</span>
+                                <span><span class="badge badge-warning">7 specs</span></span>
+                            </div>
+                            <div class="metric-row">
+                                <span>i18n Support</span>
+                                <span><span class="badge badge-success">EN/AR</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p><strong>Stratum AI</strong> - Revenue Operating System with Trust-Gated Autopilot</p>
+            <p>Audit Report Generated: January 10, 2026</p>
+            <p>Total Files Analyzed: 518 | Backend: 215 Python | Frontend: 175 TSX | Config: 28</p>
+        </footer>
+    </div>
+</body>
+</html>
