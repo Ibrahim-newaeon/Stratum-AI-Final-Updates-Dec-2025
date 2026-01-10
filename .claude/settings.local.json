@@ -132,7 +132,10 @@
       "Bash(copy:*)",
       "Bash(copy \"C:\\\\Users\\\\Vip\\\\OneDrive\\\\Desktop\\\\Stratum-AI-Final-Updates-Dec-2025-main\\\\Stratum-frontend-value-v2-aligned-ar.html\" \"C:\\\\Users\\\\Vip\\\\OneDrive\\\\Desktop\\\\Stratum-AI-Final-Updates-Dec-2025-main\\\\frontend\\\\public\\\\landing-ar.html\")",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(alembic upgrade:*)"
+      "Bash(alembic upgrade:*)",
+      "Bash(del \"C:\\\\Users\\\\Vip\\\\OneDrive\\\\Desktop\\\\Stratum-AI-Final-Updates-Dec-2025-main\\\\backend\\\\app\\\\api\\\\v1\\\\endpoints\\\\linkedin.py\")",
+      "Bash(del \"C:\\\\Users\\\\Vip\\\\OneDrive\\\\Desktop\\\\Stratum-AI-Final-Updates-Dec-2025-main\\\\backend\\\\app\\\\services\\\\linkedin_client.py\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiZXhwIjoxNzY4MDQwMDI0LCJpYXQiOjE3NjgwMzgyMjQsInR5cGUiOiJhY2Nlc3MiLCJ0ZW5hbnRfaWQiOjIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoidGVzdEBzdHJhdHVtLmFpIn0.Sb5KusC8tXRNRpkqJUdw8eWdxGfyt5DJbyBafNTxlPk\")"
     ],
     "deny": [],
     "ask": []

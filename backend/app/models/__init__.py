@@ -128,6 +128,18 @@ from app.models.reporting import (
     DeliveryChannelConfig,
 )
 
+# Onboarding models
+from app.models.onboarding import (
+    OnboardingStatus,
+    OnboardingStep,
+    Industry,
+    MonthlyAdSpend,
+    TeamSize,
+    AutomationMode,
+    PrimaryKPI,
+    TenantOnboarding,
+)
+
 __all__ = [
     # Enums
     "UserRole",
@@ -228,4 +240,13 @@ __all__ = [
     "ReportExecution",
     "ReportDelivery",
     "DeliveryChannelConfig",
+    # Onboarding
+    "OnboardingStatus",
+    "OnboardingStep",
+    "Industry",
+    "MonthlyAdSpend",
+    "TeamSize",
+    "AutomationMode",
+    "PrimaryKPI",
+    "TenantOnboarding",
 ]

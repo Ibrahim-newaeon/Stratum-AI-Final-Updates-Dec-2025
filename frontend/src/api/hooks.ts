@@ -288,6 +288,31 @@ export {
   useUpdateTenantSettings,
 } from './hooks/useTenantDashboard'
 
+// Onboarding hooks
+export {
+  useOnboardingStatus,
+  useOnboardingCheck,
+  useSubmitBusinessProfile,
+  useSubmitPlatformSelection,
+  useSubmitGoalsSetup,
+  useSubmitAutomationPreferences,
+  useSubmitTrustGateConfig,
+  useSkipOnboarding,
+  useResetOnboarding,
+} from './onboarding'
+
+// Dashboard hooks
+export {
+  useDashboardOverview,
+  useDashboardCampaigns,
+  useDashboardRecommendations,
+  useApproveRecommendation,
+  useRejectRecommendation,
+  useDashboardActivity,
+  useDashboardQuickActions,
+  useDashboardSignalHealth,
+} from './dashboard'
+
 // =============================================================================
 // Tenant Overview Hooks (for tenant dashboard)
 // =============================================================================

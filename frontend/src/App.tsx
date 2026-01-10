@@ -8,6 +8,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import OnboardingGuard from './components/auth/OnboardingGuard'
 
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./views/Landing'))
@@ -16,6 +17,7 @@ const Signup = lazy(() => import('./views/Signup'))
 const ForgotPassword = lazy(() => import('./views/ForgotPassword'))
 const ResetPassword = lazy(() => import('./views/ResetPassword'))
 const VerifyEmail = lazy(() => import('./views/VerifyEmail'))
+const Onboarding = lazy(() => import('./views/Onboarding'))
 const Overview = lazy(() => import('./views/Overview'))
 const CustomDashboard = lazy(() => import('./views/CustomDashboard'))
 const Campaigns = lazy(() => import('./views/Campaigns'))
@@ -132,12 +134,26 @@ function App() {
                 }
               />
 
-              {/* Protected dashboard routes */}
+              {/* Onboarding wizard (protected) */}
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Onboarding />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Protected dashboard routes - wrapped with onboarding guard */}
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <DashboardLayout />
+                    <OnboardingGuard>
+                      <DashboardLayout />
+                    </OnboardingGuard>
                   </ProtectedRoute>
                 }
               >
@@ -371,12 +387,14 @@ function App() {
                 />
               </Route>
 
-              {/* Tenant-scoped routes with :tenantId parameter */}
+              {/* Tenant-scoped routes with :tenantId parameter - wrapped with onboarding guard */}
               <Route
                 path="/app/:tenantId"
                 element={
                   <ProtectedRoute>
-                    <TenantLayout />
+                    <OnboardingGuard>
+                      <TenantLayout />
+                    </OnboardingGuard>
                   </ProtectedRoute>
                 }
               >

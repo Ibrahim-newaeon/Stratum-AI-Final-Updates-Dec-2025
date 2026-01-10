@@ -9,6 +9,9 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     auth,
+    oauth,
+    onboarding,
+    dashboard,
     campaigns,
     assets,
     rules,
@@ -52,6 +55,24 @@ api_router.include_router(
     auth.router,
     prefix="/auth",
     tags=["Authentication"],
+)
+
+# OAuth (Ad Platform Connections)
+api_router.include_router(
+    oauth.router,
+    tags=["OAuth"],
+)
+
+# Onboarding Wizard
+api_router.include_router(
+    onboarding.router,
+    tags=["Onboarding"],
+)
+
+# Main Dashboard (Unified dashboard for frontend)
+api_router.include_router(
+    dashboard.router,
+    tags=["Dashboard"],
 )
 
 # User management

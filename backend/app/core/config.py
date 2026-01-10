@@ -77,26 +77,34 @@ class Settings(BaseSettings):
         default=True, description="Use mock data instead of real ad platform APIs"
     )
 
-    # Meta/Facebook
-    meta_app_id: Optional[str] = Field(default=None)
-    meta_app_secret: Optional[str] = Field(default=None)
-    meta_access_token: Optional[str] = Field(default=None)
+    # OAuth callback base URL (for constructing redirect URIs)
+    oauth_redirect_base_url: str = Field(
+        default="http://localhost:8000",
+        description="Base URL for OAuth callbacks"
+    )
 
-    # Google Ads
+    # Meta/Facebook OAuth
+    meta_app_id: Optional[str] = Field(default=None, description="Meta/Facebook App ID")
+    meta_app_secret: Optional[str] = Field(default=None, description="Meta/Facebook App Secret")
+    meta_access_token: Optional[str] = Field(default=None)
+    meta_api_version: str = Field(default="v19.0", description="Meta Graph API version")
+
+    # Google Ads OAuth
     google_ads_developer_token: Optional[str] = Field(default=None)
-    google_ads_client_id: Optional[str] = Field(default=None)
-    google_ads_client_secret: Optional[str] = Field(default=None)
+    google_ads_client_id: Optional[str] = Field(default=None, description="Google OAuth Client ID")
+    google_ads_client_secret: Optional[str] = Field(default=None, description="Google OAuth Client Secret")
     google_ads_refresh_token: Optional[str] = Field(default=None)
     google_ads_customer_id: Optional[str] = Field(default=None)
 
-    # TikTok
-    tiktok_app_id: Optional[str] = Field(default=None)
-    tiktok_secret: Optional[str] = Field(default=None)
+    # TikTok OAuth
+    tiktok_app_id: Optional[str] = Field(default=None, description="TikTok App ID")
+    tiktok_app_secret: Optional[str] = Field(default=None, description="TikTok App Secret")
+    tiktok_secret: Optional[str] = Field(default=None)  # Legacy, use tiktok_app_secret
     tiktok_access_token: Optional[str] = Field(default=None)
 
-    # Snapchat
-    snapchat_client_id: Optional[str] = Field(default=None)
-    snapchat_client_secret: Optional[str] = Field(default=None)
+    # Snapchat OAuth
+    snapchat_client_id: Optional[str] = Field(default=None, description="Snapchat Client ID")
+    snapchat_client_secret: Optional[str] = Field(default=None, description="Snapchat Client Secret")
     snapchat_access_token: Optional[str] = Field(default=None)
 
     # -------------------------------------------------------------------------
@@ -156,6 +164,33 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = Field(default=7)
     pii_encryption_key: str = Field(
         default="dev-encryption-key-32bytes", description="AES encryption key for PII"
+    )
+
+    # Email verification and password reset token expiry
+    email_verification_expire_hours: int = Field(
+        default=24, description="Hours until email verification token expires"
+    )
+    password_reset_expire_hours: int = Field(
+        default=1, description="Hours until password reset token expires"
+    )
+
+    # -------------------------------------------------------------------------
+    # Email Configuration
+    # -------------------------------------------------------------------------
+    smtp_host: str = Field(default="smtp.gmail.com", description="SMTP server host")
+    smtp_port: int = Field(default=587, description="SMTP server port")
+    smtp_user: Optional[str] = Field(default=None, description="SMTP username")
+    smtp_password: Optional[str] = Field(default=None, description="SMTP password")
+    smtp_tls: bool = Field(default=True, description="Use TLS for SMTP")
+    smtp_ssl: bool = Field(default=False, description="Use SSL for SMTP")
+    email_from_name: str = Field(default="Stratum AI", description="Email sender name")
+    email_from_address: str = Field(
+        default="noreply@stratum.ai", description="Email sender address"
+    )
+
+    # Frontend URL for email links
+    frontend_url: str = Field(
+        default="http://localhost:3000", description="Frontend URL for email links"
     )
 
     # -------------------------------------------------------------------------
