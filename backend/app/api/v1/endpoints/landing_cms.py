@@ -13,7 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.core.database import get_async_session
+from app.db.session import get_async_session
 from app.base_models import LandingPageSubscriber, SubscriberStatus
 
 router = APIRouter(prefix="/landing-cms")
