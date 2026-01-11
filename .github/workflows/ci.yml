@@ -121,8 +121,8 @@ jobs:
           PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
           APP_ENV: test
         run: |
-          pytest tests/unit --cov=app --cov-report=xml --cov-report=term-missing -m "unit or not integration"
-        continue-on-error: true
+          pytest tests/unit --cov=app --cov-config=.coveragerc --cov-report=xml --cov-report=term-missing --cov-fail-under=70 -m "unit or not integration"
+        continue-on-error: true  # Remove once coverage target is met
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -130,6 +130,14 @@ jobs:
           file: backend/coverage.xml
           flags: backend
           fail_ci_if_error: false
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/htmlcov
+          retention-days: 7
 
   # ===========================================================================
   # Frontend Tests & Build
@@ -161,9 +169,24 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Run unit tests
-        run: npm run test -- --run --reporter=verbose
+      - name: Run unit tests with coverage
+        run: npm run test:coverage -- --reporter=verbose
         continue-on-error: true  # Remove once tests are stable
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: frontend/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          retention-days: 7
 
       - name: Build
         run: npm run build

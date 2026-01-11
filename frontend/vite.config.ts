@@ -25,10 +25,33 @@ export default defineConfig({
     sourcemap: true,
   },
   test: {
+    globals: true,
+    environment: 'jsdom',
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
       '**/e2e/**',
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'e2e/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/index.ts',
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+      ],
+      thresholds: {
+        statements: 60,
+        branches: 60,
+        functions: 60,
+        lines: 60,
+      },
+    },
   },
 })

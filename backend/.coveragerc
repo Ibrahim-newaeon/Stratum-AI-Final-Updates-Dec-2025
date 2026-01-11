@@ -1,0 +1,52 @@
+# =============================================================================
+# Stratum AI - Coverage Configuration
+# =============================================================================
+# Run with: pytest --cov=app --cov-config=.coveragerc
+
+[run]
+source = app
+branch = True
+omit =
+    */tests/*
+    */__pycache__/*
+    */migrations/*
+    */alembic/*
+    app/main.py
+    app/workers/celery_app.py
+
+[report]
+# Minimum coverage percentage required
+fail_under = 70
+
+# Show missing line numbers
+show_missing = True
+
+# Exclude lines from coverage
+exclude_lines =
+    # Skip type checking blocks
+    pragma: no cover
+    if TYPE_CHECKING:
+    if typing.TYPE_CHECKING:
+
+    # Skip abstract methods
+    @abstractmethod
+
+    # Skip defensive assertions
+    raise NotImplementedError
+    raise AssertionError
+
+    # Skip debug code
+    if __name__ == .__main__.:
+    if settings.DEBUG:
+
+    # Skip ellipsis (protocol stubs)
+    \.\.\.
+
+precision = 2
+
+[html]
+directory = htmlcov
+title = Stratum AI Backend Coverage Report
+
+[xml]
+output = coverage.xml
