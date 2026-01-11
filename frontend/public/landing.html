@@ -2857,6 +2857,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-auth-btn::after {
+            display: none;
         }
 
         .nav-auth-btn:hover {
@@ -4988,12 +4994,14 @@
         const savedTheme = localStorage.getItem('theme') || 'dark';
         html.setAttribute('data-theme', savedTheme);
 
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
 
         // Cursor Glow Effect
         const cursorGlow = document.getElementById('cursorGlow');
@@ -5008,21 +5016,25 @@
         function animateCursor() {
             glowX += (mouseX - glowX) * 0.1;
             glowY += (mouseY - glowY) * 0.1;
-            cursorGlow.style.left = glowX + 'px';
-            cursorGlow.style.top = glowY + 'px';
+            if (cursorGlow) {
+                cursorGlow.style.left = glowX + 'px';
+                cursorGlow.style.top = glowY + 'px';
+            }
             requestAnimationFrame(animateCursor);
         }
         animateCursor();
 
         // Create Particles
         const particlesContainer = document.getElementById('particles');
-        for (let i = 0; i < 20; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 10 + 's';
-            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            particlesContainer.appendChild(particle);
+        if (particlesContainer) {
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
         }
 
         // Navbar scroll effect
@@ -5451,17 +5463,23 @@
             const openBtn = document.getElementById('openAuthModal');
             const closeBtn = document.getElementById('closeAuthModal');
 
-            // Open modal
-            openBtn.addEventListener('click', () => {
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            });
+            if (!modal) return;
+
+            // Open modal (only if button exists)
+            if (openBtn) {
+                openBtn.addEventListener('click', () => {
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            }
 
             // Close modal
-            closeBtn.addEventListener('click', () => {
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            });
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            }
 
             // Close on overlay click
             modal.addEventListener('click', (e) => {
@@ -5523,14 +5541,16 @@
                 window.top.location.href = '/dashboard/overview';
             }
 
-            loginSuperadmin.addEventListener('click', () => handleDemoLogin('superadmin'));
-            loginAdmin.addEventListener('click', () => handleDemoLogin('admin'));
-            loginAM.addEventListener('click', () => handleDemoLogin('am'));
+            if (loginSuperadmin) loginSuperadmin.addEventListener('click', () => handleDemoLogin('superadmin'));
+            if (loginAdmin) loginAdmin.addEventListener('click', () => handleDemoLogin('admin'));
+            if (loginAM) loginAM.addEventListener('click', () => handleDemoLogin('am'));
         })();
 
         // Contact Form Modal Functionality
         (function initContactModal() {
             const modal = document.getElementById('contactModal');
+            if (!modal) return;
+
             const closeBtn = document.getElementById('closeContactModal');
             const form = document.getElementById('contactForm');
             const submitBtn = document.getElementById('contactSubmitBtn');
@@ -5541,15 +5561,17 @@
                 modal.classList.add('active');
                 document.body.style.overflow = 'hidden';
                 // Reset form if it was in success mode
-                modalContent.classList.remove('success-mode');
-                form.reset();
+                if (modalContent) modalContent.classList.remove('success-mode');
+                if (form) form.reset();
             };
 
             // Close modal
-            closeBtn.addEventListener('click', () => {
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            });
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            }
 
             // Close on overlay click
             modal.addEventListener('click', (e) => {
