@@ -2997,60 +2997,60 @@
         /* Inline Contact Section Styles */
         .contact-section {
             padding: 6rem 2rem;
-            background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(99, 102, 241, 0.05) 100%);
+            background: var(--bg-secondary);
         }
 
         .contact-section-container {
-            max-width: 700px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: linear-gradient(180deg, rgba(30, 30, 50, 0.8) 0%, rgba(20, 20, 35, 0.9) 100%);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            border-radius: 24px;
-            padding: 3rem;
-            text-align: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
         }
 
         .contact-section-header {
-            margin-bottom: 2rem;
+            text-align: left;
         }
 
         .contact-section-logo {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem;
+            font-size: 0.85rem;
             font-weight: 700;
             letter-spacing: 0.2em;
             color: var(--primary);
             margin-bottom: 1rem;
+            text-transform: uppercase;
         }
 
         .contact-section-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
         }
 
         .contact-section-subtitle {
             color: var(--text-muted);
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 2rem;
         }
 
         .contact-section-info {
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
+            background: rgba(99, 102, 241, 0.08);
+            border-left: 3px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+            padding: 1.25rem 1.5rem;
             margin-bottom: 1.5rem;
-            display: inline-block;
         }
 
         .contact-section-info p {
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin: 0.25rem 0;
+            font-size: 0.95rem;
+            margin: 0.5rem 0;
         }
 
         .contact-section-info strong {
@@ -3059,48 +3059,17 @@
 
         .contact-section-prompt {
             color: var(--text-primary);
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 500;
-        }
-
-        .contact-section-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            text-align: left;
-        }
-
-        .contact-section-submit {
-            width: 100%;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
-        }
-
-        .contact-section-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .contact-section-success {
-            text-align: center;
-            padding: 2rem;
+            font-style: italic;
         }
 
         .contact-section-benefits {
             display: flex;
-            justify-content: center;
             gap: 2rem;
-            margin-top: 2rem;
+            margin-top: 2.5rem;
             padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .contact-section-benefits .benefit-item {
@@ -3119,17 +3088,76 @@
             font-weight: 500;
         }
 
+        .contact-section-form {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .contact-section-submit {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .contact-section-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .contact-section-success {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+        }
+
+        @media (max-width: 900px) {
+            .contact-section-container {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+
+            .contact-section-header {
+                text-align: center;
+            }
+
+            .contact-section-info {
+                border-left: none;
+                border-top: 3px solid var(--primary);
+                border-radius: 0 0 8px 8px;
+            }
+
+            .contact-section-benefits {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+
         @media (max-width: 768px) {
             .contact-section {
                 padding: 4rem 1rem;
             }
 
-            .contact-section-container {
-                padding: 2rem 1.5rem;
+            .contact-section-title {
+                font-size: 1.75rem;
             }
 
-            .contact-section-title {
-                font-size: 1.5rem;
+            .contact-section-form {
+                padding: 1.5rem;
             }
 
             .contact-section-benefits {
@@ -3143,163 +3171,12 @@
             }
         }
 
-        /* Contact Form Popup Styles */
-        .contact-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            padding: 1rem;
-        }
-
-        .contact-modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .contact-modal {
-            background: linear-gradient(145deg, var(--bg-secondary) 0%, rgba(15, 23, 42, 0.98) 100%);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            width: 100%;
-            max-width: 520px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            transform: translateY(30px) scale(0.95);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow:
-                0 25px 50px -12px rgba(0, 0, 0, 0.6),
-                0 0 0 1px rgba(139, 92, 246, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .contact-modal-overlay.active .contact-modal {
-            transform: translateY(0) scale(1);
-        }
-
-        .contact-modal-close {
-            position: absolute;
-            top: 1.25rem;
-            right: 1.25rem;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            color: var(--text-secondary);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            font-size: 1.5rem;
-            z-index: 10;
-        }
-
-        .contact-modal-close:hover {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.5);
-            color: #ef4444;
-            transform: rotate(90deg);
-        }
-
-        .contact-modal-header {
-            text-align: center;
-            padding: 2.5rem 2.5rem 0;
-            position: relative;
-        }
-
-        .contact-modal-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 100px;
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-            color: var(--accent-purple);
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .contact-modal-logo {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.75rem;
-        }
-
-        .contact-modal-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .contact-modal-subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-
-        .contact-modal-info {
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .contact-modal-info p {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin: 0.25rem 0;
-        }
-
-        .contact-modal-info strong {
-            color: var(--primary);
-        }
-
-        .contact-modal-prompt {
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-weight: 500;
-            margin-top: 0.5rem;
-        }
-
+        /* Contact Form Styles */
         .contact-form-disclaimer {
             text-align: center;
             color: var(--text-muted);
             font-size: 0.8rem;
             margin-top: 0.5rem;
-        }
-
-        .contact-modal-body {
-            padding: 2rem 2.5rem 2.5rem;
-        }
-
-        .contact-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
         }
 
         .contact-form-row {
@@ -3424,42 +3301,7 @@
             margin-top: 0.5rem;
         }
 
-        .contact-benefits {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-glass);
-        }
-
-        .contact-benefit {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .contact-benefit-icon {
-            color: var(--accent-green);
-        }
-
-        /* Success state */
-        .contact-modal.success-mode .contact-form {
-            display: none;
-        }
-
-        .contact-success {
-            display: none;
-            text-align: center;
-            padding: 2rem 0;
-        }
-
-        .contact-modal.success-mode .contact-success {
-            display: block;
-        }
-
+        /* Inline Contact Success Styles */
         .contact-success-icon {
             width: 80px;
             height: 80px;
@@ -3495,36 +3337,7 @@
             margin: 0 auto;
         }
 
-        @media (max-width: 600px) {
-            .contact-modal {
-                margin: 0.5rem;
-                border-radius: 20px;
-            }
-
-            .contact-modal-header {
-                padding: 2rem 1.5rem 0;
-            }
-
-            .contact-modal-body {
-                padding: 1.5rem;
-            }
-
-            .contact-form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .contact-modal-title {
-                font-size: 1.5rem;
-            }
-
-            .contact-benefits {
-                flex-direction: column;
-                align-items: center;
-                gap: 0.75rem;
-            }
-        }
-
-        /* Early Access Modal Styles (popup.png design) */
+        /* Early Access Modal Styles */
         .early-access-modal-overlay {
             position: fixed;
             top: 0;
@@ -3728,9 +3541,63 @@
         }
 
         .early-access-note {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.4);
-            margin-bottom: 1.75rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 1.5rem;
+        }
+
+        .spots-remaining-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+
+        .spots-remaining-badge span {
+            color: var(--accent-orange);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .spots-remaining-badge #modalSpotsRemaining {
+            font-size: 1.1rem;
+        }
+
+        .early-access-cta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .early-access-form {
+            display: flex;
+            gap: 0.75rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .early-access-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .early-access-demo-btn {
+            padding: 0.875rem 1.5rem;
         }
 
         .early-access-benefits {
@@ -3907,195 +3774,35 @@
         </div>
     </div>
 
-    <!-- Contact Form Modal -->
-    <div class="contact-modal-overlay" id="contactModal">
-        <div class="contact-modal">
-            <button class="contact-modal-close" id="closeContactModal">&times;</button>
-
-            <div class="contact-modal-header">
-                <div class="contact-modal-logo">STRATUM AI</div>
-                <h2 class="contact-modal-title">Let's build your Stratum workspace</h2>
-                <p class="contact-modal-subtitle">
-                    Tell us what you're trying to achieve (documents, client management, WhatsApp/email messaging, reporting).
-                    We'll reply with the fastest setup path, estimated timeline, and the next steps.
-                </p>
-                <div class="contact-modal-info">
-                    <p><strong>Typical reply time:</strong> within 24 hours</p>
-                    <p><strong>Best for:</strong> demos, onboarding, integrations, custom workflows</p>
-                </div>
-                <p class="contact-modal-prompt">
-                    Send us a message and tell us what you need — we'll take it from there.
-                </p>
-            </div>
-
-            <div class="contact-modal-body">
-                <form class="contact-form" id="contactForm">
-                    <div class="contact-form-row">
-                        <div class="contact-form-group">
-                            <label class="contact-form-label">
-                                Full Name <span class="required">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                class="contact-form-input"
-                                id="contactName"
-                                name="name"
-                                placeholder="John Smith"
-                                required
-                            >
-                        </div>
-                        <div class="contact-form-group">
-                            <label class="contact-form-label">
-                                Work Email <span class="required">*</span>
-                            </label>
-                            <input
-                                type="email"
-                                class="contact-form-input"
-                                id="contactEmail"
-                                name="email"
-                                placeholder="john@company.com"
-                                required
-                            >
-                        </div>
-                    </div>
-
-                    <div class="contact-form-row">
-                        <div class="contact-form-group">
-                            <label class="contact-form-label">
-                                Company Name <span class="required">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                class="contact-form-input"
-                                id="contactCompany"
-                                name="company"
-                                placeholder="Acme Inc."
-                                required
-                            >
-                        </div>
-                        <div class="contact-form-group">
-                            <label class="contact-form-label">
-                                Company Size <span class="required">*</span>
-                            </label>
-                            <select class="contact-form-select" id="contactSize" name="company_size" required>
-                                <option value="" disabled selected>Select size</option>
-                                <option value="1-10">1-10 employees</option>
-                                <option value="11-50">11-50 employees</option>
-                                <option value="51-200">51-200 employees</option>
-                                <option value="201-500">201-500 employees</option>
-                                <option value="500+">500+ employees</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="contact-form-group">
-                        <label class="contact-form-label">
-                            Your Position <span class="required">*</span>
-                        </label>
-                        <select class="contact-form-select" id="contactPosition" name="position" required>
-                            <option value="" disabled selected>Select your role</option>
-                            <option value="ceo">CEO / Founder</option>
-                            <option value="cmo">CMO / VP Marketing</option>
-                            <option value="marketing_director">Marketing Director</option>
-                            <option value="growth_manager">Growth Manager</option>
-                            <option value="performance_marketing">Performance Marketing Manager</option>
-                            <option value="media_buyer">Media Buyer</option>
-                            <option value="agency_owner">Agency Owner</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-
-                    <div class="contact-form-group">
-                        <label class="contact-form-label">
-                            How can we help you?
-                        </label>
-                        <textarea
-                            class="contact-form-textarea"
-                            id="contactInquiry"
-                            name="inquiry"
-                            placeholder="Tell us what you're looking to achieve — documents, client management, messaging, reporting, or anything else..."
-                            rows="4"
-                        ></textarea>
-                    </div>
-
-                    <button type="submit" class="contact-submit-btn" id="contactSubmitBtn">
-                        <span class="btn-text">Submit</span>
-                    </button>
-
-                    <p class="contact-form-disclaimer">
-                        By submitting this form, you agree to be contacted about your request.
-                    </p>
-                    <p class="contact-form-note">
-                        🔒 Your information is secure and will never be shared.
-                    </p>
-                </form>
-
-                <div class="contact-success">
-                    <div class="contact-success-icon">✓</div>
-                    <h3 class="contact-success-title">Message Sent!</h3>
-                    <p class="contact-success-message">
-                        Thank you for reaching out. We'll review your request and get back to you within 24 hours.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Early Access Modal (popup.png design) -->
+    <!-- Early Access Modal -->
     <div class="early-access-modal-overlay" id="earlyAccessModal">
         <div class="early-access-modal">
             <button class="early-access-modal-close" id="closeEarlyAccessModal">&times;</button>
 
             <div class="early-access-content">
-                <div class="early-access-badge">
-                    <span>🚀</span> LAUNCHING SOON
-                </div>
-
-                <h2 class="early-access-title">Be First to Access Stratum AI</h2>
+                <h2 class="early-access-title">Don't Wait—Every Day Costs You Money</h2>
                 <p class="early-access-subtitle">
-                    Subscribe now to secure your spot in our exclusive early access program.
-                    <strong>First 100 subscribers get 3 months free.</strong>
+                    <strong>Limited spots available.</strong> Join 150+ growth teams who stopped guessing and started knowing their true profit.
                 </p>
 
-                <div class="early-access-countdown" id="modalCountdown">
-                    <div class="countdown-box">
-                        <div class="countdown-num" id="modalDays">13</div>
-                        <div class="countdown-label">Days</div>
-                    </div>
-                    <div class="countdown-box">
-                        <div class="countdown-num" id="modalHours">19</div>
-                        <div class="countdown-label">Hours</div>
-                    </div>
-                    <div class="countdown-box">
-                        <div class="countdown-num" id="modalMinutes">27</div>
-                        <div class="countdown-label">Minutes</div>
-                    </div>
-                    <div class="countdown-box">
-                        <div class="countdown-num" id="modalSeconds">12</div>
-                        <div class="countdown-label">Seconds</div>
-                    </div>
+                <div class="spots-remaining-badge">
+                    <span>🔥 Only <span id="modalSpotsRemaining">22</span> early access spots remaining</span>
                 </div>
 
-                <form class="early-access-form" id="earlyAccessForm">
-                    <input type="email" class="early-access-input" id="earlyAccessEmail" placeholder="Enter your work email" required>
-                    <button type="submit" class="early-access-btn">Get Early Access →</button>
-                </form>
-                <p class="early-access-note">No credit card required • Be notified at launch • Cancel anytime</p>
-
-                <div class="early-access-benefits">
-                    <div class="early-benefit">
-                        <span class="early-benefit-icon">🎁</span>
-                        <span>3 Months Free</span>
-                    </div>
-                    <div class="early-benefit">
-                        <span class="early-benefit-icon">⚡</span>
-                        <span>Priority Onboarding</span>
-                    </div>
-                    <div class="early-benefit">
-                        <span class="early-benefit-icon">💬</span>
-                        <span>Direct Founder Access</span>
-                    </div>
+                <div class="early-access-cta-buttons">
+                    <form class="early-access-form" id="earlyAccessForm">
+                        <input type="email" class="early-access-input" id="earlyAccessEmail" placeholder="Enter your work email" required>
+                        <button type="submit" class="btn btn-primary early-access-btn">
+                            Claim Your Spot Now
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </form>
+                    <a href="/signup" class="btn btn-secondary early-access-demo-btn">Book a Demo Call</a>
                 </div>
+
+                <p class="early-access-note">✓ No credit card required &nbsp;&nbsp; ✓ Setup in 24 hours &nbsp;&nbsp; ✓ 30-day money-back guarantee</p>
             </div>
 
             <div class="early-access-success" id="earlyAccessSuccess">
@@ -5072,8 +4779,9 @@
     <!-- Contact Us Section -->
     <section class="contact-section" id="contact">
         <div class="contact-section-container reveal">
+            <!-- Left Column: Info -->
             <div class="contact-section-header">
-                <div class="contact-section-logo">STRATUM AI</div>
+                <div class="contact-section-logo">Contact Us</div>
                 <h2 class="contact-section-title">Let's build your Stratum workspace</h2>
                 <p class="contact-section-subtitle">
                     Tell us what you're trying to achieve (documents, client management, WhatsApp/email messaging, reporting).
@@ -5086,125 +4794,128 @@
                 <p class="contact-section-prompt">
                     Send us a message and tell us what you need — we'll take it from there.
                 </p>
-            </div>
 
-            <form class="contact-section-form" id="inlineContactForm">
-                <div class="contact-form-row">
-                    <div class="contact-form-group">
-                        <label class="contact-form-label">
-                            Full Name <span class="required">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            class="contact-form-input"
-                            name="name"
-                            placeholder="John Smith"
-                            required
-                        >
+                <div class="contact-section-benefits">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🎁</span>
+                        <span class="benefit-text">3 Months Free</span>
                     </div>
-                    <div class="contact-form-group">
-                        <label class="contact-form-label">
-                            Work Email <span class="required">*</span>
-                        </label>
-                        <input
-                            type="email"
-                            class="contact-form-input"
-                            name="email"
-                            placeholder="john@company.com"
-                            required
-                        >
+                    <div class="benefit-item">
+                        <span class="benefit-icon">⚡</span>
+                        <span class="benefit-text">Priority Onboarding</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">💬</span>
+                        <span class="benefit-text">Direct Founder Access</span>
                     </div>
                 </div>
+            </div>
 
-                <div class="contact-form-row">
-                    <div class="contact-form-group">
-                        <label class="contact-form-label">
-                            Company Name <span class="required">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            class="contact-form-input"
-                            name="company"
-                            placeholder="Acme Inc."
-                            required
-                        >
+            <!-- Right Column: Form -->
+            <div class="contact-section-form-wrapper">
+                <form class="contact-section-form" id="inlineContactForm">
+                    <div class="contact-form-row">
+                        <div class="contact-form-group">
+                            <label class="contact-form-label">
+                                Full Name <span class="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                class="contact-form-input"
+                                name="name"
+                                placeholder="John Smith"
+                                required
+                            >
+                        </div>
+                        <div class="contact-form-group">
+                            <label class="contact-form-label">
+                                Work Email <span class="required">*</span>
+                            </label>
+                            <input
+                                type="email"
+                                class="contact-form-input"
+                                name="email"
+                                placeholder="john@company.com"
+                                required
+                            >
+                        </div>
                     </div>
+
+                    <div class="contact-form-row">
+                        <div class="contact-form-group">
+                            <label class="contact-form-label">
+                                Company Name <span class="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                class="contact-form-input"
+                                name="company"
+                                placeholder="Acme Inc."
+                                required
+                            >
+                        </div>
+                        <div class="contact-form-group">
+                            <label class="contact-form-label">
+                                Company Size <span class="required">*</span>
+                            </label>
+                            <select class="contact-form-select" name="company_size" required>
+                                <option value="" disabled selected>Select size</option>
+                                <option value="1-10">1-10 employees</option>
+                                <option value="11-50">11-50 employees</option>
+                                <option value="51-200">51-200 employees</option>
+                                <option value="201-500">201-500 employees</option>
+                                <option value="500+">500+ employees</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="contact-form-group">
                         <label class="contact-form-label">
-                            Company Size <span class="required">*</span>
+                            Your Position <span class="required">*</span>
                         </label>
-                        <select class="contact-form-select" name="company_size" required>
-                            <option value="" disabled selected>Select size</option>
-                            <option value="1-10">1-10 employees</option>
-                            <option value="11-50">11-50 employees</option>
-                            <option value="51-200">51-200 employees</option>
-                            <option value="201-500">201-500 employees</option>
-                            <option value="500+">500+ employees</option>
+                        <select class="contact-form-select" name="position" required>
+                            <option value="" disabled selected>Select your role</option>
+                            <option value="ceo">CEO / Founder</option>
+                            <option value="cmo">CMO / VP Marketing</option>
+                            <option value="marketing_director">Marketing Director</option>
+                            <option value="growth_manager">Growth Manager</option>
+                            <option value="performance_marketing">Performance Marketing Manager</option>
+                            <option value="media_buyer">Media Buyer</option>
+                            <option value="agency_owner">Agency Owner</option>
+                            <option value="other">Other</option>
                         </select>
                     </div>
-                </div>
 
-                <div class="contact-form-group">
-                    <label class="contact-form-label">
-                        Your Position <span class="required">*</span>
-                    </label>
-                    <select class="contact-form-select" name="position" required>
-                        <option value="" disabled selected>Select your role</option>
-                        <option value="ceo">CEO / Founder</option>
-                        <option value="cmo">CMO / VP Marketing</option>
-                        <option value="marketing_director">Marketing Director</option>
-                        <option value="growth_manager">Growth Manager</option>
-                        <option value="performance_marketing">Performance Marketing Manager</option>
-                        <option value="media_buyer">Media Buyer</option>
-                        <option value="agency_owner">Agency Owner</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
+                    <div class="contact-form-group">
+                        <label class="contact-form-label">
+                            How can we help you?
+                        </label>
+                        <textarea
+                            class="contact-form-textarea"
+                            name="inquiry"
+                            placeholder="Tell us what you're looking to achieve — documents, client management, messaging, reporting, or anything else..."
+                            rows="4"
+                        ></textarea>
+                    </div>
 
-                <div class="contact-form-group">
-                    <label class="contact-form-label">
-                        How can we help you?
-                    </label>
-                    <textarea
-                        class="contact-form-textarea"
-                        name="inquiry"
-                        placeholder="Tell us what you're looking to achieve — documents, client management, messaging, reporting, or anything else..."
-                        rows="4"
-                    ></textarea>
-                </div>
+                    <button type="submit" class="contact-section-submit">
+                        <span class="btn-text">Submit</span>
+                    </button>
 
-                <button type="submit" class="contact-section-submit">
-                    <span class="btn-text">Submit</span>
-                </button>
+                    <p class="contact-form-disclaimer">
+                        By submitting this form, you agree to be contacted about your request.
+                    </p>
+                    <p class="contact-form-note">
+                        🔒 Your information is secure and will never be shared.
+                    </p>
+                </form>
 
-                <p class="contact-form-disclaimer">
-                    By submitting this form, you agree to be contacted about your request.
-                </p>
-                <p class="contact-form-note">
-                    🔒 Your information is secure and will never be shared.
-                </p>
-            </form>
-
-            <div class="contact-section-success" id="inlineContactSuccess" style="display: none;">
-                <div class="contact-success-icon">✓</div>
-                <h3 class="contact-success-title">Message Sent!</h3>
-                <p class="contact-success-message">
-                    Thank you for reaching out. We'll review your request and get back to you within 24 hours.
-                </p>
-            </div>
-
-            <div class="contact-section-benefits">
-                <div class="benefit-item">
-                    <span class="benefit-icon">🎁</span>
-                    <span class="benefit-text">3 Months Free</span>
-                </div>
-                <div class="benefit-item">
-                    <span class="benefit-icon">⚡</span>
-                    <span class="benefit-text">Priority Onboarding</span>
-                </div>
-                <div class="benefit-item">
-                    <span class="benefit-icon">💬</span>
-                    <span class="benefit-text">Direct Founder Access</span>
+                <div class="contact-section-success" id="inlineContactSuccess" style="display: none;">
+                    <div class="contact-success-icon">✓</div>
+                    <h3 class="contact-success-title">Message Sent!</h3>
+                    <p class="contact-success-message">
+                        Thank you for reaching out. We'll review your request and get back to you within 24 hours.
+                    </p>
                 </div>
             </div>
         </div>
@@ -5783,121 +5494,6 @@
             if (loginSuperadmin) loginSuperadmin.addEventListener('click', () => handleDemoLogin('superadmin'));
             if (loginAdmin) loginAdmin.addEventListener('click', () => handleDemoLogin('admin'));
             if (loginAM) loginAM.addEventListener('click', () => handleDemoLogin('am'));
-        })();
-
-        // Contact Form Modal Functionality
-        (function initContactModal() {
-            const modal = document.getElementById('contactModal');
-            if (!modal) return;
-
-            const closeBtn = document.getElementById('closeContactModal');
-            const form = document.getElementById('contactForm');
-            const submitBtn = document.getElementById('contactSubmitBtn');
-            const modalContent = modal.querySelector('.contact-modal');
-
-            // Function to open contact modal
-            window.openContactModal = function() {
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                // Reset form if it was in success mode
-                if (modalContent) modalContent.classList.remove('success-mode');
-                if (form) form.reset();
-            };
-
-            // Close modal
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    modal.classList.remove('active');
-                    document.body.style.overflow = '';
-                });
-            }
-
-            // Close on overlay click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
-
-            // Close on Escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('active')) {
-                    modal.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
-
-            // Handle form submission
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const btnText = submitBtn.querySelector('.btn-text');
-                const originalText = btnText.textContent;
-
-                // Show loading state
-                submitBtn.disabled = true;
-                btnText.innerHTML = '<span class="spinner"></span> Submitting...';
-
-                // Collect form data
-                const formData = {
-                    name: document.getElementById('contactName').value,
-                    email: document.getElementById('contactEmail').value,
-                    company: document.getElementById('contactCompany').value,
-                    company_size: document.getElementById('contactSize').value,
-                    position: document.getElementById('contactPosition').value,
-                    inquiry: document.getElementById('contactInquiry').value,
-                    submitted_at: new Date().toISOString(),
-                    source: 'landing_page_contact_form'
-                };
-
-                try {
-                    // Try to send to backend API
-                    const response = await fetch('/api/v1/leads/contact', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formData)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('API error');
-                    }
-                } catch (error) {
-                    // If API fails, store locally (fallback)
-                    console.log('Storing contact form locally:', formData);
-                    const existingLeads = JSON.parse(localStorage.getItem('stratum_leads') || '[]');
-                    existingLeads.push(formData);
-                    localStorage.setItem('stratum_leads', JSON.stringify(existingLeads));
-                }
-
-                // Show success state
-                setTimeout(() => {
-                    modalContent.classList.add('success-mode');
-                    submitBtn.disabled = false;
-                    btnText.textContent = originalText;
-
-                    // Auto-close after 3 seconds
-                    setTimeout(() => {
-                        modal.classList.remove('active');
-                        document.body.style.overflow = '';
-                        // Reset after animation completes
-                        setTimeout(() => {
-                            modalContent.classList.remove('success-mode');
-                            form.reset();
-                        }, 300);
-                    }, 3000);
-                }, 1000);
-            });
-
-            // Wire up all CTA buttons to open contact modal
-            document.querySelectorAll('[data-contact-trigger]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.openContactModal();
-                });
-            });
         })();
 
         // Global function to open Early Access modal
