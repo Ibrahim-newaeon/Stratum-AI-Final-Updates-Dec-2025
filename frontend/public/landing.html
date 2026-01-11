@@ -4836,10 +4836,6 @@
                     <span>🚀</span> LAUNCHING SOON
                 </div>
                 <h2 class="launch-title">Be First to Access Stratum AI</h2>
-                <p class="launch-subtitle">
-                    Subscribe now to secure your spot in our exclusive early access program.
-                    <strong>First 100 subscribers get 3 months free.</strong>
-                </p>
 
                 <div class="countdown" id="launchCountdown">
                     <div class="countdown-item">
@@ -5786,11 +5782,17 @@
                 });
             }
 
-            // Auto-open Early Access modal after 7 seconds (only once per session)
+        })();
+
+        // Auto-open Early Access modal after 7 seconds (only once per session)
+        (function initAutoPopup() {
             if (!sessionStorage.getItem('earlyAccessShown')) {
                 setTimeout(() => {
-                    if (!modal.classList.contains('active')) {
-                        window.openEarlyAccessModal();
+                    const modal = document.getElementById('earlyAccessModal');
+                    if (modal && !modal.classList.contains('active')) {
+                        if (window.openEarlyAccessModal) {
+                            window.openEarlyAccessModal();
+                        }
                         sessionStorage.setItem('earlyAccessShown', 'true');
                     }
                 }, 7000);
