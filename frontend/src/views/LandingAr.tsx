@@ -1,13 +1,13 @@
 /**
- * Landing Page
- * Renders the static landing page HTML in a full-page iframe
+ * Arabic Landing Page
+ * Renders the static Arabic landing page HTML in a full-page iframe
  */
 
-export default function Landing() {
+export default function LandingAr() {
   return (
     <iframe
-      src="/landing.html"
-      title="Stratum AI - Revenue Intelligence + Trust Layer"
+      src="/landing-ar.html"
+      title="Stratum AI - ذكاء الإيرادات + طبقة الثقة"
       style={{
         position: 'fixed',
         top: 0,
