@@ -1,10 +1,17 @@
-# Claude Session Memory - January 11, 2026
+# Claude Session Memory - January 12, 2026
 
 ## Current State
 
 ### What Was Completed
 
-1. **Mobile Popup Enhancement** - DONE
+1. **CI/CD Pipeline** - DONE (January 12, 2026)
+   - Created `.github/workflows/ci.yml` - Main CI for backend & frontend
+   - Created `.github/workflows/docker.yml` - Docker build & push
+   - Created `.github/dependabot.yml` - Automated dependency updates
+   - Created `.github/pull_request_template.md` - PR template
+   - Created `frontend/nginx.conf` - Production nginx config (was missing)
+
+2. **Mobile Popup Enhancement** - DONE
    - Integrated new popup design from `pop.html` into `landing.html`
    - Features: countdown timer, "Only 22 spots" banner, benefits section, auto-popup after 7s
    - Mobile responsive breakpoints at 900px, 600px, 400px
@@ -93,3 +100,42 @@ curl -s -X POST "http://localhost:8000/api/v1/auth/login" -H "Content-Type: appl
 # Re-seed demo data if needed (run inside Docker!)
 docker exec stratum_api python scripts/seed_demo_data.py
 ```
+
+---
+
+## CI/CD Setup
+
+### GitHub Branch Protection (Recommended)
+
+Configure these settings in GitHub repo settings → Branches → Add rule for `main`:
+
+1. **Required status checks:**
+   - `Backend CI`
+   - `Frontend CI`
+   - `Build Backend`
+   - `Build Frontend`
+
+2. **Additional settings:**
+   - [x] Require pull request before merging
+   - [x] Require approvals (1 minimum)
+   - [x] Dismiss stale PR approvals when new commits pushed
+   - [x] Require conversation resolution before merging
+   - [x] Do not allow bypassing the above settings
+
+### CI/CD Files Created
+
+| File | Purpose |
+|------|---------|
+| `.github/workflows/ci.yml` | Lint, type-check, test for backend/frontend |
+| `.github/workflows/docker.yml` | Build & push Docker images to GHCR |
+| `.github/dependabot.yml` | Auto-update dependencies weekly |
+| `.github/pull_request_template.md` | Consistent PR descriptions |
+| `frontend/nginx.conf` | Production nginx for SPA |
+
+### CI Features
+
+- **Backend:** Ruff lint, Black format, isort, mypy, pytest (unit + integration)
+- **Frontend:** ESLint, TypeScript check, Vitest, Vite build
+- **E2E:** Playwright tests on PRs
+- **Security:** Trivy vulnerability scanning
+- **Docker:** Build verification, compose integration test
