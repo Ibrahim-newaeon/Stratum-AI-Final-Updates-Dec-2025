@@ -4,7 +4,18 @@
 
 ### What Was Completed
 
-1. **CI/CD Pipeline** - DONE (January 12, 2026)
+1. **Sentry Monitoring** - DONE (January 12, 2026)
+   - Backend: Enhanced Sentry integration in `app/main.py` with error capture
+   - Frontend: Added `@sentry/react`, created `src/lib/sentry.ts`, ErrorBoundary in `main.tsx`
+   - Environment variables: `SENTRY_DSN` (backend), `VITE_SENTRY_DSN` (frontend)
+   - Created `frontend/.env.example` with all frontend env vars
+
+2. **Test Coverage** - DONE (January 12, 2026)
+   - Backend: `.coveragerc` with 70% threshold, pytest-cov integration
+   - Frontend: vitest coverage with v8 provider, 60% threshold
+   - CI: Coverage artifacts uploaded, Codecov integration
+
+3. **CI/CD Pipeline** - DONE (January 12, 2026)
    - Created `.github/workflows/ci.yml` - Main CI for backend & frontend
    - Created `.github/workflows/docker.yml` - Docker build & push
    - Created `.github/dependabot.yml` - Automated dependency updates

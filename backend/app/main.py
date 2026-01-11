@@ -49,14 +49,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         debug=settings.debug,
     )
 
-    # Initialize Sentry (production only)
-    if settings.sentry_dsn and settings.is_production:
+    # Initialize Sentry for error tracking
+    if settings.sentry_dsn:
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.app_env,
-            traces_sample_rate=0.1,
+            release=f"stratum-backend@1.0.0",
+            # Performance monitoring
+            traces_sample_rate=0.1 if settings.is_production else 1.0,
+            # Profile sampling for performance insights
+            profiles_sample_rate=0.1 if settings.is_production else 0.0,
+            # Capture HTTP headers and request body
+            send_default_pii=False,
+            # Additional integrations
+            integrations=[],
+            # Filter out health check endpoints from traces
+            traces_sampler=lambda ctx: 0.0 if ctx.get("wsgi_environ", {}).get("PATH_INFO", "").startswith("/health") else None,
         )
-        logger.info("sentry_initialized")
+        logger.info("sentry_initialized", environment=settings.app_env)
 
     # Verify database connection
     db_health = await check_database_health()
@@ -170,6 +180,18 @@ def create_application() -> FastAPI:
             path=request.url.path,
             method=request.method,
         )
+
+        # Capture exception in Sentry
+        if settings.sentry_dsn:
+            with sentry_sdk.push_scope() as scope:
+                scope.set_tag("path", request.url.path)
+                scope.set_tag("method", request.method)
+                scope.set_context("request", {
+                    "url": str(request.url),
+                    "method": request.method,
+                    "headers": dict(request.headers),
+                })
+                sentry_sdk.capture_exception(exc)
 
         if settings.is_development:
             import traceback
