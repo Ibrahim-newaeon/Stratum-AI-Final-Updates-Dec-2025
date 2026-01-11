@@ -47,10 +47,11 @@ export default function Login() {
   }
 
   const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'user') => {
+    // Demo account credentials
     const credentials = {
-      superadmin: { email: 'superadmin@stratum.ai', password: 'admin123' },
-      admin: { email: 'admin@company.com', password: 'admin123' },
-      user: { email: 'user@company.com', password: 'user123' },
+      superadmin: { email: 'superadmin@stratum.ai', password: 'Admin123!' },
+      admin: { email: 'demo@stratum.ai', password: 'demo1234' },
+      user: { email: 'demo@stratum.ai', password: 'demo1234' },
     }
 
     const { email, password } = credentials[role]
