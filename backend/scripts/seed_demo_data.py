@@ -13,7 +13,6 @@ Or from the backend folder:
 """
 
 import asyncio
-import hashlib
 import random
 import sys
 from datetime import datetime, timezone, timedelta
@@ -52,7 +51,7 @@ from app.models.onboarding import (
     AutomationMode,
     PrimaryKPI,
 )
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, hash_pii_for_lookup, encrypt_pii
 
 
 # Demo campaigns data - realistic ad campaigns
@@ -209,12 +208,12 @@ async def seed_demo_data():
 
             print("\n[2/6] Creating demo user...")
             demo_email = "demo@stratum.ai"
-            email_hash = hashlib.sha256(demo_email.lower().encode()).hexdigest()
+            email_hash = hash_pii_for_lookup(demo_email.lower())
             user = User(
-                email=demo_email,
+                email=encrypt_pii(demo_email.lower()),
                 email_hash=email_hash,
-                password_hash=get_password_hash("demo123"),
-                full_name="Demo User",
+                password_hash=get_password_hash("demo1234"),
+                full_name=encrypt_pii("Demo User"),
                 role=UserRole.ADMIN,
                 tenant_id=tenant.id,
                 is_verified=True,
@@ -222,7 +221,7 @@ async def seed_demo_data():
             )
             db.add(user)
             await db.flush()
-            print(f"      Created user: {user.email} (password: demo123)")
+            print(f"      Created user: {demo_email} (password: demo1234)")
 
             print("\n[3/6] Creating onboarding record...")
             onboarding = TenantOnboarding(
@@ -339,7 +338,7 @@ async def seed_demo_data():
             print("=" * 60)
             print("\nLogin credentials:")
             print("  Email:    demo@stratum.ai")
-            print("  Password: demo123")
+            print("  Password: demo1234")
             print("\nDashboard metrics summary:")
 
             total_spend = sum(c["spend_cents"] for c in DEMO_CAMPAIGNS) / 100

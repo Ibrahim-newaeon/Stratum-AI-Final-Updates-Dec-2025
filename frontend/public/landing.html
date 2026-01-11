@@ -3337,362 +3337,519 @@
             margin: 0 auto;
         }
 
-        /* Early Access Modal Styles */
-        .early-access-modal-overlay {
+        /* Early Access Popup Styles (from pop.html) */
+        .popup-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(10, 10, 20, 0.95);
-            backdrop-filter: blur(12px);
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 28px 18px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
         }
 
-        .early-access-modal-overlay.active {
+        .popup-overlay.active {
             opacity: 1;
             visibility: visible;
         }
 
-        .early-access-modal {
-            background: linear-gradient(180deg, #151528 0%, #0d0d1a 100%);
-            border-radius: 20px;
-            padding: 2.5rem 3rem 3rem;
-            max-width: 480px;
-            width: 90%;
+        .popup-modal {
             position: relative;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            box-shadow: 0 0 80px rgba(99, 102, 241, 0.15),
-                        0 0 40px rgba(139, 92, 246, 0.1),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            transform: scale(0.9) translateY(20px);
+            width: min(1120px, 100%);
+            border-radius: 26px;
+            border: 2px solid rgba(190, 120, 255, 0.75);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+            overflow: hidden;
+            background:
+                radial-gradient(900px 520px at 50% 0%, rgba(165, 107, 255, 0.22), transparent 60%),
+                radial-gradient(900px 520px at 10% 60%, rgba(255, 90, 166, 0.10), transparent 62%),
+                radial-gradient(900px 520px at 90% 60%, rgba(76, 121, 255, 0.12), transparent 62%),
+                rgba(20, 18, 38, 0.62);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            padding: 42px 50px 38px;
+            transform: scale(0.95) translateY(20px);
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .early-access-modal-overlay.active .early-access-modal {
+        .popup-overlay.active .popup-modal {
             transform: scale(1) translateY(0);
         }
 
-        .early-access-modal-close {
+        .popup-modal::after {
+            content: "";
             position: absolute;
-            top: 1rem;
-            right: 1rem;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: none;
-            background: rgba(255, 255, 255, 0.05);
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 1.25rem;
+            inset: -2px;
+            border-radius: inherit;
+            pointer-events: none;
+            background:
+                radial-gradient(800px 300px at 50% 12%, rgba(255, 255, 255, 0.12), transparent 60%),
+                radial-gradient(900px 500px at 50% 120%, rgba(165, 107, 255, 0.10), transparent 65%);
+            mix-blend-mode: screen;
+            opacity: 0.35;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.85);
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+
+        .popup-close:hover {
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .popup-content {
+            position: relative;
+            z-index: 1;
+            max-width: 880px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .popup-badge {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            font-size: 12px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: linear-gradient(90deg, rgba(76, 121, 255, 0.85), rgba(255, 90, 166, 0.85));
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            color: white;
+        }
+
+        .popup-badge-dot {
+            width: 18px;
+            height: 18px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 12px;
             line-height: 1;
         }
 
-        .early-access-modal-close:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .popup-title {
+            margin: 18px 0 10px;
+            font-size: clamp(34px, 4vw, 52px);
+            line-height: 1.06;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            text-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
             color: white;
         }
 
-        .early-access-content {
+        .popup-subtitle {
+            margin: 0 auto;
+            max-width: 720px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .popup-subtitle strong {
+            color: white;
+        }
+
+        .popup-precopy {
+            margin: 16px auto 14px;
+            max-width: 680px;
+            line-height: 1.55;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 16px;
+        }
+
+        .popup-highlight {
+            color: rgba(90, 255, 220, 0.95);
+            font-weight: 800;
+        }
+
+        .popup-spots {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0 20px;
+        }
+
+        .popup-spots-pill {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            padding: 14px 18px;
+            min-width: min(560px, 92vw);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 178, 74, 0.28);
+            background: linear-gradient(180deg, rgba(255, 178, 74, 0.12), rgba(255, 178, 74, 0.06));
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+            color: rgba(255, 194, 120, 0.95);
+            font-weight: 900;
+            letter-spacing: -0.01em;
+        }
+
+        .popup-flame {
+            filter: saturate(1.1);
+        }
+
+        .popup-spots-text {
+            color: rgba(255, 178, 74, 0.98);
+            font-size: 16px;
+        }
+
+        .popup-countdown {
+            display: flex;
+            justify-content: center;
+            gap: 34px;
+            margin: 18px 0 22px;
+            flex-wrap: wrap;
+        }
+
+        .popup-timebox {
+            min-width: 92px;
             text-align: center;
         }
 
-        .early-access-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(99, 102, 241, 0.15));
-            border: 1px solid rgba(139, 92, 246, 0.4);
-            padding: 0.5rem 1.25rem;
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #c4b5fd;
-            letter-spacing: 0.1em;
-            margin-bottom: 1.75rem;
+        .popup-num {
+            font-weight: 900;
+            font-size: 34px;
+            letter-spacing: -0.01em;
+            color: rgba(170, 120, 255, 0.95);
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .popup-lbl {
+            margin-top: 6px;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: rgba(255, 255, 255, 0.58);
             text-transform: uppercase;
         }
 
-        .early-access-badge span {
-            font-size: 0.9rem;
-        }
-
-        .early-access-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.85rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            color: #ffffff;
-            letter-spacing: -0.02em;
-        }
-
-        .early-access-subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.05rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            max-width: 420px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .early-access-subtitle strong {
-            color: #22d3ee;
-            font-weight: 600;
-        }
-
-        .early-access-countdown {
+        .popup-form {
             display: flex;
             justify-content: center;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
+            gap: 16px;
+            margin: 8px 0 10px;
+            flex-wrap: wrap;
         }
 
-        .countdown-box {
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 12px;
-            padding: 0.875rem 1rem;
-            min-width: 68px;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .countdown-num {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.2;
-        }
-
-        .countdown-box .countdown-label {
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.5);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-top: 0.25rem;
-            font-weight: 500;
-        }
-
-        .early-access-form {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.875rem;
-        }
-
-        .early-access-input {
-            flex: 1;
-            padding: 0.875rem 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+        .popup-input {
+            width: min(420px, 92vw);
+            height: 56px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.06);
             color: white;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .early-access-input::placeholder {
-            color: rgba(255, 255, 255, 0.35);
-        }
-
-        .early-access-input:focus {
+            padding: 0 18px;
             outline: none;
-            border-color: rgba(139, 92, 246, 0.5);
-            background: rgba(139, 92, 246, 0.05);
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+            font-size: 15px;
         }
 
-        .early-access-btn {
-            padding: 0.875rem 1.5rem;
-            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%);
-            border: none;
-            border-radius: 10px;
+        .popup-input::placeholder {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .popup-input:focus {
+            border-color: rgba(165, 107, 255, 0.5);
+            background: rgba(165, 107, 255, 0.08);
+        }
+
+        .popup-btn {
+            height: 56px;
+            padding: 0 22px;
+            border-radius: 14px;
+            border: 0;
             color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-weight: 900;
+            letter-spacing: 0.01em;
             cursor: pointer;
-            transition: all 0.3s ease;
+            background: linear-gradient(90deg, rgba(76, 121, 255, 0.95), rgba(255, 90, 166, 0.95));
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            transition: transform 0.08s ease, filter 0.15s ease;
             white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+            font-size: 15px;
         }
 
-        .early-access-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        .popup-btn:hover {
+            filter: brightness(1.05);
         }
 
-        .early-access-btn:disabled {
+        .popup-btn:active {
+            transform: translateY(1px) scale(0.99);
+        }
+
+        .popup-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .early-access-note {
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.5);
-            margin-top: 1.5rem;
+        .popup-fineprint {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12.5px;
         }
 
-        .spots-remaining-badge {
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+        .popup-benefits {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .popup-benefit {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .popup-benefit-icon {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
             border-radius: 12px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 2rem;
-            display: inline-block;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 18px;
         }
 
-        .spots-remaining-badge span {
-            color: var(--accent-orange);
-            font-weight: 700;
-            font-size: 1rem;
+        .popup-benefit-txt {
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.90);
+            font-size: 14px;
         }
 
-        .spots-remaining-badge #modalSpotsRemaining {
-            font-size: 1.1rem;
-        }
-
-        .early-access-cta-buttons {
-            display: flex;
+        .popup-success {
+            display: none;
             flex-direction: column;
-            gap: 1rem;
             align-items: center;
-        }
-
-        .early-access-form {
-            display: flex;
-            gap: 0.75rem;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .early-access-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 1.5rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .early-access-demo-btn {
-            padding: 0.875rem 1.5rem;
-        }
-
-        .early-access-benefits {
-            display: flex;
             justify-content: center;
-            gap: 1.25rem;
-            flex-wrap: wrap;
-            padding-top: 1.25rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .early-benefit {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .early-benefit-icon {
-            font-size: 0.9rem;
-        }
-
-        .early-access-success {
-            display: none;
             text-align: center;
-            padding: 2rem 0;
-        }
-
-        .early-access-modal.success-mode .early-access-content {
-            display: none;
-        }
-
-        .early-access-modal.success-mode .early-access-success {
-            display: block;
+            padding: 3rem 0;
+            min-height: 300px;
             animation: fadeInUp 0.5s ease forwards;
         }
 
-        .early-access-success .success-icon {
-            width: 64px;
-            height: 64px;
+        .popup-success-icon {
+            width: 80px;
+            height: 80px;
             background: linear-gradient(135deg, var(--accent-green), #059669);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
-            font-size: 2rem;
+            font-size: 2.5rem;
             color: white;
             animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .early-access-success h3 {
+        .popup-success h3 {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
             color: white;
         }
 
-        .early-access-success p {
-            color: var(--text-secondary);
+        .popup-success p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        @media (max-width: 900px) {
+            .popup-overlay {
+                padding: 20px 12px;
+            }
+
+            .popup-modal {
+                padding: 34px 20px 26px;
+                border-radius: 20px;
+            }
+
+            .popup-countdown {
+                gap: 18px;
+            }
+
+            .popup-benefits {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .popup-timebox {
+                min-width: 70px;
+            }
+
+            .popup-spots-pill {
+                min-width: auto;
+                width: 100%;
+                justify-content: center;
+                padding: 12px 14px;
+            }
+
+            .popup-subtitle {
+                font-size: 14px;
+            }
+
+            .popup-precopy {
+                font-size: 14px;
+            }
         }
 
         @media (max-width: 600px) {
-            .early-access-modal {
-                padding: 2rem 1.5rem;
-                margin: 0.5rem;
+            .popup-overlay {
+                padding: 12px 8px;
             }
 
-            .early-access-title {
+            .popup-modal {
+                padding: 28px 16px 22px;
+                border-radius: 16px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .popup-close {
+                width: 36px;
+                height: 36px;
+                top: 12px;
+                right: 12px;
+            }
+
+            .popup-badge {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+
+            .popup-title {
+                font-size: 1.5rem;
+                margin: 14px 0 8px;
+            }
+
+            .popup-subtitle {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+            .popup-precopy {
+                font-size: 13px;
+                margin: 12px auto 10px;
+            }
+
+            .popup-spots-pill {
+                padding: 10px 12px;
+                font-size: 13px;
+                flex-wrap: wrap;
+            }
+
+            .popup-countdown {
+                gap: 12px;
+                margin: 14px 0 18px;
+            }
+
+            .popup-timebox {
+                min-width: 60px;
+            }
+
+            .popup-num {
                 font-size: 1.5rem;
             }
 
-            .early-access-countdown {
-                gap: 0.5rem;
+            .popup-lbl {
+                font-size: 9px;
             }
 
-            .countdown-box {
-                padding: 0.75rem 0.5rem;
-                min-width: 55px;
+            .popup-form {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                margin: 8px 0;
             }
 
-            .countdown-num {
+            .popup-input {
+                width: 100%;
+                height: 50px;
+                font-size: 14px;
+            }
+
+            .popup-btn {
+                width: 100%;
+                height: 50px;
+                font-size: 14px;
+            }
+
+            .popup-fineprint {
+                font-size: 11px;
+            }
+
+            .popup-benefits {
+                margin-top: 18px;
+                gap: 10px;
+            }
+
+            .popup-benefit {
+                padding: 12px 14px;
+            }
+
+            .popup-benefit-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+
+            .popup-benefit-txt {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .popup-modal {
+                padding: 24px 12px 18px;
+            }
+
+            .popup-title {
                 font-size: 1.25rem;
             }
 
-            .early-access-form {
-                flex-direction: column;
+            .popup-countdown {
+                gap: 8px;
             }
 
-            .early-access-benefits {
-                flex-direction: column;
-                align-items: center;
-                gap: 0.75rem;
+            .popup-timebox {
+                min-width: 50px;
+            }
+
+            .popup-num {
+                font-size: 1.25rem;
+            }
+
+            .popup-spots-pill {
+                font-size: 12px;
             }
         }
     </style>
@@ -3774,43 +3931,84 @@
         </div>
     </div>
 
-    <!-- Early Access Modal -->
-    <div class="early-access-modal-overlay" id="earlyAccessModal">
-        <div class="early-access-modal">
-            <button class="early-access-modal-close" id="closeEarlyAccessModal">&times;</button>
+    <!-- Early Access Modal (pop.html design) -->
+    <div class="popup-overlay" id="earlyAccessModal">
+        <section class="popup-modal">
+            <button class="popup-close" id="closeEarlyAccessModal">✕</button>
 
-            <div class="early-access-content">
-                <h2 class="early-access-title">Don't Wait—Every Day Costs You Money</h2>
-                <p class="early-access-subtitle">
-                    <strong>Limited spots available.</strong> Join 150+ growth teams who stopped guessing and started knowing their true profit.
+            <div class="popup-content" id="popupContent">
+                <div class="popup-badge">
+                    <span class="popup-badge-dot">🚀</span>
+                    <span>Launching Soon</span>
+                </div>
+
+                <h1 class="popup-title">Be First to Access Stratum AI</h1>
+
+                <p class="popup-subtitle">
+                    Subscribe now to secure your spot in our exclusive early access program.
+                    <strong>First 100 subscribers</strong> get <strong>3 months free</strong>.
                 </p>
 
-                <div class="spots-remaining-badge">
-                    <span>🔥 Only <span id="modalSpotsRemaining">22</span> early access spots remaining</span>
+                <p class="popup-precopy">
+                    <span class="popup-highlight">Limited spots available.</span>
+                    Join 150+ growth teams who stopped guessing and started knowing their true profit.
+                </p>
+
+                <div class="popup-spots">
+                    <div class="popup-spots-pill">
+                        <span class="popup-flame">🔥</span>
+                        <span class="popup-spots-text">Only <span id="modalSpotsRemaining">22</span> early access spots remaining</span>
+                    </div>
                 </div>
 
-                <div class="early-access-cta-buttons">
-                    <form class="early-access-form" id="earlyAccessForm">
-                        <input type="email" class="early-access-input" id="earlyAccessEmail" placeholder="Enter your work email" required>
-                        <button type="submit" class="btn btn-primary early-access-btn">
-                            Claim Your Spot Now
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                    </form>
-                    <a href="/signup" class="btn btn-secondary early-access-demo-btn">Book a Demo Call</a>
+                <div class="popup-countdown">
+                    <div class="popup-timebox">
+                        <div class="popup-num" id="modalDays">14</div>
+                        <div class="popup-lbl">Days</div>
+                    </div>
+                    <div class="popup-timebox">
+                        <div class="popup-num" id="modalHours">08</div>
+                        <div class="popup-lbl">Hours</div>
+                    </div>
+                    <div class="popup-timebox">
+                        <div class="popup-num" id="modalMinutes">42</div>
+                        <div class="popup-lbl">Minutes</div>
+                    </div>
+                    <div class="popup-timebox">
+                        <div class="popup-num" id="modalSeconds">17</div>
+                        <div class="popup-lbl">Seconds</div>
+                    </div>
                 </div>
 
-                <p class="early-access-note">✓ No credit card required &nbsp;&nbsp; ✓ Setup in 24 hours &nbsp;&nbsp; ✓ 30-day money-back guarantee</p>
+                <form class="popup-form" id="earlyAccessForm">
+                    <input class="popup-input" id="earlyAccessEmail" type="email" placeholder="Enter your work email" required>
+                    <button class="popup-btn" type="submit">Claim Your Spot Now</button>
+                </form>
+
+                <p class="popup-fineprint">No credit card required • Be notified at launch • Cancel anytime</p>
+
+                <div class="popup-benefits">
+                    <div class="popup-benefit">
+                        <div class="popup-benefit-icon">🎁</div>
+                        <div class="popup-benefit-txt">3 Months Free</div>
+                    </div>
+                    <div class="popup-benefit">
+                        <div class="popup-benefit-icon">⚡</div>
+                        <div class="popup-benefit-txt">Priority Onboarding</div>
+                    </div>
+                    <div class="popup-benefit">
+                        <div class="popup-benefit-icon">💬</div>
+                        <div class="popup-benefit-txt">Direct Founder Access</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="early-access-success" id="earlyAccessSuccess">
-                <div class="success-icon">✓</div>
+            <div class="popup-success" id="earlyAccessSuccess">
+                <div class="popup-success-icon">✓</div>
                 <h3>You're on the list!</h3>
                 <p>We'll notify you as soon as early access opens.</p>
             </div>
-        </div>
+        </section>
     </div>
 
     <!-- Hero Section -->
@@ -5452,43 +5650,66 @@
             const loginAdmin = document.getElementById('loginAdmin');
             const loginAM = document.getElementById('loginAM');
 
-            function handleDemoLogin(role) {
-                // Store demo user info in localStorage for the React app
-                const demoUsers = {
-                    superadmin: {
-                        id: '1',
-                        email: 'superadmin@stratum.ai',
-                        name: 'Super Admin',
-                        role: 'superadmin',
-                        permissions: ['all']
-                    },
-                    admin: {
-                        id: '2',
-                        email: 'admin@company.com',
-                        name: 'Company Admin',
-                        role: 'admin',
-                        organization: 'Acme Corp',
-                        permissions: ['campaigns', 'analytics', 'users']
-                    },
-                    am: {
-                        id: '3',
-                        email: 'user@company.com',
-                        name: 'Account Manager',
-                        role: 'user',
-                        organization: 'Acme Corp',
-                        permissions: ['campaigns', 'analytics']
-                    }
+            async function handleDemoLogin(role) {
+                // Demo credentials from seed script
+                const demoCredentials = {
+                    email: 'demo@stratum.ai',
+                    password: 'demo1234'
                 };
 
-                const user = demoUsers[role];
-                localStorage.setItem('stratum_auth', JSON.stringify(user));
+                // Show loading state on button
+                const buttons = document.querySelectorAll('.demo-login-btn');
+                buttons.forEach(btn => btn.disabled = true);
 
-                // Close modal and redirect to dashboard
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
+                try {
+                    // Call the actual login API to get JWT token
+                    const response = await fetch('/api/v1/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(demoCredentials)
+                    });
 
-                // Redirect to dashboard (break out of iframe)
-                window.top.location.href = '/dashboard/overview';
+                    if (!response.ok) {
+                        throw new Error('Login failed');
+                    }
+
+                    const data = await response.json();
+
+                    // Store tokens for API client
+                    if (data.data && data.data.tokens) {
+                        localStorage.setItem('access_token', data.data.tokens.access_token);
+                        localStorage.setItem('refresh_token', data.data.tokens.refresh_token);
+                    }
+
+                    // Store user info for React auth context
+                    const userInfo = {
+                        id: data.data?.user?.id || '1',
+                        email: data.data?.user?.email || demoCredentials.email,
+                        name: data.data?.user?.full_name || 'Demo User',
+                        role: role, // Use selected role for UI purposes
+                        permissions: ['all']
+                    };
+                    localStorage.setItem('stratum_auth', JSON.stringify(userInfo));
+
+                    // Store tenant ID
+                    if (data.data?.user?.tenant_id) {
+                        localStorage.setItem('tenant_id', String(data.data.user.tenant_id));
+                    }
+
+                    // Close modal and redirect to dashboard
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+
+                    // Redirect to dashboard (break out of iframe)
+                    window.top.location.href = '/dashboard/overview';
+
+                } catch (error) {
+                    console.error('Demo login failed:', error);
+                    alert('Demo login failed. Please make sure the demo data has been seeded.');
+                    buttons.forEach(btn => btn.disabled = false);
+                }
             }
 
             if (loginSuperadmin) loginSuperadmin.addEventListener('click', () => handleDemoLogin('superadmin'));
@@ -5499,13 +5720,16 @@
         // Global function to open Early Access modal
         window.openEarlyAccessModal = function() {
             const modal = document.getElementById('earlyAccessModal');
-            const modalContent = modal ? modal.querySelector('.early-access-modal') : null;
+            const popupContent = document.getElementById('popupContent');
+            const successDiv = document.getElementById('earlyAccessSuccess');
             const form = document.getElementById('earlyAccessForm');
 
             if (modal) {
                 modal.classList.add('active');
                 document.body.style.overflow = 'hidden';
-                if (modalContent) modalContent.classList.remove('success-mode');
+                // Reset to form view
+                if (popupContent) popupContent.style.display = 'block';
+                if (successDiv) successDiv.style.display = 'none';
                 if (form) form.reset();
             }
         };
@@ -5595,7 +5819,8 @@
             const closeBtn = document.getElementById('closeEarlyAccessModal');
             const form = document.getElementById('earlyAccessForm');
             const emailInput = document.getElementById('earlyAccessEmail');
-            const modalContent = modal.querySelector('.early-access-modal');
+            const popupContent = document.getElementById('popupContent');
+            const successDiv = document.getElementById('earlyAccessSuccess');
 
             // Close modal
             if (closeBtn) {
@@ -5629,7 +5854,7 @@
                     const email = emailInput ? emailInput.value.trim() : '';
                     if (!email || !email.includes('@')) return;
 
-                    const submitBtn = form.querySelector('.early-access-btn');
+                    const submitBtn = form.querySelector('.popup-btn');
                     const originalText = submitBtn ? submitBtn.textContent : '';
 
                     // Show loading state
@@ -5661,7 +5886,8 @@
 
                     // Show success state
                     setTimeout(() => {
-                        if (modalContent) modalContent.classList.add('success-mode');
+                        if (popupContent) popupContent.style.display = 'none';
+                        if (successDiv) successDiv.style.display = 'flex';
                         if (submitBtn) {
                             submitBtn.disabled = false;
                             submitBtn.textContent = originalText;
@@ -5672,7 +5898,8 @@
                             modal.classList.remove('active');
                             document.body.style.overflow = '';
                             setTimeout(() => {
-                                if (modalContent) modalContent.classList.remove('success-mode');
+                                if (popupContent) popupContent.style.display = 'block';
+                                if (successDiv) successDiv.style.display = 'none';
                                 if (form) form.reset();
                             }, 300);
                         }, 3000);
@@ -5680,6 +5907,42 @@
                 });
             }
 
+        })();
+
+        // Popup Modal Countdown Timer
+        (function initPopupCountdown() {
+            const target = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+            const elements = {
+                days: document.getElementById('modalDays'),
+                hours: document.getElementById('modalHours'),
+                minutes: document.getElementById('modalMinutes'),
+                seconds: document.getElementById('modalSeconds')
+            };
+
+            function pad(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function tick() {
+                const now = new Date();
+                let diff = target - now;
+                if (diff < 0) diff = 0;
+
+                const totalSeconds = Math.floor(diff / 1000);
+                const days = Math.floor(totalSeconds / (24 * 3600));
+                const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                if (elements.days) elements.days.textContent = pad(days);
+                if (elements.hours) elements.hours.textContent = pad(hours);
+                if (elements.minutes) elements.minutes.textContent = pad(minutes);
+                if (elements.seconds) elements.seconds.textContent = pad(seconds);
+            }
+
+            tick();
+            setInterval(tick, 1000);
         })();
 
         // Auto-open Early Access modal after 7 seconds (only once per session)
