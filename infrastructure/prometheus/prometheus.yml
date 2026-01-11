@@ -1,0 +1,47 @@
+# =============================================================================
+# Stratum AI - Prometheus Configuration
+# =============================================================================
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Stratum API
+  - job_name: 'stratum-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['api:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'stratum-api'
+
+  # Celery Workers (if metrics exposed)
+  - job_name: 'stratum-worker'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['worker:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'stratum-worker'
+
+  # Redis Exporter (optional - requires redis_exporter container)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+
+  # PostgreSQL Exporter (optional - requires postgres_exporter container)
+  # - job_name: 'postgresql'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']

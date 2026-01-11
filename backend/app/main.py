@@ -20,6 +20,7 @@ import structlog
 
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
+from app.core.metrics import setup_metrics
 from app.core.websocket import ws_manager
 from app.db.session import async_engine, check_database_health
 from app.middleware.audit import AuditMiddleware
@@ -79,6 +80,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     await ws_manager.start()
     logger.info("websocket_manager_started")
 
+    # Note: Prometheus metrics are initialized in create_application()
+    logger.info("prometheus_metrics_ready", endpoint="/metrics")
+
     yield
 
     # Shutdown
@@ -109,6 +113,14 @@ def create_application() -> FastAPI:
         default_response_class=ORJSONResponse,
         lifespan=lifespan,
     )
+
+    # -------------------------------------------------------------------------
+    # Prometheus Metrics Instrumentation
+    # -------------------------------------------------------------------------
+    # Setup Prometheus metrics before middleware so we capture all requests
+    # This instruments the app and exposes /metrics endpoint
+    instrumentator = setup_metrics(app)
+    logger.info("prometheus_instrumentator_initialized")
 
     # -------------------------------------------------------------------------
     # Middleware (order matters - executed in reverse order)
