@@ -3343,8 +3343,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(12px);
             z-index: 10000;
             display: flex;
             align-items: center;
@@ -3360,15 +3360,16 @@
         }
 
         .early-access-modal {
-            background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
-            border-radius: 24px;
-            padding: 3rem;
-            max-width: 520px;
+            background: linear-gradient(180deg, #151528 0%, #0d0d1a 100%);
+            border-radius: 20px;
+            padding: 2.5rem 3rem 3rem;
+            max-width: 480px;
             width: 90%;
             position: relative;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
-                        0 0 100px rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 80px rgba(99, 102, 241, 0.15),
+                        0 0 40px rgba(139, 92, 246, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
             transform: scale(0.9) translateY(20px);
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -3381,13 +3382,13 @@
             position: absolute;
             top: 1rem;
             right: 1rem;
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: none;
             background: rgba(255, 255, 255, 0.05);
-            color: var(--text-secondary);
-            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 1.25rem;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
@@ -3399,8 +3400,6 @@
         .early-access-modal-close:hover {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
         }
 
         .early-access-content {
@@ -3411,117 +3410,122 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(99, 102, 241, 0.15));
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            padding: 0.5rem 1.25rem;
             border-radius: 100px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #a78bfa;
-            letter-spacing: 0.05em;
-            margin-bottom: 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #c4b5fd;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.75rem;
+            text-transform: uppercase;
         }
 
         .early-access-badge span {
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .early-access-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 2rem;
+            font-size: 1.85rem;
             font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 0.75rem;
+            color: #ffffff;
+            letter-spacing: -0.02em;
         }
 
         .early-access-subtitle {
-            color: var(--text-secondary);
-            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
             line-height: 1.6;
             margin-bottom: 2rem;
-            max-width: 400px;
+            max-width: 380px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .early-access-subtitle strong {
-            color: var(--accent-cyan);
+            color: #f472b6;
+            font-weight: 600;
         }
 
         .early-access-countdown {
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 0.75rem;
             margin-bottom: 2rem;
         }
 
         .countdown-box {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
             border-radius: 12px;
-            padding: 1rem 1.25rem;
-            min-width: 70px;
+            padding: 0.875rem 1rem;
+            min-width: 68px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .countdown-num {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            line-height: 1.2;
         }
 
         .countdown-box .countdown-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
             margin-top: 0.25rem;
+            font-weight: 500;
         }
 
         .early-access-form {
             display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: 0.5rem;
+            margin-bottom: 0.875rem;
         }
 
         .early-access-input {
             flex: 1;
-            padding: 1rem 1.25rem;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 0.875rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
         }
 
         .early-access-input::placeholder {
-            color: var(--text-muted);
+            color: rgba(255, 255, 255, 0.35);
         }
 
         .early-access-input:focus {
             outline: none;
-            border-color: var(--accent-purple);
+            border-color: rgba(139, 92, 246, 0.5);
             background: rgba(139, 92, 246, 0.05);
         }
 
         .early-access-btn {
-            padding: 1rem 1.5rem;
-            background: var(--gradient-primary);
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s ease;
             white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
         }
 
         .early-access-btn:hover {
@@ -3529,29 +3533,37 @@
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
         }
 
+        .early-access-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .early-access-note {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 2rem;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 1.75rem;
         }
 
         .early-access-benefits {
             display: flex;
             justify-content: center;
-            gap: 1.5rem;
+            gap: 1.25rem;
             flex-wrap: wrap;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .early-benefit {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .early-benefit-icon {
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .early-access-success {
@@ -3653,7 +3665,7 @@
                 <li><a href="#intelligence" data-section="intelligence">Intelligence</a></li>
                 <li><a href="#integrations" data-section="integrations">Integrations</a></li>
                 <li><a href="#roi" data-section="roi">ROI</a></li>
-                <li><a href="#contact" data-section="contact" id="contactUsNav">Contact Us</a></li>
+                <li><a href="#contact" data-section="contact" onclick="handleContactUsClick(event)">Contact Us</a></li>
             </ul>
             <div class="nav-actions">
                 <a href="/signup" class="nav-auth-btn">Login / Sign Up</a>
@@ -5740,27 +5752,22 @@
         })();
 
         // Contact Us Nav Link - Scroll and open contact modal
-        (function initContactUsNav() {
-            const contactUsNav = document.getElementById('contactUsNav');
-            if (contactUsNav) {
-                contactUsNav.addEventListener('click', (e) => {
-                    e.preventDefault();
+        window.handleContactUsClick = function(e) {
+            e.preventDefault();
 
-                    // Scroll to contact section
-                    const contactSection = document.getElementById('contact');
-                    if (contactSection) {
-                        contactSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-
-                    // Open contact modal after a short delay (to let scroll complete)
-                    setTimeout(() => {
-                        if (window.openContactModal) {
-                            window.openContactModal();
-                        }
-                    }, 500);
-                });
+            // Scroll to contact section
+            const contactSection = document.getElementById('contact');
+            if (contactSection) {
+                contactSection.scrollIntoView({ behavior: 'smooth' });
             }
-        })();
+
+            // Open contact modal after a short delay (to let scroll complete)
+            setTimeout(() => {
+                if (window.openContactModal) {
+                    window.openContactModal();
+                }
+            }, 600);
+        };
     </script>
 </body>
 </html>
