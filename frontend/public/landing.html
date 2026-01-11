@@ -5639,28 +5639,55 @@
             });
         })();
 
-        // Early Access Modal Functionality
+        // Global function to open Early Access modal
+        window.openEarlyAccessModal = function() {
+            const modal = document.getElementById('earlyAccessModal');
+            const modalContent = modal ? modal.querySelector('.early-access-modal') : null;
+            const form = document.getElementById('earlyAccessForm');
+
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                if (modalContent) modalContent.classList.remove('success-mode');
+                if (form) form.reset();
+            }
+        };
+
+        // Global function to handle Contact Us click
+        window.handleContactUsClick = function(e) {
+            if (e) e.preventDefault();
+
+            // Scroll to contact section
+            const contactSection = document.getElementById('contact');
+            if (contactSection) {
+                contactSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Open contact modal after a short delay
+            setTimeout(() => {
+                if (window.openContactModal) {
+                    window.openContactModal();
+                }
+            }, 600);
+        };
+
+        // Early Access Modal Event Handlers
         (function initEarlyAccessModal() {
             const modal = document.getElementById('earlyAccessModal');
+            if (!modal) return;
+
             const closeBtn = document.getElementById('closeEarlyAccessModal');
             const form = document.getElementById('earlyAccessForm');
             const emailInput = document.getElementById('earlyAccessEmail');
             const modalContent = modal.querySelector('.early-access-modal');
 
-            // Function to open early access modal (called from buttons)
-            window.openEarlyAccessModal = function() {
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                // Reset form if it was in success mode
-                modalContent.classList.remove('success-mode');
-                if (form) form.reset();
-            };
-
             // Close modal
-            closeBtn.addEventListener('click', () => {
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            });
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            }
 
             // Close on overlay click
             modal.addEventListener('click', (e) => {
@@ -5679,70 +5706,67 @@
             });
 
             // Handle early access form submission
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
 
-                const email = emailInput.value.trim();
-                if (!email || !email.includes('@')) return;
+                    const email = emailInput ? emailInput.value.trim() : '';
+                    if (!email || !email.includes('@')) return;
 
-                const submitBtn = form.querySelector('.early-access-btn');
-                const originalText = submitBtn.textContent;
+                    const submitBtn = form.querySelector('.early-access-btn');
+                    const originalText = submitBtn ? submitBtn.textContent : '';
 
-                // Show loading state
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Submitting...';
-
-                // Prepare data
-                const formData = {
-                    email: email,
-                    submitted_at: new Date().toISOString(),
-                    source: 'early_access_modal'
-                };
-
-                try {
-                    // Try to send to backend API
-                    const response = await fetch('/api/v1/leads/early-access', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formData)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('API error');
+                    // Show loading state
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Submitting...';
                     }
-                } catch (error) {
-                    // If API fails, store locally (fallback)
-                    console.log('Storing early access signup locally:', formData);
-                    const existingSignups = JSON.parse(localStorage.getItem('stratum_early_access') || '[]');
-                    existingSignups.push(formData);
-                    localStorage.setItem('stratum_early_access', JSON.stringify(existingSignups));
-                }
 
-                // Show success state
-                setTimeout(() => {
-                    modalContent.classList.add('success-mode');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    // Prepare data
+                    const formData = {
+                        email: email,
+                        submitted_at: new Date().toISOString(),
+                        source: 'early_access_modal'
+                    };
 
-                    // Auto-close after 3 seconds
+                    try {
+                        const response = await fetch('/api/v1/leads/early-access', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(formData)
+                        });
+                        if (!response.ok) throw new Error('API error');
+                    } catch (error) {
+                        console.log('Storing early access signup locally:', formData);
+                        const existingSignups = JSON.parse(localStorage.getItem('stratum_early_access') || '[]');
+                        existingSignups.push(formData);
+                        localStorage.setItem('stratum_early_access', JSON.stringify(existingSignups));
+                    }
+
+                    // Show success state
                     setTimeout(() => {
-                        modal.classList.remove('active');
-                        document.body.style.overflow = '';
-                        // Reset after animation completes
+                        if (modalContent) modalContent.classList.add('success-mode');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = originalText;
+                        }
+
+                        // Auto-close after 3 seconds
                         setTimeout(() => {
-                            modalContent.classList.remove('success-mode');
-                            form.reset();
-                        }, 300);
-                    }, 3000);
-                }, 800);
-            });
+                            modal.classList.remove('active');
+                            document.body.style.overflow = '';
+                            setTimeout(() => {
+                                if (modalContent) modalContent.classList.remove('success-mode');
+                                if (form) form.reset();
+                            }, 300);
+                        }, 3000);
+                    }, 800);
+                });
+            }
 
             // Auto-open Early Access modal after 7 seconds (only once per session)
             if (!sessionStorage.getItem('earlyAccessShown')) {
                 setTimeout(() => {
-                    // Only show if user hasn't interacted with the modal yet
                     if (!modal.classList.contains('active')) {
                         window.openEarlyAccessModal();
                         sessionStorage.setItem('earlyAccessShown', 'true');
@@ -5750,24 +5774,6 @@
                 }, 7000);
             }
         })();
-
-        // Contact Us Nav Link - Scroll and open contact modal
-        window.handleContactUsClick = function(e) {
-            e.preventDefault();
-
-            // Scroll to contact section
-            const contactSection = document.getElementById('contact');
-            if (contactSection) {
-                contactSection.scrollIntoView({ behavior: 'smooth' });
-            }
-
-            // Open contact modal after a short delay (to let scroll complete)
-            setTimeout(() => {
-                if (window.openContactModal) {
-                    window.openContactModal();
-                }
-            }, 600);
-        };
     </script>
 </body>
 </html>
