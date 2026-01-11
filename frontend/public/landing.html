@@ -2994,6 +2994,155 @@
             }
         }
 
+        /* Inline Contact Section Styles */
+        .contact-section {
+            padding: 6rem 2rem;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(99, 102, 241, 0.05) 100%);
+        }
+
+        .contact-section-container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(30, 30, 50, 0.8) 0%, rgba(20, 20, 35, 0.9) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .contact-section-header {
+            margin-bottom: 2rem;
+        }
+
+        .contact-section-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .contact-section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .contact-section-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-section-info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .contact-section-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0.25rem 0;
+        }
+
+        .contact-section-info strong {
+            color: var(--primary);
+        }
+
+        .contact-section-prompt {
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .contact-section-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            text-align: left;
+        }
+
+        .contact-section-submit {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .contact-section-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .contact-section-success {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .contact-section-benefits {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .contact-section-benefits .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .contact-section-benefits .benefit-icon {
+            font-size: 1.2rem;
+        }
+
+        .contact-section-benefits .benefit-text {
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .contact-section {
+                padding: 4rem 1rem;
+            }
+
+            .contact-section-container {
+                padding: 2rem 1.5rem;
+            }
+
+            .contact-section-title {
+                font-size: 1.5rem;
+            }
+
+            .contact-section-benefits {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            .contact-form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Contact Form Popup Styles */
         .contact-modal-overlay {
             position: fixed;
@@ -4853,53 +5002,6 @@
     <!-- Pricing / Launch Section -->
     <section class="pricing" id="pricing">
         <div class="pricing-container">
-            <!-- Launching Soon Banner -->
-            <div class="launch-banner reveal-scale">
-                <div class="launch-badge">
-                    <span>🚀</span> LAUNCHING SOON
-                </div>
-                <h2 class="launch-title">Be First to Access Stratum AI</h2>
-
-                <div class="countdown" id="launchCountdown">
-                    <div class="countdown-item">
-                        <div class="countdown-value" id="days">14</div>
-                        <div class="countdown-label">Days</div>
-                    </div>
-                    <div class="countdown-item">
-                        <div class="countdown-value" id="hours">08</div>
-                        <div class="countdown-label">Hours</div>
-                    </div>
-                    <div class="countdown-item">
-                        <div class="countdown-value" id="minutes">42</div>
-                        <div class="countdown-label">Minutes</div>
-                    </div>
-                    <div class="countdown-item">
-                        <div class="countdown-value" id="seconds">17</div>
-                        <div class="countdown-label">Seconds</div>
-                    </div>
-                </div>
-
-                <button type="button" class="subscribe-btn" onclick="openContactModal()" style="width: auto; padding: 1rem 2rem; margin: 0 auto;">
-                    Get Early Access →
-                </button>
-                <p class="subscribe-note">No credit card required • Be notified at launch • Cancel anytime</p>
-
-                <div class="early-benefits">
-                    <div class="benefit-item">
-                        <span class="benefit-icon">🎁</span>
-                        <span class="benefit-text">3 Months Free</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">⚡</span>
-                        <span class="benefit-text">Priority Onboarding</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">💬</span>
-                        <span class="benefit-text">Direct Founder Access</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- Pricing Plans Preview -->
             <div class="section-header reveal">
                 <div class="section-label">Pricing Preview</div>
@@ -4922,7 +5024,7 @@
                         <li>WhatsApp alerts</li>
                         <li>Email support</li>
                     </ul>
-                    <button class="btn btn-secondary" style="width: 100%;" onclick="openContactModal()">Join Waitlist</button>
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="handleContactUsClick(event)">Join Waitlist</button>
                 </div>
 
                 <!-- Scale Plan (Featured) -->
@@ -4937,7 +5039,7 @@
                         <li>Profit ROAS tracking</li>
                         <li>Priority support</li>
                     </ul>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="openContactModal()">Join Waitlist</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="handleContactUsClick(event)">Join Waitlist</button>
                 </div>
 
                 <!-- Enterprise Plan -->
@@ -4952,7 +5054,7 @@
                         <li>Dedicated CSM</li>
                         <li>SLA guarantee</li>
                     </ul>
-                    <button class="btn btn-secondary" style="width: 100%;" onclick="openContactModal()">Contact Sales</button>
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="handleContactUsClick(event)">Contact Sales</button>
                 </div>
             </div>
 
@@ -4963,6 +5065,147 @@
                 <div class="trust-badge">💳 No Card for Trial</div>
                 <div class="trust-badge">🔄 Cancel Anytime</div>
                 <div class="trust-badge">💰 30-Day Money Back</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Us Section -->
+    <section class="contact-section" id="contact">
+        <div class="contact-section-container reveal">
+            <div class="contact-section-header">
+                <div class="contact-section-logo">STRATUM AI</div>
+                <h2 class="contact-section-title">Let's build your Stratum workspace</h2>
+                <p class="contact-section-subtitle">
+                    Tell us what you're trying to achieve (documents, client management, WhatsApp/email messaging, reporting).
+                    We'll reply with the fastest setup path, estimated timeline, and the next steps.
+                </p>
+                <div class="contact-section-info">
+                    <p><strong>Typical reply time:</strong> within 24 hours</p>
+                    <p><strong>Best for:</strong> demos, onboarding, integrations, custom workflows</p>
+                </div>
+                <p class="contact-section-prompt">
+                    Send us a message and tell us what you need — we'll take it from there.
+                </p>
+            </div>
+
+            <form class="contact-section-form" id="inlineContactForm">
+                <div class="contact-form-row">
+                    <div class="contact-form-group">
+                        <label class="contact-form-label">
+                            Full Name <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="contact-form-input"
+                            name="name"
+                            placeholder="John Smith"
+                            required
+                        >
+                    </div>
+                    <div class="contact-form-group">
+                        <label class="contact-form-label">
+                            Work Email <span class="required">*</span>
+                        </label>
+                        <input
+                            type="email"
+                            class="contact-form-input"
+                            name="email"
+                            placeholder="john@company.com"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="contact-form-row">
+                    <div class="contact-form-group">
+                        <label class="contact-form-label">
+                            Company Name <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="contact-form-input"
+                            name="company"
+                            placeholder="Acme Inc."
+                            required
+                        >
+                    </div>
+                    <div class="contact-form-group">
+                        <label class="contact-form-label">
+                            Company Size <span class="required">*</span>
+                        </label>
+                        <select class="contact-form-select" name="company_size" required>
+                            <option value="" disabled selected>Select size</option>
+                            <option value="1-10">1-10 employees</option>
+                            <option value="11-50">11-50 employees</option>
+                            <option value="51-200">51-200 employees</option>
+                            <option value="201-500">201-500 employees</option>
+                            <option value="500+">500+ employees</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="contact-form-group">
+                    <label class="contact-form-label">
+                        Your Position <span class="required">*</span>
+                    </label>
+                    <select class="contact-form-select" name="position" required>
+                        <option value="" disabled selected>Select your role</option>
+                        <option value="ceo">CEO / Founder</option>
+                        <option value="cmo">CMO / VP Marketing</option>
+                        <option value="marketing_director">Marketing Director</option>
+                        <option value="growth_manager">Growth Manager</option>
+                        <option value="performance_marketing">Performance Marketing Manager</option>
+                        <option value="media_buyer">Media Buyer</option>
+                        <option value="agency_owner">Agency Owner</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="contact-form-group">
+                    <label class="contact-form-label">
+                        How can we help you?
+                    </label>
+                    <textarea
+                        class="contact-form-textarea"
+                        name="inquiry"
+                        placeholder="Tell us what you're looking to achieve — documents, client management, messaging, reporting, or anything else..."
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="contact-section-submit">
+                    <span class="btn-text">Submit</span>
+                </button>
+
+                <p class="contact-form-disclaimer">
+                    By submitting this form, you agree to be contacted about your request.
+                </p>
+                <p class="contact-form-note">
+                    🔒 Your information is secure and will never be shared.
+                </p>
+            </form>
+
+            <div class="contact-section-success" id="inlineContactSuccess" style="display: none;">
+                <div class="contact-success-icon">✓</div>
+                <h3 class="contact-success-title">Message Sent!</h3>
+                <p class="contact-success-message">
+                    Thank you for reaching out. We'll review your request and get back to you within 24 hours.
+                </p>
+            </div>
+
+            <div class="contact-section-benefits">
+                <div class="benefit-item">
+                    <span class="benefit-icon">🎁</span>
+                    <span class="benefit-text">3 Months Free</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">⚡</span>
+                    <span class="benefit-text">Priority Onboarding</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">💬</span>
+                    <span class="benefit-text">Direct Founder Access</span>
+                </div>
             </div>
         </div>
     </section>
@@ -5675,11 +5918,78 @@
         window.handleContactUsClick = function(e) {
             if (e) e.preventDefault();
 
-            // Open contact modal directly
-            if (window.openContactModal) {
-                window.openContactModal();
+            // Scroll to inline contact section
+            const contactSection = document.getElementById('contact');
+            if (contactSection) {
+                contactSection.scrollIntoView({ behavior: 'smooth' });
             }
         };
+
+        // Inline Contact Form Handler
+        (function initInlineContactForm() {
+            const form = document.getElementById('inlineContactForm');
+            const successDiv = document.getElementById('inlineContactSuccess');
+            if (!form) return;
+
+            const submitBtn = form.querySelector('.contact-section-submit');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const btnText = submitBtn.querySelector('.btn-text');
+                const originalText = btnText.textContent;
+
+                // Show loading state
+                submitBtn.disabled = true;
+                btnText.innerHTML = '<span class="spinner"></span> Submitting...';
+
+                // Collect form data
+                const formData = {
+                    name: form.querySelector('[name="name"]').value,
+                    email: form.querySelector('[name="email"]').value,
+                    company: form.querySelector('[name="company"]').value,
+                    company_size: form.querySelector('[name="company_size"]').value,
+                    position: form.querySelector('[name="position"]').value,
+                    inquiry: form.querySelector('[name="inquiry"]').value,
+                    submitted_at: new Date().toISOString(),
+                    source: 'landing_page_inline_contact'
+                };
+
+                try {
+                    // Try to send to backend API
+                    const response = await fetch('/api/v1/leads/contact', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('API error');
+                    }
+                } catch (error) {
+                    // If API fails, store locally (fallback)
+                    console.log('Storing contact form locally:', formData);
+                    const existingLeads = JSON.parse(localStorage.getItem('stratum_leads') || '[]');
+                    existingLeads.push(formData);
+                    localStorage.setItem('stratum_leads', JSON.stringify(existingLeads));
+                }
+
+                // Show success state
+                setTimeout(() => {
+                    form.style.display = 'none';
+                    successDiv.style.display = 'block';
+                    submitBtn.disabled = false;
+                    btnText.textContent = originalText;
+
+                    // Reset form after a delay
+                    setTimeout(() => {
+                        form.reset();
+                    }, 1000);
+                }, 1000);
+            });
+        })();
 
         // Early Access Modal Event Handlers
         (function initEarlyAccessModal() {
