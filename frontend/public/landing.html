@@ -3107,7 +3107,40 @@
         .contact-modal-subtitle {
             color: var(--text-muted);
             font-size: 0.95rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .contact-modal-info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-modal-info p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin: 0.25rem 0;
+        }
+
+        .contact-modal-info strong {
+            color: var(--primary);
+        }
+
+        .contact-modal-prompt {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .contact-form-disclaimer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
         }
 
         .contact-modal-body {
@@ -3731,13 +3764,18 @@
             <button class="contact-modal-close" id="closeContactModal">&times;</button>
 
             <div class="contact-modal-header">
-                <div class="contact-modal-badge">
-                    <span>🚀</span> LAUNCHING SOON
-                </div>
                 <div class="contact-modal-logo">STRATUM AI</div>
-                <h2 class="contact-modal-title">Be First to Access Stratum AI</h2>
+                <h2 class="contact-modal-title">Let's build your Stratum workspace</h2>
                 <p class="contact-modal-subtitle">
-                    Join our exclusive early access program and get priority onboarding.
+                    Tell us what you're trying to achieve (documents, client management, WhatsApp/email messaging, reporting).
+                    We'll reply with the fastest setup path, estimated timeline, and the next steps.
+                </p>
+                <div class="contact-modal-info">
+                    <p><strong>Typical reply time:</strong> within 24 hours</p>
+                    <p><strong>Best for:</strong> demos, onboarding, integrations, custom workflows</p>
+                </div>
+                <p class="contact-modal-prompt">
+                    Send us a message and tell us what you need — we'll take it from there.
                 </p>
             </div>
 
@@ -3826,18 +3864,18 @@
                             class="contact-form-textarea"
                             id="contactInquiry"
                             name="inquiry"
-                            placeholder="Tell us about your current challenges with ad attribution, budget optimization, or what you're looking to achieve..."
+                            placeholder="Tell us what you're looking to achieve — documents, client management, messaging, reporting, or anything else..."
                             rows="4"
                         ></textarea>
                     </div>
 
                     <button type="submit" class="contact-submit-btn" id="contactSubmitBtn">
-                        <span class="btn-text">Get Early Access</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
+                        <span class="btn-text">Submit</span>
                     </button>
 
+                    <p class="contact-form-disclaimer">
+                        By submitting this form, you agree to be contacted about your request.
+                    </p>
                     <p class="contact-form-note">
                         🔒 Your information is secure and will never be shared.
                     </p>
@@ -3845,25 +3883,10 @@
 
                 <div class="contact-success">
                     <div class="contact-success-icon">✓</div>
-                    <h3 class="contact-success-title">You're on the list!</h3>
+                    <h3 class="contact-success-title">Message Sent!</h3>
                     <p class="contact-success-message">
-                        Thank you for your interest. We'll be in touch soon with exclusive early access details.
+                        Thank you for reaching out. We'll review your request and get back to you within 24 hours.
                     </p>
-                </div>
-
-                <div class="contact-benefits">
-                    <div class="contact-benefit">
-                        <span class="contact-benefit-icon">🎁</span>
-                        <span>3 Months Free</span>
-                    </div>
-                    <div class="contact-benefit">
-                        <span class="contact-benefit-icon">⚡</span>
-                        <span>Priority Onboarding</span>
-                    </div>
-                    <div class="contact-benefit">
-                        <span class="contact-benefit-icon">💬</span>
-                        <span>Direct Founder Access</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -4944,29 +4967,6 @@
         </div>
     </section>
 
-    <!-- CTA / Contact Section -->
-    <section class="cta" id="contact">
-        <div class="cta-container reveal">
-            <h2>Don't Wait—Every Day Costs You Money</h2>
-            <p><strong>Limited spots available.</strong> Join 150+ growth teams who stopped guessing and started knowing their true profit.</p>
-            <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 2rem; display: inline-block;">
-                <span style="color: var(--accent-orange); font-weight: 700;">🔥 Only <span id="spotsRemaining">23</span> early access spots remaining</span>
-            </div>
-            <div class="cta-buttons">
-                <button type="button" class="btn btn-primary magnetic" onclick="openEarlyAccessModal()">
-                    Claim Your Spot Now
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
-                <a href="/signup" class="btn btn-secondary magnetic">Book a Demo Call</a>
-            </div>
-            <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
-                ✓ No credit card required &nbsp;&nbsp; ✓ Setup in 24 hours &nbsp;&nbsp; ✓ 30-day money-back guarantee
-            </p>
-        </div>
-    </section>
-
     <!-- Footer -->
     <footer>
         <div class="footer-container">
@@ -5675,18 +5675,10 @@
         window.handleContactUsClick = function(e) {
             if (e) e.preventDefault();
 
-            // Scroll to contact section
-            const contactSection = document.getElementById('contact');
-            if (contactSection) {
-                contactSection.scrollIntoView({ behavior: 'smooth' });
+            // Open contact modal directly
+            if (window.openContactModal) {
+                window.openContactModal();
             }
-
-            // Open contact modal after a short delay
-            setTimeout(() => {
-                if (window.openContactModal) {
-                    window.openContactModal();
-                }
-            }, 600);
         };
 
         // Early Access Modal Event Handlers
