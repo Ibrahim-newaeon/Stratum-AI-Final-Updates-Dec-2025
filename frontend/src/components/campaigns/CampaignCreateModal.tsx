@@ -20,8 +20,11 @@ import {
   UserPlus,
   UsersRound,
   Bookmark,
+  Settings,
 } from 'lucide-react'
 import { cn, getPlatformColor } from '@/lib/utils'
+import { useAdAccounts, Platform } from '@/api/campaignBuilder'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface CampaignCreateModalProps {
   open: boolean
@@ -61,86 +64,30 @@ const PLATFORMS = [
   },
 ]
 
-// Mock ad accounts per platform
-const MOCK_AD_ACCOUNTS: Record<string, Array<{ id: string; name: string; currency: string }>> = {
-  meta: [
-    { id: 'act_123456789', name: 'Main Business Account', currency: 'USD' },
-    { id: 'act_987654321', name: 'E-commerce Store', currency: 'USD' },
-    { id: 'act_456789123', name: 'Saudi Arabia Account', currency: 'SAR' },
-  ],
-  google: [
-    { id: '123-456-7890', name: 'Google Ads - Primary', currency: 'USD' },
-    { id: '098-765-4321', name: 'Google Ads - MENA', currency: 'AED' },
-  ],
-  tiktok: [
-    { id: 'tt_adv_12345', name: 'TikTok Business Center', currency: 'USD' },
-    { id: 'tt_adv_67890', name: 'TikTok - GCC Region', currency: 'SAR' },
-  ],
-  snapchat: [
-    { id: 'snap_org_111', name: 'Snapchat Ad Account', currency: 'USD' },
-  ],
+// Audience types for when API is available
+interface CustomAudience {
+  id: string
+  name: string
+  size: number
 }
 
-// Mock audiences per platform
-const MOCK_AUDIENCES: Record<string, {
-  custom: Array<{ id: string; name: string; size: number }>;
-  lookalike: Array<{ id: string; name: string; size: number; source: string }>;
-  saved: Array<{ id: string; name: string; description: string }>;
-}> = {
-  meta: {
-    custom: [
-      { id: 'ca_001', name: 'Website Visitors - 30 Days', size: 125000 },
-      { id: 'ca_002', name: 'Email Subscribers', size: 45000 },
-      { id: 'ca_003', name: 'App Users', size: 78000 },
-      { id: 'ca_004', name: 'Purchase History - 90 Days', size: 32000 },
-    ],
-    lookalike: [
-      { id: 'la_001', name: '1% Lookalike - Purchasers', size: 2100000, source: 'Purchase History' },
-      { id: 'la_002', name: '2% Lookalike - High Value', size: 4200000, source: 'Top 10% Customers' },
-      { id: 'la_003', name: '1% Lookalike - Subscribers', size: 1900000, source: 'Email Subscribers' },
-    ],
-    saved: [
-      { id: 'sa_001', name: 'Tech Enthusiasts 25-44', description: 'Age 25-44, Interest in Technology' },
-      { id: 'sa_002', name: 'Fashion Shoppers', description: 'Interest in Fashion, Online Shopping' },
-      { id: 'sa_003', name: 'Parents with Kids', description: 'Parents, Age 30-50, Family interests' },
-    ],
-  },
-  google: {
-    custom: [
-      { id: 'gca_001', name: 'Converters - Last 30 Days', size: 15000 },
-      { id: 'gca_002', name: 'Cart Abandoners', size: 28000 },
-    ],
-    lookalike: [
-      { id: 'gla_001', name: 'Similar to Converters', size: 1500000, source: 'Conversion List' },
-    ],
-    saved: [
-      { id: 'gsa_001', name: 'In-Market: Software', description: 'In-market for Business Software' },
-      { id: 'gsa_002', name: 'Affinity: Tech Savvy', description: 'Technology enthusiasts' },
-    ],
-  },
-  tiktok: {
-    custom: [
-      { id: 'tca_001', name: 'Video Viewers - 7 Days', size: 250000 },
-      { id: 'tca_002', name: 'Profile Visitors', size: 180000 },
-    ],
-    lookalike: [
-      { id: 'tla_001', name: 'Lookalike - Engagers', size: 3000000, source: 'Video Engagers' },
-    ],
-    saved: [
-      { id: 'tsa_001', name: 'Gen Z Shoppers', description: 'Age 18-24, Shopping interest' },
-    ],
-  },
-  snapchat: {
-    custom: [
-      { id: 'sca_001', name: 'Snap Pixel Audience', size: 95000 },
-    ],
-    lookalike: [
-      { id: 'sla_001', name: 'Lookalike - Buyers', size: 1200000, source: 'Purchasers' },
-    ],
-    saved: [
-      { id: 'ssa_001', name: 'Millennials & Gen Z', description: 'Age 18-35' },
-    ],
-  },
+interface LookalikeAudience {
+  id: string
+  name: string
+  size: number
+  source: string
+}
+
+interface SavedAudience {
+  id: string
+  name: string
+  description: string
+}
+
+interface PlatformAudiences {
+  custom: CustomAudience[]
+  lookalike: LookalikeAudience[]
+  saved: SavedAudience[]
 }
 
 const STEPS = ['platform', 'basics', 'budget', 'targeting'] as const
@@ -197,37 +144,51 @@ const initialFormData: FormData = {
 
 export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreateModalProps) {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState<Step>('platform')
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
-  const [adAccounts, setAdAccounts] = useState<Array<{ id: string; name: string; currency: string }>>([])
   const [audienceTab, setAudienceTab] = useState<'custom' | 'lookalike' | 'saved'>('custom')
+  const [platformAudiences, setPlatformAudiences] = useState<PlatformAudiences | null>(null)
 
+  const tenantId = user?.tenant_id || 0
   const currentStepIndex = STEPS.indexOf(currentStep)
   const selectedPlatform = PLATFORMS.find(p => p.id === formData.platform)
-  const platformAudiences = formData.platform ? MOCK_AUDIENCES[formData.platform] : null
 
-  // Fetch ad accounts when platform changes
+  // Fetch ad accounts from real API
+  const {
+    data: adAccounts = [],
+    isLoading: isLoadingAccounts,
+    refetch: refetchAccounts
+  } = useAdAccounts(
+    tenantId,
+    formData.platform as Platform,
+    true // enabled only
+  )
+
+  // Auto-select first account when accounts load
+  useEffect(() => {
+    if (adAccounts.length > 0 && !formData.account_id) {
+      setFormData(prev => ({
+        ...prev,
+        account_id: adAccounts[0].platform_account_id,
+        currency: adAccounts[0].currency,
+      }))
+    }
+  }, [adAccounts, formData.account_id])
+
+  // Reset account selection when platform changes
   useEffect(() => {
     if (formData.platform) {
-      setIsLoadingAccounts(true)
-      // Simulate API call
-      setTimeout(() => {
-        setAdAccounts(MOCK_AD_ACCOUNTS[formData.platform] || [])
-        setIsLoadingAccounts(false)
-        // Auto-select first account and set its currency
-        const accounts = MOCK_AD_ACCOUNTS[formData.platform] || []
-        if (accounts.length > 0) {
-          setFormData(prev => ({
-            ...prev,
-            account_id: accounts[0].id,
-            currency: accounts[0].currency,
-          }))
-        }
-      }, 500)
+      setFormData(prev => ({
+        ...prev,
+        account_id: '',
+        currency: 'USD',
+      }))
+      // Audiences would be fetched from API when endpoint is available
+      setPlatformAudiences(null)
     }
   }, [formData.platform])
 
@@ -239,7 +200,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
   }
 
   const handleAccountChange = (accountId: string) => {
-    const account = adAccounts.find(a => a.id === accountId)
+    const account = adAccounts.find(a => a.platform_account_id === accountId)
     if (account) {
       setFormData(prev => ({
         ...prev,
@@ -383,7 +344,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
     setCurrentStep('platform')
     setErrors({})
     setSubmitError(null)
-    setAdAccounts([])
+    setPlatformAudiences(null)
     onClose()
   }
 
@@ -558,6 +519,16 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">Loading accounts...</span>
                   </div>
+                ) : adAccounts.length === 0 ? (
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-dashed bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <Settings className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">No ad accounts connected</p>
+                        <p className="text-xs text-muted-foreground">Connect your {selectedPlatform?.name} account in Settings → Integrations</p>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <select
                     value={formData.account_id}
@@ -569,8 +540,8 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   >
                     <option value="">Select an ad account</option>
                     {adAccounts.map(account => (
-                      <option key={account.id} value={account.id}>
-                        {account.name} ({account.id}) - {account.currency}
+                      <option key={account.id} value={account.platform_account_id}>
+                        {account.name} ({account.platform_account_id}) - {account.currency}
                       </option>
                     ))}
                   </select>
@@ -727,149 +698,163 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
               </div>
 
               {/* Audiences Section */}
-              {platformAudiences && (
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-3">
-                    {t('campaigns.create.audiences', 'Audiences')}
-                  </label>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-3">
+                  {t('campaigns.create.audiences', 'Audiences')} <span className="text-muted-foreground font-normal">(Optional)</span>
+                </label>
 
-                  {/* Audience Tabs */}
-                  <div className="flex gap-2 mb-3">
-                    <button
-                      onClick={() => setAudienceTab('custom')}
-                      className={cn(
-                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-                        audienceTab === 'custom'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted hover:bg-muted/80'
-                      )}
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      Custom ({platformAudiences.custom.length})
-                    </button>
-                    <button
-                      onClick={() => setAudienceTab('lookalike')}
-                      className={cn(
-                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-                        audienceTab === 'lookalike'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted hover:bg-muted/80'
-                      )}
-                    >
-                      <UsersRound className="w-4 h-4" />
-                      Lookalike ({platformAudiences.lookalike.length})
-                    </button>
-                    <button
-                      onClick={() => setAudienceTab('saved')}
-                      className={cn(
-                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-                        audienceTab === 'saved'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted hover:bg-muted/80'
-                      )}
-                    >
-                      <Bookmark className="w-4 h-4" />
-                      Saved ({platformAudiences.saved.length})
-                    </button>
+                {platformAudiences ? (
+                  <>
+                    {/* Audience Tabs */}
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        onClick={() => setAudienceTab('custom')}
+                        className={cn(
+                          'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                          audienceTab === 'custom'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80'
+                        )}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Custom ({platformAudiences.custom.length})
+                      </button>
+                      <button
+                        onClick={() => setAudienceTab('lookalike')}
+                        className={cn(
+                          'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                          audienceTab === 'lookalike'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80'
+                        )}
+                      >
+                        <UsersRound className="w-4 h-4" />
+                        Lookalike ({platformAudiences.lookalike.length})
+                      </button>
+                      <button
+                        onClick={() => setAudienceTab('saved')}
+                        className={cn(
+                          'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                          audienceTab === 'saved'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80'
+                        )}
+                      >
+                        <Bookmark className="w-4 h-4" />
+                        Saved ({platformAudiences.saved.length})
+                      </button>
+                    </div>
+
+                    {/* Custom Audiences */}
+                    {audienceTab === 'custom' && (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {platformAudiences.custom.map(audience => (
+                          <label
+                            key={audience.id}
+                            className={cn(
+                              'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                              formData.custom_audiences.includes(audience.id)
+                                ? 'border-primary bg-primary/5'
+                                : 'border-transparent bg-muted/50 hover:bg-muted'
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={formData.custom_audiences.includes(audience.id)}
+                                onChange={() => toggleAudience('custom_audiences', audience.id)}
+                                className="rounded border-muted-foreground"
+                              />
+                              <span className="font-medium text-sm">{audience.name}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)} users</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Lookalike Audiences */}
+                    {audienceTab === 'lookalike' && (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {platformAudiences.lookalike.map(audience => (
+                          <label
+                            key={audience.id}
+                            className={cn(
+                              'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                              formData.lookalike_audiences.includes(audience.id)
+                                ? 'border-primary bg-primary/5'
+                                : 'border-transparent bg-muted/50 hover:bg-muted'
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={formData.lookalike_audiences.includes(audience.id)}
+                                onChange={() => toggleAudience('lookalike_audiences', audience.id)}
+                                className="rounded border-muted-foreground"
+                              />
+                              <div>
+                                <span className="font-medium text-sm block">{audience.name}</span>
+                                <span className="text-xs text-muted-foreground">Source: {audience.source}</span>
+                              </div>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Saved Audiences */}
+                    {audienceTab === 'saved' && (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {platformAudiences.saved.map(audience => (
+                          <label
+                            key={audience.id}
+                            className={cn(
+                              'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                              formData.saved_audiences.includes(audience.id)
+                                ? 'border-primary bg-primary/5'
+                                : 'border-transparent bg-muted/50 hover:bg-muted'
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={formData.saved_audiences.includes(audience.id)}
+                                onChange={() => toggleAudience('saved_audiences', audience.id)}
+                                className="rounded border-muted-foreground"
+                              />
+                              <div>
+                                <span className="font-medium text-sm block">{audience.name}</span>
+                                <span className="text-xs text-muted-foreground">{audience.description}</span>
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Selected audiences count */}
+                    {(formData.custom_audiences.length > 0 || formData.lookalike_audiences.length > 0 || formData.saved_audiences.length > 0) && (
+                      <p className="text-xs text-primary mt-2">
+                        {formData.custom_audiences.length + formData.lookalike_audiences.length + formData.saved_audiences.length} audience(s) selected
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-dashed bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">No audiences synced</p>
+                        <p className="text-xs text-muted-foreground">
+                          Audiences can be synced after connecting your platform. Use demographic targeting below instead.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Custom Audiences */}
-                  {audienceTab === 'custom' && (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {platformAudiences.custom.map(audience => (
-                        <label
-                          key={audience.id}
-                          className={cn(
-                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
-                            formData.custom_audiences.includes(audience.id)
-                              ? 'border-primary bg-primary/5'
-                              : 'border-transparent bg-muted/50 hover:bg-muted'
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={formData.custom_audiences.includes(audience.id)}
-                              onChange={() => toggleAudience('custom_audiences', audience.id)}
-                              className="rounded border-muted-foreground"
-                            />
-                            <span className="font-medium text-sm">{audience.name}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)} users</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Lookalike Audiences */}
-                  {audienceTab === 'lookalike' && (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {platformAudiences.lookalike.map(audience => (
-                        <label
-                          key={audience.id}
-                          className={cn(
-                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
-                            formData.lookalike_audiences.includes(audience.id)
-                              ? 'border-primary bg-primary/5'
-                              : 'border-transparent bg-muted/50 hover:bg-muted'
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={formData.lookalike_audiences.includes(audience.id)}
-                              onChange={() => toggleAudience('lookalike_audiences', audience.id)}
-                              className="rounded border-muted-foreground"
-                            />
-                            <div>
-                              <span className="font-medium text-sm block">{audience.name}</span>
-                              <span className="text-xs text-muted-foreground">Source: {audience.source}</span>
-                            </div>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Saved Audiences */}
-                  {audienceTab === 'saved' && (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {platformAudiences.saved.map(audience => (
-                        <label
-                          key={audience.id}
-                          className={cn(
-                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
-                            formData.saved_audiences.includes(audience.id)
-                              ? 'border-primary bg-primary/5'
-                              : 'border-transparent bg-muted/50 hover:bg-muted'
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={formData.saved_audiences.includes(audience.id)}
-                              onChange={() => toggleAudience('saved_audiences', audience.id)}
-                              className="rounded border-muted-foreground"
-                            />
-                            <div>
-                              <span className="font-medium text-sm block">{audience.name}</span>
-                              <span className="text-xs text-muted-foreground">{audience.description}</span>
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Selected audiences count */}
-                  {(formData.custom_audiences.length > 0 || formData.lookalike_audiences.length > 0 || formData.saved_audiences.length > 0) && (
-                    <p className="text-xs text-primary mt-2">
-                      {formData.custom_audiences.length + formData.lookalike_audiences.length + formData.saved_audiences.length} audience(s) selected
-                    </p>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Age Range */}
               <div>
