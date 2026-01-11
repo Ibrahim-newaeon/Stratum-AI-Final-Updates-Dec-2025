@@ -12,6 +12,7 @@ import OnboardingGuard from './components/auth/OnboardingGuard'
 
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./views/Landing'))
+const LandingAr = lazy(() => import('./views/LandingAr'))
 const Login = lazy(() => import('./views/Login'))
 const Signup = lazy(() => import('./views/Signup'))
 const ForgotPassword = lazy(() => import('./views/ForgotPassword'))
@@ -19,6 +20,7 @@ const ResetPassword = lazy(() => import('./views/ResetPassword'))
 const VerifyEmail = lazy(() => import('./views/VerifyEmail'))
 const Onboarding = lazy(() => import('./views/Onboarding'))
 const Overview = lazy(() => import('./views/Overview'))
+const UnifiedDashboard = lazy(() => import('./views/dashboard/UnifiedDashboard'))
 const CustomDashboard = lazy(() => import('./views/CustomDashboard'))
 const Campaigns = lazy(() => import('./views/Campaigns'))
 const Stratum = lazy(() => import('./views/Stratum'))
@@ -94,6 +96,14 @@ function App() {
                 }
               />
               <Route
+                path="/ar"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <LandingAr />
+                  </Suspense>
+                }
+              />
+              <Route
                 path="/login"
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
@@ -162,7 +172,7 @@ function App() {
                   path="overview"
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
-                      <Overview />
+                      <UnifiedDashboard />
                     </Suspense>
                   }
                 />
