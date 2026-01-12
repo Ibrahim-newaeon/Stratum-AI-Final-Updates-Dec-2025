@@ -73,22 +73,12 @@ os.environ["DATABASE_URL_SYNC"] = os.environ.get(
 
 
 # =============================================================================
-# Async Event Loop Configuration
-# =============================================================================
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for the entire test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-# =============================================================================
 # Database Fixtures
 # =============================================================================
+# Note: Event loop is managed by pytest-asyncio with function scope
+# (configured in pytest.ini via asyncio_default_fixture_loop_scope = function)
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def sync_engine():
     """Create a sync database engine for setup/teardown."""
     from app.core.config import settings
@@ -102,9 +92,9 @@ def sync_engine():
     engine.dispose()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def async_engine():
-    """Create an async database engine for tests."""
+    """Create an async database engine for tests (function-scoped to match event loop)."""
     from app.core.config import settings
 
     engine = create_async_engine(
@@ -121,7 +111,7 @@ async def db_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
     """
     Create a database session for each test.
 
-    Uses transaction rollback for isolation between tests.
+    Uses savepoint for isolation - allows nested transactions from API calls.
     """
     async_session_factory = async_sessionmaker(
         bind=async_engine,
@@ -130,12 +120,16 @@ async def db_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
         autoflush=False,
     )
 
-    async with async_session_factory() as session:
-        # Start a transaction
-        async with session.begin():
+    async with async_engine.connect() as connection:
+        # Start a transaction that we'll rollback at the end
+        transaction = await connection.begin()
+
+        # Create session bound to this connection
+        async with async_session_factory(bind=connection) as session:
             yield session
-            # Rollback at the end to reset state
-            await session.rollback()
+
+        # Rollback the transaction to reset state
+        await transaction.rollback()
 
 
 @pytest.fixture(scope="function")
@@ -273,14 +267,18 @@ async def test_campaign(db_session, test_tenant) -> dict:
     """Create a test campaign."""
     from app.models.campaign_builder import CampaignDraft
 
+    draft_json = {
+        "objective": "conversions",
+        "daily_budget": 100.0,
+        "currency": "USD",
+    }
+
     campaign = CampaignDraft(
         tenant_id=test_tenant["id"],
         name="Test Campaign",
         status="draft",
         platform="meta",
-        objective="conversions",
-        daily_budget=100.0,
-        currency="USD",
+        draft_json=draft_json,
     )
 
     db_session.add(campaign)
@@ -291,7 +289,7 @@ async def test_campaign(db_session, test_tenant) -> dict:
         "name": campaign.name,
         "status": campaign.status,
         "platform": campaign.platform,
-        "daily_budget": campaign.daily_budget,
+        "daily_budget": draft_json["daily_budget"],
     }
 
 
@@ -401,21 +399,36 @@ def superadmin_headers():
 # =============================================================================
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_database(sync_engine):
+def setup_test_database():
     """
     Set up the test database before running tests.
 
-    Creates all tables and runs migrations if needed.
+    Creates all tables using a dedicated session-scoped engine.
     """
+    from app.core.config import settings
     from app.db.base_class import Base
 
-    # Create all tables
-    Base.metadata.create_all(bind=sync_engine)
+    # Import all models to register them with Base.metadata
+    # This ensures all tables and enum types are created
+    import app.base_models  # noqa: F401
+    import app.models  # noqa: F401
+
+    # Create a dedicated engine for setup (session-scoped)
+    setup_engine = create_engine(
+        settings.database_url_sync,
+        echo=False,
+        pool_pre_ping=True,
+    )
+
+    # Create all tables and enum types
+    Base.metadata.create_all(bind=setup_engine)
 
     yield
 
+    # Cleanup
+    setup_engine.dispose()
     # Optionally drop tables after tests (comment out to preserve data for debugging)
-    # Base.metadata.drop_all(bind=sync_engine)
+    # Base.metadata.drop_all(bind=setup_engine)
 
 
 # =============================================================================
