@@ -4,12 +4,18 @@
 """
 Centralized configuration management using Pydantic Settings.
 All environment variables are validated and typed.
+
+SECURITY NOTE:
+- In production, all sensitive values MUST be set via environment variables
+- Never commit real credentials to the repository
+- Use strong, randomly generated keys (32+ bytes) for encryption/signing
 """
 
 from functools import lru_cache
 from typing import List, Literal, Optional
+import warnings
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,20 +38,23 @@ class Settings(BaseSettings):
     )
     debug: bool = Field(default=True)
     secret_key: str = Field(
-        default="dev-secret-key-change-in-production",
+        default="",
         min_length=32,
-        description="Secret key for signing",
+        description="Secret key for signing (REQUIRED: set via SECRET_KEY env var)",
     )
     api_v1_prefix: str = Field(default="/api/v1")
 
     # -------------------------------------------------------------------------
     # Database Configuration
     # -------------------------------------------------------------------------
+    # NOTE: No default passwords - must be set via environment variables
     database_url: str = Field(
-        default="postgresql+asyncpg://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+        default="postgresql+asyncpg://stratum:changeme@localhost:5432/stratum_ai",
+        description="Database URL (set DATABASE_URL env var with real credentials)"
     )
     database_url_sync: str = Field(
-        default="postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+        default="postgresql://stratum:changeme@localhost:5432/stratum_ai",
+        description="Sync database URL (set DATABASE_URL_SYNC env var with real credentials)"
     )
     db_pool_size: int = Field(default=10)
     db_max_overflow: int = Field(default=20)
@@ -156,14 +165,17 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Security Configuration
     # -------------------------------------------------------------------------
+    # NOTE: All security keys MUST be set via environment variables in production
     jwt_secret_key: str = Field(
-        default="jwt-secret-dev", description="JWT signing key"
+        default="",
+        description="JWT signing key (REQUIRED: set via JWT_SECRET_KEY env var, min 32 chars)"
     )
     jwt_algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=30)
     refresh_token_expire_days: int = Field(default=7)
     pii_encryption_key: str = Field(
-        default="dev-encryption-key-32bytes", description="AES encryption key for PII"
+        default="",
+        description="AES encryption key for PII (REQUIRED: set via PII_ENCRYPTION_KEY env var, min 32 chars)"
     )
 
     # Email verification and password reset token expiry
@@ -239,10 +251,108 @@ class Settings(BaseSettings):
         """Check if running in production mode."""
         return self.app_env == "production"
 
+    @model_validator(mode="after")
+    def validate_security_settings(self) -> "Settings":
+        """
+        Validate that security-critical settings are properly configured.
+
+        In production:
+        - Raises errors for missing/weak security keys
+        - Raises errors for default/weak database passwords
+
+        In development:
+        - Issues warnings but allows startup with defaults for local testing
+        """
+        issues = []
+
+        # Check for insecure database passwords
+        insecure_passwords = ["changeme", "password", "123456", "admin", "root", ""]
+        for url_field in ["database_url", "database_url_sync"]:
+            url = getattr(self, url_field, "")
+            for weak_pw in insecure_passwords:
+                if f":{weak_pw}@" in url:
+                    issues.append(f"{url_field} contains insecure password")
+                    break
+
+        # Check security keys
+        if not self.secret_key or len(self.secret_key) < 32:
+            issues.append("SECRET_KEY must be set and be at least 32 characters")
+
+        if not self.jwt_secret_key or len(self.jwt_secret_key) < 32:
+            issues.append("JWT_SECRET_KEY must be set and be at least 32 characters")
+
+        if not self.pii_encryption_key or len(self.pii_encryption_key) < 32:
+            issues.append("PII_ENCRYPTION_KEY must be set and be at least 32 characters")
+
+        # Check for common weak keys
+        weak_keys = [
+            "dev-secret-key", "jwt-secret-dev", "dev-encryption-key",
+            "changeme", "secret", "password", "test", "demo"
+        ]
+        for key_field in ["secret_key", "jwt_secret_key", "pii_encryption_key"]:
+            key_value = getattr(self, key_field, "").lower()
+            for weak in weak_keys:
+                if weak in key_value:
+                    issues.append(f"{key_field.upper()} contains weak/default value")
+                    break
+
+        if issues:
+            if self.is_production:
+                # In production, fail fast with clear error
+                raise ValueError(
+                    f"SECURITY ERROR - Cannot start in production with insecure configuration:\n"
+                    f"  - " + "\n  - ".join(issues) + "\n\n"
+                    f"Please set these environment variables with secure values:\n"
+                    f"  - DATABASE_URL (with strong password)\n"
+                    f"  - SECRET_KEY (min 32 random characters)\n"
+                    f"  - JWT_SECRET_KEY (min 32 random characters)\n"
+                    f"  - PII_ENCRYPTION_KEY (min 32 random characters)\n\n"
+                    f"Generate secure keys with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+                )
+            else:
+                # In development, warn but allow startup
+                warning_msg = (
+                    f"\n{'='*60}\n"
+                    f"SECURITY WARNING - Development mode with insecure defaults:\n"
+                    f"  - " + "\n  - ".join(issues) + "\n"
+                    f"{'='*60}\n"
+                    f"This is OK for local development but NEVER use in production!\n"
+                    f"Set APP_ENV=production to enforce security requirements.\n"
+                    f"{'='*60}\n"
+                )
+                warnings.warn(warning_msg, UserWarning, stacklevel=2)
+
+        return self
+
+
+# Development-only fallback keys (only used when APP_ENV != production)
+_DEV_FALLBACK_KEYS = {
+    "secret_key": "dev-only-secret-key-do-not-use-in-production-32chars",
+    "jwt_secret_key": "dev-only-jwt-secret-do-not-use-in-production-32",
+    "pii_encryption_key": "dev-only-pii-key-do-not-use-in-prod-32ch",
+}
+
 
 @lru_cache
 def get_settings() -> Settings:
-    """Get cached settings instance."""
+    """
+    Get cached settings instance.
+
+    In development mode, provides fallback values for required keys
+    to allow local testing without full configuration.
+    """
+    import os
+
+    # Check if we're in production before creating settings
+    app_env = os.getenv("APP_ENV", "development").lower()
+
+    if app_env != "production":
+        # For development, set fallback values if not provided
+        for key, fallback in _DEV_FALLBACK_KEYS.items():
+            env_key = key.upper()
+            if not os.getenv(env_key):
+                os.environ[env_key] = fallback
+
     return Settings()
 
 
