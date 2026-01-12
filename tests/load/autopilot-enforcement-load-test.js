@@ -24,10 +24,18 @@ import { SharedArray } from 'k6/data';
 const BASE_URL = __ENV.BASE_URL || 'http://api:8000';
 const API_V1 = `${BASE_URL}/api/v1`;
 
-// Test credentials
-const TEST_EMAIL = __ENV.TEST_EMAIL || 'admin@test-tenant.com';
+// Test credentials - supports multiple users to avoid rate limiting
 const TEST_PASSWORD = __ENV.TEST_PASSWORD || 'TestPassword123!';
 const TEST_TENANT_ID = __ENV.TEST_TENANT_ID || '1';
+const NUM_TEST_USERS = parseInt(__ENV.NUM_TEST_USERS || '25');
+
+// Generate user emails for load testing (each VU gets its own user)
+function getTestEmail(vuIndex) {
+    if (vuIndex === 0) {
+        return 'admin@test-tenant.com';
+    }
+    return `loadtest${vuIndex}@test-tenant.com`;
+}
 
 // =============================================================================
 // Custom Metrics
@@ -138,14 +146,14 @@ function getHeaders(token = null) {
     return headers;
 }
 
-function login() {
+function login(email) {
     loginAttempts.add(1);
     const startTime = Date.now();
 
     const loginRes = http.post(
         `${API_V1}/auth/login`,
         JSON.stringify({
-            email: TEST_EMAIL,
+            email: email,
             password: TEST_PASSWORD,
         }),
         { headers: getHeaders(), tags: { name: 'login' } }
@@ -183,18 +191,24 @@ function randomBudget(min = 100, max = 10000) {
 // Store token per VU to avoid repeated logins
 let vuToken = null;
 let vuTokenExpiry = 0;
+let vuEmail = null;
 const TOKEN_TTL_MS = 25 * 60 * 1000; // 25 minutes (tokens typically valid for 30 min)
 
 function getToken() {
     const now = Date.now();
 
-    // Return cached token if still valid
-    if (vuToken && now < vuTokenExpiry) {
+    // Determine which user this VU should use (each VU gets a unique user)
+    const userIndex = (__VU - 1) % NUM_TEST_USERS;
+    const email = getTestEmail(userIndex);
+
+    // Return cached token if still valid and for same user
+    if (vuToken && now < vuTokenExpiry && vuEmail === email) {
         return vuToken;
     }
 
     // Login and cache new token
-    vuToken = login();
+    vuEmail = email;
+    vuToken = login(email);
     if (vuToken) {
         vuTokenExpiry = now + TOKEN_TTL_MS;
     }
@@ -653,6 +667,7 @@ export function setup() {
     console.log(`Scenario: ${selectedScenario}`);
     console.log(`Base URL: ${BASE_URL}`);
     console.log(`Tenant ID: ${TEST_TENANT_ID}`);
+    console.log(`Number of test users: ${NUM_TEST_USERS}`);
 
     // Verify API is reachable
     const healthRes = http.get(`${BASE_URL}/health`);
@@ -660,13 +675,14 @@ export function setup() {
         throw new Error(`API not healthy: ${healthRes.status}`);
     }
 
-    // Verify authentication works
-    const token = login();
+    // Verify authentication works with first user
+    const token = login(getTestEmail(0));
     if (!token) {
         throw new Error('Failed to authenticate during setup');
     }
 
     console.log('Setup complete - authentication verified');
+    console.log('Note: Each VU will use a unique user to avoid rate limiting');
     return { setupToken: token };
 }
 
