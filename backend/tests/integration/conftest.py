@@ -26,14 +26,49 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.orm import sessionmaker, Session
 
 
+# =============================================================================
+# Database URL Configuration
+# =============================================================================
+# Auto-detect Docker environment and use appropriate database hostname.
+# When running inside Docker, use 'db' (service name). When running locally, use 'localhost'.
+
+def _is_running_in_docker() -> bool:
+    """Detect if we're running inside a Docker container."""
+    # Check for .dockerenv file (most reliable)
+    if os.path.exists("/.dockerenv"):
+        return True
+    # Check for Docker-specific cgroup
+    try:
+        with open("/proc/1/cgroup", "r") as f:
+            return "docker" in f.read()
+    except (FileNotFoundError, PermissionError):
+        pass
+    # Check for explicit environment variable
+    return os.environ.get("IN_DOCKER", "").lower() in ("true", "1", "yes")
+
+
+def _get_db_host() -> str:
+    """Get the appropriate database host based on environment."""
+    # Allow explicit override via environment variable
+    if os.environ.get("TEST_DB_HOST"):
+        return os.environ["TEST_DB_HOST"]
+    # Auto-detect Docker environment
+    return "db" if _is_running_in_docker() else "localhost"
+
+
+_db_host = _get_db_host()
+_db_user = os.environ.get("POSTGRES_USER", "stratum")
+_db_pass = os.environ.get("POSTGRES_PASSWORD", "stratum_secure_password_2024")
+_db_name = os.environ.get("POSTGRES_DB", "stratum_ai")
+
 # Set database URLs for tests
 os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://stratum:stratum_dev@localhost:5432/stratum_ai_test"
+    f"postgresql+asyncpg://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
 )
 os.environ["DATABASE_URL_SYNC"] = os.environ.get(
     "TEST_DATABASE_URL_SYNC",
-    "postgresql://stratum:stratum_dev@localhost:5432/stratum_ai_test"
+    f"postgresql://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
 )
 
 
@@ -159,11 +194,11 @@ async def authenticated_client(client, test_user, test_tenant) -> AsyncClient:
     """
     Create an authenticated client with JWT token.
     """
-    from app.auth.jwt import create_access_token
+    from app.core.security import create_access_token
 
     token = create_access_token(
-        data={
-            "sub": str(test_user["id"]),
+        subject=test_user["id"],
+        additional_claims={
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
@@ -188,7 +223,6 @@ async def test_tenant(db_session) -> dict:
     tenant = Tenant(
         name="Test Tenant",
         slug="test-tenant",
-        is_active=True,
         plan="professional",
         max_users=10,
         max_campaigns=100,
@@ -209,7 +243,7 @@ async def test_tenant(db_session) -> dict:
 async def test_user(db_session, test_tenant) -> dict:
     """Create a test user."""
     from app.base_models import User, UserRole
-    from app.auth.security import get_password_hash
+    from app.core.security import get_password_hash
 
     user = User(
         tenant_id=test_tenant["id"],
@@ -327,11 +361,11 @@ async def test_action(db_session, test_tenant, test_user) -> dict:
 @pytest.fixture
 def auth_headers(test_user, test_tenant):
     """Generate authentication headers for API requests."""
-    from app.auth.jwt import create_access_token
+    from app.core.security import create_access_token
 
     token = create_access_token(
-        data={
-            "sub": str(test_user["id"]),
+        subject=test_user["id"],
+        additional_claims={
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
@@ -347,11 +381,11 @@ def auth_headers(test_user, test_tenant):
 @pytest.fixture
 def superadmin_headers():
     """Generate superadmin authentication headers."""
-    from app.auth.jwt import create_access_token
+    from app.core.security import create_access_token
 
     token = create_access_token(
-        data={
-            "sub": "1",
+        subject=1,
+        additional_claims={
             "email": "admin@stratum.ai",
             "role": "superadmin",
         }
