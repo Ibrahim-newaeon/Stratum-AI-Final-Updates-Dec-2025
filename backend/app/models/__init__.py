@@ -140,6 +140,17 @@ from app.models.onboarding import (
     TenantOnboarding,
 )
 
+# Autopilot Enforcement models
+from app.models.autopilot import (
+    EnforcementMode,
+    ViolationType,
+    InterventionAction,
+    TenantEnforcementSettings,
+    TenantEnforcementRule,
+    EnforcementAuditLog,
+    PendingConfirmationToken,
+)
+
 __all__ = [
     # Enums
     "UserRole",
@@ -249,4 +260,12 @@ __all__ = [
     "AutomationMode",
     "PrimaryKPI",
     "TenantOnboarding",
+    # Autopilot Enforcement
+    "EnforcementMode",
+    "ViolationType",
+    "InterventionAction",
+    "TenantEnforcementSettings",
+    "TenantEnforcementRule",
+    "EnforcementAuditLog",
+    "PendingConfirmationToken",
 ]
