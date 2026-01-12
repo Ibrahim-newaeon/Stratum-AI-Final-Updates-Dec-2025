@@ -402,8 +402,9 @@ class EmqService:
         start_date = end_date - timedelta(weeks=weeks)
 
         # Query weekly EMQ scores
+        week_col = func.date_trunc('week', FactSignalHealthDaily.date).label('week')
         query = select(
-            func.date_trunc('week', FactSignalHealthDaily.date).label('week'),
+            week_col,
             func.avg(FactSignalHealthDaily.emq_score).label('avg_score'),
             func.stddev(FactSignalHealthDaily.emq_score).label('stddev'),
         ).where(
@@ -413,8 +414,8 @@ class EmqService:
                 FactSignalHealthDaily.date <= end_date,
             )
         ).group_by(
-            func.date_trunc('week', FactSignalHealthDaily.date)
-        ).order_by('week')
+            week_col
+        ).order_by(week_col)
 
         result = await self.session.execute(query)
         weekly_data = result.all()

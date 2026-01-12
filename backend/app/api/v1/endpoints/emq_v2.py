@@ -548,7 +548,7 @@ async def update_autopilot_mode(
 # Super Admin Endpoints
 # =============================================================================
 @router.get(
-    "/benchmarks",
+    "/emq/benchmarks",
     response_model=APIResponse[List[EmqBenchmarkResponse]],
     summary="Get EMQ Benchmarks",
     description="Get platform-wide EMQ benchmarks (super admin only).",
@@ -575,7 +575,7 @@ async def get_benchmarks(
 
 
 @router.get(
-    "/portfolio",
+    "/emq/portfolio",
     response_model=APIResponse[EmqPortfolioResponse],
     summary="Get Portfolio Overview",
     description="Get portfolio-wide EMQ overview (super admin only).",

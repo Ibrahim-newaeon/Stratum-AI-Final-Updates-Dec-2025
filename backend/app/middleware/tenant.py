@@ -62,8 +62,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
         role = await self._extract_role(request)
 
         if tenant_id is None:
-            # For development, use a default tenant
-            if settings.is_development:
+            # Superadmins can operate without a specific tenant context
+            if role == "superadmin":
+                logger.debug("superadmin_no_tenant_context")
+            # For development, use a default tenant for non-superadmin users
+            elif settings.is_development:
                 tenant_id = 1
                 logger.debug("using_default_tenant", tenant_id=tenant_id)
             else:
