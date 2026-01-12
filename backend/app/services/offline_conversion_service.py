@@ -135,8 +135,18 @@ class BaseOfflineUploader:
         self._credentials = credentials
 
     async def upload(self, conversions: List[OfflineConversion]) -> UploadResult:
-        """Upload conversions. Override in subclasses."""
-        raise NotImplementedError
+        """
+        Upload conversions to the platform.
+
+        This is an abstract method - concrete implementations exist in:
+        - MetaOfflineUploader.upload()
+        - GoogleOfflineUploader.upload()
+        - TikTokOfflineUploader.upload()
+
+        Raises:
+            NotImplementedError: This base class method must be overridden.
+        """
+        raise NotImplementedError("Subclass must implement upload()")
 
     def _hash_email(self, email: Optional[str]) -> Optional[str]:
         """Hash email for privacy."""

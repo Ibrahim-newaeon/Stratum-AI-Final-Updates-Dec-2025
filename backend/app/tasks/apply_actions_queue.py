@@ -30,7 +30,14 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 class PlatformExecutor:
-    """Base class for platform-specific action execution."""
+    """
+    Base class for platform-specific action execution.
+
+    This is an abstract base class - concrete implementations exist in:
+    - MetaExecutor
+    - GoogleExecutor
+    - TikTokExecutor
+    """
 
     async def execute_action(
         self,
@@ -42,10 +49,15 @@ class PlatformExecutor:
         """
         Execute an action on the platform.
 
+        This is an abstract method that must be overridden by subclasses.
+
         Returns:
             Dict with keys: success, before_value, after_value, platform_response, error
+
+        Raises:
+            NotImplementedError: This base class method must be overridden.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Subclass must implement execute_action()")
 
 
 class MetaExecutor(PlatformExecutor):
