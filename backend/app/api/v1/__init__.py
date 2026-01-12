@@ -222,7 +222,6 @@ api_router.include_router(
 # Autopilot Enforcement (Budget/ROAS restrictions)
 api_router.include_router(
     autopilot_enforcement.router,
-    prefix="/autopilot/enforcement",
     tags=["Autopilot Enforcement"],
 )
 

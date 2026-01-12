@@ -27,6 +27,31 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
+# Module-level cache for settings (persists across requests until DB persistence)
+# =============================================================================
+_global_settings_cache: Dict[int, "EnforcementSettings"] = {}
+_global_pending_confirmations: Dict[str, Dict[str, Any]] = {}
+
+
+def clear_enforcement_cache(tenant_id: Optional[int] = None) -> None:
+    """
+    Clear the enforcement settings cache.
+
+    Args:
+        tenant_id: If provided, only clear cache for this tenant.
+                   If None, clear all cached settings.
+
+    For use in testing to ensure clean state between tests.
+    """
+    global _global_settings_cache, _global_pending_confirmations
+    if tenant_id is not None:
+        _global_settings_cache.pop(tenant_id, None)
+    else:
+        _global_settings_cache.clear()
+        _global_pending_confirmations.clear()
+
+
+# =============================================================================
 # Enforcement Types
 # =============================================================================
 
@@ -150,18 +175,19 @@ class AutopilotEnforcer:
 
     def __init__(self, db: Optional[AsyncSession] = None):
         self.db = db
-        self._settings_cache: Dict[int, EnforcementSettings] = {}
-        self._pending_confirmations: Dict[str, Dict[str, Any]] = {}
+        # Use module-level caches for persistence across requests
+        # TODO: Replace with database persistence when ready
 
     async def get_settings(self, tenant_id: int) -> EnforcementSettings:
         """Get enforcement settings for tenant."""
-        if tenant_id in self._settings_cache:
-            return self._settings_cache[tenant_id]
+        global _global_settings_cache
+        if tenant_id in _global_settings_cache:
+            return _global_settings_cache[tenant_id]
 
         # TODO: Load from database when table exists
         # For now, return defaults
         settings = EnforcementSettings(tenant_id=tenant_id)
-        self._settings_cache[tenant_id] = settings
+        _global_settings_cache[tenant_id] = settings
         return settings
 
     async def update_settings(
@@ -170,13 +196,14 @@ class AutopilotEnforcer:
         updates: Dict[str, Any],
     ) -> EnforcementSettings:
         """Update enforcement settings for tenant."""
+        global _global_settings_cache
         settings = await self.get_settings(tenant_id)
 
         for key, value in updates.items():
             if hasattr(settings, key):
                 setattr(settings, key, value)
 
-        self._settings_cache[tenant_id] = settings
+        _global_settings_cache[tenant_id] = settings
         # TODO: Persist to database
 
         return settings
@@ -270,9 +297,10 @@ class AutopilotEnforcer:
 
         elif strictest_mode == EnforcementMode.SOFT_BLOCK:
             # Generate confirmation token
+            global _global_pending_confirmations
             import uuid
             token = str(uuid.uuid4())
-            self._pending_confirmations[token] = {
+            _global_pending_confirmations[token] = {
                 "tenant_id": tenant_id,
                 "action_type": action_type,
                 "entity_id": entity_id,
@@ -329,10 +357,11 @@ class AutopilotEnforcer:
         Returns:
             Tuple of (success, error_message)
         """
-        if confirmation_token not in self._pending_confirmations:
+        global _global_pending_confirmations
+        if confirmation_token not in _global_pending_confirmations:
             return False, "Invalid or expired confirmation token"
 
-        confirmation = self._pending_confirmations[confirmation_token]
+        confirmation = _global_pending_confirmations[confirmation_token]
 
         if confirmation["tenant_id"] != tenant_id:
             return False, "Token does not belong to this tenant"
@@ -352,7 +381,7 @@ class AutopilotEnforcer:
         )
 
         # Remove used token
-        del self._pending_confirmations[confirmation_token]
+        del _global_pending_confirmations[confirmation_token]
 
         return True, None
 
