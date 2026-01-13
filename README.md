@@ -2,7 +2,7 @@
 
 **Revenue Operating System with Trust-Gated Autopilot Architecture**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-purple.svg)](https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025/releases/tag/v1.0.0)
+[![Version](https://img.shields.io/badge/version-1.1.0-purple.svg)](https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025/releases/tag/v1.1.0)
 [![Tests](https://img.shields.io/badge/tests-231%20passed-brightgreen.svg)](#production-validation)
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](#)
 
@@ -34,14 +34,66 @@ Signal Health Check → Trust Gate → Automation Decision
 
 | Feature | Description |
 |---------|-------------|
-| **Trust Engine** | Signal health monitoring with 4-component weighted scoring |
+| **Trust Engine** | Signal health monitoring with 5-component weighted scoring (now includes CDP EMQ) |
 | **Autopilot** | Configurable enforcement (Advisory/Soft-Block/Hard-Block) |
 | **Campaign Builder** | Multi-step wizard with approval workflow |
+| **CDP (NEW)** | First-party data platform with identity resolution & consent management |
 | **Multi-Platform** | Meta, Google, TikTok, Snapchat integrations |
 | **CRM Integration** | HubSpot bidirectional sync with identity matching |
 | **Attribution** | 6 models including Markov Chain & Shapley Value |
 | **Pacing** | Budget forecasting with EWMA predictions |
 | **A/B Testing** | Statistical analysis with power calculations |
+
+## CDP (Customer Data Platform) v1.1.0
+
+Stratum CDP provides first-party data infrastructure for privacy-compliant customer data management:
+
+```
+Event Ingestion → Profile Unification → Trust Engine Integration
+       ↓                  ↓                      ↓
+   [EMQ Score]     [Identity Graph]      [Signal Health + CDP]
+```
+
+### CDP Features
+
+| Feature | Description |
+|---------|-------------|
+| **Event Ingestion** | Real-time event collection with batch support (up to 1000/request) |
+| **Identity Resolution** | PII hashing, profile unification, multi-identifier matching |
+| **EMQ Scoring** | Event Match Quality scoring based on identifier quality, completeness, timeliness |
+| **Consent Management** | GDPR/PDPL compliant consent tracking per profile |
+| **Source Authentication** | API key-based source authentication for secure ingestion |
+| **Trust Engine Integration** | CDP EMQ contributes 10% to overall signal health score |
+
+### CDP Endpoints
+
+```bash
+# Event Ingestion
+POST /api/v1/cdp/events         # Ingest events (single or batch)
+
+# Profile Management
+GET /api/v1/cdp/profiles/{id}   # Get profile by UUID
+GET /api/v1/cdp/profiles        # Lookup profile by identifier
+
+# Source Management
+GET /api/v1/cdp/sources         # List data sources
+POST /api/v1/cdp/sources        # Create new source
+
+# Health Check
+GET /api/v1/cdp/health          # CDP module health status
+```
+
+### Rate Limits
+
+| Operation | Limit |
+|-----------|-------|
+| Event Ingestion | 100 requests/minute |
+| Profile Lookups | 300 requests/minute |
+| Source Operations | 30 requests/minute |
+
+### ROI Calculator
+
+Interactive calculator at `/calculator` estimates the business impact of improved identity resolution.
 
 ## Tech Stack
 
@@ -115,4 +167,4 @@ stratum-ai/
 
 ---
 
-**Stratum AI v1.0.0** - Built with precision. Deployed with confidence.
+**Stratum AI v1.1.0** - Built with precision. Deployed with confidence.

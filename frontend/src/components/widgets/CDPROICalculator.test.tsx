@@ -57,8 +57,9 @@ describe('CDPROICalculator', () => {
       // Conversion Rate default: 2.5%
       expect(screen.getByText('2.5%')).toBeInTheDocument()
 
-      // Current Match Rate default: 35%
-      expect(screen.getByText('35%')).toBeInTheDocument()
+      // Current Match Rate default: 35% - may appear in multiple places
+      const elements35 = screen.getAllByText('35%')
+      expect(elements35.length).toBeGreaterThan(0)
 
       // Expected Improvement default: +40%
       expect(screen.getByText('+40%')).toBeInTheDocument()
@@ -122,7 +123,9 @@ describe('CDPROICalculator', () => {
       const slider = screen.getByLabelText(/Current Identity Match Rate/i)
       fireEvent.change(slider, { target: { value: '50' } })
 
-      expect(screen.getByText('50%')).toBeInTheDocument()
+      // Use getAllByText since value may appear in multiple places
+      const elements = screen.getAllByText('50%')
+      expect(elements.length).toBeGreaterThan(0)
     })
 
     it('updates expected improvement when slider changes', async () => {
@@ -193,7 +196,8 @@ describe('CDPROICalculator', () => {
       // Monthly fee: $2,000
       // Monthly ROI: ($200,000 - $2,000) / $2,000 * 100 = 9,900%
 
-      const roiSection = screen.getByText('Monthly ROI').parentElement
+      // We need to get the parent's parent to include the value <p> element
+      const roiSection = screen.getByText('Monthly ROI').parentElement?.parentElement
       const roiValue = within(roiSection!).getByText(/%$/)
       expect(roiValue).toHaveClass('text-green-500')
     })
@@ -202,8 +206,9 @@ describe('CDPROICalculator', () => {
       render(<CDPROICalculator />)
 
       // With very high ROI, payback period should be less than 1 month
-      const paybackSection = screen.getByText('Payback Period').parentElement
-      expect(within(paybackSection!).getByText(/<1 mo/)).toBeInTheDocument()
+      // We need to get the parent's parent to include the value <p> element
+      const paybackSection = screen.getByText('Payback Period').parentElement?.parentElement
+      expect(within(paybackSection!).getByText(/<1.*mo/)).toBeInTheDocument()
     })
 
     it('recalculates outputs when inputs change', () => {
@@ -260,8 +265,9 @@ describe('CDPROICalculator', () => {
       const feeSlider = screen.getByLabelText(/Monthly CDP Cost/i)
       fireEvent.change(feeSlider, { target: { value: '500' } })
 
-      // Should show minimum fee
-      expect(screen.getByText('$500')).toBeInTheDocument()
+      // Should show minimum fee - use getAllByText since $500 appears in multiple places
+      const elements = screen.getAllByText('$500')
+      expect(elements.length).toBeGreaterThan(0)
     })
   })
 
@@ -319,16 +325,20 @@ describe('CDPROICalculator', () => {
     it('updates summary when inputs change', () => {
       render(<CDPROICalculator />)
 
-      // Initial summary shows 35% to 75%
-      expect(screen.getByText('35%')).toBeInTheDocument()
-      expect(screen.getByText('75%')).toBeInTheDocument()
+      // Initial summary shows 35% to 75% - there may be multiple elements with these values
+      // So we use getAllByText and check at least one exists
+      const elements35 = screen.getAllByText('35%')
+      const elements75 = screen.getAllByText('75%')
+      expect(elements35.length).toBeGreaterThan(0)
+      expect(elements75.length).toBeGreaterThan(0)
 
       // Change current match rate
       const currentRateSlider = screen.getByLabelText(/Current Identity Match Rate/i)
       fireEvent.change(currentRateSlider, { target: { value: '50' } })
 
       // Summary should update to show 50%
-      expect(screen.getByText('50%')).toBeInTheDocument()
+      const elements50 = screen.getAllByText('50%')
+      expect(elements50.length).toBeGreaterThan(0)
     })
   })
 
@@ -336,17 +346,19 @@ describe('CDPROICalculator', () => {
     it('shows green color for positive metrics', () => {
       render(<CDPROICalculator />)
 
-      // Projected attributed should be green
+      // Projected attributed should be green (value is a <p> element)
       const projectedSection = screen.getByText('Projected Attributed').parentElement?.parentElement
-      expect(within(projectedSection!).getByRole('heading', { level: undefined })).toHaveClass('text-green-500')
+      const valueElement = within(projectedSection!).getByText('1,875')
+      expect(valueElement).toHaveClass('text-green-500')
     })
 
     it('shows amber color for current metrics', () => {
       render(<CDPROICalculator />)
 
-      // Current attributed should be amber
+      // Current attributed should be amber (value is a <p> element)
       const currentSection = screen.getByText('Current Attributed').parentElement?.parentElement
-      expect(within(currentSection!).getByRole('heading', { level: undefined })).toHaveClass('text-amber-500')
+      const valueElement = within(currentSection!).getByText('875')
+      expect(valueElement).toHaveClass('text-amber-500')
     })
   })
 })

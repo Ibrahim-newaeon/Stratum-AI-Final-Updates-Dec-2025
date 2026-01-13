@@ -101,7 +101,7 @@
 - [x] Implement input fields (sessions, CVR, AOV, etc.)
 - [x] Implement real-time calculations
 - [x] Implement results display
-- [ ] Add to landing page or create route
+- [x] Add to landing page or create route (`/cdp-calculator`)
 - [x] Style with Tailwind (match existing widgets)
 
 ### Frontend API Integration
@@ -168,6 +168,7 @@
 
 ### Frontend
 - `frontend/src/components/widgets/CDPROICalculator.tsx`
+- `frontend/src/views/CDPCalculator.tsx`
 
 ### Documentation
 - `docs/stratum-cdp/README.md`

@@ -378,3 +378,61 @@ class CDPConsent(Base, TimestampMixin):
     def __repr__(self) -> str:
         status = "granted" if self.granted else "revoked"
         return f"<CDPConsent {self.consent_type}: {status}>"
+
+
+# =============================================================================
+# CDP Webhook Model
+# =============================================================================
+
+class WebhookEventType(str, enum.Enum):
+    """Events that can trigger webhooks."""
+    EVENT_RECEIVED = "event.received"
+    PROFILE_CREATED = "profile.created"
+    PROFILE_UPDATED = "profile.updated"
+    PROFILE_MERGED = "profile.merged"
+    CONSENT_UPDATED = "consent.updated"
+    ALL = "all"
+
+
+class CDPWebhook(Base, TimestampMixin):
+    """
+    Webhook destination for CDP events.
+    Allows tenants to receive real-time notifications when events occur.
+    """
+    __tablename__ = "cdp_webhooks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Webhook configuration
+    name = Column(String(255), nullable=False)
+    url = Column(String(2048), nullable=False)
+    event_types = Column(JSONB, nullable=False, default=list)  # List of WebhookEventType values
+
+    # Authentication
+    secret_key = Column(String(64), nullable=True)  # For HMAC signature
+
+    # State
+    is_active = Column(Boolean, nullable=False, default=True)
+    last_triggered_at = Column(DateTime(timezone=True), nullable=True)
+    last_success_at = Column(DateTime(timezone=True), nullable=True)
+    last_failure_at = Column(DateTime(timezone=True), nullable=True)
+    failure_count = Column(Integer, nullable=False, default=0)
+
+    # Retry configuration
+    max_retries = Column(Integer, nullable=False, default=3)
+    timeout_seconds = Column(Integer, nullable=False, default=30)
+
+    __table_args__ = (
+        Index("ix_cdp_webhooks_tenant", "tenant_id"),
+        Index("ix_cdp_webhooks_active", "tenant_id", "is_active"),
+    )
+
+    def __repr__(self) -> str:
+        status = "active" if self.is_active else "inactive"
+        return f"<CDPWebhook {self.name}: {status}>"

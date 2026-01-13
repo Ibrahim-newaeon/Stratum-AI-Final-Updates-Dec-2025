@@ -279,3 +279,96 @@ class CDPAPIResponse(BaseModel):
     data: Optional[Any] = None
     message: Optional[str] = None
     errors: Optional[List[Dict[str, Any]]] = None
+
+
+# =============================================================================
+# Webhook Schemas
+# =============================================================================
+
+class WebhookCreate(BaseModel):
+    """Create a new webhook destination."""
+    name: str = Field(..., min_length=1, max_length=255, description="Human-readable webhook name")
+    url: str = Field(..., min_length=1, max_length=2048, description="Webhook destination URL (HTTPS)")
+    event_types: List[str] = Field(
+        ...,
+        min_length=1,
+        description="Event types to trigger on: event.received, profile.created, profile.updated, profile.merged, consent.updated, all"
+    )
+    max_retries: int = Field(3, ge=0, le=10, description="Max retry attempts on failure")
+    timeout_seconds: int = Field(30, ge=5, le=120, description="Request timeout in seconds")
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if not v.startswith(("https://", "http://localhost")):
+            raise ValueError("Webhook URL must use HTTPS (http://localhost allowed for testing)")
+        return v
+
+    @field_validator("event_types")
+    @classmethod
+    def validate_event_types(cls, v: List[str]) -> List[str]:
+        allowed = {"event.received", "profile.created", "profile.updated", "profile.merged", "consent.updated", "all"}
+        for event_type in v:
+            if event_type not in allowed:
+                raise ValueError(f"Invalid event type '{event_type}'. Allowed: {allowed}")
+        return v
+
+
+class WebhookUpdate(BaseModel):
+    """Update an existing webhook."""
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    url: Optional[str] = Field(None, min_length=1, max_length=2048)
+    event_types: Optional[List[str]] = None
+    is_active: Optional[bool] = None
+    max_retries: Optional[int] = Field(None, ge=0, le=10)
+    timeout_seconds: Optional[int] = Field(None, ge=5, le=120)
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
+        if v and not v.startswith(("https://", "http://localhost")):
+            raise ValueError("Webhook URL must use HTTPS (http://localhost allowed for testing)")
+        return v
+
+    @field_validator("event_types")
+    @classmethod
+    def validate_event_types(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is None:
+            return v
+        allowed = {"event.received", "profile.created", "profile.updated", "profile.merged", "consent.updated", "all"}
+        for event_type in v:
+            if event_type not in allowed:
+                raise ValueError(f"Invalid event type '{event_type}'. Allowed: {allowed}")
+        return v
+
+
+class WebhookResponse(CDPBaseSchema):
+    """Webhook in API responses."""
+    id: UUID
+    name: str
+    url: str
+    event_types: List[str]
+    secret_key: Optional[str] = None  # Only returned on create
+    is_active: bool
+    last_triggered_at: Optional[datetime] = None
+    last_success_at: Optional[datetime] = None
+    last_failure_at: Optional[datetime] = None
+    failure_count: int
+    max_retries: int
+    timeout_seconds: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class WebhookListResponse(BaseModel):
+    """List of webhooks."""
+    webhooks: List[WebhookResponse]
+    total: int
+
+
+class WebhookTestResult(BaseModel):
+    """Result of webhook test request."""
+    success: bool
+    status_code: Optional[int] = None
+    response_time_ms: Optional[float] = None
+    error: Optional[str] = None
