@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useState, useMemo } from 'react'
 import {
   Building2,
   Plus,
@@ -10,13 +9,11 @@ import {
   Crown,
   ChevronDown,
   MoreHorizontal,
-  Check,
   X,
   AlertTriangle,
   Calendar,
   Settings,
   Shield,
-  RefreshCw,
   Filter,
   Globe,
   Zap,
@@ -128,7 +125,6 @@ const featureFlags = [
 ]
 
 export function Tenants() {
-  const { t } = useTranslation()
   const [tenants, setTenants] = useState<Tenant[]>(mockTenants)
   const [searchQuery, setSearchQuery] = useState('')
   const [planFilter, setPlanFilter] = useState<string>('all')
@@ -137,7 +133,6 @@ export function Tenants() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showFeaturesModal, setShowFeaturesModal] = useState(false)
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'user_count'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
