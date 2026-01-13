@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
   Activity,
   AlertTriangle,
@@ -13,11 +12,8 @@ import {
   TrendingDown,
   RefreshCw,
   ChevronRight,
-  Zap,
   Target,
-  BarChart3,
   ArrowUpRight,
-  Shield,
   Lightbulb,
   XCircle,
 } from 'lucide-react'
@@ -111,12 +107,11 @@ const getSeverityStyle = (severity: string) => {
 }
 
 export function DataQuality() {
-  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [report, setReport] = useState<QualityReport | null>(null)
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [_error, setError] = useState<string | null>(null)
 
   const fetchReport = async () => {
     try {

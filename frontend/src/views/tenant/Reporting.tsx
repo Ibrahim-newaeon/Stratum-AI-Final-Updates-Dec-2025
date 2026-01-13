@@ -5,7 +5,6 @@
  */
 
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 import {
   useReportTemplates,
   useReportSchedules,
@@ -14,11 +13,9 @@ import {
   useGenerateReport,
   usePauseReportSchedule,
   useResumeReportSchedule,
-  useCreateReportTemplate,
 } from '@/api/hooks'
 import {
   DocumentTextIcon,
-  CalendarIcon,
   PlayIcon,
   PauseIcon,
   PlusIcon,
@@ -34,7 +31,6 @@ import { cn } from '@/lib/utils'
 type TabType = 'templates' | 'schedules' | 'history' | 'delivery'
 
 export default function Reporting() {
-  const { tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('templates')
 
   const { data: templates } = useReportTemplates()
