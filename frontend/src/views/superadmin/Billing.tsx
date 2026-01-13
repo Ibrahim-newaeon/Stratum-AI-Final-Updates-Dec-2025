@@ -18,7 +18,6 @@ import { useToast } from '@/components/ui/use-toast'
 import {
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -71,10 +70,10 @@ export default function Billing() {
   const [showEditPlanModal, setShowEditPlanModal] = useState(false)
 
   // Fetch data from API
-  const { data: revenueData, isLoading: revenueLoading } = useRevenue()
-  const { data: plansData, isLoading: plansLoading } = useBillingPlans()
-  const { data: invoicesData, isLoading: invoicesLoading } = useBillingInvoices()
-  const { data: subscriptionsData, isLoading: subscriptionsLoading } = useBillingSubscriptions()
+  const { data: revenueData } = useRevenue()
+  const { data: plansData } = useBillingPlans()
+  const { data: invoicesData } = useBillingInvoices()
+  const { data: subscriptionsData } = useBillingSubscriptions()
   const retryPaymentMutation = useRetryPayment()
 
   // Default mock data

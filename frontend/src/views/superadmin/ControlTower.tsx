@@ -5,12 +5,10 @@
  * Shows portfolio KPIs, system risk, and action queue safety
  */
 
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import {
   ConfidenceBandBadge,
-  VolatilityBadge,
 } from '@/components/shared'
 import {
   useEmqBenchmarks,
@@ -24,11 +22,8 @@ import {
   BuildingOffice2Icon,
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
-  ShieldCheckIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ChartBarIcon,
-  BoltIcon,
   Cog6ToothIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline'
