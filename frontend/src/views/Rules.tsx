@@ -7,14 +7,11 @@ import {
   Play,
   Pause,
   Edit,
-  Trash2,
   Copy,
   Zap,
   Clock,
   CheckCircle2,
-  XCircle,
   ChevronRight,
-  AlertTriangle,
   Bell,
   Tag,
   DollarSign,
@@ -22,9 +19,8 @@ import {
   MessageCircle,
   Loader2,
 } from 'lucide-react'
-import { cn, formatCompactNumber } from '@/lib/utils'
-import { useRules, useToggleRule, useDeleteRule, useCreateRule } from '@/api/hooks'
-import { useTenantStore } from '@/stores/tenantStore'
+import { cn } from '@/lib/utils'
+import { useRules, useToggleRule } from '@/api/hooks'
 
 type RuleStatus = 'active' | 'paused' | 'draft'
 type RuleAction = 'apply_label' | 'send_alert' | 'pause_campaign' | 'adjust_budget' | 'notify_slack' | 'notify_whatsapp'
@@ -148,14 +144,9 @@ export function Rules() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  // Get tenant ID from tenant store
-  const _tenantId = useTenantStore((state) => state.tenantId) ?? 1
-
   // Fetch rules from API
   const { data: rulesData, isLoading } = useRules()
   const toggleRule = useToggleRule()
-  const _deleteRule = useDeleteRule()
-  const createRule = useCreateRule()
 
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
