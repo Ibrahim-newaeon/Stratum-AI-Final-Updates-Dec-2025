@@ -50,6 +50,13 @@ celery_app.conf.update(
         "app.workers.tasks.evaluate_rules": {"queue": "rules"},
         "app.workers.tasks.fetch_competitor_data": {"queue": "intel"},
         "app.workers.tasks.generate_forecast": {"queue": "ml"},
+        # CDP tasks
+        "app.workers.tasks.compute_cdp_segment": {"queue": "cdp"},
+        "app.workers.tasks.compute_all_cdp_segments": {"queue": "cdp"},
+        "app.workers.tasks.compute_cdp_rfm": {"queue": "cdp"},
+        "app.workers.tasks.compute_cdp_traits": {"queue": "cdp"},
+        "app.workers.tasks.compute_cdp_funnel": {"queue": "cdp"},
+        "app.workers.tasks.compute_all_cdp_funnels": {"queue": "cdp"},
     },
 
     # Task time limits
@@ -141,6 +148,24 @@ celery_app.conf.beat_schedule = {
         "task": "app.workers.tasks.process_scheduled_whatsapp_messages",
         "schedule": crontab(minute="*"),
         "options": {"queue": "default"},
+    },
+
+    # ==========================================================================
+    # CDP (Customer Data Platform) Scheduled Tasks
+    # ==========================================================================
+
+    # Compute CDP segments that need refresh every hour
+    "compute-cdp-segments": {
+        "task": "app.workers.tasks.compute_all_cdp_segments",
+        "schedule": crontab(minute=0),
+        "options": {"queue": "cdp"},
+    },
+
+    # Compute CDP funnels every 2 hours
+    "compute-cdp-funnels": {
+        "task": "app.workers.tasks.compute_all_cdp_funnels",
+        "schedule": crontab(minute=0, hour="*/2"),
+        "options": {"queue": "cdp"},
     },
 }
 

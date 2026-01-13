@@ -1470,3 +1470,893 @@ def calculate_daily_scores():
 
 # Additional helper for missing function
 from sqlalchemy import func
+
+
+# =============================================================================
+# CDP (Customer Data Platform) Tasks
+# =============================================================================
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    max_retries=3,
+)
+def compute_cdp_segment(self, tenant_id: int, segment_id: str):
+    """
+    Compute membership for a specific CDP segment.
+
+    Evaluates all profiles against segment rules and updates membership.
+    Idempotent: Safe to retry without side effects.
+    """
+    from uuid import UUID
+    from app.models.cdp import CDPSegment, CDPProfile, CDPSegmentMembership, SegmentStatus
+
+    logger.info(f"Computing CDP segment {segment_id} for tenant {tenant_id}")
+
+    with SyncSessionLocal() as db:
+        segment = db.execute(
+            select(CDPSegment).where(
+                CDPSegment.id == UUID(segment_id),
+                CDPSegment.tenant_id == tenant_id,
+            )
+        ).scalar_one_or_none()
+
+        if not segment:
+            logger.warning(f"Segment {segment_id} not found")
+            return {"status": "not_found", "segment_id": segment_id}
+
+        try:
+            # Update status to computing
+            segment.status = SegmentStatus.COMPUTING
+            db.commit()
+
+            start_time = datetime.now(timezone.utc)
+
+            # Clear existing memberships for fresh computation
+            db.execute(
+                select(CDPSegmentMembership).where(
+                    CDPSegmentMembership.segment_id == segment.id
+                )
+            )
+            from sqlalchemy import delete
+            db.execute(
+                delete(CDPSegmentMembership).where(
+                    CDPSegmentMembership.segment_id == segment.id
+                )
+            )
+
+            # Get all profiles for this tenant
+            profiles = db.execute(
+                select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
+            ).scalars().all()
+
+            # Evaluate each profile against segment rules
+            matched_count = 0
+            rules = segment.rules or {}
+
+            for profile in profiles:
+                match_result = _evaluate_segment_rules(profile, rules)
+
+                if match_result["matched"]:
+                    membership = CDPSegmentMembership(
+                        tenant_id=tenant_id,
+                        segment_id=segment.id,
+                        profile_id=profile.id,
+                        match_score=match_result.get("score", 1.0),
+                    )
+                    db.add(membership)
+                    matched_count += 1
+
+            # Update segment stats
+            end_time = datetime.now(timezone.utc)
+            duration_ms = int((end_time - start_time).total_seconds() * 1000)
+
+            segment.profile_count = matched_count
+            segment.status = SegmentStatus.ACTIVE
+            segment.last_computed_at = end_time
+            segment.computation_duration_ms = duration_ms
+
+            # Set next refresh time
+            if segment.auto_refresh:
+                segment.next_refresh_at = end_time + timedelta(hours=segment.refresh_interval_hours)
+
+            db.commit()
+
+            # Publish event
+            _publish_event(tenant_id, "segment_computed", {
+                "segment_id": segment_id,
+                "segment_name": segment.name,
+                "profile_count": matched_count,
+                "duration_ms": duration_ms,
+            })
+
+            logger.info(f"Segment {segment_id} computed: {matched_count} profiles matched in {duration_ms}ms")
+            return {
+                "status": "success",
+                "segment_id": segment_id,
+                "profile_count": matched_count,
+                "duration_ms": duration_ms,
+            }
+
+        except Exception as e:
+            segment.status = SegmentStatus.STALE
+            db.commit()
+            logger.error(f"Failed to compute segment {segment_id}: {e}")
+            raise
+
+
+def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
+    """Evaluate a profile against segment rules."""
+    try:
+        logic = rules.get("logic", "and")
+        conditions = rules.get("conditions", [])
+        groups = rules.get("groups", [])
+
+        if not conditions and not groups:
+            return {"matched": False, "score": 0.0}
+
+        condition_results = []
+
+        # Evaluate conditions
+        for condition in conditions:
+            result = _evaluate_condition_single(profile, condition)
+            condition_results.append(result)
+
+        # Evaluate nested groups recursively
+        for group in groups:
+            group_result = _evaluate_segment_rules(profile, group)
+            condition_results.append(group_result["matched"])
+
+        # Apply logic
+        if not condition_results:
+            matched = False
+        elif logic == "and":
+            matched = all(condition_results)
+        else:  # or
+            matched = any(condition_results)
+
+        # Calculate match score (percentage of conditions met)
+        score = sum(1 for r in condition_results if r) / len(condition_results) if condition_results else 0.0
+
+        return {"matched": matched, "score": score}
+
+    except Exception as e:
+        logger.warning(f"Error evaluating segment rules: {e}")
+        return {"matched": False, "score": 0.0}
+
+
+def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
+    """Evaluate a single condition against a profile."""
+    field = condition.get("field", "")
+    operator = condition.get("operator", "equals")
+    value = condition.get("value")
+
+    # Get field value from profile
+    if field.startswith("profile_data."):
+        data_field = field[13:]  # Remove "profile_data." prefix
+        field_value = (profile.profile_data or {}).get(data_field)
+    elif field.startswith("computed_traits."):
+        trait_field = field[16:]  # Remove "computed_traits." prefix
+        field_value = (profile.computed_traits or {}).get(trait_field)
+    else:
+        field_value = getattr(profile, field, None)
+
+    if field_value is None and operator not in ("is_null", "is_not_null", "not_exists"):
+        return False
+
+    try:
+        # Operators
+        if operator == "equals":
+            return field_value == value
+        elif operator == "not_equals":
+            return field_value != value
+        elif operator == "greater_than":
+            return float(field_value) > float(value)
+        elif operator == "less_than":
+            return float(field_value) < float(value)
+        elif operator == "gte":
+            return float(field_value) >= float(value)
+        elif operator == "lte":
+            return float(field_value) <= float(value)
+        elif operator == "contains":
+            return str(value).lower() in str(field_value).lower()
+        elif operator == "not_contains":
+            return str(value).lower() not in str(field_value).lower()
+        elif operator == "starts_with":
+            return str(field_value).lower().startswith(str(value).lower())
+        elif operator == "ends_with":
+            return str(field_value).lower().endswith(str(value).lower())
+        elif operator == "in":
+            return field_value in (value if isinstance(value, list) else [value])
+        elif operator == "not_in":
+            return field_value not in (value if isinstance(value, list) else [value])
+        elif operator == "is_null":
+            return field_value is None
+        elif operator == "is_not_null":
+            return field_value is not None
+        elif operator == "exists":
+            return field_value is not None
+        elif operator == "not_exists":
+            return field_value is None
+        elif operator == "within_last":
+            # value is number of days
+            if isinstance(field_value, datetime):
+                return field_value >= datetime.now(timezone.utc) - timedelta(days=int(value))
+            return False
+        elif operator == "not_within_last":
+            if isinstance(field_value, datetime):
+                return field_value < datetime.now(timezone.utc) - timedelta(days=int(value))
+            return False
+        elif operator == "between":
+            if isinstance(value, list) and len(value) == 2:
+                return float(value[0]) <= float(field_value) <= float(value[1])
+            return False
+        else:
+            return False
+
+    except (ValueError, TypeError):
+        return False
+
+
+@shared_task
+def compute_all_cdp_segments(tenant_id: int = None):
+    """
+    Compute all CDP segments that need refresh.
+
+    If tenant_id is provided, only compute for that tenant.
+    Otherwise, compute for all tenants.
+    """
+    from app.models.cdp import CDPSegment, SegmentStatus
+
+    logger.info(f"Computing all CDP segments" + (f" for tenant {tenant_id}" if tenant_id else ""))
+
+    with SyncSessionLocal() as db:
+        now = datetime.now(timezone.utc)
+
+        # Build query for segments needing refresh
+        query = select(CDPSegment).where(
+            CDPSegment.auto_refresh == True,
+            CDPSegment.status.in_([SegmentStatus.ACTIVE, SegmentStatus.STALE, SegmentStatus.DRAFT]),
+        )
+
+        if tenant_id:
+            query = query.where(CDPSegment.tenant_id == tenant_id)
+
+        # Get segments where next_refresh_at is in the past or null
+        segments = db.execute(query).scalars().all()
+
+        task_count = 0
+        for segment in segments:
+            # Check if refresh is due
+            if segment.next_refresh_at is None or segment.next_refresh_at <= now:
+                compute_cdp_segment.delay(segment.tenant_id, str(segment.id))
+                task_count += 1
+
+    logger.info(f"Queued {task_count} CDP segment computation tasks")
+    return {"tasks_queued": task_count}
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    max_retries=3,
+)
+def compute_cdp_rfm(self, tenant_id: int, config: Optional[Dict] = None):
+    """
+    Compute RFM scores for all profiles of a tenant.
+
+    Uses purchase events to calculate Recency, Frequency, and Monetary values.
+    Assigns RFM segment based on score thresholds.
+    """
+    from app.models.cdp import CDPProfile, CDPEvent
+    from decimal import Decimal
+
+    logger.info(f"Computing RFM scores for tenant {tenant_id}")
+
+    config = config or {}
+    purchase_event = config.get("purchase_event_name", "purchase")
+    revenue_property = config.get("revenue_property", "revenue")
+    analysis_window_days = config.get("analysis_window_days", 365)
+
+    with SyncSessionLocal() as db:
+        start_time = datetime.now(timezone.utc)
+        window_start = start_time - timedelta(days=analysis_window_days)
+
+        # Get all profiles for this tenant
+        profiles = db.execute(
+            select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
+        ).scalars().all()
+
+        segment_counts = {}
+        profiles_processed = 0
+
+        for profile in profiles:
+            # Get purchase events for this profile
+            purchase_events = db.execute(
+                select(CDPEvent).where(
+                    CDPEvent.profile_id == profile.id,
+                    CDPEvent.event_name == purchase_event,
+                    CDPEvent.event_time >= window_start,
+                )
+            ).scalars().all()
+
+            if not purchase_events:
+                # No purchases - skip or assign 'lost'/'hibernating'
+                rfm_data = {
+                    "recency_days": analysis_window_days,
+                    "frequency": 0,
+                    "monetary": 0,
+                    "recency_score": 1,
+                    "frequency_score": 1,
+                    "monetary_score": 1,
+                    "rfm_score": 1.0,
+                    "rfm_segment": "lost",
+                    "calculated_at": start_time.isoformat(),
+                }
+            else:
+                # Calculate R, F, M values
+                most_recent = max(e.event_time for e in purchase_events)
+                recency_days = (start_time - most_recent).days
+                frequency = len(purchase_events)
+
+                total_revenue = 0.0
+                for e in purchase_events:
+                    props = e.properties or {}
+                    rev = props.get(revenue_property, 0)
+                    if isinstance(rev, (int, float, Decimal)):
+                        total_revenue += float(rev)
+
+                # Calculate scores (1-5)
+                r_score = _calculate_rfm_score(recency_days, [7, 30, 90, 180], reverse=True)
+                f_score = _calculate_rfm_score(frequency, [1, 2, 5, 10])
+                m_score = _calculate_rfm_score(total_revenue, [50, 100, 500, 1000])
+
+                # Calculate composite RFM score
+                rfm_composite = (r_score + f_score + m_score) / 3.0
+
+                # Determine segment
+                segment = _determine_rfm_segment(r_score, f_score, m_score)
+
+                rfm_data = {
+                    "recency_days": recency_days,
+                    "frequency": frequency,
+                    "monetary": total_revenue,
+                    "recency_score": r_score,
+                    "frequency_score": f_score,
+                    "monetary_score": m_score,
+                    "rfm_score": round(rfm_composite, 2),
+                    "rfm_segment": segment,
+                    "calculated_at": start_time.isoformat(),
+                }
+
+            # Update profile computed traits with RFM data
+            computed_traits = profile.computed_traits or {}
+            computed_traits["rfm"] = rfm_data
+            profile.computed_traits = computed_traits
+
+            # Count segments
+            seg = rfm_data["rfm_segment"]
+            segment_counts[seg] = segment_counts.get(seg, 0) + 1
+            profiles_processed += 1
+
+        db.commit()
+
+        duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+
+        # Publish event
+        _publish_event(tenant_id, "rfm_computed", {
+            "profiles_processed": profiles_processed,
+            "segment_distribution": segment_counts,
+            "duration_ms": duration_ms,
+        })
+
+        logger.info(f"RFM computed for {profiles_processed} profiles in {duration_ms}ms")
+        return {
+            "status": "success",
+            "profiles_processed": profiles_processed,
+            "segment_distribution": segment_counts,
+            "duration_ms": duration_ms,
+        }
+
+
+def _calculate_rfm_score(value: float, thresholds: List[float], reverse: bool = False) -> int:
+    """Calculate RFM score (1-5) based on value and thresholds."""
+    score = 1
+    for i, threshold in enumerate(thresholds, start=2):
+        if reverse:
+            if value <= threshold:
+                score = 6 - i + 1  # Higher score for lower values (recency)
+        else:
+            if value >= threshold:
+                score = i
+    return score
+
+
+def _determine_rfm_segment(r: int, f: int, m: int) -> str:
+    """Determine RFM segment based on R, F, M scores."""
+    # Champions: High R, F, M
+    if r >= 4 and f >= 4 and m >= 4:
+        return "champions"
+    # Loyal Customers: High F & M
+    elif f >= 4 and m >= 4:
+        return "loyal_customers"
+    # Potential Loyalists: High R, medium F
+    elif r >= 4 and f >= 2 and f < 4:
+        return "potential_loyalists"
+    # New Customers: High R, low F
+    elif r >= 4 and f == 1:
+        return "new_customers"
+    # Promising: High R, low F & M
+    elif r >= 4 and f < 2:
+        return "promising"
+    # Need Attention: Medium R, F, M
+    elif r >= 3 and r < 4 and f >= 3 and m >= 3:
+        return "need_attention"
+    # About to Sleep: Low R, moderate F
+    elif r >= 2 and r < 3 and f >= 2:
+        return "about_to_sleep"
+    # At Risk: Low R, high F
+    elif r < 3 and f >= 4:
+        return "at_risk"
+    # Cannot Lose: Very low R, very high F & M
+    elif r == 1 and f >= 4 and m >= 4:
+        return "cannot_lose"
+    # Hibernating: Very low R, low F
+    elif r < 2 and f < 2:
+        return "hibernating"
+    # Lost: Lowest scores
+    elif r == 1 and f == 1:
+        return "lost"
+    else:
+        return "other"
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    max_retries=3,
+)
+def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
+    """
+    Compute computed traits for all profiles of a tenant.
+
+    If trait_id is provided, only compute that specific trait.
+    Otherwise, compute all active traits.
+    """
+    from uuid import UUID
+    from app.models.cdp import CDPProfile, CDPEvent, CDPComputedTrait
+
+    logger.info(f"Computing CDP traits for tenant {tenant_id}" + (f" (trait: {trait_id})" if trait_id else ""))
+
+    with SyncSessionLocal() as db:
+        start_time = datetime.now(timezone.utc)
+
+        # Get traits to compute
+        trait_query = select(CDPComputedTrait).where(
+            CDPComputedTrait.tenant_id == tenant_id,
+            CDPComputedTrait.is_active == True,
+        )
+        if trait_id:
+            trait_query = trait_query.where(CDPComputedTrait.id == UUID(trait_id))
+
+        traits = db.execute(trait_query).scalars().all()
+
+        if not traits:
+            return {"status": "no_traits", "computed": 0}
+
+        # Get all profiles
+        profiles = db.execute(
+            select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
+        ).scalars().all()
+
+        profiles_updated = 0
+        errors = 0
+
+        for profile in profiles:
+            computed = profile.computed_traits or {}
+
+            for trait in traits:
+                try:
+                    value = _compute_trait_value(db, profile, trait)
+                    computed[trait.name] = value
+                except Exception as e:
+                    logger.warning(f"Error computing trait {trait.name} for profile {profile.id}: {e}")
+                    errors += 1
+
+            profile.computed_traits = computed
+            profiles_updated += 1
+
+        # Update trait metadata
+        for trait in traits:
+            trait.last_computed_at = datetime.now(timezone.utc)
+
+        db.commit()
+
+        duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+
+        logger.info(f"Traits computed for {profiles_updated} profiles in {duration_ms}ms")
+        return {
+            "status": "success",
+            "profiles_processed": profiles_updated,
+            "traits_computed": len(traits),
+            "errors": errors,
+            "duration_ms": duration_ms,
+        }
+
+
+def _compute_trait_value(db, profile, trait) -> Any:
+    """Compute a single trait value for a profile."""
+    from app.models.cdp import CDPEvent
+
+    source_config = trait.source_config or {}
+    event_name = source_config.get("event_name")
+    property_name = source_config.get("property")
+    time_window_days = source_config.get("time_window_days")
+
+    # Build event query
+    query = select(CDPEvent).where(CDPEvent.profile_id == profile.id)
+
+    if event_name:
+        query = query.where(CDPEvent.event_name == event_name)
+
+    if time_window_days:
+        window_start = datetime.now(timezone.utc) - timedelta(days=time_window_days)
+        query = query.where(CDPEvent.event_time >= window_start)
+
+    events = db.execute(query).scalars().all()
+
+    trait_type = trait.trait_type
+    default_value = trait.default_value
+
+    if not events:
+        return default_value
+
+    values = []
+    if property_name:
+        for e in events:
+            props = e.properties or {}
+            if property_name in props:
+                values.append(props[property_name])
+
+    # Calculate based on trait type
+    if trait_type == "count":
+        return len(events)
+    elif trait_type == "sum":
+        return sum(float(v) for v in values if isinstance(v, (int, float)))
+    elif trait_type == "average":
+        numeric = [float(v) for v in values if isinstance(v, (int, float))]
+        return sum(numeric) / len(numeric) if numeric else default_value
+    elif trait_type == "min":
+        numeric = [float(v) for v in values if isinstance(v, (int, float))]
+        return min(numeric) if numeric else default_value
+    elif trait_type == "max":
+        numeric = [float(v) for v in values if isinstance(v, (int, float))]
+        return max(numeric) if numeric else default_value
+    elif trait_type == "first":
+        sorted_events = sorted(events, key=lambda e: e.event_time)
+        if sorted_events and property_name:
+            return (sorted_events[0].properties or {}).get(property_name, default_value)
+        return events[0].event_time.isoformat() if events else default_value
+    elif trait_type == "last":
+        sorted_events = sorted(events, key=lambda e: e.event_time, reverse=True)
+        if sorted_events and property_name:
+            return (sorted_events[0].properties or {}).get(property_name, default_value)
+        return events[-1].event_time.isoformat() if events else default_value
+    elif trait_type == "unique_count":
+        return len(set(values))
+    elif trait_type == "exists":
+        return len(events) > 0
+    else:
+        return default_value
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    max_retries=3,
+)
+def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
+    """
+    Compute metrics for a specific CDP funnel.
+
+    Evaluates all profiles through funnel steps and updates conversion metrics.
+    """
+    from uuid import UUID
+    from app.models.cdp import CDPFunnel, CDPFunnelEntry, CDPProfile, CDPEvent, FunnelStatus
+
+    logger.info(f"Computing CDP funnel {funnel_id} for tenant {tenant_id}")
+
+    with SyncSessionLocal() as db:
+        funnel = db.execute(
+            select(CDPFunnel).where(
+                CDPFunnel.id == UUID(funnel_id),
+                CDPFunnel.tenant_id == tenant_id,
+            )
+        ).scalar_one_or_none()
+
+        if not funnel:
+            logger.warning(f"Funnel {funnel_id} not found")
+            return {"status": "not_found", "funnel_id": funnel_id}
+
+        try:
+            # Update status
+            funnel.status = FunnelStatus.COMPUTING
+            db.commit()
+
+            start_time = datetime.now(timezone.utc)
+            steps = funnel.steps or []
+
+            if len(steps) < 2:
+                funnel.status = FunnelStatus.STALE
+                db.commit()
+                return {"status": "error", "message": "Funnel needs at least 2 steps"}
+
+            # Clear existing entries
+            from sqlalchemy import delete
+            db.execute(
+                delete(CDPFunnelEntry).where(CDPFunnelEntry.funnel_id == funnel.id)
+            )
+
+            # Get conversion window
+            conversion_window = timedelta(days=funnel.conversion_window_days)
+            step_timeout = timedelta(hours=funnel.step_timeout_hours) if funnel.step_timeout_hours else None
+
+            # Get all profiles
+            profiles = db.execute(
+                select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
+            ).scalars().all()
+
+            total_entered = 0
+            total_converted = 0
+            step_counts = [0] * len(steps)
+            step_metrics = []
+
+            for profile in profiles:
+                # Get all events for this profile
+                events = db.execute(
+                    select(CDPEvent).where(CDPEvent.profile_id == profile.id)
+                    .order_by(CDPEvent.event_time)
+                ).scalars().all()
+
+                if not events:
+                    continue
+
+                # Track progress through funnel
+                entry_result = _track_funnel_progress(events, steps, conversion_window, step_timeout)
+
+                if entry_result["entered"]:
+                    total_entered += 1
+                    step_counts[0] += 1
+
+                    # Create funnel entry
+                    entry = CDPFunnelEntry(
+                        tenant_id=tenant_id,
+                        funnel_id=funnel.id,
+                        profile_id=profile.id,
+                        entered_at=entry_result["entered_at"],
+                        current_step=entry_result["current_step"],
+                        completed_steps=entry_result["completed_steps"],
+                        is_converted=entry_result["is_converted"],
+                        converted_at=entry_result.get("converted_at"),
+                        step_timestamps=entry_result["step_timestamps"],
+                        total_duration_seconds=entry_result.get("total_duration_seconds"),
+                    )
+                    db.add(entry)
+
+                    # Update step counts
+                    for i in range(1, entry_result["completed_steps"]):
+                        if i < len(step_counts):
+                            step_counts[i] += 1
+
+                    if entry_result["is_converted"]:
+                        total_converted += 1
+
+            # Calculate step metrics
+            for i, step in enumerate(steps):
+                count = step_counts[i] if i < len(step_counts) else 0
+                prev_count = step_counts[i - 1] if i > 0 else total_entered
+
+                conversion_rate = (count / total_entered * 100) if total_entered > 0 else 0
+                drop_off = prev_count - count if i > 0 else 0
+                drop_off_rate = (drop_off / prev_count * 100) if prev_count > 0 else 0
+
+                step_metrics.append({
+                    "step": i + 1,
+                    "name": step.get("step_name", f"Step {i + 1}"),
+                    "event_name": step.get("event_name", ""),
+                    "count": count,
+                    "conversion_rate": round(conversion_rate, 2),
+                    "drop_off_rate": round(drop_off_rate, 2),
+                    "drop_off_count": drop_off,
+                })
+
+            # Update funnel metrics
+            duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+
+            funnel.total_entered = total_entered
+            funnel.total_converted = total_converted
+            funnel.overall_conversion_rate = (total_converted / total_entered * 100) if total_entered > 0 else 0
+            funnel.step_metrics = step_metrics
+            funnel.status = FunnelStatus.ACTIVE
+            funnel.last_computed_at = datetime.now(timezone.utc)
+            funnel.computation_duration_ms = duration_ms
+
+            if funnel.auto_refresh:
+                funnel.next_refresh_at = datetime.now(timezone.utc) + timedelta(hours=funnel.refresh_interval_hours)
+
+            db.commit()
+
+            # Publish event
+            _publish_event(tenant_id, "funnel_computed", {
+                "funnel_id": funnel_id,
+                "funnel_name": funnel.name,
+                "total_entered": total_entered,
+                "total_converted": total_converted,
+                "conversion_rate": funnel.overall_conversion_rate,
+            })
+
+            logger.info(f"Funnel {funnel_id} computed: {total_entered} entered, {total_converted} converted")
+            return {
+                "status": "success",
+                "funnel_id": funnel_id,
+                "total_entered": total_entered,
+                "total_converted": total_converted,
+                "conversion_rate": funnel.overall_conversion_rate,
+                "duration_ms": duration_ms,
+            }
+
+        except Exception as e:
+            funnel.status = FunnelStatus.STALE
+            db.commit()
+            logger.error(f"Failed to compute funnel {funnel_id}: {e}")
+            raise
+
+
+def _track_funnel_progress(events, steps, conversion_window, step_timeout) -> Dict[str, Any]:
+    """Track a profile's progress through funnel steps."""
+    if not events or not steps:
+        return {"entered": False}
+
+    first_step = steps[0]
+    first_step_event = first_step.get("event_name")
+
+    # Find first matching event for step 1
+    entered_at = None
+    for event in events:
+        if event.event_name == first_step_event:
+            if _check_step_conditions(event, first_step.get("conditions", [])):
+                entered_at = event.event_time
+                break
+
+    if not entered_at:
+        return {"entered": False}
+
+    # Track progress through remaining steps
+    step_timestamps = {"1": entered_at.isoformat()}
+    current_step = 1
+    completed_steps = 1
+    last_step_time = entered_at
+
+    for i, step in enumerate(steps[1:], start=2):
+        step_event = step.get("event_name")
+        step_conditions = step.get("conditions", [])
+
+        # Find matching event after previous step
+        found = False
+        for event in events:
+            if event.event_time <= last_step_time:
+                continue
+
+            # Check conversion window
+            if event.event_time > entered_at + conversion_window:
+                break
+
+            # Check step timeout
+            if step_timeout and event.event_time > last_step_time + step_timeout:
+                break
+
+            if event.event_name == step_event:
+                if _check_step_conditions(event, step_conditions):
+                    step_timestamps[str(i)] = event.event_time.isoformat()
+                    current_step = i
+                    completed_steps = i
+                    last_step_time = event.event_time
+                    found = True
+                    break
+
+        if not found:
+            break
+
+    is_converted = completed_steps == len(steps)
+    converted_at = None
+    total_duration_seconds = None
+
+    if is_converted:
+        last_step_str = str(len(steps))
+        if last_step_str in step_timestamps:
+            from dateutil.parser import parse
+            converted_at = parse(step_timestamps[last_step_str])
+            total_duration_seconds = int((converted_at - entered_at).total_seconds())
+
+    return {
+        "entered": True,
+        "entered_at": entered_at,
+        "current_step": current_step,
+        "completed_steps": completed_steps,
+        "is_converted": is_converted,
+        "converted_at": converted_at,
+        "step_timestamps": step_timestamps,
+        "total_duration_seconds": total_duration_seconds,
+    }
+
+
+def _check_step_conditions(event, conditions) -> bool:
+    """Check if an event matches step conditions."""
+    if not conditions:
+        return True
+
+    props = event.properties or {}
+
+    for condition in conditions:
+        field = condition.get("field", "")
+        operator = condition.get("operator", "equals")
+        value = condition.get("value")
+
+        field_value = props.get(field)
+
+        if operator == "equals" and field_value != value:
+            return False
+        elif operator == "not_equals" and field_value == value:
+            return False
+        elif operator == "greater_than" and not (field_value and float(field_value) > float(value)):
+            return False
+        elif operator == "less_than" and not (field_value and float(field_value) < float(value)):
+            return False
+        elif operator == "contains" and not (field_value and str(value) in str(field_value)):
+            return False
+        elif operator == "exists" and field_value is None:
+            return False
+
+    return True
+
+
+@shared_task
+def compute_all_cdp_funnels(tenant_id: int = None):
+    """
+    Compute all CDP funnels that need refresh.
+
+    If tenant_id is provided, only compute for that tenant.
+    """
+    from app.models.cdp import CDPFunnel, FunnelStatus
+
+    logger.info(f"Computing all CDP funnels" + (f" for tenant {tenant_id}" if tenant_id else ""))
+
+    with SyncSessionLocal() as db:
+        now = datetime.now(timezone.utc)
+
+        query = select(CDPFunnel).where(
+            CDPFunnel.auto_refresh == True,
+            CDPFunnel.status.in_([FunnelStatus.ACTIVE, FunnelStatus.STALE, FunnelStatus.DRAFT]),
+        )
+
+        if tenant_id:
+            query = query.where(CDPFunnel.tenant_id == tenant_id)
+
+        funnels = db.execute(query).scalars().all()
+
+        task_count = 0
+        for funnel in funnels:
+            if funnel.next_refresh_at is None or funnel.next_refresh_at <= now:
+                compute_cdp_funnel.delay(funnel.tenant_id, str(funnel.id))
+                task_count += 1
+
+    logger.info(f"Queued {task_count} CDP funnel computation tasks")
+    return {"tasks_queued": task_count}

@@ -28,6 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Identity graph with confidence scoring
   - Cross-device profile linking
 
+- **Identity Graph & Profile Merging**
+  - Full identity graph with nodes (identifiers) and edges (links)
+  - Priority-based identity resolution (external_id > email > phone > device_id > anonymous_id)
+  - Automatic profile merging when same person detected
+  - Manual profile merge API endpoint
+  - Merge history with full audit trail and rollback support
+  - Canonical identity tracking (golden identity per profile)
+  - BFS graph traversal for identity stitching
+  - Link types: same_session, same_event, login, form_submit, purchase, manual, inferred
+  - API endpoints for identity graph visualization and merge management
+
 - **Consent Management**
   - GDPR/PDPL compliant consent tracking
   - Per-profile, per-type consent records
@@ -76,6 +87,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configurable detection parameters (window, threshold)
   - Anomaly summary endpoint with health status and volume trends
   - Severity levels: low, medium, high, critical
+
+- **Segment Builder**
+  - Dynamic segments with rule-based evaluation
+  - Static segments with manual membership management
+  - 18 condition operators (equals, contains, greater_than, within_last, etc.)
+  - Nested rule groups with AND/OR logic
+  - Segment preview with estimated count
+  - Auto-refresh with configurable intervals
+  - Profile membership tracking with match scores
+  - API endpoints: CRUD, compute, preview, get profiles
+
+- **Computed Traits**
+  - Profile enrichment with derived values
+  - Trait types: count, sum, average, min, max, first, last, unique_count, exists
+  - Time-window based calculations
+  - Batch computation for all profiles
+  - Per-profile on-demand computation
+
+- **RFM Analysis**
+  - Recency, Frequency, Monetary scoring (1-5 scale)
+  - 12 customer segments: champions, loyal_customers, potential_loyalists, new_customers, promising, need_attention, about_to_sleep, at_risk, cannot_lose, hibernating, lost, other
+  - Configurable purchase event and revenue property
+  - Batch RFM calculation with segment distribution
+  - RFM summary endpoint with coverage statistics
+
+- **Funnel/Journey Tracking**
+  - Define multi-step conversion funnels (2-20 steps)
+  - Track user progression through event sequences
+  - Step-by-step conversion rate analysis
+  - Drop-off point identification with profile retrieval
+  - Configurable conversion windows (1-365 days)
+  - Optional step timeout limits
+  - Date-filtered funnel analysis
+  - Profile journey tracking across multiple funnels
+  - Auto-refresh with configurable intervals
+  - API endpoints: CRUD, compute, analyze, drop-offs, profile journeys
+
+- **Profile Search API**
+  - Advanced profile search with comprehensive filtering
+  - Text search in external_id and profile_data
+  - Filter by multiple segments (include/exclude)
+  - Filter by lifecycle stages
+  - Filter by RFM segments
+  - Filter by identifier types
+  - Filter by event/revenue thresholds
+  - Filter by date ranges
+  - Email/phone identifier presence filters
+  - Customer status filter
+  - Flexible sorting (last_seen, first_seen, events, revenue)
+  - Configurable output fields
+
+- **Audience Export (Enhanced)**
+  - Advanced filtering for audience export
+  - Filter by segment membership
+  - Filter by lifecycle stage
+  - Filter by RFM segment
+  - Filter by event/revenue thresholds
+  - Filter by date ranges (first_seen, last_seen)
+  - Filter by identifier type presence
+  - Configurable output fields (traits, identifiers, RFM)
+  - JSON and CSV format support
+  - Up to 50,000 profiles per export
+  - Export metadata with applied filters
+
+- **Profile Deletion (GDPR)**
+  - Right to erasure endpoint (DELETE /profiles/{id})
+  - Cascading deletion of events, identifiers, consents, segment memberships
+  - Optional event retention
+  - Deletion audit logging
+
+- **Event Statistics & Analytics**
+  - Event statistics endpoint with period-based analysis (GET /events/statistics)
+  - Event trends with period-over-period comparison (GET /events/trends)
+  - Profile statistics with lifecycle and coverage metrics (GET /profiles/statistics)
+  - Event volume by name and source
+  - Daily event volume trends
+  - EMQ score distribution analysis
+  - Profile lifecycle distribution
+  - Email/phone coverage percentages
+  - Customer conversion rates
+  - Revenue statistics (total, average, max)
+  - React Query hooks for real-time dashboard integration
+
+- **Async Computation (Celery Tasks)**
+  - Background segment computation with rule evaluation
+  - Async RFM calculation for all tenant profiles
+  - Computed traits batch processing
+  - Funnel metrics computation with step analysis
+  - Scheduled refresh for segments and funnels
+  - Task routing to dedicated CDP queue
+  - Exponential backoff retry with max 3 attempts
+  - Real-time event publishing on completion
+  - Beat schedule: segments hourly, funnels every 2 hours
 
 ### Changed
 
