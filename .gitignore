@@ -52,3 +52,4 @@ sample_training_data.csv
 # Claude Code
 CLAUDE.local.md
 .claude/state/
+tmpclaude-*
