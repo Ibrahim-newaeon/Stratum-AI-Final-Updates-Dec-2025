@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stratum AI vs Smartly — Battlecard</title>
+  <style>
+:root{
+  --color-primary:#16A085;
+  --color-secondary:#667eea;
+  --color-accent:#F39C12;
+
+  --color-bg:#0B1220;
+  --color-surface:#101A2E;
+  --color-text:#EAF0FF;
+  --color-muted:#A9B6D3;
+
+  --border: rgba(255,255,255,.12);
+  --shadow: 0 12px 28px rgba(0,0,0,.35);
+  --radius: 16px;
+  --maxw: 1280px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  color:var(--color-text);
+  background:
+    radial-gradient(1200px 700px at 12% 15%, rgba(22,160,133,.22), transparent 55%),
+    radial-gradient(900px 520px at 85% 18%, rgba(102,126,234,.20), transparent 50%),
+    radial-gradient(900px 520px at 70% 92%, rgba(243,156,18,.12), transparent 55%),
+    var(--color-bg);
+}
+
+a{ color:#BFD6FF; text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+.container{ max-width:var(--maxw); margin:0 auto; padding:18px 16px 56px; }
+
+.nav{
+  position:sticky; top:0; z-index:50;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow:var(--shadow);
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  backdrop-filter: blur(10px);
+}
+
+.brand{
+  display:flex; flex-direction:column; gap:2px; min-width:0;
+}
+.brand .title{ font-weight:900; letter-spacing:-0.02em; }
+.brand .subtitle{ color:var(--color-muted); font-size:12px; }
+
+.nav .links{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 12px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.18);
+  color:var(--color-text);
+  font-weight:800; font-size:13px;
+  transition: transform .05s ease, background .2s ease, border-color .2s ease;
+  user-select:none;
+}
+.btn:hover{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.20); text-decoration:none; }
+.btn:active{ transform:translateY(1px); }
+.btn.primary{
+  border-color: rgba(22,160,133,.40);
+  background: linear-gradient(180deg, rgba(22,160,133,.20), rgba(0,0,0,.18));
+}
+.btn.purple{
+  border-color: rgba(102,126,234,.40);
+  background: linear-gradient(180deg, rgba(102,126,234,.20), rgba(0,0,0,.18));
+}
+
+.hero{
+  margin-top:14px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:rgba(16,26,46,.55);
+  box-shadow:var(--shadow);
+  padding:22px 18px;
+  backdrop-filter: blur(10px);
+}
+
+.kicker{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.pill{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  color:var(--color-muted);
+  background:rgba(0,0,0,.16);
+  white-space:nowrap;
+}
+.pill.strong{
+  color:var(--color-text);
+  border-color: rgba(22,160,133,.40);
+  background: linear-gradient(180deg, rgba(22,160,133,.18), rgba(0,0,0,.16));
+}
+
+.hero h1{
+  margin:0;
+  font-size:26px;
+  letter-spacing:-0.03em;
+}
+.hero p{
+  margin:8px 0 0;
+  color:var(--color-muted);
+  max-width: 95ch;
+  line-height:1.55;
+  font-size:13px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:14px;
+  margin-top:14px;
+}
+@media (max-width: 1000px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.card{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:var(--radius);
+  padding:14px;
+}
+
+.card h2{
+  margin:0 0 10px;
+  font-size:14px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--color-muted);
+}
+ul{ margin:0; padding-left:18px; color:var(--color-muted); line-height:1.6; font-size:13px; }
+ul strong{ color:var(--color-text); }
+
+.metrics{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  gap:10px;
+  margin-top:14px;
+}
+@media (max-width: 1100px){
+  .metrics{ grid-template-columns: repeat(2, minmax(170px, 1fr)); }
+}
+@media (max-width: 520px){
+  .metrics{ grid-template-columns: 1fr; }
+}
+.metric{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:var(--radius);
+  padding:12px 12px;
+}
+.metric .k{ margin:0 0 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-muted); }
+.metric .v{ margin:0; font-size:16px; font-weight:900; }
+
+.tableWrap{
+  margin-top:14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius);
+  overflow:auto;
+  background:rgba(0,0,0,.10);
+}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width: 900px;
+}
+th, td{
+  padding:12px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:13px;
+  white-space:nowrap;
+}
+th{
+  position:sticky; top:0;
+  background:rgba(0,0,0,.30);
+  text-align:left;
+  font-weight:900;
+}
+td:first-child, th:first-child{
+  position:sticky; left:0;
+  background:rgba(0,0,0,.22);
+  font-weight:900;
+}
+
+.good{ color:#B6F7D2; }
+.mid{ color:#FFE6A6; }
+.bad{ color:#FFB4B4; }
+
+.smallNote{
+  margin-top:12px;
+  color:var(--color-muted);
+  font-size:13px;
+  line-height:1.55;
+  border-top:1px solid rgba(255,255,255,.10);
+  padding-top:12px;
+}
+.footerLinks{
+  display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;
+}
+textarea{
+  width:100%;
+  min-height:110px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.16);
+  color:var(--color-text);
+  padding:10px 12px;
+  outline:none;
+  resize:vertical;
+  font-size:13px;
+  line-height:1.55;
+}
+label{ display:block; margin:0 0 8px; color:var(--color-muted); font-size:12px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <div class="title">Stratum AI • Battlecard</div>
+        <div class="subtitle">Trust‑Gated Autopilot for Marketing Automation</div>
+      </div>
+      <div class="links">
+        <a class="btn" href="../index.html">Documentation</a>
+        <a class="btn" href="../competitors.html">All Competitors</a>
+        <a class="btn purple" target="_blank" rel="noopener" href="https://www.smartly.io/">Open Smartly</a>
+        <a class="btn primary" target="_blank" rel="noopener" href="https://stratum.ai">Open Stratum</a>
+        <button class="btn" id="btnPrint" type="button">Print / PDF</button>
+        <button class="btn" id="btnExport" type="button">Export JSON</button>
+      </div>
+    </div>
+
+    <section class="hero" aria-label="Hero">
+      <div class="kicker">
+        <span class="pill strong">Stratum AI</span>
+        <span class="pill">vs</span>
+        <span class="pill strong">Smartly (AI Advertising Platform)</span>
+        <span class="pill">Cross‑channel ads</span><span class="pill">Creative workflows</span><span class="pill">Automation</span>
+      </div>
+      <h1>Stratum AI vs Smartly</h1>
+      <p>
+        <strong>Competitor focus:</strong> Cross‑channel ad platform with creative + workflow automation and reporting across major social channels.<br/>
+        <strong>Stratum angle:</strong> trust‑gated automation + inventory protection + multi‑platform agents.
+      </p>
+    </section>
+
+    <div class="metrics" aria-label="Proof & Pricing">
+      <div class="metric">
+        <p class="k">ROAS impact</p>
+        <p class="v">4–8x</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Beta range (positioning)</p>
+      </div>
+      <div class="metric">
+        <p class="k">Time saved</p>
+        <p class="v">~73%</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Less manual babysitting</p>
+      </div>
+      <div class="metric">
+        <p class="k">Waste reduced</p>
+        <p class="v">15–25%</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Bad data / OOS waste</p>
+      </div>
+      <div class="metric">
+        <p class="k">Positioning</p>
+        <p class="v">Validate → Execute</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Trust‑gated autopilot</p>
+      </div>
+    </div>
+
+    <div class="grid" aria-label="Core sections">
+      <div class="card">
+        <h2>Stratum core differentiators</h2>
+        <ul><li><strong>Trust Engine validates signal health before any automation executes</strong></li>
+<li><strong>Inventory Sync prevents ads for out‑of‑stock products automatically</strong></li>
+<li><strong>Multi‑agent optimization across Meta, Google, TikTok, Snapchat</strong></li>
+<li><strong>MENA‑native optimization (Arabic + regional calendar awareness)</strong></li></ul>
+        <div class="smallNote"><strong>Fast pitch:</strong> “Most tools automate blindly. Stratum validates signal health, blocks bad actions, and optimizes across 4 platforms with inventory awareness.”</div>
+      </div>
+
+      <div class="card">
+        <h2>Proof points (from your deck)</h2>
+        <ul><li><strong>ROAS impact:</strong> 4–8x ROAS (beta)</li>
+<li><strong>Time saved:</strong> ~70–73%</li>
+<li><strong>Budget efficiency:</strong> 15–25% less waste</li>
+<li><strong>Case study:</strong> Midas: 3.8x → 6.1x ROAS in 8 weeks; Trust Engine blocked a $12k mistake</li></ul>
+        <div class="smallNote"><strong>Safety story:</strong> “Trust Engine blocked a $12k mistake.”</div>
+      </div>
+
+      <div class="card">
+        <h2>Battle questions to ask prospects</h2>
+        <ul><li>How do you prevent automation from acting on bad pixels / misattributed conversions?</li>
+<li>Can you automatically pause or redirect spend when inventory is out-of-stock (without manual rules)?</li>
+<li>Do you optimize across Meta + Google + TikTok + Snapchat from one place, or is it channel-by-channel?</li>
+<li>Do you provide an auditable decision log + approval workflow for every automated action?</li></ul>
+        <div class="smallNote">If answers are unclear, position Stratum’s Trust Engine + governance.</div>
+      </div>
+
+      <div class="card">
+        <h2>Stratum pricing (anchor)</h2>
+        <div class="metrics" style="grid-template-columns: repeat(3, minmax(200px, 1fr)); margin-top:0"><div class="metric">
+          <p class="k">Starter</p>
+          <p class="v">$499/mo</p>
+          <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">10 campaigns • 2 platforms • Trust Engine</p>
+        </div>
+<div class="metric">
+          <p class="k">Growth</p>
+          <p class="v">$999/mo</p>
+          <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">50 campaigns • All 4 platforms • Full agent suite</p>
+        </div>
+<div class="metric">
+          <p class="k">Enterprise</p>
+          <p class="v">Custom</p>
+          <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Unlimited • White‑label • Custom agents</p>
+        </div></div>
+        <div class="smallNote">Use published tiers to de-risk buying; enterprise tools often hide pricing.</div>
+      </div>
+    </div>
+
+    <div class="tableWrap" aria-label="Comparison matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Stratum AI</th>
+            <th>Smartly</th>
+            <th>Delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+      <td>Trust / Signal Validation (gated automation)</td>
+      <td class="good">✅ Trust Engine gates execution when signal health < threshold.</td>
+      <td class="mid">❌ No explicit signal‑health gating described publicly.</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>Inventory‑aware automation</td>
+      <td class="good">✅ Inventory Sync auto-blocks OOS ads & redirects budget.</td>
+      <td class="mid">⚠️ Supports catalogs/creative at scale; inventory auto‑pausing not clearly stated.</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>Cross‑platform scope</td>
+      <td class="good">✅ Single cockpit across Meta, Google, TikTok, Snapchat.</td>
+      <td class="mid">✅ Supports multiple channels (e.g., Meta, TikTok, Pinterest, Snapchat) from one platform.</td>
+      <td class="mid">Parity / depends</td>
+    </tr>
+<tr>
+      <td>AI agents / automated decisioning</td>
+      <td class="good">✅ Multi-agent optimization (bids, pacing, audiences, creative, anomalies).</td>
+      <td class="mid">⚠️ AI‑powered automation; not positioned as “trust‑gated agents.”</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>Governance & approvals / audit trail</td>
+      <td class="good">✅ Approval queue + decision logs + safe mode + rollback.</td>
+      <td class="mid">⚠️ Workflow automation; enterprise governance specifics not prominent on public pages.</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>Forecasting / measurement models</td>
+      <td class="good">✅ ROAS/CV forecast + confidence signals.</td>
+      <td class="mid">❌ No explicit ROAS/CV forecasting claim on core pages.</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>MENA‑native layer (Arabic + regional calendar)</td>
+      <td class="good">✅ Arabic + regional calendar + local commerce context.</td>
+      <td class="mid">❌ No MENA‑specific layer advertised.</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>Implementation speed / connector depth</td>
+      <td class="good">✅ Playbooks + templates + prebuilt connectors.</td>
+      <td class="mid">⚠️ Unified platform; implementation details vary by enterprise.</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>Pricing clarity & SMB fit</td>
+      <td class="good">✅ Published anchor tiers ($499 / $999 / Enterprise).</td>
+      <td class="mid">❓ Pricing not clearly published; typically demo‑led.</td>
+      <td class="good">Stratum edge</td>
+    </tr>
+<tr>
+      <td>Attribution depth (MTA/incrementality)</td>
+      <td class="good">⚠️ Attribution-aware and can plug into MTA tools (positioning).</td>
+      <td class="mid">⚠️ Reporting exists; not a dedicated MTA product.</td>
+      <td class="mid">Parity / depends</td>
+    </tr>
+<tr>
+      <td>ETL / data export (reverse ETL/warehouses)</td>
+      <td class="good">⚠️ Exports to dashboards; integrates first-party + ad platforms.</td>
+      <td class="mid">⚠️ Feeds/data supported; warehouse‑grade ETL not core positioning.</td>
+      <td class="mid">Parity / depends</td>
+    </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Sources used (public)</h2>
+      <ul><li><a target="_blank" rel="noopener" href="https://www.smartly.io/">Smartly homepage</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.smartly.io/social-media">Smartly Social Media overview</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.smartly.io/product/snapchat">Smartly Snapchat product page</a></li></ul>
+      <div class="smallNote">
+        Competitor capabilities are derived from public pages above. If something isn’t stated publicly, it is marked “Unknown/Partial” rather than assumed.
+      </div>
+      <div class="smallNote">
+        <strong>Quick quote (vendor page):</strong> “One login. Total control.” (Smartly Social Media page)
+      </div>
+
+    </div>
+
+    
+    <div class="grid" style="margin-top:14px" aria-label="Win Narrative">
+      <div class="card">
+        <h2>What Smartly is great at</h2>
+        <ul>
+          <li><strong>Cross‑channel creative + media workflow</strong> from one platform across major ad channels.</li>
+          <li><strong>Creative automation</strong> and personalization at scale (studio‑style production workflows).</li>
+          <li><strong>Creative prediction</strong> features (forecasting creative effectiveness) to reduce guesswork pre‑launch.</li>
+        </ul>
+        <div class="smallNote">
+          Use this framing: <strong>Smartly = creative ops + orchestration</strong>. If the prospect is bottlenecked by creative production, Smartly is a strong fit.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>How Stratum wins (talk track)</h2>
+        <ul>
+          <li><strong>Trust‑Gated Autopilot:</strong> validate signal health <em>before</em> automation executes.</li>
+          <li><strong>Inventory protection:</strong> stop spend when products are out‑of‑stock — automatically.</li>
+          <li><strong>Decision safety:</strong> approvals, decision logs, rollback (reduce “automation anxiety”).</li>
+          <li><strong>Performance layer:</strong> agents optimize pacing/bids/audiences + anomaly detection.</li>
+        </ul>
+        <div class="smallNote">
+          <strong>One‑liner:</strong> “Smartly helps you build and ship creative faster. Stratum makes sure automations are safe and profitable — even when tracking or inventory is messy.”
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Objection → response</h2>
+        <ul>
+          <li><strong>“We already automate in Smartly.”</strong> → “Perfect — Stratum’s job is to <em>prevent expensive wrong moves</em> when pixels/attribution/inventory are unreliable.”</li>
+          <li><strong>“Creative speed is our priority.”</strong> → “Great. Use Smartly for creative ops; Stratum sits above as the <em>trust layer</em> that decides when to scale, pause, or shift budget.”</li>
+          <li><strong>“We need cross‑channel control.”</strong> → “We do cross‑platform optimization <em>plus</em> trust gating and inventory sync.”</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Trap questions (to reveal gaps)</h2>
+        <ul>
+          <li>“If Meta CAPI breaks for 24 hours, what stops your automations from scaling the wrong ads?”</li>
+          <li>“Can you auto‑pause spend when the top SKU is out‑of‑stock — without manual rules?”</li>
+          <li>“Do you have a signal health score that gates every automated change?”</li>
+          <li>“Can we audit every automated action and roll it back?”</li>
+        </ul>
+        <div class="smallNote">
+          If they say “we can do that with rules,” respond: “Rules don’t know whether the <em>signal is trustworthy</em> — they just execute.”
+        </div>
+      </div>
+    </div>
+
+<div class="card" style="margin-top:14px">
+      <h2>Notes for this competitor</h2>
+      <label for="notes">Paste any extra sourced facts here (pricing page, docs, case studies). Export JSON to save.</label>
+      <textarea id="notes" placeholder="Example: Smartly supports X integration, pricing starts at Y, has Z workflow..."></textarea>
+      <div class="footerLinks">
+        <a class="btn" target="_blank" rel="noopener" href="https://www.smartly.io/">Research: https://www.smartly.io/</a>
+        <a class="btn" target="_blank" rel="noopener" href="https://stratum.ai">Stratum site</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    function downloadJSON(filename, obj){
+      const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+      $("#btnPrint").addEventListener("click", () => window.print());
+      $("#btnExport").addEventListener("click", () => {
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          stratum: {"name": "Stratum AI", "tagline": "Trust\u2011Gated Autopilot for Marketing Automation", "value_props": ["Trust Engine validates signal health before any automation executes", "Inventory Sync prevents ads for out\u2011of\u2011stock products automatically", "Multi\u2011agent optimization across Meta, Google, TikTok, Snapchat", "MENA\u2011native optimization (Arabic + regional calendar awareness)"], "proof": [{"k": "ROAS impact", "v": "4\u20138x ROAS (beta)"}, {"k": "Time saved", "v": "~70\u201373%"}, {"k": "Budget efficiency", "v": "15\u201325% less waste"}, {"k": "Case study", "v": "Midas: 3.8x \u2192 6.1x ROAS in 8 weeks; Trust Engine blocked a $12k mistake"}], "pricing": [{"tier": "Starter", "price": "$499/mo", "fit": "10 campaigns \u2022 2 platforms \u2022 Trust Engine"}, {"tier": "Growth", "price": "$999/mo", "fit": "50 campaigns \u2022 All 4 platforms \u2022 Full agent suite"}, {"tier": "Enterprise", "price": "Custom", "fit": "Unlimited \u2022 White\u2011label \u2022 Custom agents"}]},
+          competitor: {"id": "smartly", "name": "Smartly", "label": "Smartly (AI Advertising Platform)", "url": "https://www.smartly.io/", "tags": ["Cross\u2011channel ads", "Creative workflows", "Automation"], "focus": "Cross\u2011channel ad platform with creative + workflow automation and reporting across major social channels."},
+          matrixCaps: {"trust": "no", "inventory": "partial", "cross": "yes", "agents": "partial", "governance": "partial", "forecast": "no", "mena": "no", "impl": "partial", "pricing": "unknown", "attribution": "partial", "datapiping": "partial"},
+          notes: ($("#notes").value || ""),
+          sources: [{"label": "Smartly homepage", "url": "https://www.smartly.io/"}, {"label": "Smartly Social Media overview", "url": "https://www.smartly.io/social-media"}, {"label": "Smartly Snapchat product page", "url": "https://www.smartly.io/product/snapchat"}]
+        };
+        downloadJSON(`stratum-vs-smartly.json`, payload);
+      });
+    });
+  </script>
+</body>
+</html>

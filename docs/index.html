@@ -39,6 +39,39 @@
             padding: 2rem;
         }
 
+        /* Top Navigation */
+        .top-nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .top-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .top-nav a:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .top-nav a.active {
+            background: var(--primary);
+            color: white;
+        }
+
         /* Header */
         .header {
             text-align: center;
@@ -505,6 +538,18 @@
     </style>
 </head>
 <body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <a href="index.html" class="active">Documentation</a>
+        <a href="competitors.html">Competitors Overview</a>
+        <a href="competitors/index.html">Comparison Hub</a>
+        <a href="competitors/stratum-vs-smartly.html">vs Smartly</a>
+        <a href="competitors/stratum-vs-sprinklr.html">vs Sprinklr</a>
+        <a href="competitors/stratum-vs-skai.html">vs Skai</a>
+        <a href="competitors/stratum-vs-northbeam.html">vs Northbeam</a>
+        <a href="competitors/stratum-vs-triplewhale.html">vs Triple Whale</a>
+    </nav>
+
     <!-- Header -->
     <header class="header">
         <h1>Stratum AI Platform</h1>
