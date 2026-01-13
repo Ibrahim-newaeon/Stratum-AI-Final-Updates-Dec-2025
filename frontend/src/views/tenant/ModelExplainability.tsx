@@ -164,7 +164,8 @@ function useSHAPSummary(modelType: ModelType) {
   })
 }
 
-function useExplainPrediction() {
+// Exported for future use in prediction explanation features
+export function useExplainPrediction() {
   return useMutation({
     mutationFn: explainabilityApi.explainPrediction,
   })
@@ -184,11 +185,11 @@ const modelTypeLabels: Record<ModelType, string> = {
 }
 
 export default function ModelExplainability() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  useParams<{ tenantId: string }>()
   const [selectedModel, setSelectedModel] = useState<ModelType>('roas_optimizer')
   const [activeTab, setActiveTab] = useState<'overview' | 'shap' | 'lime' | 'ltv'>('overview')
 
-  const { data: models } = useModels()
+  useModels() // Prefetch models list
   const { data: modelInfo } = useModelInfo(selectedModel)
   const { data: featureImportance } = useFeatureImportance(selectedModel)
   const { data: shapSummary } = useSHAPSummary(selectedModel)

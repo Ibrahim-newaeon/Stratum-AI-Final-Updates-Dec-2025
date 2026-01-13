@@ -128,8 +128,8 @@ export function Campaigns() {
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([])
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
-  // Get tenant ID from tenant store
-  const _tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  // Use tenant store for context (reserved for API calls)
+  useTenantStore((state) => state.tenantId)
 
   // Fetch campaigns from API
   const { data: campaignsData, isLoading } = useCampaigns()

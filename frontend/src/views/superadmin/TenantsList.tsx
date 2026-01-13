@@ -53,7 +53,7 @@ export default function TenantsList() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   // Fetch tenants from superadmin API
-  const { data: tenantsData, isLoading } = useSuperAdminTenants()
+  const { data: tenantsData } = useSuperAdminTenants()
 
   // Default mock tenants
   const mockTenants: TenantListItem[] = [
@@ -245,15 +245,6 @@ export default function TenantsList() {
     const hours = Math.floor(mins / 60)
     if (hours < 24) return `${hours}h ago`
     return `${Math.floor(hours / 24)}d ago`
-  }
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortField(field)
-      setSortDirection('asc')
-    }
   }
 
   // Summary stats

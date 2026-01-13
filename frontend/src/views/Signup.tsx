@@ -35,7 +35,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [, setSubmittedEmail] = useState('');
   const [step, setStep] = useState<SignupStep>('details');
   const [formData, setFormData] = useState<SignupForm | null>(null);
   const [otpCode, setOtpCode] = useState('');
@@ -44,7 +44,7 @@ export default function Signup() {
   const [otpCountdown, setOtpCountdown] = useState(0);
 
   const signupMutation = useSignup();
-  const resendMutation = useResendVerification();
+  useResendVerification(); // Prefetch for resend flow
   const sendOTPMutation = useSendWhatsAppOTP();
   const verifyOTPMutation = useVerifyWhatsAppOTP();
 
@@ -133,12 +133,6 @@ export default function Signup() {
           },
         }
       );
-    }
-  };
-
-  const _handleResendVerification = () => {
-    if (submittedEmail) {
-      resendMutation.mutate({ email: submittedEmail });
     }
   };
 

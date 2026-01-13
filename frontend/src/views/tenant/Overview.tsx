@@ -51,7 +51,7 @@ export default function TenantOverview() {
   const updatePlaybookItem = useUpdatePlaybookItem(tid)
 
   // Fetch data
-  const { data: emqData, isLoading: emqLoading } = useEmqScore(tid)
+  const { data: emqData } = useEmqScore(tid)
   const { data: autopilotData } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
   const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)

@@ -14,7 +14,6 @@ import {
   useAlertStats,
   useAcknowledgeAlert,
   useResolveAlert,
-  useCreateTarget,
 } from '@/api/hooks'
 import {
   ChartBarIcon,
@@ -39,9 +38,9 @@ const statusColors = {
 }
 
 export default function Pacing() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
-  const [showNewTargetModal, setShowNewTargetModal] = useState(false)
+  const [, setShowNewTargetModal] = useState(false)
 
   const { data: targets } = useTargets()
   const { data: pacingStatus } = useAllPacingStatus()

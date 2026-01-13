@@ -15,7 +15,6 @@ import {
   Bars3Icon,
   XMarkIcon,
   BellIcon,
-  BookOpenIcon,
   LinkIcon,
   BuildingStorefrontIcon,
   PlusCircleIcon,

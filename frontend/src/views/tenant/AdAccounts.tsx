@@ -79,7 +79,8 @@ export default function AdAccounts() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const tid = parseInt(tenantId || '1', 10)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('meta')
+  // Platform filter state - reserved for filter functionality
+  const [, /* selectedPlatform */ /* setSelectedPlatform */] = useState<Platform>('meta')
 
   // API hooks for all platforms
   const { data: metaAccounts } = useAdAccounts(tid, 'meta')

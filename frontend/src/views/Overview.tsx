@@ -44,7 +44,7 @@ import {
   DailyTrendChart,
   RegionalBreakdownChart,
 } from '@/components/charts'
-import { KPICardSkeleton, TableSkeleton, AlertSkeleton } from '@/components/ui/Skeleton'
+import { TableSkeleton, AlertSkeleton } from '@/components/ui/Skeleton'
 import { NoFilterResultsState } from '@/components/ui/EmptyState'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import {

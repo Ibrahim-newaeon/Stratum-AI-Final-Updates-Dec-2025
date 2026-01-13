@@ -33,7 +33,6 @@ import {
   ArrowLeftIcon,
   BuildingOfficeIcon,
   UserGroupIcon,
-  CurrencyDollarIcon,
   CalendarIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,

@@ -131,12 +131,12 @@ export function Assets() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedAssets, setSelectedAssets] = useState<number[]>([])
 
-  // Get tenant ID from tenant store
-  const _tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  // Use tenant store for context (reserved for API calls)
+  useTenantStore((state) => state.tenantId)
 
   // Fetch assets from API
-  const { data: assetsData, isLoading: _isLoading } = useAssets()
-  const _deleteAsset = useDeleteAsset()
+  const { data: assetsData } = useAssets()
+  useDeleteAsset() // Prefetch delete mutation
   const bulkArchive = useBulkArchiveAssets()
 
   // Transform API data or fall back to mock

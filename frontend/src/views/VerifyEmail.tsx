@@ -11,7 +11,7 @@ export default function VerifyEmail() {
   const token = searchParams.get('token');
 
   const verifyMutation = useVerifyEmail();
-  const resendMutation = useResendVerification();
+  useResendVerification(); // Prefetch resend mutation
 
   const isLoading = verifyMutation.isPending;
   const isSuccess = verifyMutation.isSuccess;

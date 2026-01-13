@@ -58,7 +58,7 @@ const modelLabels: Record<AttributionModel, string> = {
 }
 
 export default function Attribution() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [selectedModel, setSelectedModel] = useState<AttributionModel>('linear')
   const [dateRange] = useState({
@@ -66,7 +66,7 @@ export default function Attribution() {
     endDate: new Date().toISOString().split('T')[0],
   })
 
-  const { data: summaryData, isLoading: loadingSummary } = useAttributionSummary({
+  const { data: summaryData } = useAttributionSummary({
     ...dateRange,
     model: selectedModel,
   })

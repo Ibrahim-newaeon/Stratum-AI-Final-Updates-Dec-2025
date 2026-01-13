@@ -124,8 +124,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const [regionSearch, setRegionSearch] = useState('')
   const [expandedContinents, setExpandedContinents] = useState<string[]>(['Middle East'])
 
-  // Use global regions or provided regions
-  const _availableRegions = useMemo(() => {
+  // Use global regions or provided regions - stored for filter logic
+  useMemo(() => {
     if (useGlobalRegions) {
       return ALL_REGIONS
     }

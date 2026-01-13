@@ -45,8 +45,8 @@ const mockRadarData = [
   { metric: 'Engagement', you: 90, industry: 72 },
 ]
 
-// Mock market share trend (reserved for future use)
-const _mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
+// Mock market share trend - exported for chart components
+export const mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
   month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
   you: 15 + Math.random() * 5 + i * 0.3,
   compA: 22 + Math.random() * 4 - i * 0.2,

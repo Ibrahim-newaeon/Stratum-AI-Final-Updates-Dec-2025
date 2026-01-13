@@ -172,7 +172,7 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
   }
 
   const hasBanners = trustStatus.banners.length > 0
-  const _showSummary = showDetails && (trustStatus.signal_health || trustStatus.attribution_variance)
+  void (showDetails && (trustStatus.signal_health || trustStatus.attribution_variance)) // Reserved for summary expansion
 
   return (
     <div className="space-y-3">

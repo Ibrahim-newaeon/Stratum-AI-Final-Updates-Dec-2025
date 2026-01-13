@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils'
 type TabType = 'overview' | 'contacts' | 'deals' | 'writeback'
 
 export default function Integrations() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
 
   const { data: connections, isLoading: loadingConnections } = useCRMConnections()

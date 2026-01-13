@@ -12,7 +12,6 @@ import {
   Bars3Icon,
   XMarkIcon,
   BellIcon,
-  UserCircleIcon,
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
   Squares2X2Icon,
