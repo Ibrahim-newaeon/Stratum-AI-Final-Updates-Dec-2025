@@ -81,14 +81,30 @@ def hash_identifier(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _get_identifier_type(identifier) -> str:
+    """Get identifier type from dict or object."""
+    if isinstance(identifier, dict):
+        return identifier.get("type", "")
+    return getattr(identifier, "type", "")
+
+
+def _get_context_attr(context, attr: str):
+    """Get attribute from context dict or object."""
+    if context is None:
+        return None
+    if isinstance(context, dict):
+        return context.get(attr)
+    return getattr(context, attr, None)
+
+
 def calculate_emq_score(event_data: dict, has_pii: bool, latency_seconds: float) -> float:
     """Calculate Event Match Quality score (0-100)."""
     score = 0.0
 
     # Identifier quality (40%)
     identifiers = event_data.get("identifiers", [])
-    has_email = any(i.type == "email" for i in identifiers)
-    has_phone = any(i.type == "phone" for i in identifiers)
+    has_email = any(_get_identifier_type(i) == "email" for i in identifiers)
+    has_phone = any(_get_identifier_type(i) == "phone" for i in identifiers)
     if has_email or has_phone:
         score += 40
     elif identifiers:
@@ -108,11 +124,11 @@ def calculate_emq_score(event_data: dict, has_pii: bool, latency_seconds: float)
     # Context richness (15%)
     context = event_data.get("context")
     if context:
-        if context.campaign:
+        if _get_context_attr(context, "campaign"):
             score += 5
-        if context.user_agent:
+        if _get_context_attr(context, "user_agent"):
             score += 5
-        if context.ip:
+        if _get_context_attr(context, "ip"):
             score += 5
 
     return min(score, 100.0)
@@ -204,6 +220,43 @@ async def link_identifiers_to_profile(
 # Event Endpoints
 # =============================================================================
 
+async def validate_source_key(
+    db: AsyncSession,
+    tenant_id: int,
+    source_key: Optional[str],
+) -> Optional[CDPSource]:
+    """
+    Validate source_key and return the source if valid.
+    Returns None if source_key is not provided (backward compatibility).
+    Raises HTTPException if source_key is invalid.
+    """
+    if not source_key:
+        return None
+
+    result = await db.execute(
+        select(CDPSource)
+        .where(
+            CDPSource.tenant_id == tenant_id,
+            CDPSource.source_key == source_key,
+            CDPSource.is_active == True,
+        )
+    )
+    source = result.scalar_one_or_none()
+
+    if not source:
+        logger.warning(
+            "cdp_invalid_source_key",
+            tenant_id=tenant_id,
+            source_key_prefix=source_key[:8] + "..." if source_key else None,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or inactive source_key",
+        )
+
+    return source
+
+
 @router.post(
     "/events",
     response_model=EventBatchResponse,
@@ -214,17 +267,19 @@ async def link_identifiers_to_profile(
 async def ingest_events(
     request: Request,
     batch: EventBatchInput,
+    source_key: Optional[str] = Query(None, description="Source API key for authentication"),
     db: AsyncSession = Depends(get_async_session),
     current_user = Depends(get_current_user),
 ):
     """
     Ingest events into CDP.
 
+    - Validates source_key (if provided) for source-level authentication
     - Validates event schema
     - Hashes PII identifiers
     - Finds or creates profile
     - Links identifiers to profile
-    - Stores event
+    - Stores event with source_id
     - Calculates EMQ score
     """
     tenant_id = current_user.tenant_id
@@ -233,10 +288,15 @@ async def ingest_events(
     rejected = 0
     duplicates = 0
 
+    # Validate source authentication
+    source = await validate_source_key(db, tenant_id, source_key)
+    source_id = source.id if source else None
+
     logger.info(
         "cdp_event_ingestion_started",
         tenant_id=tenant_id,
         event_count=len(batch.events),
+        source_id=str(source_id) if source_id else None,
     )
 
     for event in batch.events:
@@ -284,6 +344,7 @@ async def ingest_events(
             db_event = CDPEvent(
                 tenant_id=tenant_id,
                 profile_id=profile.id,
+                source_id=source_id,
                 event_name=event.event_name,
                 event_time=event.event_time,
                 received_at=received_at,
@@ -294,6 +355,11 @@ async def ingest_events(
                 emq_score=emq_score,
             )
             db.add(db_event)
+
+            # Update source metrics if source is provided
+            if source:
+                source.event_count += 1
+                source.last_event_at = received_at
 
             # Update profile counters
             profile.total_events += 1

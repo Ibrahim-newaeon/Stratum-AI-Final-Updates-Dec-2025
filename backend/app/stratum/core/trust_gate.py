@@ -84,18 +84,24 @@ class TrustGateResult:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API responses."""
+        components = {
+            "emq": self.signal_health.emq_score,
+            "freshness": self.signal_health.freshness_score,
+            "variance": self.signal_health.variance_score,
+            "anomaly": self.signal_health.anomaly_score,
+        }
+        # Include CDP EMQ if available
+        if self.signal_health.cdp_emq_score is not None:
+            components["cdp"] = self.signal_health.cdp_emq_score
+
         return {
             "decision": self.decision.value,
             "signalHealth": {
                 "score": self.signal_health.overall_score,
                 "status": self.signal_health.status,
-                "components": {
-                    "emq": self.signal_health.emq_score,
-                    "freshness": self.signal_health.freshness_score,
-                    "variance": self.signal_health.variance_score,
-                    "anomaly": self.signal_health.anomaly_score,
-                },
+                "components": components,
                 "issues": self.signal_health.issues,
+                "hasCdpData": self.signal_health.has_cdp_data(),
             },
             "action": {
                 "type": self.action.action_type,
@@ -322,6 +328,18 @@ class TrustGate:
             recommendations.append("Verify tracking implementation")
             recommendations.append("Consider pausing automation until resolved")
 
+        # CDP-specific recommendations
+        if signal_health.cdp_emq_score is not None:
+            if signal_health.cdp_emq_score < 70:
+                recommendations.append("Review CDP data quality and identity resolution")
+                recommendations.append("Check CDP event ingestion for missing identifiers")
+            elif signal_health.cdp_emq_score < 85:
+                recommendations.append("Consider enhancing CDP identifier collection")
+        elif signal_health.has_cdp_data() is False:
+            # No CDP data available - recommend integration
+            if decision != GateDecision.PASS:
+                recommendations.append("Consider integrating CDP for improved identity resolution")
+
         # Add issue-specific recommendations
         for issue in signal_health.issues:
             if "EMQ" in issue or "match" in issue.lower():
@@ -332,6 +350,10 @@ class TrustGate:
                 recommendations.append("Compare platform vs GA4 attribution settings")
             elif "anomaly" in issue.lower():
                 recommendations.append("Investigate unusual metric patterns")
+            elif "CDP" in issue or "cdp" in issue.lower():
+                recommendations.append("Review CDP event schema and identifier quality")
+            elif "identity" in issue.lower() or "resolution" in issue.lower():
+                recommendations.append("Enhance first-party data collection (email, phone)")
 
         return list(set(recommendations))  # Remove duplicates
 

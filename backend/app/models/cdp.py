@@ -22,7 +22,7 @@ import enum
 
 from sqlalchemy import (
     Column, String, Integer, DateTime, Text, ForeignKey,
-    Index, Enum as SQLEnum, Boolean, BigInteger, Numeric
+    Index, Enum as SQLEnum, Boolean, BigInteger, Numeric, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -243,6 +243,10 @@ class CDPProfileIdentifier(Base):
         Index("ix_cdp_identifiers_profile", "profile_id"),
         Index("ix_cdp_identifiers_lookup", "tenant_id", "identifier_type", "identifier_hash"),
         Index("ix_cdp_identifiers_hash", "identifier_hash"),
+        UniqueConstraint(
+            "tenant_id", "identifier_type", "identifier_hash",
+            name="uq_cdp_identifiers_tenant_type_hash"
+        ),
     )
 
     def __repr__(self) -> str:
@@ -365,6 +369,10 @@ class CDPConsent(Base, TimestampMixin):
         Index("ix_cdp_consents_tenant", "tenant_id"),
         Index("ix_cdp_consents_profile", "profile_id"),
         Index("ix_cdp_consents_type", "tenant_id", "consent_type", "granted"),
+        UniqueConstraint(
+            "tenant_id", "profile_id", "consent_type",
+            name="uq_cdp_consents_tenant_profile_type"
+        ),
     )
 
     def __repr__(self) -> str:

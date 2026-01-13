@@ -42,10 +42,15 @@ class SignalHealthConfig:
     degraded_threshold: float = 40.0
 
     # Component weights (must sum to 1.0)
+    # When CDP data is available, weights are redistributed
     emq_weight: float = 0.40
     freshness_weight: float = 0.25
     variance_weight: float = 0.20
     anomaly_weight: float = 0.15
+
+    # CDP weight (when available, other weights are proportionally reduced)
+    cdp_weight: float = 0.10
+    cdp_enabled: bool = True
 
     # Freshness thresholds
     max_data_age_hours: int = 24
@@ -57,6 +62,32 @@ class SignalHealthConfig:
 
     # Anomaly thresholds
     anomaly_zscore_threshold: float = 3.0
+
+    def get_weights(self, include_cdp: bool = False) -> Dict[str, float]:
+        """
+        Get component weights, optionally including CDP.
+
+        When CDP is included, other weights are proportionally reduced
+        to maintain a total weight of 1.0.
+        """
+        if not include_cdp or not self.cdp_enabled:
+            return {
+                "emq": self.emq_weight,
+                "freshness": self.freshness_weight,
+                "variance": self.variance_weight,
+                "anomaly": self.anomaly_weight,
+                "cdp": 0.0,
+            }
+
+        # Reduce base weights proportionally to make room for CDP
+        scale_factor = 1.0 - self.cdp_weight
+        return {
+            "emq": self.emq_weight * scale_factor,
+            "freshness": self.freshness_weight * scale_factor,
+            "variance": self.variance_weight * scale_factor,
+            "anomaly": self.anomaly_weight * scale_factor,
+            "cdp": self.cdp_weight,
+        }
 
 
 class SignalHealthCalculator:
@@ -95,6 +126,7 @@ class SignalHealthCalculator:
         historical_variance: Optional[List[float]] = None,
         current_metrics: Optional[Dict[str, float]] = None,
         historical_metrics: Optional[List[Dict[str, float]]] = None,
+        cdp_emq_score: Optional[float] = None,
     ) -> SignalHealth:
         """
         Calculate composite signal health score.
@@ -107,6 +139,7 @@ class SignalHealthCalculator:
             historical_variance: List of historical variance percentages
             current_metrics: Current period metrics for anomaly detection
             historical_metrics: Historical metrics for anomaly comparison
+            cdp_emq_score: CDP EMQ score from CDPEMQAggregator (0-100)
 
         Returns:
             SignalHealth object with composite score and component breakdown
@@ -123,13 +156,24 @@ class SignalHealthCalculator:
             current_metrics, historical_metrics, issues
         )
 
+        # Calculate CDP component if available
+        cdp_score = self._calculate_cdp_component(cdp_emq_score, issues)
+        include_cdp = cdp_score is not None
+
+        # Get weights (with or without CDP)
+        weights = self.config.get_weights(include_cdp=include_cdp)
+
         # Calculate weighted composite score
         overall_score = (
-            emq_score * self.config.emq_weight +
-            freshness_score * self.config.freshness_weight +
-            variance_score * self.config.variance_weight +
-            anomaly_score * self.config.anomaly_weight
+            emq_score * weights["emq"] +
+            freshness_score * weights["freshness"] +
+            variance_score * weights["variance"] +
+            anomaly_score * weights["anomaly"]
         )
+
+        # Add CDP component if available
+        if include_cdp:
+            overall_score += cdp_score * weights["cdp"]
 
         # Determine status
         if overall_score >= self.config.healthy_threshold:
@@ -145,18 +189,41 @@ class SignalHealthCalculator:
             freshness_score=round(freshness_score, 1),
             variance_score=round(variance_score, 1),
             anomaly_score=round(anomaly_score, 1),
+            cdp_emq_score=round(cdp_score, 1) if cdp_score is not None else None,
             status=status,
             issues=issues,
             last_updated=datetime.utcnow(),
         )
 
+        cdp_info = f", CDP:{health.cdp_emq_score}" if health.cdp_emq_score is not None else ""
         logger.info(
             f"Signal health calculated: {health.overall_score} ({health.status}) "
             f"[EMQ:{health.emq_score}, Fresh:{health.freshness_score}, "
-            f"Var:{health.variance_score}, Anom:{health.anomaly_score}]"
+            f"Var:{health.variance_score}, Anom:{health.anomaly_score}{cdp_info}]"
         )
 
         return health
+
+    def _calculate_cdp_component(
+        self,
+        cdp_emq_score: Optional[float],
+        issues: List[str],
+    ) -> Optional[float]:
+        """
+        Calculate CDP EMQ component score (0-100).
+
+        Returns None if CDP data is not available.
+        """
+        if cdp_emq_score is None:
+            return None
+
+        # CDP score is already 0-100 from CDPEMQAggregator
+        score = min(100, max(0, cdp_emq_score))
+
+        if score < 70:
+            issues.append(f"CDP EMQ below target: {score:.1f} (target: 70+)")
+
+        return score
 
     def _calculate_emq_component(
         self,

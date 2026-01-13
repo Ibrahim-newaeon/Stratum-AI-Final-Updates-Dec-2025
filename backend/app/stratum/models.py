@@ -216,6 +216,7 @@ class SignalHealth(BaseModel):
     freshness_score: float = Field(ge=0, le=100)
     variance_score: float = Field(ge=0, le=100)
     anomaly_score: float = Field(ge=0, le=100)
+    cdp_emq_score: Optional[float] = Field(default=None, ge=0, le=100)  # CDP EMQ integration
     status: str = "healthy"  # healthy, degraded, critical
     issues: List[str] = Field(default_factory=list)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
@@ -223,6 +224,10 @@ class SignalHealth(BaseModel):
     def is_autopilot_safe(self, threshold: float = 70.0) -> bool:
         """Check if signal health allows autopilot operations."""
         return self.overall_score >= threshold and self.status != "critical"
+
+    def has_cdp_data(self) -> bool:
+        """Check if CDP EMQ data is available."""
+        return self.cdp_emq_score is not None
 
 
 class AutomationAction(BaseModel):

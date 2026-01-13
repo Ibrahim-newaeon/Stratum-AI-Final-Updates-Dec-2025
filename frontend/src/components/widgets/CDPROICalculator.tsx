@@ -1,9 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Calculator, TrendingUp, DollarSign, Users, BarChart3, Clock } from 'lucide-react'
-import { cn, formatCurrency, formatPercent } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 
 interface CDPROICalculatorProps {
   className?: string
+  /** Currency code (e.g., 'USD', 'SAR', 'EUR') */
+  currency?: string
+  /** Locale for number formatting (e.g., 'en-US', 'ar-SA') */
+  locale?: string
 }
 
 interface CalculatorInputs {
@@ -79,7 +83,11 @@ function calculateROI(inputs: CalculatorInputs): CalculatorOutputs {
   }
 }
 
-export function CDPROICalculator({ className }: CDPROICalculatorProps) {
+export function CDPROICalculator({
+  className,
+  currency = 'USD',
+  locale = 'en-US',
+}: CDPROICalculatorProps) {
   const [inputs, setInputs] = useState<CalculatorInputs>(defaultInputs)
 
   const outputs = useMemo(() => calculateROI(inputs), [inputs])
@@ -87,6 +95,12 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
   const updateInput = (key: keyof CalculatorInputs, value: number) => {
     setInputs((prev) => ({ ...prev, [key]: value }))
   }
+
+  // Memoized currency formatter using locale/currency props
+  const format = useCallback(
+    (value: number) => formatCurrency(value, currency, locale),
+    [currency, locale]
+  )
 
   return (
     <div className={cn('bg-card border border-border rounded-xl p-6', className)}>
@@ -112,7 +126,10 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
 
           {/* Monthly Sessions */}
           <div>
-            <label className="flex items-center justify-between text-sm mb-2">
+            <label
+              id="monthly-sessions-label"
+              className="flex items-center justify-between text-sm mb-2"
+            >
               <span>Monthly Website Sessions</span>
               <span className="font-mono text-primary">
                 {inputs.monthlySessions.toLocaleString()}
@@ -126,8 +143,13 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               value={inputs.monthlySessions}
               onChange={(e) => updateInput('monthlySessions', Number(e.target.value))}
               className="w-full accent-primary"
+              aria-labelledby="monthly-sessions-label"
+              aria-valuemin={10000}
+              aria-valuemax={1000000}
+              aria-valuenow={inputs.monthlySessions}
+              aria-valuetext={`${inputs.monthlySessions.toLocaleString()} sessions`}
             />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <div className="flex justify-between text-xs text-muted-foreground mt-1" aria-hidden="true">
               <span>10K</span>
               <span>500K</span>
               <span>1M</span>
@@ -136,7 +158,7 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
 
           {/* Conversion Rate */}
           <div>
-            <label className="flex items-center justify-between text-sm mb-2">
+            <label id="conversion-rate-label" className="flex items-center justify-between text-sm mb-2">
               <span>Conversion Rate</span>
               <span className="font-mono text-primary">{inputs.conversionRate}%</span>
             </label>
@@ -148,14 +170,19 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               value={inputs.conversionRate}
               onChange={(e) => updateInput('conversionRate', Number(e.target.value))}
               className="w-full accent-primary"
+              aria-labelledby="conversion-rate-label"
+              aria-valuemin={0.5}
+              aria-valuemax={10}
+              aria-valuenow={inputs.conversionRate}
+              aria-valuetext={`${inputs.conversionRate}%`}
             />
           </div>
 
           {/* Average Order Value */}
           <div>
-            <label className="flex items-center justify-between text-sm mb-2">
+            <label id="aov-label" className="flex items-center justify-between text-sm mb-2">
               <span>Average Order Value</span>
-              <span className="font-mono text-primary">{formatCurrency(inputs.averageOrderValue)}</span>
+              <span className="font-mono text-primary">{format(inputs.averageOrderValue)}</span>
             </label>
             <input
               type="range"
@@ -165,12 +192,17 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               value={inputs.averageOrderValue}
               onChange={(e) => updateInput('averageOrderValue', Number(e.target.value))}
               className="w-full accent-primary"
+              aria-labelledby="aov-label"
+              aria-valuemin={50}
+              aria-valuemax={5000}
+              aria-valuenow={inputs.averageOrderValue}
+              aria-valuetext={format(inputs.averageOrderValue)}
             />
           </div>
 
           {/* Gross Margin */}
           <div>
-            <label className="flex items-center justify-between text-sm mb-2">
+            <label id="gross-margin-label" className="flex items-center justify-between text-sm mb-2">
               <span>Gross Margin</span>
               <span className="font-mono text-primary">{inputs.grossMarginPercent}%</span>
             </label>
@@ -182,12 +214,17 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               value={inputs.grossMarginPercent}
               onChange={(e) => updateInput('grossMarginPercent', Number(e.target.value))}
               className="w-full accent-primary"
+              aria-labelledby="gross-margin-label"
+              aria-valuemin={10}
+              aria-valuemax={80}
+              aria-valuenow={inputs.grossMarginPercent}
+              aria-valuetext={`${inputs.grossMarginPercent}%`}
             />
           </div>
 
           {/* Current Match Rate */}
           <div>
-            <label className="flex items-center justify-between text-sm mb-2">
+            <label id="current-match-rate-label" className="flex items-center justify-between text-sm mb-2">
               <span>Current Identity Match Rate</span>
               <span className="font-mono text-amber-500">{inputs.currentMatchRate}%</span>
             </label>
@@ -199,12 +236,17 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               value={inputs.currentMatchRate}
               onChange={(e) => updateInput('currentMatchRate', Number(e.target.value))}
               className="w-full accent-amber-500"
+              aria-labelledby="current-match-rate-label"
+              aria-valuemin={10}
+              aria-valuemax={70}
+              aria-valuenow={inputs.currentMatchRate}
+              aria-valuetext={`${inputs.currentMatchRate}%`}
             />
           </div>
 
           {/* Expected Improvement */}
           <div>
-            <label className="flex items-center justify-between text-sm mb-2">
+            <label id="improvement-label" className="flex items-center justify-between text-sm mb-2">
               <span>Expected Match Rate Improvement</span>
               <span className="font-mono text-green-500">+{inputs.expectedMatchRateImprovement}%</span>
             </label>
@@ -216,14 +258,19 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               value={inputs.expectedMatchRateImprovement}
               onChange={(e) => updateInput('expectedMatchRateImprovement', Number(e.target.value))}
               className="w-full accent-green-500"
+              aria-labelledby="improvement-label"
+              aria-valuemin={10}
+              aria-valuemax={60}
+              aria-valuenow={inputs.expectedMatchRateImprovement}
+              aria-valuetext={`+${inputs.expectedMatchRateImprovement}%`}
             />
           </div>
 
           {/* Monthly Fee */}
           <div>
-            <label className="flex items-center justify-between text-sm mb-2">
+            <label id="monthly-fee-label" className="flex items-center justify-between text-sm mb-2">
               <span>Monthly CDP Cost</span>
-              <span className="font-mono text-muted-foreground">{formatCurrency(inputs.monthlyPlatformFee)}</span>
+              <span className="font-mono text-muted-foreground">{format(inputs.monthlyPlatformFee)}</span>
             </label>
             <input
               type="range"
@@ -233,6 +280,11 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               value={inputs.monthlyPlatformFee}
               onChange={(e) => updateInput('monthlyPlatformFee', Number(e.target.value))}
               className="w-full accent-muted-foreground"
+              aria-labelledby="monthly-fee-label"
+              aria-valuemin={500}
+              aria-valuemax={10000}
+              aria-valuenow={inputs.monthlyPlatformFee}
+              aria-valuetext={format(inputs.monthlyPlatformFee)}
             />
           </div>
         </div>
@@ -283,7 +335,7 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               <div>
                 <p className="text-xs text-muted-foreground">Incremental Revenue</p>
                 <p className="text-xl font-bold text-primary">
-                  +{formatCurrency(outputs.incrementalRevenue)}
+                  +{format(outputs.incrementalRevenue)}
                 </p>
               </div>
             </div>
@@ -327,10 +379,10 @@ export function CDPROICalculator({ className }: CDPROICalculatorProps) {
               'text-3xl font-bold',
               outputs.annualValue >= 0 ? 'text-primary' : 'text-red-500'
             )}>
-              {formatCurrency(outputs.annualValue)}
+              {format(outputs.annualValue)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              After CDP costs ({formatCurrency(inputs.monthlyPlatformFee * 12)}/year)
+              After CDP costs ({format(inputs.monthlyPlatformFee * 12)}/year)
             </p>
           </div>
 

@@ -37,6 +37,7 @@ const CAPISetup = lazy(() => import('./views/CAPISetup'))
 const DataQuality = lazy(() => import('./views/DataQuality'))
 const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'))
 const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'))
+const CDPCalculator = lazy(() => import('./views/CDPCalculator'))
 
 // Super Admin views
 const ControlTower = lazy(() => import('./views/superadmin/ControlTower'))
@@ -140,6 +141,16 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <VerifyEmail />
+                  </Suspense>
+                }
+              />
+
+              {/* CDP ROI Calculator (public) */}
+              <Route
+                path="/cdp-calculator"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <CDPCalculator />
                   </Suspense>
                 }
               />
