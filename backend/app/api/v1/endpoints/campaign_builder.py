@@ -159,8 +159,8 @@ async def get_connector_status(
     return APIResponse(
         success=True,
         data=ConnectorStatusResponse(
-            platform=connection.platform.value,
-            status=connection.status.value,
+            platform=connection.platform,  # Already a string in DB
+            status=connection.status,  # Already a string in DB
             connected_at=connection.connected_at,
             last_refreshed_at=connection.last_refreshed_at,
             scopes=connection.scopes or [],
@@ -429,12 +429,12 @@ async def create_campaign_draft(
 
     draft = CampaignDraft(
         tenant_id=tenant_id,
-        platform=AdPlatform(draft_data.platform),
+        platform=draft_data.platform,  # Already a string
         ad_account_id=draft_data.ad_account_id,
         name=draft_data.name,
         description=draft_data.description,
         draft_json=draft_data.draft_json,
-        status=DraftStatus.DRAFT,
+        status=DraftStatus.DRAFT.value,
         created_by_user_id=user_id,
     )
 
@@ -538,10 +538,10 @@ async def update_campaign_draft(
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
 
-    if draft.status not in [DraftStatus.DRAFT, DraftStatus.REJECTED]:
+    if draft.status not in [DraftStatus.DRAFT.value, DraftStatus.REJECTED.value]:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot update draft in {draft.status.value} status"
+            detail=f"Cannot update draft in {draft.status} status"
         )
 
     if update_data.name is not None:
@@ -552,8 +552,8 @@ async def update_campaign_draft(
         draft.draft_json = update_data.draft_json
 
     # Reset to draft status if was rejected
-    if draft.status == DraftStatus.REJECTED:
-        draft.status = DraftStatus.DRAFT
+    if draft.status == DraftStatus.REJECTED.value:
+        draft.status = DraftStatus.DRAFT.value
         draft.rejection_reason = None
 
     await db.commit()
@@ -591,13 +591,13 @@ async def submit_campaign_draft(
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
 
-    if draft.status != DraftStatus.DRAFT:
+    if draft.status != DraftStatus.DRAFT.value:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot submit draft in {draft.status.value} status"
+            detail=f"Cannot submit draft in {draft.status} status"
         )
 
-    draft.status = DraftStatus.SUBMITTED
+    draft.status = DraftStatus.SUBMITTED.value
     draft.submitted_by_user_id = user_id
     draft.submitted_at = datetime.now(timezone.utc)
 
@@ -636,13 +636,13 @@ async def approve_campaign_draft(
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
 
-    if draft.status != DraftStatus.SUBMITTED:
+    if draft.status != DraftStatus.SUBMITTED.value:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot approve draft in {draft.status.value} status"
+            detail=f"Cannot approve draft in {draft.status} status"
         )
 
-    draft.status = DraftStatus.APPROVED
+    draft.status = DraftStatus.APPROVED.value
     draft.approved_by_user_id = user_id
     draft.approved_at = datetime.now(timezone.utc)
 
@@ -682,13 +682,13 @@ async def reject_campaign_draft(
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
 
-    if draft.status != DraftStatus.SUBMITTED:
+    if draft.status != DraftStatus.SUBMITTED.value:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot reject draft in {draft.status.value} status"
+            detail=f"Cannot reject draft in {draft.status} status"
         )
 
-    draft.status = DraftStatus.REJECTED
+    draft.status = DraftStatus.REJECTED.value
     draft.rejected_by_user_id = user_id
     draft.rejected_at = datetime.now(timezone.utc)
     draft.rejection_reason = reason
@@ -731,10 +731,10 @@ async def publish_campaign_draft(
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
 
-    if draft.status != DraftStatus.APPROVED:
+    if draft.status != DraftStatus.APPROVED.value:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot publish draft in {draft.status.value} status. Must be approved first."
+            detail=f"Cannot publish draft in {draft.status} status. Must be approved first."
         )
 
     # Check budget guardrails
@@ -749,7 +749,7 @@ async def publish_campaign_draft(
             )
 
     # Update status to publishing
-    draft.status = DraftStatus.PUBLISHING
+    draft.status = DraftStatus.PUBLISHING.value
     await db.commit()
 
     # Create publish log entry
@@ -760,7 +760,7 @@ async def publish_campaign_draft(
         platform_account_id=draft.ad_account.platform_account_id if draft.ad_account else "",
         published_by_user_id=user_id,
         request_json=draft.draft_json,
-        result_status=PublishResult.SUCCESS,  # Will be updated by background task
+        result_status=PublishResult.SUCCESS.value,  # Will be updated by background task
     )
     db.add(publish_log)
     await db.commit()
@@ -769,7 +769,7 @@ async def publish_campaign_draft(
     # background_tasks.add_task(publish_campaign_task, draft_id, publish_log.id)
 
     # Simulate successful publish for now
-    draft.status = DraftStatus.PUBLISHED
+    draft.status = DraftStatus.PUBLISHED.value
     draft.platform_campaign_id = f"camp_{draft_id.hex[:12]}"
     draft.published_at = datetime.now(timezone.utc)
     publish_log.platform_campaign_id = draft.platform_campaign_id
@@ -846,7 +846,7 @@ async def retry_publish(
     if not log:
         raise HTTPException(status_code=404, detail="Publish log not found")
 
-    if log.result_status != PublishResult.FAILURE:
+    if log.result_status != PublishResult.FAILURE.value:
         raise HTTPException(
             status_code=400,
             detail="Can only retry failed publish attempts"

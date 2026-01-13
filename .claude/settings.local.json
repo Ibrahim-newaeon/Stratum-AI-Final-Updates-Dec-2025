@@ -135,7 +135,20 @@
       "Bash(alembic upgrade:*)",
       "Bash(del \"C:\\\\Users\\\\Vip\\\\OneDrive\\\\Desktop\\\\Stratum-AI-Final-Updates-Dec-2025-main\\\\backend\\\\app\\\\api\\\\v1\\\\endpoints\\\\linkedin.py\")",
       "Bash(del \"C:\\\\Users\\\\Vip\\\\OneDrive\\\\Desktop\\\\Stratum-AI-Final-Updates-Dec-2025-main\\\\backend\\\\app\\\\services\\\\linkedin_client.py\")",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiZXhwIjoxNzY4MDQwMDI0LCJpYXQiOjE3NjgwMzgyMjQsInR5cGUiOiJhY2Nlc3MiLCJ0ZW5hbnRfaWQiOjIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoidGVzdEBzdHJhdHVtLmFpIn0.Sb5KusC8tXRNRpkqJUdw8eWdxGfyt5DJbyBafNTxlPk\")"
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiZXhwIjoxNzY4MDQwMDI0LCJpYXQiOjE3NjgwMzgyMjQsInR5cGUiOiJhY2Nlc3MiLCJ0ZW5hbnRfaWQiOjIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoidGVzdEBzdHJhdHVtLmFpIn0.Sb5KusC8tXRNRpkqJUdw8eWdxGfyt5DJbyBafNTxlPk\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc2ODE0NzA0OCwiaWF0IjoxNzY4MTQ1MjQ4LCJ0eXBlIjoiYWNjZXNzIiwidGVuYW50X2lkIjoxMywicm9sZSI6ImFkbWluIiwiZW1haWwiOiJkZW1vQHN0cmF0dW0uYWkifQ.OwFrNTLJIDfXDSnAJSt6miIyJUGr143pxWr_WrgOlKY\")",
+      "Bash(start http://localhost:5173)",
+      "Bash(npm run test:*)",
+      "Bash(npm test:*)",
+      "Bash(k6 version:*)",
+      "Bash(winget install:*)",
+      "Bash(choco install:*)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run:*)",
+      "Bash(xargs basename:*)",
+      "Bash(pip show:*)",
+      "Bash(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "Bash(start \"\" \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "Bash(Start-Process \"$env:ProgramFiles\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")"
     ],
     "deny": [],
     "ask": []
