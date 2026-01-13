@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
   Search,
   Plus,
@@ -13,13 +12,11 @@ import {
   XCircle,
   Phone,
   UserCheck,
-  UserX,
   Eye,
   Radio,
   Trash2,
   Upload,
   Inbox,
-  Reply,
   ArrowLeft,
   Paperclip,
   Image,
@@ -28,8 +25,6 @@ import {
   Download,
   AlertCircle,
   X,
-  ChevronDown,
-  Globe,
   Loader2,
   Edit2,
   UserMinus,
@@ -296,7 +291,6 @@ interface Conversation {
 }
 
 export function WhatsApp() {
-  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>('contacts')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
