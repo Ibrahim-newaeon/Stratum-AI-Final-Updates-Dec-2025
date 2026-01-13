@@ -39,7 +39,7 @@ export default function Signup() {
   const [step, setStep] = useState<SignupStep>('details');
   const [formData, setFormData] = useState<SignupForm | null>(null);
   const [otpCode, setOtpCode] = useState('');
-  const [verificationToken, setVerificationToken] = useState('');
+  const [_verificationToken, setVerificationToken] = useState('');
   const [otpError, setOtpError] = useState('');
   const [otpCountdown, setOtpCountdown] = useState(0);
 
@@ -56,7 +56,6 @@ export default function Signup() {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
   });
@@ -137,7 +136,7 @@ export default function Signup() {
     }
   };
 
-  const handleResendVerification = () => {
+  const _handleResendVerification = () => {
     if (submittedEmail) {
       resendMutation.mutate({ email: submittedEmail });
     }

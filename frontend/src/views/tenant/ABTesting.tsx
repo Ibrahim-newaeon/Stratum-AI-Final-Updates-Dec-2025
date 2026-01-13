@@ -5,12 +5,10 @@
  */
 
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 import {
   useABTests,
   useABTest,
   useABTestResults,
-  useCreateABTest,
   useStartABTest,
   usePauseABTest,
   useStopABTest,
@@ -55,10 +53,9 @@ const testTypeLabels: Record<TestType, string> = {
 }
 
 export default function ABTesting() {
-  const { tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('active')
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null)
-  const [showNewTestModal, setShowNewTestModal] = useState(false)
+  const [_showNewTestModal, setShowNewTestModal] = useState(false)
   const [powerAnalysisParams, setPowerAnalysisParams] = useState({
     baselineConversionRate: 2.5,
     minimumDetectableEffect: 10,
@@ -69,7 +66,7 @@ export default function ABTesting() {
   const { data: activeTests } = useABTests({ status: 'running' })
   const { data: completedTests } = useABTests({ status: 'completed' })
   const { data: draftTests } = useABTests({ status: 'draft' })
-  const { data: selectedTest } = useABTest(selectedTestId || '')
+  const { data: _selectedTest } = useABTest(selectedTestId || '')
   const { data: testResults } = useABTestResults(selectedTestId || '')
   const { data: ltvImpact } = useLTVImpact(selectedTestId || '')
 
