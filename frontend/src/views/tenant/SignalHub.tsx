@@ -12,7 +12,6 @@ import {
   EmqScoreCard,
   EmqTimeline,
   VolatilityBadge,
-  ConfidenceBandBadge,
   type TimelineEvent,
 } from '@/components/shared'
 import {
@@ -28,8 +27,6 @@ import {
   CheckCircleIcon,
   ArrowPathIcon,
   SignalIcon,
-  WifiIcon,
-  CloudIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useToast } from '@/components/ui/use-toast'

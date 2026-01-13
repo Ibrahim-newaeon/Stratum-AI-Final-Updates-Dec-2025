@@ -5,11 +5,9 @@
  */
 
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient, ApiResponse } from '@/api/client'
 import {
-  ExclamationTriangleIcon,
   ArrowPathIcon,
   TrashIcon,
   EyeIcon,
@@ -171,14 +169,13 @@ const platformColors: Record<Platform, string> = {
 }
 
 export default function DeadLetterQueue() {
-  const { tenantId } = useParams<{ tenantId: string }>()
   const [filterStatus, setFilterStatus] = useState<DLQStatus | ''>('')
   const [filterPlatform, setFilterPlatform] = useState<Platform | ''>('')
   const [selectedEntry, setSelectedEntry] = useState<DLQEntry | null>(null)
   const [showPayloadModal, setShowPayloadModal] = useState(false)
 
-  const { data: stats, isLoading: loadingStats } = useDLQStats()
-  const { data: entries, isLoading: loadingEntries } = useDLQEntries({
+  const { data: stats } = useDLQStats()
+  const { data: entries } = useDLQEntries({
     status: filterStatus || undefined,
     platform: filterPlatform || undefined,
     limit: 100,

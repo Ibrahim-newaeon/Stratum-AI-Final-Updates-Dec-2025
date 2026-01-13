@@ -22,12 +22,10 @@ import {
 } from '@/api/hooks'
 import { useTenantRecommendations } from '@/api/hooks'
 import {
-  SparklesIcon,
   ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
   WrenchScrewdriverIcon,
   CheckCircleIcon,
-  ClockIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 
@@ -44,7 +42,7 @@ export default function Console() {
   // Fetch data
   const { data: emqData } = useEmqScore(tid)
   const { data: autopilotData } = useAutopilotState(tid)
-  const { data: recommendationsData } = useTenantRecommendations(tid)
+  const { data: _recommendationsData } = useTenantRecommendations(tid)
 
   const emqScore = emqData?.score ?? 85
   const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'normal'
