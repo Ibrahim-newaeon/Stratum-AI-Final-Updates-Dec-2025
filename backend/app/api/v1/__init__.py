@@ -46,6 +46,7 @@ from app.api.v1.endpoints import (
     data_driven_attribution,
     reporting,
     audit_services,
+    cdp,
 )
 
 api_router = APIRouter()
@@ -303,4 +304,10 @@ api_router.include_router(
     audit_services.router,
     prefix="/audit",
     tags=["Audit Services"],
+)
+
+# CDP (Customer Data Platform - Event ingestion, profiles, identity resolution)
+api_router.include_router(
+    cdp.router,
+    tags=["CDP"],
 )

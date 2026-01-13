@@ -151,6 +151,19 @@ from app.models.autopilot import (
     PendingConfirmationToken,
 )
 
+# CDP (Customer Data Platform) models
+from app.models.cdp import (
+    SourceType,
+    IdentifierType,
+    LifecycleStage,
+    ConsentType,
+    CDPSource,
+    CDPProfile,
+    CDPProfileIdentifier,
+    CDPEvent,
+    CDPConsent,
+)
+
 __all__ = [
     # Enums
     "UserRole",
@@ -268,4 +281,14 @@ __all__ = [
     "TenantEnforcementRule",
     "EnforcementAuditLog",
     "PendingConfirmationToken",
+    # CDP (Customer Data Platform)
+    "SourceType",
+    "IdentifierType",
+    "LifecycleStage",
+    "ConsentType",
+    "CDPSource",
+    "CDPProfile",
+    "CDPProfileIdentifier",
+    "CDPEvent",
+    "CDPConsent",
 ]
