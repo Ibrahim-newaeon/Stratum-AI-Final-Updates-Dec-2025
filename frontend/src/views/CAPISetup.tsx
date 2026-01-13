@@ -16,7 +16,6 @@ import {
   TrendingUp,
   HelpCircle,
   RefreshCw,
-  Copy,
   ExternalLink,
   Settings,
   Loader2,
@@ -101,7 +100,7 @@ interface TestResult {
 }
 
 export function CAPISetup() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
   const [credentials, setCredentials] = useState<Record<string, string>>({})
   const [connecting, setConnecting] = useState(false)

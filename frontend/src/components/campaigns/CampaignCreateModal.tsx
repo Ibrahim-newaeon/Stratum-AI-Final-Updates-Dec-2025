@@ -11,10 +11,8 @@ import {
   ChevronRight,
   Check,
   Loader2,
-  Target,
   DollarSign,
   Users,
-  Calendar,
   AlertCircle,
   RefreshCw,
   UserPlus,
@@ -22,7 +20,7 @@ import {
   Bookmark,
   Settings,
 } from 'lucide-react'
-import { cn, getPlatformColor } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { useAdAccounts, Platform } from '@/api/campaignBuilder'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -161,7 +159,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
   const {
     data: adAccounts = [],
     isLoading: isLoadingAccounts,
-    refetch: refetchAccounts
+    refetch: _refetchAccounts
   } = useAdAccounts(
     tenantId,
     formData.platform as Platform,

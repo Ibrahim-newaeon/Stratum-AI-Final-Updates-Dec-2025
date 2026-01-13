@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
-  Filter,
   Upload,
   Grid,
   List,
@@ -133,12 +132,12 @@ export function Assets() {
   const [selectedAssets, setSelectedAssets] = useState<number[]>([])
 
   // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  const _tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch assets from API
-  const { data: assetsData, isLoading } = useAssets(tenantId)
-  const deleteAsset = useDeleteAsset(tenantId)
-  const bulkArchive = useBulkArchiveAssets(tenantId)
+  const { data: assetsData, isLoading: _isLoading } = useAssets()
+  const _deleteAsset = useDeleteAsset()
+  const bulkArchive = useBulkArchiveAssets()
 
   // Transform API data or fall back to mock
   const assets = useMemo((): Asset[] => {

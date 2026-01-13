@@ -33,13 +33,10 @@ import {
   PhoneIcon,
   CalendarIcon,
   ShieldCheckIcon,
-  ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 
 interface BlockedAction {
@@ -72,7 +69,7 @@ export default function TenantNarrative() {
   }
 
   // Fetch data
-  const { data: tenantData } = useTenant(tenantId || '')
+  const { data: tenantData } = useTenant(Number(tenantId) || 0)
   const { data: emqData } = useEmqScore(tid)
   const { data: autopilotData } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
@@ -86,7 +83,7 @@ export default function TenantNarrative() {
   const tenant = {
     id: tenantId,
     name: tenantData?.name ?? 'Fashion Forward',
-    industry: tenantData?.industry ?? 'Retail',
+    industry: (tenantData as { industry?: string } | undefined)?.industry ?? 'Retail',
     plan: 'Pro',
     primaryContact: {
       name: 'Jennifer Smith',

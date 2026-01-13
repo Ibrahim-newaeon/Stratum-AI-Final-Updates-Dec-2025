@@ -55,8 +55,8 @@ export default function TenantOverview() {
   const { data: autopilotData } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
   const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
-  const { data: overviewData } = useTenantOverview(tid.toString())
-  const { data: recommendationsData } = useTenantRecommendations(tid.toString())
+  const { data: overviewData } = useTenantOverview(tid)
+  const { data: recommendationsData } = useTenantRecommendations(tid)
 
   // Transform data for components
   const emqScore = emqData?.score ?? 85
@@ -67,7 +67,7 @@ export default function TenantOverview() {
     {
       id: 'spend',
       label: 'Spend',
-      value: overviewData?.kpis.totalSpend ?? 45000,
+      value: overviewData?.kpis?.total_spend ?? 45000,
       format: 'currency',
       previousValue: 42000,
       confidence: emqScore,
@@ -75,7 +75,7 @@ export default function TenantOverview() {
     {
       id: 'revenue',
       label: 'Revenue',
-      value: overviewData?.kpis.totalRevenue ?? 180000,
+      value: overviewData?.kpis?.total_revenue ?? 180000,
       format: 'currency',
       previousValue: 165000,
       confidence: emqScore,
@@ -159,7 +159,11 @@ export default function TenantOverview() {
     },
   ]
 
-  const actions: Action[] = recommendationsData?.map((r) => ({
+  // Handle both array and object response shapes
+  const recommendationsList = Array.isArray(recommendationsData)
+    ? recommendationsData
+    : (recommendationsData as { recommendations?: unknown[] } | undefined)?.recommendations || []
+  const actions: Action[] = (recommendationsList as { id: string; priority: string; title: string; description: string; platform?: string; expectedImpact: number; status: string; createdAt?: string }[]).map((r) => ({
     id: r.id,
     type: r.priority === 'high' ? 'opportunity' : 'recommendation',
     title: r.title,
@@ -173,7 +177,7 @@ export default function TenantOverview() {
     },
     status: r.status === 'approved' ? 'applied' : 'pending',
     priority: r.priority === 'high' ? 1 : 2,
-    createdAt: new Date(r.createdAt),
+    createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
   })) as Action[] ?? [
     {
       id: '1',

@@ -153,7 +153,7 @@ export default function TenantProfile() {
   }
 
   // Fetch data
-  const { data: tenantData } = useTenant(tenantId || '')
+  const { data: tenantData } = useTenant(tid)
   const { data: emqData } = useEmqScore(tid)
   const { data: autopilotData, refetch: refetchAutopilot } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
@@ -171,7 +171,7 @@ export default function TenantProfile() {
   const tenant = {
     id: tenantId,
     name: tenantData?.name ?? 'Fashion Forward',
-    industry: tenantData?.industry ?? 'Retail',
+    industry: 'Retail', // Industry not in API, using default
     plan: tenantData?.plan ?? 'Pro',
     accountManager: 'Sarah Johnson',
     createdAt: new Date('2024-01-15'),

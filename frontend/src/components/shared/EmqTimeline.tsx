@@ -13,7 +13,7 @@ import {
 
 export interface TimelineEvent {
   id: string
-  type: 'incident_opened' | 'incident_closed' | 'degradation' | 'recovery' | 'update'
+  type: 'incident_opened' | 'incident_closed' | 'degradation' | 'recovery' | 'update' | 'mode_change' | 'action_blocked'
   title: string
   description?: string
   timestamp: Date
@@ -60,6 +60,18 @@ const eventConfig = {
     color: 'text-text-secondary',
     bgColor: 'bg-surface-tertiary',
     lineColor: 'bg-white/20',
+  },
+  mode_change: {
+    icon: ArrowPathIcon,
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/10',
+    lineColor: 'bg-blue-500',
+  },
+  action_blocked: {
+    icon: ExclamationTriangleIcon,
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/10',
+    lineColor: 'bg-orange-500',
   },
 }
 

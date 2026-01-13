@@ -149,13 +149,13 @@ export function Rules() {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  const _tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch rules from API
-  const { data: rulesData, isLoading } = useRules(tenantId)
-  const toggleRule = useToggleRule(tenantId)
-  const deleteRule = useDeleteRule(tenantId)
-  const createRule = useCreateRule(tenantId)
+  const { data: rulesData, isLoading } = useRules()
+  const toggleRule = useToggleRule()
+  const _deleteRule = useDeleteRule()
+  const createRule = useCreateRule()
 
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
@@ -178,9 +178,8 @@ export function Rules() {
   }, [rulesData])
 
   // Handle toggle rule status
-  const handleToggleRule = async (ruleId: number, currentStatus: RuleStatus) => {
-    const enabled = currentStatus !== 'active'
-    await toggleRule.mutateAsync({ ruleId: ruleId.toString(), enabled })
+  const handleToggleRule = async (ruleId: number, _currentStatus: RuleStatus) => {
+    await toggleRule.mutateAsync(ruleId.toString())
   }
 
   const filteredRules = rules.filter((rule) => {

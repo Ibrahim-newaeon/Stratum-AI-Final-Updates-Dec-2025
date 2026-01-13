@@ -43,12 +43,11 @@ const statusColors = {
 
 export default function TenantCampaigns() {
   const { tenantId } = useParams<{ tenantId: string }>()
-  const tid = parseInt(tenantId || '1', 10)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
   // Fetch campaigns from API
-  const { data: campaignsData, isLoading } = useCampaigns(tid)
+  const { data: campaignsData } = useCampaigns()
 
   // Transform API data or fall back to mock
   const campaigns = useMemo((): Campaign[] => {

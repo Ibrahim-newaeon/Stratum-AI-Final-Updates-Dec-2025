@@ -51,8 +51,56 @@ export * from '../campaigns'
 export * from '../assets'
 export * from '../rules'
 export * from '../competitors'
-export * from '../predictions'
-export * from '../admin'
+// Exclude AlertSeverity from predictions (already exported from pacing)
+export {
+  type PredictionType,
+  type Prediction,
+  type PredictionAlert,
+  type BudgetOptimization,
+  type Scenario,
+  type CreateScenarioRequest,
+  predictionsApi,
+  useLivePredictions,
+  useCampaignPredictions,
+  usePredictionAlerts,
+  useMarkAlertRead,
+  useRefreshPredictions,
+  useBudgetOptimization,
+  useApplyBudgetOptimization,
+  useScenarios,
+  useScenario,
+  useCreateScenario,
+  useDeleteScenario,
+} from '../predictions'
+// Exclude User from admin (already exported from auth)
+export {
+  type UserRole,
+  type TenantStatus,
+  type PlanTier,
+  type Tenant,
+  type TenantWithMetrics,
+  type UserFilters,
+  type TenantFilters,
+  type CreateUserRequest,
+  type UpdateUserRequest,
+  type CreateTenantRequest,
+  type UpdateTenantRequest,
+  adminApi,
+  useUsers,
+  useUser,
+  useCreateUser,
+  useUpdateUser,
+  useDeleteUser,
+  useResetUserPassword,
+  useTenants,
+  useTenant,
+  useCreateTenant,
+  useUpdateTenant,
+  useDeleteTenant,
+  useSuspendTenant,
+  useReactivateTenant,
+  useTenantUsers,
+} from '../admin'
 export * from '../gdpr'
 export * from '../attribution'
 export * from '../pacing'

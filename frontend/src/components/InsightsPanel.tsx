@@ -21,7 +21,31 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react'
-import { useTenantRecommendations, type Recommendation } from '../api/hooks'
+import { useTenantRecommendations } from '@/api/hooks/useTenantDashboard'
+
+// Local Recommendation type to match API response
+interface RecommendationAction {
+  action: string
+  label: string
+  params?: Record<string, unknown>
+}
+
+interface Recommendation {
+  id: string
+  type: 'scale' | 'watch' | 'fix' | 'pause' | 'creative_refresh' | 'budget_shift'
+  priority: number
+  entity_type?: string
+  entity_id?: string
+  entity_name?: string
+  title: string
+  description: string
+  impact_estimate?: string | null
+  expected_impact?: number
+  roas_impact?: number | null
+  confidence?: number
+  actions?: RecommendationAction[]
+  created_at?: string
+}
 import { useToast } from '@/components/ui/use-toast'
 
 interface InsightsPanelProps {
@@ -178,15 +202,17 @@ const InsightCard: React.FC<{
                 {recommendation.impact_estimate}
               </span>
             )}
-            <div className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" aria-hidden="true" />
-              <span>{new Date(recommendation.created_at).toLocaleDateString()}</span>
-            </div>
+            {recommendation.created_at && (
+              <div className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" aria-hidden="true" />
+                <span>{new Date(recommendation.created_at).toLocaleDateString()}</span>
+              </div>
+            )}
           </div>
         )}
 
         {/* Confidence indicator */}
-        {recommendation.confidence > 0 && (
+        {recommendation.confidence != null && recommendation.confidence > 0 && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-muted-foreground">Confidence</span>
@@ -227,7 +253,7 @@ const InsightCard: React.FC<{
               Recommended Actions
             </p>
             <div className="space-y-2">
-              {recommendation.actions.map((action, idx) => (
+              {recommendation.actions.map((action: RecommendationAction, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => handleApply(action.action)}
@@ -270,11 +296,16 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   const navigate = useNavigate()
   const { toast } = useToast()
 
-  const { data: recommendations, isLoading, error, refetch } = useTenantRecommendations(
+  const { data: recommendationsData, isLoading, error, refetch } = useTenantRecommendations(
     tenantId,
     undefined,
     { limit: maxItems + dismissedIds.size }
   )
+
+  // Handle both array and object response shapes
+  const recommendations: Recommendation[] | undefined = Array.isArray(recommendationsData)
+    ? recommendationsData as Recommendation[]
+    : (recommendationsData as { recommendations: Recommendation[] } | undefined)?.recommendations
 
   const handleDismiss = (id: string) => {
     setDismissedIds((prev) => new Set([...prev, id]))
@@ -311,7 +342,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   }
 
   const visibleRecommendations = recommendations
-    ?.filter((r) => !dismissedIds.has(r.id))
+    ?.filter((r: Recommendation) => !dismissedIds.has(r.id))
     .slice(0, maxItems)
 
   if (isLoading) {
@@ -382,7 +413,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
       {/* Insights list */}
       <div className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
         {visibleRecommendations && visibleRecommendations.length > 0 ? (
-          visibleRecommendations.map((recommendation, index) => (
+          visibleRecommendations.map((recommendation: Recommendation, index: number) => (
             <InsightCard
               key={recommendation.id}
               recommendation={recommendation}

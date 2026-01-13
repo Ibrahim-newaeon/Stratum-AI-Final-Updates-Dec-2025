@@ -68,7 +68,7 @@ export interface FeatureFlagsState {
 // Default Values
 // =============================================================================
 
-const defaultFeatures: FeatureFlags = {
+const _defaultFeatures: FeatureFlags = {
   signal_health: false,
   attribution_variance: false,
   ai_recommendations: false,

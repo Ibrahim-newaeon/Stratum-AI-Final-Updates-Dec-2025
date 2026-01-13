@@ -62,7 +62,7 @@ export default function ABTesting() {
   const [powerAnalysisParams, setPowerAnalysisParams] = useState({
     baselineConversionRate: 2.5,
     minimumDetectableEffect: 10,
-    confidenceLevel: 0.95 as const,
+    confidenceLevel: 0.95 as 0.9 | 0.95 | 0.99,
     dailyTraffic: 10000,
   })
 

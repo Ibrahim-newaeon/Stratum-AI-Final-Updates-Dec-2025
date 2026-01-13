@@ -11,7 +11,7 @@ import { apiClient, ApiResponse } from './client'
 // Types
 // =============================================================================
 
-export type AttributionModel = 'first_touch' | 'last_touch' | 'linear' | 'position_based' | 'time_decay' | 'w_shaped'
+export type AttributionModel = 'first_touch' | 'last_touch' | 'linear' | 'position_based' | 'time_decay' | 'w_shaped' | 'markov' | 'shapley'
 export type DataDrivenModelType = 'markov_chain' | 'shapley_value'
 export type ModelStatus = 'training' | 'active' | 'archived' | 'failed'
 

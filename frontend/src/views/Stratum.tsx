@@ -27,25 +27,38 @@ import {
   Settings,
   Loader2,
   X,
-  DollarSign,
-  Users,
   BarChart3,
   Clock,
   Zap,
   Bell,
   Mail,
   MessageSquare,
-  Trash2,
-  ToggleLeft,
-  ToggleRight,
 } from 'lucide-react'
-import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
+import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
 import { useInsights, useRecommendations, useAnomalies, useLivePredictions } from '@/api/hooks'
 import { useTenantStore } from '@/stores/tenantStore'
 
+// Type for insight - defined early for mock data typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface Insight {
+  id: number
+  type: string
+  priority: string
+  title: string
+  description: string
+  impact: string
+  campaign: string
+  fullDescription?: string
+  metrics?: Record<string, any>
+  recommendations?: string[]
+  historicalData?: Array<{ date: string; performance: number }>
+  confidence?: number
+  detectedAt?: string
+}
+
 // Mock AI insights with extended details
-const mockInsights = [
+const mockInsights: Insight[] = [
   {
     id: 1,
     type: 'opportunity',
@@ -140,23 +153,6 @@ const mockInsights = [
   },
 ]
 
-// Type for insight
-interface Insight {
-  id: number
-  type: string
-  priority: string
-  title: string
-  description: string
-  impact: string
-  campaign: string
-  fullDescription?: string
-  metrics?: Record<string, any>
-  recommendations?: string[]
-  historicalData?: Array<{ date: string; performance: number }>
-  confidence?: number
-  detectedAt?: string
-}
-
 // Mock prediction data
 const mockPredictionData = Array.from({ length: 14 }, (_, i) => {
   const date = new Date()
@@ -179,8 +175,30 @@ const mockAttributionData = [
   { name: 'Time Decay', value: 15, color: '#8b5cf6' },
 ]
 
+// Type for anomaly - defined early for mock data typing
+interface Anomaly {
+  id: number
+  date: string
+  metric: string
+  value: number
+  expected: number
+  deviation: string
+  type: string
+  fullDescription?: string
+  campaign?: string
+  adGroup?: string
+  platform?: string
+  severity?: string
+  historicalData?: Array<{ date: string; value: number }>
+  possibleCauses?: string[]
+  suggestedActions?: string[]
+  relatedMetrics?: Record<string, { value: number; change: number }>
+  detectedAt?: string
+  confidence?: number
+}
+
 // Mock anomaly data with extended details
-const mockAnomalies = [
+const mockAnomalies: Anomaly[] = [
   {
     id: 1,
     date: 'Nov 28',
@@ -312,28 +330,6 @@ const mockAnomalies = [
     confidence: 91,
   },
 ]
-
-// Type for anomaly
-interface Anomaly {
-  id: number
-  date: string
-  metric: string
-  value: number
-  expected: number
-  deviation: string
-  type: string
-  fullDescription?: string
-  campaign?: string
-  adGroup?: string
-  platform?: string
-  severity?: string
-  historicalData?: Array<{ date: string; value: number }>
-  possibleCauses?: string[]
-  suggestedActions?: string[]
-  relatedMetrics?: Record<string, { value: number; change: number }>
-  detectedAt?: string
-  confidence?: number
-}
 
 // Insight Detail Modal Component
 function InsightDetailModal({
@@ -1401,21 +1397,21 @@ export function Stratum() {
 
   // Fetch data from API
   const { data: insightsData, isLoading: insightsLoading, refetch: refetchInsights } = useInsights(tenantId)
-  const { data: recommendationsData } = useRecommendations(tenantId)
-  const { data: anomaliesData, isLoading: anomaliesLoading } = useAnomalies(tenantId)
-  const { data: predictionsData } = useLivePredictions(tenantId)
+  const { data: _recommendationsData } = useRecommendations(tenantId)
+  const { data: anomaliesData, isLoading: _anomaliesLoading } = useAnomalies(tenantId)
+  const { data: _predictionsData } = useLivePredictions()
 
   // Transform API insights or fall back to mock
   const insights = useMemo(() => {
-    if (insightsData?.items && insightsData.items.length > 0) {
-      return insightsData.items.slice(0, 3).map((i: any, idx: number) => ({
-        id: i.id || idx + 1,
-        type: i.type || i.insight_type || 'suggestion',
+    if (insightsData?.actions && insightsData.actions.length > 0) {
+      return insightsData.actions.slice(0, 3).map((i, idx) => ({
+        id: idx + 1,
+        type: i.type || 'suggestion',
         priority: i.priority || 'medium',
         title: i.title || '',
         description: i.description || '',
-        impact: i.impact || i.expected_impact || '+$0 estimated',
-        campaign: i.campaign || i.campaign_name || 'All campaigns',
+        impact: i.expected_impact ? `+${JSON.stringify(i.expected_impact)}` : '+$0 estimated',
+        campaign: i.entity_name || 'All campaigns',
       }))
     }
     return mockInsights
@@ -1423,14 +1419,15 @@ export function Stratum() {
 
   // Transform API anomalies or fall back to mock
   const anomalies = useMemo(() => {
-    if (anomaliesData?.items && anomaliesData.items.length > 0) {
-      return anomaliesData.items.slice(0, 3).map((a: any) => ({
-        date: new Date(a.detected_at || a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        metric: a.metric || a.metric_name || 'Unknown',
-        value: a.actual_value || a.value || 0,
-        expected: a.expected_value || a.expected || 0,
-        deviation: a.deviation ? `${a.deviation > 0 ? '+' : ''}${(a.deviation * 100).toFixed(0)}%` : '0%',
-        type: a.is_positive || a.type === 'positive' ? 'positive' : 'negative',
+    if (anomaliesData?.anomalies && anomaliesData.anomalies.length > 0) {
+      return anomaliesData.anomalies.slice(0, 3).map((a, idx) => ({
+        id: idx + 1,
+        date: new Date(a.detected_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        metric: a.metric || 'Unknown',
+        value: a.current_value || 0,
+        expected: a.expected_value || 0,
+        deviation: a.zscore ? `${a.zscore > 0 ? '+' : ''}${(a.zscore * 100).toFixed(0)}%` : '0%',
+        type: a.direction === 'spike' ? 'positive' : 'negative',
       }))
     }
     return mockAnomalies

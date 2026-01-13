@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Filter, X, ChevronDown, ChevronUp, Search, Globe, SlidersHorizontal } from 'lucide-react'
+import { X, ChevronDown, ChevronUp, Search, Globe, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DashboardFilters } from '@/types/dashboard'
 
@@ -125,7 +125,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const [expandedContinents, setExpandedContinents] = useState<string[]>(['Middle East'])
 
   // Use global regions or provided regions
-  const availableRegions = useMemo(() => {
+  const _availableRegions = useMemo(() => {
     if (useGlobalRegions) {
       return ALL_REGIONS
     }

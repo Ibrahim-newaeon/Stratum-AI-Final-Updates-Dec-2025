@@ -13,24 +13,16 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Activity,
-  AlertTriangle,
   ArrowRight,
   BarChart3,
-  CheckCircle2,
   ChevronDown,
-  Clock,
   DollarSign,
-  ExternalLink,
-  Gauge,
   Loader2,
   MousePointerClick,
   RefreshCw,
   Settings,
-  ShieldCheck,
   Target,
   TrendingUp,
-  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -259,7 +251,7 @@ export default function UnifiedDashboard() {
           trend={overview?.metrics.roas.trend}
           icon={<Target className="w-5 h-5" />}
           loading={overviewLoading}
-          highlight={overview?.metrics.roas.value >= 3}
+          highlight={(overview?.metrics.roas.value ?? 0) >= 3}
           positive
         />
         <MetricCard

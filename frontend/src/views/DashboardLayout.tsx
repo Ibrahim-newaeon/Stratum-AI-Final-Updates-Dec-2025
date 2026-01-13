@@ -318,7 +318,7 @@ export default function DashboardLayout() {
       </div>
 
       {/* Learning Hub Sidebar */}
-      <LearningHub open={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
+      <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
     </div>
   )
 }

@@ -19,7 +19,6 @@ import {
   ChartBarIcon,
   ArrowPathIcon,
   EllipsisHorizontalIcon,
-  ExclamationTriangleIcon,
   XMarkIcon,
   CheckIcon,
   TrashIcon,
@@ -79,7 +78,7 @@ const PLATFORMS = [
 ]
 
 export function Competitors() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -154,8 +153,9 @@ export function Competitors() {
     }))
   }
 
-  // Sample competitors
-  const competitors: Competitor[] = competitorsData?.map((c) => ({
+  // Sample competitors - handle paginated response
+  const competitorsList = Array.isArray(competitorsData) ? competitorsData : (competitorsData as { data?: unknown[] } | undefined)?.data || []
+  const competitors: Competitor[] = (competitorsList as { id: string; name: string; domain: string; estimatedSpend?: number; shareOfVoice?: number; activeCreatives?: number; lastUpdated?: string; isActive?: boolean }[]).map((c) => ({
     id: c.id,
     name: c.name,
     domain: c.domain,
@@ -230,8 +230,9 @@ export function Competitors() {
     { keyword: 'ppc management', yourPosition: 4, competitorPosition: 1, searchVolume: 9800, cpc: 15.60, competitor: 'CompetitorOne' },
   ]
 
-  // Share of Voice data
-  const shareOfVoice = sovData ?? {
+  // Share of Voice data - handle API response shape
+  type ShareOfVoiceData = { you: number; competitors: { name: string; share: number }[] }
+  const shareOfVoice: ShareOfVoiceData = (sovData && !Array.isArray(sovData) ? sovData as ShareOfVoiceData : null) ?? {
     you: 15,
     competitors: [
       { name: 'MarketLeader Inc', share: 35 },

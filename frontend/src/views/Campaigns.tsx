@@ -129,13 +129,13 @@ export function Campaigns() {
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
   // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  const _tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch campaigns from API
-  const { data: campaignsData, isLoading } = useCampaigns(tenantId)
-  const pauseCampaign = usePauseCampaign(tenantId)
-  const activateCampaign = useActivateCampaign(tenantId)
-  const deleteCampaign = useDeleteCampaign(tenantId)
+  const { data: campaignsData, isLoading } = useCampaigns()
+  const pauseCampaign = usePauseCampaign()
+  const activateCampaign = useActivateCampaign()
+  const deleteCampaign = useDeleteCampaign()
 
   // Transform API data or fall back to mock
   const campaigns = useMemo((): Campaign[] => {

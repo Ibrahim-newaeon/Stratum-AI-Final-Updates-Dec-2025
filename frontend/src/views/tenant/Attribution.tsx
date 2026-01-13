@@ -23,9 +23,28 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
+import type { AttributionModel, AttributionSummary as ApiAttributionSummary, ConversionPath as ApiConversionPath, TrainedAttributionModel as ApiTrainedModel } from '@/api/attribution'
 
 type TabType = 'overview' | 'models' | 'paths' | 'compare'
-type AttributionModel = 'first_touch' | 'last_touch' | 'linear' | 'time_decay' | 'position_based' | 'markov' | 'shapley'
+
+// Extended local types for UI display
+interface DisplaySummary {
+  totalConversions: number
+  totalRevenue: number
+  channelBreakdown: ApiAttributionSummary[]
+}
+
+interface DisplayPath extends Omit<ApiConversionPath, 'path'> {
+  path: string[]  // Convert string path to array for display
+  totalRevenue: number
+  avgTimeToConversion: number
+}
+
+interface DisplayTrainedModel extends Partial<ApiTrainedModel> {
+  name?: string
+  trainedAt?: string
+  accuracy?: number
+}
 
 const modelLabels: Record<AttributionModel, string> = {
   first_touch: 'First Touch',
@@ -33,6 +52,7 @@ const modelLabels: Record<AttributionModel, string> = {
   linear: 'Linear',
   time_decay: 'Time Decay',
   position_based: 'Position Based',
+  w_shaped: 'W-Shaped',
   markov: 'Markov Chain',
   shapley: 'Shapley Value',
 }
@@ -46,18 +66,42 @@ export default function Attribution() {
     endDate: new Date().toISOString().split('T')[0],
   })
 
-  const { data: summary, isLoading: loadingSummary } = useAttributionSummary({
+  const { data: summaryData, isLoading: loadingSummary } = useAttributionSummary({
     ...dateRange,
     model: selectedModel,
   })
-  const { data: topPaths } = useTopConversionPaths({ ...dateRange, limit: 10 })
-  const { data: comparison } = useCompareModels({
+  const { data: topPathsData } = useTopConversionPaths({ ...dateRange, limit: 10 })
+  const { data: comparisonData } = useCompareModels({
     ...dateRange,
-    models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'],
+    models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'] as AttributionModel[],
   })
-  const { data: trainedModels } = useTrainedModels()
+  const { data: trainedModelsData } = useTrainedModels()
   const trainMarkov = useTrainMarkovModel()
   const trainShapley = useTrainShapleyModel()
+
+  // Transform API data to display format
+  const summary: DisplaySummary | null = summaryData ? {
+    totalConversions: summaryData.reduce((sum, s) => sum + s.conversions, 0),
+    totalRevenue: summaryData.reduce((sum, s) => sum + s.attributedRevenue, 0),
+    channelBreakdown: summaryData,
+  } : null
+
+  const topPaths: DisplayPath[] = (topPathsData ?? []).map(p => ({
+    ...p,
+    path: p.path.split(' > '),  // Split path string into array
+    totalRevenue: p.revenue,
+    avgTimeToConversion: p.avgDaysToConvert,
+  }))
+
+  // Use the proper AttributionComparison type from API
+  const comparison = comparisonData
+
+  const trainedModels: DisplayTrainedModel[] = (trainedModelsData ?? []).map(m => ({
+    ...m,
+    name: m.modelName,
+    trainedAt: m.createdAt,
+    accuracy: m.validationAccuracy,
+  } as DisplayTrainedModel))
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
@@ -159,7 +203,7 @@ export default function Attribution() {
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
                         className="h-2 rounded-full bg-primary"
-                        style={{ width: `${channel.attributionWeight * 100}%` }}
+                        style={{ width: `${channel.avgWeight * 100}%` }}
                       />
                     </div>
                   </div>
@@ -266,9 +310,9 @@ export default function Attribution() {
                 {trainedModels?.map((model) => (
                   <tr key={model.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium">{model.name}</td>
-                    <td className="px-4 py-3 text-sm capitalize">{model.modelType.replace('_', ' ')}</td>
+                    <td className="px-4 py-3 text-sm capitalize">{model.modelType?.replace('_', ' ') ?? '-'}</td>
                     <td className="px-4 py-3 text-sm">
-                      {new Date(model.trainedAt).toLocaleDateString()}
+                      {model.trainedAt ? new Date(model.trainedAt).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-4 py-3 text-right font-medium">
                       {model.accuracy ? `${(model.accuracy * 100).toFixed(1)}%` : '-'}
@@ -371,7 +415,7 @@ export default function Attribution() {
                     <td className="px-4 py-3 font-medium">{channel.channel}</td>
                     {comparison.models.map((model) => (
                       <td key={model} className="px-4 py-3 text-right">
-                        ${channel.attributionByModel[model]?.toLocaleString() || '0'}
+                        ${channel.byModel[model as AttributionModel]?.revenue?.toLocaleString() || '0'}
                       </td>
                     ))}
                   </tr>

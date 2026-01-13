@@ -17,12 +17,12 @@ export interface PlaybookItem {
   title: string
   description: string
   priority: 'critical' | 'high' | 'medium' | 'low'
-  owner?: string
+  owner?: string | null
   estimatedImpact: number // Expected EMQ improvement
-  estimatedTime?: string // e.g., "15 min", "1 hour"
-  platform?: string
+  estimatedTime?: string | null // e.g., "15 min", "1 hour"
+  platform?: string | null
   status: 'pending' | 'in_progress' | 'completed'
-  actionUrl?: string
+  actionUrl?: string | null
 }
 
 interface EmqFixPlaybookPanelProps {

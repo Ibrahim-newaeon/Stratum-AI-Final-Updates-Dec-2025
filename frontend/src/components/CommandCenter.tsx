@@ -18,7 +18,7 @@ import {
   ArrowDownRight,
   Minus,
 } from 'lucide-react'
-import { useCommandCenter, type CommandCenterItem } from '../api/hooks'
+import { useCommandCenter, type CommandCenterItem } from '@/api/hooks/useTenantDashboard'
 
 interface CommandCenterProps {
   tenantId: number

@@ -13,6 +13,7 @@ export interface User {
   avatar?: string
   organization?: string
   permissions: string[]
+  tenant_id?: number | null
 }
 
 interface AuthContextType {

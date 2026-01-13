@@ -24,11 +24,11 @@ import { cn } from '@/lib/utils'
 interface TeamMember {
   id: number
   email: string
-  full_name: string
+  name: string
   role: string
-  is_active: boolean
-  last_login_at: string | null
-  created_at: string
+  isActive: boolean
+  lastLoginAt: string | null
+  createdAt: string
 }
 
 const ROLES = [
@@ -56,16 +56,16 @@ export default function TeamManagement() {
   const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null)
   const [newUser, setNewUser] = useState({
     email: '',
-    full_name: '',
+    name: '',
     role: 'viewer',
   })
 
-  const users: TeamMember[] = usersData?.data || []
+  const users: TeamMember[] = usersData || []
 
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const handleInvite = async () => {
@@ -79,18 +79,21 @@ export default function TeamManagement() {
     }
 
     try {
+      // Generate a temporary password for invite flow - user will reset via email
+      const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`
       await createUserMutation.mutateAsync({
-        tenant_id: tenantIdNum,
+        tenantId: tenantIdNum,
         email: newUser.email,
-        full_name: newUser.full_name,
-        role: newUser.role,
+        name: newUser.name || newUser.email.split('@')[0],
+        password: tempPassword,
+        role: newUser.role as 'superadmin' | 'admin' | 'user' | 'viewer',
       })
       toast({
         title: 'Success',
         description: 'Team member invited successfully',
       })
       setShowInviteModal(false)
-      setNewUser({ email: '', full_name: '', role: 'viewer' })
+      setNewUser({ email: '', name: '', role: 'viewer' })
       refetch()
     } catch (error) {
       toast({
@@ -105,7 +108,7 @@ export default function TeamManagement() {
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
-        role: newRole,
+        data: { role: newRole as 'superadmin' | 'admin' | 'user' | 'viewer' },
       })
       toast({
         title: 'Success',
@@ -247,11 +250,11 @@ export default function TeamManagement() {
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-sm font-medium text-primary">
-                          {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                          {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium">{user.full_name || 'No name'}</p>
+                        <p className="font-medium">{user.name || 'No name'}</p>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
@@ -274,7 +277,7 @@ export default function TeamManagement() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      {user.is_active ? (
+                      {user.isActive ? (
                         <>
                           <CheckCircleIcon className="h-5 w-5 text-green-500" />
                           <span className="text-sm text-green-600 dark:text-green-400">Active</span>
@@ -288,7 +291,7 @@ export default function TeamManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {formatDate(user.last_login_at)}
+                    {formatDate(user.lastLoginAt)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
@@ -303,7 +306,7 @@ export default function TeamManagement() {
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleRemoveUser(user.id, user.full_name || user.email)}
+                        onClick={() => handleRemoveUser(user.id, user.name || user.email)}
                         className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition-colors"
                         title="Remove member"
                       >
@@ -363,8 +366,8 @@ export default function TeamManagement() {
                 <label className="block text-sm font-medium mb-2">Full Name</label>
                 <input
                   type="text"
-                  value={newUser.full_name}
-                  onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                   placeholder="John Doe"
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
@@ -426,9 +429,9 @@ export default function TeamManagement() {
                 <label className="block text-sm font-medium mb-2">Full Name</label>
                 <input
                   type="text"
-                  value={selectedUser.full_name || ''}
+                  value={selectedUser.name || ''}
                   onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, full_name: e.target.value })
+                    setSelectedUser({ ...selectedUser, name: e.target.value })
                   }
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />

@@ -218,9 +218,9 @@ export function Overview() {
   const tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch data from API with fallback to mock data
-  const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns(tenantId)
+  const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns()
   const { data: overviewData } = useTenantOverview(tenantId)
-  const { data: anomaliesData } = useAnomalies(tenantId)
+  const { data: _anomaliesData } = useAnomalies(tenantId)
 
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -262,7 +262,8 @@ export function Overview() {
   const kpis = useMemo((): KPIMetrics => {
     // Use API overview data if available
     if (overviewData?.kpis) {
-      const apiKpis = overviewData.kpis
+      // Cast to allow access to both snake_case and camelCase properties
+      const apiKpis = overviewData.kpis as Record<string, number | undefined>
       return {
         totalSpend: apiKpis.total_spend ?? apiKpis.totalSpend ?? 0,
         totalRevenue: apiKpis.total_revenue ?? apiKpis.totalRevenue ?? 0,

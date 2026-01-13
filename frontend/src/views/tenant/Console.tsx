@@ -44,7 +44,7 @@ export default function Console() {
   // Fetch data
   const { data: emqData } = useEmqScore(tid)
   const { data: autopilotData } = useAutopilotState(tid)
-  const { data: recommendationsData } = useTenantRecommendations(tid.toString())
+  const { data: recommendationsData } = useTenantRecommendations(tid)
 
   const emqScore = emqData?.score ?? 85
   const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'normal'

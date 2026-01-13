@@ -64,25 +64,25 @@ interface Scenario {
 }
 
 export function Predictions() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'predictions' | 'optimization' | 'scenarios'>('predictions')
   const [timeHorizon, setTimeHorizon] = useState<'7d' | '30d' | '90d'>('30d')
   const [selectedCampaign, setSelectedCampaign] = useState<string>('all')
 
-  const { data: predictionsData, isLoading: predictionsLoading } = useLivePredictions()
+  const { data: predictionsData, isLoading: _predictionsLoading } = useLivePredictions()
   const { data: optimizationData } = useBudgetOptimization()
   const { data: alertsData } = usePredictionAlerts()
 
-  // Sample predictions
+  // Sample predictions - use predictedValue from API
   const predictions: Prediction[] = predictionsData?.map((p) => ({
     id: p.campaignId,
     campaign: `Campaign ${p.campaignId}`,
     platform: 'Meta',
     metric: 'ROAS',
     currentValue: 3.2,
-    predictedValue: p.predictedRoas ?? 3.5,
+    predictedValue: p.predictedValue ?? 3.5,
     confidence: p.confidence ?? 85,
-    trend: (p.predictedRoas ?? 0) > 3.2 ? 'up' : 'down',
+    trend: (p.predictedValue ?? 0) > 3.2 ? 'up' : 'down',
     horizon: '30d',
     updatedAt: new Date(),
   })) ?? [
@@ -136,12 +136,13 @@ export function Predictions() {
     },
   ]
 
-  const optimizations: OptimizationRecommendation[] = optimizationData?.recommendations?.map((r) => ({
+  // Use optimizedAllocation from API (not recommendations)
+  const optimizations: OptimizationRecommendation[] = optimizationData?.optimizedAllocation?.map((r: { campaignId: string; campaignName: string; currentBudget: number; recommendedBudget: number; expectedRoasChange: number }) => ({
     id: r.campaignId,
-    title: `Optimize ${r.campaignId}`,
-    description: r.action,
+    title: `Optimize ${r.campaignName || r.campaignId}`,
+    description: `Adjust budget for better ROAS`,
     currentBudget: r.currentBudget,
-    recommendedBudget: r.suggestedBudget,
+    recommendedBudget: r.recommendedBudget,
     expectedImpact: {
       metric: 'ROAS',
       change: r.expectedRoasChange,
@@ -189,7 +190,12 @@ export function Predictions() {
     { id: '4', name: 'Maximum Growth', budgetChange: 50, predictedRoas: 2.9, predictedRevenue: 240000, confidence: 62 },
   ]
 
-  const alerts = alertsData ?? [
+  // Map PredictionAlert severity to local alert type
+  const alerts: { id: string; type: 'warning' | 'opportunity'; message: string }[] = alertsData?.map(a => ({
+    id: a.id,
+    type: a.severity === 'critical' || a.severity === 'warning' ? 'warning' : 'opportunity',
+    message: a.message,
+  })) ?? [
     { id: '1', type: 'warning', message: 'Brand Awareness Q4 ROAS predicted to drop 10% in next 7 days' },
     { id: '2', type: 'opportunity', message: 'Summer Sale 2024 has scaling potential - consider budget increase' },
   ]

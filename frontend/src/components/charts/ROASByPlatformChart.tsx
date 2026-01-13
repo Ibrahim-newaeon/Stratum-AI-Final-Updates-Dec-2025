@@ -14,7 +14,7 @@ import {
   Cell,
   ReferenceLine,
 } from 'recharts'
-import { chartTheme, chartFormatters, getPlatformChartColor } from '@/lib/chartTheme'
+import { chartTheme, chartFormatters } from '@/lib/chartTheme'
 import { PlatformSummary } from '@/types/dashboard'
 import { ChartSkeleton } from '@/components/ui/Skeleton'
 import { NoChartDataState } from '@/components/ui/EmptyState'
