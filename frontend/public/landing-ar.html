@@ -1183,16 +1183,37 @@
         .integration-logos {
             max-width: 1000px;
             margin: 3rem auto 0;
+            overflow: hidden;
+            position: relative;
+            /* Fade edges for smooth appearance */
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+
+        .integration-logos:hover .marquee-track {
+            animation-play-state: paused;
+        }
+
+        .marquee-track {
             display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
             gap: 2rem;
+            animation: marquee 25s linear infinite;
+            width: max-content;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
         }
 
         .integration-logo {
             width: 120px;
             height: 80px;
-            background: var(--bg-card);
+            background: linear-gradient(145deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95));
             border: 1px solid var(--border-glass);
             border-radius: 16px;
             display: flex;
@@ -1204,6 +1225,13 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            box-shadow:
+                0 4px 6px rgba(0, 0, 0, 0.3),
+                0 8px 15px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
         }
 
         .integration-logo::before {
@@ -1213,8 +1241,20 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.2), transparent);
             transition: left 0.5s ease;
+        }
+
+        .integration-logo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.08), transparent);
+            border-radius: 16px 16px 0 0;
+            pointer-events: none;
         }
 
         .integration-logo:hover::before {
@@ -1222,10 +1262,72 @@
         }
 
         .integration-logo:hover {
-            border-color: var(--accent-purple);
-            transform: translateY(-8px) scale(1.05);
-            box-shadow: 0 15px 30px var(--shadow-color);
+            transform: translateY(-10px) rotateX(10deg) scale(1.08);
             color: var(--text-primary);
+        }
+
+        /* Brand-specific glow colors */
+        .integration-logo[data-brand="meta"]:hover {
+            border-color: #0668E1;
+            box-shadow:
+                0 0 20px rgba(6, 104, 225, 0.6),
+                0 0 40px rgba(6, 104, 225, 0.4),
+                0 0 60px rgba(6, 104, 225, 0.2),
+                0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .integration-logo[data-brand="google"]:hover {
+            border-color: #4285F4;
+            box-shadow:
+                0 0 20px rgba(66, 133, 244, 0.6),
+                0 0 40px rgba(66, 133, 244, 0.4),
+                0 0 60px rgba(66, 133, 244, 0.2),
+                0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .integration-logo[data-brand="tiktok"]:hover {
+            border-color: #00F2EA;
+            box-shadow:
+                0 0 20px rgba(0, 242, 234, 0.6),
+                0 0 40px rgba(255, 0, 80, 0.4),
+                0 0 60px rgba(0, 242, 234, 0.2),
+                0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .integration-logo[data-brand="snapchat"]:hover {
+            border-color: #FFFC00;
+            box-shadow:
+                0 0 20px rgba(255, 252, 0, 0.6),
+                0 0 40px rgba(255, 252, 0, 0.4),
+                0 0 60px rgba(255, 252, 0, 0.2),
+                0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .integration-logo[data-brand="whatsapp"]:hover {
+            border-color: #25D366;
+            box-shadow:
+                0 0 20px rgba(37, 211, 102, 0.6),
+                0 0 40px rgba(37, 211, 102, 0.4),
+                0 0 60px rgba(37, 211, 102, 0.2),
+                0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .integration-logo[data-brand="ga4"]:hover {
+            border-color: #E37400;
+            box-shadow:
+                0 0 20px rgba(227, 116, 0, 0.6),
+                0 0 40px rgba(227, 116, 0, 0.4),
+                0 0 60px rgba(227, 116, 0, 0.2),
+                0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .integration-logo[data-brand="webhook"]:hover {
+            border-color: #8B5CF6;
+            box-shadow:
+                0 0 20px rgba(139, 92, 246, 0.6),
+                0 0 40px rgba(139, 92, 246, 0.4),
+                0 0 60px rgba(139, 92, 246, 0.2),
+                0 10px 20px rgba(0, 0, 0, 0.3);
         }
 
         /* ROI Calculator */
@@ -3867,14 +3969,24 @@
         </div>
 
         <div class="integration-logos">
-            <div class="integration-logo reveal-scale">META</div>
-            <div class="integration-logo reveal-scale">GOOGLE</div>
-            <div class="integration-logo reveal-scale">TIKTOK</div>
-            <div class="integration-logo reveal-scale">SNAPCHAT</div>
-            <div class="integration-logo reveal-scale">LINKEDIN</div>
-            <div class="integration-logo reveal-scale">WHATSAPP</div>
-            <div class="integration-logo reveal-scale">GA4</div>
-            <div class="integration-logo reveal-scale">WEBHOOK</div>
+            <div class="marquee-track">
+                <!-- First set of logos -->
+                <div class="integration-logo" data-brand="meta"><img src="./icons/meta.svg" alt="Meta" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="google"><img src="./icons/google_ads-official.svg" alt="Google Ads" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="tiktok"><img src="./icons/tiktok.svg" alt="TikTok" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="snapchat"><img src="./icons/snapchat.svg" alt="Snapchat" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="whatsapp"><img src="./icons/whatsapp.svg" alt="WhatsApp" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="ga4"><img src="./icons/ga4.svg" alt="GA4" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="webhook"><img src="./icons/webhook.svg" alt="Webhook" style="height: 40px; width: auto;"></div>
+                <!-- Duplicate set for seamless loop -->
+                <div class="integration-logo" data-brand="meta"><img src="./icons/meta.svg" alt="Meta" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="google"><img src="./icons/google_ads-official.svg" alt="Google Ads" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="tiktok"><img src="./icons/tiktok.svg" alt="TikTok" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="snapchat"><img src="./icons/snapchat.svg" alt="Snapchat" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="whatsapp"><img src="./icons/whatsapp.svg" alt="WhatsApp" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="ga4"><img src="./icons/ga4.svg" alt="GA4" style="height: 40px; width: auto;"></div>
+                <div class="integration-logo" data-brand="webhook"><img src="./icons/webhook.svg" alt="Webhook" style="height: 40px; width: auto;"></div>
+            </div>
         </div>
 
         <div style="max-width: 1000px; margin: 2.5rem auto 0; padding: 1.25rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px;">

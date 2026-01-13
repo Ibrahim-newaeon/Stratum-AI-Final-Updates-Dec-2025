@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+  
+  <path d="M78 36c-10 0-18 8-18 18v12c0 6-5 12-12 12s-12-6-12-12 5-12 12-12"
+        stroke="rgba(255,255,255,0.92)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M80 84h22l-8-8" stroke="rgba(255,255,255,0.92)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M102 84l-8 8" stroke="rgba(255,255,255,0.92)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="64" y="112" text-anchor="middle" font-family="system-ui,Segoe UI,Arial" font-size="16" fill="rgba(255,255,255,0.75)">WEBHOOK</text>
+
+</svg>
