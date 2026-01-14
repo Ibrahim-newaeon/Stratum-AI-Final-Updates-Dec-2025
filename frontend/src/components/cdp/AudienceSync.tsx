@@ -23,6 +23,9 @@ import {
   Settings2,
   ArrowUpRight,
   X,
+  Download,
+  FileJson,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -33,11 +36,13 @@ import {
   useTriggerSync,
   useDeletePlatformAudience,
   useSyncHistory,
+  useExportAudience,
   PlatformAudience,
   SyncPlatform,
   SyncStatus,
   SyncJob,
   CDPSegment,
+  AudienceExportParams,
 } from '@/api/cdp'
 
 // Platform configurations
@@ -473,6 +478,197 @@ function SyncHistoryPanel({ audienceId, audienceName, onClose }: SyncHistoryPane
   )
 }
 
+// Export audience modal
+interface ExportAudienceModalProps {
+  isOpen: boolean
+  onClose: () => void
+  segments: CDPSegment[]
+}
+
+function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalProps) {
+  const [segmentId, setSegmentId] = useState<string>('')
+  const [format, setFormat] = useState<'csv' | 'json'>('csv')
+  const [includeTraits, setIncludeTraits] = useState(true)
+  const [includeEvents, setIncludeEvents] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+
+  const exportMutation = useExportAudience()
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const params: AudienceExportParams = {
+        format,
+        segment_ids: segmentId ? [segmentId] : undefined,
+        include_traits: includeTraits,
+        include_events: includeEvents,
+      }
+
+      const result = await exportMutation.mutateAsync(params)
+
+      // Handle file download
+      if (result instanceof Blob) {
+        const url = URL.createObjectURL(result)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `audience-export-${new Date().toISOString().split('T')[0]}.${format}`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } else {
+        // JSON response - convert to downloadable file
+        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `audience-export-${new Date().toISOString().split('T')[0]}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+
+      onClose()
+    } catch (error) {
+      console.error('Export failed:', error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border rounded-xl shadow-xl w-full max-w-md mx-4">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Download className="w-5 h-5" />
+            Export Custom Audience
+          </h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Segment selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Segment (optional)</label>
+            <select
+              value={segmentId}
+              onChange={(e) => setSegmentId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">All profiles</option>
+              {segments.map(segment => (
+                <option key={segment.id} value={segment.id}>
+                  {segment.name} ({segment.profile_count?.toLocaleString() || 0} profiles)
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Leave empty to export all profiles
+            </p>
+          </div>
+
+          {/* Format selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Export Format</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormat('csv')}
+                className={cn(
+                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-all',
+                  format === 'csv'
+                    ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                    : 'hover:border-muted-foreground/20'
+                )}
+              >
+                <FileSpreadsheet className="w-5 h-5" />
+                <span className="font-medium">CSV</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormat('json')}
+                className={cn(
+                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-all',
+                  format === 'json'
+                    ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                    : 'hover:border-muted-foreground/20'
+                )}
+              >
+                <FileJson className="w-5 h-5" />
+                <span className="font-medium">JSON</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Include options */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Include Data</label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={includeTraits}
+                  onChange={(e) => setIncludeTraits(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                <span className="text-sm">Profile traits & attributes</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={includeEvents}
+                  onChange={(e) => setIncludeEvents(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                <span className="text-sm">Recent events (last 30 days)</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Info box */}
+          <div className="p-3 rounded-lg bg-muted/30 border text-sm">
+            <p className="text-muted-foreground">
+              Export includes: email, phone, identifiers, lifecycle stage
+              {includeTraits && ', custom traits'}
+              {includeEvents && ', event history'}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              Export {format.toUpperCase()}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Audience card component
 interface AudienceCardProps {
   audience: PlatformAudience
@@ -598,6 +794,7 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
 // Main component
 export function AudienceSync() {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [platformFilter, setPlatformFilter] = useState<SyncPlatform | ''>('')
   const [historyAudience, setHistoryAudience] = useState<PlatformAudience | null>(null)
@@ -669,14 +866,24 @@ export function AudienceSync() {
             Push CDP segments to ad platforms for targeting
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          disabled={connectedPlatforms.length === 0 || segments.length === 0}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Audience
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowExportModal(true)}
+            disabled={segments.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted disabled:opacity-50 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            disabled={connectedPlatforms.length === 0 || segments.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Audience
+          </button>
+        </div>
       </div>
 
       {/* Connected platforms summary */}
@@ -769,6 +976,13 @@ export function AudienceSync() {
         onClose={() => setShowCreateModal(false)}
         segments={segments}
         connectedPlatforms={connectedPlatforms}
+      />
+
+      {/* Export modal */}
+      <ExportAudienceModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        segments={segments}
       />
 
       {/* History panel */}
