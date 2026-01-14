@@ -38,6 +38,13 @@ const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'))
 const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'))
 const CDPCalculator = lazy(() => import('./views/CDPCalculator'))
 
+// CDP (Customer Data Platform) views
+const CDPDashboard = lazy(() => import('./views/cdp/CDPDashboard'))
+const CDPProfiles = lazy(() => import('./views/cdp/CDPProfiles'))
+const CDPSegments = lazy(() => import('./views/cdp/CDPSegments'))
+const CDPEvents = lazy(() => import('./views/cdp/CDPEvents'))
+const CDPIdentityGraph = lazy(() => import('./views/cdp/CDPIdentityGraph'))
+
 // Super Admin views
 const ControlTower = lazy(() => import('./views/superadmin/ControlTower'))
 const SuperAdminTenantsList = lazy(() => import('./views/superadmin/TenantsList'))
@@ -306,6 +313,49 @@ function App() {
                     </Suspense>
                   }
                 />
+
+                {/* CDP (Customer Data Platform) routes */}
+                <Route
+                  path="cdp"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPDashboard />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/profiles"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPProfiles />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/segments"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPSegments />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/events"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPEvents />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/identity"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPIdentityGraph />
+                    </Suspense>
+                  }
+                />
+
                 {/* Superadmin only routes */}
                 <Route
                   path="superadmin"

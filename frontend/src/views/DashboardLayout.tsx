@@ -22,6 +22,11 @@ import {
   CircleStackIcon,
   ShieldCheckIcon,
   ArrowRightOnRectangleIcon,
+  UserGroupIcon,
+  TagIcon,
+  ClockIcon,
+  ShareIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
@@ -39,6 +44,15 @@ const navigation = [
   { name: 'nav.whatsapp', href: '/dashboard/whatsapp', icon: ChatBubbleLeftRightIcon, tourId: 'nav-whatsapp' },
 ]
 
+// CDP Navigation with sub-items
+const cdpNavigation = [
+  { name: 'CDP Overview', href: '/dashboard/cdp', icon: CircleStackIcon },
+  { name: 'Profiles', href: '/dashboard/cdp/profiles', icon: UserGroupIcon },
+  { name: 'Segments', href: '/dashboard/cdp/segments', icon: TagIcon },
+  { name: 'Events', href: '/dashboard/cdp/events', icon: ClockIcon },
+  { name: 'Identity Graph', href: '/dashboard/cdp/identity', icon: ShareIcon },
+]
+
 export default function DashboardLayout() {
   const { t, i18n } = useTranslation()
   const location = useLocation()
@@ -47,6 +61,7 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [learningHubOpen, setLearningHubOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'))
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'ar' : 'en'
@@ -124,6 +139,54 @@ export default function DashboardLayout() {
                 </NavLink>
               )
             })}
+
+            {/* CDP Section with Submenu */}
+            <div className="pt-2">
+              <button
+                onClick={() => setCdpExpanded(!cdpExpanded)}
+                className={cn(
+                  'w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  location.pathname.startsWith('/dashboard/cdp')
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <CircleStackIcon className="h-5 w-5" />
+                  <span>CDP</span>
+                </div>
+                <ChevronDownIcon
+                  className={cn(
+                    'h-4 w-4 transition-transform duration-200',
+                    cdpExpanded ? 'rotate-180' : ''
+                  )}
+                />
+              </button>
+
+              {cdpExpanded && (
+                <div className="ml-4 mt-1 space-y-1 border-l-2 border-muted pl-3">
+                  {cdpNavigation.map((item) => {
+                    const isActive = location.pathname === item.href
+                    return (
+                      <NavLink
+                        key={item.name}
+                        to={item.href}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                          isActive
+                            ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        )}
+                        onClick={() => setSidebarOpen(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </NavLink>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Admin & Settings at bottom */}
