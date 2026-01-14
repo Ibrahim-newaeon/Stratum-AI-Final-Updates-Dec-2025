@@ -1282,6 +1282,7 @@
                 <a href="#users">16. User Management</a>
                 <a href="#api">17. API Reference</a>
                 <a href="#tech">18. Technical Stack</a>
+                <a href="#math-models">19. Mathematical Models & Predictions</a>
             </div>
         </nav>
 
@@ -2134,6 +2135,453 @@ PUBLISHING → FAILED (retry available)</div>
                     <tr><td>Load Tests</td><td><span class="badge badge-success">100% checks passed</span></td></tr>
                     <tr><td>Security Audit</td><td><span class="badge badge-success">No vulnerabilities</span></td></tr>
                     <tr><td>Frontend Build</td><td><span class="badge badge-success">Successful</span></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Mathematical Models & Predictions -->
+        <section class="section" id="math-models">
+            <h2>Mathematical Models & Prediction Engine</h2>
+            <p>Complete documentation of all mathematical formulas, algorithms, and prediction models used in the Stratum AI platform.</p>
+
+            <!-- Signal Health -->
+            <h3>1. Signal Health Calculation</h3>
+            <p>The core metric that determines automation eligibility. Composite score from 0-100.</p>
+
+            <div class="diagram">
+Overall Signal Health Score Formula:
+════════════════════════════════════════════════════════════════════════════════
+
+Score = (EMQ × 0.40) + (Freshness × 0.25) + (Variance × 0.20) + (Anomaly × 0.15)
+
+With CDP Enhancement:
+Score = (EMQ × 0.36) + (Freshness × 0.225) + (Variance × 0.18) +
+        (Anomaly × 0.135) + (CDP_EMQ × 0.10)
+
+Thresholds:
+┌─────────────┬───────────┬─────────────────────────────────┐
+│ Status      │ Score     │ Automation Action               │
+├─────────────┼───────────┼─────────────────────────────────┤
+│ HEALTHY     │ ≥ 70      │ Autopilot enabled               │
+│ DEGRADED    │ 40 - 69   │ Alert + Hold                    │
+│ CRITICAL    │ < 40      │ Manual intervention required    │
+└─────────────┴───────────┴─────────────────────────────────┘
+            </div>
+
+            <h4>Freshness Score</h4>
+            <div class="diagram">
+Freshness Score (0-100):
+════════════════════════════════════════════════════════════════════════════════
+
+if age_hours ≤ max_data_age (24h):
+    Score = 100.0
+
+else if age_hours ≥ stale_threshold (48h):
+    Score = 0.0
+
+else:
+    decay = (age_hours - max_data_age) / (stale_threshold - max_data_age)
+    Score = 100.0 × (1.0 - decay)
+            </div>
+
+            <h4>Variance Score</h4>
+            <div class="diagram">
+Variance Score (Revenue Discrepancy Detection):
+════════════════════════════════════════════════════════════════════════════════
+
+variance = |platform_revenue - ga4_revenue| / ga4_revenue
+
+if variance ≤ 0.10 (10% warning threshold):
+    Score = 100.0
+
+else if variance ≥ 0.15 (15% max threshold):
+    Score = 0.0  [Issue flagged]
+
+else:
+    excess = variance - 0.10
+    max_excess = 0.15 - 0.10
+    decay = (excess / max_excess) × 0.3
+    Score = 100.0 × (1.0 - decay)
+            </div>
+
+            <h4>Anomaly Detection (Z-Score)</h4>
+            <div class="diagram">
+Z-Score Anomaly Detection:
+════════════════════════════════════════════════════════════════════════════════
+
+For each metric [spend, conversions, CPA, ROAS]:
+
+    μ = Σ(historical_values) / n          (mean)
+    σ = √(Σ(x - μ)² / n)                  (standard deviation)
+    z_score = |current_value - μ| / σ
+
+    Anomaly detected if: |z_score| > 3.0
+
+Severity Mapping:
+┌──────────────┬─────────────┐
+│ |z_score|    │ Severity    │
+├──────────────┼─────────────┤
+│ ≥ 4.0        │ CRITICAL    │
+│ ≥ 3.0        │ HIGH        │
+│ ≥ 2.5        │ MEDIUM      │
+│ < 2.5        │ LOW         │
+└──────────────┴─────────────┘
+
+Anomaly Score:
+    anomaly_ratio = anomaly_count / metrics_checked
+
+    if ratio = 0:    Score = 100
+    if ratio ≤ 0.25: Score = 80
+    if ratio ≤ 0.50: Score = 50
+    else:            Score = 20
+            </div>
+
+            <!-- RFM Scoring -->
+            <h3>2. RFM Scoring & Customer Segmentation</h3>
+            <p>Recency, Frequency, Monetary analysis for customer value segmentation.</p>
+
+            <div class="diagram">
+RFM Quintile Scoring (1-5 per dimension):
+════════════════════════════════════════════════════════════════════════════════
+
+Calculate percentiles: 20th (Q1), 40th (Q2), 60th (Q3), 80th (Q4)
+
+Recency Score (inverse - lower days = higher score):
+    if days ≤ Q1: score = 5
+    if days ≤ Q2: score = 4
+    if days ≤ Q3: score = 3
+    if days ≤ Q4: score = 2
+    else:         score = 1
+
+Frequency & Monetary Score (direct):
+    if value ≤ Q1: score = 1
+    if value ≤ Q2: score = 2
+    if value ≤ Q3: score = 3
+    if value ≤ Q4: score = 4
+    else:          score = 5
+
+Composite RFM Score:
+    RFM = (R × 0.35) + (F × 0.35) + (M × 0.30)
+    Percentile = ((RFM - 1) / 4) × 100
+            </div>
+
+            <h4>RFM Segment Definitions</h4>
+            <div class="diagram">
+RFM Segments (11 customer segments):
+════════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────┬─────────┬─────────┬─────────┬────────────────┐
+│ Segment             │ R Score │ F Score │ M Score │ Retention Rate │
+├─────────────────────┼─────────┼─────────┼─────────┼────────────────┤
+│ CHAMPIONS           │ 5       │ 5       │ 5       │ 95%            │
+│ LOYAL_CUSTOMERS     │ ≥4      │ ≥3      │ ≥4      │ 85%            │
+│ POTENTIAL_LOYALISTS │ ≥4      │ ≤3      │ ≤3      │ 70%            │
+│ NEW_CUSTOMERS       │ 5       │ 1       │ ≤3      │ 40%            │
+│ PROMISING           │ 4       │ 1       │ ≤2      │ 50%            │
+│ NEED_ATTENTION      │ 3       │ 2-3     │ 2-3     │ 60%            │
+│ ABOUT_TO_SLEEP      │ 2-3     │ ≤2      │ ≤2      │ 30%            │
+│ AT_RISK             │ 1-2     │ 3-5     │ 3-5     │ 25%            │
+│ CANT_LOSE           │ 1       │ 4-5     │ 4-5     │ 35%            │
+│ HIBERNATING         │ 1-2     │ 1-2     │ 1-2     │ 15%            │
+│ LOST                │ 1       │ 1       │ 1       │ 5%             │
+└─────────────────────┴─────────┴─────────┴─────────┴────────────────┘
+            </div>
+
+            <!-- CLV Prediction -->
+            <h3>3. Customer Lifetime Value (CLV) Prediction</h3>
+            <p>Discounted cash flow model for predicting future customer value.</p>
+
+            <div class="diagram">
+CLV Prediction Formula (Discounted Cash Flow):
+════════════════════════════════════════════════════════════════════════════════
+
+For each month m in prediction_horizon (default: 24 months):
+
+    survival_prob(m) = retention_rate ^ m
+
+    expected_value(m) = avg_monthly_value × order_multiplier × survival_prob(m)
+
+    discounted_value(m) = expected_value(m) / (1 + monthly_discount_rate)^m
+
+    Predicted_CLV = Σ discounted_value(m)  for m = 1 to 24
+
+Monthly Discount Rate:
+    monthly_rate = (1 + annual_rate)^(1/12) - 1
+    Default annual rate: 10%
+
+Expected Customer Lifetime:
+    lifetime_months = 1 / (1 - retention_rate)
+            </div>
+
+            <h4>CLV Confidence Score</h4>
+            <div class="diagram">
+CLV Confidence Calculation:
+════════════════════════════════════════════════════════════════════════════════
+
+confidence = 0.50 (base)
+
+if total_orders ≥ 10:   confidence += 0.20
+else if orders ≥ 5:     confidence += 0.10
+
+if days_as_customer ≥ 365: confidence += 0.15
+else if days ≥ 180:        confidence += 0.10
+
+if rfm_composite ≥ 4:      confidence += 0.10
+
+Final confidence = min(0.95, confidence)
+            </div>
+
+            <!-- Attribution Models -->
+            <h3>4. Attribution Models</h3>
+
+            <h4>Shapley Value Attribution</h4>
+            <p>Game-theoretic approach to fairly distribute conversion credit across channels.</p>
+
+            <div class="diagram">
+Shapley Value Formula:
+════════════════════════════════════════════════════════════════════════════════
+
+φᵢ = Σ [|S|! × (n-|S|-1)! / n!] × [v(S ∪ {i}) - v(S)]
+     S⊆N\{i}
+
+Where:
+    φᵢ = Shapley value (credit) for channel i
+    S  = subset of channels not containing i
+    n  = total number of channels
+    v(S) = conversion rate/value of coalition S
+
+For large channel sets (>10), Monte Carlo Approximation:
+    K = 10,000 random permutations
+
+    For each permutation:
+        marginal = v(coalition ∪ {channel}) - v(coalition)
+
+    Shapley_Value = Σ(marginal_contributions) / K
+
+Normalization:
+    weights = {channel: value / Σ(all_values)}  (ensures sum = 1.0)
+            </div>
+
+            <h4>Markov Chain Attribution</h4>
+            <div class="diagram">
+Markov Chain Attribution:
+════════════════════════════════════════════════════════════════════════════════
+
+Transition Probability:
+    P(from → to) = count(transitions) / count(total_from_state)
+
+Conversion Probability (Iterative):
+    Initialize: conv_prob[state] = 0.0 for all transient states
+
+    Iterate until convergence (max 100 iterations, tolerance 1e-6):
+        new_prob[state] = P(state → CONVERSION) +
+                          Σ P(state → next) × conv_prob[next]
+
+Removal Effect (Channel Importance):
+    baseline = conversion_probability(all_channels)
+
+    For each channel:
+        without = conversion_probability(all_except_channel)
+        removal_effect = (baseline - without) / baseline
+
+    Attribution = {channel: effect / Σ(effects)}
+            </div>
+
+            <!-- Profit & ROAS -->
+            <h3>5. Profit & ROAS Calculations</h3>
+
+            <div class="diagram">
+Profit Metrics:
+════════════════════════════════════════════════════════════════════════════════
+
+Gross_Profit = Revenue - COGS
+Net_Profit = Gross_Profit - Ad_Spend
+
+ROAS Metrics:
+    Revenue_ROAS = Total_Revenue / Total_Ad_Spend
+    Gross_Profit_ROAS = Total_Gross_Profit / Total_Ad_Spend
+    Net_Profit_ROAS = Total_Net_Profit / Total_Ad_Spend
+
+Margin Percentages:
+    Gross_Margin% = (Gross_Profit / Revenue) × 100
+    Net_Margin% = (Net_Profit / Revenue) × 100
+
+Breakeven Analysis:
+    Breakeven_ROAS = 1 / (Gross_Margin% / 100)
+    Margin_of_Safety = Revenue_ROAS - Breakeven_ROAS
+    Profitable = Revenue_ROAS > Breakeven_ROAS
+
+COGS Determination Priority:
+    1. Product-specific: cogs = cogs_per_unit × units
+    2. By percentage: cogs = revenue × cogs_pct / 100
+    3. By margin: cogs = revenue × (100 - margin_pct) / 100
+    4. Default: cogs = revenue × 0.70 (assumes 30% margin)
+            </div>
+
+            <!-- Pacing & Forecasting -->
+            <h3>6. Pacing & Forecasting</h3>
+
+            <div class="diagram">
+Pacing Calculations:
+════════════════════════════════════════════════════════════════════════════════
+
+period_days = (end_date - start_date).days + 1
+days_elapsed = max(0, (current_date - start_date).days + 1)
+days_remaining = max(0, (end_date - current_date).days)
+
+progress_pct = days_elapsed / period_days
+mtd_expected = target_value × progress_pct
+pacing_pct = (mtd_actual / mtd_expected) × 100
+completion_pct = (mtd_actual / target) × 100
+
+Pacing Status:
+┌────────────┬─────────────────────────────┐
+│ Status     │ Pacing Range                │
+├────────────┼─────────────────────────────┤
+│ ON_TRACK   │ 90% ≤ pacing ≤ 110%         │
+│ AT_RISK    │ 75-90% or 110-125%          │
+│ OFF_TRACK  │ < 75% or > 125%             │
+└────────────┴─────────────────────────────┘
+            </div>
+
+            <h4>EWMA Forecasting</h4>
+            <div class="diagram">
+Exponentially Weighted Moving Average (EWMA):
+════════════════════════════════════════════════════════════════════════════════
+
+EWMA_t = α × value_t + (1 - α) × EWMA_{t-1}
+
+Default α = 0.3 (higher weight to recent data)
+
+Day-of-Week Seasonality:
+    dow_factor[day] = avg_value[day] / overall_mean
+    forecast = EWMA × dow_factor[target_day]
+
+90% Confidence Intervals:
+    residual_std = √(Σ(actual - forecast)² / n)
+    horizon_factor = √(1 + forecast_days × 0.1)
+    ci_width = 1.645 × residual_std × horizon_factor
+
+    lower_bound = max(0, forecast - ci_width)
+    upper_bound = forecast + ci_width
+            </div>
+
+            <!-- EMQ Scoring -->
+            <h3>7. EMQ (Event Measurement Quality) Scoring</h3>
+
+            <div class="diagram">
+EMQ Composite Score (0-100):
+════════════════════════════════════════════════════════════════════════════════
+
+EMQ = (Event_Match_Rate × 0.30) + (Pixel_Coverage × 0.25) +
+      (Conversion_Latency × 0.20) + (Attribution_Accuracy × 0.15) +
+      (Data_Freshness × 0.10)
+
+Event Match Rate:
+    if matched_events > 0:
+        rate = (matched / max(pixel, capi)) × 100
+    else:
+        rate = (min(pixel, capi) / max(pixel, capi)) × 100
+
+    Status: GOOD ≥85, WARNING 70-84, CRITICAL <70
+
+Pixel Coverage:
+    page_coverage = (pages_with_pixel / total_pages) × 100
+    event_coverage = (events_configured / events_expected) × 100
+    score = (page_coverage + event_coverage) / 2
+
+    Status: GOOD ≥90, WARNING 75-89, CRITICAL <75
+            </div>
+
+            <!-- Scaling Score -->
+            <h3>8. Scaling Score Calculator</h3>
+
+            <div class="diagram">
+Performance-Based Scaling Score:
+════════════════════════════════════════════════════════════════════════════════
+
+Performance Deltas (vs baseline):
+    d_roas = (roas_today - roas_baseline) / |roas_baseline|
+    d_cpa = (cpa_today - cpa_baseline) / |cpa_baseline|
+    d_cvr = (cvr_today - cvr_baseline) / |cvr_baseline|
+    d_ctr = (ctr_today - ctr_baseline) / |ctr_baseline|
+
+Risk Penalties:
+    freq_penalty = clamp((frequency - target) / target, 0, 1)
+    emq_penalty = clamp((emq_target - emq_score) / emq_target, 0, 1)
+    vol_penalty = clamp(min_conversions / today_conversions, 0, 1)
+
+Final Score:
+    score = (d_roas × 0.40) + (-d_cpa × 0.20) + (d_cvr × 0.15) + (d_ctr × 0.10)
+    score = score × (1 - freq_penalty_weight × freq_penalty)
+    score = score × (1 - emq_penalty_weight × emq_penalty)
+    score = score × (1 - vol_penalty_weight × vol_penalty)
+
+Optional EMA Smoothing:
+    score = (0.4 × current) + (0.6 × previous)
+
+Action Thresholds:
+┌─────────┬─────────────────┐
+│ Action  │ Score Range     │
+├─────────┼─────────────────┤
+│ SCALE   │ ≥ 0.25          │
+│ WATCH   │ -0.25 to 0.25   │
+│ FIX     │ ≤ -0.25         │
+└─────────┴─────────────────┘
+            </div>
+
+            <!-- A/B Testing -->
+            <h3>9. A/B Testing & Power Analysis</h3>
+
+            <div class="diagram">
+Statistical Testing Metrics:
+════════════════════════════════════════════════════════════════════════════════
+
+MAE = Σ|predicted - actual| / n
+RMSE = √(Σ(predicted - actual)² / n)
+MAPE = (Σ|error / actual| / n) × 100
+
+Sample Size for Proportions:
+    n = 2 × (z_α + z_power)² × p × (1-p) / (effect)²
+
+    For relative effect:
+        absolute_effect = baseline_rate × MDE
+
+Power Calculation:
+    z_effect = effect / √(2 × p × (1-p) / n)
+    power = Φ(z_effect - z_α)
+
+    Where Φ = standard normal CDF
+
+Minimum Detectable Effect:
+    MDE = (z_α + z_power) × √(2 × p × (1-p) / n)
+
+Sequential Testing (Early Stopping):
+    Adjusted α using O'Brien-Fleming spending function
+    Stop if p_value < adjusted_α
+            </div>
+
+            <!-- Summary Table -->
+            <h3>10. Model Summary</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Type</th>
+                        <th>Key Metrics</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Signal Health</td><td>Weighted Average</td><td>EMQ, Freshness, Variance, Anomaly</td><td>Trust Gate decisions</td></tr>
+                    <tr><td>RFM Scoring</td><td>Quintile-based</td><td>Recency, Frequency, Monetary</td><td>Customer segmentation</td></tr>
+                    <tr><td>CLV Prediction</td><td>DCF Model</td><td>Lifetime value, retention</td><td>Customer value forecasting</td></tr>
+                    <tr><td>Shapley Attribution</td><td>Game Theory</td><td>Channel credit allocation</td><td>Multi-touch attribution</td></tr>
+                    <tr><td>Markov Attribution</td><td>Probabilistic</td><td>Transition & removal effects</td><td>Path-based attribution</td></tr>
+                    <tr><td>Anomaly Detection</td><td>Z-Score</td><td>Statistical deviation</td><td>Data quality alerts</td></tr>
+                    <tr><td>EWMA Forecasting</td><td>Time Series</td><td>Weighted moving average</td><td>Budget/metric projections</td></tr>
+                    <tr><td>Scaling Score</td><td>Weighted Deltas</td><td>Performance vs baseline</td><td>Budget recommendations</td></tr>
+                    <tr><td>Power Analysis</td><td>Statistical</td><td>Sample size, MDE</td><td>Experiment design</td></tr>
                 </tbody>
             </table>
         </section>
