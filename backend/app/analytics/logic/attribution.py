@@ -12,7 +12,6 @@ Use:
 - If abs(rev_var_pct) > 30% consistently: show an "Attribution Noise" banner.
 """
 
-from typing import Optional
 from app.analytics.logic.types import AttributionVarianceResult
 
 

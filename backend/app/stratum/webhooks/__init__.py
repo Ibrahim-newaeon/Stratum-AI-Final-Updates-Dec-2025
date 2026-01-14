@@ -55,10 +55,9 @@ import logging
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Callable
-from functools import wraps
 
-from fastapi import FastAPI, Request, Response, HTTPException, BackgroundTasks, Query, Header
-from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, Query, Header
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import asyncio
 
@@ -390,7 +389,7 @@ async def whatsapp_webhook_verify(
         logger.info("WhatsApp webhook verified successfully")
         return PlainTextResponse(content=hub_challenge)
 
-    logger.warning(f"WhatsApp webhook verification failed")
+    logger.warning("WhatsApp webhook verification failed")
     raise HTTPException(status_code=403, detail="Verification failed")
 
 
@@ -736,8 +735,7 @@ async def process_ecommerce_event(event_data: Dict[str, Any]):
     """
     from app.stratum.events import (
         ServerEvent, StandardEvent, UserData, ContentItem,
-        UnifiedEventsAPI, MetaEventsSender, GoogleEventsSender,
-        TikTokEventsSender, SnapchatEventsSender
+        UnifiedEventsAPI, MetaEventsSender
     )
 
     # Map event type

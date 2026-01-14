@@ -9,12 +9,10 @@ Implements Module B: Data Integration.
 """
 
 import hashlib
-import math
 import random
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-from enum import Enum
 
 from app.core.logging import get_logger
 from app.models import AdPlatform, CampaignStatus

@@ -17,7 +17,6 @@ from app.db.session import get_async_session
 from app.models import Tenant, User, UserRole
 from app.schemas import (
     APIResponse,
-    PaginatedResponse,
     TenantCreate,
     TenantResponse,
     TenantUpdate,

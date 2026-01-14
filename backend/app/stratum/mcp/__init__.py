@@ -80,11 +80,9 @@ Usage Examples:
     Claude: "Done! Budget increased from $500 to $600. Signal health: 85 (Healthy)"
 """
 
-import json
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
-from dataclasses import dataclass
+from typing import Dict, Any, List
 
 logger = logging.getLogger("stratum.mcp")
 
@@ -716,7 +714,7 @@ class StratumMCPServer:
 
     async def _handle_track_conversion(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Handle track_conversion tool call."""
-        from app.stratum.events import ServerEvent, StandardEvent, UserData, UnifiedEventsAPI
+        from app.stratum.events import ServerEvent, StandardEvent, UserData
 
         event_type_map = {
             "purchase": StandardEvent.PURCHASE,

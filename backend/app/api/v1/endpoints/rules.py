@@ -6,7 +6,6 @@ IFTTT-style automation rules management.
 Implements Module C: Stratum Automation.
 """
 
-from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status

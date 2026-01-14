@@ -17,7 +17,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 from pydantic import BaseModel, Field
 
@@ -26,8 +26,7 @@ from app.models.campaign_builder import (
     TenantPlatformConnection, TenantAdAccount, CampaignDraft, CampaignPublishLog,
     AdPlatform, ConnectionStatus, DraftStatus, PublishResult
 )
-from app.core.security import require_permission
-from app.schemas.response import APIResponse, PaginatedResponse
+from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["campaign-builder"])
 

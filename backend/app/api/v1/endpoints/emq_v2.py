@@ -16,7 +16,7 @@ Provides endpoints for:
 - Portfolio overview (super admin)
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import List, Optional
 import uuid
 

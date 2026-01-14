@@ -36,7 +36,6 @@ async def example_meta_integration():
     7. Executing the action (if approved)
     """
     from app.stratum import (
-        create_adapter,
         Platform,
         AutomationAction,
         EMQScore,
@@ -83,7 +82,7 @@ async def example_meta_integration():
         EMQScore(platform=Platform.META, event_name="Purchase", score=8.2),
         EMQScore(platform=Platform.META, event_name="AddToCart", score=6.5),
     ]
-    logger.info(f"  Simulated EMQ scores: Purchase=8.2, AddToCart=6.5")
+    logger.info("  Simulated EMQ scores: Purchase=8.2, AddToCart=6.5")
 
     # Simulate metrics
     logger.info("\nStep 5: Simulate historical metrics")
@@ -99,7 +98,7 @@ async def example_meta_integration():
             date_end=datetime.now() - timedelta(days=6-i),
         )
         recent_metrics.append(metrics)
-    logger.info(f"  Generated 7 days of metrics data")
+    logger.info("  Generated 7 days of metrics data")
 
     # Calculate signal health
     logger.info("\nStep 6: Calculate signal health")
@@ -128,7 +127,7 @@ async def example_meta_integration():
         parameters={"daily_budget": 150.00},
         signal_health_at_creation=signal_health.score
     )
-    logger.info(f"  Action: Update campaign budget to $150/day")
+    logger.info("  Action: Update campaign budget to $150/day")
 
     # Evaluate through trust gate
     logger.info("\nStep 8: Evaluate through trust gate")
@@ -249,7 +248,7 @@ async def example_budget_optimization():
     best = sorted_campaigns[0]
     worst = sorted_campaigns[-1]
 
-    logger.info(f"\n[TARGET] Optimization Decision:")
+    logger.info("\n[TARGET] Optimization Decision:")
     logger.info(f"  Best performer: {best['name']} ({best['roas']}x ROAS)")
     logger.info(f"  Worst performer: {worst['name']} ({worst['roas']}x ROAS)")
     logger.info(f"  -> Shift $20 from {worst['name']} to {best['name']}")

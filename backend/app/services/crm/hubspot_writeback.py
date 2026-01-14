@@ -12,12 +12,12 @@ Features:
 - Writeback history tracking
 """
 
-from datetime import datetime, date, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 from uuid import UUID
 import enum
 
-from sqlalchemy import select, and_, func, update
+from sqlalchemy import select, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger

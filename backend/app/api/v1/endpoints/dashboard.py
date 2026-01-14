@@ -16,16 +16,14 @@ All data is scoped to the authenticated user's tenant.
 """
 
 from datetime import datetime, timezone, timedelta, date
-from decimal import Decimal
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from enum import Enum
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy import select, func, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.auth.deps import CurrentUserDep, VerifiedUserDep

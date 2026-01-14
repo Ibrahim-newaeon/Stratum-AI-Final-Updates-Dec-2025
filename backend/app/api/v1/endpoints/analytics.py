@@ -5,7 +5,7 @@
 Analytics endpoints for dashboard data and KPI calculations.
 """
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request

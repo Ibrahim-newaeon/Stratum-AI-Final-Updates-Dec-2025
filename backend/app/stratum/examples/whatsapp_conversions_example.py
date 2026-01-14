@@ -25,7 +25,7 @@ This script shows how to implement each step.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("stratum.example.whatsapp")
@@ -35,11 +35,6 @@ async def example_whatsapp_messaging():
     """
     Example: WhatsApp messaging for e-commerce.
     """
-    from app.stratum.adapters.whatsapp_adapter import (
-        WhatsAppAdapter,
-        MessageType,
-        ConversationType
-    )
 
     logger.info("=" * 60)
     logger.info("WHATSAPP MESSAGING EXAMPLE")
@@ -191,11 +186,7 @@ async def example_server_side_conversions():
     from app.stratum.conversions import (
         ConversionEvent,
         UserData,
-        EventType,
-        MetaConversionsAPI,
-        TikTokEventsAPI,
-        SnapchatConversionsAPI,
-        UnifiedConversionsAPI
+        EventType
     )
 
     logger.info("\n" + "=" * 60)
@@ -223,7 +214,7 @@ async def example_server_side_conversions():
     logger.info(f"   Email: {user_data.email}")
     logger.info(f"   Phone: {user_data.phone}")
     logger.info(f"   External ID: {user_data.external_id}")
-    logger.info(f"   Click ID (fbc): Present")
+    logger.info("   Click ID (fbc): Present")
 
     logger.info("\n[HASH] Step 2: Data is Automatically Hashed (SHA256)")
     logger.info(f"   Hashed email: {user_data.get_hashed('email')[:20]}...")

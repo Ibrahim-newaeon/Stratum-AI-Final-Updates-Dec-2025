@@ -7,8 +7,7 @@ Implements strict type validation with comprehensive field constraints.
 """
 
 from datetime import datetime, date
-from decimal import Decimal
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar
 
 from pydantic import (
     BaseModel,

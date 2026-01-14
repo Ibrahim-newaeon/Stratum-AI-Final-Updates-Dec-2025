@@ -12,13 +12,13 @@ from datetime import date
 from typing import Dict, Any, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 
 from app.db.session import get_async_session
-from app.autopilot.service import AutopilotService, ActionStatus, ActionType
-from app.features.service import can_access_feature, get_tenant_features
+from app.autopilot.service import AutopilotService
+from app.features.service import get_tenant_features
 from app.schemas.response import APIResponse
 
 

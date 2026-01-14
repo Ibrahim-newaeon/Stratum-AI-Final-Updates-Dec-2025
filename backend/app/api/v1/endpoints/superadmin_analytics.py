@@ -7,11 +7,11 @@ Provides cross-tenant insights and platform health monitoring.
 """
 
 from datetime import date, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func
 
 from app.db.session import get_async_session
 from app.models.trust_layer import FactSignalHealthDaily, FactActionsQueue

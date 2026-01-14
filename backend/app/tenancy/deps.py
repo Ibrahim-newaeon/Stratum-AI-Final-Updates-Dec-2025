@@ -8,8 +8,7 @@ These dependencies ensure all data access is properly tenant-scoped
 and provide audit logging for super admin bypass operations.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select

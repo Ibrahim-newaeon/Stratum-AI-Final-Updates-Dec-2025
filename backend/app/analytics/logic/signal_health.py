@@ -14,7 +14,7 @@ Thresholds:
 - healthy: otherwise
 """
 
-from typing import Optional, List
+from typing import Optional
 from app.analytics.logic.types import (
     SignalHealthParams,
     SignalHealthResult,

@@ -302,7 +302,7 @@ async def calculate_fatigue_score(
         )
 
     # Calculate fatigue score
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timezone
 
     base_score = 0.0
 

@@ -14,19 +14,13 @@ from datetime import datetime, timezone
 from app.analytics.logic.types import (
     EntityMetrics,
     BaselineMetrics,
-    ScalingScoreResult,
-    FatigueResult,
-    AnomalyResult,
-    SignalHealthResult,
-    BudgetAction,
     RecommendationAction,
     AlertSeverity,
-    SignalHealthStatus,
     ScalingAction,
     FatigueState,
 )
-from app.analytics.logic.scoring import scaling_score, batch_scaling_scores
-from app.analytics.logic.fatigue import creative_fatigue, batch_creative_fatigue
+from app.analytics.logic.scoring import batch_scaling_scores
+from app.analytics.logic.fatigue import batch_creative_fatigue
 from app.analytics.logic.anomalies import detect_anomalies
 from app.analytics.logic.signal_health import signal_health, should_suspend_automation
 from app.analytics.logic.budget import reallocate_budget, summarize_reallocation

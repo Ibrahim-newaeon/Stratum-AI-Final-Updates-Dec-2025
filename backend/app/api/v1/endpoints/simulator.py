@@ -7,7 +7,6 @@ Implements Module A: Intelligence Engine.
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select

@@ -14,23 +14,19 @@ Supported models:
 - Custom: User-defined weights
 """
 
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 import math
 
-from sqlalchemy import select, and_, or_, func, case
+from sqlalchemy import select, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.core.logging import get_logger
 from app.models.crm import (
-    CRMContact,
     CRMDeal,
     Touchpoint,
     AttributionModel,
-    DailyPipelineMetrics,
 )
 
 logger = get_logger(__name__)

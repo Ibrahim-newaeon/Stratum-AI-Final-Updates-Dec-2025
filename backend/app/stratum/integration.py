@@ -11,12 +11,12 @@ Provides compatibility layer to integrate:
 """
 
 import logging
-from datetime import datetime, date
-from typing import Optional, Dict, Any, List
+from datetime import datetime
+from typing import Optional, Dict, Any
 
 from app.stratum.models import Platform, SignalHealth, AutomationAction, EMQScore
 from app.stratum.core.signal_health import SignalHealthCalculator
-from app.stratum.core.trust_gate import TrustGate, TrustGateResult, GateDecision
+from app.stratum.core.trust_gate import TrustGate, TrustGateResult
 
 
 logger = logging.getLogger("stratum.integration")

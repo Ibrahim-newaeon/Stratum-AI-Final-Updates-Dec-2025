@@ -15,7 +15,6 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from enum import Enum
 from dataclasses import dataclass, field
-import json
 import logging
 import uuid
 
@@ -199,8 +198,6 @@ class AutopilotEnforcer:
         from app.models.autopilot import (
             TenantEnforcementSettings,
             TenantEnforcementRule,
-            EnforcementMode as DBEnforcementMode,
-            ViolationType as DBViolationType,
         )
 
         # Query settings with rules

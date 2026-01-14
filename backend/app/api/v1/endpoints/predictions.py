@@ -15,10 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.ml.roas_optimizer import ROASOptimizer, LivePredictionEngine
+from app.ml.roas_optimizer import ROASOptimizer
 from app.models import Campaign, MLPrediction
 from app.schemas import APIResponse
-from app.workers.tasks import run_live_predictions, generate_roas_alerts
+from app.workers.tasks import run_live_predictions
 
 logger = get_logger(__name__)
 router = APIRouter()

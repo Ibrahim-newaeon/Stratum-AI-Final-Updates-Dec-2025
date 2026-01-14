@@ -11,18 +11,17 @@ Features:
 - Support for spend, revenue, ROAS, conversions forecasting
 """
 
-from datetime import date, datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import date, timedelta
+from typing import Any, Dict, List, Optional
 import math
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.pacing import (
     DailyKPI,
     Forecast,
-    Target,
     TargetMetric,
 )
 

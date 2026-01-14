@@ -8,11 +8,11 @@ Collects data from various sources and formats it according to the template.
 """
 
 from datetime import datetime, date, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 from uuid import UUID
 import json
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -43,7 +43,7 @@ class ReportDataCollector:
         config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Collect campaign performance data."""
-        from app.models import Campaign, CampaignMetric
+        from app.models import Campaign
 
         # Get metrics
         metrics = config.get("metrics", ["spend", "revenue", "roas", "conversions"])
@@ -127,7 +127,7 @@ class ReportDataCollector:
         config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Collect attribution summary data."""
-        from app.models.crm import CRMDeal, Touchpoint
+        from app.models.crm import CRMDeal
 
         # Get won deals in period
         deal_result = await self.db.execute(
@@ -183,7 +183,7 @@ class ReportDataCollector:
         config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Collect pacing and forecasting data."""
-        from app.models.pacing import Target, PacingSummary, PacingAlert
+        from app.models.pacing import Target, PacingAlert
 
         # Get active targets
         target_result = await self.db.execute(

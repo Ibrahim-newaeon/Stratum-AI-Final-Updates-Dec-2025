@@ -6,7 +6,6 @@ FastAPI dependencies for authentication and authorization.
 Provides get_current_user and related dependencies for protected routes.
 """
 
-from datetime import datetime, timedelta, timezone
 import secrets
 from typing import Annotated, Optional
 
@@ -15,9 +14,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import decode_token, encrypt_pii, hash_pii_for_lookup
+from app.core.security import decode_token
 from app.db.session import get_async_session
 from app.models import User, UserRole
 

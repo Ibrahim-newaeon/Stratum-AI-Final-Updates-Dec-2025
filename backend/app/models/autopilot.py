@@ -10,8 +10,6 @@ Models:
 - EnforcementAuditLog: Intervention audit log
 """
 
-from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 import enum
 

@@ -6,8 +6,8 @@ Time-series forecasting for ROAS predictions.
 Uses historical data to forecast future performance.
 """
 
-from datetime import date, datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import date, timedelta
+from typing import Any, Dict, List
 
 import numpy as np
 from sqlalchemy import select

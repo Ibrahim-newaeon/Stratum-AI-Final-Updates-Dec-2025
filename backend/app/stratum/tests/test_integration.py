@@ -36,9 +36,7 @@ def test_models():
     print("="*60)
 
     from app.stratum.models import (
-        Platform, EntityStatus, BiddingStrategy,
-        UnifiedCampaign, UnifiedAdSet, UnifiedAd,
-        PerformanceMetrics, EMQScore, SignalHealth, AutomationAction
+        Platform, EntityStatus, UnifiedCampaign, PerformanceMetrics, EMQScore, SignalHealth, AutomationAction
     )
 
     # Test Platform enum
@@ -342,7 +340,7 @@ def test_integration_bridge():
     print("="*60)
 
     from app.stratum.integration import (
-        StratumIntegration, get_integration,
+        get_integration,
         convert_platform_emq_to_score, create_automation_action
     )
     from app.stratum.core.trust_gate import GateDecision
@@ -370,7 +368,7 @@ def test_integration_bridge():
     # Test 2: Calculate signal health from EMQ response
     signal_health = integration.calculate_signal_health_from_emq_response(emq_response)
 
-    print(f"\n  From EMQ Response:")
+    print("\n  From EMQ Response:")
     print(f"  Overall Score: {signal_health.overall_score}")
     print(f"  EMQ Component: {signal_health.emq_score}")
     print(f"  Freshness: {signal_health.freshness_score}")
@@ -394,7 +392,7 @@ def test_integration_bridge():
 
     result = integration.evaluate_action(emq_response, action)
 
-    print(f"\n  Action Evaluation:")
+    print("\n  Action Evaluation:")
     print(f"  Decision: {result.decision.value}")
     print(f"  Reason: {result.reason}")
 
@@ -404,7 +402,7 @@ def test_integration_bridge():
     # Test 4: Get autopilot config
     autopilot_config = integration.get_autopilot_config(emq_response)
 
-    print(f"\n  Autopilot Config:")
+    print("\n  Autopilot Config:")
     print(f"  Mode: {autopilot_config['mode']}")
     print(f"  Reason: {autopilot_config['reason']}")
     print(f"  Allowed Actions: {autopilot_config['allowedActions'][:3]}...")
@@ -444,8 +442,6 @@ def test_adapter_registry():
     print("="*60)
 
     from app.stratum.adapters.registry import AdapterRegistry
-    from app.stratum.adapters.base import BaseAdapter
-    from app.stratum.models import Platform
 
     # Test 1: Check registry is singleton
     registry1 = AdapterRegistry()

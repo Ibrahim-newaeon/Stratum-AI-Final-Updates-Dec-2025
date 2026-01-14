@@ -50,7 +50,6 @@ Rate Limits
 - API calls: 80 calls/second for Cloud API
 """
 
-import asyncio
 import logging
 import hashlib
 import hmac
@@ -58,14 +57,12 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-import json
 import requests
 
 from app.stratum.adapters.base import (
     BaseAdapter,
     AdapterError,
     AuthenticationError,
-    RateLimitError,
     PlatformError,
     RateLimiter
 )

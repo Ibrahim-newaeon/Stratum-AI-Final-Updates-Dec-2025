@@ -7,8 +7,7 @@ Database models for the Trust Layer:
 - FactAttributionVarianceDaily: Daily attribution variance metrics
 """
 
-from datetime import datetime, date
-from typing import Optional
+from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (

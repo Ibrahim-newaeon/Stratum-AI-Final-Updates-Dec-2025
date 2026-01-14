@@ -9,7 +9,7 @@ All models inherit from this base for consistent behavior.
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import DateTime, Integer, MetaData, event, func
+from sqlalchemy import DateTime, Integer, MetaData
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 

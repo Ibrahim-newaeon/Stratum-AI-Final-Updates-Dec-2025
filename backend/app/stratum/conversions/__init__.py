@@ -44,7 +44,6 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-import json
 import requests
 
 logger = logging.getLogger("stratum.conversions")
@@ -643,7 +642,7 @@ class SnapchatConversionsAPI:
             response = requests.post(self.BASE_URL, json=payload, headers=headers)
             response.raise_for_status()
 
-            logger.info(f"Snapchat CAPI: Event sent successfully")
+            logger.info("Snapchat CAPI: Event sent successfully")
             return {"status": "success"}
 
         except requests.RequestException as e:

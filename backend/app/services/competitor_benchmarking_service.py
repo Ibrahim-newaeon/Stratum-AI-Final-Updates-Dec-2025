@@ -11,7 +11,7 @@ Provides:
 - Recommendations based on competitive position
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum

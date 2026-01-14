@@ -6,7 +6,6 @@ Pydantic models for EMQ (Event Measurement Quality) v2 API endpoints.
 These schemas match the frontend types defined in api/emqV2.ts.
 """
 
-from datetime import datetime
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field

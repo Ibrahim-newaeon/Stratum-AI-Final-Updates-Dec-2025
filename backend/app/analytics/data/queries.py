@@ -6,8 +6,8 @@ Common SQL queries for analytics operations.
 Based on Data_Schema_Events_and_Tables.md requirements.
 """
 
-from datetime import date, datetime, timedelta
-from typing import Optional, List
+from datetime import date
+from typing import List
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 

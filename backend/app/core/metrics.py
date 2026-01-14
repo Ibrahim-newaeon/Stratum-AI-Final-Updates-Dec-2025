@@ -15,7 +15,7 @@ Integration:
 """
 
 from typing import Callable, Optional
-from prometheus_client import Counter, Histogram, Gauge, Info, REGISTRY
+from prometheus_client import Counter, Histogram, Gauge
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 from prometheus_fastapi_instrumentator.metrics import Info as MetricInfo
 from fastapi import FastAPI

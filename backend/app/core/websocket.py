@@ -15,11 +15,11 @@ Handles:
 import asyncio
 import json
 from datetime import datetime
-from typing import Dict, Set, Optional, Any, List
+from typing import Dict, Set, Optional, Any
 from dataclasses import dataclass, field
 from enum import Enum
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from starlette.websockets import WebSocketState
 import redis.asyncio as redis
 

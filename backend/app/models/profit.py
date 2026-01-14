@@ -12,8 +12,7 @@ Models:
 - ProfitROASReport: Aggregated profit ROAS reports
 """
 
-from datetime import datetime, date
-from typing import Optional
+from datetime import datetime
 from uuid import uuid4
 import enum
 

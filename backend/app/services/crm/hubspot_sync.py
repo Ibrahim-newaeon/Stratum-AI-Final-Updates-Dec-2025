@@ -7,7 +7,7 @@ Supports scheduled syncs and real-time webhook updates.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import select, and_
@@ -21,8 +21,6 @@ from app.models.crm import (
     CRMDeal,
     CRMProvider,
     DealStage,
-    Touchpoint,
-    DailyPipelineMetrics,
 )
 from app.services.crm.hubspot_client import HubSpotClient, hash_email, hash_phone
 from app.services.crm.identity_matching import IdentityMatcher

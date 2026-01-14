@@ -23,7 +23,6 @@ from uuid import uuid4
 from enum import Enum
 
 from sqlalchemy import select, and_, func, desc
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
 

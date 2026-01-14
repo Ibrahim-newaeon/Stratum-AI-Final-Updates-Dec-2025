@@ -10,12 +10,11 @@ Database models for the Campaign Builder feature:
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List
 from uuid import uuid4
 
 from sqlalchemy import (
     Column, String, Boolean, Integer, DateTime, Text, ForeignKey,
-    Numeric, UniqueConstraint, Index, Enum as SQLEnum
+    Numeric, UniqueConstraint, Index
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship

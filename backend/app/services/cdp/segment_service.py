@@ -18,19 +18,17 @@ from typing import Optional, List, Dict, Any, Tuple
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select, update, delete, func, and_, or_, cast, String
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.cdp import (
     CDPProfile,
-    CDPProfileIdentifier,
     CDPEvent,
     CDPSegment,
     CDPSegmentMembership,
     SegmentType,
     SegmentStatus,
-    ConditionOperator,
 )
 
 logger = structlog.get_logger()

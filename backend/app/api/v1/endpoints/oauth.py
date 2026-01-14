@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, and_
@@ -37,8 +37,6 @@ from app.auth.deps import CurrentUserDep, VerifiedUserDep
 from app.schemas import APIResponse
 from app.services.oauth import (
     get_oauth_service,
-    OAuthTokens,
-    AdAccountInfo,
 )
 
 logger = get_logger(__name__)

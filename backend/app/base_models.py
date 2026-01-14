@@ -16,14 +16,11 @@ Models:
 """
 
 from datetime import datetime, timezone
-from decimal import Decimal
 from enum import Enum as PyEnum
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from sqlalchemy import (
-    JSON,
     Boolean,
-    CheckConstraint,
     Date,
     DateTime,
     Enum,
@@ -31,11 +28,9 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    Numeric,
     String,
     Text,
     UniqueConstraint,
-    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship

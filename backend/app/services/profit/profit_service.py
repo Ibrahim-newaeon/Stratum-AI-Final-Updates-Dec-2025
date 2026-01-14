@@ -13,10 +13,9 @@ Features:
 - Margin trending
 """
 
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import date
+from typing import Any, Dict, Optional
 from uuid import UUID
-from decimal import Decimal
 
 from sqlalchemy import select, and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,8 +27,6 @@ from app.models.profit import (
     MarginRule,
     DailyProfitMetrics,
     ProfitROASReport,
-    MarginType,
-    COGSSource,
 )
 
 logger = get_logger(__name__)

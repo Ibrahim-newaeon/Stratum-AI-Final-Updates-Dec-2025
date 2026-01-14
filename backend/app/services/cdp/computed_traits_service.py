@@ -12,12 +12,11 @@ This service handles:
 """
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from typing import Optional, List, Dict, Any, Tuple
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select, update, func, and_, desc
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cdp import (

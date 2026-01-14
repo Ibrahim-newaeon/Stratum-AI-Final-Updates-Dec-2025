@@ -47,12 +47,10 @@ This adapter implements exponential backoff when rate limits are hit, automatica
 retrying failed requests after progressively longer delays.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Dict, Any
 import hashlib
-import json
 
 # Meta's official Python SDK
 from facebook_business.api import FacebookAdsApi
@@ -71,7 +69,6 @@ from app.stratum.adapters.base import (
     BaseAdapter,
     AdapterError,
     AuthenticationError,
-    RateLimitError,
     PlatformError,
     RateLimiter
 )
@@ -85,8 +82,7 @@ from app.stratum.models import (
     EMQScore,
     AutomationAction,
     EntityStatus,
-    BiddingStrategy,
-    OptimizationGoal
+    BiddingStrategy
 )
 
 

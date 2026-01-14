@@ -8,13 +8,12 @@ Implements Module G: WhatsApp Messaging.
 
 import hashlib
 import hmac
-import secrets
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -31,7 +30,7 @@ from app.models import (
     WhatsAppTemplateStatus,
 )
 from app.schemas import APIResponse, PaginatedResponse
-from app.services.whatsapp_client import WhatsAppClient, WhatsAppAPIError, get_whatsapp_client
+from app.services.whatsapp_client import WhatsAppAPIError, get_whatsapp_client
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -946,7 +945,7 @@ async def send_broadcast(
             failed_contacts=failed_contacts,
             message=f"Broadcast queued: {messages_queued} messages",
         ),
-        message=f"Broadcast queued successfully",
+        message="Broadcast queued successfully",
     )
 
 

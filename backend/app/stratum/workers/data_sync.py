@@ -61,7 +61,7 @@ Or combined:
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import asyncio
 from functools import wraps
 
@@ -78,7 +78,7 @@ except ImportError:
             return func
         return decorator
 
-from app.stratum.models import Platform, SignalHealth, EMQScore, PerformanceMetrics
+from app.stratum.models import Platform, EMQScore, PerformanceMetrics
 from app.stratum.core.signal_health import SignalHealthCalculator
 
 

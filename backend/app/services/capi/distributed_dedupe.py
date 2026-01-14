@@ -20,7 +20,6 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, Optional
 from dataclasses import dataclass, field
-import json
 
 try:
     import redis.asyncio as aioredis

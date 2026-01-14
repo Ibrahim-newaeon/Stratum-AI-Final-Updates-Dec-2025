@@ -51,12 +51,11 @@ Example:
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Protocol
+from datetime import datetime
+from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-import uuid
 
 from app.stratum.models import (
     Platform,
@@ -67,7 +66,7 @@ from app.stratum.models import (
     AutomationAction,
     EntityStatus,
 )
-from app.stratum.core.trust_gate import TrustGate, GateDecision, TrustGateResult
+from app.stratum.core.trust_gate import TrustGate, GateDecision
 
 
 logger = logging.getLogger("stratum.core.autopilot")

@@ -23,7 +23,7 @@ from typing import Optional, List, Dict, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 
-from app.stratum.models import SignalHealth, AutomationAction, Platform
+from app.stratum.models import SignalHealth, AutomationAction
 
 
 logger = logging.getLogger("stratum.trust_gate")

@@ -48,7 +48,7 @@ Integration Opportunities
    - Claude suggests new creative angles
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import json
 

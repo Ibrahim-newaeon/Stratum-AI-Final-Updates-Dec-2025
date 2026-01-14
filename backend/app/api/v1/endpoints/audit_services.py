@@ -22,15 +22,13 @@ Security features:
 - Structured audit logging
 """
 
-from datetime import datetime, timedelta, timezone, date
+from datetime import datetime, timezone, date
 from typing import List, Optional, Dict, Any
-from uuid import UUID
-from functools import wraps
 import time
 from collections import defaultdict
 import threading
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 

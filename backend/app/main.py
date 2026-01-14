@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.app_env,
-            release=f"stratum-backend@1.0.0",
+            release="stratum-backend@1.0.0",
             # Performance monitoring
             traces_sample_rate=0.1 if settings.is_production else 1.0,
             # Profile sampling for performance insights

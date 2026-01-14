@@ -12,12 +12,11 @@ Provides:
 - Budget optimization based on predicted LTV
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
 from pathlib import Path
-import json
 import numpy as np
 import pandas as pd
 

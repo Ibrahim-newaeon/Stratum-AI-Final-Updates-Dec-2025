@@ -23,7 +23,7 @@ Docs: https://business-api.tiktok.com/portal/docs?id=1738373164380162
 """
 
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import aiohttp
 

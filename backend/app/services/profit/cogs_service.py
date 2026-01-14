@@ -12,7 +12,7 @@ Features:
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, BinaryIO
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 import csv
 import io
@@ -28,7 +28,6 @@ from app.models.profit import (
     COGSUpload,
     MarginType,
     COGSSource,
-    ProductStatus,
 )
 
 logger = get_logger(__name__)

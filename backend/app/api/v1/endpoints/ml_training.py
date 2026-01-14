@@ -7,18 +7,16 @@ API endpoints for uploading training data and managing ML models.
 
 import os
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.db.session import get_async_session
 from app.ml.data_loader import TrainingDataLoader
 from app.ml.train import ModelTrainer
 

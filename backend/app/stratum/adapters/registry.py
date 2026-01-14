@@ -9,7 +9,7 @@ platform type. This enables dynamic adapter selection at runtime.
 """
 
 import logging
-from typing import Dict, Type, Optional, Any
+from typing import Dict, Type, Optional
 
 from app.stratum.models import Platform
 from app.stratum.adapters.base import BaseAdapter, AdapterError

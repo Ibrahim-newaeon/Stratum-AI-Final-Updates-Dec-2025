@@ -13,12 +13,11 @@ from typing import Dict, Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
 
 from app.db.session import get_async_session
 from app.features.service import can_access_feature, get_tenant_features
 from app.quality.trust_layer_service import SignalHealthService
-from app.analytics.logic.recommend import RecommendationsEngine, generate_recommendations
+from app.analytics.logic.recommend import RecommendationsEngine
 from app.analytics.logic.types import EntityMetrics, BaselineMetrics
 from app.schemas.response import APIResponse
 

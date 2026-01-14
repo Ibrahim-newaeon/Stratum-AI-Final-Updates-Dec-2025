@@ -21,12 +21,12 @@ import io
 import logging
 import os
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 from fastapi import APIRouter, Request, HTTPException, Depends, Query, Response, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_async_session

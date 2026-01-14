@@ -67,11 +67,9 @@ regardless of how many rows it returns. Batch operations count as one operation 
 entity modified.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Dict, Any
-import os
 
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
@@ -81,7 +79,6 @@ from app.stratum.adapters.base import (
     BaseAdapter,
     AdapterError,
     AuthenticationError,
-    RateLimitError,
     PlatformError,
     RateLimiter
 )

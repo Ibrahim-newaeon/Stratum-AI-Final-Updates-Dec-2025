@@ -17,12 +17,12 @@ Key properties of Shapley Values:
 
 from collections import defaultdict
 from datetime import datetime
-from itertools import combinations, permutations
-from typing import Any, Dict, List, Optional, Set, Tuple
+from itertools import combinations
+from typing import Any, Dict, List, Optional, Set
 from uuid import UUID
 import math
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger

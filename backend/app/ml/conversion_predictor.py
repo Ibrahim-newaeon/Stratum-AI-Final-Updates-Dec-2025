@@ -6,7 +6,7 @@ ML-based conversion prediction for campaign optimization.
 Predicts expected conversions based on campaign features.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
 

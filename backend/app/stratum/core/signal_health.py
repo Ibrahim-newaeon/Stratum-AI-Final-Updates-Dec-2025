@@ -17,12 +17,12 @@ The composite score determines whether automation can proceed:
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+from datetime import datetime
+from typing import Optional, List, Dict
 from dataclasses import dataclass
 from enum import Enum
 
-from app.stratum.models import SignalHealth, Platform
+from app.stratum.models import SignalHealth
 
 
 logger = logging.getLogger("stratum.signal_health")

@@ -6,17 +6,17 @@ API endpoints for AI-powered analytics.
 Provides recommendations, scoring, and insights based on the Analytics Design System.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
-from sqlalchemy import select, desc
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models import Campaign, CreativeAsset
+from app.models import Campaign
 from app.schemas import APIResponse
 
 from app.analytics.logic.types import (
@@ -24,18 +24,12 @@ from app.analytics.logic.types import (
     BaselineMetrics,
     EntityLevel,
     Platform,
-    ScoringParams,
-    FatigueParams,
-    AnomalyParams,
-    SignalHealthParams,
 )
-from app.analytics.logic.scoring import scaling_score, batch_scaling_scores
-from app.analytics.logic.fatigue import creative_fatigue, batch_creative_fatigue
+from app.analytics.logic.scoring import scaling_score
+from app.analytics.logic.fatigue import creative_fatigue
 from app.analytics.logic.anomalies import detect_anomalies
 from app.analytics.logic.signal_health import signal_health, auto_resolve
-from app.analytics.logic.attribution import attribution_variance, get_attribution_health
-from app.analytics.logic.budget import reallocate_budget, summarize_reallocation
-from app.analytics.logic.recommend import generate_recommendations, RecommendationsEngine
+from app.analytics.logic.recommend import RecommendationsEngine
 
 logger = get_logger(__name__)
 router = APIRouter()

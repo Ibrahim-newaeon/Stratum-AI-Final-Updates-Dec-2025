@@ -17,7 +17,6 @@ import logging
 
 from celery import shared_task
 from sqlalchemy import select, and_
-from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models.campaign_builder import (

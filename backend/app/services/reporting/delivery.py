@@ -13,11 +13,10 @@ Supported channels:
 """
 
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Protocol
+from typing import List, Dict, Any
 from uuid import UUID
 import logging
 import os
-import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -32,7 +31,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.reporting import (
     ReportExecution,
     ReportDelivery,
-    DeliveryChannelConfig,
     DeliveryChannel,
     DeliveryStatus,
     ExecutionStatus,
@@ -721,7 +719,7 @@ class DeliveryService:
             raise ValueError(f"Delivery not found: {delivery_id}")
 
         if delivery.status != DeliveryStatus.FAILED:
-            raise ValueError(f"Can only retry failed deliveries")
+            raise ValueError("Can only retry failed deliveries")
 
         execution = await self.db.get(ReportExecution, delivery.execution_id)
 

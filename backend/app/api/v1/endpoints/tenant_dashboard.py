@@ -15,19 +15,19 @@ Routes:
 """
 
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.permissions import Permission, require_permissions
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models import Campaign, CreativeAsset, Tenant
+from app.models import Campaign, Tenant
 from app.schemas import APIResponse
-from app.tenancy import get_tenant, require_tenant, TenantContext, tenant_query
+from app.tenancy import require_tenant, TenantContext, tenant_query
 
 logger = get_logger(__name__)
 router = APIRouter()

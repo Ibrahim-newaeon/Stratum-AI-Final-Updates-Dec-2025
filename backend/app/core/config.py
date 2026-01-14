@@ -15,7 +15,7 @@ from functools import lru_cache
 from typing import List, Literal, Optional
 import warnings
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -300,14 +300,14 @@ class Settings(BaseSettings):
             if self.is_production:
                 # In production, fail fast with clear error
                 raise ValueError(
-                    f"SECURITY ERROR - Cannot start in production with insecure configuration:\n"
-                    f"  - " + "\n  - ".join(issues) + "\n\n"
-                    f"Please set these environment variables with secure values:\n"
-                    f"  - DATABASE_URL (with strong password)\n"
-                    f"  - SECRET_KEY (min 32 random characters)\n"
-                    f"  - JWT_SECRET_KEY (min 32 random characters)\n"
-                    f"  - PII_ENCRYPTION_KEY (min 32 random characters)\n\n"
-                    f"Generate secure keys with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+                    "SECURITY ERROR - Cannot start in production with insecure configuration:\n"
+                    "  - " + "\n  - ".join(issues) + "\n\n"
+                    "Please set these environment variables with secure values:\n"
+                    "  - DATABASE_URL (with strong password)\n"
+                    "  - SECRET_KEY (min 32 random characters)\n"
+                    "  - JWT_SECRET_KEY (min 32 random characters)\n"
+                    "  - PII_ENCRYPTION_KEY (min 32 random characters)\n\n"
+                    "Generate secure keys with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
                 )
             else:
                 # In development, warn but allow startup

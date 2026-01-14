@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from sqlalchemy import (
     Column, String, Integer, DateTime, Float, Text, ForeignKey,
-    Index, Boolean, BigInteger
+    Index, BigInteger
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship

@@ -6,11 +6,9 @@ Data loader for importing training datasets from various sources.
 Supports CSV files from Kaggle and other public datasets.
 """
 
-import csv
-import hashlib
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 from sqlalchemy import select
@@ -22,7 +20,6 @@ from app.models import (
     Campaign,
     CampaignMetric,
     CampaignStatus,
-    Tenant,
 )
 
 logger = get_logger(__name__)
@@ -407,7 +404,6 @@ class TrainingDataLoader:
 # CLI interface for standalone usage
 if __name__ == "__main__":
     import argparse
-    import asyncio
 
     parser = argparse.ArgumentParser(description="Load training data")
     parser.add_argument("--generate", action="store_true", help="Generate sample data")

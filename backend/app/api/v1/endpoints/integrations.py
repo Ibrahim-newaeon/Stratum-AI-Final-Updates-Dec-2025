@@ -14,7 +14,6 @@ import hashlib
 import hmac
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, BackgroundTasks, Header
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +27,6 @@ from app.models.crm import (
     CRMContact,
     CRMDeal,
     CRMProvider,
-    DealStage,
     DailyPipelineMetrics,
     CRMWritebackConfig,
     CRMWritebackSync,

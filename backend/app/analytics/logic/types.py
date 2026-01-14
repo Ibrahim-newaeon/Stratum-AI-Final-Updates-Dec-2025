@@ -9,7 +9,7 @@ Based on AI_Logic_Formulas_Pseudocode.md and Data_Schema_Events_and_Tables.md.
 from datetime import datetime
 from typing import Dict, List, Optional, Literal
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 # =============================================================================

@@ -47,11 +47,9 @@ Production: https://adsapi.snapchat.com/v1
 The API version is included in the URL path.
 """
 
-import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
-import json
 
 import requests
 
@@ -72,8 +70,7 @@ from app.stratum.models import (
     PerformanceMetrics,
     EMQScore,
     AutomationAction,
-    EntityStatus,
-    BiddingStrategy
+    EntityStatus
 )
 
 
@@ -200,7 +197,7 @@ class SnapchatAdapter(BaseAdapter):
             if not self.organization_id and me_data.get("organization_id"):
                 self.organization_id = me_data["organization_id"]
             
-            logger.info(f"Successfully authenticated with Snapchat API")
+            logger.info("Successfully authenticated with Snapchat API")
             self._initialized = True
             
         except requests.RequestException as e:

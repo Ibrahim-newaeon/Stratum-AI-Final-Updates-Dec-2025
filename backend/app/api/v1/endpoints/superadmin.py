@@ -13,12 +13,12 @@ Features:
 - Audit logging
 """
 
-from datetime import datetime, timedelta, timezone, date
+from datetime import datetime, timezone, date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
-from sqlalchemy import select, func, desc, and_, or_
+from sqlalchemy import select, func, desc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -531,7 +531,7 @@ async def get_audit_logs(
     require_superadmin(request)
 
     try:
-        from sqlalchemy import Table, MetaData
+        from sqlalchemy import MetaData
         metadata = MetaData()
 
         # Build query for audit_logs table

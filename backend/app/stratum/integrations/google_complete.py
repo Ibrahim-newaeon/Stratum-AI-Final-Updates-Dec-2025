@@ -34,11 +34,10 @@ For Stratum's Trust-Gated Autopilot, we primarily use:
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import hashlib
-import json
 
 logger = logging.getLogger("stratum.google")
 

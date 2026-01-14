@@ -16,7 +16,7 @@ Permissions are granular and can be checked individually or in combination.
 
 from enum import Enum
 from functools import wraps
-from typing import Callable, List, Optional, Set
+from typing import Callable, List, Set
 
 from fastapi import HTTPException, Request, status
 

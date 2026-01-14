@@ -6,10 +6,7 @@ What-If Simulator for budget impact prediction.
 Uses the hybrid ML strategy to predict outcomes based on budget changes.
 """
 
-import hashlib
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import numpy as np
 

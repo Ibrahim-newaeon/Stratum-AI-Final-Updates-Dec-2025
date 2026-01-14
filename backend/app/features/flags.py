@@ -15,7 +15,7 @@ Feature Flags:
 - superadmin_profitability: Platform owner profitability views
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from enum import Enum
 from pydantic import BaseModel, Field
 

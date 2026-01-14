@@ -14,8 +14,7 @@ Database models for audit-recommended services:
 - LTV Predictions
 """
 
-from datetime import datetime, date
-from typing import Optional
+from datetime import datetime
 from uuid import uuid4
 import enum
 

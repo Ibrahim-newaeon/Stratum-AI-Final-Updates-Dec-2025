@@ -12,14 +12,13 @@ This service handles:
 - Canonical identity management
 """
 
-import hashlib
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional, List, Dict, Tuple, Set
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select, update, delete, and_, or_
+from sqlalchemy import select, update, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 

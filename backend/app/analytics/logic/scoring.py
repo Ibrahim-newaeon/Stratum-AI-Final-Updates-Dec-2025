@@ -115,7 +115,7 @@ def scaling_score(
     # Generate recommendations
     recommendations = []
     if action == ScalingAction.SCALE:
-        recommendations.append(f"Consider increasing budget by 20-30%")
+        recommendations.append("Consider increasing budget by 20-30%")
         recommendations.append(f"ROAS improved {d_roas*100:.1f}% vs baseline")
     elif action == ScalingAction.FIX:
         if d_roas < -0.2:

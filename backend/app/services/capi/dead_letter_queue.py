@@ -30,8 +30,6 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-from sqlalchemy import select, and_, update, delete, func
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 

@@ -7,18 +7,18 @@ Handles safe execution of budget changes, pauses, and other campaign modificatio
 """
 
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import logging
 import json
 
 from celery import shared_task
-from sqlalchemy import select, and_, update
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
 from app.models.trust_layer import FactActionsQueue, FactSignalHealthDaily, SignalHealthStatus
-from app.autopilot.service import ActionStatus, ActionType, SAFE_ACTIONS
-from app.features.flags import get_autopilot_caps, AutopilotLevel
+from app.autopilot.service import ActionStatus, ActionType
+from app.features.flags import get_autopilot_caps
 from app.core.websocket import publish_action_status_update
 
 

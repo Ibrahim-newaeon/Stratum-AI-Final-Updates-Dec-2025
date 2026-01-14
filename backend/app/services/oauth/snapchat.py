@@ -19,7 +19,7 @@ Docs: https://developers.snap.com/api/marketing-api/Authorization
 """
 
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 import base64
 
 import aiohttp

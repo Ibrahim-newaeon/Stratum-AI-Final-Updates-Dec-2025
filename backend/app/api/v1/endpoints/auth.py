@@ -8,8 +8,8 @@ Handles login, registration, token refresh, password reset, and WhatsApp verific
 
 import random
 import string
-from datetime import datetime, timezone, timedelta
-from typing import Annotated, Optional
+from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from pydantic import BaseModel, EmailStr, Field, field_validator

@@ -15,7 +15,7 @@ Each driver scores 0-100, weighted to produce final EMQ score.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Tuple
 from enum import Enum
 

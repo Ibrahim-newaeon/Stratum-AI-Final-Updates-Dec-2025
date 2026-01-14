@@ -7,7 +7,7 @@ Prevents API abuse and ensures fair resource usage.
 """
 
 import time
-from typing import Callable, Optional
+from typing import Callable
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse

@@ -498,7 +498,7 @@ class CreativeLifecyclePredictor:
 
         if urgency == RefreshUrgency.IMMEDIATE:
             recommendations.append("🚨 Refresh creative immediately - performance has degraded significantly")
-            recommendations.append(f"Consider pausing until new creative is ready")
+            recommendations.append("Consider pausing until new creative is ready")
         elif urgency == RefreshUrgency.SOON:
             recommendations.append(f"⚠️ Prepare new creative - estimated {days_to_fatigue} days until fatigue")
             recommendations.append("Start testing new variants now")

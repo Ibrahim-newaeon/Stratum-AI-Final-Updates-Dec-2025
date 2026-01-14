@@ -15,7 +15,6 @@ Integrates with:
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import statistics
 
 from app.core.logging import get_logger
@@ -28,7 +27,6 @@ from app.analytics.logic.emq_calculation import (
 )
 from app.services.capi.platform_connectors import (
     get_event_delivery_logs,
-    EventDeliveryLog,
 )
 
 logger = get_logger(__name__)

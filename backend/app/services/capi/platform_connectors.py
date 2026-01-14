@@ -8,8 +8,6 @@ Production-ready with retry logic, circuit breakers, and rate limiting.
 """
 
 import hashlib
-import hmac
-import json
 import time
 import asyncio
 import uuid
@@ -19,12 +17,11 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import wraps
 import httpx
 
 from app.core.logging import get_logger
-from .pii_hasher import PIIHasher, PIIField
-from .event_mapper import AIEventMapper, StandardEvent
+from .pii_hasher import PIIHasher
+from .event_mapper import AIEventMapper
 
 logger = get_logger(__name__)
 

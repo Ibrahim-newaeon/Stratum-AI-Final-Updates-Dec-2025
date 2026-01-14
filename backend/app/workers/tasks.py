@@ -12,9 +12,8 @@ from typing import Any, Dict, List, Optional
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select, and_
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from tenacity import retry, stop_after_attempt, wait_exponential
 
 from app.core.config import settings
 from app.db.session import SyncSessionLocal
@@ -884,7 +883,7 @@ def run_live_predictions(self, tenant_id: int):
     Run live predictions for all campaigns of a tenant.
     Generates predictions, alerts, and ROAS optimization recommendations.
     """
-    from app.ml.roas_optimizer import ROASOptimizer, LivePredictionEngine
+    from app.ml.roas_optimizer import ROASOptimizer
     from app.models import MLPrediction
 
     logger.info(f"Running live predictions for tenant {tenant_id}")
@@ -1387,7 +1386,6 @@ def calculate_daily_scores():
     """
     from app.analytics.logic.types import EntityMetrics, BaselineMetrics, EntityLevel, Platform
     from app.analytics.logic.scoring import scaling_score
-    from app.analytics.logic.fatigue import creative_fatigue
 
     logger.info("Running daily scoring calculations")
 
@@ -1710,7 +1708,7 @@ def compute_all_cdp_segments(tenant_id: int = None):
     """
     from app.models.cdp import CDPSegment, SegmentStatus
 
-    logger.info(f"Computing all CDP segments" + (f" for tenant {tenant_id}" if tenant_id else ""))
+    logger.info("Computing all CDP segments" + (f" for tenant {tenant_id}" if tenant_id else ""))
 
     with SyncSessionLocal() as db:
         now = datetime.now(timezone.utc)
@@ -1930,7 +1928,7 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
     Otherwise, compute all active traits.
     """
     from uuid import UUID
-    from app.models.cdp import CDPProfile, CDPEvent, CDPComputedTrait
+    from app.models.cdp import CDPProfile, CDPComputedTrait
 
     logger.info(f"Computing CDP traits for tenant {tenant_id}" + (f" (trait: {trait_id})" if trait_id else ""))
 
@@ -2337,7 +2335,7 @@ def compute_all_cdp_funnels(tenant_id: int = None):
     """
     from app.models.cdp import CDPFunnel, FunnelStatus
 
-    logger.info(f"Computing all CDP funnels" + (f" for tenant {tenant_id}" if tenant_id else ""))
+    logger.info("Computing all CDP funnels" + (f" for tenant {tenant_id}" if tenant_id else ""))
 
     with SyncSessionLocal() as db:
         now = datetime.now(timezone.utc)

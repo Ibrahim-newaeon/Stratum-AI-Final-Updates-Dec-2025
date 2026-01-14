@@ -21,7 +21,7 @@ Docs: https://developers.facebook.com/docs/marketing-api/overview/authorization
 """
 
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import aiohttp
 

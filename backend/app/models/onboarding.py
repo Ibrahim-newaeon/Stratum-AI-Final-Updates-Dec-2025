@@ -16,15 +16,14 @@ Onboarding Steps:
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-from uuid import uuid4
+from typing import Optional
 import enum
 
 from sqlalchemy import (
-    Column, String, Boolean, Integer, DateTime, Text, ForeignKey,
-    Enum as SQLEnum, UniqueConstraint, Index
+    String, Boolean, Integer, DateTime, ForeignKey,
+    Index
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from app.db.base_class import Base

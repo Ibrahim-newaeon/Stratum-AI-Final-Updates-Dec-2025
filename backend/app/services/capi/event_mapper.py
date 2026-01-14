@@ -7,7 +7,7 @@ Automatically maps custom events to standard platform events.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
 

@@ -11,12 +11,12 @@ Aggregates touchpoint data into journey paths for analysis:
 - Time-to-conversion metrics
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 from collections import defaultdict
 
-from sqlalchemy import select, and_, func, text
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -24,7 +24,6 @@ from app.models.crm import (
     CRMContact,
     CRMDeal,
     Touchpoint,
-    AttributionModel,
 )
 
 logger = get_logger(__name__)

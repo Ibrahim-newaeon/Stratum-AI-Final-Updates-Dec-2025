@@ -17,7 +17,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
 import statistics
-import math
 
 from app.core.logging import get_logger
 
@@ -496,7 +495,7 @@ class AudienceInsightsService:
                 action="expand",
                 priority="medium",
                 title=f"Expand {audience.name}",
-                description=f"Low saturation with good performance supports budget increase",
+                description="Low saturation with good performance supports budget increase",
                 expected_impact={
                     "additional_conversions": audience.metrics.conversions * 0.3,
                     "expected_roas": audience.predicted_roas,

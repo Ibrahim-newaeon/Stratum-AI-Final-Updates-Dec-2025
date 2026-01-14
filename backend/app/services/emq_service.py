@@ -13,10 +13,9 @@ Handles:
 
 import json
 from datetime import datetime, date, timedelta
-from typing import Optional, List, Dict, Any, Tuple
-from sqlalchemy import select, func, and_, or_
+from typing import Optional, List, Dict, Any
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 from app.models.trust_layer import (
     FactSignalHealthDaily,
@@ -25,15 +24,7 @@ from app.models.trust_layer import (
     SignalHealthStatus,
 )
 from app.analytics.logic.emq_calculation import (
-    PlatformMetrics,
-    EmqCalculationResult,
-    EmqDriverResult,
-    calculate_emq_score,
-    calculate_aggregate_emq,
     determine_autopilot_mode,
-    calculate_event_loss_percentage,
-    DriverStatus,
-    DriverTrend,
 )
 
 

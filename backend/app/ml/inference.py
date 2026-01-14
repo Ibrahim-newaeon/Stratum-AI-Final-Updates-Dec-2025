@@ -9,11 +9,9 @@ Based on ML_PROVIDER environment variable:
 - vertex: Send payloads to Google Vertex AI Endpoint
 """
 
-import hashlib
 import json
-import os
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -435,12 +433,12 @@ class ModelRegistry:
                 if not result.get("error"):
                     result["model_type"] = "platform_specific"
                     result["platform"] = platform
-                    logger.info(f"roas_prediction_platform_model", platform=platform)
+                    logger.info("roas_prediction_platform_model", platform=platform)
                     return result
             except ModelUnavailableError:
-                logger.info(f"platform_model_unavailable_using_ensemble", platform=platform)
+                logger.info("platform_model_unavailable_using_ensemble", platform=platform)
             except Exception as e:
-                logger.warning(f"platform_model_error_using_ensemble", platform=platform, error=str(e))
+                logger.warning("platform_model_error_using_ensemble", platform=platform, error=str(e))
 
         # Fall back to ensemble model
         try:

@@ -7,11 +7,11 @@ Compares platform-reported metrics with GA4 data to identify discrepancies.
 """
 
 from datetime import date, datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import logging
 
 from celery import shared_task
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory

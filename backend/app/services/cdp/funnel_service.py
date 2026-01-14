@@ -19,7 +19,7 @@ from uuid import UUID
 import re
 
 import structlog
-from sqlalchemy import select, func, and_, or_, delete
+from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 

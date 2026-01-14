@@ -11,11 +11,11 @@ Provides:
 - Recommendations for model selection
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -144,7 +144,7 @@ async def train_model(
     if request.model_type not in [DataDrivenModelType.MARKOV_CHAIN, DataDrivenModelType.SHAPLEY_VALUE]:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid model_type. Must be 'markov_chain' or 'shapley_value'"
+            detail="Invalid model_type. Must be 'markov_chain' or 'shapley_value'"
         )
 
     service = ModelTrainingService(db, tenant_id)
@@ -374,7 +374,7 @@ async def get_training_requirements(
 
     Returns data availability and recommendations.
     """
-    from app.models.crm import CRMDeal, CRMContact, Touchpoint
+    from app.models.crm import CRMDeal, Touchpoint
     from sqlalchemy import func
 
     # Count won deals

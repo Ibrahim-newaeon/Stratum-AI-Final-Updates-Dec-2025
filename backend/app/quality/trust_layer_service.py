@@ -8,12 +8,12 @@ Service for Trust Layer operations:
 - Trust banners and alerts
 """
 
-from datetime import datetime, date, timezone, timedelta
+from datetime import date
 from typing import Dict, Any, List, Optional
 import json
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_
 
 from app.models.trust_layer import (
     FactSignalHealthDaily,
@@ -21,8 +21,6 @@ from app.models.trust_layer import (
     SignalHealthStatus,
     AttributionVarianceStatus,
 )
-from app.analytics.logic.signal_health import signal_health, should_suspend_automation
-from app.analytics.logic.attribution import attribution_variance, get_attribution_health
 
 
 # =============================================================================

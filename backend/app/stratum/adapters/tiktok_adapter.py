@@ -53,22 +53,17 @@ is actively developed, with new features added regularly. This adapter targets s
 endpoints that are unlikely to change frequently.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Dict, Any
 import json
-import hashlib
-import hmac
 
 import requests
-from requests.auth import AuthBase
 
 from app.stratum.adapters.base import (
     BaseAdapter,
     AdapterError,
     AuthenticationError,
-    RateLimitError,
     PlatformError,
     RateLimiter
 )
@@ -223,7 +218,7 @@ class TikTokAdapter(BaseAdapter):
                         f"TikTok API error: {response.get('message', 'Unknown error')}"
                     )
                 
-                logger.info(f"Successfully authenticated with TikTok API")
+                logger.info("Successfully authenticated with TikTok API")
             else:
                 logger.warning("No default advertiser_id configured")
             

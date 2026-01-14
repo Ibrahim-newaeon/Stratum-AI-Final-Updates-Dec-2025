@@ -7,11 +7,11 @@ Multi-Touch Attribution (MTA) API endpoints.
 Provides attribution calculations, journey analysis, and conversion path insights.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 

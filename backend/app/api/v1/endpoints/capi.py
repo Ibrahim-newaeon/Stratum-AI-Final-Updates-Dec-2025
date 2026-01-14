@@ -9,12 +9,10 @@ Provides no-code platform connection, event streaming, and data quality analysis
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.db.session import get_async_session
 from app.services.capi import CAPIService
 from app.schemas import APIResponse
 

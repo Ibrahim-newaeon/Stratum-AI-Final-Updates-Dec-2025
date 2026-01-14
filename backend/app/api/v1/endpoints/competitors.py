@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -22,7 +22,6 @@ from app.schemas import (
     CompetitorResponse,
     CompetitorShareOfVoiceResponse,
     CompetitorUpdate,
-    PaginatedResponse,
 )
 
 logger = get_logger(__name__)

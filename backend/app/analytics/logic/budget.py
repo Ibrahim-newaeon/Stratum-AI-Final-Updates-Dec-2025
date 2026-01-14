@@ -17,7 +17,6 @@ from typing import List, Optional
 from app.analytics.logic.types import (
     ScalingScoreResult,
     BudgetAction,
-    ScalingAction,
 )
 
 

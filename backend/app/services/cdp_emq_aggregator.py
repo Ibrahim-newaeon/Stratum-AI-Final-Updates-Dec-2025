@@ -15,9 +15,8 @@ The CDP EMQ score represents the quality of first-party data collection:
 import logging
 from datetime import datetime, date, timedelta, timezone
 from typing import Optional, List, Dict, Any, Tuple
-from decimal import Decimal
 
-from sqlalchemy import select, func, and_, between, Integer
+from sqlalchemy import select, func, and_, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cdp import CDPEvent, CDPProfile, CDPConsent

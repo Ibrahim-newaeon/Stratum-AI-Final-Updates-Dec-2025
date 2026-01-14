@@ -8,7 +8,6 @@ Implements Module F: Security & Governance.
 
 import json
 from datetime import datetime, timezone
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -21,14 +20,12 @@ from app.db.session import get_async_session
 from app.models import (
     AuditAction,
     AuditLog,
-    Campaign,
     User,
     NotificationPreference,
     APIKey,
 )
 from app.schemas import (
     APIResponse,
-    AuditLogFilter,
     AuditLogResponse,
     GDPRAnonymizeRequest,
     GDPRAnonymizeResponse,

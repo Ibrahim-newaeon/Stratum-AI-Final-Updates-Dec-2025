@@ -10,7 +10,6 @@ Database models for the Campaign Builder feature:
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List
 from uuid import uuid4
 
 from sqlalchemy import (

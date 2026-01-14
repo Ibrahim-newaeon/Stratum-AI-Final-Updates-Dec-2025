@@ -8,7 +8,7 @@ Uses HTML templates rendered to PDF for professional-quality reports.
 """
 
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 from uuid import UUID
 import os
 

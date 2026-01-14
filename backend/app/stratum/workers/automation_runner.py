@@ -60,7 +60,7 @@ Execution Modes
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import asyncio
 from functools import wraps
 import uuid
@@ -79,10 +79,8 @@ except ImportError:
 from app.stratum.models import (
     Platform,
     AutomationAction,
-    SignalHealth,
     EntityStatus
 )
-from app.stratum.core.trust_gate import TrustGate, GateDecision, TrustGateResult
 from app.stratum.core.autopilot import AutopilotEngine
 
 

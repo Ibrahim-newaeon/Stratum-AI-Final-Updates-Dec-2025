@@ -6,7 +6,7 @@ Automated ROAS optimization engine.
 Analyzes campaigns and provides actionable recommendations for higher ROAS.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from enum import Enum
 
