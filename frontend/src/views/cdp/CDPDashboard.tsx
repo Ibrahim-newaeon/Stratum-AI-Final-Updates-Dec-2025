@@ -13,6 +13,7 @@ import {
   ArrowTrendingDownIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
+  ArrowUpOnSquareIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import {
@@ -290,7 +291,7 @@ export default function CDPDashboard() {
       </div>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Link
           to="/dashboard/cdp/profiles"
           className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow flex items-center gap-4"
@@ -337,6 +338,18 @@ export default function CDPDashboard() {
           <div>
             <p className="font-medium">Identity Graph</p>
             <p className="text-sm text-muted-foreground">Visualize connections</p>
+          </div>
+        </Link>
+        <Link
+          to="/dashboard/cdp/audience-sync"
+          className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow flex items-center gap-4"
+        >
+          <div className="h-10 w-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
+            <ArrowUpOnSquareIcon className="h-5 w-5 text-pink-500" />
+          </div>
+          <div>
+            <p className="font-medium">Audience Sync</p>
+            <p className="text-sm text-muted-foreground">Push to ad platforms</p>
           </div>
         </Link>
       </div>

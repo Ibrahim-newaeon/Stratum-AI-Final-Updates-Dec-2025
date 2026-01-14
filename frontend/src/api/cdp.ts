@@ -2437,3 +2437,287 @@ export function createTracker(sourceKey?: string) {
     },
   }
 }
+
+// =============================================================================
+// Audience Sync Types
+// =============================================================================
+
+export type SyncPlatform = 'meta' | 'google' | 'tiktok' | 'snapchat'
+export type SyncStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'partial'
+export type SyncOperation = 'create' | 'update' | 'replace' | 'delete'
+
+export interface PlatformAudience {
+  id: string
+  segment_id: string
+  platform: SyncPlatform
+  platform_audience_id: string | null
+  platform_audience_name: string
+  ad_account_id: string
+  description: string | null
+  auto_sync: boolean
+  sync_interval_hours: number
+  is_active: boolean
+  last_sync_at: string | null
+  last_sync_status: SyncStatus | null
+  platform_size: number | null
+  matched_size: number | null
+  match_rate: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SyncJob {
+  id: string
+  platform_audience_id: string
+  operation: SyncOperation
+  status: SyncStatus
+  started_at: string | null
+  completed_at: string | null
+  duration_ms: number | null
+  profiles_total: number
+  profiles_sent: number
+  profiles_added: number
+  profiles_removed: number
+  profiles_failed: number
+  error_message: string | null
+  triggered_by: string | null
+  created_at: string
+}
+
+export interface ConnectedPlatform {
+  platform: SyncPlatform
+  ad_accounts: Array<{
+    ad_account_id: string
+    ad_account_name: string | null
+  }>
+}
+
+export interface PlatformAudienceCreate {
+  segment_id: string
+  platform: SyncPlatform
+  ad_account_id: string
+  audience_name: string
+  description?: string
+  auto_sync?: boolean
+  sync_interval_hours?: number
+}
+
+export interface PlatformAudienceListResponse {
+  audiences: PlatformAudience[]
+  total: number
+}
+
+export interface SyncHistoryResponse {
+  jobs: SyncJob[]
+}
+
+// =============================================================================
+// Audience Sync API
+// =============================================================================
+
+export const audienceSyncApi = {
+  // Get connected platforms
+  getConnectedPlatforms: async (): Promise<ConnectedPlatform[]> => {
+    const response = await apiClient.get<ApiResponse<ConnectedPlatform[]>>(
+      '/cdp/audience-sync/platforms'
+    )
+    return response.data.data
+  },
+
+  // List platform audiences
+  listPlatformAudiences: async (params?: {
+    segment_id?: string
+    platform?: SyncPlatform
+    limit?: number
+    offset?: number
+  }): Promise<PlatformAudienceListResponse> => {
+    const response = await apiClient.get<ApiResponse<PlatformAudienceListResponse>>(
+      '/cdp/audience-sync/audiences',
+      { params }
+    )
+    return response.data.data
+  },
+
+  // Create platform audience
+  createPlatformAudience: async (
+    data: PlatformAudienceCreate
+  ): Promise<PlatformAudience> => {
+    const response = await apiClient.post<ApiResponse<PlatformAudience>>(
+      '/cdp/audience-sync/audiences',
+      data
+    )
+    return response.data.data
+  },
+
+  // Get platform audience
+  getPlatformAudience: async (audienceId: string): Promise<PlatformAudience> => {
+    const response = await apiClient.get<ApiResponse<PlatformAudience>>(
+      `/cdp/audience-sync/audiences/${audienceId}`
+    )
+    return response.data.data
+  },
+
+  // Trigger sync
+  triggerSync: async (
+    audienceId: string,
+    operation: 'update' | 'replace' = 'update'
+  ): Promise<SyncJob> => {
+    const response = await apiClient.post<ApiResponse<SyncJob>>(
+      `/cdp/audience-sync/audiences/${audienceId}/sync`,
+      { operation }
+    )
+    return response.data.data
+  },
+
+  // Get sync history
+  getSyncHistory: async (
+    audienceId: string,
+    limit?: number
+  ): Promise<SyncHistoryResponse> => {
+    const response = await apiClient.get<ApiResponse<SyncHistoryResponse>>(
+      `/cdp/audience-sync/audiences/${audienceId}/history`,
+      { params: { limit } }
+    )
+    return response.data.data
+  },
+
+  // Delete platform audience
+  deletePlatformAudience: async (
+    audienceId: string,
+    deleteFromPlatform = true
+  ): Promise<void> => {
+    await apiClient.delete(
+      `/cdp/audience-sync/audiences/${audienceId}`,
+      { params: { delete_from_platform: deleteFromPlatform } }
+    )
+  },
+
+  // Get segment audiences
+  getSegmentAudiences: async (
+    segmentId: string
+  ): Promise<PlatformAudienceListResponse> => {
+    const response = await apiClient.get<ApiResponse<PlatformAudienceListResponse>>(
+      `/cdp/audience-sync/segments/${segmentId}/audiences`
+    )
+    return response.data.data
+  },
+
+  // Sync segment to all platforms
+  syncSegmentToAllPlatforms: async (
+    segmentId: string,
+    operation: 'update' | 'replace' = 'update'
+  ): Promise<SyncJob[]> => {
+    const response = await apiClient.post<ApiResponse<SyncJob[]>>(
+      `/cdp/audience-sync/segments/${segmentId}/sync-all`,
+      null,
+      { params: { operation } }
+    )
+    return response.data.data
+  },
+}
+
+// =============================================================================
+// Audience Sync Hooks
+// =============================================================================
+
+export function useConnectedPlatforms() {
+  return useQuery({
+    queryKey: [...cdpQueryKeys.all, 'connected-platforms'],
+    queryFn: () => audienceSyncApi.getConnectedPlatforms(),
+  })
+}
+
+export function usePlatformAudiences(params?: {
+  segment_id?: string
+  platform?: SyncPlatform
+  limit?: number
+  offset?: number
+}) {
+  return useQuery({
+    queryKey: [...cdpQueryKeys.all, 'platform-audiences', params],
+    queryFn: () => audienceSyncApi.listPlatformAudiences(params),
+  })
+}
+
+export function useSegmentAudiences(segmentId: string) {
+  return useQuery({
+    queryKey: [...cdpQueryKeys.all, 'segment-audiences', segmentId],
+    queryFn: () => audienceSyncApi.getSegmentAudiences(segmentId),
+    enabled: !!segmentId,
+  })
+}
+
+export function useSyncHistory(audienceId: string, limit?: number) {
+  return useQuery({
+    queryKey: [...cdpQueryKeys.all, 'sync-history', audienceId, limit],
+    queryFn: () => audienceSyncApi.getSyncHistory(audienceId, limit),
+    enabled: !!audienceId,
+  })
+}
+
+export function useCreatePlatformAudience() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: PlatformAudienceCreate) =>
+      audienceSyncApi.createPlatformAudience(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...cdpQueryKeys.all, 'platform-audiences'] })
+      queryClient.invalidateQueries({ queryKey: [...cdpQueryKeys.all, 'segment-audiences'] })
+    },
+  })
+}
+
+export function useTriggerSync() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      audienceId,
+      operation,
+    }: {
+      audienceId: string
+      operation?: 'update' | 'replace'
+    }) => audienceSyncApi.triggerSync(audienceId, operation),
+    onSuccess: (_, { audienceId }) => {
+      queryClient.invalidateQueries({
+        queryKey: [...cdpQueryKeys.all, 'sync-history', audienceId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...cdpQueryKeys.all, 'platform-audiences'],
+      })
+    },
+  })
+}
+
+export function useDeletePlatformAudience() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      audienceId,
+      deleteFromPlatform,
+    }: {
+      audienceId: string
+      deleteFromPlatform?: boolean
+    }) => audienceSyncApi.deletePlatformAudience(audienceId, deleteFromPlatform),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...cdpQueryKeys.all, 'platform-audiences'] })
+      queryClient.invalidateQueries({ queryKey: [...cdpQueryKeys.all, 'segment-audiences'] })
+    },
+  })
+}
+
+export function useSyncSegmentToAllPlatforms() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      segmentId,
+      operation,
+    }: {
+      segmentId: string
+      operation?: 'update' | 'replace'
+    }) => audienceSyncApi.syncSegmentToAllPlatforms(segmentId, operation),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...cdpQueryKeys.all, 'platform-audiences'] })
+      queryClient.invalidateQueries({ queryKey: [...cdpQueryKeys.all, 'sync-history'] })
+    },
+  })
+}

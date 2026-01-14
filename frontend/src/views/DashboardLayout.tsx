@@ -27,6 +27,7 @@ import {
   ClockIcon,
   ShareIcon,
   ChevronDownIcon,
+  ArrowUpOnSquareIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
@@ -51,6 +52,7 @@ const cdpNavigation = [
   { name: 'Segments', href: '/dashboard/cdp/segments', icon: TagIcon },
   { name: 'Events', href: '/dashboard/cdp/events', icon: ClockIcon },
   { name: 'Identity Graph', href: '/dashboard/cdp/identity', icon: ShareIcon },
+  { name: 'Audience Sync', href: '/dashboard/cdp/audience-sync', icon: ArrowUpOnSquareIcon },
 ]
 
 export default function DashboardLayout() {

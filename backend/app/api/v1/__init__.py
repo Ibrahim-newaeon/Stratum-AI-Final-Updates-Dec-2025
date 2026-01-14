@@ -47,6 +47,7 @@ from app.api.v1.endpoints import (
     reporting,
     audit_services,
     cdp,
+    audience_sync,
 )
 
 api_router = APIRouter()
@@ -310,4 +311,10 @@ api_router.include_router(
 api_router.include_router(
     cdp.router,
     tags=["CDP"],
+)
+
+# CDP Audience Sync (Push segments to ad platforms)
+api_router.include_router(
+    audience_sync.router,
+    tags=["CDP Audience Sync"],
 )

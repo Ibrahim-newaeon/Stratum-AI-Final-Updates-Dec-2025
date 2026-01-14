@@ -164,6 +164,17 @@ from app.models.cdp import (
     CDPConsent,
 )
 
+# Audience Sync models
+from app.models.audience_sync import (
+    SyncPlatform,
+    SyncStatus,
+    SyncOperation,
+    AudienceType,
+    PlatformAudience,
+    AudienceSyncJob,
+    AudienceSyncCredential,
+)
+
 __all__ = [
     # Enums
     "UserRole",
@@ -291,4 +302,12 @@ __all__ = [
     "CDPProfileIdentifier",
     "CDPEvent",
     "CDPConsent",
+    # Audience Sync
+    "SyncPlatform",
+    "SyncStatus",
+    "SyncOperation",
+    "AudienceType",
+    "PlatformAudience",
+    "AudienceSyncJob",
+    "AudienceSyncCredential",
 ]

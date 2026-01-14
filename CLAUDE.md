@@ -77,6 +77,33 @@ DEGRADED_THRESHOLD = 40     # Yellow - alert + hold
 - Branch: `feature/STRAT-123-description`
 - Commit: `feat(signals): add anomaly detection [STRAT-123]`
 
+## CDP (Customer Data Platform) Frontend
+
+### Views & Routes
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/dashboard/cdp` | CDPDashboard | Main overview with stats, lifecycle distribution, event volume charts |
+| `/dashboard/cdp/profiles` | CDPProfiles | Profile viewer with search, filters, pagination, detail modal |
+| `/dashboard/cdp/segments` | CDPSegments | Segment builder with condition builder, preview, CRUD |
+| `/dashboard/cdp/events` | CDPEvents | Event timeline with volume charts, anomaly detection |
+| `/dashboard/cdp/identity` | CDPIdentityGraph | SVG-based identity graph visualization |
+
+### Key Files
+- `frontend/src/views/cdp/` - All CDP view components
+- `frontend/src/api/cdp.ts` - React Query hooks for CDP API (60+ hooks)
+- `frontend/src/views/DashboardLayout.tsx` - CDP navigation added here
+
+### CDP API Hooks (from `@/api/cdp`)
+- `useCDPHealth`, `useProfileStatistics`, `useEventStatistics`
+- `useSegments`, `useCreateSegment`, `useUpdateSegment`, `useDeleteSegment`
+- `useSearchProfiles`, `useCDPProfile`, `useExportAudience`
+- `useEventTrends`, `useAnomalySummary`, `useEventAnomalies`
+- `useIdentityGraph`, `useMergeHistory`
+
+### Navigation
+CDP section is in sidebar with collapsible submenu (5 items).
+State managed via `cdpExpanded` in DashboardLayout.
+
 ## Imports
 @docs/architecture/trust-engine.md
 @docs/integrations/README.md

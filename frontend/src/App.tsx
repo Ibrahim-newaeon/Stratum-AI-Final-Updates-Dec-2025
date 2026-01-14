@@ -44,6 +44,7 @@ const CDPProfiles = lazy(() => import('./views/cdp/CDPProfiles'))
 const CDPSegments = lazy(() => import('./views/cdp/CDPSegments'))
 const CDPEvents = lazy(() => import('./views/cdp/CDPEvents'))
 const CDPIdentityGraph = lazy(() => import('./views/cdp/CDPIdentityGraph'))
+const CDPAudienceSync = lazy(() => import('./views/cdp/CDPAudienceSync'))
 
 // Super Admin views
 const ControlTower = lazy(() => import('./views/superadmin/ControlTower'))
@@ -352,6 +353,14 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <CDPIdentityGraph />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/audience-sync"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPAudienceSync />
                     </Suspense>
                   }
                 />

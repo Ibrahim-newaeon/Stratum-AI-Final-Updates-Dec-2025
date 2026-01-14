@@ -31,3 +31,7 @@ export { default as AnomalyDashboardDefault } from './AnomalyDashboard'
 // Profile Search - Advanced profile search and export
 export { ProfileSearch } from './ProfileSearch'
 export { default as ProfileSearchDefault } from './ProfileSearch'
+
+// Audience Sync - Push segments to ad platforms
+export { AudienceSync } from './AudienceSync'
+export { default as AudienceSyncDefault } from './AudienceSync'
