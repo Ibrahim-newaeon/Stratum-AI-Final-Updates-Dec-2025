@@ -576,6 +576,10 @@
                 <div class="stat-value">4</div>
                 <div class="stat-label">Ad Platforms</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-value">CDP</div>
+                <div class="stat-label">Customer Data Platform</div>
+            </div>
         </div>
 
         <!-- First-Time User Flow -->
@@ -998,6 +1002,55 @@
                     </div>
                 </div>
 
+                <!-- CDP (Customer Data Platform) -->
+                <div class="screen-category">
+                    <h4>👤 Customer Data Platform (CDP)</h4>
+                    <div class="screen-list">
+                        <div class="screen-item">
+                            <div class="screen-item-icon">📊</div>
+                            <div class="screen-item-info">
+                                <h5>CDP Dashboard</h5>
+                                <span>/app/{tenantId}/cdp</span>
+                            </div>
+                        </div>
+                        <div class="screen-item">
+                            <div class="screen-item-icon">👤</div>
+                            <div class="screen-item-info">
+                                <h5>Customer Profiles</h5>
+                                <span>/app/{tenantId}/cdp/profiles</span>
+                            </div>
+                        </div>
+                        <div class="screen-item">
+                            <div class="screen-item-icon">🎯</div>
+                            <div class="screen-item-info">
+                                <h5>Segments</h5>
+                                <span>/app/{tenantId}/cdp/segments</span>
+                            </div>
+                        </div>
+                        <div class="screen-item">
+                            <div class="screen-item-icon">⚡</div>
+                            <div class="screen-item-info">
+                                <h5>Events</h5>
+                                <span>/app/{tenantId}/cdp/events</span>
+                            </div>
+                        </div>
+                        <div class="screen-item">
+                            <div class="screen-item-icon">🔗</div>
+                            <div class="screen-item-info">
+                                <h5>Identity Graph</h5>
+                                <span>/app/{tenantId}/cdp/identity</span>
+                            </div>
+                        </div>
+                        <div class="screen-item">
+                            <div class="screen-item-icon">📤</div>
+                            <div class="screen-item-info">
+                                <h5>Audience Sync</h5>
+                                <span>/app/{tenantId}/cdp/audience-sync</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Analytics & Reporting -->
                 <div class="screen-category">
                     <h4>📈 Analytics & Reporting</h4>
@@ -1206,17 +1259,18 @@
                 <a href="#architecture">4. Core Architecture</a>
                 <a href="#trust-engine">5. Trust Engine</a>
                 <a href="#autopilot">6. Autopilot System</a>
-                <a href="#campaigns">7. Campaign Management</a>
-                <a href="#integrations">8. Platform Integrations</a>
-                <a href="#crm">9. CRM Integration</a>
-                <a href="#analytics">10. Analytics & Reporting</a>
-                <a href="#attribution">11. Attribution Modeling</a>
-                <a href="#pacing">12. Pacing & Forecasting</a>
-                <a href="#profit">13. Profit & ROAS</a>
-                <a href="#testing">14. A/B Testing</a>
-                <a href="#users">15. User Management</a>
-                <a href="#api">16. API Reference</a>
-                <a href="#tech">17. Technical Stack</a>
+                <a href="#cdp">7. Customer Data Platform (CDP)</a>
+                <a href="#campaigns">8. Campaign Management</a>
+                <a href="#integrations">9. Platform Integrations</a>
+                <a href="#crm">10. CRM Integration</a>
+                <a href="#analytics">11. Analytics & Reporting</a>
+                <a href="#attribution">12. Attribution Modeling</a>
+                <a href="#pacing">13. Pacing & Forecasting</a>
+                <a href="#profit">14. Profit & ROAS</a>
+                <a href="#testing">15. A/B Testing</a>
+                <a href="#users">16. User Management</a>
+                <a href="#api">17. API Reference</a>
+                <a href="#tech">18. Technical Stack</a>
             </div>
         </nav>
 
@@ -1446,6 +1500,132 @@
                     <tr><td>Budget</td><td>increase, decrease</td></tr>
                     <tr><td>Status</td><td>pause, enable (campaign/adset/creative)</td></tr>
                     <tr><td>Bid</td><td>increase, decrease</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Customer Data Platform (CDP) -->
+        <section class="section" id="cdp">
+            <h2>Customer Data Platform (CDP)</h2>
+            <p>The CDP unifies customer data across all touchpoints, enabling advanced segmentation, identity resolution, and multi-platform audience synchronization.</p>
+
+            <h3>Core CDP Value Propositions</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>👤 Unified Customer Profiles</h4>
+                    <p>Single customer view across all touchpoints with real-time profile enrichment from events</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎯 One-Click Audience Sync</h4>
+                    <p>Push segments to Meta, Google, TikTok & Snapchat instantly with auto-sync</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Smart Segmentation</h4>
+                    <p>Behavioral conditions, RFM analysis, and lifecycle stage targeting</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔗 Identity Resolution</h4>
+                    <p>Visual identity graph with cross-device tracking and merge history</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Event Intelligence</h4>
+                    <p>Real-time event ingestion with anomaly detection and EMQ scoring</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔒 Privacy-First Design</h4>
+                    <p>GDPR/CCPA compliant with consent management and hashed PII</p>
+                </div>
+            </div>
+
+            <h3>CDP Views & Routes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Component</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>/dashboard/cdp</td><td>CDPDashboard</td><td>Main overview with stats, lifecycle distribution, event volume</td></tr>
+                    <tr><td>/dashboard/cdp/profiles</td><td>CDPProfiles</td><td>Profile viewer with search, filters, pagination</td></tr>
+                    <tr><td>/dashboard/cdp/segments</td><td>CDPSegments</td><td>Segment builder with condition builder, preview, CRUD</td></tr>
+                    <tr><td>/dashboard/cdp/events</td><td>CDPEvents</td><td>Event timeline with volume charts, anomaly detection</td></tr>
+                    <tr><td>/dashboard/cdp/identity</td><td>CDPIdentityGraph</td><td>SVG-based identity graph visualization</td></tr>
+                    <tr><td>/dashboard/cdp/audience-sync</td><td>AudienceSync</td><td>Multi-platform audience sync management</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Audience Sync - Supported Platforms</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>API</th>
+                        <th>Features</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="badge badge-primary">Meta</span></td><td>Custom Audiences API</td><td>Hashed email/phone, auto-sync 1h-1week</td></tr>
+                    <tr><td><span class="badge badge-secondary">Google</span></td><td>Customer Match API</td><td>Email/phone/MAID matching</td></tr>
+                    <tr><td><span class="badge badge-success">TikTok</span></td><td>DMP Custom Audience API</td><td>Hashed identifier sync</td></tr>
+                    <tr><td><span class="badge badge-warning">Snapchat</span></td><td>SAM API</td><td>Audience match with metrics</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Segmentation Capabilities</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Segment Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Behavioral Segments</td><td>Based on user actions and event patterns</td></tr>
+                    <tr><td>RFM Segments</td><td>Recency, Frequency, Monetary value analysis</td></tr>
+                    <tr><td>Lifecycle Stages</td><td>Anonymous, Known, Customer, Churned tracking</td></tr>
+                    <tr><td>Computed Traits</td><td>Dynamic attributes calculated from events</td></tr>
+                    <tr><td>Lookalike Audiences</td><td>Similar profiles to high-value segments</td></tr>
+                </tbody>
+            </table>
+
+            <h3>CDP API Endpoints</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>/cdp/audience-sync/platforms</td><td>GET</td><td>List connected platforms</td></tr>
+                    <tr><td>/cdp/audience-sync/audiences</td><td>GET</td><td>List all audiences</td></tr>
+                    <tr><td>/cdp/audience-sync/audiences</td><td>POST</td><td>Create new audience</td></tr>
+                    <tr><td>/cdp/audience-sync/audiences/{id}/sync</td><td>POST</td><td>Trigger manual sync</td></tr>
+                    <tr><td>/cdp/audience-sync/audiences/{id}/history</td><td>GET</td><td>View sync history</td></tr>
+                    <tr><td>/cdp/audiences/export</td><td>POST</td><td>Export to CSV/JSON</td></tr>
+                </tbody>
+            </table>
+
+            <h3>CDP Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Stratum CDP</th>
+                        <th>Segment</th>
+                        <th>mParticle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Multi-platform sync</td><td><span class="badge badge-success">4 platforms</span></td><td>Yes</td><td>Yes</td></tr>
+                    <tr><td>Real-time segments</td><td><span class="badge badge-success">Yes</span></td><td>Yes</td><td>Yes</td></tr>
+                    <tr><td>Identity graph visualization</td><td><span class="badge badge-success">Yes</span></td><td>No</td><td>No</td></tr>
+                    <tr><td>Built-in RFM analysis</td><td><span class="badge badge-success">Yes</span></td><td>No</td><td>No</td></tr>
+                    <tr><td>Trust-gated actions</td><td><span class="badge badge-primary">Unique</span></td><td>No</td><td>No</td></tr>
+                    <tr><td>Anomaly detection</td><td><span class="badge badge-success">Yes</span></td><td>No</td><td>Yes</td></tr>
                 </tbody>
             </table>
         </section>
