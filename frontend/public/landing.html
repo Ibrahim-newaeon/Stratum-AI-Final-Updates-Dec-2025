@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stratum AI - Revenue Intelligence + Trust Layer</title>
+    <title>Stratum AI - Revenue Operating System | Trust-Gated Automation & CDP</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -1314,6 +1314,211 @@
                 0 0 40px rgba(139, 92, 246, 0.4),
                 0 0 60px rgba(139, 92, 246, 0.2),
                 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* CDP Section */
+        .cdp-section {
+            padding: 8rem 2rem;
+            background: var(--bg-primary);
+            transition: background 0.5s ease;
+        }
+
+        .cdp-hero {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+        }
+
+        .cdp-hero h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cdp-hero-bullets {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .cdp-hero-bullet {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .cdp-hero-bullet::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        .cdp-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto 4rem;
+        }
+
+        .cdp-feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cdp-feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cdp-feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .cdp-feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .cdp-feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cdp-feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .cdp-feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* CDP Comparison Table */
+        .cdp-comparison {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        .cdp-comparison h3 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .cdp-table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .cdp-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+        }
+
+        .cdp-table th,
+        .cdp-table td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .cdp-table th {
+            background: var(--bg-glass);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .cdp-table th:first-child {
+            border-top-left-radius: 16px;
+        }
+
+        .cdp-table th:last-child {
+            border-top-right-radius: 16px;
+        }
+
+        .cdp-table td {
+            color: var(--text-secondary);
+        }
+
+        .cdp-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cdp-table tr:last-child td:first-child {
+            border-bottom-left-radius: 16px;
+        }
+
+        .cdp-table tr:last-child td:last-child {
+            border-bottom-right-radius: 16px;
+        }
+
+        .cdp-table tr:hover td {
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .cdp-check {
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        .cdp-cross {
+            color: var(--text-muted);
+        }
+
+        .cdp-unique {
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .cdp-hero h2 {
+                font-size: 2rem;
+            }
+
+            .cdp-hero-bullets {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .cdp-features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cdp-table th,
+            .cdp-table td {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
         }
 
         /* ROI Calculator */
@@ -3973,9 +4178,9 @@
         <div class="nav-container">
             <div class="logo">STRATUM AI</div>
             <ul class="nav-links">
-                <li><a href="#value" data-section="value">Value</a></li>
-                <li><a href="#trust" data-section="trust">Trust</a></li>
+                <li><a href="#why-stratum" data-section="why-stratum">Why Stratum</a></li>
                 <li><a href="#platform" data-section="platform">Platform</a></li>
+                <li><a href="#cdp" data-section="cdp">CDP</a></li>
                 <li><a href="#intelligence" data-section="intelligence">Intelligence</a></li>
                 <li><a href="#integrations" data-section="integrations">Integrations</a></li>
                 <li><a href="#roi" data-section="roi">ROI</a></li>
@@ -4122,8 +4327,8 @@
                 </div>
                 <h1>Stop Losing <span class="typing-text" id="typingText">23% of Ad Spend</span><span class="typing-cursor"></span> to Bad Attribution</h1>
                 <p class="hero-description">
-                    Brands using Stratum AI recover an average of <strong>$24K/month</strong> in wasted ad spend within their first 30 days.
-                    Finally see true profit—not vanity metrics—across Meta, Google, TikTok, Snapchat & LinkedIn.
+                    The Revenue Operating System with <strong>trust-gated automation</strong>. Brands using Stratum AI recover an average of <strong>$24K/month</strong> in wasted ad spend.
+                    Unify customer data, sync audiences to all ad platforms, and automate only when your signals are healthy.
                 </p>
                 <div class="hero-cta">
                     <button type="button" class="btn btn-primary magnetic" onclick="openEarlyAccessModal()">
@@ -4202,62 +4407,83 @@
         </div>
     </section>
 
-    <!-- Value Proposition -->
-    <section class="value-prop" id="value">
+    <!-- Why Stratum Section -->
+    <section class="value-prop" id="why-stratum">
         <div class="section-header reveal">
             <div class="section-label">Why Stratum AI</div>
-            <h2 class="section-title">Every Day Without True Profit Visibility Costs You Money</h2>
+            <h2 class="section-title">The Only Revenue OS With Trust-Gated Automation</h2>
             <p class="section-description">
-                The average brand wastes <strong>23% of ad budget</strong> on campaigns that look profitable but aren't.
-                Stratum AI fixes that in your first week—<strong>guaranteed or your money back</strong>.
+                Other platforms automate blindly. Stratum AI checks <strong>signal health first</strong>—and only executes when data is trustworthy.
+                That's the difference between automation that scales and automation that burns budget.
             </p>
+        </div>
+
+        <!-- Core Differentiator Banner -->
+        <div style="max-width: 1200px; margin: 0 auto 3rem; padding: 2rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; text-align: center;">
+                <div>
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📡</div>
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Signal Health Check</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Continuous data quality monitoring</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛡️</div>
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Trust Gate</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Pass/Hold/Block decision checkpoint</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚀</div>
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Safe Automation</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Execute only when data is healthy</div>
+                </div>
+            </div>
         </div>
 
         <div class="value-grid">
             <div class="value-card" style="--delay: 0.1s;">
+                <div class="value-icon green">🔒</div>
+                <h3>Trust-Gated Autopilot</h3>
+                <p>Automation executes <strong>only when signal health passes 70+</strong>. Degraded signals trigger alerts, not blind actions. Your budget stays protected.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">100%</span>
+                    <span class="value-metric-label">controlled automation</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.2s;">
                 <div class="value-icon blue">💰</div>
                 <h3>True Profit Tracking</h3>
-                <p>Know your real ROAS after COGS, overhead, and operational costs. Not vanity metrics - actual profit per campaign.</p>
+                <p>Know your real ROAS after COGS, overhead, and operational costs. Not vanity metrics—actual profit per campaign, per creative, per audience.</p>
                 <div class="value-metric">
                     <span class="value-metric-number">+34%</span>
                     <span class="value-metric-label">profit visibility increase</span>
                 </div>
             </div>
 
-            <div class="value-card" style="--delay: 0.2s;">
+            <div class="value-card" style="--delay: 0.3s;">
                 <div class="value-icon purple">🎯</div>
                 <h3>Multi-Touch Attribution</h3>
-                <p>Markov Chain & Shapley models reveal the true value of each touchpoint. Stop over-crediting last-click.</p>
+                <p>Markov Chain & Shapley models reveal the true value of each touchpoint. Stop over-crediting last-click and starving your prospecting.</p>
                 <div class="value-metric">
                     <span class="value-metric-number">-28%</span>
                     <span class="value-metric-label">wasted ad spend</span>
                 </div>
             </div>
 
-            <div class="value-card" style="--delay: 0.3s;">
+            <div class="value-card" style="--delay: 0.4s;">
                 <div class="value-icon cyan">📊</div>
-                <h3>Signal Health & Event Quality</h3>
-                <p>A unified Signal Health score that combines <strong>Meta EMQ</strong> with cross‑platform diagnostics (coverage, freshness, latency). Fix gaps before they cost conversions.</p>
+                <h3>Unified Signal Health</h3>
+                <p>A single score combining <strong>Meta EMQ</strong> with cross-platform diagnostics (coverage, freshness, latency). See exactly what's broken and how to fix it.</p>
                 <div class="value-metric">
                     <span class="value-metric-number">+45%</span>
                     <span class="value-metric-label">better signal quality</span>
                 </div>
             </div>
 
-            <div class="value-card" style="--delay: 0.4s;">
-                <div class="value-icon green">🤖</div>
-                <h3>AI Budget Optimization</h3>
-                <p>ML models predict performance and recommend budget shifts. Simulate scenarios before spending a dollar.</p>
-                <div class="value-metric">
-                    <span class="value-metric-number">+18%</span>
-                    <span class="value-metric-label">ROAS improvement</span>
-                </div>
-            </div>
-
             <div class="value-card" style="--delay: 0.5s;">
                 <div class="value-icon orange">⚡</div>
-                <h3>Automated Pacing</h3>
-                <p>Never overspend or underspend again. Smart alerts and auto-actions keep budgets on track 24/7.</p>
+                <h3>Smart Budget Pacing</h3>
+                <p>ML-powered predictions prevent overspend and underspend. Simulate scenarios before committing—with guardrails and rollback built in.</p>
                 <div class="value-metric">
                     <span class="value-metric-number">99.2%</span>
                     <span class="value-metric-label">budget accuracy</span>
@@ -4266,11 +4492,42 @@
 
             <div class="value-card" style="--delay: 0.6s;">
                 <div class="value-icon pink">📱</div>
-                <h3>WhatsApp Alerts</h3>
-                <p>Critical updates delivered instantly to your phone. Performance drops, budget alerts, daily digests.</p>
+                <h3>Instant WhatsApp Alerts</h3>
+                <p>Critical updates delivered directly to your phone. ROAS drops, budget anomalies, signal degradation—know instantly, act immediately.</p>
                 <div class="value-metric">
                     <span class="value-metric-number">&lt;5min</span>
-                    <span class="value-metric-label">response time</span>
+                    <span class="value-metric-label">alert response time</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- What Makes Us Different -->
+        <div style="max-width: 1200px; margin: 4rem auto 0;">
+            <h3 style="text-align: center; font-size: 1.75rem; margin-bottom: 2rem;">What Makes Stratum Different</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="font-size: 1.5rem;">❌</div>
+                        <div style="font-weight: 700; color: var(--accent-orange);">Other Platforms</div>
+                    </div>
+                    <ul style="list-style: none; color: var(--text-secondary); font-size: 0.95rem;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);">Automate based on stale or incomplete data</li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);">No visibility into data quality issues</li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);">Black-box attribution models</li>
+                        <li style="padding: 0.5rem 0;">Actions without guardrails or rollback</li>
+                    </ul>
+                </div>
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="font-size: 1.5rem;">✅</div>
+                        <div style="font-weight: 700; color: var(--accent-green);">Stratum AI</div>
+                    </div>
+                    <ul style="list-style: none; color: var(--text-secondary); font-size: 0.95rem;">
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);"><strong>Trust Gate</strong> blocks automation when signal < 70</li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);"><strong>Connection Health Center</strong> shows exactly what's broken</li>
+                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);"><strong>Transparent attribution</strong> with model selection</li>
+                        <li style="padding: 0.5rem 0;"><strong>Guardrails + rollback</strong> on every automated action</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -4917,12 +5174,189 @@
             <div style="display:flex; gap: 1rem; align-items:flex-start;">
                 <div style="font-size: 1.5rem;">ℹ️</div>
                 <div style="color: var(--text-secondary);">
-                    <strong>Note:</strong> “EMQ” is Meta-specific. For other platforms, Stratum AI tracks signal health using measurable diagnostics (coverage, freshness, latency, delivery errors).
+                    <strong>Note:</strong> "EMQ" is Meta-specific. For other platforms, Stratum AI tracks signal health using measurable diagnostics (coverage, freshness, latency, delivery errors).
                     Conversions API (CAPI) support requires correct permissions and production connector hardening.
                 </div>
             </div>
         </div>
 
+    </section>
+
+    <!-- CDP Section -->
+    <section class="cdp-section" id="cdp">
+        <div class="cdp-hero">
+            <div class="section-label">Customer Data Platform</div>
+            <h2>Turn Customer Data Into Revenue</h2>
+            <p class="section-description">
+                Unify profiles across every touchpoint. Sync audiences to all ad platforms instantly. Automate targeting with smart segmentation.
+            </p>
+            <div class="cdp-hero-bullets">
+                <span class="cdp-hero-bullet">360° unified profiles</span>
+                <span class="cdp-hero-bullet">One-click audience sync</span>
+                <span class="cdp-hero-bullet">Smart behavioral segments</span>
+                <span class="cdp-hero-bullet">Privacy-first design</span>
+            </div>
+        </div>
+
+        <div class="cdp-features-grid">
+            <!-- One-Click Audience Sync -->
+            <div class="cdp-feature-card reveal">
+                <div class="cdp-feature-icon">🎯</div>
+                <h3 class="cdp-feature-title">One-Click Audience Sync</h3>
+                <p class="cdp-feature-desc">
+                    Push segments to <strong>Meta, Google, TikTok & Snapchat</strong> instantly. Auto-sync keeps your audiences fresh 24/7 with configurable intervals (1h - 1 week).
+                </p>
+            </div>
+
+            <!-- 360° Customer Profiles -->
+            <div class="cdp-feature-card reveal">
+                <div class="cdp-feature-icon">👤</div>
+                <h3 class="cdp-feature-title">360° Customer Profiles</h3>
+                <p class="cdp-feature-desc">
+                    Unified view from anonymous visitor to loyal customer. Real-time enrichment from every interaction across web, mobile, and offline touchpoints.
+                </p>
+            </div>
+
+            <!-- Smart Segmentation -->
+            <div class="cdp-feature-card reveal">
+                <div class="cdp-feature-icon">📊</div>
+                <h3 class="cdp-feature-title">Smart Segmentation</h3>
+                <p class="cdp-feature-desc">
+                    Build segments with behavioral rules, <strong>RFM scores</strong> (Recency, Frequency, Monetary), and lifecycle stages. Preview audience size before you publish.
+                </p>
+            </div>
+
+            <!-- Identity Resolution -->
+            <div class="cdp-feature-card reveal">
+                <div class="cdp-feature-icon">🔗</div>
+                <h3 class="cdp-feature-title">Identity Resolution</h3>
+                <p class="cdp-feature-desc">
+                    Connect the dots across devices and channels. Visual identity graph shows every connection with merge history and audit trail.
+                </p>
+            </div>
+
+            <!-- Event Intelligence -->
+            <div class="cdp-feature-card reveal">
+                <div class="cdp-feature-icon">⚡</div>
+                <h3 class="cdp-feature-title">Event Intelligence</h3>
+                <p class="cdp-feature-desc">
+                    Real-time event ingestion with <strong>anomaly detection</strong>. EMQ (Event Match Quality) scoring helps you optimize conversion tracking quality.
+                </p>
+            </div>
+
+            <!-- Flexible Export -->
+            <div class="cdp-feature-card reveal">
+                <div class="cdp-feature-icon">📤</div>
+                <h3 class="cdp-feature-title">Flexible Export</h3>
+                <p class="cdp-feature-desc">
+                    Export audiences as CSV or JSON anytime. Include traits, events, and custom attributes with privacy-compliant hashed identifiers.
+                </p>
+            </div>
+        </div>
+
+        <!-- CDP Comparison Table -->
+        <div class="cdp-comparison">
+            <h3>How Stratum CDP Compares</h3>
+            <div class="cdp-table-container">
+                <table class="cdp-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Stratum CDP</th>
+                            <th>Segment</th>
+                            <th>mParticle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Multi-platform sync</td>
+                            <td><span class="cdp-check">✓ 4 platforms</span></td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-check">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Real-time segments</td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-check">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Identity graph visualization</td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-cross">—</span></td>
+                            <td><span class="cdp-cross">—</span></td>
+                        </tr>
+                        <tr>
+                            <td>Built-in RFM analysis</td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-cross">—</span></td>
+                            <td><span class="cdp-cross">—</span></td>
+                        </tr>
+                        <tr>
+                            <td>Trust-gated actions</td>
+                            <td><span class="cdp-unique">✓ Unique</span></td>
+                            <td><span class="cdp-cross">—</span></td>
+                            <td><span class="cdp-cross">—</span></td>
+                        </tr>
+                        <tr>
+                            <td>Manual CSV/JSON export</td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-check">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Anomaly detection</td>
+                            <td><span class="cdp-check">✓</span></td>
+                            <td><span class="cdp-cross">—</span></td>
+                            <td><span class="cdp-check">✓</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CDP Platform Support Banner -->
+        <div style="max-width: 1200px; margin: 3rem auto 0; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px;">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-weight: 700; font-size: 1.1rem;">Sync to All Major Ad Platforms</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Hashed identifier matching (email, phone, MAID) for privacy-compliant audience syncing</div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📘</div>
+                    <div style="font-weight: 600;">Meta</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem;">Custom Audiences API</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+                    <div style="font-weight: 600;">Google</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem;">Customer Match API</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎵</div>
+                    <div style="font-weight: 600;">TikTok</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem;">DMP Custom Audience</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">👻</div>
+                    <div style="font-weight: 600;">Snapchat</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem;">SAM API</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy & Compliance -->
+        <div style="max-width: 1000px; margin: 2rem auto 0; padding: 1.25rem 1.5rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px;">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="font-size: 1.5rem;">🔒</div>
+                <div>
+                    <div style="font-weight: 700; margin-bottom: 0.25rem;">Privacy-First by Design</div>
+                    <div style="color: var(--text-secondary);">
+                        <strong>GDPR/CCPA compliant</strong> exports, consent management per data type, hashed PII for platform sync, and full audit logging for all data operations.
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- ROI Calculator -->
