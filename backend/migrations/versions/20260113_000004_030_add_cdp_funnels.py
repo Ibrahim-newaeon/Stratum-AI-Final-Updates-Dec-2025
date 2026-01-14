@@ -1,7 +1,7 @@
 """Add CDP funnel/journey tracking tables
 
 Revision ID: 030_add_cdp_funnels
-Revises: 029_add_cdp_segments
+Revises: 029_cdp_segments
 Create Date: 2026-01-13 00:00:04
 
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 # revision identifiers, used by Alembic.
 revision = "030_add_cdp_funnels"
-down_revision = "029_add_cdp_segments"
+down_revision = "029_cdp_segments"
 branch_labels = None
 depends_on = None
 

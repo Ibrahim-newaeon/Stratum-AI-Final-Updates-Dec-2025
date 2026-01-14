@@ -19,10 +19,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_db
+from app.db.session import get_async_session
 from app.tenancy.deps import get_tenant_id
 from app.auth.deps import get_current_user
-from app.models.user import User
+from app.models import User
 from app.models.audience_sync import SyncPlatform, SyncOperation, SyncStatus
 from app.services.cdp.audience_sync import AudienceSyncService
 
@@ -123,7 +123,7 @@ class SyncHistoryResponse(BaseModel):
     description="List all platforms with active credentials for audience sync.",
 )
 async def get_connected_platforms(
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
 ) -> List[ConnectedPlatformResponse]:
     """Get list of platforms with active credentials."""
@@ -143,7 +143,7 @@ async def list_platform_audiences(
     platform: Optional[str] = Query(None, description="Filter by platform"),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
 ) -> PlatformAudienceListResponse:
     """List platform audiences."""
@@ -169,7 +169,7 @@ async def list_platform_audiences(
 )
 async def create_platform_audience(
     request: PlatformAudienceCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
 ) -> PlatformAudienceResponse:
@@ -217,7 +217,7 @@ async def create_platform_audience(
 )
 async def get_platform_audience(
     audience_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
 ) -> PlatformAudienceResponse:
     """Get platform audience details."""
@@ -254,7 +254,7 @@ async def get_platform_audience(
 async def trigger_sync(
     audience_id: UUID,
     request: TriggerSyncRequest,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
 ) -> SyncJobResponse:
@@ -305,7 +305,7 @@ async def trigger_sync(
 async def get_sync_history(
     audience_id: UUID,
     limit: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
 ) -> SyncHistoryResponse:
     """Get sync history."""
@@ -325,7 +325,7 @@ async def get_sync_history(
 async def delete_platform_audience(
     audience_id: UUID,
     delete_from_platform: bool = Query(True, description="Also delete from ad platform"),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
 ):
@@ -358,7 +358,7 @@ async def delete_platform_audience(
 )
 async def get_segment_audiences(
     segment_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
 ) -> PlatformAudienceListResponse:
     """Get all platform audiences for a segment."""
@@ -383,7 +383,7 @@ async def get_segment_audiences(
 async def sync_segment_to_all_platforms(
     segment_id: UUID,
     operation: str = Query("update", description="Operation: update, replace"),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
 ) -> List[SyncJobResponse]:

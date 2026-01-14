@@ -27,7 +27,7 @@ from typing import Optional, Dict, List, Any
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
 from sqlalchemy import select, func, or_, String, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -4407,7 +4407,7 @@ async def analyze_funnel(
 )
 async def get_funnel_drop_offs(
     funnel_id: UUID,
-    step: int = Query(..., ge=1, description="Step number (1-indexed)"),
+    step: int = Path(..., ge=1, description="Step number (1-indexed)"),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),

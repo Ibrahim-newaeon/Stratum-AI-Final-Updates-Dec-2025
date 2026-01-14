@@ -1,7 +1,7 @@
 """Add CDP audience sync tables
 
 Revision ID: 031_cdp_audience_sync
-Revises: 030_cdp_funnels
+Revises: 030_add_cdp_funnels
 Create Date: 2026-01-14 00:00:00.000000
 
 Tables:
@@ -16,7 +16,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers
 revision = '031_cdp_audience_sync'
-down_revision = '030_cdp_funnels'
+down_revision = '030_add_cdp_funnels'
 branch_labels = None
 depends_on = None
 
