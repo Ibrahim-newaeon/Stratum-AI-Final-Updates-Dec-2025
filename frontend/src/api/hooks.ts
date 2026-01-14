@@ -313,6 +313,111 @@ export {
   useDashboardSignalHealth,
 } from './dashboard'
 
+// CDP (Customer Data Platform) hooks
+export {
+  // API client and types
+  cdpApi,
+  cdpQueryKeys,
+  createTracker,
+  // Profile hooks
+  useCDPProfile,
+  useCDPProfileLookup,
+  useDeleteProfile,
+  useSearchProfiles,
+  useSearchProfilesMutation,
+  useProfileStatistics,
+  // Source hooks
+  useCDPSources,
+  useCreateSource,
+  // Event hooks
+  useIngestEvents,
+  useIngestEvent,
+  useEventStatistics,
+  useEventTrends,
+  // Health hook
+  useCDPHealth,
+  // Webhook hooks
+  useCDPWebhooks,
+  useCDPWebhook,
+  useCreateWebhook,
+  useUpdateWebhook,
+  useDeleteWebhook,
+  useTestWebhook,
+  useRotateWebhookSecret,
+  // Anomaly hooks
+  useEventAnomalies,
+  useAnomalySummary,
+  // Identity Graph hooks
+  useIdentityGraph,
+  useCanonicalIdentity,
+  useProfileMergeHistory,
+  useMergeHistory,
+  useIdentityLinks,
+  useMergeProfiles,
+  // Segment hooks
+  useSegments,
+  useSegment,
+  useCreateSegment,
+  useUpdateSegment,
+  useDeleteSegment,
+  useComputeSegment,
+  usePreviewSegment,
+  useSegmentProfiles,
+  useProfileSegments,
+  // Computed Traits hooks
+  useComputedTraits,
+  useComputedTrait,
+  useCreateComputedTrait,
+  useDeleteComputedTrait,
+  useComputeAllTraits,
+  // RFM hooks
+  useProfileRFM,
+  useComputeRFMBatch,
+  useRFMSummary,
+  // Funnel hooks
+  useFunnels,
+  useFunnel,
+  useCreateFunnel,
+  useUpdateFunnel,
+  useDeleteFunnel,
+  useComputeFunnel,
+  useAnalyzeFunnel,
+  useFunnelDropOffs,
+  useProfileFunnelJourneys,
+  // Export hooks
+  useExportAudience,
+  // Type exports
+  type IdentifierType,
+  type IdentifierInput,
+  type Identifier,
+  type EventInput,
+  type EventBatchInput,
+  type EventBatchResponse,
+  type CDPEvent,
+  type CDPProfile,
+  type ProfileListResponse,
+  type CDPSource,
+  type SourceCreate,
+  type SourceListResponse,
+  type CDPWebhook,
+  type WebhookCreate,
+  type WebhookUpdate,
+  type CDPSegment,
+  type SegmentCreate,
+  type SegmentUpdate,
+  type SegmentRules,
+  type CDPComputedTrait,
+  type ComputedTraitCreate,
+  type RFMScores,
+  type RFMSegment,
+  type CDPFunnel,
+  type FunnelCreate,
+  type FunnelUpdate,
+  type FunnelStep,
+  type ProfileSearchParams,
+  type AudienceExportParams,
+} from './cdp'
+
 // =============================================================================
 // Tenant Overview Hooks (for tenant dashboard)
 // =============================================================================

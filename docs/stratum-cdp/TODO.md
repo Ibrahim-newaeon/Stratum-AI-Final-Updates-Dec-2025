@@ -105,9 +105,9 @@
 - [x] Style with Tailwind (match existing widgets)
 
 ### Frontend API Integration
-- [ ] Create `frontend/src/api/cdp.ts`
-- [ ] Add API hooks for CDP endpoints
-- [ ] Add types for CDP data structures
+- [x] Create `frontend/src/api/cdp.ts`
+- [x] Add API hooks for CDP endpoints
+- [x] Add types for CDP data structures
 
 ### Documentation
 - [x] Write `PITCH_DECK.md` (12-15 slides)
@@ -148,11 +148,11 @@
 | Week | Status | Completion |
 |------|--------|------------|
 | Week 1 | Complete | 100% |
-| Week 2 | Complete | 95% |
+| Week 2 | Complete | 100% |
 | Week 3 | Complete | 85% |
-| Week 4 | Complete | 75% |
+| Week 4 | Complete | 90% |
 
-**Last Updated**: 2026-01-13
+**Last Updated**: 2026-01-14
 
 ---
 
