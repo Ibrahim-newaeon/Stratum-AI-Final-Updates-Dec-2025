@@ -28,7 +28,7 @@ from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import select, func, and_, or_, String
+from sqlalchemy import select, func, or_, String, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -47,24 +47,17 @@ from app.models.cdp import (
     CDPSegment,
     CDPSegmentMembership,
     CDPFunnel,
-    CDPFunnelEntry,
-    IdentifierType,
     LifecycleStage,
     MergeReason,
-    SegmentStatus,
-    FunnelStatus,
 )
 from app.schemas.cdp import (
     EventBatchInput,
     EventBatchResponse,
     EventIngestResult,
     ProfileResponse,
-    ProfileListResponse,
     SourceCreate,
     SourceResponse,
     SourceListResponse,
-    ConsentUpdate,
-    ConsentResponse,
     IdentifierResponse,
     WebhookCreate,
     WebhookUpdate,
@@ -86,7 +79,6 @@ from app.schemas.cdp import (
     SegmentPreviewResponse,
     SegmentProfilesResponse,
     ProfileSegmentsResponse,
-    ProfileDeletionRequest,
     ProfileDeletionResponse,
     ComputedTraitCreate,
     ComputedTraitResponse,
@@ -508,7 +500,7 @@ async def validate_source_key(
         .where(
             CDPSource.tenant_id == tenant_id,
             CDPSource.source_key == source_key,
-            CDPSource.is_active == True,
+            CDPSource.is_active.is_(True),
         )
     )
     source = result.scalar_one_or_none()
@@ -996,7 +988,6 @@ async def export_profiles(
     from fastapi.responses import StreamingResponse
     import csv
     import io
-    import json
 
     tenant_id = current_user.tenant_id
 
@@ -1665,7 +1656,7 @@ async def search_profiles(
             select(CDPSegmentMembership.profile_id)
             .where(
                 CDPSegmentMembership.segment_id.in_(segment_ids),
-                CDPSegmentMembership.is_member == True,
+                CDPSegmentMembership.is_member.is_(True),
             )
             .distinct()
         )
@@ -1677,7 +1668,7 @@ async def search_profiles(
             select(CDPSegmentMembership.profile_id)
             .where(
                 CDPSegmentMembership.segment_id.in_(exclude_segment_ids),
-                CDPSegmentMembership.is_member == True,
+                CDPSegmentMembership.is_member.is_(True),
             )
             .distinct()
         )
@@ -1897,7 +1888,7 @@ async def export_audience(
             CDPSegmentMembership.profile_id == CDPProfile.id,
         ).where(
             CDPSegmentMembership.segment_id == segment_id,
-            CDPSegmentMembership.is_member == True,
+            CDPSegmentMembership.is_member.is_(True),
         )
 
     # Apply lifecycle stage filter
@@ -2680,8 +2671,6 @@ async def get_anomaly_summary(
     """
     Get a summary of CDP data health including volume trends and anomalies.
     """
-    from sqlalchemy import cast, Date
-
     tenant_id = current_user.tenant_id
 
     # Get event counts for the last 7 days

@@ -16,16 +16,16 @@ All models are multi-tenant with tenant_id column.
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List
+from typing import Optional
 from uuid import uuid4
 import enum
 
 from sqlalchemy import (
     Column, String, Integer, DateTime, Text, ForeignKey,
-    Index, Enum as SQLEnum, Boolean, BigInteger, Numeric, UniqueConstraint
+    Index, Boolean, BigInteger, Numeric, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, TimestampMixin
 
