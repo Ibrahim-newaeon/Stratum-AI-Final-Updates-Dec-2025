@@ -4,20 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stratum AI Platform - Complete Feature Documentation v1.0.0</title>
+    <!-- New Design System -->
+    <link rel="stylesheet" href="styles.css">
     <style>
+        /* Override variables to match new design system */
         :root {
-            --primary: #8B5CF6;
-            --primary-dark: #7C3AED;
-            --secondary: #06B6D4;
+            --primary: #FC6423;
+            --primary-dark: #D1521C;
+            --secondary: #3980EA;
             --success: #10B981;
             --warning: #F59E0B;
             --danger: #EF4444;
-            --bg-dark: #0F0F1A;
-            --bg-card: #1A1A2E;
-            --bg-secondary: #16162A;
+            --bg-dark: #0B1220;
+            --bg-card: rgba(16, 26, 46, 0.85);
+            --bg-secondary: #101A2E;
             --text-primary: #FFFFFF;
-            --text-secondary: #A0A0B0;
-            --border: #2A2A4A;
+            --text-secondary: #A9B6D3;
+            --border: rgba(255, 255, 255, 0.12);
         }
 
         * {
@@ -63,41 +66,46 @@
         }
 
         .top-nav a:hover {
-            background: var(--primary);
+            background: linear-gradient(135deg, #FC6423, #D1521C);
             color: white;
         }
 
         .top-nav a.active {
-            background: var(--primary);
+            background: linear-gradient(135deg, #FC6423, #D1521C);
             color: white;
+            box-shadow: 0 2px 8px rgba(252, 100, 35, 0.3);
         }
 
         /* Header */
         .header {
             text-align: center;
             padding: 4rem 2rem;
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            background: linear-gradient(135deg, rgba(252, 100, 35, 0.15) 0%, rgba(57, 128, 234, 0.1) 50%, rgba(150, 112, 194, 0.08) 100%);
             border-bottom: 1px solid var(--border);
             margin-bottom: 3rem;
+            position: relative;
         }
 
         .header h1 {
             font-size: 3rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(135deg, #FC6423 0%, #3980EA 50%, #9670C2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 1rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
         }
 
         .header .version {
             display: inline-block;
-            background: var(--primary);
+            background: linear-gradient(135deg, #FC6423, #D1521C);
             color: white;
             padding: 0.5rem 1.5rem;
             border-radius: 50px;
             font-weight: 600;
             margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(252, 100, 35, 0.3);
         }
 
         .header .date {
@@ -151,9 +159,10 @@
         }
 
         .section h2 {
-            color: var(--primary);
+            color: #FC6423;
             font-size: 2rem;
             margin-bottom: 1.5rem;
+            font-weight: 800;
             padding-bottom: 1rem;
             border-bottom: 2px solid var(--border);
         }
@@ -375,13 +384,15 @@
         }
 
         .feature-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-3px);
+            border-color: #FC6423;
+            transform: translateY(-4px);
+            box-shadow: 0 0 30px rgba(252, 100, 35, 0.15);
         }
 
         .feature-card h4 {
-            color: var(--primary);
+            color: #FC6423;
             margin-bottom: 0.75rem;
+            font-weight: 700;
         }
 
         .feature-card p {
@@ -407,8 +418,8 @@
 
         .stat-value {
             font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            font-weight: 900;
+            background: linear-gradient(135deg, #FC6423 0%, #3980EA 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
