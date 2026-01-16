@@ -7012,17 +7012,22 @@
 
         // Auto-open Early Access modal after 7 seconds (only once per session)
         (function initAutoPopup() {
-            if (!sessionStorage.getItem('earlyAccessShown')) {
-                setTimeout(() => {
-                    const modal = document.getElementById('earlyAccessModal');
-                    if (modal && !modal.classList.contains('active')) {
-                        if (window.openEarlyAccessModal) {
-                            window.openEarlyAccessModal();
-                        }
-                        sessionStorage.setItem('earlyAccessShown', 'true');
-                    }
-                }, 7000);
+            // Only show once per session
+            if (sessionStorage.getItem('earlyAccessAutoShown')) {
+                return;
             }
+
+            setTimeout(function() {
+                var modal = document.getElementById('earlyAccessModal');
+                // Only open if modal exists and isn't already open
+                if (modal && !modal.classList.contains('active')) {
+                    // Use the global function
+                    if (typeof window.openEarlyAccessModal === 'function') {
+                        window.openEarlyAccessModal();
+                        sessionStorage.setItem('earlyAccessAutoShown', 'true');
+                    }
+                }
+            }, 7000);
         })();
 
         // Exit Intent Popup
