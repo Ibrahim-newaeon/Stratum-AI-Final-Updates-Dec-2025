@@ -7030,12 +7030,31 @@
             }, 7000);
         })();
 
-        // Exit Intent Popup
+        // Exit Intent Popup - only triggers when mouse leaves viewport at top
         let exitPopupShown = false;
+        let exitIntentEnabled = false;
 
-        document.addEventListener('mouseleave', (e) => {
-            if (e.clientY <= 0 && !exitPopupShown && !sessionStorage.getItem('exitPopupDismissed')) {
-                const exitPopup = document.getElementById('exitPopup');
+        // Enable exit intent after 15 seconds (give user time to browse first)
+        setTimeout(function() {
+            exitIntentEnabled = true;
+        }, 15000);
+
+        document.addEventListener('mouseleave', function(e) {
+            // Only trigger if:
+            // 1. Mouse left from top of viewport (e.clientY <= 0)
+            // 2. Exit intent is enabled (15 seconds have passed)
+            // 3. Exit popup hasn't been shown yet
+            // 4. Exit popup wasn't dismissed before
+            // 5. Early access modal is NOT currently open
+            var earlyAccessModal = document.getElementById('earlyAccessModal');
+            var earlyAccessOpen = earlyAccessModal && earlyAccessModal.classList.contains('active');
+
+            if (e.clientY <= 0 &&
+                exitIntentEnabled &&
+                !exitPopupShown &&
+                !sessionStorage.getItem('exitPopupDismissed') &&
+                !earlyAccessOpen) {
+                var exitPopup = document.getElementById('exitPopup');
                 if (exitPopup) {
                     exitPopup.classList.add('visible');
                     exitPopupShown = true;
