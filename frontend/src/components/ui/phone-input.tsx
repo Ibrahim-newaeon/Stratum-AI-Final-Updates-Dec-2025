@@ -127,12 +127,13 @@ export function PhoneInput({
     <div className={cn('relative', className)} ref={dropdownRef}>
       <div
         className={cn(
-          'flex rounded-xl bg-surface-secondary border-2 transition-all duration-200',
-          error ? 'border-danger' : 'border-white/10 focus-within:border-stratum-500/50',
-          'focus-within:ring-2',
-          error ? 'focus-within:ring-danger/20' : 'focus-within:ring-stratum-500/20',
+          'flex rounded-xl transition-all duration-200',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
+        style={{
+          background: 'rgba(255, 255, 255, 0.06)',
+          border: error ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.12)'
+        }}
       >
         {/* Country selector */}
         <button
@@ -140,10 +141,11 @@ export function PhoneInput({
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-3 border-r border-white/10',
+            'flex items-center gap-1.5 px-3 py-3',
             'text-white hover:bg-white/5 transition-colors rounded-l-xl',
             disabled && 'cursor-not-allowed'
           )}
+          style={{ borderRight: '1px solid rgba(255, 255, 255, 0.12)' }}
         >
           <span className="text-lg">{selectedCountry.flag}</span>
           <span className="text-sm font-medium text-text-secondary">{selectedCountry.code}</span>
@@ -170,49 +172,51 @@ export function PhoneInput({
       {/* Dropdown */}
       {isOpen && (
         <div
-          className={cn(
-            'absolute z-50 top-full left-0 mt-2 w-full max-h-64 overflow-hidden',
-            'rounded-xl bg-surface-secondary border border-white/10 shadow-xl',
-            'animate-fade-in'
-          )}
+          className="absolute z-50 top-full left-0 mt-2 w-full max-h-64 overflow-hidden rounded-xl shadow-xl animate-fade-in"
+          style={{
+            background: 'rgba(20, 40, 62, 0.98)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            backdropFilter: 'blur(20px)'
+          }}
         >
           {/* Search input */}
-          <div className="p-2 border-b border-white/10">
+          <div className="p-2" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.12)' }}>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search country..."
               autoFocus
-              className={cn(
-                'w-full px-3 py-2 rounded-lg bg-surface-tertiary border border-white/10',
-                'text-white placeholder-text-muted text-sm',
-                'outline-none focus:border-stratum-500/50'
-              )}
+              className="w-full px-3 py-2 rounded-lg text-white placeholder-white/40 text-sm outline-none transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.12)'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#FC6423'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
             />
           </div>
 
           {/* Country list */}
           <div className="overflow-y-auto max-h-48">
             {filteredCountries.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-text-muted text-center">No countries found</div>
+              <div className="px-4 py-3 text-sm text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>No countries found</div>
             ) : (
               filteredCountries.map((country, index) => (
                 <button
                   key={`${country.country}-${index}`}
                   type="button"
                   onClick={() => handleCountrySelect(country)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-4 py-2.5 text-left',
-                    'hover:bg-white/5 transition-colors',
-                    selectedCountry.country === country.country &&
-                      selectedCountry.code === country.code &&
-                      'bg-stratum-500/10'
-                  )}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
+                  style={{
+                    background: selectedCountry.country === country.country && selectedCountry.code === country.code
+                      ? 'rgba(252, 100, 35, 0.1)'
+                      : 'transparent'
+                  }}
                 >
                   <span className="text-lg">{country.flag}</span>
                   <span className="flex-1 text-sm text-white">{country.name}</span>
-                  <span className="text-sm text-text-muted">{country.code}</span>
+                  <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{country.code}</span>
                 </button>
               ))
             )}

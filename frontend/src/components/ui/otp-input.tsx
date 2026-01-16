@@ -134,17 +134,33 @@ export function OTPInput({
           aria-label={`Digit ${index + 1}`}
           className={cn(
             'w-10 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-semibold',
-            'rounded-xl bg-surface-secondary border-2',
+            'rounded-xl border-2',
             'text-white placeholder-text-muted',
             'transition-all duration-200 outline-none',
-            'focus:border-stratum-500 focus:ring-2 focus:ring-stratum-500/20',
-            error
-              ? 'border-danger focus:border-danger focus:ring-danger/20'
-              : digit
-              ? 'border-stratum-500/50'
-              : 'border-white/10',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
+          style={{
+            background: 'rgba(255, 255, 255, 0.06)',
+            borderColor: error
+              ? '#ef4444'
+              : digit
+              ? 'rgba(252, 100, 35, 0.5)'
+              : 'rgba(255, 255, 255, 0.12)'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = error ? '#ef4444' : '#FC6423';
+            e.target.style.boxShadow = error
+              ? '0 0 0 3px rgba(239, 68, 68, 0.1)'
+              : '0 0 0 3px rgba(252, 100, 35, 0.1)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = error
+              ? '#ef4444'
+              : digit
+              ? 'rgba(252, 100, 35, 0.5)'
+              : 'rgba(255, 255, 255, 0.12)';
+            e.target.style.boxShadow = 'none';
+          }}
         />
       ))}
     </div>
