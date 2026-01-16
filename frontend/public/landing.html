@@ -7,36 +7,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Dark Theme (default) */
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: rgba(255, 255, 255, 0.03);
-            --bg-glass: rgba(255, 255, 255, 0.05);
-            --border-glass: rgba(255, 255, 255, 0.1);
+            /* Dark Theme (default) - Infobip inspired */
+            --bg-primary: #0C1B2C;
+            --bg-secondary: #14283E;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-glass: rgba(255, 255, 255, 0.06);
+            --border-glass: rgba(255, 255, 255, 0.12);
             --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-secondary: rgba(255, 255, 255, 0.75);
             --text-muted: rgba(255, 255, 255, 0.5);
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-cyan: #06b6d4;
-            --accent-green: #10b981;
-            --accent-orange: #f59e0b;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --accent-blue: #3980EA;
+            --accent-purple: #9670C2;
+            --accent-cyan: #78ADFC;
+            --accent-green: #6DCFA7;
+            --accent-orange: #FC6423;
             --accent-pink: #ec4899;
-            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
-            --gradient-glow: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(139, 92, 246, 0.5) 100%);
+            --gradient-primary: linear-gradient(135deg, #FC6423 0%, #D1521C 50%, #3980EA 100%);
+            --gradient-glow: linear-gradient(135deg, rgba(252, 100, 35, 0.5) 0%, rgba(57, 128, 234, 0.5) 100%);
+            /* Infobip global colors */
+            --infobip-orange: #FC6423;
+            --infobip-orange-dark: #D1521C;
+            --infobip-blue: #3980EA;
+            --infobip-blue-dark: #222E42;
+            --infobip-blue-darker: #14283E;
+            --infobip-blue-light: #EEF2FC;
+            --infobip-purple: #9670C2;
+            --infobip-green: #6DCFA7;
+            --infobip-black: #0C1B2C;
         }
 
         [data-theme="light"] {
-            --bg-primary: #f8fafc;
+            --bg-primary: #F8F9FD;
             --bg-secondary: #ffffff;
-            --bg-card: rgba(0, 0, 0, 0.02);
-            --bg-glass: rgba(0, 0, 0, 0.03);
-            --border-glass: rgba(0, 0, 0, 0.1);
-            --text-primary: #0f172a;
-            --text-secondary: rgba(15, 23, 42, 0.7);
-            --text-muted: rgba(15, 23, 42, 0.5);
-            --shadow-color: rgba(0, 0, 0, 0.1);
+            --bg-card: rgba(12, 27, 44, 0.03);
+            --bg-glass: rgba(12, 27, 44, 0.04);
+            --border-glass: rgba(12, 27, 44, 0.1);
+            --text-primary: #0C1B2C;
+            --text-secondary: #5E6C82;
+            --text-muted: #8A98AD;
+            --shadow-color: rgba(12, 27, 44, 0.1);
         }
 
         * {
@@ -81,9 +91,9 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-                        radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 30% 20%, rgba(252, 100, 35, 0.12) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(57, 128, 234, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(150, 112, 194, 0.06) 0%, transparent 50%);
             animation: bgMove 20s ease-in-out infinite;
         }
 
@@ -98,7 +108,7 @@
         .orb-1 {
             width: 600px;
             height: 600px;
-            background: rgba(59, 130, 246, 0.3);
+            background: rgba(252, 100, 35, 0.25);
             top: -200px;
             left: -200px;
             animation-delay: 0s;
@@ -107,7 +117,7 @@
         .orb-2 {
             width: 500px;
             height: 500px;
-            background: rgba(139, 92, 246, 0.3);
+            background: rgba(57, 128, 234, 0.25);
             bottom: -150px;
             right: -150px;
             animation-delay: -5s;
@@ -116,7 +126,7 @@
         .orb-3 {
             width: 400px;
             height: 400px;
-            background: rgba(236, 72, 153, 0.2);
+            background: rgba(150, 112, 194, 0.18);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -456,15 +466,16 @@
         }
 
         .btn-primary {
-            background: var(--gradient-primary);
+            background: var(--accent-orange);
             color: white;
             border: none;
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 4px 20px rgba(252, 100, 35, 0.4);
         }
 
         .btn-primary:hover {
             transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+            background: var(--infobip-orange-dark);
+            box-shadow: 0 8px 30px rgba(252, 100, 35, 0.5);
         }
 
         .btn-primary:active {
@@ -1171,6 +1182,9 @@
             margin: 3rem auto 0;
             overflow: hidden;
             position: relative;
+            background: #FFFFFF;
+            padding: 1.5rem 0;
+            border-radius: 16px;
             /* Fade edges for smooth appearance */
             mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
@@ -2400,6 +2414,12 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             box-shadow: 0 2px 10px var(--shadow-color);
+        }
+
+        [data-theme="light"] .feature-tab.active {
+            background: #0C1B2C;
+            color: #FFFFFF;
+            box-shadow: 0 2px 10px rgba(12, 27, 44, 0.2);
         }
 
         /* Feature Content Area */
@@ -3892,8 +3912,8 @@
             font-weight: 900;
             letter-spacing: 0.01em;
             cursor: pointer;
-            background: linear-gradient(90deg, rgba(76, 121, 255, 0.95), rgba(255, 90, 166, 0.95));
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            background: linear-gradient(90deg, #FC6423, #D1521C);
+            box-shadow: 0 18px 40px rgba(252, 100, 35, 0.35);
             transition: transform 0.08s ease, filter 0.15s ease;
             white-space: nowrap;
             font-size: 15px;
@@ -4159,6 +4179,260 @@
                 font-size: 12px;
             }
         }
+
+        /* Enhanced Mobile Optimizations */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+            .hero-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .metric-row {
+                grid-template-columns: 1fr;
+            }
+
+            .value-grid,
+            .solutions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-preview {
+                transform: none;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-cta .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .hero-trust-badges > div {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-value {
+                font-size: 2.25rem;
+            }
+
+            .comparison-stat > div {
+                grid-template-columns: 1fr;
+            }
+
+            .customer-success > .container > div:nth-child(2) {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Sticky CTA Bar */
+        .sticky-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-glass);
+            padding: 1rem 2rem;
+            z-index: 999;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(20px);
+        }
+
+        .sticky-cta.visible {
+            transform: translateY(0);
+        }
+
+        .sticky-cta-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sticky-cta-text {
+            flex: 1;
+        }
+
+        .sticky-cta-title {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .sticky-cta-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .sticky-cta-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .sticky-cta-close {
+            background: transparent;
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .sticky-cta-close:hover {
+            background: var(--bg-glass);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .sticky-cta-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .sticky-cta-actions {
+                width: 100%;
+            }
+
+            .sticky-cta-actions .btn {
+                flex: 1;
+            }
+        }
+
+        /* Exit Intent Popup */
+        .exit-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(12, 27, 44, 0.95);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .exit-popup.visible {
+            display: flex;
+        }
+
+        .exit-popup-modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .exit-popup-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .exit-popup-close:hover {
+            background: var(--bg-glass);
+            color: var(--text-primary);
+        }
+
+        .exit-popup-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .exit-popup-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .exit-popup-desc {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .exit-popup-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .exit-popup-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* Loading spinner animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -4331,13 +4605,37 @@
                     Unify customer data, sync audiences to all ad platforms, and automate only when your signals are healthy.
                 </p>
                 <div class="hero-cta">
-                    <button type="button" class="btn btn-primary magnetic" onclick="openEarlyAccessModal()">
+                    <button type="button" class="btn btn-primary magnetic" style="padding: 1.25rem 2.5rem; font-size: 1.1rem; box-shadow: 0 8px 30px rgba(252, 100, 35, 0.5);" onclick="openEarlyAccessModal()">
                         Get Early Access
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>
                     </button>
-                    <a href="/signup" class="btn btn-secondary magnetic">Book Demo (No Card Required)</a>
+                    <a href="/signup" class="btn btn-secondary magnetic" style="border: 1px solid rgba(255, 255, 255, 0.2); background: transparent;">Book Demo</a>
+                </div>
+
+                <!-- Hero Trust Badges -->
+                <div class="hero-trust-badges" style="margin-top: 2rem; opacity: 0; animation: fadeInUp 0.8s ease forwards; animation-delay: 1s;">
+                    <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-green)">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span style="color: var(--text-secondary); font-size: 0.9rem;">150+ growth teams</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-green)">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span style="color: var(--text-secondary); font-size: 0.9rem;">$12M+ recovered</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-green)">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span style="color: var(--text-secondary); font-size: 0.9rem;">4.2x avg ROAS</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="hero-visual">
@@ -4405,6 +4703,22 @@
                 <div class="stat-label">Active Growth Teams</div>
             </div>
         </div>
+
+        <!-- Comparison Stats: Stratum vs Others -->
+        <div class="comparison-stat reveal" style="max-width: 900px; margin: 3rem auto 0;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div style="text-align: center; padding: 2rem; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 20px;">
+                    <div style="color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem;">Other Platforms</div>
+                    <div style="font-size: 3rem; font-weight: 800; color: #ef4444; font-family: 'Space Grotesk', sans-serif;">67%</div>
+                    <div style="color: var(--text-secondary); font-size: 1rem;">Attribution Accuracy</div>
+                </div>
+                <div style="text-align: center; padding: 2rem; background: rgba(109, 207, 167, 0.08); border: 1px solid rgba(109, 207, 167, 0.25); border-radius: 20px;">
+                    <div style="color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem;">Stratum AI</div>
+                    <div style="font-size: 3rem; font-weight: 800; color: var(--accent-green); font-family: 'Space Grotesk', sans-serif;">98.7%</div>
+                    <div style="color: var(--text-secondary); font-size: 1rem;">Attribution Accuracy</div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Why Stratum Section -->
@@ -4419,8 +4733,8 @@
         </div>
 
         <!-- Core Differentiator Banner -->
-        <div style="max-width: 1200px; margin: 0 auto 3rem; padding: 2rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 20px;">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; text-align: center;">
+        <div style="max-width: 1400px; margin: 0 auto 3rem; padding: 2rem; background: linear-gradient(135deg, rgba(252, 100, 35, 0.12), rgba(57, 128, 234, 0.08)); border: 1px solid rgba(252, 100, 35, 0.25); border-radius: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center;">
                 <div>
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📡</div>
                     <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Signal Health Check</div>
@@ -4435,6 +4749,11 @@
                     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚀</div>
                     <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Safe Automation</div>
                     <div style="color: var(--text-secondary); font-size: 0.9rem;">Execute only when data is healthy</div>
+                </div>
+                <div>
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👤</div>
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Customer Data Platform</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Unified profiles & audience sync</div>
                 </div>
             </div>
         </div>
@@ -4501,9 +4820,9 @@
             </div>
         </div>
 
-        <!-- What Makes Us Different -->
-        <div style="max-width: 1200px; margin: 4rem auto 0;">
-            <h3 style="text-align: center; font-size: 1.75rem; margin-bottom: 2rem;">What Makes Stratum Different</h3>
+        <!-- A New Standard for Marketing Intelligence -->
+        <div style="max-width: 1400px; margin: 4rem auto 0; padding: 0 2rem;">
+            <h3 style="text-align: center; font-size: 1.75rem; margin-bottom: 2rem;">A New Standard for Marketing Intelligence</h3>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
                 <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
@@ -4517,7 +4836,7 @@
                         <li style="padding: 0.5rem 0;">Actions without guardrails or rollback</li>
                     </ul>
                 </div>
-                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 1.5rem;">
+                <div style="background: linear-gradient(135deg, rgba(109, 207, 167, 0.1), rgba(57, 128, 234, 0.1)); border: 1px solid rgba(109, 207, 167, 0.3); border-radius: 16px; padding: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                         <div style="font-size: 1.5rem;">✅</div>
                         <div style="font-weight: 700; color: var(--accent-green);">Stratum AI</div>
@@ -5450,6 +5769,96 @@
         </div>
     </section>
 
+    <!-- Customer Success: Before vs After Section -->
+    <section class="customer-success" style="padding: 100px 0; background: var(--bg-secondary);">
+        <div class="container" style="max-width: 1400px; margin: 0 auto; padding: 0 2rem;">
+            <div class="section-header reveal">
+                <div class="section-label">Customer Success</div>
+                <h2 class="section-title">Before vs After Stratum AI</h2>
+                <p class="section-description">Real results from real clients</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+
+                <!-- Case 1: Fashion E-commerce -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🛍️</div>
+                    <div style="font-weight: 600; margin-bottom: 1.5rem; font-size: 1.1rem;">Fashion E-commerce (KSA)</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">Before</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #ef4444; font-family: 'Space Grotesk', sans-serif;">2.1x</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">ROAS</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">After</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-green); font-family: 'Space Grotesk', sans-serif;">5.7x</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">ROAS</div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(109, 207, 167, 0.1); border: 1px solid rgba(109, 207, 167, 0.3); border-radius: 12px; padding: 1rem; text-align: center;">
+                        <div style="color: var(--accent-green); font-weight: 700;">+171% improvement</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">90 days</div>
+                    </div>
+                </div>
+
+                <!-- Case 2: Home Decor -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🏠</div>
+                    <div style="font-weight: 600; margin-bottom: 1.5rem; font-size: 1.1rem;">Home Decor (UAE)</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">Before</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #ef4444; font-family: 'Space Grotesk', sans-serif;">$87</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">CPA</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">After</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-green); font-family: 'Space Grotesk', sans-serif;">$31</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">CPA</div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(109, 207, 167, 0.1); border: 1px solid rgba(109, 207, 167, 0.3); border-radius: 12px; padding: 1rem; text-align: center;">
+                        <div style="color: var(--accent-green); font-weight: 700;">-64% CPA reduction</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">120 days</div>
+                    </div>
+                </div>
+
+                <!-- Case 3: B2B SaaS -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚙️</div>
+                    <div style="font-weight: 600; margin-bottom: 1.5rem; font-size: 1.1rem;">B2B SaaS (Qatar)</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">Before</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #ef4444; font-family: 'Space Grotesk', sans-serif;">18</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">SQLs/mo</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">After</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-green); font-family: 'Space Grotesk', sans-serif;">76</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">SQLs/mo</div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(109, 207, 167, 0.1); border: 1px solid rgba(109, 207, 167, 0.3); border-radius: 12px; padding: 1rem; text-align: center;">
+                        <div style="color: var(--accent-green); font-weight: 700;">+322% SQL growth</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">60 days</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <button class="btn btn-primary" onclick="handleContactUsClick(event)">Get Similar Results</button>
+            </div>
+        </div>
+    </section>
+
     <!-- Pricing / Launch Section -->
     <section class="pricing" id="pricing">
         <div class="pricing-container">
@@ -5516,6 +5925,69 @@
                 <div class="trust-badge">💳 No Card for Trial</div>
                 <div class="trust-badge">🔄 Cancel Anytime</div>
                 <div class="trust-badge">💰 30-Day Money Back</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section" id="faq" style="padding: 100px 0;">
+        <div class="container" style="max-width: 1400px; margin: 0 auto; padding: 0 2rem;">
+            <div class="section-header reveal">
+                <div class="section-label">FAQ</div>
+                <h2 class="section-title">Frequently Asked Questions</h2>
+            </div>
+
+            <div style="max-width: 800px; margin: 0 auto;">
+
+                <!-- FAQ Item 1 -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">What is Trust-Gated Autopilot?</div>
+                    <p style="color: var(--text-secondary); line-height: 1.7;">
+                        Trust-Gated Autopilot is our unique safety mechanism. Before any automation executes,
+                        we check your Signal Health score (0-100). Score 70+ = safe to execute. Score &lt;70 =
+                        hold for human review. This prevents automation from running on bad data.
+                    </p>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">How is this different from other marketing automation tools?</div>
+                    <p style="color: var(--text-secondary); line-height: 1.7;">
+                        Other tools (Smartly, Sprinklr, Skai) automate blindly. If your pixel is broken or
+                        attribution is off, they keep running and wasting budget. Stratum AI monitors data quality
+                        24/7 and only automates when it's safe.
+                    </p>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">What's included in the CDP?</div>
+                    <p style="color: var(--text-secondary); line-height: 1.7;">
+                        Built-in Customer Data Platform with: 360° customer profiles, RFM segmentation,
+                        identity resolution, behavioral tracking, and one-click audience sync to Meta,
+                        Google, TikTok & Snapchat.
+                    </p>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">Can I try it for free?</div>
+                    <p style="color: var(--text-secondary); line-height: 1.7;">
+                        Yes! 14-day free trial with full platform access. No credit card required. You can
+                        cancel anytime with no questions asked.
+                    </p>
+                </div>
+
+                <!-- FAQ Item 5 -->
+                <div class="reveal" style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem;">
+                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">What if I need help setting up?</div>
+                    <p style="color: var(--text-secondary); line-height: 1.7;">
+                        Scale plan includes priority support (12hr response). Enterprise includes
+                        24/7 support with 2hr SLA. Plus, we offer optional onboarding packages with dedicated
+                        implementation specialist.
+                    </p>
+                </div>
+
             </div>
         </div>
     </section>
@@ -5664,6 +6136,45 @@
             </div>
         </div>
     </section>
+
+    <!-- Exit Intent Popup -->
+    <div class="exit-popup" id="exitPopup">
+        <div class="exit-popup-modal">
+            <button class="exit-popup-close" onclick="closeExitPopup()">&times;</button>
+            <div class="exit-popup-icon">⏰</div>
+            <h3 class="exit-popup-title">Wait! Before You Go...</h3>
+            <p class="exit-popup-desc">
+                Join 150+ growth teams who recovered $12M+ in wasted ad spend.
+                Get a personalized ROI estimate in 60 seconds.
+            </p>
+            <div class="exit-popup-actions">
+                <button class="btn btn-primary" onclick="window.location.href='#roi'">
+                    Calculate My ROI
+                </button>
+                <button class="btn btn-secondary" onclick="closeExitPopup()">
+                    No Thanks
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky CTA Bar -->
+    <div class="sticky-cta" id="stickyCTA">
+        <div class="sticky-cta-inner">
+            <div class="sticky-cta-text">
+                <div class="sticky-cta-title">Ready to recover wasted ad spend?</div>
+                <div class="sticky-cta-subtitle">14-day free trial - No credit card required</div>
+            </div>
+            <div class="sticky-cta-actions">
+                <button class="btn btn-primary" onclick="openEarlyAccessModal()">
+                    Start Free Trial
+                </button>
+                <button class="sticky-cta-close" onclick="closeStickyBar()">
+                    &times;
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer>
@@ -6505,6 +7016,56 @@
                 }, 7000);
             }
         })();
+
+        // Exit Intent Popup
+        let exitPopupShown = false;
+
+        document.addEventListener('mouseleave', (e) => {
+            if (e.clientY <= 0 && !exitPopupShown && !sessionStorage.getItem('exitPopupDismissed')) {
+                const exitPopup = document.getElementById('exitPopup');
+                if (exitPopup) {
+                    exitPopup.classList.add('visible');
+                    exitPopupShown = true;
+                }
+            }
+        });
+
+        function closeExitPopup() {
+            const exitPopup = document.getElementById('exitPopup');
+            if (exitPopup) {
+                exitPopup.classList.remove('visible');
+                sessionStorage.setItem('exitPopupDismissed', 'true');
+            }
+        }
+
+        // Close exit popup when clicking outside
+        document.getElementById('exitPopup')?.addEventListener('click', (e) => {
+            if (e.target.id === 'exitPopup') {
+                closeExitPopup();
+            }
+        });
+
+        // Sticky CTA Bar
+        let stickyBarDismissed = false;
+
+        window.addEventListener('scroll', () => {
+            const stickyCTA = document.getElementById('stickyCTA');
+            if (stickyCTA && !stickyBarDismissed) {
+                if (window.scrollY > 1000) {
+                    stickyCTA.classList.add('visible');
+                } else {
+                    stickyCTA.classList.remove('visible');
+                }
+            }
+        });
+
+        function closeStickyBar() {
+            const stickyCTA = document.getElementById('stickyCTA');
+            if (stickyCTA) {
+                stickyCTA.classList.remove('visible');
+                stickyBarDismissed = true;
+            }
+        }
     </script>
 </body>
 </html>
