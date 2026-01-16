@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -9,11 +9,13 @@ import {
   EnvelopeIcon,
   LockClosedIcon,
   UserIcon,
-  PhoneIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
+  PhoneIcon,
 } from '@heroicons/react/24/outline';
 import { useSignup, useResendVerification, useSendWhatsAppOTP, useVerifyWhatsAppOTP } from '@/api/auth';
+import { OTPInput } from '@/components/ui/otp-input';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -55,9 +57,13 @@ export default function Signup() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      phone: '+1 ',
+    },
   });
 
   // Start countdown timer for OTP resend
@@ -155,23 +161,17 @@ export default function Signup() {
 
             {/* OTP Input */}
             <div className="mb-6">
-              <input
-                type="text"
+              <OTPInput
                 value={otpCode}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                onChange={(value) => {
                   setOtpCode(value);
                   setOtpError('');
                 }}
-                placeholder="Enter 6-digit code"
-                className="w-full text-center text-2xl tracking-[0.5em] py-4 rounded-xl bg-surface-secondary border border-white/10
-                           text-white placeholder-text-muted
-                           focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
-                           transition-all duration-base outline-none"
-                maxLength={6}
+                error={!!otpError}
+                disabled={verifyOTPMutation.isPending}
               />
               {otpError && (
-                <p className="mt-2 text-meta text-danger">{otpError}</p>
+                <p className="mt-3 text-meta text-danger text-center">{otpError}</p>
               )}
             </div>
 
@@ -232,9 +232,22 @@ export default function Signup() {
               <CheckCircleIcon className="w-10 h-10 text-success" />
             </div>
             <h1 className="text-h1 text-white mb-4">Account Created!</h1>
-            <p className="text-body text-text-secondary mb-8">
-              Your account has been created successfully. You can now sign in to access Stratum AI.
+            <p className="text-body text-text-secondary mb-4">
+              Your account has been created successfully.
             </p>
+
+            {/* Email verification notice */}
+            <div className="mb-8 p-4 rounded-xl bg-stratum-500/10 border border-stratum-500/20">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <EnvelopeIcon className="w-5 h-5 text-stratum-400" />
+                <span className="text-body font-medium text-stratum-400">Verify your email</span>
+              </div>
+              <p className="text-meta text-text-muted">
+                We've sent a verification link to <span className="text-white">{formData?.email}</span>.
+                Please check your inbox to complete verification.
+              </p>
+            </div>
+
             <div className="space-y-4">
               <button
                 onClick={() => navigate('/login')}
@@ -243,6 +256,15 @@ export default function Signup() {
               >
                 Go to Login
               </button>
+              <p className="text-xs text-text-muted">
+                Didn't receive the email?{' '}
+                <button
+                  onClick={() => navigate(`/verify-email?email=${encodeURIComponent(formData?.email || '')}`)}
+                  className="text-stratum-400 hover:text-stratum-300"
+                >
+                  Resend verification
+                </button>
+              </p>
             </div>
           </div>
         </div>
@@ -367,19 +389,19 @@ export default function Signup() {
               {/* Phone Number */}
               <div>
                 <label className="block text-meta text-text-secondary mb-2">WhatsApp number</label>
-                <div className="relative">
-                  <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-                  <input
-                    {...register('phone')}
-                    type="tel"
-                    placeholder="+1 234 567 8900"
-                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-secondary border border-white/10
-                               text-white placeholder-text-muted text-body
-                               focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
-                               transition-all duration-base outline-none"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-text-muted">Include country code for WhatsApp verification</p>
+                <Controller
+                  name="phone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={!!errors.phone}
+                      placeholder="234 567 8900"
+                    />
+                  )}
+                />
+                <p className="mt-1.5 text-xs text-text-muted">We'll send a verification code to your WhatsApp</p>
                 {errors.phone && (
                   <p className="mt-2 text-meta text-danger">{errors.phone.message}</p>
                 )}

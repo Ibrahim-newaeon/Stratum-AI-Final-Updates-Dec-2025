@@ -1,22 +1,40 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 import { useVerifyEmail, useResendVerification } from '@/api/auth';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const emailParam = searchParams.get('email');
+
+  const [resendEmail, setResendEmail] = useState(emailParam || '');
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const verifyMutation = useVerifyEmail();
-  useResendVerification(); // Prefetch resend mutation
+  const resendMutation = useResendVerification();
 
   const isLoading = verifyMutation.isPending;
   const isSuccess = verifyMutation.isSuccess;
   const error = verifyMutation.error?.message ||
     (verifyMutation.isError ? 'Verification failed' : '');
+
+  const handleResend = () => {
+    if (!resendEmail) return;
+
+    resendMutation.mutate(
+      { email: resendEmail },
+      {
+        onSuccess: () => {
+          setResendSuccess(true);
+        },
+      }
+    );
+  };
 
   useEffect(() => {
     if (token && !verifyMutation.isPending && !verifyMutation.isSuccess && !verifyMutation.isError) {
@@ -110,27 +128,64 @@ export default function VerifyEmail() {
             <ExclamationTriangleIcon className="w-10 h-10 text-danger" />
           </div>
           <h1 className="text-h1 text-white mb-4">Verification failed</h1>
-          <p className="text-body text-text-secondary mb-8">
+          <p className="text-body text-text-secondary mb-6">
             {error || 'The verification link is invalid or has expired.'}
           </p>
-          <div className="space-y-4">
-            <Link
-              to="/signup"
-              className="block w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body text-center
-                         hover:shadow-glow transition-all duration-base"
-            >
-              Sign up again
-            </Link>
-            <button
-              onClick={async () => {
-                // TODO: Implement resend verification
-                console.log('Resend verification');
-              }}
-              className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors"
-            >
-              Resend verification email
-            </button>
-          </div>
+
+          {/* Resend form */}
+          {!resendSuccess ? (
+            <div className="space-y-4 mb-6">
+              <p className="text-meta text-text-muted">
+                Enter your email to receive a new verification link:
+              </p>
+              <div className="relative">
+                <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                <input
+                  type="email"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-secondary border border-white/10
+                             text-white placeholder-text-muted text-body
+                             focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                             transition-all duration-base outline-none"
+                />
+              </div>
+              <button
+                onClick={handleResend}
+                disabled={!resendEmail || resendMutation.isPending}
+                className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
+                           hover:shadow-glow transition-all duration-base
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resendMutation.isPending ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Sending...
+                  </span>
+                ) : (
+                  'Resend verification email'
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="mb-6 p-4 rounded-xl bg-success/10 border border-success/20">
+              <CheckCircleIcon className="w-6 h-6 text-success mx-auto mb-2" />
+              <p className="text-body text-success">
+                Verification email sent! Check your inbox.
+              </p>
+            </div>
+          )}
+
+          <Link
+            to="/login"
+            className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors"
+          >
+            Back to login
+          </Link>
         </div>
       </div>
     </div>
