@@ -1,40 +1,46 @@
 import { useNavigate } from 'react-router-dom';
-import { CheckIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 export function Pricing() {
   const navigate = useNavigate();
 
   const plans = [
     {
-      name: 'Starter',
-      description: 'For small teams getting started',
-      price: '$299',
+      name: 'Growth',
+      description: 'For teams scaling their ad operations',
+      price: '$499',
       period: '/month',
+      adSpend: 'Up to $100K monthly ad spend',
       features: [
-        '2 ad platforms',
-        'Up to $50K monthly ad spend',
-        '3 team members',
-        'Signal Health monitoring',
-        'Basic anomaly detection',
+        '5 ad accounts',
+        'Multi-touch attribution',
+        'Signal health monitoring',
+        'WhatsApp alerts',
         'Email support',
+        'Basic anomaly detection',
       ],
       cta: 'Start Free Trial',
       highlighted: false,
     },
     {
-      name: 'Pro',
+      name: 'Scale',
       description: 'For growing marketing teams',
-      price: '$799',
+      price: '$999',
       period: '/month',
+      adSpend: 'Up to $500K monthly ad spend',
       features: [
-        'All 4 ad platforms + GA4',
-        'Up to $500K monthly ad spend',
-        '10 team members',
-        'Full Trust Layer (EMQ + Variance)',
-        'Intelligence Layer (Scaling + Fatigue)',
-        'Autopilot (Limited mode)',
-        'Campaign Builder',
-        'Priority support',
+        '15 ad accounts',
+        'Everything in Growth',
+        'AI budget optimization',
+        'Profit ROAS tracking',
+        'CDP with audience sync',
+        'Trust-gated autopilot',
+        'Priority support (12hr)',
+        'Custom dashboards',
       ],
       cta: 'Start Free Trial',
       highlighted: true,
@@ -45,102 +51,144 @@ export function Pricing() {
       description: 'For large organizations',
       price: 'Custom',
       period: '',
+      adSpend: 'Unlimited ad spend',
       features: [
-        'Unlimited ad platforms',
-        'Unlimited ad spend',
-        'Unlimited team members',
-        'Full USP Stack',
-        'Autopilot (All modes)',
+        'Unlimited ad accounts',
+        'Everything in Scale',
         'Custom integrations',
-        'Dedicated success manager',
-        'SLA guarantee',
+        'Dedicated CSM',
+        'SLA guarantee (99.9%)',
         'SSO & advanced security',
+        'White-label options',
+        'On-premise deployment',
       ],
       cta: 'Contact Sales',
       highlighted: false,
     },
   ];
 
+  const trustBadges = [
+    { icon: '🔒', text: 'SOC 2 Compliant' },
+    { icon: '🛡️', text: 'GDPR Ready' },
+    { icon: '💳', text: 'No Card for Trial' },
+    { icon: '🔄', text: 'Cancel Anytime' },
+    { icon: '💰', text: '30-Day Money Back' },
+  ];
+
   return (
-    <section className="py-32 bg-surface-primary">
+    <section className="py-32 bg-surface-primary" id="pricing">
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-16">
-          <h2 className="text-h1 text-white mb-4">
-            Simple, transparent pricing
+          <Badge variant="outline" className="mb-4 px-4 py-1 text-orange-400 border-orange-500/30 bg-orange-500/10">
+            Pricing
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Simple, Transparent Pricing
           </h2>
-          <p className="text-body text-text-secondary max-w-2xl mx-auto">
-            Start free for 14 days. No credit card required. Cancel anytime.
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            Choose the plan that fits your ad spend. All plans include full access to core features.
+            Start free for 14 days — no credit card required.
           </p>
         </div>
 
         {/* Pricing cards */}
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
-            <div
+            <Card
               key={plan.name}
-              className={`relative rounded-2xl p-8 ${
+              className={`relative flex flex-col ${
                 plan.highlighted
-                  ? 'bg-gradient-to-b from-stratum-500/10 to-surface-secondary border-2 border-stratum-500/30'
-                  : 'bg-surface-secondary border border-white/5'
+                  ? 'bg-gradient-to-b from-orange-500/10 to-gray-900 border-2 border-orange-500/30 shadow-lg shadow-orange-500/10'
+                  : 'bg-gray-900/50 border-white/10'
               }`}
             >
               {/* Badge */}
               {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="px-4 py-1 rounded-full bg-gradient-stratum text-white text-meta font-medium">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 px-4 py-1">
+                    <SparklesIcon className="w-3 h-3 mr-1" />
                     {plan.badge}
-                  </span>
+                  </Badge>
                 </div>
               )}
 
-              {/* Plan header */}
-              <div className="mb-8">
-                <h3 className="text-h3 text-white mb-2">{plan.name}</h3>
-                <p className="text-meta text-text-muted mb-4">{plan.description}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[40px] font-bold text-white">{plan.price}</span>
-                  <span className="text-body text-text-muted">{plan.period}</span>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl text-white">{plan.name}</CardTitle>
+                <CardDescription className="text-gray-400">{plan.description}</CardDescription>
+              </CardHeader>
+
+              <CardContent className="flex-1">
+                {/* Price */}
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-5xl font-bold text-white">{plan.price}</span>
+                    <span className="text-lg text-gray-500">{plan.period}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">{plan.adSpend}</p>
                 </div>
-              </div>
 
-              {/* Features */}
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <CheckIcon className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                    <span className="text-body text-text-secondary">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+                <Separator className="my-6 bg-white/10" />
 
-              {/* CTA */}
-              <button
-                onClick={() => navigate(plan.name === 'Enterprise' ? '/contact' : '/signup')}
-                className={`w-full py-3 rounded-xl font-medium text-body transition-all duration-base ${
-                  plan.highlighted
-                    ? 'bg-gradient-stratum text-white hover:shadow-glow'
-                    : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
-                }`}
-              >
-                {plan.cta}
-              </button>
-            </div>
+                {/* Features */}
+                <ul className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <CheckIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-300">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+
+              <CardFooter className="pt-6">
+                <Button
+                  onClick={() => navigate(plan.name === 'Enterprise' ? '/contact' : '/signup')}
+                  className={`w-full py-6 text-base font-semibold ${
+                    plan.highlighted
+                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/30'
+                      : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                  }`}
+                  size="lg"
+                >
+                  {plan.cta}
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
 
-        {/* FAQ teaser */}
+        {/* Trust Badges */}
+        <div className="mt-16 flex flex-wrap justify-center gap-4">
+          {trustBadges.map((badge, i) => (
+            <Badge
+              key={i}
+              variant="outline"
+              className="px-4 py-2 text-sm bg-gray-900/50 border-white/10 text-gray-400"
+            >
+              <span className="mr-2">{badge.icon}</span>
+              {badge.text}
+            </Badge>
+          ))}
+        </div>
+
+        {/* Comparison teaser */}
         <div className="mt-16 text-center">
-          <p className="text-body text-text-muted">
-            Have questions?{' '}
-            <a href="#" className="text-stratum-400 hover:text-stratum-300 transition-colors">
-              Check our FAQ
-            </a>{' '}
-            or{' '}
-            <a href="#" className="text-stratum-400 hover:text-stratum-300 transition-colors">
-              contact sales
-            </a>
-          </p>
+          <Card className="inline-block bg-gray-900/50 border-white/10 px-8 py-6">
+            <div className="flex items-center gap-4">
+              <div className="text-left">
+                <p className="text-white font-medium">Not sure which plan is right for you?</p>
+                <p className="text-sm text-gray-500">Talk to our team for a personalized recommendation.</p>
+              </div>
+              <Button
+                variant="outline"
+                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                onClick={() => navigate('/contact')}
+              >
+                Contact Sales
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
     </section>
