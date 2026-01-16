@@ -129,48 +129,20 @@ export default {
   			]
   		},
   		fontSize: {
-  			micro: [
-  				'10px',
-  				{
-  					lineHeight: '1.4',
-  					fontWeight: '400'
-  				}
-  			],
-  			meta: [
-  				'12px',
-  				{
-  					lineHeight: '1.5',
-  					fontWeight: '400'
-  				}
-  			],
-  			body: [
-  				'14px',
-  				{
-  					lineHeight: '1.55',
-  					fontWeight: '400'
-  				}
-  			],
-  			h3: [
-  				'18px',
-  				{
-  					lineHeight: '1.35',
-  					fontWeight: '600'
-  				}
-  			],
-  			h2: [
-  				'22px',
-  				{
-  					lineHeight: '1.3',
-  					fontWeight: '600'
-  				}
-  			],
-  			h1: [
-  				'28px',
-  				{
-  					lineHeight: '1.25',
-  					fontWeight: '700'
-  				}
-  			]
+  			// Base typography scale
+  			micro: ['10px', { lineHeight: '1.4', fontWeight: '400' }],
+  			meta: ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+  			body: ['14px', { lineHeight: '1.55', fontWeight: '400' }],
+  			'body-lg': ['16px', { lineHeight: '1.6', fontWeight: '400' }],
+  			h3: ['18px', { lineHeight: '1.35', fontWeight: '600' }],
+  			h2: ['22px', { lineHeight: '1.3', fontWeight: '600' }],
+  			h1: ['28px', { lineHeight: '1.25', fontWeight: '700' }],
+  			// Display typography for landing pages
+  			'display-sm': ['32px', { lineHeight: '1.2', fontWeight: '700', letterSpacing: '-0.02em' }],
+  			'display': ['40px', { lineHeight: '1.15', fontWeight: '700', letterSpacing: '-0.02em' }],
+  			'display-lg': ['48px', { lineHeight: '1.1', fontWeight: '800', letterSpacing: '-0.025em' }],
+  			'display-xl': ['56px', { lineHeight: '1.05', fontWeight: '800', letterSpacing: '-0.03em' }],
+  			'display-2xl': ['72px', { lineHeight: '1', fontWeight: '800', letterSpacing: '-0.03em' }],
   		},
   		boxShadow: {
   			'glow-sm': '0 0 10px rgba(168, 85, 247, 0.15)',
@@ -181,6 +153,7 @@ export default {
   			'card-hover': '0 10px 30px rgba(0, 0, 0, 0.28)'
   		},
   		spacing: {
+  			// Base spacing scale (4px increments)
   			'1': '4px',
   			'2': '8px',
   			'3': '12px',
@@ -188,7 +161,18 @@ export default {
   			'5': '24px',
   			'6': '32px',
   			'7': '48px',
-  			'8': '64px'
+  			'8': '64px',
+  			// Section spacing for landing pages
+  			'section-sm': '64px',
+  			'section': '96px',
+  			'section-lg': '128px',
+  			'section-xl': '160px',
+  			// Container max-widths
+  			'container-sm': '640px',
+  			'container-md': '768px',
+  			'container-lg': '1024px',
+  			'container-xl': '1280px',
+  			'container-2xl': '1400px',
   		},
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

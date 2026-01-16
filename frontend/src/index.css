@@ -935,3 +935,140 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ===== Landing Page Design System ===== */
+@layer components {
+  /* Section spacing */
+  .landing-section {
+    @apply py-section px-6;
+  }
+  .landing-section-sm {
+    @apply py-section-sm px-6;
+  }
+  .landing-section-lg {
+    @apply py-section-lg px-6;
+  }
+
+  /* Section containers */
+  .landing-container {
+    @apply max-w-7xl mx-auto;
+  }
+  .landing-container-sm {
+    @apply max-w-4xl mx-auto;
+  }
+  .landing-container-lg {
+    @apply max-w-[1400px] mx-auto;
+  }
+
+  /* Section headers - consistent styling */
+  .landing-header {
+    @apply text-center mb-16;
+  }
+  .landing-header-left {
+    @apply text-left mb-12;
+  }
+
+  /* Landing typography */
+  .landing-badge {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full;
+    @apply bg-orange-500/10 border border-orange-500/20 text-orange-400;
+    @apply text-sm font-medium mb-6;
+  }
+
+  .landing-title {
+    @apply text-display-lg md:text-display-xl font-bold text-white mb-6;
+  }
+  .landing-title-sm {
+    @apply text-display-sm md:text-display font-bold text-white mb-4;
+  }
+
+  .landing-subtitle {
+    @apply text-body-lg md:text-xl text-gray-400 max-w-3xl mx-auto;
+  }
+  .landing-subtitle-left {
+    @apply text-body-lg md:text-xl text-gray-400 max-w-3xl;
+  }
+
+  /* Landing cards */
+  .landing-card {
+    @apply bg-gray-900/50 border border-white/10 rounded-2xl p-8;
+    @apply transition-all duration-300;
+  }
+  .landing-card:hover {
+    @apply border-white/20 shadow-lg;
+  }
+  .landing-card-highlighted {
+    @apply bg-gradient-to-b from-orange-500/10 to-gray-900;
+    @apply border-2 border-orange-500/30;
+    @apply shadow-lg shadow-orange-500/10;
+  }
+
+  /* Landing buttons */
+  .landing-btn-primary {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-8 py-4 rounded-xl font-semibold text-lg;
+    @apply bg-gradient-to-r from-orange-500 to-orange-600 text-white;
+    @apply shadow-lg shadow-orange-500/30;
+    @apply hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-500/50;
+    @apply transition-all duration-200;
+    @apply active:scale-[0.98];
+  }
+
+  .landing-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-8 py-4 rounded-xl font-medium text-lg;
+    @apply bg-transparent border border-white/20 text-white;
+    @apply hover:bg-white/10 hover:border-white/30;
+    @apply transition-all duration-200;
+    @apply active:scale-[0.98];
+  }
+
+  /* Landing grids */
+  .landing-grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-8;
+  }
+  .landing-grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8;
+  }
+  .landing-grid-4 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
+  /* Trust badges row */
+  .landing-trust-badges {
+    @apply flex flex-wrap items-center justify-center gap-4 mt-8;
+  }
+  .landing-trust-badge {
+    @apply inline-flex items-center gap-2 px-4 py-2;
+    @apply bg-gray-900/50 border border-white/10 rounded-full;
+    @apply text-sm text-gray-400;
+  }
+
+  /* Stats section */
+  .landing-stats {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-8;
+  }
+  .landing-stat {
+    @apply text-center;
+  }
+  .landing-stat-value {
+    @apply text-display-sm md:text-display font-bold text-white;
+  }
+  .landing-stat-label {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  /* Feature list with checkmarks */
+  .landing-features {
+    @apply space-y-4;
+  }
+  .landing-feature {
+    @apply flex items-start gap-3;
+  }
+  .landing-feature-icon {
+    @apply w-5 h-5 text-green-500 flex-shrink-0 mt-0.5;
+  }
+  .landing-feature-text {
+    @apply text-sm text-gray-300;
+  }
+}
