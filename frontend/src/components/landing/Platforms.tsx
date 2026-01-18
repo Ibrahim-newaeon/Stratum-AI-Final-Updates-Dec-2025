@@ -5,6 +5,8 @@ export function Platforms() {
     { name: 'TikTok', color: '#00F2EA', icon: TikTokIcon },
     { name: 'Snapchat', color: '#FFFC00', icon: SnapchatIcon },
     { name: 'GA4', color: '#E37400', icon: GA4Icon },
+    { name: 'HubSpot', color: '#FF7A59', icon: HubSpotIcon },
+    { name: 'Zoho', color: '#E42527', icon: ZohoIcon },
   ];
 
   return (
@@ -97,6 +99,22 @@ function GA4Icon({ className, style }: { className?: string; style?: React.CSSPr
   return (
     <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor">
       <path d="M22.84 2.998v17.99a3 3 0 0 1-3 3.01h-3.02V9.998a3 3 0 0 1 3-3h3.02v-4zm-9.01 21v-6.01a3 3 0 0 0-3-3H7.82v9.01h6.01zm-9.01 0V15a3 3 0 0 0-3-3H1.8v12.01h2.01a1 1 0 0 0 1.01-1.01z"/>
+    </svg>
+  );
+}
+
+function HubSpotIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.164 7.93V5.084a2.198 2.198 0 0 0 1.267-1.984v-.066A2.198 2.198 0 0 0 17.233.836h-.066a2.198 2.198 0 0 0-2.198 2.198v.066c0 .864.501 1.61 1.227 1.967v2.862a5.052 5.052 0 0 0-2.331 1.108l-6.156-4.785a2.625 2.625 0 0 0 .073-.548 2.612 2.612 0 0 0-2.611-2.611 2.612 2.612 0 0 0-2.612 2.611 2.612 2.612 0 0 0 2.612 2.612c.511 0 .987-.149 1.388-.405l6.040 4.696a5.058 5.058 0 0 0-.478 2.158 5.058 5.058 0 0 0 .498 2.199l-1.803 1.803a2.197 2.197 0 0 0-.648-.097 2.198 2.198 0 0 0-2.198 2.198 2.198 2.198 0 0 0 2.198 2.198 2.198 2.198 0 0 0 2.198-2.198c0-.237-.037-.465-.106-.679l1.765-1.765a5.063 5.063 0 0 0 3.048 1.025 5.073 5.073 0 0 0 5.072-5.073 5.073 5.073 0 0 0-4.122-4.98zM17.2 15.8a2.534 2.534 0 0 1-2.535-2.535A2.534 2.534 0 0 1 17.2 10.73a2.534 2.534 0 0 1 2.535 2.535A2.534 2.534 0 0 1 17.2 15.8z"/>
+    </svg>
+  );
+}
+
+function ZohoIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M2.63 9.14h5.55L4.09 14.4H0l2.63-5.26zm5.85 5.26L14.1 3.57l2.13 4.25-3.69 7.38-3.23-6.46-3.07 6.13 2.24-.47zm12.89-5.26l-2.64 5.26h4.09L24 9.14h-2.63zm-5.55 0L12 16.02l-2.13-4.25 1.22-2.44 1.08 2.16.85-1.7.85 1.7 1.08-2.16 1.22 2.44.77-1.53h2.15l.28-.57-3.23-6.46-3.33 6.65-1.23-2.46-1.23 2.46-3.33-6.65-3.23 6.46.28.57h2.15l.77 1.53 1.22-2.44 1.08 2.16.85-1.7z"/>
     </svg>
   );
 }
