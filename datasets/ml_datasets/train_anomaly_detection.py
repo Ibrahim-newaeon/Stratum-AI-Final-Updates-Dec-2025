@@ -161,8 +161,7 @@ def train_one_class_svm(X_train, X_test, y_train, y_test, numeric_cols):
     oc_svm = OneClassSVM(
         kernel='rbf',
         gamma='auto',
-        nu=0.05,  # Expected proportion of anomalies
-        random_state=42
+        nu=0.05  # Expected proportion of anomalies
     )
 
     oc_svm.fit(X_train_scaled)
@@ -235,7 +234,7 @@ def analyze_feature_importance(model, feature_names):
 
     if not importance_df.empty:
         for idx, row in importance_df.iterrows():
-            bar = "█" * int(row['importance'] * 50)
+            bar = "#" * int(row['importance'] * 50)
             print(f"  {row['feature'][:30]:<30} {row['importance']:.4f} {bar}")
 
     return importance_df

@@ -35,7 +35,8 @@ from ml_utils import (
 def prepare_data(df: pd.DataFrame):
     """Prepare features and target for churn prediction."""
     # Define target and ID columns to exclude
-    exclude_cols = ['customer_id', 'churned', 'churn_probability']
+    # Note: churn_date is excluded to prevent data leakage
+    exclude_cols = ['customer_id', 'churned', 'churn_probability', 'churn_date']
 
     # Get feature columns
     numeric_cols, categorical_cols = get_feature_columns(df, exclude_cols)
@@ -163,7 +164,7 @@ def analyze_churn_factors(model, X_train, feature_names):
 
     if not importance_df.empty:
         for idx, row in importance_df.iterrows():
-            bar = "█" * int(row['importance'] * 50)
+            bar = "#" * int(row['importance'] * 50)
             print(f"  {row['feature'][:30]:<30} {row['importance']:.4f} {bar}")
 
     return importance_df

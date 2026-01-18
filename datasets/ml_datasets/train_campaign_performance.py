@@ -215,7 +215,7 @@ def analyze_performance_drivers(model, feature_names, target_name):
 
     if not importance_df.empty:
         for idx, row in importance_df.iterrows():
-            bar = "█" * int(row['importance'] * 50)
+            bar = "#" * int(row['importance'] * 50)
             print(f"  {row['feature'][:30]:<30} {row['importance']:.4f} {bar}")
 
     return importance_df
