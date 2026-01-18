@@ -561,6 +561,47 @@
         .dashboard-dot:nth-child(2) { background: #f59e0b; }
         .dashboard-dot:nth-child(3) { background: #10b981; }
 
+        /* Dashboard Loading State */
+        .dashboard-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .dashboard-loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(252, 100, 35, 0.1);
+            border-top-color: var(--accent-orange);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .dashboard-content {
             display: grid;
             gap: 1rem;
@@ -1430,6 +1471,40 @@
             color: var(--text-secondary);
             font-size: 0.95rem;
             line-height: 1.6;
+        }
+
+        .cdp-feature-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .cdp-impact-badge {
+            background: rgba(109, 207, 167, 0.1);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .cdp-platform-badges {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .cdp-platform-badge {
+            padding: 0.25rem 0.75rem;
+            background: rgba(57, 128, 234, 0.1);
+            border: 1px solid rgba(57, 128, 234, 0.3);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            font-weight: 500;
         }
 
         /* CDP Comparison Table */
@@ -4639,7 +4714,12 @@
                 </div>
             </div>
             <div class="hero-visual">
-                <div class="dashboard-preview">
+                <div class="dashboard-preview" style="position: relative;">
+                    <!-- Loading State -->
+                    <div class="dashboard-loading" id="dashboardLoading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading dashboard...</div>
+                    </div>
                     <div class="dashboard-header">
                         <div class="dashboard-dot"></div>
                         <div class="dashboard-dot"></div>
@@ -5520,16 +5600,28 @@
         <div class="cdp-features-grid">
             <!-- One-Click Audience Sync -->
             <div class="cdp-feature-card reveal">
-                <div class="cdp-feature-icon">🎯</div>
+                <div class="cdp-feature-header">
+                    <div class="cdp-feature-icon">🎯</div>
+                    <div class="cdp-impact-badge">+28% ROAS</div>
+                </div>
                 <h3 class="cdp-feature-title">One-Click Audience Sync</h3>
                 <p class="cdp-feature-desc">
                     Push segments to <strong>Meta, Google, TikTok & Snapchat</strong> instantly. Auto-sync keeps your audiences fresh 24/7 with configurable intervals (1h - 1 week).
                 </p>
+                <div class="cdp-platform-badges">
+                    <span class="cdp-platform-badge">Meta</span>
+                    <span class="cdp-platform-badge">Google</span>
+                    <span class="cdp-platform-badge">TikTok</span>
+                    <span class="cdp-platform-badge">Snapchat</span>
+                </div>
             </div>
 
             <!-- 360° Customer Profiles -->
             <div class="cdp-feature-card reveal">
-                <div class="cdp-feature-icon">👤</div>
+                <div class="cdp-feature-header">
+                    <div class="cdp-feature-icon">👤</div>
+                    <div class="cdp-impact-badge">+2.1x LTV</div>
+                </div>
                 <h3 class="cdp-feature-title">360° Customer Profiles</h3>
                 <p class="cdp-feature-desc">
                     Unified view from anonymous visitor to loyal customer. Real-time enrichment from every interaction across web, mobile, and offline touchpoints.
@@ -5538,7 +5630,10 @@
 
             <!-- Smart Segmentation -->
             <div class="cdp-feature-card reveal">
-                <div class="cdp-feature-icon">📊</div>
+                <div class="cdp-feature-header">
+                    <div class="cdp-feature-icon">📊</div>
+                    <div class="cdp-impact-badge">+45% CTR</div>
+                </div>
                 <h3 class="cdp-feature-title">Smart Segmentation</h3>
                 <p class="cdp-feature-desc">
                     Build segments with behavioral rules, <strong>RFM scores</strong> (Recency, Frequency, Monetary), and lifecycle stages. Preview audience size before you publish.
@@ -5547,7 +5642,10 @@
 
             <!-- Identity Resolution -->
             <div class="cdp-feature-card reveal">
-                <div class="cdp-feature-icon">🔗</div>
+                <div class="cdp-feature-header">
+                    <div class="cdp-feature-icon">🔗</div>
+                    <div class="cdp-impact-badge">3x Match Rate</div>
+                </div>
                 <h3 class="cdp-feature-title">Identity Resolution</h3>
                 <p class="cdp-feature-desc">
                     Connect the dots across devices and channels. Visual identity graph shows every connection with merge history and audit trail.
@@ -5556,7 +5654,10 @@
 
             <!-- Event Intelligence -->
             <div class="cdp-feature-card reveal">
-                <div class="cdp-feature-icon">⚡</div>
+                <div class="cdp-feature-header">
+                    <div class="cdp-feature-icon">⚡</div>
+                    <div class="cdp-impact-badge">99.8% Accuracy</div>
+                </div>
                 <h3 class="cdp-feature-title">Event Intelligence</h3>
                 <p class="cdp-feature-desc">
                     Real-time event ingestion with <strong>anomaly detection</strong>. EMQ (Event Match Quality) scoring helps you optimize conversion tracking quality.
@@ -5565,7 +5666,10 @@
 
             <!-- Flexible Export -->
             <div class="cdp-feature-card reveal">
-                <div class="cdp-feature-icon">📤</div>
+                <div class="cdp-feature-header">
+                    <div class="cdp-feature-icon">📤</div>
+                    <div class="cdp-impact-badge">GDPR Ready</div>
+                </div>
                 <h3 class="cdp-feature-title">Flexible Export</h3>
                 <p class="cdp-feature-desc">
                     Export audiences as CSV or JSON anytime. Include traits, events, and custom attributes with privacy-compliant hashed identifiers.
@@ -5643,28 +5747,28 @@
             <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;">
                 <div style="text-align: center;">
                     <div style="width: 60px; height: 60px; background: rgba(24, 119, 242, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
-                        <img src="./icons/meta.svg" alt="Meta" style="height: 32px; width: auto;">
+                        <img src="./icons/meta.svg" alt="Meta" loading="lazy" style="height: 32px; width: auto;">
                     </div>
                     <div style="font-weight: 600;">Meta</div>
                     <div style="color: var(--text-muted); font-size: 0.8rem;">Custom Audiences API</div>
                 </div>
                 <div style="text-align: center;">
                     <div style="width: 60px; height: 60px; background: rgba(66, 133, 244, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
-                        <img src="./icons/google_ads-official.svg" alt="Google Ads" style="height: 32px; width: auto;">
+                        <img src="./icons/google_ads-official.svg" alt="Google Ads" loading="lazy" style="height: 32px; width: auto;">
                     </div>
                     <div style="font-weight: 600;">Google</div>
                     <div style="color: var(--text-muted); font-size: 0.8rem;">Customer Match API</div>
                 </div>
                 <div style="text-align: center;">
                     <div style="width: 60px; height: 60px; background: rgba(0, 0, 0, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
-                        <img src="./icons/tiktok.svg" alt="TikTok" style="height: 32px; width: auto;">
+                        <img src="./icons/tiktok.svg" alt="TikTok" loading="lazy" style="height: 32px; width: auto;">
                     </div>
                     <div style="font-weight: 600;">TikTok</div>
                     <div style="color: var(--text-muted); font-size: 0.8rem;">DMP Custom Audience</div>
                 </div>
                 <div style="text-align: center;">
                     <div style="width: 60px; height: 60px; background: rgba(255, 252, 0, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
-                        <img src="./icons/snapchat.svg" alt="Snapchat" style="height: 32px; width: auto;">
+                        <img src="./icons/snapchat.svg" alt="Snapchat" loading="lazy" style="height: 32px; width: auto;">
                     </div>
                     <div style="font-weight: 600;">Snapchat</div>
                     <div style="color: var(--text-muted); font-size: 0.8rem;">SAM API</div>
@@ -6214,6 +6318,35 @@
                 html.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
             });
+        }
+
+        // Dashboard Loading State
+        const dashboardLoading = document.getElementById('dashboardLoading');
+        if (dashboardLoading) {
+            // Hide loading after a short delay to show the animation
+            setTimeout(() => {
+                dashboardLoading.classList.add('hidden');
+            }, 1500);
+        }
+
+        // Lazy Loading Images (fallback for browsers without native support)
+        if ('IntersectionObserver' in window) {
+            const lazyImages = document.querySelectorAll('img[data-src]');
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            }, {
+                rootMargin: '50px 0px',
+                threshold: 0.01
+            });
+
+            lazyImages.forEach(img => imageObserver.observe(img));
         }
 
         // Cursor Glow Effect
