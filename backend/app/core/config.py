@@ -153,6 +153,20 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # Zoho CRM Configuration
+    # -------------------------------------------------------------------------
+    zoho_client_id: Optional[str] = Field(
+        default=None, description="Zoho OAuth App Client ID"
+    )
+    zoho_client_secret: Optional[str] = Field(
+        default=None, description="Zoho OAuth App Client Secret"
+    )
+    zoho_region: str = Field(
+        default="com",
+        description="Zoho data center region (com, eu, in, com.au, jp, com.cn)"
+    )
+
+    # -------------------------------------------------------------------------
     # Market Intelligence Configuration
     # -------------------------------------------------------------------------
     market_intel_provider: Literal["mock", "serpapi", "dataforseo"] = Field(

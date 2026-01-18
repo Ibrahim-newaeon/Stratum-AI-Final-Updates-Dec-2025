@@ -36,6 +36,9 @@ from app.services.crm.hubspot_client import HubSpotClient
 from app.services.crm.hubspot_sync import HubSpotSyncService
 from app.services.crm.identity_matching import IdentityMatcher
 from app.services.crm.hubspot_writeback import HubSpotWritebackService
+from app.services.crm.zoho_client import ZohoClient
+from app.services.crm.zoho_sync import ZohoSyncService
+from app.services.crm.zoho_writeback import ZohoWritebackService
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.schemas.response import APIResponse
@@ -985,4 +988,384 @@ async def update_writeback_config(
             "properties_created": config.properties_created,
         },
         message="Writeback configuration updated",
+    )
+
+
+# =============================================================================
+# Zoho CRM Schemas
+# =============================================================================
+
+class ZohoConnectRequest(BaseModel):
+    """Request to initiate Zoho OAuth."""
+    redirect_uri: str = Field(..., description="OAuth callback URL")
+    region: str = Field(default="com", description="Zoho region (com, eu, in, com.au, jp, com.cn)")
+
+
+class ZohoConnectResponse(BaseModel):
+    """Response with OAuth authorization URL."""
+    authorization_url: str
+    state: str
+
+
+class ZohoStatusResponse(BaseModel):
+    """Zoho connection status."""
+    connected: bool
+    status: str
+    provider: str = "zoho"
+    account_id: Optional[str] = None
+    account_name: Optional[str] = None
+    last_sync_at: Optional[str] = None
+    last_sync_status: Optional[str] = None
+    scopes: List[str] = []
+
+
+# =============================================================================
+# Zoho OAuth Endpoints
+# =============================================================================
+
+@router.post(
+    "/zoho/connect",
+    response_model=APIResponse[ZohoConnectResponse],
+    summary="Initiate Zoho OAuth",
+)
+async def zoho_connect(
+    request: ZohoConnectRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Start Zoho OAuth authorization flow.
+    Returns authorization URL to redirect user to Zoho.
+    """
+    client = ZohoClient(db, tenant_id, request.region)
+
+    # Generate state token for CSRF protection
+    import secrets
+    state = secrets.token_urlsafe(32)
+
+    # Include tenant_id and region in state
+    state_with_tenant = f"{tenant_id}:{request.region}:{state}"
+
+    auth_url = client.get_authorization_url(
+        redirect_uri=request.redirect_uri,
+        state=state_with_tenant,
+    )
+
+    return APIResponse(
+        success=True,
+        data=ZohoConnectResponse(
+            authorization_url=auth_url,
+            state=state_with_tenant,
+        ),
+    )
+
+
+@router.get(
+    "/zoho/callback",
+    response_model=APIResponse[ZohoStatusResponse],
+    summary="Zoho OAuth callback",
+)
+async def zoho_callback(
+    code: str = Query(..., description="Authorization code"),
+    state: str = Query(..., description="State parameter"),
+    redirect_uri: str = Query(..., description="Redirect URI used in authorization"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Handle Zoho OAuth callback.
+    Exchanges authorization code for tokens and stores connection.
+    """
+    # Extract tenant_id and region from state
+    try:
+        parts = state.split(":", 2)
+        tenant_id = int(parts[0])
+        region = parts[1] if len(parts) > 1 else "com"
+    except (ValueError, AttributeError, IndexError):
+        raise HTTPException(status_code=400, detail="Invalid state parameter")
+
+    client = ZohoClient(db, tenant_id, region)
+
+    try:
+        connection = await client.exchange_code_for_tokens(code, redirect_uri)
+        status = await client.get_connection_status()
+
+        return APIResponse(
+            success=True,
+            data=ZohoStatusResponse(**status),
+            message="Zoho CRM connected successfully",
+        )
+
+    except Exception as e:
+        logger.error("zoho_oauth_failed", error=str(e), tenant_id=tenant_id)
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+
+
+@router.get(
+    "/zoho/status",
+    response_model=APIResponse[ZohoStatusResponse],
+    summary="Get Zoho connection status",
+)
+async def zoho_status(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get current Zoho CRM connection status for tenant."""
+    client = ZohoClient(db, tenant_id, settings.zoho_region)
+    status = await client.get_connection_status()
+
+    return APIResponse(
+        success=True,
+        data=ZohoStatusResponse(**status),
+    )
+
+
+@router.delete(
+    "/zoho/disconnect",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Disconnect Zoho",
+)
+async def zoho_disconnect(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Disconnect Zoho CRM integration for tenant."""
+    client = ZohoClient(db, tenant_id, settings.zoho_region)
+    success = await client.disconnect()
+
+    if not success:
+        raise HTTPException(status_code=404, detail="No Zoho connection found")
+
+    return APIResponse(
+        success=True,
+        data={"disconnected": True},
+        message="Zoho CRM disconnected successfully",
+    )
+
+
+# =============================================================================
+# Zoho Sync Endpoints
+# =============================================================================
+
+@router.post(
+    "/zoho/sync",
+    response_model=APIResponse[SyncResponse],
+    summary="Trigger Zoho sync",
+)
+async def zoho_sync(
+    request: SyncRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    background_tasks: BackgroundTasks = None,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Trigger manual sync of Zoho CRM contacts, leads, and deals.
+    """
+    sync_service = ZohoSyncService(db, tenant_id, settings.zoho_region)
+
+    results = await sync_service.sync_all(full_sync=request.full_sync)
+
+    return APIResponse(
+        success=results.get("status") != "error",
+        data=SyncResponse(
+            status=results.get("status", "error"),
+            contacts_synced=results.get("contacts_synced", 0),
+            contacts_created=results.get("contacts_created", 0),
+            contacts_updated=results.get("contacts_updated", 0),
+            deals_synced=results.get("deals_synced", 0),
+            deals_created=results.get("deals_created", 0),
+            deals_updated=results.get("deals_updated", 0),
+            errors=results.get("errors", []),
+        ),
+        message=f"Sync completed: {results.get('contacts_synced', 0)} contacts, {results.get('deals_synced', 0)} deals",
+    )
+
+
+@router.get(
+    "/zoho/pipeline",
+    response_model=APIResponse[PipelineSummaryResponse],
+    summary="Get Zoho pipeline summary",
+)
+async def zoho_pipeline_summary(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get Zoho CRM pipeline summary with stage counts and values."""
+    sync_service = ZohoSyncService(db, tenant_id, settings.zoho_region)
+    summary = await sync_service.get_pipeline_summary()
+
+    return APIResponse(
+        success=True,
+        data=PipelineSummaryResponse(**summary),
+    )
+
+
+# =============================================================================
+# Zoho Writeback Endpoints
+# =============================================================================
+
+@router.get(
+    "/zoho/writeback/status",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Get Zoho writeback status",
+)
+async def get_zoho_writeback_status(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get Zoho CRM writeback configuration and status.
+    """
+    writeback_service = ZohoWritebackService(db, tenant_id, settings.zoho_region)
+    status = await writeback_service.get_writeback_status()
+
+    return APIResponse(
+        success=True,
+        data=status,
+    )
+
+
+@router.get(
+    "/zoho/writeback/fields",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Get required Zoho custom fields",
+)
+async def get_zoho_writeback_fields(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get list of custom fields required in Zoho CRM for writeback.
+
+    For Zoho CRM editions that don't support API field creation,
+    use this information to manually create fields in Zoho settings.
+    """
+    writeback_service = ZohoWritebackService(db, tenant_id, settings.zoho_region)
+    fields_info = await writeback_service.get_required_fields_info()
+
+    return APIResponse(
+        success=True,
+        data=fields_info,
+    )
+
+
+@router.post(
+    "/zoho/writeback/setup-fields",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Setup Zoho custom fields",
+)
+async def setup_zoho_writeback_fields(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Attempt to create Stratum custom fields in Zoho CRM.
+
+    Note: This requires Zoho CRM Enterprise edition for API field creation.
+    For other editions, fields must be created manually in Zoho CRM settings.
+    """
+    writeback_service = ZohoWritebackService(db, tenant_id, settings.zoho_region)
+
+    try:
+        results = await writeback_service.setup_custom_fields()
+
+        return APIResponse(
+            success=True,
+            data=results,
+            message="Custom field setup attempted. Check results for details.",
+        )
+    except Exception as e:
+        logger.error(f"Failed to setup Zoho writeback fields: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/zoho/writeback/sync",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Run Zoho writeback sync",
+)
+async def run_zoho_writeback_sync(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    sync_contacts: bool = Query(True, description="Sync contact attribution"),
+    sync_deals: bool = Query(True, description="Sync deal attribution"),
+    full_sync: bool = Query(False, description="Full sync (ignore modified_since)"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Run Zoho CRM writeback sync.
+
+    Pushes Stratum attribution data to Zoho contacts and deals:
+    - Contact: ad platform, campaign, ad IDs, attribution confidence
+    - Deal: attributed spend, ROAS, profit metrics, touchpoint count
+    """
+    writeback_service = ZohoWritebackService(db, tenant_id, settings.zoho_region)
+
+    # Get last sync time for incremental
+    modified_since = None
+    if not full_sync:
+        result = await db.execute(
+            select(CRMConnection).where(
+                and_(
+                    CRMConnection.tenant_id == tenant_id,
+                    CRMConnection.provider == CRMProvider.ZOHO,
+                )
+            )
+        )
+        connection = result.scalar_one_or_none()
+        if connection and connection.last_sync_at:
+            modified_since = connection.last_sync_at
+
+    try:
+        results = await writeback_service.full_sync(
+            sync_contacts=sync_contacts,
+            sync_deals=sync_deals,
+            modified_since=modified_since,
+        )
+
+        return APIResponse(
+            success=True,
+            data=results,
+            message="Zoho writeback sync completed",
+        )
+
+    except Exception as e:
+        logger.error(f"Zoho writeback sync failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# Multi-CRM Status Endpoint
+# =============================================================================
+
+@router.get(
+    "/crm/status",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Get all CRM connection statuses",
+)
+async def get_all_crm_status(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get connection status for all supported CRM providers.
+
+    Returns status for:
+    - HubSpot
+    - Zoho
+    - Salesforce (future)
+    - Pipedrive (future)
+    """
+    hubspot_client = HubSpotClient(db, tenant_id)
+    zoho_client = ZohoClient(db, tenant_id, settings.zoho_region)
+
+    hubspot_status = await hubspot_client.get_connection_status()
+    zoho_status = await zoho_client.get_connection_status()
+
+    return APIResponse(
+        success=True,
+        data={
+            "hubspot": hubspot_status,
+            "zoho": zoho_status,
+            "salesforce": {"connected": False, "status": "not_supported"},
+            "pipedrive": {"connected": False, "status": "not_supported"},
+        },
     )
