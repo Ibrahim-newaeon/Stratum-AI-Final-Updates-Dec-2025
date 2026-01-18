@@ -148,6 +148,107 @@ class FactAttributionVarianceDaily(Base):
     )
 
 
+class SignalHealthHistory(Base):
+    """
+    Aggregated signal health history for trend analysis.
+    Stores daily rollups of signal health metrics.
+    """
+    __tablename__ = "signal_health_history"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    date = Column(Date, nullable=False)
+
+    # Aggregated scores
+    overall_score = Column(Float, nullable=False)  # 0-100
+    emq_score_avg = Column(Float, nullable=True)
+    event_loss_pct_avg = Column(Float, nullable=True)
+    freshness_minutes_avg = Column(Integer, nullable=True)
+    api_error_rate_avg = Column(Float, nullable=True)
+
+    # Status counts
+    platforms_ok = Column(Integer, default=0)
+    platforms_risk = Column(Integer, default=0)
+    platforms_degraded = Column(Integer, default=0)
+    platforms_critical = Column(Integer, default=0)
+
+    # Computed overall status
+    status = Column(
+        SQLEnum(
+            SignalHealthStatus,
+            name='signal_health_status',
+            create_type=False,
+            values_callable=lambda x: [e.value for e in x]
+        ),
+        nullable=False,
+        default=SignalHealthStatus.OK
+    )
+
+    # Automation state
+    automation_blocked = Column(Integer, default=0)  # Boolean stored as int for SQLite compatibility
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        Index("ix_signal_health_history_tenant_date", "tenant_id", "date", unique=True),
+    )
+
+
+class TrustGateAuditLog(Base):
+    """
+    Audit log for trust gate decisions.
+    Tracks every automation decision made by the trust gate.
+    """
+    __tablename__ = "trust_gate_audit_log"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+
+    # Decision context
+    decision_type = Column(String(50), nullable=False)  # execute, hold, block
+    action_type = Column(String(100), nullable=False)  # budget_increase, pause, etc.
+    entity_type = Column(String(50), nullable=False)  # campaign, adset, creative
+    entity_id = Column(String(255), nullable=False)
+    entity_name = Column(String(255), nullable=True)
+    platform = Column(String(50), nullable=True)
+
+    # Signal health at decision time
+    signal_health_score = Column(Float, nullable=True)
+    signal_health_status = Column(String(20), nullable=True)
+
+    # Trust gate evaluation
+    gate_passed = Column(Integer, default=0)  # Boolean as int
+    gate_reason = Column(Text, nullable=True)  # JSON with reasons
+
+    # Thresholds used
+    healthy_threshold = Column(Float, nullable=True)
+    degraded_threshold = Column(Float, nullable=True)
+
+    # Dry run indicator
+    is_dry_run = Column(Integer, default=0)  # Boolean as int
+
+    # Action details
+    action_payload = Column(Text, nullable=True)  # JSON
+    action_result = Column(Text, nullable=True)  # JSON
+
+    # User context
+    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    triggered_by_system = Column(Integer, default=0)  # Boolean as int
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    triggered_by = relationship("User", foreign_keys=[triggered_by_user_id])
+
+    __table_args__ = (
+        Index("ix_trust_gate_audit_tenant_date", "tenant_id", "created_at"),
+        Index("ix_trust_gate_audit_decision", "tenant_id", "decision_type"),
+        Index("ix_trust_gate_audit_entity", "tenant_id", "entity_type", "entity_id"),
+    )
+
+
 class FactActionsQueue(Base):
     """
     Queue for autopilot actions requiring approval or execution.

@@ -28,6 +28,13 @@ import {
   ShareIcon,
   ChevronDownIcon,
   ArrowUpOnSquareIcon,
+  PresentationChartBarIcon,
+  FunnelIcon,
+  CalculatorIcon,
+  ShieldExclamationIcon,
+  AdjustmentsHorizontalIcon,
+  DocumentChartBarIcon,
+  UserMinusIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
@@ -42,6 +49,8 @@ const navigation = [
   { name: 'nav.benchmarks', href: '/dashboard/benchmarks', icon: FolderIcon, tourId: 'nav-benchmarks' },
   { name: 'nav.assets', href: '/dashboard/assets', icon: PhotoIcon, tourId: 'nav-assets' },
   { name: 'nav.rules', href: '/dashboard/rules', icon: BoltIcon, tourId: 'nav-rules' },
+  { name: 'Custom Autopilot', href: '/dashboard/custom-autopilot-rules', icon: AdjustmentsHorizontalIcon, tourId: 'nav-custom-autopilot' },
+  { name: 'Custom Reports', href: '/dashboard/custom-reports', icon: DocumentChartBarIcon, tourId: 'nav-custom-reports' },
   { name: 'nav.whatsapp', href: '/dashboard/whatsapp', icon: ChatBubbleLeftRightIcon, tourId: 'nav-whatsapp' },
 ]
 
@@ -52,6 +61,11 @@ const cdpNavigation = [
   { name: 'Segments', href: '/dashboard/cdp/segments', icon: TagIcon },
   { name: 'Events', href: '/dashboard/cdp/events', icon: ClockIcon },
   { name: 'Identity Graph', href: '/dashboard/cdp/identity', icon: ShareIcon },
+  { name: 'RFM Analysis', href: '/dashboard/cdp/rfm', icon: PresentationChartBarIcon },
+  { name: 'Funnels', href: '/dashboard/cdp/funnels', icon: FunnelIcon },
+  { name: 'Computed Traits', href: '/dashboard/cdp/computed-traits', icon: CalculatorIcon },
+  { name: 'Consent', href: '/dashboard/cdp/consent', icon: ShieldExclamationIcon },
+  { name: 'Predictive Churn', href: '/dashboard/cdp/predictive-churn', icon: UserMinusIcon },
   { name: 'Audience Sync', href: '/dashboard/cdp/audience-sync', icon: ArrowUpOnSquareIcon },
 ]
 

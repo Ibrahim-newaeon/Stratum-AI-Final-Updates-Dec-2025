@@ -168,6 +168,18 @@ export interface QuickActionsResponse {
   actions: QuickAction[]
 }
 
+// Export format types
+export type ExportFormat = 'csv' | 'json'
+
+// Export request
+export interface DashboardExportRequest {
+  format: ExportFormat
+  period?: TimePeriod
+  include_campaigns?: boolean
+  include_metrics?: boolean
+  include_recommendations?: boolean
+}
+
 // Request types
 export interface CampaignPerformanceRequest {
   period?: TimePeriod
@@ -288,6 +300,16 @@ export const dashboardApi = {
     )
     return response.data.data
   },
+
+  /**
+   * Export dashboard data as CSV or JSON
+   */
+  exportDashboard: async (params: DashboardExportRequest): Promise<Blob> => {
+    const response = await apiClient.post('/dashboard/export', params, {
+      responseType: 'blob',
+    })
+    return response.data
+  },
 }
 
 // =============================================================================
@@ -402,5 +424,26 @@ export function useDashboardSignalHealth(enabled = true) {
     enabled,
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // 1 minute
+  })
+}
+
+/**
+ * Export dashboard data
+ */
+export function useExportDashboard() {
+  return useMutation({
+    mutationFn: async (params: DashboardExportRequest) => {
+      const blob = await dashboardApi.exportDashboard(params)
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `stratum-dashboard-export-${new Date().toISOString().split('T')[0]}.${params.format}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      return blob
+    },
   })
 }

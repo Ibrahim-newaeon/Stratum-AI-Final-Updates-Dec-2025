@@ -39,6 +39,12 @@ from app.services.crm.hubspot_writeback import HubSpotWritebackService
 from app.services.crm.zoho_client import ZohoClient
 from app.services.crm.zoho_sync import ZohoSyncService
 from app.services.crm.zoho_writeback import ZohoWritebackService
+from app.services.crm.pipedrive_client import PipedriveClient
+from app.services.crm.pipedrive_sync import PipedriveSyncService
+from app.services.crm.pipedrive_writeback import PipedriveWritebackService
+from app.services.crm.salesforce_client import SalesforceClient
+from app.services.crm.salesforce_sync import SalesforceSyncService
+from app.services.crm.salesforce_writeback import SalesforceWritebackService
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.schemas.response import APIResponse
@@ -1020,6 +1026,87 @@ class ZohoStatusResponse(BaseModel):
 
 
 # =============================================================================
+# Pipedrive CRM Schemas
+# =============================================================================
+
+class PipedriveConnectRequest(BaseModel):
+    """Request to initiate Pipedrive OAuth."""
+    redirect_uri: str = Field(..., description="OAuth callback URL")
+
+
+class PipedriveConnectResponse(BaseModel):
+    """Response with OAuth authorization URL."""
+    authorization_url: str
+    state: str
+
+
+class PipedriveStatusResponse(BaseModel):
+    """Pipedrive connection status."""
+    connected: bool
+    status: str
+    provider: str = "pipedrive"
+    account_id: Optional[str] = None
+    account_name: Optional[str] = None
+    last_sync_at: Optional[str] = None
+    last_sync_status: Optional[str] = None
+    scopes: List[str] = []
+
+
+class PipedriveSyncResponse(BaseModel):
+    """Pipedrive sync operation response."""
+    status: str
+    persons_synced: int = 0
+    persons_created: int = 0
+    persons_updated: int = 0
+    deals_synced: int = 0
+    deals_created: int = 0
+    errors: List[str] = []
+
+
+# =============================================================================
+# Salesforce CRM Schemas
+# =============================================================================
+
+class SalesforceConnectRequest(BaseModel):
+    """Request to initiate Salesforce OAuth."""
+    redirect_uri: str = Field(..., description="OAuth callback URL")
+    is_sandbox: bool = Field(default=False, description="Use Salesforce sandbox environment")
+
+
+class SalesforceConnectResponse(BaseModel):
+    """Response with OAuth authorization URL."""
+    authorization_url: str
+    state: str
+
+
+class SalesforceStatusResponse(BaseModel):
+    """Salesforce connection status."""
+    connected: bool
+    status: str
+    provider: str = "salesforce"
+    account_id: Optional[str] = None
+    account_name: Optional[str] = None
+    last_sync_at: Optional[str] = None
+    last_sync_status: Optional[str] = None
+    scopes: List[str] = []
+    is_sandbox: bool = False
+
+
+class SalesforceSyncResponse(BaseModel):
+    """Salesforce sync operation response."""
+    status: str
+    contacts_synced: int = 0
+    contacts_created: int = 0
+    contacts_updated: int = 0
+    leads_synced: int = 0
+    leads_created: int = 0
+    leads_updated: int = 0
+    opportunities_synced: int = 0
+    opportunities_created: int = 0
+    errors: List[str] = []
+
+
+# =============================================================================
 # Zoho OAuth Endpoints
 # =============================================================================
 
@@ -1333,6 +1420,644 @@ async def run_zoho_writeback_sync(
 
 
 # =============================================================================
+# Pipedrive OAuth Endpoints
+# =============================================================================
+
+@router.post(
+    "/pipedrive/connect",
+    response_model=APIResponse[PipedriveConnectResponse],
+    summary="Initiate Pipedrive OAuth",
+)
+async def pipedrive_connect(
+    request: PipedriveConnectRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Start Pipedrive OAuth authorization flow.
+    Returns authorization URL to redirect user to Pipedrive.
+    """
+    client = PipedriveClient(db, tenant_id)
+
+    # Generate state token for CSRF protection
+    import secrets
+    state = secrets.token_urlsafe(32)
+
+    # Include tenant_id in state
+    state_with_tenant = f"{tenant_id}:{state}"
+
+    auth_url = client.get_authorization_url(
+        redirect_uri=request.redirect_uri,
+        state=state_with_tenant,
+    )
+
+    return APIResponse(
+        success=True,
+        data=PipedriveConnectResponse(
+            authorization_url=auth_url,
+            state=state_with_tenant,
+        ),
+    )
+
+
+@router.get(
+    "/pipedrive/callback",
+    response_model=APIResponse[PipedriveStatusResponse],
+    summary="Pipedrive OAuth callback",
+)
+async def pipedrive_callback(
+    code: str = Query(..., description="Authorization code"),
+    state: str = Query(..., description="State parameter"),
+    redirect_uri: str = Query(..., description="Redirect URI used in authorization"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Handle Pipedrive OAuth callback.
+    Exchanges authorization code for tokens and stores connection.
+    """
+    # Extract tenant_id from state
+    try:
+        tenant_id_str, _ = state.split(":", 1)
+        tenant_id = int(tenant_id_str)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=400, detail="Invalid state parameter")
+
+    client = PipedriveClient(db, tenant_id)
+
+    try:
+        connection = await client.exchange_code_for_tokens(code, redirect_uri)
+        status = await client.get_connection_status()
+
+        return APIResponse(
+            success=True,
+            data=PipedriveStatusResponse(**status),
+            message="Pipedrive connected successfully",
+        )
+
+    except Exception as e:
+        logger.error("pipedrive_oauth_failed", error=str(e), tenant_id=tenant_id)
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+
+
+@router.get(
+    "/pipedrive/status",
+    response_model=APIResponse[PipedriveStatusResponse],
+    summary="Get Pipedrive connection status",
+)
+async def pipedrive_status(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get current Pipedrive connection status for tenant."""
+    client = PipedriveClient(db, tenant_id)
+    status = await client.get_connection_status()
+
+    return APIResponse(
+        success=True,
+        data=PipedriveStatusResponse(**status),
+    )
+
+
+@router.delete(
+    "/pipedrive/disconnect",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Disconnect Pipedrive",
+)
+async def pipedrive_disconnect(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Disconnect Pipedrive integration for tenant."""
+    client = PipedriveClient(db, tenant_id)
+    success = await client.disconnect()
+
+    if not success:
+        raise HTTPException(status_code=404, detail="No Pipedrive connection found")
+
+    return APIResponse(
+        success=True,
+        data={"disconnected": True},
+        message="Pipedrive disconnected successfully",
+    )
+
+
+# =============================================================================
+# Pipedrive Sync Endpoints
+# =============================================================================
+
+@router.post(
+    "/pipedrive/sync",
+    response_model=APIResponse[PipedriveSyncResponse],
+    summary="Trigger Pipedrive sync",
+)
+async def pipedrive_sync(
+    request: SyncRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    background_tasks: BackgroundTasks = None,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Trigger manual sync of Pipedrive persons and deals.
+    """
+    sync_service = PipedriveSyncService(db, tenant_id)
+
+    results = await sync_service.sync_all(full_sync=request.full_sync)
+
+    return APIResponse(
+        success="error" not in results.get("errors", []),
+        data=PipedriveSyncResponse(
+            status="success" if not results.get("errors") else "partial",
+            persons_synced=results.get("persons_synced", 0),
+            persons_created=results.get("persons_created", 0),
+            persons_updated=results.get("persons_updated", 0),
+            deals_synced=results.get("deals_synced", 0),
+            deals_created=results.get("deals_created", 0),
+            errors=results.get("errors", []),
+        ),
+        message=f"Sync completed: {results.get('persons_synced', 0)} persons, {results.get('deals_synced', 0)} deals",
+    )
+
+
+@router.get(
+    "/pipedrive/pipeline",
+    response_model=APIResponse[PipelineSummaryResponse],
+    summary="Get Pipedrive pipeline summary",
+)
+async def pipedrive_pipeline_summary(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get Pipedrive pipeline summary with stage counts and values."""
+    # Get deals for pipeline summary
+    result = await db.execute(
+        select(CRMDeal).where(
+            and_(
+                CRMDeal.tenant_id == tenant_id,
+            )
+        )
+    )
+    deals = result.scalars().all()
+
+    # Build stage summary
+    stage_counts: Dict[str, int] = {}
+    stage_values: Dict[str, float] = {}
+    total_pipeline_value = 0
+    total_won_value = 0
+    won_deal_count = 0
+
+    for deal in deals:
+        stage = deal.stage or "Unknown"
+        stage_counts[stage] = stage_counts.get(stage, 0) + 1
+        deal_value = (deal.amount_cents or 0) / 100
+        stage_values[stage] = stage_values.get(stage, 0) + deal_value
+
+        if not deal.is_closed:
+            total_pipeline_value += deal_value
+
+        if deal.is_won:
+            total_won_value += deal_value
+            won_deal_count += 1
+
+    return APIResponse(
+        success=True,
+        data=PipelineSummaryResponse(
+            status="success",
+            stage_counts=stage_counts,
+            stage_values=stage_values,
+            total_pipeline_value=total_pipeline_value,
+            total_won_value=total_won_value,
+            won_deal_count=won_deal_count,
+        ),
+    )
+
+
+# =============================================================================
+# Pipedrive Writeback Endpoints
+# =============================================================================
+
+@router.get(
+    "/pipedrive/writeback/status",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Get Pipedrive writeback status",
+)
+async def get_pipedrive_writeback_status(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get Pipedrive writeback configuration and status.
+    """
+    writeback_service = PipedriveWritebackService(db, tenant_id)
+    status = await writeback_service.get_writeback_status()
+
+    return APIResponse(
+        success=True,
+        data=status,
+    )
+
+
+@router.post(
+    "/pipedrive/writeback/setup-fields",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Setup Pipedrive custom fields",
+)
+async def setup_pipedrive_writeback_fields(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Create Stratum custom fields in Pipedrive.
+
+    Creates custom fields for both persons and deals to store attribution data:
+    - Person: ad platform, campaign, attribution confidence, touchpoints
+    - Deal: attributed spend, ROAS, profit metrics, days to close
+    """
+    writeback_service = PipedriveWritebackService(db, tenant_id)
+
+    try:
+        results = await writeback_service.setup_custom_fields()
+
+        return APIResponse(
+            success=True,
+            data=results,
+            message="Custom fields created successfully",
+        )
+    except Exception as e:
+        logger.error(f"Failed to setup Pipedrive writeback fields: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/pipedrive/writeback/sync",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Run Pipedrive writeback sync",
+)
+async def run_pipedrive_writeback_sync(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    sync_persons: bool = Query(True, description="Sync person attribution"),
+    sync_deals: bool = Query(True, description="Sync deal attribution"),
+    full_sync: bool = Query(False, description="Full sync (ignore modified_since)"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Run Pipedrive writeback sync.
+
+    Pushes Stratum attribution data to Pipedrive persons and deals:
+    - Person: ad platform, campaign, ad IDs, attribution confidence
+    - Deal: attributed spend, ROAS, profit metrics, touchpoint count
+    """
+    writeback_service = PipedriveWritebackService(db, tenant_id)
+
+    # Get last sync time for incremental
+    modified_since = None
+    if not full_sync:
+        result = await db.execute(
+            select(CRMConnection).where(
+                and_(
+                    CRMConnection.tenant_id == tenant_id,
+                    CRMConnection.provider == CRMProvider.PIPEDRIVE,
+                )
+            )
+        )
+        connection = result.scalar_one_or_none()
+        if connection and connection.last_sync_at:
+            modified_since = connection.last_sync_at
+
+    try:
+        results = await writeback_service.full_sync(
+            sync_persons=sync_persons,
+            sync_deals=sync_deals,
+            modified_since=modified_since,
+        )
+
+        return APIResponse(
+            success=True,
+            data=results,
+            message="Pipedrive writeback sync completed",
+        )
+
+    except Exception as e:
+        logger.error(f"Pipedrive writeback sync failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# Salesforce OAuth Endpoints
+# =============================================================================
+
+@router.post(
+    "/salesforce/connect",
+    response_model=APIResponse[SalesforceConnectResponse],
+    summary="Initiate Salesforce OAuth",
+)
+async def salesforce_connect(
+    request: SalesforceConnectRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Start Salesforce OAuth authorization flow.
+    Returns authorization URL to redirect user to Salesforce.
+    """
+    client = SalesforceClient(db, tenant_id, request.is_sandbox)
+
+    # Generate state token for CSRF protection
+    import secrets
+    state = secrets.token_urlsafe(32)
+
+    # Include tenant_id and sandbox flag in state
+    state_with_tenant = f"{tenant_id}:{'sandbox' if request.is_sandbox else 'prod'}:{state}"
+
+    auth_url = client.get_authorization_url(
+        redirect_uri=request.redirect_uri,
+        state=state_with_tenant,
+    )
+
+    return APIResponse(
+        success=True,
+        data=SalesforceConnectResponse(
+            authorization_url=auth_url,
+            state=state_with_tenant,
+        ),
+    )
+
+
+@router.get(
+    "/salesforce/callback",
+    response_model=APIResponse[SalesforceStatusResponse],
+    summary="Salesforce OAuth callback",
+)
+async def salesforce_callback(
+    code: str = Query(..., description="Authorization code"),
+    state: str = Query(..., description="State parameter"),
+    redirect_uri: str = Query(..., description="Redirect URI used in authorization"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Handle Salesforce OAuth callback.
+    Exchanges authorization code for tokens and stores connection.
+    """
+    # Extract tenant_id and sandbox flag from state
+    try:
+        parts = state.split(":", 2)
+        tenant_id = int(parts[0])
+        is_sandbox = parts[1] == "sandbox" if len(parts) > 1 else False
+    except (ValueError, AttributeError, IndexError):
+        raise HTTPException(status_code=400, detail="Invalid state parameter")
+
+    client = SalesforceClient(db, tenant_id, is_sandbox)
+
+    try:
+        connection = await client.exchange_code_for_tokens(code, redirect_uri)
+        status = await client.get_connection_status()
+
+        return APIResponse(
+            success=True,
+            data=SalesforceStatusResponse(**status),
+            message="Salesforce connected successfully",
+        )
+
+    except Exception as e:
+        logger.error("salesforce_oauth_failed", error=str(e), tenant_id=tenant_id)
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+
+
+@router.get(
+    "/salesforce/status",
+    response_model=APIResponse[SalesforceStatusResponse],
+    summary="Get Salesforce connection status",
+)
+async def salesforce_status(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get current Salesforce connection status for tenant."""
+    client = SalesforceClient(db, tenant_id)
+    status = await client.get_connection_status()
+
+    return APIResponse(
+        success=True,
+        data=SalesforceStatusResponse(**status),
+    )
+
+
+@router.delete(
+    "/salesforce/disconnect",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Disconnect Salesforce",
+)
+async def salesforce_disconnect(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Disconnect Salesforce integration for tenant."""
+    client = SalesforceClient(db, tenant_id)
+    success = await client.disconnect()
+
+    if not success:
+        raise HTTPException(status_code=404, detail="No Salesforce connection found")
+
+    return APIResponse(
+        success=True,
+        data={"disconnected": True},
+        message="Salesforce disconnected successfully",
+    )
+
+
+# =============================================================================
+# Salesforce Sync Endpoints
+# =============================================================================
+
+@router.post(
+    "/salesforce/sync",
+    response_model=APIResponse[SalesforceSyncResponse],
+    summary="Trigger Salesforce sync",
+)
+async def salesforce_sync(
+    request: SyncRequest,
+    tenant_id: int = Query(..., description="Tenant ID"),
+    background_tasks: BackgroundTasks = None,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Trigger manual sync of Salesforce contacts, leads, and opportunities.
+    """
+    sync_service = SalesforceSyncService(db, tenant_id)
+
+    results = await sync_service.sync_all(full_sync=request.full_sync)
+
+    return APIResponse(
+        success="error" not in str(results.get("errors", [])),
+        data=SalesforceSyncResponse(
+            status="success" if not results.get("errors") else "partial",
+            contacts_synced=results.get("contacts_synced", 0),
+            contacts_created=results.get("contacts_created", 0),
+            contacts_updated=results.get("contacts_updated", 0),
+            leads_synced=results.get("leads_synced", 0),
+            leads_created=results.get("leads_created", 0),
+            leads_updated=results.get("leads_updated", 0),
+            opportunities_synced=results.get("opportunities_synced", 0),
+            opportunities_created=results.get("opportunities_created", 0),
+            errors=results.get("errors", []),
+        ),
+        message=f"Sync completed: {results.get('contacts_synced', 0)} contacts, {results.get('leads_synced', 0)} leads, {results.get('opportunities_synced', 0)} opportunities",
+    )
+
+
+@router.get(
+    "/salesforce/pipeline",
+    response_model=APIResponse[PipelineSummaryResponse],
+    summary="Get Salesforce pipeline summary",
+)
+async def salesforce_pipeline_summary(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get Salesforce pipeline summary with stage counts and values."""
+    sync_service = SalesforceSyncService(db, tenant_id)
+    summary = await sync_service.get_pipeline_summary()
+
+    return APIResponse(
+        success=True,
+        data=PipelineSummaryResponse(**summary),
+    )
+
+
+# =============================================================================
+# Salesforce Writeback Endpoints
+# =============================================================================
+
+@router.get(
+    "/salesforce/writeback/status",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Get Salesforce writeback status",
+)
+async def get_salesforce_writeback_status(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get Salesforce writeback configuration and status.
+    """
+    writeback_service = SalesforceWritebackService(db, tenant_id)
+    status = await writeback_service.get_writeback_status()
+
+    return APIResponse(
+        success=True,
+        data=status,
+    )
+
+
+@router.get(
+    "/salesforce/writeback/fields",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Get required Salesforce custom fields",
+)
+async def get_salesforce_writeback_fields(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get list of custom fields required in Salesforce for writeback.
+
+    Use this information to manually create fields in Salesforce Setup
+    if the Metadata API is not available.
+    """
+    writeback_service = SalesforceWritebackService(db, tenant_id)
+    fields_info = await writeback_service.get_required_fields_info()
+
+    return APIResponse(
+        success=True,
+        data=fields_info,
+    )
+
+
+@router.post(
+    "/salesforce/writeback/setup-fields",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Check Salesforce custom fields setup",
+)
+async def setup_salesforce_writeback_fields(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Check which Stratum custom fields exist in Salesforce.
+
+    Note: Creating custom fields via API requires Salesforce Metadata API.
+    This endpoint checks existing fields and provides instructions for
+    manually creating any missing fields in Salesforce Setup.
+    """
+    writeback_service = SalesforceWritebackService(db, tenant_id)
+
+    try:
+        results = await writeback_service.setup_custom_fields()
+
+        return APIResponse(
+            success=True,
+            data=results,
+            message="Field check completed. See instructions for any missing fields.",
+        )
+    except Exception as e:
+        logger.error(f"Failed to check Salesforce writeback fields: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/salesforce/writeback/sync",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Run Salesforce writeback sync",
+)
+async def run_salesforce_writeback_sync(
+    tenant_id: int = Query(..., description="Tenant ID"),
+    sync_contacts: bool = Query(True, description="Sync contact attribution"),
+    sync_opportunities: bool = Query(True, description="Sync opportunity attribution"),
+    full_sync: bool = Query(False, description="Full sync (ignore modified_since)"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Run Salesforce writeback sync.
+
+    Pushes Stratum attribution data to Salesforce contacts and opportunities:
+    - Contact: ad platform, campaign, ad IDs, attribution confidence
+    - Opportunity: attributed spend, ROAS, profit metrics, touchpoint count
+    """
+    writeback_service = SalesforceWritebackService(db, tenant_id)
+
+    # Get last sync time for incremental
+    modified_since = None
+    if not full_sync:
+        result = await db.execute(
+            select(CRMConnection).where(
+                and_(
+                    CRMConnection.tenant_id == tenant_id,
+                    CRMConnection.provider == CRMProvider.SALESFORCE,
+                )
+            )
+        )
+        connection = result.scalar_one_or_none()
+        if connection and connection.last_sync_at:
+            modified_since = connection.last_sync_at
+
+    try:
+        results = await writeback_service.full_sync(
+            sync_contacts=sync_contacts,
+            sync_opportunities=sync_opportunities,
+            modified_since=modified_since,
+        )
+
+        return APIResponse(
+            success=True,
+            data=results,
+            message="Salesforce writeback sync completed",
+        )
+
+    except Exception as e:
+        logger.error(f"Salesforce writeback sync failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
 # Multi-CRM Status Endpoint
 # =============================================================================
 
@@ -1351,21 +2076,122 @@ async def get_all_crm_status(
     Returns status for:
     - HubSpot
     - Zoho
+    - Pipedrive
     - Salesforce (future)
-    - Pipedrive (future)
     """
     hubspot_client = HubSpotClient(db, tenant_id)
     zoho_client = ZohoClient(db, tenant_id, settings.zoho_region)
+    pipedrive_client = PipedriveClient(db, tenant_id)
+
+    salesforce_client = SalesforceClient(db, tenant_id)
 
     hubspot_status = await hubspot_client.get_connection_status()
     zoho_status = await zoho_client.get_connection_status()
+    pipedrive_status = await pipedrive_client.get_connection_status()
+    salesforce_status = await salesforce_client.get_connection_status()
 
     return APIResponse(
         success=True,
         data={
             "hubspot": hubspot_status,
             "zoho": zoho_status,
-            "salesforce": {"connected": False, "status": "not_supported"},
-            "pipedrive": {"connected": False, "status": "not_supported"},
+            "pipedrive": pipedrive_status,
+            "salesforce": salesforce_status,
         },
     )
+
+
+# =============================================================================
+# Slack Integration
+# =============================================================================
+
+class SlackTestRequest(BaseModel):
+    """Request to test Slack webhook."""
+    webhook_url: str = Field(..., description="Slack webhook URL to test")
+
+
+@router.post(
+    "/slack/test",
+    response_model=APIResponse[Dict[str, Any]],
+    summary="Test Slack webhook",
+)
+async def test_slack_webhook(
+    request: SlackTestRequest,
+):
+    """
+    Test a Slack webhook by sending a test message.
+
+    Validates the webhook URL and sends a sample notification.
+    """
+    import aiohttp
+
+    # Build test message
+    message = {
+        "blocks": [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": ":white_check_mark: Stratum AI Connected!",
+                    "emoji": True,
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Your Slack integration is working correctly. You will now receive alerts and notifications from Stratum AI.",
+                },
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"Test sent at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+                    }
+                ],
+            },
+        ]
+    }
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                request.webhook_url,
+                json=message,
+                headers={"Content-Type": "application/json"},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as response:
+                response_text = await response.text()
+
+                if response.status == 200:
+                    logger.info("slack_test_success", webhook_url=request.webhook_url[:50])
+                    return APIResponse(
+                        success=True,
+                        data={"success": True, "message": "Test message sent successfully"},
+                        message="Slack webhook test successful",
+                    )
+                else:
+                    logger.warning(
+                        "slack_test_failed",
+                        status=response.status,
+                        response=response_text,
+                    )
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Slack returned error: {response.status} - {response_text}",
+                    )
+
+    except aiohttp.ClientError as e:
+        logger.error("slack_test_connection_error", error=str(e))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to connect to Slack: {str(e)}",
+        )
+    except Exception as e:
+        logger.error("slack_test_unexpected_error", error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error: {str(e)}",
+        )

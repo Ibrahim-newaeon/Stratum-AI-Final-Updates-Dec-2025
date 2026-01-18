@@ -18,8 +18,9 @@ from pydantic import BaseModel, Field
 
 from app.db.session import get_async_session
 from app.autopilot.service import AutopilotService
-from app.features.service import get_tenant_features
+from app.features.service import get_tenant_features, can_access_feature
 from app.schemas.response import APIResponse
+from app.models.trust_layer import TrustGateAuditLog
 
 
 router = APIRouter(prefix="/tenant/{tenant_id}/autopilot", tags=["autopilot"])
@@ -385,4 +386,183 @@ async def get_action(
     return APIResponse(
         success=True,
         data={"action": action_to_response(action).dict()},
+    )
+
+
+# =============================================================================
+# Dry-Run Mode
+# =============================================================================
+
+class DryRunRequest(BaseModel):
+    """Request to simulate an action in dry-run mode."""
+    action_type: str = Field(..., description="Type of action")
+    entity_type: str = Field(..., description="Type of entity (campaign, adset, creative)")
+    entity_id: str = Field(..., description="Platform entity ID")
+    entity_name: Optional[str] = Field(None, description="Human-readable name")
+    platform: str = Field(..., description="Ad platform (meta, google, tiktok, snapchat)")
+    action_json: Dict[str, Any] = Field(..., description="Full action details")
+
+
+class DryRunResult(BaseModel):
+    """Result of a dry-run simulation."""
+    would_execute: bool
+    decision_type: str  # execute, hold, block
+    signal_health_score: Optional[float]
+    signal_health_status: Optional[str]
+    gate_passed: bool
+    gate_reasons: List[str]
+    healthy_threshold: float
+    degraded_threshold: float
+    action_preview: Dict[str, Any]
+    warnings: List[str]
+
+
+@router.post("/actions/dry-run", response_model=APIResponse[Dict[str, Any]])
+async def dry_run_action(
+    request: Request,
+    tenant_id: int,
+    body: DryRunRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Simulate an action without executing it (dry-run mode).
+
+    This endpoint allows testing automation rules before applying them.
+    It evaluates:
+    - Signal health and trust gate status
+    - Autopilot level and caps
+    - Action validity
+
+    The result is logged to the trust gate audit log with is_dry_run=True.
+    """
+    if getattr(request.state, "tenant_id", None) != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant")
+
+    if not await can_access_feature(db, tenant_id, "action_dry_run"):
+        raise HTTPException(status_code=403, detail="Action dry-run feature not enabled")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    # Get tenant features and autopilot level
+    features = await get_tenant_features(db, tenant_id)
+    autopilot_level = features.get("autopilot_level", 0)
+
+    # Get signal health
+    from app.quality.trust_layer_service import SignalHealthService
+    signal_service = SignalHealthService(db)
+    signal_data = await signal_service.get_signal_health(tenant_id)
+
+    # Determine thresholds
+    healthy_threshold = 70.0
+    degraded_threshold = 40.0
+
+    # Calculate effective signal health score
+    signal_score = None
+    signal_status = signal_data.get("status", "no_data")
+
+    # Get EMQ from cards if available
+    for card in signal_data.get("cards", []):
+        if "EMQ" in card.get("title", ""):
+            try:
+                signal_score = float(card.get("value", "0").rstrip("%"))
+            except (ValueError, AttributeError):
+                pass
+
+    # Evaluate trust gate
+    gate_passed = True
+    gate_reasons = []
+    decision_type = "execute"
+    warnings = []
+
+    # Check signal health
+    if signal_status in ["degraded", "critical"]:
+        gate_passed = False
+        decision_type = "block"
+        gate_reasons.append(f"Signal health is {signal_status}")
+    elif signal_status == "risk":
+        decision_type = "hold"
+        gate_reasons.append("Signal health is at risk")
+        warnings.append("Action will be held for review due to signal health")
+
+    if signal_score is not None:
+        if signal_score < degraded_threshold:
+            gate_passed = False
+            decision_type = "block"
+            gate_reasons.append(f"EMQ score {signal_score:.1f}% is below degraded threshold ({degraded_threshold}%)")
+        elif signal_score < healthy_threshold:
+            if decision_type != "block":
+                decision_type = "hold"
+            gate_reasons.append(f"EMQ score {signal_score:.1f}% is below healthy threshold ({healthy_threshold}%)")
+            warnings.append("Consider improving data quality before executing")
+
+    # Check autopilot level
+    service = AutopilotService(db)
+    can_auto, auto_reason = service.can_auto_execute(
+        autopilot_level,
+        body.action_type,
+        body.action_json,
+    )
+
+    if not can_auto:
+        if decision_type == "execute":
+            decision_type = "hold"
+        gate_reasons.append(f"Autopilot check: {auto_reason}")
+
+    # Prepare action preview
+    action_preview = {
+        "action_type": body.action_type,
+        "entity_type": body.entity_type,
+        "entity_id": body.entity_id,
+        "entity_name": body.entity_name,
+        "platform": body.platform,
+        "details": body.action_json,
+    }
+
+    # Log to audit trail
+    import json
+    from datetime import datetime, timezone
+    audit_log = TrustGateAuditLog(
+        tenant_id=tenant_id,
+        decision_type=decision_type,
+        action_type=body.action_type,
+        entity_type=body.entity_type,
+        entity_id=body.entity_id,
+        entity_name=body.entity_name,
+        platform=body.platform,
+        signal_health_score=signal_score,
+        signal_health_status=signal_status,
+        gate_passed=1 if gate_passed else 0,
+        gate_reason=json.dumps(gate_reasons),
+        healthy_threshold=healthy_threshold,
+        degraded_threshold=degraded_threshold,
+        is_dry_run=1,
+        action_payload=json.dumps(body.action_json),
+        triggered_by_user_id=user_id,
+        triggered_by_system=0,
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(audit_log)
+    await db.commit()
+    await db.refresh(audit_log)
+
+    result = DryRunResult(
+        would_execute=gate_passed and decision_type == "execute",
+        decision_type=decision_type,
+        signal_health_score=signal_score,
+        signal_health_status=signal_status,
+        gate_passed=gate_passed,
+        gate_reasons=gate_reasons,
+        healthy_threshold=healthy_threshold,
+        degraded_threshold=degraded_threshold,
+        action_preview=action_preview,
+        warnings=warnings,
+    )
+
+    return APIResponse(
+        success=True,
+        data={
+            **result.dict(),
+            "audit_log_id": str(audit_log.id),
+            "message": "Dry-run simulation completed. No changes were made.",
+        },
     )

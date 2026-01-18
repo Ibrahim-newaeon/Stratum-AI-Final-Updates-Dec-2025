@@ -18,8 +18,12 @@ All data is scoped to the authenticated user's tenant.
 from datetime import datetime, timezone, timedelta, date
 from typing import List, Optional, Dict
 from enum import Enum
+import csv
+import json
+from io import StringIO
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -234,6 +238,21 @@ class ActivityFeedResponse(BaseModel):
 class QuickActionsResponse(BaseModel):
     """Quick actions for dashboard."""
     actions: List[QuickAction]
+
+
+class ExportFormat(str, Enum):
+    """Export format options."""
+    CSV = "csv"
+    JSON = "json"
+
+
+class DashboardExportRequest(BaseModel):
+    """Dashboard export request."""
+    format: ExportFormat = ExportFormat.CSV
+    period: TimePeriod = TimePeriod.LAST_30_DAYS
+    include_campaigns: bool = True
+    include_metrics: bool = True
+    include_recommendations: bool = True
 
 
 # =============================================================================
@@ -1006,3 +1025,164 @@ async def get_signal_health(
             autopilot_enabled=autopilot_enabled,
         ),
     )
+
+
+@router.post("/export")
+async def export_dashboard(
+    request: DashboardExportRequest,
+    current_user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Export dashboard data as CSV or JSON.
+
+    Returns a file download with campaigns, metrics, and recommendations.
+    """
+    tenant_id = current_user.tenant_id
+
+    # Get date range
+    start_date, end_date = get_date_range(request.period)
+
+    # Get campaigns
+    campaigns_result = await db.execute(
+        select(Campaign).where(
+            and_(
+                Campaign.tenant_id == tenant_id,
+                Campaign.is_deleted == False,
+            )
+        )
+    )
+    campaigns = campaigns_result.scalars().all()
+
+    # Build export data
+    export_data = {
+        "export_date": datetime.now(timezone.utc).isoformat(),
+        "period": request.period.value,
+        "date_range": {
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+        },
+    }
+
+    # Add metrics summary
+    if request.include_metrics:
+        total_spend = sum(c.total_spend_cents or 0 for c in campaigns) / 100
+        total_revenue = sum(c.revenue_cents or 0 for c in campaigns) / 100
+        total_conversions = sum(c.conversions or 0 for c in campaigns)
+        total_impressions = sum(c.impressions or 0 for c in campaigns)
+        total_clicks = sum(c.clicks or 0 for c in campaigns)
+
+        export_data["metrics"] = {
+            "total_spend": total_spend,
+            "total_revenue": total_revenue,
+            "roas": total_revenue / total_spend if total_spend > 0 else 0,
+            "conversions": total_conversions,
+            "cpa": total_spend / total_conversions if total_conversions > 0 else 0,
+            "impressions": total_impressions,
+            "clicks": total_clicks,
+            "ctr": (total_clicks / total_impressions * 100) if total_impressions > 0 else 0,
+        }
+
+    # Add campaigns
+    if request.include_campaigns:
+        export_data["campaigns"] = [
+            {
+                "id": c.id,
+                "name": c.name,
+                "platform": c.platform.value,
+                "status": c.status.value,
+                "spend": (c.total_spend_cents or 0) / 100,
+                "revenue": (c.revenue_cents or 0) / 100,
+                "conversions": c.conversions or 0,
+                "impressions": c.impressions or 0,
+                "clicks": c.clicks or 0,
+                "roas": ((c.revenue_cents or 0) / (c.total_spend_cents or 1)) if (c.total_spend_cents or 0) > 0 else 0,
+            }
+            for c in campaigns
+        ]
+
+    # Add recommendations (mock for demo)
+    if request.include_recommendations:
+        recommendations = []
+        for c in campaigns:
+            spend = (c.total_spend_cents or 0) / 100
+            revenue = (c.revenue_cents or 0) / 100
+            roas = revenue / spend if spend > 0 else 0
+
+            if roas >= 3:
+                recommendations.append({
+                    "campaign": c.name,
+                    "type": "scale",
+                    "description": f"Scale budget by 20-30% - ROAS {roas:.2f}x",
+                })
+            elif roas < 1 and spend > 0:
+                recommendations.append({
+                    "campaign": c.name,
+                    "type": "fix",
+                    "description": f"Review targeting - ROAS {roas:.2f}x below breakeven",
+                })
+
+        export_data["recommendations"] = recommendations
+
+    # Generate response based on format
+    if request.format == ExportFormat.CSV:
+        # Create CSV
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Write metrics header
+        if request.include_metrics:
+            writer.writerow(["=== METRICS SUMMARY ==="])
+            writer.writerow(["Metric", "Value"])
+            for key, value in export_data.get("metrics", {}).items():
+                if isinstance(value, float):
+                    writer.writerow([key, f"{value:.2f}"])
+                else:
+                    writer.writerow([key, value])
+            writer.writerow([])
+
+        # Write campaigns
+        if request.include_campaigns and export_data.get("campaigns"):
+            writer.writerow(["=== CAMPAIGNS ==="])
+            headers = ["ID", "Name", "Platform", "Status", "Spend", "Revenue", "ROAS", "Conversions", "Impressions", "Clicks"]
+            writer.writerow(headers)
+            for campaign in export_data["campaigns"]:
+                writer.writerow([
+                    campaign["id"],
+                    campaign["name"],
+                    campaign["platform"],
+                    campaign["status"],
+                    f"${campaign['spend']:.2f}",
+                    f"${campaign['revenue']:.2f}",
+                    f"{campaign['roas']:.2f}x",
+                    campaign["conversions"],
+                    campaign["impressions"],
+                    campaign["clicks"],
+                ])
+            writer.writerow([])
+
+        # Write recommendations
+        if request.include_recommendations and export_data.get("recommendations"):
+            writer.writerow(["=== RECOMMENDATIONS ==="])
+            writer.writerow(["Campaign", "Type", "Description"])
+            for rec in export_data["recommendations"]:
+                writer.writerow([rec["campaign"], rec["type"], rec["description"]])
+
+        output.seek(0)
+        filename = f"stratum-dashboard-export-{date.today().isoformat()}.csv"
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    else:
+        # JSON format
+        filename = f"stratum-dashboard-export-{date.today().isoformat()}.json"
+
+        return StreamingResponse(
+            iter([json.dumps(export_data, indent=2, default=str)]),
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )

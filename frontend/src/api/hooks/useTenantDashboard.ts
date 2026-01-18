@@ -404,3 +404,18 @@ export function useCommandCenter(
     staleTime: 1000 * 60, // 1 minute
   })
 }
+
+/**
+ * Hook to test Slack webhook connection.
+ */
+export function useTestSlackWebhook() {
+  return useMutation({
+    mutationFn: async ({ webhookUrl }: { webhookUrl: string }) => {
+      const response = await apiClient.post<ApiResponse<{ success: boolean; message: string }>>(
+        '/integrations/slack/test',
+        { webhook_url: webhookUrl }
+      )
+      return response.data.data
+    },
+  })
+}

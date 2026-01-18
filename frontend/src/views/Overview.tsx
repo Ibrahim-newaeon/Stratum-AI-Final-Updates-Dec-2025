@@ -55,6 +55,7 @@ import {
   DailyPerformance,
 } from '@/types/dashboard'
 import { useCampaigns, useAnomalies, useTenantOverview } from '@/api/hooks'
+import { useExportDashboard, ExportFormat } from '@/api/dashboard'
 import { useTenantStore } from '@/stores/tenantStore'
 
 // Mock data for demonstration
@@ -222,6 +223,9 @@ export function Overview() {
   const { data: overviewData } = useTenantOverview(tenantId)
   const { data: _anomaliesData } = useAnomalies(tenantId)
 
+  // Export mutation
+  const exportMutation = useExportDashboard()
+
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
     dateRange: {
@@ -356,10 +360,15 @@ export function Overview() {
   }, [])
 
   // Export handler
-  const handleExport = useCallback(() => {
-    // TODO: Implement export functionality
-    console.log('Exporting dashboard data...')
-  }, [])
+  const handleExport = useCallback((format: ExportFormat = 'csv') => {
+    exportMutation.mutate({
+      format,
+      period: '30d',
+      include_campaigns: true,
+      include_metrics: true,
+      include_recommendations: true,
+    })
+  }, [exportMutation])
 
   // KPI action handlers
   const handleViewDetails = useCallback((metric: string) => {
@@ -388,7 +397,7 @@ export function Overview() {
         case 'e':
           if (!e.ctrlKey && !e.metaKey) {
             e.preventDefault()
-            handleExport()
+            handleExport('csv')
           }
           break
         case '?':
@@ -500,12 +509,22 @@ export function Overview() {
           </button>
 
           <button
-            onClick={handleExport}
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            onClick={() => handleExport('csv')}
+            disabled={exportMutation.isPending}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             aria-label="Export dashboard (E)"
           >
-            <Download className="w-4 h-4 mr-2" />
-            {t('common.export')}
+            {exportMutation.isPending ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                {t('common.export')}
+              </>
+            )}
           </button>
         </div>
       </div>

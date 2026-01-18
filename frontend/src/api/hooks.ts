@@ -93,8 +93,10 @@ export {
 export {
   useSignalHealth,
   useSignalHealthHistory,
+  useSignalHealthHistoryDetailed,
   useAttributionVariance,
   useTrustStatus,
+  useTrustGateAuditLogs,
 } from './trustLayer'
 
 // Autopilot hooks
@@ -107,6 +109,7 @@ export {
   useApproveAction,
   useApproveAllActions,
   useDismissAction,
+  useDryRunAction,
 } from './autopilot'
 
 // Campaigns hooks
@@ -286,6 +289,7 @@ export {
 // Tenant Dashboard hooks
 export {
   useUpdateTenantSettings,
+  useTestSlackWebhook,
 } from './hooks/useTenantDashboard'
 
 // Onboarding hooks

@@ -45,6 +45,11 @@ const CDPSegments = lazy(() => import('./views/cdp/CDPSegments'))
 const CDPEvents = lazy(() => import('./views/cdp/CDPEvents'))
 const CDPIdentityGraph = lazy(() => import('./views/cdp/CDPIdentityGraph'))
 const CDPAudienceSync = lazy(() => import('./views/cdp/CDPAudienceSync'))
+const CDPRfm = lazy(() => import('./views/cdp/CDPRfm'))
+const CDPFunnels = lazy(() => import('./views/cdp/CDPFunnels'))
+const CDPComputedTraits = lazy(() => import('./views/cdp/CDPComputedTraits'))
+const CDPConsent = lazy(() => import('./views/cdp/CDPConsent'))
+const CDPPredictiveChurn = lazy(() => import('./views/cdp/CDPPredictiveChurn'))
 
 // Super Admin views
 const ControlTower = lazy(() => import('./views/superadmin/ControlTower'))
@@ -82,6 +87,10 @@ const Reporting = lazy(() => import('./views/tenant/Reporting'))
 const ABTesting = lazy(() => import('./views/tenant/ABTesting'))
 const DeadLetterQueue = lazy(() => import('./views/tenant/DeadLetterQueue'))
 const ModelExplainability = lazy(() => import('./views/tenant/ModelExplainability'))
+
+// Enterprise feature views
+const CustomAutopilotRules = lazy(() => import('./views/CustomAutopilotRules'))
+const CustomReportBuilder = lazy(() => import('./views/CustomReportBuilder'))
 
 // Account Manager views
 const AMPortfolio = lazy(() => import('./views/am/Portfolio'))
@@ -361,6 +370,64 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <CDPAudienceSync />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/rfm"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPRfm />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/funnels"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPFunnels />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/computed-traits"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPComputedTraits />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/consent"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPConsent />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="cdp/predictive-churn"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CDPPredictiveChurn />
+                    </Suspense>
+                  }
+                />
+
+                {/* Enterprise feature routes */}
+                <Route
+                  path="custom-autopilot-rules"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CustomAutopilotRules />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="custom-reports"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CustomReportBuilder />
                     </Suspense>
                   }
                 />

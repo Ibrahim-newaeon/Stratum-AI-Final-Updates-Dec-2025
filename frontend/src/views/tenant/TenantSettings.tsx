@@ -7,7 +7,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTenantStore } from '@/stores/tenantStore'
-import { useUpdateTenantSettings } from '@/api/hooks'
+import { useUpdateTenantSettings, useTestSlackWebhook } from '@/api/hooks'
 import { useToast } from '@/components/ui/use-toast'
 import {
   CogIcon,
@@ -53,6 +53,34 @@ export default function TenantSettings() {
 
   const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
   const updateSettingsMutation = useUpdateTenantSettings(tenantIdNum)
+  const testSlackMutation = useTestSlackWebhook()
+
+  const handleTestSlack = async () => {
+    if (!settings.slackWebhook) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a Slack webhook URL first',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      await testSlackMutation.mutateAsync({
+        webhookUrl: settings.slackWebhook,
+      })
+      toast({
+        title: 'Success',
+        description: 'Test message sent to Slack successfully!',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to send test message',
+        variant: 'destructive',
+      })
+    }
+  }
 
   const handleSave = async () => {
     if (!tenantIdNum) {
@@ -231,15 +259,30 @@ export default function TenantSettings() {
               </button>
             </div>
             {settings.slackNotifications && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Slack Webhook URL</label>
-                <input
-                  type="text"
-                  value={settings.slackWebhook}
-                  onChange={(e) => setSettings({ ...settings, slackWebhook: e.target.value })}
-                  placeholder="https://hooks.slack.com/services/..."
-                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Slack Webhook URL</label>
+                  <input
+                    type="text"
+                    value={settings.slackWebhook}
+                    onChange={(e) => setSettings({ ...settings, slackWebhook: e.target.value })}
+                    placeholder="https://hooks.slack.com/services/..."
+                    className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTestSlack}
+                  disabled={testSlackMutation.isPending || !settings.slackWebhook}
+                  className={cn(
+                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                    settings.slackWebhook
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                  )}
+                >
+                  {testSlackMutation.isPending ? 'Sending...' : 'Test Connection'}
+                </button>
               </div>
             )}
           </div>

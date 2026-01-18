@@ -79,6 +79,30 @@ export interface QueueActionRequest {
   before_value?: Record<string, unknown>
 }
 
+export interface DryRunRequest {
+  action_type: string
+  entity_type: 'campaign' | 'adset' | 'creative'
+  entity_id: string
+  entity_name?: string
+  platform: string
+  action_json: Record<string, unknown>
+}
+
+export interface DryRunResult {
+  would_execute: boolean
+  decision_type: 'execute' | 'hold' | 'block'
+  signal_health_score: number | null
+  signal_health_status: string | null
+  gate_passed: boolean
+  gate_reasons: string[]
+  healthy_threshold: number
+  degraded_threshold: number
+  action_preview: Record<string, unknown>
+  warnings: string[]
+  audit_log_id: string
+  message: string
+}
+
 // =============================================================================
 // Query Hooks
 // =============================================================================
@@ -254,6 +278,21 @@ export function useDismissAction(tenantId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] })
       queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] })
+    },
+  })
+}
+
+/**
+ * Dry-run an action to simulate execution without making changes.
+ */
+export function useDryRunAction(tenantId: number) {
+  return useMutation({
+    mutationFn: async (request: DryRunRequest) => {
+      const response = await apiClient.post<{ data: DryRunResult }>(
+        `/autopilot/tenant/${tenantId}/autopilot/actions/dry-run`,
+        request
+      )
+      return response.data.data
     },
   })
 }
