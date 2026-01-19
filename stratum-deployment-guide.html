@@ -817,14 +817,46 @@
                 </div>
 
                 <div class="section">
-                    <h2>Security Keys <span class="badge required">Required</span></h2>
-                    <p>Generate all 3 keys using:</p>
-                    <div class="code-block"><code>python -c "import secrets; print(secrets.token_urlsafe(32))"</code></div>
+                    <h2>Security Keys <span class="badge required">Required at Deployment</span></h2>
+
+                    <div class="warning-box">
+                        <h5>When to Generate Keys</h5>
+                        <p><strong>Generate keys at deployment time on the production server, NOT before.</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>Development:</strong> Use placeholder keys (already in .env.example) - fine for local testing</li>
+                            <li><strong>Production:</strong> Generate fresh, unique keys on each server/environment</li>
+                        </ul>
+                    </div>
+
+                    <h3>Why Generate at Deployment?</h3>
                     <ul class="checklist">
-                        <li><code>SECRET_KEY</code> - App secret (32+ chars)</li>
-                        <li><code>JWT_SECRET_KEY</code> - JWT signing (32+ chars)</li>
-                        <li><code>PII_ENCRYPTION_KEY</code> - Data encryption (32+ chars)</li>
+                        <li><strong>Different keys per environment</strong> - Staging and production should have different keys</li>
+                        <li><strong>Keys shouldn't be in git</strong> - If committed, they're exposed in repo history forever</li>
+                        <li><strong>Rotation capability</strong> - Generate at deployment allows easy key rotation without code changes</li>
                     </ul>
+
+                    <h3>Generate Each Key On Server</h3>
+                    <p>Run this command 3 times on your production server:</p>
+                    <div class="code-block"><code>python -c "import secrets; print(secrets.token_urlsafe(32))"</code></div>
+
+                    <table>
+                        <thead><tr><th>Key</th><th>Purpose</th><th>Can Rotate?</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>SECRET_KEY</code></td><td>App session signing</td><td><span class="badge yes">Yes</span> (users re-login)</td></tr>
+                            <tr><td><code>JWT_SECRET_KEY</code></td><td>JWT token signing</td><td><span class="badge yes">Yes</span> (tokens invalidated)</td></tr>
+                            <tr><td><code>PII_ENCRYPTION_KEY</code></td><td>Encrypt sensitive data</td><td><span class="badge danger">No*</span></td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <h5>Important: PII_ENCRYPTION_KEY</h5>
+                        <p>The <code>PII_ENCRYPTION_KEY</code> is special - once you encrypt data with it, you <strong>cannot change it</strong> without losing access to all encrypted PII (emails, names, etc.).</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Generate it once at first deployment</li>
+                            <li><strong>Back it up securely</strong> (password manager, secrets vault)</li>
+                            <li>Never commit it to git or share it</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="section">
@@ -901,6 +933,36 @@
                             <tr><td>Worker Concurrency</td><td>4</td><td>4-8</td></tr>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="section">
+                    <h2>Security Keys <span class="badge required">Required at Deployment</span></h2>
+
+                    <div class="warning-box">
+                        <h5>When to Generate Keys</h5>
+                        <p><strong>Generate keys at deployment time on the production server, NOT before.</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>Development:</strong> Use placeholder keys - fine for local testing</li>
+                            <li><strong>Production:</strong> Generate fresh, unique keys on each server</li>
+                        </ul>
+                    </div>
+
+                    <h3>Generate Each Key On Server</h3>
+                    <div class="code-block"><code>python -c "import secrets; print(secrets.token_urlsafe(32))"</code></div>
+
+                    <table>
+                        <thead><tr><th>Key</th><th>Purpose</th><th>Can Rotate?</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>SECRET_KEY</code></td><td>App session signing</td><td><span class="badge yes">Yes</span></td></tr>
+                            <tr><td><code>JWT_SECRET_KEY</code></td><td>JWT token signing</td><td><span class="badge yes">Yes</span></td></tr>
+                            <tr><td><code>PII_ENCRYPTION_KEY</code></td><td>Encrypt sensitive data</td><td><span class="badge danger">No*</span></td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <h5>Critical: PII_ENCRYPTION_KEY</h5>
+                        <p>Generate once at first deployment and <strong>back it up securely</strong>. Cannot be changed without losing access to encrypted data.</p>
+                    </div>
                 </div>
 
                 <div class="section">
@@ -982,6 +1044,52 @@
                         <li>Container orchestration (ECS, Kubernetes)</li>
                         <li>Auto-scaling for workers</li>
                     </ul>
+                </div>
+
+                <div class="section">
+                    <h2>Security Keys <span class="badge required">Required at Deployment</span></h2>
+
+                    <div class="warning-box">
+                        <h5>When to Generate Keys</h5>
+                        <p><strong>Generate keys at deployment time on the production server, NOT before.</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>Development/Staging:</strong> Use separate placeholder keys for each environment</li>
+                            <li><strong>Production:</strong> Generate fresh, unique keys - never reuse from other environments</li>
+                        </ul>
+                    </div>
+
+                    <h3>Generate Each Key On Server</h3>
+                    <div class="code-block"><code>python -c "import secrets; print(secrets.token_urlsafe(32))"</code></div>
+
+                    <table>
+                        <thead><tr><th>Key</th><th>Purpose</th><th>Can Rotate?</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>SECRET_KEY</code></td><td>App session signing</td><td><span class="badge yes">Yes</span> (users re-login)</td></tr>
+                            <tr><td><code>JWT_SECRET_KEY</code></td><td>JWT token signing</td><td><span class="badge yes">Yes</span> (tokens invalidated)</td></tr>
+                            <tr><td><code>PII_ENCRYPTION_KEY</code></td><td>Encrypt sensitive data</td><td><span class="badge danger">No*</span></td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <h5>Critical: PII_ENCRYPTION_KEY Management</h5>
+                        <p>The <code>PII_ENCRYPTION_KEY</code> encrypts all PII (emails, names, etc.). <strong>It cannot be rotated</strong> without losing access to encrypted data.</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Generate once at first deployment</li>
+                            <li>Store in a secrets manager (AWS Secrets Manager, HashiCorp Vault)</li>
+                            <li>Maintain secure backup with disaster recovery procedures</li>
+                            <li>Document key custodians and access procedures</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-box">
+                        <h5>Enterprise Best Practices</h5>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Use AWS Secrets Manager, HashiCorp Vault, or GCP Secret Manager</li>
+                            <li>Rotate SECRET_KEY and JWT_SECRET_KEY quarterly</li>
+                            <li>Audit key access logs regularly</li>
+                            <li>Never store keys in environment files on disk - inject at runtime</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="section">
