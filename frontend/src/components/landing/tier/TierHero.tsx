@@ -3,7 +3,15 @@ import { ArrowRightIcon, PlayIcon, CheckIcon } from '@heroicons/react/24/outline
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { SmartTooltip } from '@/components/guide/SmartTooltip';
 import type { TierContent } from '@/config/tierLandingContent';
+
+// Tooltip content for tier metrics
+const metricTooltips: Record<string, string> = {
+  'Ad Accounts': 'Number of ad platform accounts you can connect (Meta, Google, TikTok, Snapchat).',
+  'Monthly Spend': 'Maximum combined monthly ad spend across all connected accounts.',
+  'Avg ROI Lift': 'Average ROAS improvement seen by customers on this tier.',
+};
 
 interface TierHeroProps {
   content: TierContent;
@@ -85,7 +93,16 @@ export function TierHero({ content }: TierHeroProps) {
                 <div className={`text-3xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
                   {metric.value}
                 </div>
-                <div className="text-sm text-gray-400 mt-1">{metric.label}</div>
+                <SmartTooltip
+                  content={metricTooltips[metric.label] || metric.description}
+                  position="bottom"
+                  showIcon
+                  iconType="info"
+                >
+                  <span className="text-sm text-gray-400 mt-1 cursor-help border-b border-dashed border-gray-600">
+                    {metric.label}
+                  </span>
+                </SmartTooltip>
                 <div className="text-xs text-gray-600 mt-0.5">{metric.description}</div>
               </CardContent>
             </Card>

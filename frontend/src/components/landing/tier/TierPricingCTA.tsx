@@ -4,7 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { SmartTooltip } from '@/components/guide/SmartTooltip';
 import type { TierContent } from '@/config/tierLandingContent';
+
+// Tooltip content for pricing terms
+const pricingTooltips = {
+  adSpendLimit: 'Total monthly ad spend across all connected accounts. Upgrade when you exceed.',
+  accountLimit: 'Number of ad platform accounts (Meta, Google, TikTok, Snapchat) you can connect.',
+  savings: 'Save by committing to annual billing. Cancel anytime with prorated refund.',
+  soc2: 'SOC 2 Type II certified. Your data security is audited annually.',
+  gdpr: 'Full GDPR compliance with consent management and data deletion.',
+  noCard: 'Start your trial instantly. Add payment only when you\'re ready to continue.',
+  cancel: 'No contracts or commitments. Downgrade or cancel with one click.',
+};
 
 interface TierPricingCTAProps {
   content: TierContent;
@@ -30,10 +42,10 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
   };
 
   const trustBadges = [
-    { icon: '🔒', text: 'SOC 2 Compliant' },
-    { icon: '🛡️', text: 'GDPR Ready' },
-    { icon: '💳', text: 'No Card for Trial' },
-    { icon: '🔄', text: 'Cancel Anytime' },
+    { icon: '🔒', text: 'SOC 2 Compliant', tooltip: pricingTooltips.soc2 },
+    { icon: '🛡️', text: 'GDPR Ready', tooltip: pricingTooltips.gdpr },
+    { icon: '💳', text: 'No Card for Trial', tooltip: pricingTooltips.noCard },
+    { icon: '🔄', text: 'Cancel Anytime', tooltip: pricingTooltips.cancel },
   ];
 
   return (
@@ -90,16 +102,35 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                       <span className="text-xl text-gray-500">{pricing.period}</span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500 mt-2">
-                    {pricing.adSpendLimit}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {pricing.accountLimit}
-                  </div>
+                  <SmartTooltip
+                    content={pricingTooltips.adSpendLimit}
+                    position="right"
+                    showIcon
+                    iconType="info"
+                  >
+                    <span className="text-sm text-gray-500 mt-2 cursor-help">
+                      {pricing.adSpendLimit}
+                    </span>
+                  </SmartTooltip>
+                  <SmartTooltip
+                    content={pricingTooltips.accountLimit}
+                    position="right"
+                    showIcon
+                    iconType="info"
+                  >
+                    <span className="text-sm text-gray-500 cursor-help">
+                      {pricing.accountLimit}
+                    </span>
+                  </SmartTooltip>
                   {pricing.savings && (
-                    <Badge variant="outline" className="mt-3 text-green-400 border-green-500/30 bg-green-500/10">
-                      {pricing.savings}
-                    </Badge>
+                    <SmartTooltip
+                      content={pricingTooltips.savings}
+                      position="right"
+                    >
+                      <Badge variant="outline" className="mt-3 text-green-400 border-green-500/30 bg-green-500/10 cursor-help">
+                        {pricing.savings}
+                      </Badge>
+                    </SmartTooltip>
                   )}
                 </div>
 
@@ -148,14 +179,19 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
             {/* Trust Badges */}
             <div className="flex flex-wrap justify-center gap-4">
               {trustBadges.map((badge, i) => (
-                <Badge
+                <SmartTooltip
                   key={i}
-                  variant="outline"
-                  className="px-4 py-2 text-sm bg-gray-900/50 border-white/10 text-gray-400"
+                  content={badge.tooltip}
+                  position="top"
                 >
-                  <span className="mr-2">{badge.icon}</span>
-                  {badge.text}
-                </Badge>
+                  <Badge
+                    variant="outline"
+                    className="px-4 py-2 text-sm bg-gray-900/50 border-white/10 text-gray-400 cursor-help"
+                  >
+                    <span className="mr-2">{badge.icon}</span>
+                    {badge.text}
+                  </Badge>
+                </SmartTooltip>
               ))}
             </div>
           </CardContent>

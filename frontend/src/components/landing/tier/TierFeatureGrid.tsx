@@ -17,7 +17,23 @@ import {
 } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { SmartTooltip } from '@/components/guide/SmartTooltip';
 import type { TierContent, TierFeatureCategory } from '@/config/tierLandingContent';
+
+// Tooltip content for key Stratum features (kept under 150 chars)
+const featureTooltips: Record<string, string> = {
+  'EMQ Signal Scoring': 'Event Match Quality score (0-100) measuring data reliability across platforms.',
+  'RFM Analysis': 'Recency, Frequency, Monetary - classic customer segmentation framework.',
+  'Segment Builder': 'Visual tool to create dynamic customer segments with behavioral rules.',
+  'Meta Custom Audiences': 'Push CDP segments directly to Meta Ads for targeting.',
+  'Google Customer Match': 'Sync customer lists to Google Ads for personalized campaigns.',
+  'Funnel Builder': 'Create step-by-step conversion funnels to track drop-off points.',
+  'Predictive Churn Modeling': 'ML model that identifies customers likely to stop purchasing.',
+  'Identity Graph': 'Visual map of how anonymous and known identities connect.',
+  'Custom Autopilot Rules': 'Define your own automation logic with if/then conditions.',
+  'API Access': 'REST API for integrating Stratum data into your own systems.',
+  'Trust Gate Audit Logs': 'Complete history of why automations were allowed or blocked.',
+};
 
 interface TierFeatureGridProps {
   content: TierContent;
@@ -69,32 +85,49 @@ function CategoryCard({
 
       {/* Features List */}
       <ul className="space-y-3">
-        {category.features.map((feature) => (
-          <li key={feature.name} className="flex items-start gap-3">
-            {feature.included ? (
-              <div className="mt-0.5 p-1 rounded-full bg-green-500/20">
-                <CheckIcon className="w-3 h-3 text-green-500" />
+        {category.features.map((feature) => {
+          const hasTooltip = featureTooltips[feature.name];
+
+          return (
+            <li key={feature.name} className="flex items-start gap-3">
+              {feature.included ? (
+                <div className="mt-0.5 p-1 rounded-full bg-green-500/20">
+                  <CheckIcon className="w-3 h-3 text-green-500" />
+                </div>
+              ) : (
+                <div className="mt-0.5 p-1 rounded-full bg-gray-700/50">
+                  <XMarkIcon className="w-3 h-3 text-gray-500" />
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  {hasTooltip ? (
+                    <SmartTooltip
+                      content={featureTooltips[feature.name]}
+                      position="top"
+                      showIcon
+                      iconType="help"
+                    >
+                      <span className={`text-sm ${feature.included ? 'text-white' : 'text-gray-500'} cursor-help`}>
+                        {feature.name}
+                      </span>
+                    </SmartTooltip>
+                  ) : (
+                    <span className={`text-sm ${feature.included ? 'text-white' : 'text-gray-500'}`}>
+                      {feature.name}
+                    </span>
+                  )}
+                  {feature.highlight && feature.included && (
+                    <Badge className={`text-[10px] px-1.5 py-0 bg-gradient-to-r ${gradientClass} text-white border-0`}>
+                      Key
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">{feature.description}</p>
               </div>
-            ) : (
-              <div className="mt-0.5 p-1 rounded-full bg-gray-700/50">
-                <XMarkIcon className="w-3 h-3 text-gray-500" />
-              </div>
-            )}
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className={`text-sm ${feature.included ? 'text-white' : 'text-gray-500'}`}>
-                  {feature.name}
-                </span>
-                {feature.highlight && feature.included && (
-                  <Badge className={`text-[10px] px-1.5 py-0 bg-gradient-to-r ${gradientClass} text-white border-0`}>
-                    Key
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 mt-0.5">{feature.description}</p>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       {/* Upgrade Prompt for Unavailable Features */}

@@ -1,10 +1,56 @@
 import { useState } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
+import { ContextualHelp } from '@/components/guide/SmartTooltip';
 import type { TierContent, TierFAQ as TierFAQType } from '@/config/tierLandingContent';
+
+// Technical terms with definitions for contextual help
+const termDefinitions: Record<string, { definition: string; example?: string }> = {
+  'EMQ': {
+    definition: 'Event Match Quality - a score from 0-100 measuring data reliability.',
+    example: 'EMQ of 85 means 85% of events are being tracked accurately.',
+  },
+  'ROAS': {
+    definition: 'Return on Ad Spend - revenue generated per dollar spent on ads.',
+    example: 'ROAS of 4.0 means $4 revenue for every $1 spent.',
+  },
+  'CDP': {
+    definition: 'Customer Data Platform - unified customer database for marketing.',
+  },
+  'Trust Gate': {
+    definition: 'Safety checkpoint that validates data quality before automation.',
+  },
+  'Autopilot': {
+    definition: 'Automated actions that execute when signal health passes thresholds.',
+  },
+};
 
 interface TierFAQProps {
   content: TierContent;
+}
+
+// Helper to render answer with contextual help for known terms
+function renderAnswerWithTerms(answer: string): React.ReactNode {
+  // Split by terms we want to highlight
+  const terms = Object.keys(termDefinitions);
+  const regex = new RegExp(`\\b(${terms.join('|')})\\b`, 'g');
+
+  const parts = answer.split(regex);
+
+  return parts.map((part, index) => {
+    if (termDefinitions[part]) {
+      const term = termDefinitions[part];
+      return (
+        <ContextualHelp
+          key={index}
+          term={part}
+          definition={term.definition}
+          example={term.example}
+        />
+      );
+    }
+    return part;
+  });
 }
 
 function FAQItem({
@@ -42,7 +88,7 @@ function FAQItem({
         }`}
       >
         <p className="text-gray-400 leading-relaxed pr-12">
-          {faq.answer}
+          {renderAnswerWithTerms(faq.answer)}
         </p>
       </div>
     </div>
