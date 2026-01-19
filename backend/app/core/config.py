@@ -45,6 +45,14 @@ class Settings(BaseSettings):
     api_v1_prefix: str = Field(default="/api/v1")
 
     # -------------------------------------------------------------------------
+    # Subscription Tier
+    # -------------------------------------------------------------------------
+    subscription_tier: Literal["starter", "professional", "enterprise"] = Field(
+        default="enterprise",
+        description="Subscription tier (starter, professional, enterprise)"
+    )
+
+    # -------------------------------------------------------------------------
     # Database Configuration
     # -------------------------------------------------------------------------
     # NOTE: No default passwords - must be set via environment variables

@@ -48,6 +48,7 @@ from app.api.v1.endpoints import (
     audit_services,
     cdp,
     audience_sync,
+    tier,
 )
 
 api_router = APIRouter()
@@ -317,4 +318,10 @@ api_router.include_router(
 api_router.include_router(
     audience_sync.router,
     tags=["CDP Audience Sync"],
+)
+
+# Subscription Tier (Feature access and limits)
+api_router.include_router(
+    tier.router,
+    tags=["Subscription Tier"],
 )

@@ -22,7 +22,7 @@ from app.models.cdp import (
     IdentifierType,
 )
 from app.models.crm import CRMConnection, CRMSyncLog, CRMProvider
-from app.services.cdp.identity_service import IdentityService
+from app.services.cdp.identity_resolution import IdentityResolutionService
 from .salesforce_client import SalesforceClient, hash_email, hash_phone
 
 logger = get_logger(__name__)
@@ -32,12 +32,12 @@ logger = get_logger(__name__)
 STAGE_MAPPING = {
     "prospecting": LifecycleStage.KNOWN,
     "qualification": LifecycleStage.KNOWN,
-    "needs analysis": LifecycleStage.ENGAGED,
-    "value proposition": LifecycleStage.ENGAGED,
-    "id. decision makers": LifecycleStage.ENGAGED,
-    "perception analysis": LifecycleStage.ENGAGED,
-    "proposal/price quote": LifecycleStage.ENGAGED,
-    "negotiation/review": LifecycleStage.ENGAGED,
+    "needs analysis": LifecycleStage.KNOWN,
+    "value proposition": LifecycleStage.KNOWN,
+    "id. decision makers": LifecycleStage.KNOWN,
+    "perception analysis": LifecycleStage.KNOWN,
+    "proposal/price quote": LifecycleStage.KNOWN,
+    "negotiation/review": LifecycleStage.KNOWN,
     "closed won": LifecycleStage.CUSTOMER,
     "closed lost": LifecycleStage.CHURNED,
 }
@@ -58,7 +58,7 @@ class SalesforceSyncService:
         self.db = db
         self.tenant_id = tenant_id
         self.client = SalesforceClient(db, tenant_id, is_sandbox)
-        self.identity_service = IdentityService(db, tenant_id)
+        self.identity_service = IdentityResolutionService(db, tenant_id)
 
     async def sync_all(self, full_sync: bool = False) -> Dict[str, Any]:
         """
@@ -541,7 +541,7 @@ class SalesforceSyncService:
             ),
             records_failed=len(results.get("errors", [])),
             error_message=error,
-            metadata=results,
+            sync_metadata=results,
         )
 
         self.db.add(log)

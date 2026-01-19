@@ -80,6 +80,65 @@ class IdentityResolutionService:
             )
         )
 
+    async def resolve_profile(
+        self,
+        identifiers: List[Dict],
+    ) -> CDPProfile:
+        """
+        Resolve or create a profile based on provided identifiers.
+
+        Args:
+            identifiers: List of dicts with 'type', 'value', 'hash' keys
+
+        Returns:
+            The matched or newly created CDPProfile
+        """
+        # Try to find existing profile by any identifier hash
+        for identifier in identifiers:
+            result = await self.db.execute(
+                select(CDPProfileIdentifier)
+                .where(
+                    CDPProfileIdentifier.tenant_id == self.tenant_id,
+                    CDPProfileIdentifier.identifier_hash == identifier.get("hash"),
+                )
+            )
+            existing = result.scalar_one_or_none()
+            if existing:
+                # Found a profile, load it
+                profile_result = await self.db.execute(
+                    select(CDPProfile).where(CDPProfile.id == existing.profile_id)
+                )
+                profile = profile_result.scalar_one_or_none()
+                if profile:
+                    profile.updated_at = datetime.now(timezone.utc)
+                    return profile
+
+        # No existing profile found, create new one
+        profile = CDPProfile(
+            tenant_id=self.tenant_id,
+            lifecycle_stage=LifecycleStage.ANONYMOUS.value,
+            total_events=0,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        self.db.add(profile)
+        await self.db.flush()
+
+        # Add identifiers to the new profile
+        for identifier in identifiers:
+            profile_identifier = CDPProfileIdentifier(
+                tenant_id=self.tenant_id,
+                profile_id=profile.id,
+                identifier_type=identifier.get("type"),
+                identifier_value=identifier.get("value"),
+                identifier_hash=identifier.get("hash"),
+                is_primary=False,
+            )
+            self.db.add(profile_identifier)
+
+        await self.db.flush()
+        return profile
+
     async def determine_surviving_profile(
         self,
         profile_a: CDPProfile,

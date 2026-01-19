@@ -1,0 +1,226 @@
+# =============================================================================
+# Stratum AI - ENTERPRISE EDITION
+# =============================================================================
+# Standalone deployment for Enterprise tier (Custom pricing)
+# Features: ALL features unlocked
+# Limits: Unlimited
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL Database
+  # ===========================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: stratum_enterprise_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stratum_enterprise}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-enterprise_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-stratum_enterprise}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stratum_enterprise}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stratum_enterprise_network
+
+  # ===========================================================================
+  # Redis
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: stratum_enterprise_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stratum_enterprise_network
+
+  # ===========================================================================
+  # FastAPI Backend (Enterprise Edition - Full Features)
+  # ===========================================================================
+  api:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: stratum_enterprise_api
+    restart: unless-stopped
+    environment:
+      - APP_NAME=${APP_NAME:-Stratum AI Enterprise}
+      - APP_ENV=${APP_ENV:-production}
+      - SUBSCRIPTION_TIER=enterprise
+      - DEBUG=false
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum_enterprise}:${POSTGRES_PASSWORD:-enterprise_secure_password}@db:5432/${POSTGRES_DB:-stratum_enterprise}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_enterprise}:${POSTGRES_PASSWORD:-enterprise_secure_password}@db:5432/${POSTGRES_DB:-stratum_enterprise}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - ML_MODELS_PATH=/app/ml_service/models
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-false}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173}
+      - LOG_LEVEL=INFO
+      # All CRM Integrations
+      - PIPEDRIVE_API_TOKEN=${PIPEDRIVE_API_TOKEN:-}
+      - HUBSPOT_API_KEY=${HUBSPOT_API_KEY:-}
+      - SALESFORCE_CLIENT_ID=${SALESFORCE_CLIENT_ID:-}
+      - SALESFORCE_CLIENT_SECRET=${SALESFORCE_CLIENT_SECRET:-}
+      - ZOHO_CLIENT_ID=${ZOHO_CLIENT_ID:-}
+      - ZOHO_CLIENT_SECRET=${ZOHO_CLIENT_SECRET:-}
+      # All Ad Platforms
+      - META_APP_ID=${META_APP_ID:-}
+      - META_APP_SECRET=${META_APP_SECRET:-}
+      - GOOGLE_ADS_DEVELOPER_TOKEN=${GOOGLE_ADS_DEVELOPER_TOKEN:-}
+      - TIKTOK_APP_ID=${TIKTOK_APP_ID:-}
+      - SNAPCHAT_CLIENT_ID=${SNAPCHAT_CLIENT_ID:-}
+      # Monitoring
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    volumes:
+      - ../../ml_service/models:/app/ml_service/models:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - stratum_enterprise_network
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
+
+  # ===========================================================================
+  # Celery Worker (High Concurrency for Enterprise)
+  # ===========================================================================
+  worker:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: stratum_enterprise_worker
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - SUBSCRIPTION_TIER=enterprise
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum_enterprise}:${POSTGRES_PASSWORD:-enterprise_secure_password}@db:5432/${POSTGRES_DB:-stratum_enterprise}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_enterprise}:${POSTGRES_PASSWORD:-enterprise_secure_password}@db:5432/${POSTGRES_DB:-stratum_enterprise}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-false}
+      # All integrations
+      - PIPEDRIVE_API_TOKEN=${PIPEDRIVE_API_TOKEN:-}
+      - HUBSPOT_API_KEY=${HUBSPOT_API_KEY:-}
+      - SALESFORCE_CLIENT_ID=${SALESFORCE_CLIENT_ID:-}
+      - ZOHO_CLIENT_ID=${ZOHO_CLIENT_ID:-}
+    volumes:
+      - ../../ml_service/models:/app/ml_service/models:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - stratum_enterprise_network
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=8
+
+  # ===========================================================================
+  # Celery Beat Scheduler
+  # ===========================================================================
+  scheduler:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: stratum_enterprise_scheduler
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - SUBSCRIPTION_TIER=enterprise
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_enterprise}:${POSTGRES_PASSWORD:-enterprise_secure_password}@db:5432/${POSTGRES_DB:-stratum_enterprise}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - worker
+    networks:
+      - stratum_enterprise_network
+    command: celery -A app.workers.celery_app beat --loglevel=info
+
+  # ===========================================================================
+  # React Frontend (Enterprise Edition - All Features)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - VITE_SUBSCRIPTION_TIER=enterprise
+        - VITE_APP_NAME=Stratum AI Enterprise
+    container_name: stratum_enterprise_frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+      - VITE_SUBSCRIPTION_TIER=enterprise
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    networks:
+      - stratum_enterprise_network
+
+  # ===========================================================================
+  # Flower - Celery Monitoring (Enterprise only)
+  # ===========================================================================
+  flower:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: stratum_enterprise_flower
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - FLOWER_PORT=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - worker
+    networks:
+      - stratum_enterprise_network
+    command: celery -A app.workers.celery_app flower --port=5555
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  stratum_enterprise_network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+  redis_data:

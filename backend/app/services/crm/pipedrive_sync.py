@@ -22,7 +22,7 @@ from app.models.cdp import (
     IdentifierType,
 )
 from app.models.crm import CRMConnection, CRMSyncLog, CRMProvider
-from app.services.cdp.identity_service import IdentityService
+from app.services.cdp.identity_resolution import IdentityResolutionService
 from .pipedrive_client import PipedriveClient, hash_email, hash_phone
 
 logger = get_logger(__name__)
@@ -43,7 +43,7 @@ class PipedriveSyncService:
         self.db = db
         self.tenant_id = tenant_id
         self.client = PipedriveClient(db, tenant_id)
-        self.identity_service = IdentityService(db, tenant_id)
+        self.identity_service = IdentityResolutionService(db, tenant_id)
 
     async def sync_all(self, full_sync: bool = False) -> Dict[str, Any]:
         """
@@ -382,7 +382,7 @@ class PipedriveSyncService:
             records_updated=results.get("persons_updated", 0),
             records_failed=len(results.get("errors", [])),
             error_message=error,
-            metadata=results,
+            sync_metadata=results,
         )
 
         self.db.add(log)

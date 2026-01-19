@@ -455,6 +455,52 @@ class DailyPipelineMetrics(Base):
 
 
 # =============================================================================
+# CRM Sync Log Model
+# =============================================================================
+
+class CRMSyncLog(Base):
+    """
+    Log of CRM synchronization operations.
+    Tracks sync history for auditing and troubleshooting.
+    """
+    __tablename__ = "crm_sync_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+
+    # Sync details
+    provider = Column(SQLEnum(CRMProvider), nullable=False)
+    sync_type = Column(String(50), nullable=False)  # full, incremental, manual
+    status = Column(String(50), nullable=False)  # success, failed, partial
+
+    # Timing
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    duration_ms = Column(Integer, nullable=True)
+
+    # Results
+    records_processed = Column(Integer, default=0)
+    records_created = Column(Integer, default=0)
+    records_updated = Column(Integer, default=0)
+    records_failed = Column(Integer, default=0)
+
+    # Error details
+    error_message = Column(Text, nullable=True)
+    sync_metadata = Column(JSONB, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    tenant = relationship("Tenant", foreign_keys=[tenant_id])
+
+    __table_args__ = (
+        Index("ix_crm_sync_logs_tenant_date", "tenant_id", "started_at"),
+        Index("ix_crm_sync_logs_provider", "tenant_id", "provider"),
+    )
+
+
+# =============================================================================
 # Writeback Status Enum
 # =============================================================================
 
