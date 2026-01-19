@@ -54,7 +54,7 @@ jobs:
             type=sha,prefix=
 
       - name: Build and push backend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./backend
           push: ${{ github.event_name != 'pull_request' }}
@@ -102,7 +102,7 @@ jobs:
             type=sha,prefix=
 
       - name: Build and push frontend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./frontend
           target: production
