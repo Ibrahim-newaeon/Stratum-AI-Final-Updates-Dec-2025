@@ -3,6 +3,11 @@
  *
  * Each tour is designed for a specific user role to help them
  * understand their primary workflows and features.
+ *
+ * CONTENT GUIDELINES:
+ * - Keep step content under 150 characters for readability
+ * - Use concise, action-oriented language
+ * - Focus on "what" and "why", not detailed "how"
  */
 
 import { Step } from 'react-joyride'
@@ -133,7 +138,7 @@ export const tenantAdminTour: TourConfig = {
     },
     {
       target: '[data-tour="confidence-band"]',
-      content: 'Your confidence band tells you how much to trust today\'s numbers: Reliable (use freely), Directional (use with caution), or Unsafe (investigate first).',
+      content: 'Confidence bands: Reliable (use freely), Directional (use with caution), or Unsafe (investigate first).',
       placement: 'bottom',
     },
     {

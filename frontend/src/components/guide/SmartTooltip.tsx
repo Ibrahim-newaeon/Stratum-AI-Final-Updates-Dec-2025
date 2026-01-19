@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ReactNode } from 'react'
+import { useState, useRef, useEffect, ReactNode, useId, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Info, HelpCircle, X, ExternalLink, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,12 @@ interface SmartTooltipProps {
   className?: string
   showIcon?: boolean
   iconType?: 'info' | 'help'
+  /** Show a "Got it" button instead of X for acknowledgment-style tooltips */
+  showGotIt?: boolean
+  /** Callback when user dismisses with "Got it" */
+  onGotIt?: () => void
+  /** Accessible label for the tooltip (used if content is not a string) */
+  ariaLabel?: string
 }
 
 interface TooltipCoords {
@@ -34,12 +40,19 @@ export function SmartTooltip({
   className,
   showIcon = false,
   iconType = 'info',
+  showGotIt = false,
+  onGotIt,
+  ariaLabel,
 }: SmartTooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [coords, setCoords] = useState<TooltipCoords>({ top: 0, left: 0 })
   const triggerRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Generate unique ID for accessibility
+  const tooltipId = useId()
+  const titleId = useId()
 
   const calculatePosition = () => {
     if (!triggerRef.current || !tooltipRef.current) return
@@ -104,18 +117,33 @@ export function SmartTooltip({
     }
   }
 
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false)
+    onGotIt?.()
+  }, [onGotIt])
+
+  // Handle Escape key to close tooltip
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && isVisible) {
+      handleDismiss()
+      triggerRef.current?.focus()
+    }
+  }, [isVisible, handleDismiss])
+
   useEffect(() => {
     if (isVisible) {
       calculatePosition()
       window.addEventListener('scroll', calculatePosition, true)
       window.addEventListener('resize', calculatePosition)
+      document.addEventListener('keydown', handleKeyDown)
     }
 
     return () => {
       window.removeEventListener('scroll', calculatePosition, true)
       window.removeEventListener('resize', calculatePosition)
+      document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isVisible])
+  }, [isVisible, handleKeyDown])
 
   useEffect(() => {
     return () => {
@@ -152,10 +180,23 @@ export function SmartTooltip({
         onMouseEnter={trigger === 'hover' ? showTooltip : undefined}
         onMouseLeave={trigger === 'hover' ? hideTooltip : undefined}
         onClick={handleTriggerClick}
+        onKeyDown={(e) => {
+          if (trigger === 'click' && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault()
+            setIsVisible(!isVisible)
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-describedby={isVisible ? tooltipId : undefined}
+        aria-expanded={trigger === 'click' ? isVisible : undefined}
       >
         {children}
         {showIcon && (
-          <Icon className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+          <Icon
+            className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors"
+            aria-hidden="true"
+          />
         )}
       </div>
 
@@ -163,6 +204,10 @@ export function SmartTooltip({
         createPortal(
           <div
             ref={tooltipRef}
+            id={tooltipId}
+            role="tooltip"
+            aria-label={ariaLabel}
+            aria-labelledby={title ? titleId : undefined}
             className={cn(
               'fixed z-[9999] max-w-xs animate-in fade-in-0 zoom-in-95 duration-200',
               'bg-popover text-popover-foreground rounded-lg shadow-lg border'
@@ -177,13 +222,14 @@ export function SmartTooltip({
             <div className="p-3">
               {title && (
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-sm">{title}</h4>
-                  {trigger === 'click' && (
+                  <h4 id={titleId} className="font-semibold text-sm">{title}</h4>
+                  {trigger === 'click' && !showGotIt && (
                     <button
-                      onClick={() => setIsVisible(false)}
+                      onClick={handleDismiss}
                       className="p-0.5 rounded hover:bg-muted"
+                      aria-label="Close tooltip"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -197,8 +243,16 @@ export function SmartTooltip({
                   className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
                 >
                   Learn more
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-3 h-3" aria-hidden="true" />
                 </a>
+              )}
+              {showGotIt && (
+                <button
+                  onClick={handleDismiss}
+                  className="mt-3 w-full py-1.5 px-3 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Got it
+                </button>
               )}
             </div>
           </div>,
