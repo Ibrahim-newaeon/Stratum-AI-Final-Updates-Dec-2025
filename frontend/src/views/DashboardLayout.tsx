@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { motion, AnimatePresence } from 'framer-motion'
+import { fadeInUp, staggerContainer, listItem, dropdownVariants, transitions } from '@/lib/animations'
 import {
   HomeIcon,
   ChartBarIcon,
@@ -100,12 +102,18 @@ export default function DashboardLayout() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <aside
@@ -179,29 +187,43 @@ export default function DashboardLayout() {
                 />
               </button>
 
-              {cdpExpanded && (
-                <div className="ml-4 mt-1 space-y-1 border-l-2 border-muted pl-3">
-                  {cdpNavigation.map((item) => {
-                    const isActive = location.pathname === item.href
-                    return (
-                      <NavLink
-                        key={item.name}
-                        to={item.href}
-                        className={cn(
-                          'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                          isActive
-                            ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                        )}
-                        onClick={() => setSidebarOpen(false)}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </NavLink>
-                    )
-                  })}
-                </div>
-              )}
+              <AnimatePresence>
+                {cdpExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="ml-4 mt-1 space-y-1 border-l-2 border-muted pl-3 overflow-hidden"
+                  >
+                    {cdpNavigation.map((item, index) => {
+                      const isActive = location.pathname === item.href
+                      return (
+                        <motion.div
+                          key={item.name}
+                          initial={{ opacity: 0, x: -12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.03, duration: 0.2 }}
+                        >
+                          <NavLink
+                            to={item.href}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                              isActive
+                                ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            )}
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            {item.name}
+                          </NavLink>
+                        </motion.div>
+                      )
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </nav>
 
@@ -356,42 +378,61 @@ export default function DashboardLayout() {
               </button>
 
               {/* Dropdown menu */}
-              {userMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setUserMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-48 py-2 rounded-lg border bg-card shadow-lg z-50">
-                    <div className="px-4 py-2 border-b">
-                      <p className="text-sm font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    </div>
-                    <NavLink
-                      to="/dashboard/settings"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+              <AnimatePresence>
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
                       onClick={() => setUserMenuOpen(false)}
+                    />
+                    <motion.div
+                      variants={dropdownVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute right-0 mt-2 w-48 py-2 rounded-lg border bg-card shadow-lg z-50"
                     >
-                      <CogIcon className="w-4 h-4" />
-                      {t('common.settings')}
-                    </NavLink>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
-                    >
-                      <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                      {t('common.logout')}
-                    </button>
-                  </div>
-                </>
-              )}
+                      <div className="px-4 py-2 border-b">
+                        <p className="text-sm font-medium">{user?.name}</p>
+                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      </div>
+                      <NavLink
+                        to="/dashboard/settings"
+                        className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <CogIcon className="w-4 h-4" />
+                        {t('common.settings')}
+                      </NavLink>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                      >
+                        <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                        {t('common.logout')}
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 

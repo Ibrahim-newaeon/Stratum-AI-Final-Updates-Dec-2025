@@ -14,6 +14,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+import { staggerContainer, listItem } from '@/lib/animations'
 import {
   RefreshCw,
   Download,
@@ -538,9 +540,15 @@ export function Overview() {
       />
 
       {/* Primary KPI Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          title="Total Spend"
+      <motion.div
+        className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={listItem}>
+          <KPICard
+            title="Total Spend"
           value={formatCurrency(kpis.totalSpend)}
           numericValue={kpis.totalSpend}
           prefix="$"
@@ -552,9 +560,11 @@ export function Overview() {
           onViewDetails={() => handleViewDetails('spend')}
           onSetAlert={() => handleSetAlert('spend')}
         />
+        </motion.div>
 
-        <KPICard
-          title="Total Revenue"
+        <motion.div variants={listItem}>
+          <KPICard
+            title="Total Revenue"
           value={formatCurrency(kpis.totalRevenue)}
           numericValue={kpis.totalRevenue}
           prefix="$"
@@ -566,10 +576,12 @@ export function Overview() {
           loading={initialLoading}
           onViewDetails={() => handleViewDetails('revenue')}
           onSetAlert={() => handleSetAlert('revenue')}
-        />
+          />
+        </motion.div>
 
-        <KPICard
-          title="ROAS"
+        <motion.div variants={listItem}>
+          <KPICard
+            title="ROAS"
           value={`${kpis.overallROAS.toFixed(2)}x`}
           numericValue={kpis.overallROAS}
           suffix="x"
@@ -583,10 +595,12 @@ export function Overview() {
           loading={initialLoading}
           onViewDetails={() => handleViewDetails('roas')}
           onSetAlert={() => handleSetAlert('roas')}
-        />
+          />
+        </motion.div>
 
-        <KPICard
-          title="Total Conversions"
+        <motion.div variants={listItem}>
+          <KPICard
+            title="Total Conversions"
           value={kpis.totalConversions.toLocaleString('en-US')}
           numericValue={kpis.totalConversions}
           delta={kpis.conversionsDelta}
@@ -597,62 +611,78 @@ export function Overview() {
           loading={initialLoading}
           onViewDetails={() => handleViewDetails('conversions')}
           onSetAlert={() => handleSetAlert('conversions')}
-        />
-      </div>
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Secondary KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <KPICard
-          title="CPA"
-          value={formatCurrency(kpis.overallCPA)}
-          numericValue={kpis.overallCPA}
-          prefix="$"
-          decimals={2}
-          size="small"
-          icon={<DollarSign className="w-4 h-4" />}
-          loading={initialLoading}
-        />
+      <motion.div
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={listItem}>
+          <KPICard
+            title="CPA"
+            value={formatCurrency(kpis.overallCPA)}
+            numericValue={kpis.overallCPA}
+            prefix="$"
+            decimals={2}
+            size="small"
+            icon={<DollarSign className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        </motion.div>
 
-        <KPICard
-          title="CTR"
-          value={`${kpis.avgCTR.toFixed(2)}%`}
-          numericValue={kpis.avgCTR}
-          suffix="%"
-          decimals={2}
-          size="small"
-          icon={<MousePointerClick className="w-4 h-4" />}
-          loading={initialLoading}
-        />
+        <motion.div variants={listItem}>
+          <KPICard
+            title="CTR"
+            value={`${kpis.avgCTR.toFixed(2)}%`}
+            numericValue={kpis.avgCTR}
+            suffix="%"
+            decimals={2}
+            size="small"
+            icon={<MousePointerClick className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        </motion.div>
 
-        <KPICard
-          title="CPM"
-          value={formatCurrency(kpis.avgCPM)}
-          numericValue={kpis.avgCPM}
-          prefix="$"
-          decimals={2}
-          size="small"
-          icon={<BarChart3 className="w-4 h-4" />}
-          loading={initialLoading}
-        />
+        <motion.div variants={listItem}>
+          <KPICard
+            title="CPM"
+            value={formatCurrency(kpis.avgCPM)}
+            numericValue={kpis.avgCPM}
+            prefix="$"
+            decimals={2}
+            size="small"
+            icon={<BarChart3 className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        </motion.div>
 
-        <KPICard
-          title="Impressions"
-          value={formatCompactNumber(kpis.totalImpressions)}
-          numericValue={kpis.totalImpressions}
-          size="small"
-          icon={<Eye className="w-4 h-4" />}
-          loading={initialLoading}
-        />
+        <motion.div variants={listItem}>
+          <KPICard
+            title="Impressions"
+            value={formatCompactNumber(kpis.totalImpressions)}
+            numericValue={kpis.totalImpressions}
+            size="small"
+            icon={<Eye className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        </motion.div>
 
-        <KPICard
-          title="Clicks"
-          value={formatCompactNumber(kpis.totalClicks)}
-          numericValue={kpis.totalClicks}
-          size="small"
-          icon={<MousePointerClick className="w-4 h-4" />}
-          loading={initialLoading}
-        />
-      </div>
+        <motion.div variants={listItem}>
+          <KPICard
+            title="Clicks"
+            value={formatCompactNumber(kpis.totalClicks)}
+            numericValue={kpis.totalClicks}
+            size="small"
+            icon={<MousePointerClick className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -758,12 +788,20 @@ export function Overview() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {mockAlerts.map((alert) => (
-              <div
+              <motion.div
                 key={alert.id}
+                variants={listItem}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 className={cn(
-                  'p-4 rounded-lg border-l-4 transition-all hover:shadow-md cursor-pointer',
+                  'p-4 rounded-lg border-l-4 transition-colors cursor-pointer',
                   alert.severity === 'warning' && 'bg-amber-500/10 border-amber-500 hover:bg-amber-500/15',
                   alert.severity === 'good' && 'bg-green-500/10 border-green-500 hover:bg-green-500/15',
                   alert.severity === 'critical' && 'bg-red-500/10 border-red-500 hover:bg-red-500/15'
@@ -782,9 +820,9 @@ export function Overview() {
                     <p className="text-xs text-muted-foreground mt-2">{alert.time}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
