@@ -105,6 +105,11 @@ class Feature(str, enum.Enum):
     API_ACCESS = "api_access"
     WEBHOOKS = "webhooks"
 
+    # Embed Widgets
+    EMBED_WIDGETS_BASIC = "embed_widgets_basic"      # Starter: with full branding
+    EMBED_WIDGETS_MINIMAL = "embed_widgets_minimal"  # Professional: minimal branding
+    EMBED_WIDGETS_WHITELABEL = "embed_widgets_whitelabel"  # Enterprise: no branding
+
 
 # Feature sets per tier
 TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
@@ -122,6 +127,8 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         # Notifications
         Feature.SLACK_NOTIFICATIONS,
         Feature.EMAIL_NOTIFICATIONS,
+        # Embed Widgets (with full branding)
+        Feature.EMBED_WIDGETS_BASIC,
     },
 
     SubscriptionTier.PROFESSIONAL: {
@@ -145,6 +152,9 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         Feature.PIPEDRIVE_INTEGRATION,
         Feature.HUBSPOT_INTEGRATION,
         Feature.AUDIENCE_SYNC_BASIC,
+        # Embed Widgets (with minimal branding)
+        Feature.EMBED_WIDGETS_BASIC,
+        Feature.EMBED_WIDGETS_MINIMAL,
     },
 
     SubscriptionTier.ENTERPRISE: {
@@ -183,6 +193,10 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         Feature.IDENTITY_GRAPH,
         Feature.API_ACCESS,
         Feature.WEBHOOKS,
+        # Embed Widgets (white-label, no branding)
+        Feature.EMBED_WIDGETS_BASIC,
+        Feature.EMBED_WIDGETS_MINIMAL,
+        Feature.EMBED_WIDGETS_WHITELABEL,
     },
 }
 
@@ -197,6 +211,8 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
         "max_audience_sync_platforms": 0,
         "api_rate_limit_per_minute": 60,
         "data_retention_days": 90,
+        "max_embed_widgets": 3,
+        "max_embed_domains": 2,
     },
     SubscriptionTier.PROFESSIONAL: {
         "max_ad_accounts": 15,
@@ -206,6 +222,8 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
         "max_audience_sync_platforms": 2,
         "api_rate_limit_per_minute": 300,
         "data_retention_days": 365,
+        "max_embed_widgets": 10,
+        "max_embed_domains": 10,
     },
     SubscriptionTier.ENTERPRISE: {
         "max_ad_accounts": 999999,  # Unlimited
@@ -215,6 +233,8 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
         "max_audience_sync_platforms": 4,
         "api_rate_limit_per_minute": 1000,
         "data_retention_days": 730,  # 2 years
+        "max_embed_widgets": 999999,  # Unlimited
+        "max_embed_domains": 999999,  # Unlimited
     },
 }
 

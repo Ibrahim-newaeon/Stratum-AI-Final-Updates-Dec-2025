@@ -92,6 +92,9 @@ const ModelExplainability = lazy(() => import('./views/tenant/ModelExplainabilit
 const CustomAutopilotRules = lazy(() => import('./views/CustomAutopilotRules'))
 const CustomReportBuilder = lazy(() => import('./views/CustomReportBuilder'))
 
+// Embed Widgets
+const EmbedWidgets = lazy(() => import('./views/tenant/EmbedWidgets'))
+
 // Account Manager views
 const AMPortfolio = lazy(() => import('./views/am/Portfolio'))
 const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'))
@@ -808,6 +811,16 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <ModelExplainability />
+                    </Suspense>
+                  }
+                />
+
+                {/* Embed Widgets */}
+                <Route
+                  path="embed-widgets"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <EmbedWidgets />
                     </Suspense>
                   }
                 />
