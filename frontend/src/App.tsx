@@ -96,6 +96,9 @@ const CustomReportBuilder = lazy(() => import('./views/CustomReportBuilder'))
 const AMPortfolio = lazy(() => import('./views/am/Portfolio'))
 const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'))
 
+// Tier-specific landing pages
+const TierLandingPage = lazy(() => import('./views/plans/TierLandingPage'))
+
 function App() {
   return (
     <ThemeProvider>
@@ -167,6 +170,16 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <CDPCalculator />
+                  </Suspense>
+                }
+              />
+
+              {/* Tier-specific landing pages (public) */}
+              <Route
+                path="/plans/:tier"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <TierLandingPage />
                   </Suspense>
                 }
               />
