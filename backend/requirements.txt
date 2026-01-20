@@ -43,6 +43,10 @@ pydantic-settings==2.12.0
 # Payment Processing
 stripe==10.12.0
 
+# Two-Factor Authentication
+pyotp==2.9.0
+qrcode[pil]==7.4.2
+
 # ML / Data Science
 scikit-learn==1.8.0
 pandas==2.3.3

@@ -310,6 +310,186 @@ Need help? Check out our documentation at {self.frontend_url}/docs
         message = self._create_message(to_email, subject, html_content, text_content)
         return self._send_email(to_email, message)
 
+    def send_payment_failed_email(
+        self,
+        to_email: str,
+        user_name: str,
+        attempt_count: int = 1,
+        amount_due: Optional[str] = None,
+    ) -> bool:
+        """Send payment failure notification email."""
+        billing_url = f"{self.frontend_url}/dashboard/settings/billing"
+
+        # Adjust messaging based on attempt count
+        if attempt_count == 1:
+            urgency = "We were unable to process your payment"
+            action_text = "Please update your payment method to ensure uninterrupted service."
+        elif attempt_count == 2:
+            urgency = "Second payment attempt failed"
+            action_text = "Your subscription may be suspended soon. Please update your payment method immediately."
+        else:
+            urgency = "Final payment notice"
+            action_text = "Your subscription will be suspended if payment is not received. Please update your payment method now."
+
+        subject = f"Action Required: Payment failed for your Stratum AI subscription"
+
+        amount_section = ""
+        if amount_due:
+            amount_section = f'<p style="font-size: 18px; font-weight: 600;">Amount Due: {amount_due}</p>'
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2563eb; margin: 0;">Stratum AI</h1>
+    </div>
+
+    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0; color: #dc2626;">{urgency}</h2>
+
+        <p>Hi {user_name or 'there'},</p>
+
+        <p>{action_text}</p>
+
+        {amount_section}
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{billing_url}"
+               style="background: #dc2626; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+                Update Payment Method
+            </a>
+        </div>
+
+        <p style="color: #64748b; font-size: 14px;">
+            If you believe this is an error or need assistance, please contact our support team.
+        </p>
+    </div>
+
+    <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin-top: 0; font-size: 14px; color: #64748b;">Common reasons for payment failure:</h3>
+        <ul style="color: #64748b; font-size: 14px; padding-left: 20px; margin-bottom: 0;">
+            <li>Expired credit card</li>
+            <li>Insufficient funds</li>
+            <li>Card declined by bank</li>
+            <li>Incorrect billing information</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 12px;">
+        <p style="margin-top: 20px;">
+            &copy; 2024 Stratum AI. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>
+"""
+
+        text_content = f"""
+{urgency}
+
+Hi {user_name or 'there'},
+
+{action_text}
+
+{"Amount Due: " + amount_due if amount_due else ""}
+
+Update your payment method here: {billing_url}
+
+Common reasons for payment failure:
+- Expired credit card
+- Insufficient funds
+- Card declined by bank
+- Incorrect billing information
+
+If you believe this is an error, please contact support.
+
+- The Stratum AI Team
+"""
+
+        message = self._create_message(to_email, subject, html_content, text_content)
+        return self._send_email(to_email, message)
+
+    def send_user_invite_email(
+        self,
+        to_email: str,
+        inviter_name: str,
+        tenant_name: str,
+        invite_token: str,
+        role: str = "member",
+    ) -> bool:
+        """Send invitation email to new team member."""
+        invite_url = f"{self.frontend_url}/accept-invite?token={invite_token}"
+
+        subject = f"You've been invited to join {tenant_name} on Stratum AI"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2563eb; margin: 0;">Stratum AI</h1>
+    </div>
+
+    <div style="background: #f8fafc; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">You're invited!</h2>
+
+        <p><strong>{inviter_name}</strong> has invited you to join <strong>{tenant_name}</strong> on Stratum AI as a <strong>{role}</strong>.</p>
+
+        <p>Stratum AI is a Revenue Operating System that helps teams automate and optimize their ad campaigns with trust-gated automation.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{invite_url}"
+               style="background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+                Accept Invitation
+            </a>
+        </div>
+
+        <p style="color: #64748b; font-size: 14px;">
+            This invitation expires in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+        </p>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 12px;">
+        <p>
+            If the button doesn't work, copy and paste this link into your browser:<br>
+            <a href="{invite_url}" style="color: #2563eb; word-break: break-all;">{invite_url}</a>
+        </p>
+        <p style="margin-top: 20px;">
+            &copy; 2024 Stratum AI. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>
+"""
+
+        text_content = f"""
+You're invited!
+
+{inviter_name} has invited you to join {tenant_name} on Stratum AI as a {role}.
+
+Stratum AI is a Revenue Operating System that helps teams automate and optimize their ad campaigns.
+
+Accept your invitation: {invite_url}
+
+This invitation expires in 7 days.
+
+If you didn't expect this invitation, you can safely ignore this email.
+
+- The Stratum AI Team
+"""
+
+        message = self._create_message(to_email, subject, html_content, text_content)
+        return self._send_email(to_email, message)
+
 
 # Singleton instance
 _email_service: Optional[EmailService] = None

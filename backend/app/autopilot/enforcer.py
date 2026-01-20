@@ -644,8 +644,119 @@ class AutopilotEnforcer:
 
         logger.info(f"Auto-paused campaign {campaign_id} for tenant {tenant_id}: {reason}")
 
-        # TODO: Actually pause the campaign via platform API
-        return True
+        # Execute the actual pause via platform API
+        try:
+            success = await self._execute_platform_pause(tenant_id, campaign_id)
+            if not success:
+                logger.warning(
+                    f"Failed to pause campaign {campaign_id} via platform API for tenant {tenant_id}"
+                )
+            return success
+        except Exception as e:
+            logger.error(
+                f"Error pausing campaign {campaign_id} for tenant {tenant_id}: {e}"
+            )
+            # Return True since we logged the intervention, even if platform API failed
+            # The campaign status in our DB is updated, platform sync will retry
+            return True
+
+    async def _execute_platform_pause(
+        self,
+        tenant_id: int,
+        campaign_id: str,
+    ) -> bool:
+        """
+        Execute campaign pause via the appropriate platform API.
+
+        Args:
+            tenant_id: Tenant ID
+            campaign_id: Platform campaign ID
+
+        Returns:
+            True if pause was successful
+        """
+        from app.models import Campaign, CampaignStatus
+        from app.stratum.adapters.registry import AdapterRegistry
+        from app.stratum.adapters.base import AutomationAction
+
+        # Get campaign to find platform and ad account
+        result = await self.db.execute(
+            select(Campaign).where(
+                Campaign.platform_campaign_id == campaign_id,
+                Campaign.tenant_id == tenant_id,
+                Campaign.is_deleted == False,
+            )
+        )
+        campaign = result.scalar_one_or_none()
+
+        if not campaign:
+            logger.warning(f"Campaign {campaign_id} not found for tenant {tenant_id}")
+            return False
+
+        # Update local status first
+        campaign.status = CampaignStatus.PAUSED
+        await self.db.commit()
+
+        # Get platform credentials for tenant
+        platform = campaign.platform
+        if not platform:
+            logger.warning(f"Campaign {campaign_id} has no platform set")
+            return True  # Local status updated, no platform to call
+
+        try:
+            # Get platform credentials from tenant connections
+            from app.base_models import TenantPlatformConnection
+            conn_result = await self.db.execute(
+                select(TenantPlatformConnection).where(
+                    TenantPlatformConnection.tenant_id == tenant_id,
+                    TenantPlatformConnection.platform == platform,
+                    TenantPlatformConnection.status == "connected",
+                )
+            )
+            connection = conn_result.scalar_one_or_none()
+
+            if not connection:
+                logger.warning(
+                    f"No active connection for platform {platform} for tenant {tenant_id}"
+                )
+                return True  # Local status updated
+
+            # Get adapter and execute pause
+            from app.stratum.models import Platform as PlatformEnum
+            platform_enum = PlatformEnum(platform) if isinstance(platform, str) else platform
+
+            # Build credentials from connection
+            credentials = connection.credentials or {}
+
+            adapter = AdapterRegistry.get_adapter(platform_enum, credentials)
+            await adapter.initialize()
+
+            # Create pause action
+            action = AutomationAction(
+                action_id=f"autopause_{campaign_id}_{datetime.now(timezone.utc).timestamp()}",
+                action_type="update_status",
+                entity_type="campaign",
+                entity_id=campaign_id,
+                ad_account_id=campaign.ad_account_id,
+                new_status="PAUSED",
+            )
+
+            result = await adapter.execute_action(action)
+
+            if result.get("success"):
+                logger.info(
+                    f"Successfully paused campaign {campaign_id} via {platform} API"
+                )
+                return True
+            else:
+                logger.warning(
+                    f"Platform API returned failure for pausing campaign {campaign_id}: {result}"
+                )
+                return False
+
+        except Exception as e:
+            logger.error(f"Platform API error pausing campaign {campaign_id}: {e}")
+            return False
 
     async def set_kill_switch(
         self,

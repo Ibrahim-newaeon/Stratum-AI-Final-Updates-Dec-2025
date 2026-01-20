@@ -41,6 +41,7 @@ from app.schemas import (
 )
 from app.services.whatsapp_client import get_whatsapp_client, WhatsAppAPIError
 from app.services.email_service import get_email_service
+from app.services.mfa_service import check_mfa_required, MFAService, is_user_locked
 from app.auth.deps import (
     generate_verification_token,
     generate_password_reset_token,
@@ -55,6 +56,8 @@ OTP_EXPIRY_SECONDS = 300  # 5 minutes
 OTP_PREFIX = "whatsapp_otp:"
 EMAIL_VERIFY_PREFIX = "email_verify:"
 PASSWORD_RESET_PREFIX = "password_reset:"
+MFA_SESSION_PREFIX = "mfa_session:"  # Temporary session for MFA verification
+MFA_SESSION_EXPIRY = 300  # 5 minutes to complete MFA
 
 
 # =============================================================================
@@ -151,6 +154,54 @@ class MessageResponse(BaseModel):
     """Simple message response."""
 
     message: str
+
+
+# =============================================================================
+# MFA Login Flow Schemas
+# =============================================================================
+class LoginResponse(BaseModel):
+    """
+    Login response that supports both direct login and MFA flow.
+
+    When MFA is not enabled:
+      - mfa_required: False
+      - tokens populated with access/refresh tokens
+
+    When MFA is enabled:
+      - mfa_required: True
+      - mfa_session_token: Temporary token to use with /login/mfa
+      - tokens are None
+    """
+    mfa_required: bool = False
+    mfa_session_token: Optional[str] = None  # Temporary token for MFA step 2
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_type: Optional[str] = "bearer"
+    expires_in: Optional[int] = None
+
+    class Config:
+        json_schema_extra = {
+            "example_mfa_required": {
+                "mfa_required": True,
+                "mfa_session_token": "abc123...",
+                "access_token": None,
+                "refresh_token": None,
+            },
+            "example_no_mfa": {
+                "mfa_required": False,
+                "mfa_session_token": None,
+                "access_token": "eyJ...",
+                "refresh_token": "eyJ...",
+                "token_type": "bearer",
+                "expires_in": 1800,
+            },
+        }
+
+
+class MFALoginRequest(BaseModel):
+    """Request to complete login with MFA code."""
+    mfa_session_token: str = Field(..., description="Session token from initial login")
+    code: str = Field(..., min_length=6, max_length=10, description="TOTP code or backup code")
 
 
 # Pydantic schemas for WhatsApp OTP
@@ -321,20 +372,28 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
         )
 
 
-@router.post("/login", response_model=APIResponse[TokenResponse])
+@router.post("/login", response_model=APIResponse[LoginResponse])
 async def login(
     request: Request,
     login_data: LoginRequest,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
-    Authenticate user and return access/refresh tokens.
+    Authenticate user with email and password.
+
+    **Two-step MFA flow:**
+    1. POST /login with email/password
+       - If MFA disabled: Returns access/refresh tokens immediately
+       - If MFA enabled: Returns mfa_required=True and mfa_session_token
+
+    2. (If MFA required) POST /login/mfa with mfa_session_token and TOTP code
+       - Returns access/refresh tokens on successful verification
 
     Args:
         login_data: Email and password
 
     Returns:
-        JWT tokens for authentication
+        LoginResponse with tokens or MFA session token
     """
     # Hash email for lookup (PII is stored encrypted)
     email_hash = hash_pii_for_lookup(login_data.email.lower())
@@ -356,6 +415,48 @@ async def login(
             detail="Invalid email or password",
         )
 
+    # Check if MFA is enabled for this user
+    mfa_required = await check_mfa_required(db, user.id)
+
+    if mfa_required:
+        # Check if user is locked out from too many MFA attempts
+        is_locked, lockout_until = await is_user_locked(db, user.id)
+        if is_locked:
+            remaining = (lockout_until - datetime.now(timezone.utc)).seconds // 60
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Account locked due to too many failed MFA attempts. Try again in {remaining} minutes.",
+            )
+
+        # Generate temporary MFA session token
+        mfa_session_token = ''.join(random.choices(string.ascii_letters + string.digits, k=64))
+
+        # Store session data in Redis (user_id, email, tenant_id, ip, user_agent)
+        try:
+            redis_client = await get_redis_client()
+            session_key = f"{MFA_SESSION_PREFIX}{mfa_session_token}"
+            session_data = f"{user.id}:{user.tenant_id}:{login_data.email.lower()}"
+            await redis_client.setex(session_key, MFA_SESSION_EXPIRY, session_data)
+            await redis_client.close()
+        except Exception as e:
+            logger.error("Redis error storing MFA session", error=str(e))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to initiate MFA verification",
+            )
+
+        logger.info("mfa_required_for_login", user_id=user.id)
+
+        return APIResponse(
+            success=True,
+            data=LoginResponse(
+                mfa_required=True,
+                mfa_session_token=mfa_session_token,
+            ),
+            message="MFA verification required. Use /login/mfa to complete login.",
+        )
+
+    # No MFA - proceed with normal login
     # Update last login
     user.last_login_at = datetime.now(timezone.utc)
     await db.commit()
@@ -385,6 +486,129 @@ async def login(
     await db.commit()
 
     logger.info("user_logged_in", user_id=user.id, tenant_id=user.tenant_id)
+
+    return APIResponse(
+        success=True,
+        data=LoginResponse(
+            mfa_required=False,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=30 * 60,  # 30 minutes
+        ),
+        message="Login successful",
+    )
+
+
+@router.post("/login/mfa", response_model=APIResponse[TokenResponse])
+async def login_with_mfa(
+    request: Request,
+    mfa_data: MFALoginRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Complete login with MFA verification.
+
+    This is the second step of the MFA login flow. After receiving
+    mfa_required=True from /login, use this endpoint with:
+    - mfa_session_token: From the initial login response
+    - code: TOTP code from authenticator app or a backup code
+
+    Args:
+        mfa_data: MFA session token and TOTP/backup code
+
+    Returns:
+        JWT tokens for authentication
+    """
+    # Retrieve MFA session from Redis
+    try:
+        redis_client = await get_redis_client()
+        session_key = f"{MFA_SESSION_PREFIX}{mfa_data.mfa_session_token}"
+        session_data = await redis_client.get(session_key)
+
+        if not session_data:
+            await redis_client.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired MFA session. Please login again.",
+            )
+
+        # Delete session (single use)
+        await redis_client.delete(session_key)
+        await redis_client.close()
+
+        # Parse session data
+        parts = session_data.split(":")
+        user_id = int(parts[0])
+        tenant_id = int(parts[1])
+        email = parts[2] if len(parts) > 2 else None
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Redis error retrieving MFA session", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="MFA verification failed",
+        )
+
+    # Verify MFA code
+    mfa_service = MFAService(db)
+    valid, message = await mfa_service.verify_code(user_id, mfa_data.code)
+
+    if not valid:
+        logger.warning("mfa_login_failed", user_id=user_id, message=message)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=message,
+        )
+
+    # Get user for token generation
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.is_deleted == False,
+            User.is_active == True,
+        )
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
+
+    # Update last login
+    user.last_login_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    # Create tokens
+    access_token = create_access_token(
+        subject=user.id,
+        additional_claims={
+            "tenant_id": user.tenant_id,
+            "role": user.role.value,
+            "email": email,
+        },
+    )
+    refresh_token = create_refresh_token(subject=user.id)
+
+    # Log login event
+    audit_log = AuditLog(
+        tenant_id=user.tenant_id,
+        user_id=user.id,
+        action=AuditAction.LOGIN,
+        resource_type="user",
+        resource_id=str(user.id),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("User-Agent", "")[:500],
+        details={"mfa_verified": True},
+    )
+    db.add(audit_log)
+    await db.commit()
+
+    logger.info("user_logged_in_with_mfa", user_id=user.id, tenant_id=user.tenant_id)
 
     return APIResponse(
         success=True,

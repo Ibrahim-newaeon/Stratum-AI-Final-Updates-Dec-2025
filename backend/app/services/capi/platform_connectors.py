@@ -1002,7 +1002,7 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                     try:
                         error_data = response.json()
                         error_msg = error_data.get("message", f"HTTP {response.status_code}")
-                    except:
+                    except (ValueError, KeyError):
                         error_msg = f"HTTP {response.status_code}"
 
                     return CAPIResponse(

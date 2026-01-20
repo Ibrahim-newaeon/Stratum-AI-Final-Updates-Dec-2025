@@ -243,6 +243,22 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         DateTime(timezone=True), nullable=True
     )
 
+    # Two-Factor Authentication (2FA/MFA)
+    totp_secret: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )  # Encrypted TOTP secret
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    totp_verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    backup_codes: Mapped[Optional[dict]] = mapped_column(
+        JSONB, nullable=True
+    )  # Encrypted backup codes
+    failed_totp_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    totp_lockout_until: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # Preferences
     locale: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     timezone: Mapped[str] = mapped_column(String(50), default="UTC", nullable=False)

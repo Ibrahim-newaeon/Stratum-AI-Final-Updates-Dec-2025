@@ -1086,7 +1086,7 @@ class WhatsAppAdapter(BaseAdapter):
             if hasattr(e, 'response') and e.response is not None:
                 try:
                     error_data = e.response.json()
-                except:
+                except (json.JSONDecodeError, ValueError):
                     pass
 
             error_msg = error_data.get("error", {}).get("message", str(e))

@@ -91,13 +91,13 @@ class SignalHealthService:
             if record.issues:
                 try:
                     issues_list.extend(json.loads(record.issues))
-                except:
+                except (json.JSONDecodeError, TypeError, ValueError):
                     issues_list.append(record.issues)
 
             if record.actions:
                 try:
                     actions_list.extend(json.loads(record.actions))
-                except:
+                except (json.JSONDecodeError, TypeError, ValueError):
                     actions_list.append(record.actions)
 
         # Generate cards

@@ -301,6 +301,23 @@ class Settings(BaseSettings):
         """Check if running in production mode."""
         return self.app_env == "production"
 
+    @property
+    def stripe_enabled(self) -> bool:
+        """Check if Stripe is configured (has secret key)."""
+        return bool(self.stripe_secret_key)
+
+    @property
+    def stripe_fully_configured(self) -> bool:
+        """Check if all Stripe settings are properly configured for payments."""
+        return all([
+            self.stripe_secret_key,
+            self.stripe_publishable_key,
+            self.stripe_webhook_secret,
+            self.stripe_starter_price_id,
+            self.stripe_professional_price_id,
+            self.stripe_enterprise_price_id,
+        ])
+
     @model_validator(mode="after")
     def validate_security_settings(self) -> "Settings":
         """
@@ -334,17 +351,44 @@ class Settings(BaseSettings):
         if not self.pii_encryption_key or len(self.pii_encryption_key) < 32:
             issues.append("PII_ENCRYPTION_KEY must be set and be at least 32 characters")
 
-        # Check for common weak keys
-        weak_keys = [
-            "dev-secret-key", "jwt-secret-dev", "dev-encryption-key",
-            "changeme", "secret", "password", "test", "demo"
+        # Check for common weak keys and development fallback patterns
+        weak_key_patterns = [
+            "dev-secret", "jwt-secret-dev", "dev-encryption",
+            "changeme", "secret", "password", "test", "demo",
+            "dev-only", "do-not-use", "example", "placeholder",
+            "your-key", "change-me", "default", "insecure",
         ]
         for key_field in ["secret_key", "jwt_secret_key", "pii_encryption_key"]:
             key_value = getattr(self, key_field, "").lower()
-            for weak in weak_keys:
+            for weak in weak_key_patterns:
                 if weak in key_value:
-                    issues.append(f"{key_field.upper()} contains weak/default value")
+                    issues.append(f"{key_field.upper()} contains weak/default value (matched: '{weak}')")
                     break
+
+        # Validate Stripe configuration in production
+        # If Stripe secret key is set, all other Stripe settings must also be set
+        if self.stripe_secret_key:
+            stripe_issues = []
+            if not self.stripe_publishable_key:
+                stripe_issues.append("STRIPE_PUBLISHABLE_KEY is required when STRIPE_SECRET_KEY is set")
+            if not self.stripe_webhook_secret:
+                stripe_issues.append("STRIPE_WEBHOOK_SECRET is required for payment webhooks")
+            if not self.stripe_starter_price_id:
+                stripe_issues.append("STRIPE_STARTER_PRICE_ID is required for subscription checkout")
+            if not self.stripe_professional_price_id:
+                stripe_issues.append("STRIPE_PROFESSIONAL_PRICE_ID is required for subscription checkout")
+            if not self.stripe_enterprise_price_id:
+                stripe_issues.append("STRIPE_ENTERPRISE_PRICE_ID is required for subscription checkout")
+
+            # Check for test keys in production
+            if self.is_production:
+                if self.stripe_secret_key.startswith("sk_test_"):
+                    stripe_issues.append("STRIPE_SECRET_KEY is using test key in production (should be sk_live_...)")
+                if self.stripe_publishable_key and self.stripe_publishable_key.startswith("pk_test_"):
+                    stripe_issues.append("STRIPE_PUBLISHABLE_KEY is using test key in production (should be pk_live_...)")
+
+            if stripe_issues:
+                issues.extend(stripe_issues)
 
         if issues:
             if self.is_production:

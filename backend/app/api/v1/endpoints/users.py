@@ -7,17 +7,25 @@ User profile and management endpoints.
 
 from typing import List, Optional
 from datetime import datetime, timezone
+import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import redis.asyncio as redis
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.security import decrypt_pii, encrypt_pii, get_password_hash, hash_pii_for_lookup
 from app.db.session import get_async_session
-from app.models import User, UserRole
+from app.models import User, UserRole, Tenant
 from app.schemas import APIResponse, UserProfileResponse, UserResponse, UserUpdate
+from app.services.email_service import get_email_service
+
+# Redis key prefix for invite tokens
+INVITE_TOKEN_PREFIX = "user_invite:"
+INVITE_TOKEN_EXPIRY = 7 * 24 * 3600  # 7 days
 
 
 class InviteUserRequest(BaseModel):
@@ -198,14 +206,17 @@ async def list_users(
 async def invite_user(
     request: Request,
     invite_data: InviteUserRequest,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
     Invite a new user to the tenant.
     Requires admin role.
+    Sends an invite email with a link to set up their account.
     """
     tenant_id = getattr(request.state, "tenant_id", None)
     requester_role = getattr(request.state, "role", None)
+    requester_user_id = getattr(request.state, "user_id", None)
 
     # Only admins can invite users
     if requester_role not in ["admin", "superadmin"]:
@@ -228,6 +239,23 @@ async def invite_user(
             detail="User with this email already exists",
         )
 
+    # Get tenant name for invite email
+    tenant_result = await db.execute(
+        select(Tenant).where(Tenant.id == tenant_id)
+    )
+    tenant = tenant_result.scalar_one_or_none()
+    tenant_name = tenant.name if tenant else "Stratum AI"
+
+    # Get inviter's name
+    inviter_name = "An administrator"
+    if requester_user_id:
+        inviter_result = await db.execute(
+            select(User).where(User.id == requester_user_id)
+        )
+        inviter = inviter_result.scalar_one_or_none()
+        if inviter and inviter.full_name:
+            inviter_name = decrypt_pii(inviter.full_name)
+
     # Map role string to enum
     role_map = {
         "admin": UserRole.ADMIN,
@@ -237,7 +265,6 @@ async def invite_user(
     user_role = role_map.get(invite_data.role.lower(), UserRole.USER)
 
     # Create user with temporary password (will need to set password on first login)
-    import secrets
     temp_password = secrets.token_urlsafe(16)
 
     user = User(
@@ -255,7 +282,34 @@ async def invite_user(
     await db.commit()
     await db.refresh(user)
 
-    # TODO: Send invite email with password reset link
+    # Generate invite token and store in Redis
+    invite_token = secrets.token_urlsafe(32)
+    try:
+        redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+        token_key = f"{INVITE_TOKEN_PREFIX}{invite_token}"
+        token_data = f"{user.id}:{tenant_id}:{invite_data.email.lower()}"
+        await redis_client.setex(token_key, INVITE_TOKEN_EXPIRY, token_data)
+        await redis_client.close()
+    except Exception as e:
+        logger.error(f"Redis error storing invite token: {e}")
+        # Continue anyway - user can request password reset
+
+    # Send invite email in background
+    async def send_invite():
+        try:
+            email_service = get_email_service()
+            email_service.send_user_invite_email(
+                to_email=invite_data.email.lower(),
+                inviter_name=inviter_name,
+                tenant_name=tenant_name,
+                invite_token=invite_token,
+                role=invite_data.role,
+            )
+            logger.info(f"Invite email sent to {invite_data.email[:10]}...")
+        except Exception as e:
+            logger.error(f"Error sending invite email: {e}")
+
+    background_tasks.add_task(send_invite)
 
     logger.info(f"Invited user {user.id} to tenant {tenant_id}")
 

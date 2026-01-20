@@ -23,9 +23,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.core.security import decrypt_pii
 from app.db.session import async_session_maker
-from app.base_models import Tenant
+from app.base_models import Tenant, User
 from app.services import stripe_service
+from app.services.email_service import get_email_service
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["stripe-webhook"])
@@ -345,10 +347,12 @@ async def handle_invoice_payment_failed(db: AsyncSession, invoice: dict):
     Handle invoice.payment_failed event.
 
     This indicates a payment failure - subscription may become past_due.
+    Sends email notification to tenant admins about the failed payment.
     """
     customer_id = invoice.get("customer")
     subscription_id = invoice.get("subscription")
     attempt_count = invoice.get("attempt_count", 0)
+    amount_due = invoice.get("amount_due", 0)
 
     logger.warning(
         "stripe_invoice_payment_failed",
@@ -363,10 +367,53 @@ async def handle_invoice_payment_failed(db: AsyncSession, invoice: dict):
         return
 
     # The subscription status will be updated by subscription.updated event
-    # Here we could send a notification to the user about the failed payment
+    # Send email notification about failed payment to tenant admins
 
-    # TODO: Send email notification about failed payment
-    # await send_payment_failed_notification(tenant, attempt_count)
+    # Format amount (Stripe uses cents)
+    amount_str = None
+    if amount_due:
+        currency = invoice.get("currency", "usd").upper()
+        amount_str = f"${amount_due / 100:.2f} {currency}"
+
+    # Get tenant admin users to notify
+    from app.models import UserRole
+    result = await db.execute(
+        select(User).where(
+            User.tenant_id == tenant.id,
+            User.role == UserRole.ADMIN,
+            User.is_active == True,
+            User.is_deleted == False,
+        )
+    )
+    admin_users = result.scalars().all()
+
+    # Send notification email to each admin
+    email_service = get_email_service()
+    for user in admin_users:
+        try:
+            email = decrypt_pii(user.email) if user.email else None
+            full_name = decrypt_pii(user.full_name) if user.full_name else None
+
+            if email:
+                email_service.send_payment_failed_email(
+                    to_email=email,
+                    user_name=full_name,
+                    attempt_count=attempt_count,
+                    amount_due=amount_str,
+                )
+                logger.info(
+                    "payment_failed_email_sent",
+                    tenant_id=tenant.id,
+                    user_id=user.id,
+                    attempt_count=attempt_count,
+                )
+        except Exception as e:
+            logger.error(
+                "payment_failed_email_error",
+                tenant_id=tenant.id,
+                user_id=user.id,
+                error=str(e),
+            )
 
 
 async def handle_customer_created(db: AsyncSession, customer: dict):

@@ -1064,7 +1064,9 @@ async def get_tenant_usage(
             SELECT COUNT(*) FROM platform_connectors WHERE tenant_id = :tenant_id AND status = 'connected'
         """), {"tenant_id": tenant_id})
         connectors_count = connector_result.scalar() or 0
-    except:
+    except Exception as e:
+        # Table may not exist or other DB error - default to 0
+        logger.warning(f"Could not fetch connector count for tenant {tenant_id}: {e}")
         connectors_count = 0
 
     # Get limits from tenant or default

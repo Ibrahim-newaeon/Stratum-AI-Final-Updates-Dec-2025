@@ -52,6 +52,7 @@ from app.api.v1.endpoints import (
     subscription,
     payments,
     stripe_webhook,
+    mfa,
 )
 
 api_router = APIRouter()
@@ -345,4 +346,10 @@ api_router.include_router(
 api_router.include_router(
     stripe_webhook.router,
     tags=["Stripe Webhooks"],
+)
+
+# MFA (Two-Factor Authentication)
+api_router.include_router(
+    mfa.router,
+    tags=["MFA"],
 )
