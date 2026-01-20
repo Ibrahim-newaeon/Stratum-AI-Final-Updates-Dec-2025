@@ -256,6 +256,34 @@ class Settings(BaseSettings):
     rate_limit_burst: int = Field(default=20)
 
     # -------------------------------------------------------------------------
+    # Stripe Payment Configuration
+    # -------------------------------------------------------------------------
+    stripe_secret_key: Optional[str] = Field(
+        default=None,
+        description="Stripe Secret Key (sk_live_... or sk_test_...)"
+    )
+    stripe_publishable_key: Optional[str] = Field(
+        default=None,
+        description="Stripe Publishable Key (pk_live_... or pk_test_...)"
+    )
+    stripe_webhook_secret: Optional[str] = Field(
+        default=None,
+        description="Stripe Webhook Signing Secret (whsec_...)"
+    )
+    stripe_starter_price_id: Optional[str] = Field(
+        default=None,
+        description="Stripe Price ID for Starter tier (price_...)"
+    )
+    stripe_professional_price_id: Optional[str] = Field(
+        default=None,
+        description="Stripe Price ID for Professional tier (price_...)"
+    )
+    stripe_enterprise_price_id: Optional[str] = Field(
+        default=None,
+        description="Stripe Price ID for Enterprise tier (price_...)"
+    )
+
+    # -------------------------------------------------------------------------
     # Feature Flags
     # -------------------------------------------------------------------------
     feature_competitor_intel: bool = Field(default=True)

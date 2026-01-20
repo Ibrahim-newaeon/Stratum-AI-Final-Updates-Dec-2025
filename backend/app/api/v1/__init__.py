@@ -50,6 +50,8 @@ from app.api.v1.endpoints import (
     audience_sync,
     tier,
     subscription,
+    payments,
+    stripe_webhook,
 )
 
 api_router = APIRouter()
@@ -331,4 +333,16 @@ api_router.include_router(
 api_router.include_router(
     subscription.router,
     tags=["Subscription"],
+)
+
+# Payment Processing (Stripe integration)
+api_router.include_router(
+    payments.router,
+    tags=["Payments"],
+)
+
+# Stripe Webhooks (public endpoint for Stripe events)
+api_router.include_router(
+    stripe_webhook.router,
+    tags=["Stripe Webhooks"],
 )
