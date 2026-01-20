@@ -157,23 +157,60 @@ class FeatureGate:
     """
     FastAPI dependency for feature gating.
 
+    Checks both tier-based feature access AND subscription validity.
+
     Usage:
         @router.get("/churn")
         async def get_churn(
             _: None = Depends(FeatureGate(Feature.PREDICTIVE_CHURN))
         ):
             ...
+
+        # Skip subscription check (e.g., for billing pages)
+        @router.get("/billing-status")
+        async def get_billing(
+            _: None = Depends(FeatureGate(Feature.DASHBOARD_EXPORTS, check_subscription=False))
+        ):
+            ...
     """
 
-    def __init__(self, feature: Feature):
+    def __init__(self, feature: Feature, check_subscription: bool = True):
+        """
+        Args:
+            feature: The feature to check access for
+            check_subscription: If True, also validates subscription status
+        """
         self.feature = feature
+        self.check_subscription = check_subscription
 
     async def __call__(self, request: Request) -> None:
         # Get tenant_id from request state (set by middleware)
         tenant_id = getattr(request.state, 'tenant_id', None)
 
         if tenant_id:
-            current_tier = await get_tenant_tier(tenant_id)
+            # Check subscription status first (if enabled)
+            if self.check_subscription:
+                from app.core.subscription import get_subscription_info, is_access_allowed
+
+                sub_info = await get_subscription_info(tenant_id)
+                request.state.subscription_info = sub_info
+
+                if not is_access_allowed(sub_info.status, allow_grace=True):
+                    raise HTTPException(
+                        status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                        detail={
+                            "error": "subscription_expired",
+                            "status": sub_info.status.value,
+                            "message": sub_info.restriction_reason or "Subscription has expired",
+                            "feature": self.feature.value,
+                            "renew_url": "/settings/billing",
+                        }
+                    )
+
+                current_tier = sub_info.tier
+            else:
+                current_tier = await get_tenant_tier(tenant_id)
+
             # Cache for subsequent calls
             request.state.subscription_tier = current_tier.value
         else:
@@ -187,6 +224,8 @@ class TierGate:
     """
     FastAPI dependency for tier-level gating.
 
+    Checks both tier level AND subscription validity.
+
     Usage:
         @router.get("/enterprise-only")
         async def enterprise_endpoint(
@@ -195,15 +234,42 @@ class TierGate:
             ...
     """
 
-    def __init__(self, minimum_tier: SubscriptionTier):
+    def __init__(self, minimum_tier: SubscriptionTier, check_subscription: bool = True):
+        """
+        Args:
+            minimum_tier: The minimum tier required
+            check_subscription: If True, also validates subscription status
+        """
         self.minimum_tier = minimum_tier
+        self.check_subscription = check_subscription
 
     async def __call__(self, request: Request) -> None:
         # Get tenant_id from request state
         tenant_id = getattr(request.state, 'tenant_id', None)
 
         if tenant_id:
-            current_tier = await get_tenant_tier(tenant_id)
+            # Check subscription status first (if enabled)
+            if self.check_subscription:
+                from app.core.subscription import get_subscription_info, is_access_allowed
+
+                sub_info = await get_subscription_info(tenant_id)
+                request.state.subscription_info = sub_info
+
+                if not is_access_allowed(sub_info.status, allow_grace=True):
+                    raise HTTPException(
+                        status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                        detail={
+                            "error": "subscription_expired",
+                            "status": sub_info.status.value,
+                            "message": sub_info.restriction_reason or "Subscription has expired",
+                            "renew_url": "/settings/billing",
+                        }
+                    )
+
+                current_tier = sub_info.tier
+            else:
+                current_tier = await get_tenant_tier(tenant_id)
+
             request.state.subscription_tier = current_tier.value
         else:
             current_tier = get_current_tier()

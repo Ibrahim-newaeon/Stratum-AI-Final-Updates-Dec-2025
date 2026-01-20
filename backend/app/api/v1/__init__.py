@@ -49,6 +49,7 @@ from app.api.v1.endpoints import (
     cdp,
     audience_sync,
     tier,
+    subscription,
 )
 
 api_router = APIRouter()
@@ -324,4 +325,10 @@ api_router.include_router(
 api_router.include_router(
     tier.router,
     tags=["Subscription Tier"],
+)
+
+# Subscription Status (Expiry, billing, warnings)
+api_router.include_router(
+    subscription.router,
+    tags=["Subscription"],
 )
