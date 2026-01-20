@@ -66,7 +66,14 @@ class TenantLimitService:
         if not tenant:
             raise ValueError(f"Tenant {tenant_id} not found")
 
-        tier = SubscriptionTier(tenant.plan)
+        # Map plan names to subscription tiers (handles 'free' -> 'starter')
+        plan_mapping = {
+            'free': SubscriptionTier.STARTER,
+            'starter': SubscriptionTier.STARTER,
+            'professional': SubscriptionTier.PROFESSIONAL,
+            'enterprise': SubscriptionTier.ENTERPRISE,
+        }
+        tier = plan_mapping.get(tenant.plan.lower(), SubscriptionTier.STARTER)
         return get_tier_limits(tier)
 
     async def check_user_limit(self, tenant_id: int) -> LimitCheckResult:

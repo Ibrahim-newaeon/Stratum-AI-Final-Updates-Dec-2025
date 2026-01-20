@@ -3,11 +3,15 @@
 # =============================================================================
 """
 API endpoints for subscription tier information and feature access.
+
+These endpoints provide information about the current tenant's subscription tier,
+available features, and limits. The tier is determined from the database based
+on the authenticated user's tenant.
 """
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.core.tiers import (
     Feature,
@@ -22,29 +26,42 @@ from app.core.tiers import (
 )
 from app.core.feature_gate import (
     get_current_tier,
-    get_tier_features_response,
-    check_feature,
+    get_current_tier_dependency,
+    get_tenant_tier,
+    get_tier_features_for_tenant,
 )
 
 router = APIRouter(prefix="/tier", tags=["tier"])
 
 
 @router.get("/current")
-async def get_current_tier_info():
+async def get_current_tier_info(
+    request: Request,
+    tier: SubscriptionTier = Depends(get_current_tier_dependency),
+):
     """
     Get current subscription tier and available features.
 
-    Returns tier name, features, limits, and pricing info.
+    Returns tier name, features, limits, and pricing info based on
+    the authenticated user's tenant subscription.
     """
-    return get_tier_features_response()
+    tenant_id = getattr(request.state, 'tenant_id', None)
+    if tenant_id:
+        return await get_tier_features_for_tenant(tenant_id)
+
+    # Fallback for unauthenticated requests
+    info = get_tier_info(tier)
+    pricing = TIER_PRICING.get(tier, {})
+    return {**info, "pricing": pricing}
 
 
 @router.get("/features")
-async def get_tier_features():
+async def get_tier_features(
+    tier: SubscriptionTier = Depends(get_current_tier_dependency),
+):
     """
     Get list of all features available for current tier.
     """
-    tier = get_current_tier()
     return {
         "tier": tier.value,
         "features": get_available_features(tier),
@@ -52,7 +69,10 @@ async def get_tier_features():
 
 
 @router.get("/features/{feature_name}")
-async def check_feature_access(feature_name: str):
+async def check_feature_access(
+    feature_name: str,
+    tier: SubscriptionTier = Depends(get_current_tier_dependency),
+):
     """
     Check if a specific feature is available.
 
@@ -62,8 +82,6 @@ async def check_feature_access(feature_name: str):
         tier: str - current tier
         required_tier: str - minimum tier needed (if not available)
     """
-    tier = get_current_tier()
-
     try:
         feature = Feature(feature_name)
         available = has_feature(tier, feature)
@@ -92,11 +110,12 @@ async def check_feature_access(feature_name: str):
 
 
 @router.get("/limits")
-async def get_tier_limits():
+async def get_tier_limits_endpoint(
+    tier: SubscriptionTier = Depends(get_current_tier_dependency),
+):
     """
     Get all limits for current tier.
     """
-    tier = get_current_tier()
     return {
         "tier": tier.value,
         "limits": TIER_LIMITS.get(tier, {}),
@@ -104,11 +123,13 @@ async def get_tier_limits():
 
 
 @router.get("/limits/{limit_name}")
-async def get_specific_limit(limit_name: str):
+async def get_specific_limit(
+    limit_name: str,
+    tier: SubscriptionTier = Depends(get_current_tier_dependency),
+):
     """
     Get a specific limit value for current tier.
     """
-    tier = get_current_tier()
     limit_value = get_tier_limit(tier, limit_name)
 
     return {
@@ -119,13 +140,13 @@ async def get_specific_limit(limit_name: str):
 
 
 @router.get("/all")
-async def get_all_tiers():
+async def get_all_tiers(
+    current_tier: SubscriptionTier = Depends(get_current_tier_dependency),
+):
     """
     Get information about all available tiers.
     Useful for displaying upgrade options.
     """
-    current_tier = get_current_tier()
-
     tiers = []
     for tier in [SubscriptionTier.STARTER, SubscriptionTier.PROFESSIONAL, SubscriptionTier.ENTERPRISE]:
         info = get_tier_info(tier)

@@ -11,6 +11,7 @@ Tiers:
 """
 
 import enum
+from dataclasses import dataclass
 from typing import Dict, List, Set
 from functools import wraps
 
@@ -237,6 +238,53 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
         "max_embed_domains": 999999,  # Unlimited
     },
 }
+
+
+# =============================================================================
+# TierLimits Dataclass - Type-safe access to tier limits
+# =============================================================================
+
+@dataclass
+class TierLimits:
+    """Type-safe representation of tier limits."""
+    max_ad_accounts: int
+    max_users: int
+    max_segments: int
+    max_automations: int
+    max_audience_sync_platforms: int
+    api_rate_limit_per_minute: int
+    data_retention_days: int
+    max_embed_widgets: int
+    max_embed_domains: int
+
+    @classmethod
+    def from_dict(cls, limits_dict: Dict[str, int]) -> "TierLimits":
+        """Create TierLimits from a dictionary."""
+        return cls(
+            max_ad_accounts=limits_dict.get("max_ad_accounts", 0),
+            max_users=limits_dict.get("max_users", 0),
+            max_segments=limits_dict.get("max_segments", 0),
+            max_automations=limits_dict.get("max_automations", 0),
+            max_audience_sync_platforms=limits_dict.get("max_audience_sync_platforms", 0),
+            api_rate_limit_per_minute=limits_dict.get("api_rate_limit_per_minute", 0),
+            data_retention_days=limits_dict.get("data_retention_days", 0),
+            max_embed_widgets=limits_dict.get("max_embed_widgets", 0),
+            max_embed_domains=limits_dict.get("max_embed_domains", 0),
+        )
+
+
+def get_tier_limits(tier: SubscriptionTier) -> TierLimits:
+    """
+    Get all limits for a tier as a TierLimits dataclass.
+
+    Args:
+        tier: The subscription tier
+
+    Returns:
+        TierLimits dataclass with all limits for the tier
+    """
+    limits_dict = TIER_LIMITS.get(tier, TIER_LIMITS[SubscriptionTier.STARTER])
+    return TierLimits.from_dict(limits_dict)
 
 
 def has_feature(tier: SubscriptionTier, feature: Feature) -> bool:
