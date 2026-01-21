@@ -312,7 +312,7 @@ export default function Signup() {
               </span>
             </Link>
 
-            <h1 className="text-4xl font-bold mb-4 leading-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h1 className="text-4xl font-bold mb-4 leading-tight" style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}>
               Start optimizing your
               <br />
               <span style={{ color: '#f97316' }}>ad campaigns today</span>

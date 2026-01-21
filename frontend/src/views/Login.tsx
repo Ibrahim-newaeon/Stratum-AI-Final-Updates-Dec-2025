@@ -136,7 +136,7 @@ export default function Login() {
               </span>
             </Link>
 
-            <h1 className="text-4xl font-bold mb-4 leading-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h1 className="text-4xl font-bold mb-4 leading-tight" style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}>
               Revenue Operating System
               <br />
               <span style={{ color: '#f97316' }}>with Trust-Gated Autopilot</span>
