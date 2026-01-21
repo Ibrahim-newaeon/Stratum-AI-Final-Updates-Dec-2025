@@ -106,6 +106,30 @@ const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'))
 // Tier-specific landing pages
 const TierLandingPage = lazy(() => import('./views/plans/TierLandingPage'))
 
+// Public pages (Product)
+const FeaturesPage = lazy(() => import('./views/pages/Features'))
+const PricingPage = lazy(() => import('./views/pages/Pricing'))
+const IntegrationsPage = lazy(() => import('./views/pages/Integrations'))
+const ApiDocsPage = lazy(() => import('./views/pages/ApiDocs'))
+
+// Public pages (Solutions)
+const CDPSolutionPage = lazy(() => import('./views/pages/solutions/CDP'))
+const AudienceSyncPage = lazy(() => import('./views/pages/solutions/AudienceSync'))
+const PredictionsSolutionPage = lazy(() => import('./views/pages/solutions/PredictionsSolution'))
+const TrustEnginePage = lazy(() => import('./views/pages/solutions/TrustEngine'))
+
+// Public pages (Company)
+const AboutPage = lazy(() => import('./views/pages/company/About'))
+const CareersPage = lazy(() => import('./views/pages/company/Careers'))
+const BlogPage = lazy(() => import('./views/pages/company/Blog'))
+const ContactPage = lazy(() => import('./views/pages/company/Contact'))
+
+// Public pages (Legal)
+const PrivacyPage = lazy(() => import('./views/pages/legal/Privacy'))
+const TermsPage = lazy(() => import('./views/pages/legal/Terms'))
+const SecurityPage = lazy(() => import('./views/pages/legal/Security'))
+const DPAPage = lazy(() => import('./views/pages/legal/DPA'))
+
 function App() {
   return (
     <ThemeProvider>
@@ -200,6 +224,142 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <TierLandingPage />
+                  </Suspense>
+                }
+              />
+
+              {/* Product pages (public) */}
+              <Route
+                path="/features"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <FeaturesPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/pricing"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <PricingPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/integrations"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <IntegrationsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/api-docs"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ApiDocsPage />
+                  </Suspense>
+                }
+              />
+
+              {/* Solutions pages (public) */}
+              <Route
+                path="/solutions/cdp"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <CDPSolutionPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/solutions/audience-sync"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AudienceSyncPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/solutions/predictions"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <PredictionsSolutionPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/solutions/trust-engine"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <TrustEnginePage />
+                  </Suspense>
+                }
+              />
+
+              {/* Company pages (public) */}
+              <Route
+                path="/about"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AboutPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/careers"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <CareersPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/blog"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <BlogPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ContactPage />
+                  </Suspense>
+                }
+              />
+
+              {/* Legal pages (public) */}
+              <Route
+                path="/privacy"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <PrivacyPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <TermsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/security"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SecurityPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/dpa"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <DPAPage />
                   </Suspense>
                 }
               />
