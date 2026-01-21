@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaaS Glossary | Stratum AI - Master the Language of Revenue Operations</title>
+  <meta name="description" content="Comprehensive glossary of SaaS, Revenue Operations, and AI terms. Essential definitions for business, technical, and marketing teams.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple: #a855f7;
+      --cyan: #06b6d4;
+      --orange: #f97316;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --pink: #ec4899;
+    }
+    * { font-family: 'Inter', -apple-system, sans-serif; }
+    body { background: #030303; color: #fff; overflow-x: hidden; }
+
+    /* 2026 Mesh Gradient Background */
+    .mesh-gradient {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(168,85,247,0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(6,182,212,0.10), transparent),
+        radial-gradient(ellipse 50% 60% at 60% 80%, rgba(249,115,22,0.06), transparent),
+        radial-gradient(ellipse 40% 40% at 40% 60%, rgba(34,197,94,0.04), transparent);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Noise texture */
+    .noise {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Animations */
+    @keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    @keyframes pulse-ring { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+    @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes morph { 0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; } 50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; } }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    @keyframes typewriter { from { width: 0; } to { width: 100%; } }
+
+    .animate-gradient { animation: gradient-shift 8s ease infinite; background-size: 200% 200%; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-fade-up { animation: fade-up 0.8s ease-out forwards; opacity: 0; }
+    .animate-morph { animation: morph 8s ease-in-out infinite; }
+
+    /* Delay utilities */
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
+
+    /* Glass morphism 2026 */
+    .glass {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    /* Gradient borders */
+    .gradient-border {
+      position: relative;
+      background: #0a0a0a;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, var(--purple), var(--cyan), var(--orange));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    /* Text gradients */
+    .text-gradient { background: linear-gradient(135deg, #a855f7, #06b6d4, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-purple { background: linear-gradient(135deg, #a855f7, #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-cyan { background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-green { background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-orange { background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-pink { background: linear-gradient(135deg, #ec4899, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    /* Card styles */
+    .term-card {
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      transform-style: preserve-3d;
+    }
+    .term-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+    }
+    .term-card:hover .term-abbr {
+      transform: scale(1.05);
+    }
+
+    /* Category tabs */
+    .category-tab {
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .category-tab::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+    .category-tab:hover::after,
+    .category-tab.active::after {
+      width: 100%;
+    }
+    .category-tab.active {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    /* Search input */
+    .search-input {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    .search-input:focus {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(168,85,247,0.5);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.1);
+      outline: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #a855f7, #06b6d4); border-radius: 3px; }
+
+    /* Term abbreviation badge */
+    .term-abbr {
+      transition: transform 0.3s ease;
+    }
+
+    /* Category color coding */
+    .cat-business { --cat-color: #a855f7; }
+    .cat-technical { --cat-color: #06b6d4; }
+    .cat-marketing { --cat-color: #f97316; }
+    .cat-ai { --cat-color: #22c55e; }
+    .cat-metrics { --cat-color: #ec4899; }
+    .cat-customer { --cat-color: #3b82f6; }
+
+    /* Alphabet navigation */
+    .alpha-nav {
+      position: sticky;
+      top: 80px;
+      z-index: 40;
+    }
+    .alpha-letter {
+      transition: all 0.2s ease;
+    }
+    .alpha-letter:hover {
+      color: #a855f7;
+      transform: scale(1.2);
+    }
+    .alpha-letter.has-terms {
+      color: #fff;
+      font-weight: 600;
+    }
+    .alpha-letter.no-terms {
+      color: #444;
+      cursor: default;
+    }
+
+    /* Highlight effect */
+    .highlight-term {
+      animation: highlight 2s ease-out;
+    }
+    @keyframes highlight {
+      0% { background: rgba(168,85,247,0.3); }
+      100% { background: transparent; }
+    }
+
+    /* Formula styling */
+    .formula {
+      font-family: 'Courier New', monospace;
+      background: rgba(168,85,247,0.1);
+      border: 1px solid rgba(168,85,247,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      display: inline-block;
+      margin-top: 0.5rem;
+    }
+
+    /* Related terms */
+    .related-term {
+      transition: all 0.2s ease;
+    }
+    .related-term:hover {
+      background: rgba(168,85,247,0.2);
+      border-color: rgba(168,85,247,0.4);
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <!-- Background Effects -->
+  <div class="mesh-gradient"></div>
+  <div class="noise"></div>
+
+  <!-- Floating Orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-morph"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-morph" style="animation-delay: -4s;"></div>
+    <div class="absolute top-1/2 right-1/3 w-64 h-64 bg-orange-500/8 rounded-full blur-3xl animate-float"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass-strong">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3 group">
+          <div class="relative w-11 h-11 rounded-2xl gradient-border overflow-hidden">
+            <div class="absolute inset-[1px] rounded-2xl bg-black flex items-center justify-center">
+              <span class="text-xl font-black text-gradient">S</span>
+            </div>
+          </div>
+          <div>
+            <span class="text-xl font-bold tracking-tight">Stratum</span>
+            <span class="text-xl font-light text-purple-400 ml-1">AI</span>
+          </div>
+        </a>
+
+        <div class="hidden lg:flex items-center gap-10">
+          <a href="/" class="text-sm text-gray-400 hover:text-white transition-colors">Home</a>
+          <a href="#business" class="text-sm text-gray-400 hover:text-white transition-colors">Business</a>
+          <a href="#technical" class="text-sm text-gray-400 hover:text-white transition-colors">Technical</a>
+          <a href="#marketing" class="text-sm text-gray-400 hover:text-white transition-colors">Marketing</a>
+          <a href="#ai" class="text-sm text-gray-400 hover:text-white transition-colors">AI & ML</a>
+        </div>
+
+        <a href="/signup" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-500 hover:opacity-90 transition-opacity">
+          Get Started
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative pt-32 pb-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center max-w-4xl mx-auto">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full glass mb-8 animate-fade-up">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            <span class="text-xs font-medium text-purple-400">100+ ESSENTIAL TERMS</span>
+          </div>
+          <div class="w-px h-4 bg-white/20"></div>
+          <span class="text-xs text-gray-400">Updated January 2026</span>
+        </div>
+
+        <!-- Main Headline -->
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight mb-6 animate-fade-up delay-100">
+          <span class="text-white">The SaaS</span><br>
+          <span class="text-gradient">Glossary</span>
+        </h1>
+
+        <!-- Subheadline -->
+        <p class="text-lg sm:text-xl text-gray-400 leading-relaxed mb-10 max-w-2xl mx-auto animate-fade-up delay-200">
+          Master the language of <span class="text-white font-medium">Revenue Operations</span>,
+          <span class="text-purple-400">AI/ML</span>, and <span class="text-cyan-400">SaaS growth</span>.
+          Essential definitions for every team member.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="max-w-xl mx-auto mb-12 animate-fade-up delay-300">
+          <div class="relative">
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search terms... (e.g., ARR, API, CAC)"
+              class="w-full pl-12 pr-4 py-4 rounded-2xl search-input text-white placeholder-gray-500"
+            >
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <kbd class="px-2 py-1 text-xs text-gray-500 bg-white/5 rounded border border-white/10">/</kbd>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-up delay-400">
+          <div class="p-4 rounded-2xl glass text-center">
+            <div class="text-2xl font-bold text-gradient-purple mb-1">25+</div>
+            <div class="text-xs text-gray-500">Business Terms</div>
+          </div>
+          <div class="p-4 rounded-2xl glass text-center">
+            <div class="text-2xl font-bold text-gradient-cyan mb-1">30+</div>
+            <div class="text-xs text-gray-500">Technical Terms</div>
+          </div>
+          <div class="p-4 rounded-2xl glass text-center">
+            <div class="text-2xl font-bold text-gradient-orange mb-1">25+</div>
+            <div class="text-xs text-gray-500">Marketing Terms</div>
+          </div>
+          <div class="p-4 rounded-2xl glass text-center">
+            <div class="text-2xl font-bold text-gradient-green mb-1">20+</div>
+            <div class="text-xs text-gray-500">AI/ML Terms</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Tabs -->
+  <section class="sticky top-[72px] z-40 bg-[#030303]/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex items-center gap-2 py-4 overflow-x-auto hide-scrollbar">
+        <button onclick="filterCategory('all')" class="category-tab active px-4 py-2 rounded-xl text-sm font-medium text-white glass whitespace-nowrap" data-category="all">
+          All Terms
+        </button>
+        <button onclick="filterCategory('business')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white glass whitespace-nowrap" data-category="business">
+          <span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-2"></span>Business
+        </button>
+        <button onclick="filterCategory('technical')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white glass whitespace-nowrap" data-category="technical">
+          <span class="inline-block w-2 h-2 rounded-full bg-cyan-500 mr-2"></span>Technical
+        </button>
+        <button onclick="filterCategory('marketing')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white glass whitespace-nowrap" data-category="marketing">
+          <span class="inline-block w-2 h-2 rounded-full bg-orange-500 mr-2"></span>Marketing
+        </button>
+        <button onclick="filterCategory('ai')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white glass whitespace-nowrap" data-category="ai">
+          <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>AI & ML
+        </button>
+        <button onclick="filterCategory('metrics')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white glass whitespace-nowrap" data-category="metrics">
+          <span class="inline-block w-2 h-2 rounded-full bg-pink-500 mr-2"></span>Metrics
+        </button>
+        <button onclick="filterCategory('customer')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white glass whitespace-nowrap" data-category="customer">
+          <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>Customer
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Glossary Content -->
+  <main class="max-w-7xl mx-auto px-6 py-12">
+    <div id="glossaryContainer">
+
+      <!-- BUSINESS TERMS -->
+      <section id="business" class="mb-16 category-section" data-category="business">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Business & Revenue</h2>
+            <p class="text-sm text-gray-500">Core SaaS business metrics and financial terms</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- ARR -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="arr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">ARR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Annual Recurring Revenue</h3>
+            <p class="text-sm text-gray-400 mb-3">The predictable revenue a company expects to receive annually from subscriptions. The north star metric for SaaS businesses.</p>
+            <div class="formula text-xs text-purple-300">ARR = MRR × 12</div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('mrr')">MRR</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('nrr')">NRR</span>
+            </div>
+          </div>
+
+          <!-- MRR -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="mrr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">MRR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Monthly Recurring Revenue</h3>
+            <p class="text-sm text-gray-400 mb-3">Normalized monthly revenue from all active subscriptions. The heartbeat of SaaS financial health.</p>
+            <div class="formula text-xs text-purple-300">MRR = Σ(Monthly Subscription Fees)</div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('arr')">ARR</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('churn')">Churn</span>
+            </div>
+          </div>
+
+          <!-- CAC -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="cac">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">CAC</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Customer Acquisition Cost</h3>
+            <p class="text-sm text-gray-400 mb-3">Total cost to acquire a new customer, including marketing, sales, and onboarding expenses.</p>
+            <div class="formula text-xs text-purple-300">CAC = Total Acquisition Cost / New Customers</div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('ltv')">LTV</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('payback')">Payback</span>
+            </div>
+          </div>
+
+          <!-- LTV -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="ltv">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">LTV</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Lifetime Value</h3>
+            <p class="text-sm text-gray-400 mb-3">Total revenue expected from a customer over their entire relationship. Healthy SaaS targets LTV:CAC ratio of 3:1+.</p>
+            <div class="formula text-xs text-purple-300">LTV = ARPU × Customer Lifetime</div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('cac')">CAC</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('arpu')">ARPU</span>
+            </div>
+          </div>
+
+          <!-- Churn -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="churn">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">Churn</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Churn Rate</h3>
+            <p class="text-sm text-gray-400 mb-3">Percentage of customers or revenue lost over a period. The enemy of growth - reducing churn is often more valuable than acquiring new customers.</p>
+            <div class="formula text-xs text-purple-300">Churn = Lost Customers / Starting Customers × 100</div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('nrr')">NRR</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('retention')">Retention</span>
+            </div>
+          </div>
+
+          <!-- NRR -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="nrr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">NRR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Net Revenue Retention</h3>
+            <p class="text-sm text-gray-400 mb-3">Revenue retained from existing customers including expansions and contractions. NRR > 100% means growth without new customers.</p>
+            <div class="formula text-xs text-purple-300">NRR = (Start MRR + Expansion - Churn) / Start MRR</div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('arr')">ARR</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('expansion')">Expansion</span>
+            </div>
+          </div>
+
+          <!-- ARPU -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="arpu">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">ARPU</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Average Revenue Per User</h3>
+            <p class="text-sm text-gray-400 mb-3">Average monthly revenue generated per active user or account. Key for pricing optimization and segment analysis.</p>
+            <div class="formula text-xs text-purple-300">ARPU = Total Revenue / Active Users</div>
+          </div>
+
+          <!-- Payback Period -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="payback">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">Payback</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">CAC Payback Period</h3>
+            <p class="text-sm text-gray-400 mb-3">Months required to recover customer acquisition cost. Ideal payback is under 12 months for healthy unit economics.</p>
+            <div class="formula text-xs text-purple-300">Payback = CAC / (ARPU × Gross Margin)</div>
+          </div>
+
+          <!-- Expansion Revenue -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="expansion">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                <span class="text-sm font-bold text-purple-400">Expansion</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Expansion Revenue</h3>
+            <p class="text-sm text-gray-400 mb-3">Additional revenue from existing customers through upsells, cross-sells, and seat additions. The most efficient growth lever.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TECHNICAL TERMS -->
+      <section id="technical" class="mb-16 category-section" data-category="technical">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Technical & Platform</h2>
+            <p class="text-sm text-gray-500">Architecture, APIs, and infrastructure terms</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- API -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="api">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">API</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Application Programming Interface</h3>
+            <p class="text-sm text-gray-400 mb-3">Set of protocols enabling software applications to communicate. REST and GraphQL are common API architectures in modern SaaS.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('rest')">REST</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('webhook')">Webhook</span>
+            </div>
+          </div>
+
+          <!-- REST -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="rest">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">REST</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Representational State Transfer</h3>
+            <p class="text-sm text-gray-400 mb-3">Architectural style for web services using HTTP methods (GET, POST, PUT, DELETE) to manipulate resources.</p>
+          </div>
+
+          <!-- Webhook -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="webhook">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">Webhook</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">HTTP Callback</h3>
+            <p class="text-sm text-gray-400 mb-3">Automated HTTP POST sent when an event occurs. Enables real-time integrations without polling. Essential for payment and event-driven systems.</p>
+          </div>
+
+          <!-- Multi-tenancy -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="multitenancy">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">Multi-tenant</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Multi-Tenancy Architecture</h3>
+            <p class="text-sm text-gray-400 mb-3">Single software instance serving multiple customers (tenants) with data isolation. The foundation of scalable SaaS economics.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('rls')">RLS</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('isolation')">Isolation</span>
+            </div>
+          </div>
+
+          <!-- Tenant Isolation -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="isolation">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">Isolation</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Tenant Isolation</h3>
+            <p class="text-sm text-gray-400 mb-3">Security boundary ensuring one customer cannot access another's data. Achieved via RLS policies, separate schemas, or separate databases.</p>
+          </div>
+
+          <!-- RLS -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="rls">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">RLS</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Row-Level Security</h3>
+            <p class="text-sm text-gray-400 mb-3">Database security feature restricting data access at the row level based on policies. Critical for multi-tenant data isolation.</p>
+          </div>
+
+          <!-- SaaS -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="saas">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">SaaS</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Software as a Service</h3>
+            <p class="text-sm text-gray-400 mb-3">Cloud-based software delivery model with subscription pricing. Users access via browser without local installation.</p>
+          </div>
+
+          <!-- SDK -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="sdk">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">SDK</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Software Development Kit</h3>
+            <p class="text-sm text-gray-400 mb-3">Collection of tools, libraries, and documentation enabling developers to build applications for a specific platform.</p>
+          </div>
+
+          <!-- OAuth -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="oauth">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">OAuth</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Open Authorization</h3>
+            <p class="text-sm text-gray-400 mb-3">Industry-standard protocol for token-based authorization. Enables "Login with Google/Meta" without sharing passwords.</p>
+          </div>
+
+          <!-- JWT -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="jwt">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">JWT</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">JSON Web Token</h3>
+            <p class="text-sm text-gray-400 mb-3">Compact, URL-safe token format for securely transmitting claims between parties. Used for stateless authentication.</p>
+          </div>
+
+          <!-- MFA -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="mfa">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">MFA</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Multi-Factor Authentication</h3>
+            <p class="text-sm text-gray-400 mb-3">Security requiring multiple verification methods (password + TOTP/SMS). Essential for enterprise SaaS compliance.</p>
+          </div>
+
+          <!-- SSO -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="sso">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <span class="text-sm font-bold text-cyan-400">SSO</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Single Sign-On</h3>
+            <p class="text-sm text-gray-400 mb-3">Authentication allowing users to access multiple applications with one login. Common enterprise requirement using SAML or OIDC.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- MARKETING TERMS -->
+      <section id="marketing" class="mb-16 category-section" data-category="marketing">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-orange-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Marketing & Growth</h2>
+            <p class="text-sm text-gray-500">Digital marketing and lead generation terms</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Lead Gen -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="leadgen">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">Lead Gen</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Lead Generation</h3>
+            <p class="text-sm text-gray-400 mb-3">Process of attracting and capturing potential customers' contact information. The top of the sales funnel.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('mql')">MQL</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('sql')">SQL</span>
+            </div>
+          </div>
+
+          <!-- Inbound -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="inbound">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">Inbound</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Inbound Marketing</h3>
+            <p class="text-sm text-gray-400 mb-3">Strategy attracting customers through valuable content (blogs, SEO, social) rather than interruptive advertising.</p>
+          </div>
+
+          <!-- CTA -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cta">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CTA</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Call to Action</h3>
+            <p class="text-sm text-gray-400 mb-3">Prompt encouraging users to take a specific action. "Start Free Trial" and "Book Demo" are common SaaS CTAs.</p>
+          </div>
+
+          <!-- MQL -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="mql">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">MQL</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Marketing Qualified Lead</h3>
+            <p class="text-sm text-gray-400 mb-3">Lead meeting marketing criteria for engagement level and fit. Ready for sales nurturing but not yet sales-ready.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('sql')">SQL</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('pql')">PQL</span>
+            </div>
+          </div>
+
+          <!-- SQL -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="sql">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">SQL</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Sales Qualified Lead</h3>
+            <p class="text-sm text-gray-400 mb-3">Lead vetted by sales as having budget, authority, need, and timeline (BANT). Ready for direct sales engagement.</p>
+          </div>
+
+          <!-- PQL -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="pql">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">PQL</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Product Qualified Lead</h3>
+            <p class="text-sm text-gray-400 mb-3">Lead showing buying intent through product usage (trial engagement, feature adoption). The holy grail of PLG motion.</p>
+          </div>
+
+          <!-- PLG -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="plg">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">PLG</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Product-Led Growth</h3>
+            <p class="text-sm text-gray-400 mb-3">Go-to-market strategy where the product itself drives acquisition, conversion, and expansion. Enables viral growth loops.</p>
+          </div>
+
+          <!-- CTR -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="ctr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CTR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Click-Through Rate</h3>
+            <p class="text-sm text-gray-400 mb-3">Percentage of impressions resulting in clicks. Key metric for ad and email performance.</p>
+            <div class="formula text-xs text-orange-300">CTR = Clicks / Impressions × 100</div>
+          </div>
+
+          <!-- CVR -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cvr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CVR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Conversion Rate</h3>
+            <p class="text-sm text-gray-400 mb-3">Percentage of visitors completing a desired action (signup, purchase). The ultimate marketing efficiency metric.</p>
+            <div class="formula text-xs text-orange-300">CVR = Conversions / Visitors × 100</div>
+          </div>
+
+          <!-- ROAS -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="roas">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">ROAS</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Return on Ad Spend</h3>
+            <p class="text-sm text-gray-400 mb-3">Revenue generated per dollar spent on advertising. ROAS of 3x means $3 revenue for every $1 spent.</p>
+            <div class="formula text-xs text-orange-300">ROAS = Revenue from Ads / Ad Spend</div>
+          </div>
+
+          <!-- CPC -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cpc">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CPC</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Cost Per Click</h3>
+            <p class="text-sm text-gray-400 mb-3">Average cost paid for each click on an advertisement. Primary pricing model for search and social ads.</p>
+            <div class="formula text-xs text-orange-300">CPC = Total Ad Spend / Total Clicks</div>
+          </div>
+
+          <!-- CPM -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cpm">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CPM</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Cost Per Mille (Thousand)</h3>
+            <p class="text-sm text-gray-400 mb-3">Cost per 1,000 ad impressions. Standard pricing for display and video advertising.</p>
+            <div class="formula text-xs text-orange-300">CPM = (Cost / Impressions) × 1000</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- AI & ML TERMS -->
+      <section id="ai" class="mb-16 category-section" data-category="ai">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-green-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">AI & Machine Learning</h2>
+            <p class="text-sm text-gray-500">Artificial intelligence and predictive analytics terms</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- ML -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="ml">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">ML</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Machine Learning</h3>
+            <p class="text-sm text-gray-400 mb-3">AI subset where systems learn from data to improve predictions without explicit programming. Powers recommendations, predictions, and automation.</p>
+          </div>
+
+          <!-- SHAP -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="shap">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">SHAP</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">SHapley Additive exPlanations</h3>
+            <p class="text-sm text-gray-400 mb-3">Method explaining ML predictions by quantifying each feature's contribution. Essential for AI transparency and trust.</p>
+          </div>
+
+          <!-- RFM -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="rfm">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">RFM</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Recency, Frequency, Monetary</h3>
+            <p class="text-sm text-gray-400 mb-3">Customer segmentation model based on purchase behavior. Classifies customers into segments like Champions, At-Risk, Lost.</p>
+          </div>
+
+          <!-- Trust Gate -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="trustgate">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">Trust Gate</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Trust Gate</h3>
+            <p class="text-sm text-gray-400 mb-3">Decision checkpoint that evaluates signal health before allowing automation execution. Pass/Hold/Block based on data quality thresholds.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('signalhealth')">Signal Health</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('autopilot')">Autopilot</span>
+            </div>
+          </div>
+
+          <!-- Signal Health -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="signalhealth">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">Signal Health</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Signal Health Score</h3>
+            <p class="text-sm text-gray-400 mb-3">Composite score (0-100) measuring data reliability. Components: EMQ (40%), Freshness (25%), Variance (20%), Anomalies (15%).</p>
+          </div>
+
+          <!-- Autopilot -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="autopilot">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">Autopilot</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Trust-Gated Autopilot</h3>
+            <p class="text-sm text-gray-400 mb-3">Automated execution system that only acts when signal health passes safety thresholds. Never auto-executes when health &lt; 70.</p>
+          </div>
+
+          <!-- EMQ -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="emq">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">EMQ</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Event Match Quality</h3>
+            <p class="text-sm text-gray-400 mb-3">Score measuring how well events match between your system and ad platforms. Higher EMQ = better attribution accuracy.</p>
+          </div>
+
+          <!-- A/B Test -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="abtest">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">A/B Test</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">A/B Testing</h3>
+            <p class="text-sm text-gray-400 mb-3">Controlled experiment comparing two variants to determine which performs better. Statistical significance required for valid conclusions.</p>
+          </div>
+
+          <!-- Bayesian -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="bayesian">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">Bayesian</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">AI</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Bayesian Statistics</h3>
+            <p class="text-sm text-gray-400 mb-3">Statistical approach expressing results as probabilities. "95% probability B is better" is more intuitive than p-values.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- METRICS TERMS -->
+      <section id="metrics" class="mb-16 category-section" data-category="metrics">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-pink-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Metrics & Analytics</h2>
+            <p class="text-sm text-gray-500">Performance measurement and reporting terms</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- KPI -->
+          <div class="term-card p-6 rounded-2xl glass cat-metrics" data-term="kpi">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/30">
+                <span class="text-sm font-bold text-pink-400">KPI</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Metrics</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Key Performance Indicator</h3>
+            <p class="text-sm text-gray-400 mb-3">Measurable value demonstrating effectiveness in achieving objectives. Good KPIs are specific, measurable, and actionable.</p>
+          </div>
+
+          <!-- North Star -->
+          <div class="term-card p-6 rounded-2xl glass cat-metrics" data-term="northstar">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/30">
+                <span class="text-sm font-bold text-pink-400">North Star</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Metrics</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">North Star Metric</h3>
+            <p class="text-sm text-gray-400 mb-3">Single metric that best captures core value delivered to customers. Aligns entire company around one measurable goal.</p>
+          </div>
+
+          <!-- DAU/MAU -->
+          <div class="term-card p-6 rounded-2xl glass cat-metrics" data-term="daumau">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/30">
+                <span class="text-sm font-bold text-pink-400">DAU/MAU</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Metrics</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Daily/Monthly Active Users</h3>
+            <p class="text-sm text-gray-400 mb-3">Unique users engaging with product daily/monthly. DAU/MAU ratio measures product stickiness (20%+ is strong).</p>
+          </div>
+
+          <!-- Attribution -->
+          <div class="term-card p-6 rounded-2xl glass cat-metrics" data-term="attribution">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/30">
+                <span class="text-sm font-bold text-pink-400">Attribution</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Metrics</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Marketing Attribution</h3>
+            <p class="text-sm text-gray-400 mb-3">Determining which touchpoints contribute to conversions. Models: First-touch, Last-touch, Linear, Time-decay, Position-based, Data-driven.</p>
+          </div>
+
+          <!-- MTA -->
+          <div class="term-card p-6 rounded-2xl glass cat-metrics" data-term="mta">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/30">
+                <span class="text-sm font-bold text-pink-400">MTA</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Metrics</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Multi-Touch Attribution</h3>
+            <p class="text-sm text-gray-400 mb-3">Attribution model crediting multiple touchpoints in the customer journey. More accurate than single-touch models.</p>
+          </div>
+
+          <!-- Cohort -->
+          <div class="term-card p-6 rounded-2xl glass cat-metrics" data-term="cohort">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-pink-500/20 border border-pink-500/30">
+                <span class="text-sm font-bold text-pink-400">Cohort</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Metrics</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Cohort Analysis</h3>
+            <p class="text-sm text-gray-400 mb-3">Grouping users by shared characteristics (signup date, acquisition channel) to analyze behavior patterns over time.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- CUSTOMER TERMS -->
+      <section id="customer" class="mb-16 category-section" data-category="customer">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Customer & CDP</h2>
+            <p class="text-sm text-gray-500">Customer data platform and lifecycle terms</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- CDP -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="cdp">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">CDP</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Customer Data Platform</h3>
+            <p class="text-sm text-gray-400 mb-3">Unified system collecting, organizing, and activating customer data from all sources. Creates single customer view for personalization.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('identity')">Identity</span>
+              <span class="related-term px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-gray-400 cursor-pointer" onclick="scrollToTerm('segment')">Segment</span>
+            </div>
+          </div>
+
+          <!-- Identity Resolution -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="identity">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">Identity</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Identity Resolution</h3>
+            <p class="text-sm text-gray-400 mb-3">Process of connecting multiple identifiers (email, device ID, phone) to a single customer profile. Enables cross-device tracking.</p>
+          </div>
+
+          <!-- Segment -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="segment">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">Segment</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Customer Segment</h3>
+            <p class="text-sm text-gray-400 mb-3">Group of customers sharing common characteristics. Used for targeted marketing, personalization, and audience syncing to ad platforms.</p>
+          </div>
+
+          <!-- Retention -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="retention">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">Retention</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Customer Retention</h3>
+            <p class="text-sm text-gray-400 mb-3">Ability to keep customers over time. The inverse of churn. 5% retention improvement can increase profits 25-95%.</p>
+            <div class="formula text-xs text-blue-300">Retention = 1 - Churn Rate</div>
+          </div>
+
+          <!-- NPS -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="nps">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">NPS</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Net Promoter Score</h3>
+            <p class="text-sm text-gray-400 mb-3">Customer loyalty metric based on "How likely to recommend?" (0-10). Promoters (9-10) minus Detractors (0-6).</p>
+            <div class="formula text-xs text-blue-300">NPS = %Promoters - %Detractors</div>
+          </div>
+
+          <!-- CSAT -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="csat">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">CSAT</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Customer Satisfaction Score</h3>
+            <p class="text-sm text-gray-400 mb-3">Direct measure of customer satisfaction with a product, service, or interaction. Usually 1-5 scale after key touchpoints.</p>
+          </div>
+
+          <!-- TTV -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="ttv">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">TTV</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Time to Value</h3>
+            <p class="text-sm text-gray-400 mb-3">Duration from signup to achieving first meaningful outcome. Shorter TTV correlates with higher retention and conversion.</p>
+          </div>
+
+          <!-- Audience Sync -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="audiencesync">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">Audience Sync</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Audience Sync</h3>
+            <p class="text-sm text-gray-400 mb-3">Pushing CDP segments to ad platforms (Meta, Google, TikTok, Snapchat) for targeting. Uses hashed identifiers for privacy.</p>
+          </div>
+
+          <!-- CAPI -->
+          <div class="term-card p-6 rounded-2xl glass cat-customer" data-term="capi">
+            <div class="flex items-start justify-between mb-4">
+              <div class="term-abbr px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                <span class="text-sm font-bold text-blue-400">CAPI</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Conversions API</h3>
+            <p class="text-sm text-gray-400 mb-3">Server-side event tracking bypassing browser limitations. Essential for accurate attribution in cookie-less future.</p>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- CTA Section -->
+  <section class="relative py-24 border-t border-white/5">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
+        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+        <span class="text-sm text-gray-300">Ready to put these terms into action?</span>
+      </div>
+
+      <h2 class="text-4xl sm:text-5xl font-black tracking-tight mb-6">
+        <span class="text-white">From Glossary</span><br>
+        <span class="text-gradient">to Growth</span>
+      </h2>
+
+      <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
+        Stratum AI puts all these concepts to work with AI-powered revenue operations, predictive analytics, and trust-gated automation.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+        <a href="/signup" class="px-10 py-5 rounded-2xl text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-500 hover:opacity-90 transition-opacity inline-flex items-center gap-3 group">
+          <span>Start Free Trial</span>
+          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+        <a href="/demo" class="px-10 py-5 rounded-2xl text-lg font-semibold text-white glass hover:bg-white/5 transition-all">
+          Schedule Demo
+        </a>
+      </div>
+
+      <p class="text-sm text-gray-500">
+        No credit card required. 14-day free trial.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 bg-black/50">
+    <div class="max-w-7xl mx-auto px-6 py-12">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl gradient-border">
+            <div class="w-full h-full rounded-xl bg-black flex items-center justify-center">
+              <span class="text-lg font-black text-gradient">S</span>
+            </div>
+          </div>
+          <span class="text-xl font-bold">Stratum AI</span>
+        </div>
+        <p class="text-sm text-gray-500">© 2026 Stratum AI. All rights reserved.</p>
+        <div class="flex gap-3">
+          <div class="px-3 py-1 rounded-lg border border-white/10 text-xs text-gray-500">SOC 2</div>
+          <div class="px-3 py-1 rounded-lg border border-white/10 text-xs text-gray-500">GDPR</div>
+          <div class="px-3 py-1 rounded-lg border border-white/10 text-xs text-gray-500">CCPA</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const termCards = document.querySelectorAll('.term-card');
+    const categorySections = document.querySelectorAll('.category-section');
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+
+      termCards.forEach(card => {
+        const term = card.dataset.term;
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        const abbr = card.querySelector('.term-abbr span').textContent.toLowerCase();
+        const description = card.querySelector('p').textContent.toLowerCase();
+
+        const matches = term.includes(query) || title.includes(query) || abbr.includes(query) || description.includes(query);
+        card.style.display = matches ? 'block' : 'none';
+      });
+
+      // Show/hide category sections based on visible cards
+      categorySections.forEach(section => {
+        const visibleCards = section.querySelectorAll('.term-card[style="display: block"], .term-card:not([style])');
+        let hasVisible = false;
+        visibleCards.forEach(card => {
+          if (card.style.display !== 'none') hasVisible = true;
+        });
+        section.style.display = query === '' || hasVisible ? 'block' : 'none';
+      });
+
+      // Reset category filter when searching
+      if (query) {
+        document.querySelectorAll('.category-tab').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        document.querySelector('.category-tab[data-category="all"]').classList.add('active');
+      }
+    });
+
+    // Keyboard shortcut for search
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+      if (e.key === 'Escape') {
+        searchInput.blur();
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    });
+
+    // Category filter
+    function filterCategory(category) {
+      // Update active tab
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.category === category) {
+          tab.classList.add('active');
+        }
+      });
+
+      // Clear search
+      searchInput.value = '';
+
+      // Show/hide sections
+      categorySections.forEach(section => {
+        if (category === 'all' || section.dataset.category === category) {
+          section.style.display = 'block';
+        } else {
+          section.style.display = 'none';
+        }
+      });
+
+      // Show all cards within visible sections
+      termCards.forEach(card => {
+        card.style.display = 'block';
+      });
+    }
+
+    // Scroll to term
+    function scrollToTerm(term) {
+      const card = document.querySelector(`[data-term="${term}"]`);
+      if (card) {
+        // Show all sections first
+        filterCategory('all');
+
+        // Scroll to card
+        setTimeout(() => {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Highlight effect
+          card.classList.add('highlight-term');
+          setTimeout(() => {
+            card.classList.remove('highlight-term');
+          }, 2000);
+        }, 100);
+      }
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Intersection Observer for fade-in animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate-fade-up').forEach(el => {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
