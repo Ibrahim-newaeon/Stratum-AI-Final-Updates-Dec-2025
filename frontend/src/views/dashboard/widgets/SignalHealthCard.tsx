@@ -23,7 +23,7 @@ interface SignalHealthCardProps {
 export function SignalHealthCard({ signalHealth, loading = false }: SignalHealthCardProps) {
   if (loading) {
     return (
-      <div className="bg-card border rounded-lg p-5 h-full flex items-center justify-center min-h-[200px]">
+      <div className="glass border border-white/10 rounded-xl p-5 h-full flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     )
@@ -31,7 +31,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
 
   if (!signalHealth) {
     return (
-      <div className="bg-card border rounded-lg p-5 h-full">
+      <div className="glass border border-white/10 rounded-xl p-5 h-full">
         <div className="text-center text-muted-foreground py-8">
           <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p>No signal health data available</p>
@@ -93,16 +93,22 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
   }
 
   return (
-    <div className="bg-card border rounded-lg p-5 h-full">
+    <div className="glass border border-white/10 rounded-xl p-5 h-full card-3d">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold">Signal Health</h3>
         <div
           className={cn(
-            'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+            'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ai-chip',
             statusConfig.bgColor,
             statusConfig.color
           )}
         >
+          <div className={cn(
+            'w-1.5 h-1.5 rounded-full',
+            signalHealth.status === 'healthy' && 'dot-healthy',
+            signalHealth.status === 'degraded' && 'dot-degraded',
+            signalHealth.status === 'critical' && 'dot-critical'
+          )} />
           <StatusIcon className="w-3.5 h-3.5" />
           {statusConfig.label}
         </div>
@@ -114,6 +120,18 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           {signalHealth.overall_score}
         </div>
         <div className="text-xs text-muted-foreground mt-1">Overall Score</div>
+        {/* Progress bar */}
+        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mt-2">
+          <div
+            className={cn(
+              'h-full rounded-full transition-all duration-500',
+              signalHealth.overall_score >= 70 ? 'bg-gradient-to-r from-green-500 to-emerald-400' :
+              signalHealth.overall_score >= 40 ? 'bg-gradient-to-r from-yellow-500 to-amber-400' :
+              'bg-gradient-to-r from-red-500 to-red-400'
+            )}
+            style={{ width: `${signalHealth.overall_score}%` }}
+          />
+        </div>
       </div>
 
       {/* Metrics */}

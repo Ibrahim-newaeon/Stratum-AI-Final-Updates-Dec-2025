@@ -25,7 +25,7 @@ interface TrustGateStatusProps {
 export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStatusProps) {
   if (loading) {
     return (
-      <div className="bg-card border rounded-lg p-6 h-full flex items-center justify-center min-h-[200px]">
+      <div className="glass border border-white/10 rounded-xl p-6 h-full flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     )
@@ -88,12 +88,12 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
   const ActionIcon = config.actionIcon
 
   return (
-    <div className={cn('bg-card border rounded-lg p-6 h-full', config.borderColor)}>
+    <div className={cn('glass border border-white/10 rounded-xl p-6 h-full card-3d', config.borderColor)}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold">Trust Gate</h3>
         <div
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold',
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold ai-chip',
             config.bgLight,
             config.color
           )}
@@ -106,12 +106,13 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
       {/* Visual Gate Indicator */}
       <div className="flex items-center justify-center py-6">
         <div className="relative">
-          {/* Outer ring */}
+          {/* Outer ring with glow */}
           <div
             className={cn(
               'w-32 h-32 rounded-full ring-4 flex items-center justify-center',
               config.ringColor,
-              config.bgLight
+              config.bgLight,
+              gateStatus === 'PASS' && 'animate-glow-loop'
             )}
           >
             {/* Inner circle with icon */}

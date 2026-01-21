@@ -58,7 +58,7 @@ export function MetricCard({
     return (
       <div
         className={cn(
-          'bg-card border rounded-lg flex items-center justify-center',
+          'glass border border-white/10 rounded-xl flex items-center justify-center',
           isSmall ? 'p-3' : 'p-5'
         )}
       >
@@ -70,7 +70,7 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'bg-card border rounded-lg transition-all',
+        'glass border border-white/10 rounded-xl transition-all card-3d',
         isSmall ? 'p-3' : 'p-5',
         highlight && 'ring-2 ring-primary/20 border-primary/50'
       )}
@@ -88,7 +88,8 @@ export function MetricCard({
           <p
             className={cn(
               'font-bold mt-1 truncate',
-              isSmall ? 'text-lg' : 'text-2xl'
+              isSmall ? 'text-lg' : 'text-2xl',
+              highlight && 'text-gradient'
             )}
           >
             {value}

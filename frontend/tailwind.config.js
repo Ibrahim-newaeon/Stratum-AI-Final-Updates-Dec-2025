@@ -306,6 +306,31 @@ export default {
   				'100%': {
   					backgroundPosition: '200% 0'
   				}
+  			},
+  			// 2026 Theme animations
+  			morph: {
+  				'0%, 100%': {
+  					borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
+  				},
+  				'50%': {
+  					borderRadius: '30% 60% 70% 40% / 50% 60% 30% 60%'
+  				}
+  			},
+  			'gradient-shift': {
+  				'0%, 100%': {
+  					backgroundPosition: '0% 50%'
+  				},
+  				'50%': {
+  					backgroundPosition: '100% 50%'
+  				}
+  			},
+  			float: {
+  				'0%, 100%': {
+  					transform: 'translateY(0) rotate(0deg)'
+  				},
+  				'50%': {
+  					transform: 'translateY(-20px) rotate(2deg)'
+  				}
   			}
   		},
   		animation: {
@@ -321,7 +346,11 @@ export default {
   			insight: 'ember-glow 0.42s cubic-bezier(0.16, 1, 0.3, 1) both',
   			critical: 'micro-shake 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both',
   			'scale-in': 'scale-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1)',
-  			shimmer: 'shimmer 0.9s linear infinite'
+  			shimmer: 'shimmer 0.9s linear infinite',
+  			// 2026 Theme animations
+  			morph: 'morph 8s ease-in-out infinite',
+  			'gradient-shift': 'gradient-shift 8s ease infinite',
+  			float: 'float 6s ease-in-out infinite'
   		},
   		transitionDuration: {
   			fast: '120ms',

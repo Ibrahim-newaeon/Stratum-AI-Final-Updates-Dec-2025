@@ -39,6 +39,7 @@ import {
   UserMinusIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
+import { BackgroundEffects } from '@/components/ui/background-effects'
 import LearningHub from '@/components/guide/LearningHub'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { CommandPalette } from '@/components/ui/command-palette'
@@ -114,6 +115,9 @@ export default function DashboardLayout() {
       {/* Demo mode banner */}
       <DemoBanner variant="top" />
 
+      {/* 2026 Dark Theme Background Effects */}
+      <BackgroundEffects showOrbs={true} />
+
       <div className="flex flex-1 overflow-hidden">
       {/* Mobile sidebar overlay */}
       <AnimatePresence>
@@ -133,7 +137,7 @@ export default function DashboardLayout() {
       <aside
         data-tour="sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 transform bg-card border-r transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto',
+          'fixed inset-y-0 left-0 z-50 w-64 transform glass-strong border-r border-white/10 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -338,7 +342,7 @@ export default function DashboardLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top header */}
-        <header className="flex h-16 items-center justify-between border-b bg-card px-4 lg:px-6">
+        <header className="flex h-16 items-center justify-between border-b border-white/10 glass-strong px-4 lg:px-6">
           <button
             className="lg:hidden p-2 rounded-md hover:bg-accent"
             onClick={() => setSidebarOpen(true)}
