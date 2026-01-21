@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratum AI - Deployment Tutorial | Get 100% Platform Benefits</title>
+  <meta name="description" content="Complete step-by-step guide to deploy and configure Stratum AI for maximum ROI. Learn Trust-Gated Autopilot, CDP setup, and automation workflows.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple: #a855f7;
+      --cyan: #06b6d4;
+      --orange: #f97316;
+      --green: #22c55e;
+    }
+    * { font-family: 'Inter', -apple-system, sans-serif; }
+    body { background: #000; color: #fff; overflow-x: hidden; }
+
+    /* 2026 Mesh Gradient Background */
+    .mesh-gradient {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(168,85,247,0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(6,182,212,0.12), transparent),
+        radial-gradient(ellipse 50% 60% at 60% 80%, rgba(249,115,22,0.08), transparent),
+        radial-gradient(ellipse 40% 40% at 40% 60%, rgba(34,197,94,0.05), transparent);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Noise texture overlay */
+    .noise {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Animations */
+    @keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(2deg); } }
+    @keyframes fade-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(168,85,247,0.3); } 50% { box-shadow: 0 0 40px rgba(168,85,247,0.6); } }
+    @keyframes slide-in { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes check-bounce { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+    .animate-gradient { animation: gradient-shift 8s ease infinite; background-size: 200% 200%; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-glow { animation: glow 3s ease-in-out infinite; }
+    .animate-fade-up { animation: fade-up 0.8s ease-out forwards; opacity: 0; }
+    .animate-slide-in { animation: slide-in 0.6s ease-out forwards; opacity: 0; }
+    .animate-pulse { animation: pulse 2s ease-in-out infinite; }
+
+    /* Delay utilities */
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
+    .delay-600 { animation-delay: 0.6s; }
+
+    /* Glass morphism 2026 */
+    .glass {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .glass:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* Gradient borders */
+    .gradient-border {
+      position: relative;
+      background: #0a0a0a;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, var(--purple), var(--cyan), var(--orange));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    /* Text gradients */
+    .text-gradient { background: linear-gradient(135deg, #a855f7, #06b6d4, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-purple { background: linear-gradient(135deg, #a855f7, #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-cyan { background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-green { background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-orange { background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    /* Buttons 2026 */
+    .btn-primary {
+      position: relative;
+      background: linear-gradient(135deg, #9333ea, #06b6d4);
+      background-size: 200% 200%;
+      animation: gradient-shift 4s ease infinite;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -10px rgba(147,51,234,0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Card hover effects */
+    .card-3d {
+      transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      transform-style: preserve-3d;
+    }
+    .card-3d:hover {
+      transform: translateY(-8px) rotateX(2deg);
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #a855f7, #06b6d4); border-radius: 3px; }
+
+    /* Code blocks */
+    .code-block {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      font-family: 'Fira Code', 'Monaco', monospace;
+      font-size: 0.875rem;
+      overflow-x: auto;
+    }
+    .code-block code {
+      color: #e2e8f0;
+    }
+    .code-block .comment { color: #6b7280; }
+    .code-block .keyword { color: #c084fc; }
+    .code-block .string { color: #4ade80; }
+    .code-block .function { color: #22d3ee; }
+    .code-block .number { color: #fb923c; }
+
+    /* Step indicator */
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #9333ea, #06b6d4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .step-line {
+      width: 2px;
+      background: linear-gradient(180deg, rgba(147,51,234,0.5), rgba(6,182,212,0.5));
+      margin-left: 23px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    /* Progress tracker */
+    .progress-item {
+      transition: all 0.3s ease;
+    }
+    .progress-item.completed .progress-dot {
+      background: #22c55e;
+      box-shadow: 0 0 20px rgba(34,197,94,0.5);
+    }
+    .progress-item.active .progress-dot {
+      background: #a855f7;
+      box-shadow: 0 0 20px rgba(168,85,247,0.5);
+      animation: pulse 2s infinite;
+    }
+    .progress-dot {
+      width: 12px;
+      height: 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    /* Checklist */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    .checklist-item:hover {
+      background: rgba(255,255,255,0.03);
+    }
+    .check-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .checklist-item.done .check-icon {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: relative;
+    }
+    .tooltip::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+    .tooltip:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    /* Table of contents */
+    .toc-item {
+      padding: 8px 16px;
+      border-left: 2px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .toc-item:hover {
+      border-left-color: var(--purple);
+      background: rgba(168,85,247,0.05);
+    }
+    .toc-item.active {
+      border-left-color: var(--cyan);
+      background: rgba(6,182,212,0.1);
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: rgba(168,85,247,0.15);
+      top: 10%;
+      left: -10%;
+    }
+    .orb-2 {
+      width: 300px;
+      height: 300px;
+      background: rgba(6,182,212,0.12);
+      top: 60%;
+      right: -5%;
+      animation-delay: -3s;
+    }
+    .orb-3 {
+      width: 250px;
+      height: 250px;
+      background: rgba(34,197,94,0.1);
+      bottom: 10%;
+      left: 30%;
+      animation-delay: -5s;
+    }
+
+    /* Badge styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-purple { background: rgba(168,85,247,0.15); color: #c084fc; }
+    .badge-cyan { background: rgba(6,182,212,0.15); color: #22d3ee; }
+    .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .badge-orange { background: rgba(249,115,22,0.15); color: #fb923c; }
+
+    /* Timeline connector */
+    .timeline-connector {
+      position: absolute;
+      left: 24px;
+      top: 60px;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(168,85,247,0.3), rgba(6,182,212,0.3), rgba(34,197,94,0.3));
+    }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="antialiased">
+  <!-- Background Effects -->
+  <div class="mesh-gradient"></div>
+  <div class="noise"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass-strong">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="stratum-ai-landing.html" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <span class="text-xl font-bold">Stratum AI</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#overview" class="text-sm text-gray-400 hover:text-white transition">Overview</a>
+        <a href="#prerequisites" class="text-sm text-gray-400 hover:text-white transition">Prerequisites</a>
+        <a href="#deployment" class="text-sm text-gray-400 hover:text-white transition">Deployment</a>
+        <a href="#configuration" class="text-sm text-gray-400 hover:text-white transition">Configuration</a>
+        <a href="#features" class="text-sm text-gray-400 hover:text-white transition">Features</a>
+      </div>
+      <a href="#get-started" class="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold">
+        Get Started
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="pt-32 pb-20 px-6">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6 animate-fade-up">
+        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+        <span class="text-sm text-gray-400">Complete Deployment Guide</span>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-black mb-6 animate-fade-up delay-100">
+        Deploy <span class="text-gradient">Stratum AI</span>
+        <br>& Get 100% Benefits
+      </h1>
+      <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10 animate-fade-up delay-200">
+        Follow this step-by-step guide to fully deploy and configure Stratum AI.
+        Unlock Trust-Gated Autopilot, CDP, and intelligent automation.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4 animate-fade-up delay-300">
+        <a href="#deployment" class="btn-primary px-8 py-4 rounded-xl font-semibold flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Start Deployment
+        </a>
+        <a href="#overview" class="btn-secondary px-8 py-4 rounded-xl font-semibold flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          Read Guide
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Estimated Time & Quick Stats -->
+  <section class="py-12 px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-4">
+        <div class="glass rounded-xl p-6 text-center card-3d animate-fade-up">
+          <div class="text-3xl font-bold text-gradient-purple mb-2">8</div>
+          <div class="text-sm text-gray-400">Setup Steps</div>
+        </div>
+        <div class="glass rounded-xl p-6 text-center card-3d animate-fade-up delay-100">
+          <div class="text-3xl font-bold text-gradient-cyan mb-2">6</div>
+          <div class="text-sm text-gray-400">Core Features</div>
+        </div>
+        <div class="glass rounded-xl p-6 text-center card-3d animate-fade-up delay-200">
+          <div class="text-3xl font-bold text-gradient-green mb-2">100%</div>
+          <div class="text-sm text-gray-400">Platform Utilization</div>
+        </div>
+        <div class="glass rounded-xl p-6 text-center card-3d animate-fade-up delay-300">
+          <div class="text-3xl font-bold text-gradient-orange mb-2">24/7</div>
+          <div class="text-sm text-gray-400">Autopilot Active</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Table of Contents -->
+  <section id="overview" class="py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="glass-strong rounded-2xl p-8">
+        <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+          <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+          </svg>
+          What You'll Learn
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <a href="#step-1" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-purple-500 font-mono mr-2">01.</span> Environment Setup
+            </a>
+            <a href="#step-2" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-purple-500 font-mono mr-2">02.</span> Database Configuration
+            </a>
+            <a href="#step-3" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-purple-500 font-mono mr-2">03.</span> API Keys & Authentication
+            </a>
+            <a href="#step-4" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-purple-500 font-mono mr-2">04.</span> Trust Engine Configuration
+            </a>
+          </div>
+          <div class="space-y-2">
+            <a href="#step-5" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-cyan-500 font-mono mr-2">05.</span> CDP Setup & Profiles
+            </a>
+            <a href="#step-6" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-cyan-500 font-mono mr-2">06.</span> Platform Integrations
+            </a>
+            <a href="#step-7" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-cyan-500 font-mono mr-2">07.</span> Webhook Configuration
+            </a>
+            <a href="#step-8" class="toc-item block text-gray-300 hover:text-white">
+              <span class="text-cyan-500 font-mono mr-2">08.</span> Autopilot Activation
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Prerequisites -->
+  <section id="prerequisites" class="py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        Prerequisites
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Technical Requirements -->
+        <div class="glass rounded-xl p-6 card-3d">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+            </svg>
+            Technical Requirements
+          </h3>
+          <ul class="space-y-3">
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Docker & Docker Compose</div>
+                <div class="text-sm text-gray-500">v20.10+ recommended</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Node.js 18+</div>
+                <div class="text-sm text-gray-500">For frontend build</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Python 3.11+</div>
+                <div class="text-sm text-gray-500">For backend services</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">PostgreSQL 15</div>
+                <div class="text-sm text-gray-500">Primary database</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Redis 7+</div>
+                <div class="text-sm text-gray-500">Caching & queues</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Account Requirements -->
+        <div class="glass rounded-xl p-6 card-3d">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+            </svg>
+            Platform Credentials
+          </h3>
+          <ul class="space-y-3">
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Google Analytics</div>
+                <div class="text-sm text-gray-500">Measurement ID (G-XXXXXXX)</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Meta Business Suite</div>
+                <div class="text-sm text-gray-500">For audience sync</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Stripe Account</div>
+                <div class="text-sm text-gray-500">Optional: Payment tracking</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">Shopify Store</div>
+                <div class="text-sm text-gray-500">Optional: E-commerce sync</div>
+              </div>
+            </li>
+            <li class="checklist-item">
+              <div class="check-icon">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="font-medium">SMTP Provider</div>
+                <div class="text-sm text-gray-500">For email notifications</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Deployment Steps -->
+  <section id="deployment" class="py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold mb-12 flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+        </div>
+        Deployment Steps
+      </h2>
+
+      <!-- Step 1 -->
+      <div id="step-1" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">1</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">Environment Setup</h3>
+                <span class="badge badge-purple">Required</span>
+              </div>
+              <p class="text-gray-400 mb-6">Clone the repository and configure environment variables.</p>
+
+              <div class="code-block p-4 mb-4">
+                <pre><code><span class="comment"># Clone the repository</span>
+<span class="keyword">git</span> clone https://github.com/your-org/stratum-ai.git
+<span class="keyword">cd</span> stratum-ai
+
+<span class="comment"># Copy environment template</span>
+<span class="keyword">cp</span> .env.example .env
+
+<span class="comment"># Edit environment variables</span>
+<span class="keyword">nano</span> .env</code></pre>
+              </div>
+
+              <div class="glass-strong rounded-lg p-4">
+                <h4 class="font-semibold mb-3 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Required Environment Variables
+                </h4>
+                <div class="code-block p-3 text-sm">
+                  <pre><code><span class="comment"># Database</span>
+DATABASE_URL=<span class="string">"postgresql://user:pass@localhost:5432/stratum"</span>
+REDIS_URL=<span class="string">"redis://localhost:6379"</span>
+
+<span class="comment"># Security</span>
+SECRET_KEY=<span class="string">"your-super-secret-key-min-32-chars"</span>
+JWT_SECRET=<span class="string">"your-jwt-secret-key"</span>
+
+<span class="comment"># API Keys</span>
+STRATUM_API_KEY_LIVE=<span class="string">"strat_live_..."</span>
+STRATUM_API_KEY_TEST=<span class="string">"strat_test_..."</span></code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-line h-8"></div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="step-2" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">2</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">Database Configuration</h3>
+                <span class="badge badge-purple">Required</span>
+              </div>
+              <p class="text-gray-400 mb-6">Initialize PostgreSQL and run migrations.</p>
+
+              <div class="code-block p-4 mb-4">
+                <pre><code><span class="comment"># Start database services</span>
+<span class="keyword">docker</span> compose up -d postgres redis
+
+<span class="comment"># Run database migrations</span>
+<span class="keyword">make</span> migrate
+
+<span class="comment"># Seed initial data (optional)</span>
+<span class="keyword">python</span> -m scripts.seed_data</code></pre>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-4 mt-6">
+                <div class="glass-strong rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span class="font-medium">PostgreSQL</span>
+                  </div>
+                  <p class="text-sm text-gray-400">Primary data store for profiles, segments, and automations.</p>
+                </div>
+                <div class="glass-strong rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span class="font-medium">Redis</span>
+                  </div>
+                  <p class="text-sm text-gray-400">Caching, session storage, and Celery task queues.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-line h-8"></div>
+      </div>
+
+      <!-- Step 3 -->
+      <div id="step-3" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">3</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">API Keys & Authentication</h3>
+                <span class="badge badge-purple">Required</span>
+              </div>
+              <p class="text-gray-400 mb-6">Generate and configure API keys for secure access.</p>
+
+              <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div class="glass-strong rounded-lg p-4 border border-green-500/30">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="badge badge-green">LIVE</span>
+                    <span class="font-medium">Production Key</span>
+                  </div>
+                  <p class="text-sm text-gray-400 mb-3">Use for production traffic with real customer data.</p>
+                  <code class="text-xs bg-black/50 px-2 py-1 rounded">strat_live_xxxx...xxxx</code>
+                </div>
+                <div class="glass-strong rounded-lg p-4 border border-yellow-500/30">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="badge badge-orange">TEST</span>
+                    <span class="font-medium">Test Key</span>
+                  </div>
+                  <p class="text-sm text-gray-400 mb-3">Use for development and testing environments.</p>
+                  <code class="text-xs bg-black/50 px-2 py-1 rounded">strat_test_xxxx...xxxx</code>
+                </div>
+              </div>
+
+              <div class="code-block p-4">
+                <pre><code><span class="comment"># Generate new API keys</span>
+<span class="keyword">python</span> -m scripts.generate_api_keys
+
+<span class="comment"># Example API request with authentication</span>
+<span class="keyword">curl</span> -X GET <span class="string">"https://api.stratum.ai/v1/profiles"</span> \
+  -H <span class="string">"Authorization: Bearer strat_live_xxxx"</span> \
+  -H <span class="string">"Content-Type: application/json"</span></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-line h-8"></div>
+      </div>
+
+      <!-- Step 4 -->
+      <div id="step-4" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">4</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">Trust Engine Configuration</h3>
+                <span class="badge badge-cyan">Core Feature</span>
+              </div>
+              <p class="text-gray-400 mb-6">Configure the Trust-Gated Autopilot thresholds.</p>
+
+              <!-- Trust Gate Visual -->
+              <div class="glass-strong rounded-xl p-6 mb-6">
+                <h4 class="font-semibold mb-4">Trust Gate Thresholds</h4>
+                <div class="relative h-8 rounded-full overflow-hidden bg-gray-800 mb-4">
+                  <div class="absolute inset-y-0 left-0 w-[40%] bg-gradient-to-r from-red-600 to-red-500"></div>
+                  <div class="absolute inset-y-0 left-[40%] w-[30%] bg-gradient-to-r from-yellow-500 to-yellow-400"></div>
+                  <div class="absolute inset-y-0 left-[70%] right-0 bg-gradient-to-r from-green-500 to-green-400"></div>
+                  <div class="absolute inset-0 flex items-center justify-between px-4 text-xs font-bold">
+                    <span>BLOCK</span>
+                    <span>HOLD</span>
+                    <span>PASS</span>
+                  </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                  <div>
+                    <div class="text-red-500 font-bold">0-39</div>
+                    <div class="text-gray-500">Manual Required</div>
+                  </div>
+                  <div>
+                    <div class="text-yellow-500 font-bold">40-69</div>
+                    <div class="text-gray-500">Alert Only</div>
+                  </div>
+                  <div>
+                    <div class="text-green-500 font-bold">70-100</div>
+                    <div class="text-gray-500">Autopilot Active</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="code-block p-4">
+                <pre><code><span class="comment"># config/trust_engine.yaml</span>
+trust_engine:
+  thresholds:
+    healthy: <span class="number">70</span>      <span class="comment"># PASS - autopilot enabled</span>
+    degraded: <span class="number">40</span>     <span class="comment"># HOLD - alerts only</span>
+
+  signals:
+    - name: <span class="string">"data_freshness"</span>
+      weight: <span class="number">0.3</span>
+    - name: <span class="string">"source_reliability"</span>
+      weight: <span class="number">0.25</span>
+    - name: <span class="string">"anomaly_score"</span>
+      weight: <span class="number">0.25</span>
+    - name: <span class="string">"completeness"</span>
+      weight: <span class="number">0.2</span></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-line h-8"></div>
+      </div>
+
+      <!-- Step 5 -->
+      <div id="step-5" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">5</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">CDP Setup & Profiles</h3>
+                <span class="badge badge-cyan">Core Feature</span>
+              </div>
+              <p class="text-gray-400 mb-6">Configure the Customer Data Platform for unified profiles.</p>
+
+              <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div class="glass-strong rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="font-medium">Profile Unification</span>
+                  </div>
+                  <ul class="text-sm text-gray-400 space-y-1">
+                    <li>• Identity resolution across channels</li>
+                    <li>• Automatic profile merging</li>
+                    <li>• Real-time trait updates</li>
+                  </ul>
+                </div>
+                <div class="glass-strong rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <span class="font-medium">Segment Builder</span>
+                  </div>
+                  <ul class="text-sm text-gray-400 space-y-1">
+                    <li>• Visual condition builder</li>
+                    <li>• RFM scoring built-in</li>
+                    <li>• Dynamic segment updates</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="code-block p-4">
+                <pre><code><span class="comment"># Track a customer event</span>
+<span class="keyword">curl</span> -X POST <span class="string">"https://api.stratum.ai/v1/events"</span> \
+  -H <span class="string">"Authorization: Bearer strat_live_xxxx"</span> \
+  -d '{
+    <span class="string">"event"</span>: <span class="string">"purchase_completed"</span>,
+    <span class="string">"user_id"</span>: <span class="string">"user_123"</span>,
+    <span class="string">"properties"</span>: {
+      <span class="string">"amount"</span>: <span class="number">99.99</span>,
+      <span class="string">"product_id"</span>: <span class="string">"prod_456"</span>
+    }
+  }'</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-line h-8"></div>
+      </div>
+
+      <!-- Step 6 -->
+      <div id="step-6" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">6</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">Platform Integrations</h3>
+                <span class="badge badge-green">Recommended</span>
+              </div>
+              <p class="text-gray-400 mb-6">Connect external platforms for audience sync and data enrichment.</p>
+
+              <div class="grid md:grid-cols-3 gap-4">
+                <!-- Meta -->
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-blue-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                  </div>
+                  <div class="font-medium">Meta</div>
+                  <div class="text-xs text-gray-500">Custom Audiences</div>
+                </div>
+                <!-- Google -->
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-white flex items-center justify-center">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                  </div>
+                  <div class="font-medium">Google</div>
+                  <div class="text-xs text-gray-500">Customer Match</div>
+                </div>
+                <!-- TikTok -->
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-black flex items-center justify-center border border-white/20">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                    </svg>
+                  </div>
+                  <div class="font-medium">TikTok</div>
+                  <div class="text-xs text-gray-500">Custom Audience</div>
+                </div>
+                <!-- Shopify -->
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-green-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M15.337 3.415c-.03-.151-.151-.242-.272-.242-.121 0-2.418-.181-2.418-.181s-1.6-1.6-1.781-1.781c-.181-.181-.513-.121-.664-.091l-.906.272C9.114.939 8.87.575 8.507.333 7.811-.151 6.905 0 6.09.333c-.242.091-.484.181-.695.272-.242-.03-.484-.03-.725-.03-1.236 0-2.206.816-2.57 2.024-.272.877-.182 1.872.242 2.779-.695.212-1.178.363-1.208.363-.363.121-.393.151-.423.514C.681 6.587 0 18.617 0 18.617l12.254 2.297 6.633-1.449s-3.208-15.566-3.238-15.747c-.03-.151-.151-.242-.312-.303zm-4.68-.937l-1.117.333c0-.03 0-.091-.03-.121-.242-.786-.695-1.509-1.479-1.509h-.091c-.181-.242-.393-.363-.605-.363-.906-.03-1.781.695-2.176 1.721-.272.695-.484 1.57-.604 2.206l-1.751.544c-.03-.03 0-.091 0-.121.03-1.024.363-2.206.755-2.931.544-.968 1.268-1.479 2.054-1.509.242 0 .484.061.695.182.272-.151.575-.272.906-.363.786-.182 1.539-.03 2.145.484.212.182.393.424.544.695l.754-.248zm-2.963.787c-.363 0-.695.121-.996.363.03-.06.061-.121.091-.181.363-.665.877-1.148 1.449-1.148h.061c.363.423.544.968.605 1.57l-1.21.363v-.03c0-.332-.03-.635-.03-.937h.03zm1.509-.484c-.03-.484-.182-.877-.393-1.178.393.06.695.363.937.786.121.212.212.454.303.725l-1.087.333c.06-.212.151-.424.24-.666z"/>
+                    </svg>
+                  </div>
+                  <div class="font-medium">Shopify</div>
+                  <div class="text-xs text-gray-500">E-commerce Data</div>
+                </div>
+                <!-- Stripe -->
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-indigo-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+                    </svg>
+                  </div>
+                  <div class="font-medium">Stripe</div>
+                  <div class="text-xs text-gray-500">Payment Events</div>
+                </div>
+                <!-- WordPress -->
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-blue-800 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zM3.443 12c0-1.158.237-2.26.662-3.262l3.643 9.985A8.573 8.573 0 013.443 12zM12 20.557a8.52 8.52 0 01-2.471-.367l2.627-7.633 2.69 7.37c.018.043.039.082.062.12a8.52 8.52 0 01-2.908.51zm1.172-12.55c.527-.028.999-.083.999-.083.47-.056.414-.746-.057-.72 0 0-1.413.111-2.324.111-.856 0-2.296-.111-2.296-.111-.47-.027-.527.691-.056.72 0 0 .442.054.913.082l1.356 3.717-1.904 5.709-3.168-9.426c.526-.028.999-.083.999-.083.47-.056.413-.746-.057-.72 0 0-1.413.111-2.324.111-.163 0-.356-.004-.559-.01A8.542 8.542 0 0112 3.443a8.509 8.509 0 016.412 2.906c-.041-.002-.082-.007-.125-.007-.855 0-1.462.746-1.462 1.546 0 .72.414 1.327.856 2.045.333.581.72 1.327.72 2.403 0 .746-.286 1.612-.664 2.818l-.87 2.91-3.153-9.388zm3.46 11.088l2.665-7.702c.498-1.243.664-2.24.664-3.124 0-.32-.02-.619-.061-.9a8.556 8.556 0 011.657 5.077 8.555 8.555 0 01-4.925 7.649z"/>
+                    </svg>
+                  </div>
+                  <div class="font-medium">WordPress</div>
+                  <div class="text-xs text-gray-500">Site Tracking</div>
+                </div>
+              </div>
+
+              <div class="mt-6 p-4 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
+                <p class="text-sm text-cyan-400">
+                  <strong>Pro Tip:</strong> Connect at least 2 ad platforms to maximize audience reach with one-click sync.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-line h-8"></div>
+      </div>
+
+      <!-- Step 7 -->
+      <div id="step-7" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">7</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">Webhook Configuration</h3>
+                <span class="badge badge-green">Recommended</span>
+              </div>
+              <p class="text-gray-400 mb-6">Set up real-time event notifications to your systems.</p>
+
+              <div class="overflow-x-auto mb-6">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-white/10">
+                      <th class="text-left py-3 px-4 font-medium text-gray-400">Event</th>
+                      <th class="text-left py-3 px-4 font-medium text-gray-400">Description</th>
+                      <th class="text-left py-3 px-4 font-medium text-gray-400">Use Case</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-white/5">
+                    <tr>
+                      <td class="py-3 px-4"><code class="text-purple-400">profile.created</code></td>
+                      <td class="py-3 px-4 text-gray-400">New profile created</td>
+                      <td class="py-3 px-4 text-gray-400">Trigger welcome flow</td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4"><code class="text-purple-400">segment.synced</code></td>
+                      <td class="py-3 px-4 text-gray-400">Audience pushed to platform</td>
+                      <td class="py-3 px-4 text-gray-400">Log sync results</td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4"><code class="text-purple-400">event.anomaly</code></td>
+                      <td class="py-3 px-4 text-gray-400">Unusual activity detected</td>
+                      <td class="py-3 px-4 text-gray-400">Fraud alerts</td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4"><code class="text-purple-400">trust_gate.blocked</code></td>
+                      <td class="py-3 px-4 text-gray-400">Automation blocked</td>
+                      <td class="py-3 px-4 text-gray-400">Manual review needed</td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4"><code class="text-purple-400">automation.triggered</code></td>
+                      <td class="py-3 px-4 text-gray-400">Autopilot action executed</td>
+                      <td class="py-3 px-4 text-gray-400">Audit logging</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="code-block p-4">
+                <pre><code><span class="comment"># Example webhook payload</span>
+{
+  <span class="string">"event"</span>: <span class="string">"segment.synced"</span>,
+  <span class="string">"timestamp"</span>: <span class="string">"2024-01-21T14:30:00Z"</span>,
+  <span class="string">"data"</span>: {
+    <span class="string">"segment_id"</span>: <span class="string">"seg_abc123"</span>,
+    <span class="string">"platform"</span>: <span class="string">"meta"</span>,
+    <span class="string">"profiles_sent"</span>: <span class="number">15420</span>,
+    <span class="string">"match_rate"</span>: <span class="number">83.4</span>
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-line h-8"></div>
+      </div>
+
+      <!-- Step 8 -->
+      <div id="step-8" class="mb-12 relative">
+        <div class="flex gap-6">
+          <div class="step-number">8</div>
+          <div class="flex-1">
+            <div class="glass rounded-xl p-6 card-3d border border-green-500/30">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-xl font-bold">Autopilot Activation</h3>
+                <span class="badge badge-green">Final Step</span>
+              </div>
+              <p class="text-gray-400 mb-6">Enable Trust-Gated Autopilot for automated revenue operations.</p>
+
+              <div class="glass-strong rounded-xl p-6 mb-6 text-center">
+                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center ring-4 ring-green-500/30 animate-glow">
+                  <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                </div>
+                <h4 class="text-2xl font-bold text-green-500 mb-2">Autopilot Ready</h4>
+                <p class="text-gray-400">When signal health reaches 70+, automations execute automatically.</p>
+              </div>
+
+              <div class="code-block p-4 mb-6">
+                <pre><code><span class="comment"># Start all services</span>
+<span class="keyword">docker</span> compose up -d
+
+<span class="comment"># Verify services are healthy</span>
+<span class="keyword">docker</span> compose ps
+
+<span class="comment"># Check autopilot status</span>
+<span class="keyword">curl</span> <span class="string">"https://api.stratum.ai/v1/trust-gate/status"</span> \
+  -H <span class="string">"Authorization: Bearer strat_live_xxxx"</span></code></pre>
+              </div>
+
+              <div class="grid md:grid-cols-3 gap-4">
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="text-2xl mb-2">🎯</div>
+                  <div class="font-medium">Audience Sync</div>
+                  <div class="text-xs text-gray-500">Auto-push to ad platforms</div>
+                </div>
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="text-2xl mb-2">⚡</div>
+                  <div class="font-medium">Real-time Actions</div>
+                  <div class="text-xs text-gray-500">Instant automations</div>
+                </div>
+                <div class="glass-strong rounded-lg p-4 text-center">
+                  <div class="text-2xl mb-2">🛡️</div>
+                  <div class="font-medium">Trust Protected</div>
+                  <div class="text-xs text-gray-500">Safe execution only</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Maximization -->
+  <section id="features" class="py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold mb-8 text-center">
+        Maximize Your <span class="text-gradient">Platform Benefits</span>
+      </h2>
+      <p class="text-center text-gray-400 max-w-2xl mx-auto mb-12">
+        Follow these best practices to get 100% value from Stratum AI.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- CDP Best Practices -->
+        <div class="glass rounded-xl p-6 card-3d">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold">CDP Excellence</h3>
+          </div>
+          <ul class="space-y-3 text-sm text-gray-400">
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Track all customer touchpoints with consistent identifiers
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Use computed traits for complex segmentation logic
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Enable auto-sync for audience freshness (recommended: 6h)
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Review identity graph monthly for merge accuracy
+            </li>
+          </ul>
+        </div>
+
+        <!-- Trust Engine Best Practices -->
+        <div class="glass rounded-xl p-6 card-3d">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold">Trust Engine Mastery</h3>
+          </div>
+          <ul class="space-y-3 text-sm text-gray-400">
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Monitor signal health dashboard daily
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Set up alerts for HOLD and BLOCK states
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Investigate degraded signals within 24 hours
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Review automation audit logs weekly
+            </li>
+          </ul>
+        </div>
+
+        <!-- Automation Best Practices -->
+        <div class="glass rounded-xl p-6 card-3d">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold">Automation Power</h3>
+          </div>
+          <ul class="space-y-3 text-sm text-gray-400">
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Start with high-confidence automations first
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Test new automations in HOLD mode before PASS
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Use webhooks to track automation performance
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Build automation playbooks for common scenarios
+            </li>
+          </ul>
+        </div>
+
+        <!-- Integration Best Practices -->
+        <div class="glass rounded-xl p-6 card-3d">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold">Integration Success</h3>
+          </div>
+          <ul class="space-y-3 text-sm text-gray-400">
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Connect all revenue-generating platforms
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Use test keys during integration development
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Monitor integration health in dashboard
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Rotate API keys quarterly for security
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Configuration Reference -->
+  <section id="configuration" class="py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-green-500 flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        Quick Reference
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- API Endpoints -->
+        <div class="glass rounded-xl p-6">
+          <h3 class="font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            API Endpoints
+          </h3>
+          <div class="space-y-2 text-sm font-mono">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Base URL</span>
+              <span class="text-cyan-400">api.stratum.ai/v1</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Profiles</span>
+              <span class="text-cyan-400">/profiles</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Segments</span>
+              <span class="text-cyan-400">/segments</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Events</span>
+              <span class="text-cyan-400">/events</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Trust Gate</span>
+              <span class="text-cyan-400">/trust-gate</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Audience Sync</span>
+              <span class="text-cyan-400">/audience-sync</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Commands -->
+        <div class="glass rounded-xl p-6">
+          <h3 class="font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+            </svg>
+            Key Commands
+          </h3>
+          <div class="space-y-2 text-sm font-mono">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Start Dev</span>
+              <span class="text-green-400">make dev</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Run Tests</span>
+              <span class="text-green-400">make test</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Lint Code</span>
+              <span class="text-green-400">make lint</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Migrate DB</span>
+              <span class="text-green-400">make migrate</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Full Stack</span>
+              <span class="text-green-400">docker compose up</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section id="get-started" class="py-20 px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="glass-strong rounded-2xl p-12">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center animate-float">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-bold mb-4">Ready to Deploy?</h2>
+        <p class="text-gray-400 mb-8 max-w-lg mx-auto">
+          Follow these 8 steps and you'll have Stratum AI running with full Trust-Gated Autopilot capabilities.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href="#step-1" class="btn-primary px-8 py-4 rounded-xl font-semibold flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Start from Step 1
+          </a>
+          <a href="stratum-ai-landing.html" class="btn-secondary px-8 py-4 rounded-xl font-semibold flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 border-t border-white/10">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <span class="font-semibold">Stratum AI</span>
+        </div>
+        <div class="flex items-center gap-6 text-sm text-gray-500">
+          <a href="#" class="hover:text-white transition">Documentation</a>
+          <a href="#" class="hover:text-white transition">API Reference</a>
+          <a href="#" class="hover:text-white transition">Support</a>
+          <a href="#" class="hover:text-white transition">Status</a>
+        </div>
+        <div class="text-sm text-gray-500">
+          &copy; 2024 Stratum AI. All rights reserved.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll to top button -->
+  <button onclick="window.scrollTo({top:0,behavior:'smooth'})" class="fixed bottom-8 right-8 w-12 h-12 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 hover:bg-purple-500/30 transition opacity-0 pointer-events-none" id="scrollTop">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+    </svg>
+  </button>
+
+  <script>
+    // Scroll to top button visibility
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('scrollTop');
+      if (window.scrollY > 500) {
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+      } else {
+        btn.style.opacity = '0';
+        btn.style.pointerEvents = 'none';
+      }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Add fade-in animation on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-up');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.glass, .card-3d').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
