@@ -175,6 +175,21 @@ from app.models.audience_sync import (
     AudienceSyncCredential,
 )
 
+# Settings models (Webhooks, Notifications, Changelog, Slack)
+from app.models.settings import (
+    WebhookStatus,
+    WebhookEventType,
+    NotificationType,
+    NotificationCategory,
+    ChangelogType,
+    Webhook,
+    WebhookDelivery,
+    Notification,
+    ChangelogEntry,
+    ChangelogReadStatus,
+    SlackIntegration,
+)
+
 __all__ = [
     # Enums
     "UserRole",
@@ -310,4 +325,16 @@ __all__ = [
     "PlatformAudience",
     "AudienceSyncJob",
     "AudienceSyncCredential",
+    # Settings (Webhooks, Notifications, Changelog, Slack)
+    "WebhookStatus",
+    "WebhookEventType",
+    "NotificationType",
+    "NotificationCategory",
+    "ChangelogType",
+    "Webhook",
+    "WebhookDelivery",
+    "Notification",
+    "ChangelogEntry",
+    "ChangelogReadStatus",
+    "SlackIntegration",
 ]

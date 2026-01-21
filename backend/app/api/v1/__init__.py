@@ -53,6 +53,12 @@ from app.api.v1.endpoints import (
     payments,
     stripe_webhook,
     mfa,
+    # New Settings endpoints
+    api_keys,
+    webhooks,
+    notifications,
+    changelog,
+    slack,
 )
 
 api_router = APIRouter()
@@ -352,4 +358,34 @@ api_router.include_router(
 api_router.include_router(
     mfa.router,
     tags=["MFA"],
+)
+
+# API Keys Management
+api_router.include_router(
+    api_keys.router,
+    tags=["API Keys"],
+)
+
+# Webhooks Management
+api_router.include_router(
+    webhooks.router,
+    tags=["Webhooks"],
+)
+
+# In-App Notifications
+api_router.include_router(
+    notifications.router,
+    tags=["Notifications"],
+)
+
+# Changelog / What's New
+api_router.include_router(
+    changelog.router,
+    tags=["Changelog"],
+)
+
+# Slack Integration
+api_router.include_router(
+    slack.router,
+    tags=["Slack Integration"],
 )
