@@ -51,6 +51,13 @@ from app.models.onboarding import (
     AutomationMode,
     PrimaryKPI,
 )
+from app.models.reporting import (
+    ReportTemplate,
+    ReportType,
+    ReportFormat,
+    ScheduledReport,
+    ScheduleFrequency,
+)
 from app.core.security import get_password_hash, hash_pii_for_lookup, encrypt_pii
 
 
@@ -172,6 +179,55 @@ DEMO_ACTIVITIES = [
     {"action": AuditAction.CREATE, "resource_type": "campaign", "resource_id": "4"},
     {"action": AuditAction.UPDATE, "resource_type": "targeting", "resource_id": "1"},
     {"action": AuditAction.LOGIN, "resource_type": "user", "resource_id": "1"},
+]
+
+# Demo report templates
+DEMO_REPORT_TEMPLATES = [
+    {
+        "name": "Weekly Performance Report",
+        "description": "Comprehensive weekly summary of campaign performance across all platforms",
+        "report_type": ReportType.CAMPAIGN_PERFORMANCE,
+        "default_format": ReportFormat.PDF,
+        "config": {
+            "metrics": ["spend", "revenue", "roas", "conversions", "cpc", "cpm"],
+            "dimensions": ["campaign", "platform", "date"],
+            "sections": ["summary", "charts", "detailed_table", "recommendations"],
+            "date_range": {"type": "last_7_days"},
+        },
+    },
+    {
+        "name": "Executive Summary",
+        "description": "High-level overview for leadership with key metrics and trends",
+        "report_type": ReportType.EXECUTIVE_SUMMARY,
+        "default_format": ReportFormat.PDF,
+        "config": {
+            "metrics": ["total_spend", "total_revenue", "overall_roas", "top_campaigns"],
+            "sections": ["kpi_summary", "trend_charts", "highlights"],
+            "date_range": {"type": "last_30_days"},
+        },
+    },
+    {
+        "name": "Attribution Analysis",
+        "description": "Multi-touch attribution breakdown by channel and campaign",
+        "report_type": ReportType.ATTRIBUTION_SUMMARY,
+        "default_format": ReportFormat.PDF,
+        "config": {
+            "metrics": ["attributed_conversions", "attributed_revenue", "channel_contribution"],
+            "sections": ["funnel_analysis", "channel_comparison", "path_analysis"],
+            "attribution_model": "data_driven",
+        },
+    },
+    {
+        "name": "Profit & ROAS Report",
+        "description": "Detailed profit margin and ROAS analysis by campaign",
+        "report_type": ReportType.PROFIT_ROAS,
+        "default_format": ReportFormat.CSV,
+        "config": {
+            "metrics": ["spend", "revenue", "cogs", "profit", "profit_roas", "margin_percent"],
+            "sections": ["profitability_table", "margin_trends"],
+            "include_forecasts": True,
+        },
+    },
 ]
 
 
@@ -316,7 +372,25 @@ async def seed_demo_data():
 
             await db.flush()
 
-            print("\n[6/6] Creating activity log...")
+            print("\n[6/7] Creating report templates...")
+            for template_data in DEMO_REPORT_TEMPLATES:
+                template = ReportTemplate(
+                    tenant_id=tenant.id,
+                    name=template_data["name"],
+                    description=template_data["description"],
+                    report_type=template_data["report_type"],
+                    default_format=template_data["default_format"],
+                    config=template_data["config"],
+                    is_active=True,
+                    is_system=False,
+                    available_formats=["pdf", "csv", "excel"],
+                    created_by_user_id=user.id,
+                )
+                db.add(template)
+                print(f"      {template_data['name']}")
+            print(f"      Created {len(DEMO_REPORT_TEMPLATES)} report templates")
+
+            print("\n[7/7] Creating activity log...")
             for i, activity in enumerate(DEMO_ACTIVITIES):
                 log = AuditLog(
                     tenant_id=tenant.id,

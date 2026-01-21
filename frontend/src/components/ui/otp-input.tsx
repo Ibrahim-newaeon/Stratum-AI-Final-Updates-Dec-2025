@@ -128,7 +128,6 @@ export function OTPInput({
           onChange={(e) => handleChange(index, e)}
           onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={handlePaste}
-          onFocus={handleFocus}
           disabled={disabled}
           autoFocus={autoFocus && index === 0}
           aria-label={`Digit ${index + 1}`}
@@ -148,6 +147,7 @@ export function OTPInput({
               : 'rgba(255, 255, 255, 0.12)'
           }}
           onFocus={(e) => {
+            e.target.select();
             e.target.style.borderColor = error ? '#ef4444' : '#FC6423';
             e.target.style.boxShadow = error
               ? '0 0 0 3px rgba(239, 68, 68, 0.1)'

@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react'
 import DashboardLayout from './views/DashboardLayout'
 import TenantLayout from './views/TenantLayout'
 import { Toaster } from './components/ui/toaster'
+import { TooltipProvider } from './components/ui/tooltip'
 import { JoyrideProvider } from './components/guide/JoyrideWrapper'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
@@ -13,6 +14,7 @@ import OnboardingGuard from './components/auth/OnboardingGuard'
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./views/Landing'))
 const LandingAr = lazy(() => import('./views/LandingAr'))
+const AILanding = lazy(() => import('./views/AILanding'))
 const Login = lazy(() => import('./views/Login'))
 const Signup = lazy(() => import('./views/Signup'))
 const ForgotPassword = lazy(() => import('./views/ForgotPassword'))
@@ -106,9 +108,10 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <JoyrideProvider>
-          <div className="min-h-screen bg-background">
-            <Routes>
+        <TooltipProvider delayDuration={300}>
+          <JoyrideProvider>
+            <div className="min-h-screen bg-background">
+              <Routes>
               {/* Public routes */}
               <Route
                 path="/"
@@ -123,6 +126,15 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <LandingAr />
+                  </Suspense>
+                }
+              />
+              {/* AI-Focused Landing Page - Marketing & Sales Kit */}
+              <Route
+                path="/ai"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AILanding />
                   </Suspense>
                 }
               />
@@ -831,10 +843,11 @@ function App() {
 
               {/* Catch all - redirect to landing for unauthenticated, dashboard for authenticated */}
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-            <Toaster />
-          </div>
-        </JoyrideProvider>
+              </Routes>
+              <Toaster />
+            </div>
+          </JoyrideProvider>
+        </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
   )

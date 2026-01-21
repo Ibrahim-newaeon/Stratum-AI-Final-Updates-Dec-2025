@@ -72,7 +72,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
-      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-false}
+      - USE_MOCK_AD_DATA=false
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173}
@@ -130,7 +130,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
       - ML_PROVIDER=${ML_PROVIDER:-local}
-      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-false}
+      - USE_MOCK_AD_DATA=false
       # All integrations
       - PIPEDRIVE_API_TOKEN=${PIPEDRIVE_API_TOKEN:-}
       - HUBSPOT_API_KEY=${HUBSPOT_API_KEY:-}

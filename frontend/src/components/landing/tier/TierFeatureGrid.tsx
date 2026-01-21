@@ -13,7 +13,7 @@ import {
   LockClosedIcon,
   FingerPrintIcon,
   CpuChipIcon,
-  HeadphonesIcon,
+  LifebuoyIcon,
 } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,7 +53,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   globe: GlobeAltIcon,
   cog: CogIcon,
   lock: LockClosedIcon,
-  headset: HeadphonesIcon,
+  headset: LifebuoyIcon,
 };
 
 function CategoryCard({
