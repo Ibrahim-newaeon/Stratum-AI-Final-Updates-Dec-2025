@@ -41,6 +41,8 @@ import {
 import { cn } from '@/lib/utils'
 import LearningHub from '@/components/guide/LearningHub'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { CommandPalette } from '@/components/ui/command-palette'
+import { DemoBanner } from '@/components/demo/DemoBanner'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
@@ -100,7 +102,11 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Demo mode banner */}
+      <DemoBanner variant="top" />
+
+      <div className="flex flex-1 overflow-hidden">
       {/* Mobile sidebar overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -332,7 +338,10 @@ export default function DashboardLayout() {
             <Bars3Icon className="h-6 w-6" />
           </button>
 
-          <div className="flex-1" />
+          <div className="flex-1 flex items-center justify-center">
+            {/* Command Palette - Global Search */}
+            <CommandPalette />
+          </div>
 
           {/* Header actions */}
           <div className="flex items-center gap-3">
@@ -438,6 +447,7 @@ export default function DashboardLayout() {
 
       {/* Learning Hub Sidebar */}
       <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
+      </div>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { TooltipProvider } from './components/ui/tooltip'
 import { JoyrideProvider } from './components/guide/JoyrideWrapper'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
+import { DemoProvider } from './contexts/DemoContext'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import OnboardingGuard from './components/auth/OnboardingGuard'
@@ -108,8 +109,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <TooltipProvider delayDuration={300}>
-          <JoyrideProvider>
+        <DemoProvider>
+          <TooltipProvider delayDuration={300}>
+            <JoyrideProvider>
             <div className="min-h-screen bg-background">
               <Routes>
               {/* Public routes */}
@@ -846,8 +848,9 @@ function App() {
               </Routes>
               <Toaster />
             </div>
-          </JoyrideProvider>
-        </TooltipProvider>
+            </JoyrideProvider>
+          </TooltipProvider>
+        </DemoProvider>
       </AuthProvider>
     </ThemeProvider>
   )

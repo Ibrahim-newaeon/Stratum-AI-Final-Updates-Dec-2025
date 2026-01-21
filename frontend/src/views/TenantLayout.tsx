@@ -31,6 +31,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { CommandPalette } from '@/components/ui/command-palette'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenantStore } from '@/stores/tenantStore'
 
@@ -261,7 +262,10 @@ export default function TenantLayout() {
             <Bars3Icon className="h-6 w-6" />
           </button>
 
-          <div className="flex-1" />
+          <div className="flex-1 flex items-center justify-center">
+            {/* Command Palette - Global Search */}
+            <CommandPalette tenantId={tenantId} />
+          </div>
 
           {/* Header actions */}
           <div className="flex items-center gap-3">
