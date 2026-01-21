@@ -55,6 +55,15 @@ class Feature(str, enum.Enum):
     # Notifications
     SLACK_NOTIFICATIONS = "slack_notifications"
     EMAIL_NOTIFICATIONS = "email_notifications"
+    IN_APP_NOTIFICATIONS = "in_app_notifications"
+
+    # API & Integrations (Available to all tiers)
+    API_ACCESS = "api_access"
+    WEBHOOKS = "webhooks"
+    API_KEYS = "api_keys"
+
+    # Changelog (Available to all tiers)
+    CHANGELOG_ACCESS = "changelog_access"
 
     # === PROFESSIONAL FEATURES ===
     # Ad Account Management
@@ -102,10 +111,6 @@ class Feature(str, enum.Enum):
     # Identity
     IDENTITY_GRAPH = "identity_graph"
 
-    # API
-    API_ACCESS = "api_access"
-    WEBHOOKS = "webhooks"
-
     # Embed Widgets
     EMBED_WIDGETS_BASIC = "embed_widgets_basic"      # Starter: with full branding
     EMBED_WIDGETS_MINIMAL = "embed_widgets_minimal"  # Professional: minimal branding
@@ -125,9 +130,16 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         Feature.RFM_ANALYSIS,
         # Reporting
         Feature.DASHBOARD_EXPORTS,
-        # Notifications
+        # Notifications (all tiers)
         Feature.SLACK_NOTIFICATIONS,
         Feature.EMAIL_NOTIFICATIONS,
+        Feature.IN_APP_NOTIFICATIONS,
+        # API & Integrations (all tiers)
+        Feature.API_ACCESS,
+        Feature.WEBHOOKS,
+        Feature.API_KEYS,
+        # Changelog (all tiers)
+        Feature.CHANGELOG_ACCESS,
         # Embed Widgets (with full branding)
         Feature.EMBED_WIDGETS_BASIC,
     },
@@ -143,6 +155,11 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         Feature.DASHBOARD_EXPORTS,
         Feature.SLACK_NOTIFICATIONS,
         Feature.EMAIL_NOTIFICATIONS,
+        Feature.IN_APP_NOTIFICATIONS,
+        Feature.API_ACCESS,
+        Feature.WEBHOOKS,
+        Feature.API_KEYS,
+        Feature.CHANGELOG_ACCESS,
         # Professional features
         Feature.AD_ACCOUNTS_EXTENDED,
         Feature.FUNNEL_BUILDER,
@@ -159,7 +176,7 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
     },
 
     SubscriptionTier.ENTERPRISE: {
-        # All features
+        # All Starter & Professional features
         Feature.AD_ACCOUNTS_BASIC,
         Feature.SIGNAL_HEALTH_MONITORING,
         Feature.ANOMALY_DETECTION,
@@ -169,6 +186,11 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         Feature.DASHBOARD_EXPORTS,
         Feature.SLACK_NOTIFICATIONS,
         Feature.EMAIL_NOTIFICATIONS,
+        Feature.IN_APP_NOTIFICATIONS,
+        Feature.API_ACCESS,
+        Feature.WEBHOOKS,
+        Feature.API_KEYS,
+        Feature.CHANGELOG_ACCESS,
         Feature.AD_ACCOUNTS_EXTENDED,
         Feature.FUNNEL_BUILDER,
         Feature.COMPUTED_TRAITS,
@@ -192,8 +214,6 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         Feature.AUDIT_EXPORT,
         Feature.AUDIENCE_SYNC_ALL,
         Feature.IDENTITY_GRAPH,
-        Feature.API_ACCESS,
-        Feature.WEBHOOKS,
         # Embed Widgets (white-label, no branding)
         Feature.EMBED_WIDGETS_BASIC,
         Feature.EMBED_WIDGETS_MINIMAL,
@@ -214,6 +234,8 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
         "data_retention_days": 90,
         "max_embed_widgets": 3,
         "max_embed_domains": 2,
+        "max_api_keys": 3,
+        "max_webhooks": 5,
     },
     SubscriptionTier.PROFESSIONAL: {
         "max_ad_accounts": 15,
@@ -225,6 +247,8 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
         "data_retention_days": 365,
         "max_embed_widgets": 10,
         "max_embed_domains": 10,
+        "max_api_keys": 10,
+        "max_webhooks": 20,
     },
     SubscriptionTier.ENTERPRISE: {
         "max_ad_accounts": 999999,  # Unlimited
@@ -236,6 +260,8 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
         "data_retention_days": 730,  # 2 years
         "max_embed_widgets": 999999,  # Unlimited
         "max_embed_domains": 999999,  # Unlimited
+        "max_api_keys": 999999,  # Unlimited
+        "max_webhooks": 999999,  # Unlimited
     },
 }
 
@@ -256,6 +282,8 @@ class TierLimits:
     data_retention_days: int
     max_embed_widgets: int
     max_embed_domains: int
+    max_api_keys: int
+    max_webhooks: int
 
     @classmethod
     def from_dict(cls, limits_dict: Dict[str, int]) -> "TierLimits":
@@ -270,6 +298,8 @@ class TierLimits:
             data_retention_days=limits_dict.get("data_retention_days", 0),
             max_embed_widgets=limits_dict.get("max_embed_widgets", 0),
             max_embed_domains=limits_dict.get("max_embed_domains", 0),
+            max_api_keys=limits_dict.get("max_api_keys", 0),
+            max_webhooks=limits_dict.get("max_webhooks", 0),
         )
 
 
