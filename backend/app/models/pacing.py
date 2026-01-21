@@ -53,7 +53,10 @@ class TargetMetric(str, enum.Enum):
 class AlertSeverity(str, enum.Enum):
     """Alert severity levels."""
     INFO = "info"
+    LOW = "low"
+    MEDIUM = "medium"
     WARNING = "warning"
+    HIGH = "high"
     CRITICAL = "critical"
 
 

@@ -39,6 +39,9 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+# Alias for backward compatibility
+async_session_maker = AsyncSessionLocal
+
 
 # =============================================================================
 # Sync Engine (For Celery workers and migrations)

@@ -26,30 +26,6 @@ depends_on = None
 
 def upgrade() -> None:
     # =========================================================================
-    # Webhook Status Enum
-    # =========================================================================
-    webhook_status = postgresql.ENUM('active', 'paused', 'failed', name='webhook_status', create_type=False)
-    webhook_status.create(op.get_bind(), checkfirst=True)
-
-    # =========================================================================
-    # Notification Type Enum
-    # =========================================================================
-    notification_type = postgresql.ENUM('info', 'warning', 'error', 'success', 'alert', name='notification_type', create_type=False)
-    notification_type.create(op.get_bind(), checkfirst=True)
-
-    # =========================================================================
-    # Notification Category Enum
-    # =========================================================================
-    notification_category = postgresql.ENUM('system', 'campaign', 'trust_gate', 'billing', 'security', 'integration', name='notification_category', create_type=False)
-    notification_category.create(op.get_bind(), checkfirst=True)
-
-    # =========================================================================
-    # Changelog Type Enum
-    # =========================================================================
-    changelog_type = postgresql.ENUM('feature', 'improvement', 'fix', 'security', 'deprecation', name='changelog_type', create_type=False)
-    changelog_type.create(op.get_bind(), checkfirst=True)
-
-    # =========================================================================
     # Webhooks - Outbound webhook endpoint configuration
     # =========================================================================
     op.create_table(

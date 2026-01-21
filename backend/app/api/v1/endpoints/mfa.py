@@ -19,7 +19,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.auth.deps import get_current_user
+from app.db.session import get_async_session as get_db
 from app.base_models import User
 from app.core.logging import get_logger
 from app.services.mfa_service import MFAService, check_mfa_required, is_user_locked
