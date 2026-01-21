@@ -140,7 +140,7 @@ async def list_notifications(
                 read_at=n.read_at,
                 action_url=n.action_url,
                 action_label=n.action_label,
-                metadata=n.metadata,
+                metadata=n.extra_data,
                 created_at=n.created_at,
             )
             for n in notifications
@@ -317,7 +317,7 @@ async def create_notification(
         category=notif_category,
         action_url=body.action_url,
         action_label=body.action_label,
-        metadata=body.metadata,
+        extra_data=body.metadata,
     )
 
     db.add(notification)
@@ -338,7 +338,7 @@ async def create_notification(
             read_at=notification.read_at,
             action_url=notification.action_url,
             action_label=notification.action_label,
-            metadata=notification.metadata,
+            metadata=notification.extra_data,
             created_at=notification.created_at,
         ),
     )

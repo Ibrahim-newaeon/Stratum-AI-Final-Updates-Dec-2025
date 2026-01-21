@@ -204,8 +204,8 @@ class Notification(Base, TimestampMixin, TenantMixin):
     action_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
     action_label: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
-    # Metadata
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict, nullable=True)
+    # Extra data (renamed from metadata - reserved by SQLAlchemy)
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict, nullable=True)
 
     # Expiration
     expires_at: Mapped[Optional[datetime]] = mapped_column(

@@ -142,8 +142,8 @@ def upgrade() -> None:
         sa.Column('action_url', sa.String(2048), nullable=True),
         sa.Column('action_label', sa.String(100), nullable=True),
 
-        # Metadata
-        sa.Column('metadata', postgresql.JSONB(), server_default='{}', nullable=True),
+        # Extra data (metadata is reserved in SQLAlchemy)
+        sa.Column('extra_data', postgresql.JSONB(), server_default='{}', nullable=True),
 
         # Expiration
         sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
