@@ -582,10 +582,100 @@
   @apply bg-popover text-popover-foreground border rounded-lg shadow-lg p-3;
 }
 
-/* Focus styles */
+/* ===== Accessibility - WCAG 2.1 Compliance ===== */
 @layer base {
+  /* Focus styles - visible focus ring for keyboard navigation */
   *:focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Ensure focus is visible on interactive elements */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* High contrast focus for dark mode */
+  .dark button:focus-visible,
+  .dark a:focus-visible,
+  .dark input:focus-visible,
+  .dark select:focus-visible,
+  .dark textarea:focus-visible {
+    --tw-ring-color: hsl(var(--primary));
+    --tw-ring-offset-color: hsl(var(--background));
+  }
+}
+
+@layer utilities {
+  /* Screen reader only - visually hidden but accessible */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Not screen reader only - for skip links that should be visible on focus */
+  .not-sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Focus within for container focus styling */
+  .focus-within-ring:focus-within {
+    @apply ring-2 ring-ring ring-offset-2;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    * {
+      border-color: currentColor !important;
+    }
+
+    button,
+    a,
+    input,
+    select,
+    textarea {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+
+  /* Forced colors mode (Windows High Contrast) */
+  @media (forced-colors: active) {
+    button,
+    a {
+      forced-color-adjust: none;
+    }
   }
 }
 
@@ -1074,6 +1164,9 @@
 }
 
 /* ===== AI Landing Page Animations (2026 Design) ===== */
+/* Note: Core animations (shimmer, float, morph, gradient-shift) are defined in tailwind.config.js */
+/* This section contains additional landing page utilities only */
+
 @keyframes gradient-x {
   0%, 100% {
     background-position: 0% 50%;
@@ -1093,18 +1186,8 @@
   perspective: 1000px;
 }
 
-/* Shimmer loading effect */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
+/* Shimmer utility class - uses tailwind animation */
 .animate-shimmer {
-  animation: shimmer 2s linear infinite;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
@@ -1114,18 +1197,9 @@
   background-size: 200% 100%;
 }
 
-/* Floating animation for CTA orbs */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-20px) scale(1.02);
-  }
-}
-
+/* Float utility class - uses tailwind animation */
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  /* Uses float animation from tailwind.config.js */
 }
 
 /* Glass morphism base */
@@ -1341,33 +1415,15 @@
   100% { transform: translateX(100%) rotate(45deg); }
 }
 
-/* Morph animation for floating orbs */
-@keyframes morph {
-  0%, 100% {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-  }
-  50% {
-    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-  }
-}
-
+/* Morph animation utility - uses tailwind animation from tailwind.config.js */
 .animate-morph {
-  animation: morph 8s ease-in-out infinite;
+  /* Uses morph animation from tailwind.config.js */
 }
 
-/* Gradient shift animation */
-@keyframes gradient-shift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
+/* Gradient shift animation utility - uses tailwind animation from tailwind.config.js */
 .animate-gradient-shift {
-  animation: gradient-shift 8s ease infinite;
   background-size: 200% 200%;
+  /* Uses gradient-shift animation from tailwind.config.js */
 }
 
 /* Glow animation */

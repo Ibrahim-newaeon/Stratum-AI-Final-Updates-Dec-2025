@@ -36,18 +36,27 @@ export function formatPercent(value: number, decimals: number = 1): string {
 }
 
 /**
- * Get platform brand color
+ * Get platform brand color - Analytics Design System
+ * Colors aligned with tailwind.config.js and chartTheme.ts
  */
 export function getPlatformColor(platform: string): string {
   const colors: Record<string, string> = {
-    meta: '#1877F2',
-    facebook: '#1877F2',
+    // Primary ad platforms - Analytics Design System colors
+    meta: '#0866FF',
+    'meta ads': '#0866FF',
+    facebook: '#0866FF',
     google: '#4285F4',
-    tiktok: '#000000',
+    'google ads': '#4285F4',
+    tiktok: '#00F2EA',
+    'tiktok ads': '#00F2EA',
     snapchat: '#FFFC00',
+    'snapchat ads': '#FFFC00',
+    whatsapp: '#25D366',
+    // Other platforms
     instagram: '#E4405F',
     linkedin: '#0A66C2',
     twitter: '#1DA1F2',
+    x: '#000000',
     youtube: '#FF0000',
     pinterest: '#E60023',
   }

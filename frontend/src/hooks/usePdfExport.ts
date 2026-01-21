@@ -1,11 +1,16 @@
 /**
  * PDF Export Hook - Generate professional PDF reports from dashboard views
  * Uses jsPDF + html2canvas for high-quality exports
+ *
+ * Libraries are dynamically imported to reduce initial bundle size
  */
 
 import { useState, useCallback } from 'react'
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
+
+// Dynamic imports for PDF libraries - reduces initial bundle size
+// jspdf: ~280KB, html2canvas: ~200KB
+type JsPDF = typeof import('jspdf').default
+type Html2Canvas = typeof import('html2canvas').default
 
 export interface PdfExportOptions {
   filename?: string
@@ -51,6 +56,13 @@ export function usePdfExport() {
     setProgress(10)
 
     try {
+      // Dynamically import PDF libraries for better code splitting
+      setProgress(20)
+      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+        import('jspdf'),
+        import('html2canvas'),
+      ])
+
       // Create canvas from element
       setProgress(30)
       const canvas = await html2canvas(elementRef, {
@@ -176,9 +188,17 @@ export function usePdfExport() {
     } = options
 
     setIsExporting(true)
-    setProgress(10)
+    setProgress(5)
 
     try {
+      // Dynamically import PDF libraries for better code splitting
+      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+        import('jspdf'),
+        import('html2canvas'),
+      ])
+
+      setProgress(10)
+
       const pdf = new jsPDF({
         orientation,
         unit: 'mm',

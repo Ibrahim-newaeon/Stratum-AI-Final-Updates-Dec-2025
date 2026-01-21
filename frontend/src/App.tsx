@@ -11,6 +11,7 @@ import { DemoProvider } from './contexts/DemoContext'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import OnboardingGuard from './components/auth/OnboardingGuard'
+import { SkipToContent } from './components/ui/skip-to-content'
 
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./views/Landing'))
@@ -112,7 +113,9 @@ function App() {
         <DemoProvider>
           <TooltipProvider delayDuration={300}>
             <JoyrideProvider>
-            <div className="min-h-screen bg-background">
+            {/* Skip to content link for keyboard accessibility */}
+            <SkipToContent />
+            <div className="min-h-screen bg-background" id="main-content" role="main">
               <Routes>
               {/* Public routes */}
               <Route
