@@ -43,6 +43,10 @@ import LearningHub from '@/components/guide/LearningHub'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { CommandPalette } from '@/components/ui/command-palette'
 import { DemoBanner } from '@/components/demo/DemoBanner'
+import { NotificationCenter, NotificationBell } from '@/components/notifications/NotificationCenter'
+import { WhatsNewModal, useWhatsNew } from '@/components/changelog/WhatsNew'
+import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts'
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
@@ -82,6 +86,10 @@ export default function DashboardLayout() {
   const [learningHubOpen, setLearningHubOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'))
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const { hasNewUpdates } = useWhatsNew()
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'ar' : 'en'
@@ -365,11 +373,22 @@ export default function DashboardLayout() {
               {i18n.language === 'en' ? 'AR' : 'EN'}
             </button>
 
-            {/* Notifications */}
-            <button className="p-2 rounded-lg hover:bg-accent transition-colors relative">
-              <BellIcon className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+            {/* What's New */}
+            <button
+              onClick={() => setWhatsNewOpen(true)}
+              className="relative p-2 rounded-lg hover:bg-accent transition-colors"
+              title="What's New"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              {hasNewUpdates && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+              )}
             </button>
+
+            {/* Notifications */}
+            <NotificationBell onClick={() => setNotificationsOpen(true)} unreadCount={3} />
 
             {/* User menu */}
             <div className="relative">
@@ -447,6 +466,18 @@ export default function DashboardLayout() {
 
       {/* Learning Hub Sidebar */}
       <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
+
+      {/* Notification Center */}
+      <NotificationCenter isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+
+      {/* What's New Modal */}
+      <WhatsNewModal isOpen={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist variant="sidebar" />
       </div>
     </div>
   )
