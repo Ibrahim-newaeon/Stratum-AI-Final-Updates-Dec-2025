@@ -78,30 +78,30 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#0C1B2C' }}>
-      {/* Animated Background Orbs */}
+    <div className="min-h-screen flex" style={{ background: '#030303' }}>
+      {/* Animated Background Orbs - 2026 Theme */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute w-[600px] h-[600px] rounded-full blur-[80px] opacity-50 animate-[orbFloat_15s_ease-in-out_infinite]"
+          className="absolute w-[600px] h-[600px] rounded-full blur-[80px] opacity-40 animate-[orbFloat_15s_ease-in-out_infinite]"
           style={{
-            background: 'rgba(252, 100, 35, 0.25)',
+            background: 'rgba(168, 85, 247, 0.25)',
             top: '-200px',
             left: '-200px'
           }}
         />
         <div
-          className="absolute w-[500px] h-[500px] rounded-full blur-[80px] opacity-50 animate-[orbFloat_15s_ease-in-out_infinite]"
+          className="absolute w-[500px] h-[500px] rounded-full blur-[80px] opacity-40 animate-[orbFloat_15s_ease-in-out_infinite]"
           style={{
-            background: 'rgba(57, 128, 234, 0.25)',
+            background: 'rgba(6, 182, 212, 0.25)',
             bottom: '-150px',
             right: '-150px',
             animationDelay: '-5s'
           }}
         />
         <div
-          className="absolute w-[400px] h-[400px] rounded-full blur-[80px] opacity-40 animate-[orbFloat_15s_ease-in-out_infinite]"
+          className="absolute w-[400px] h-[400px] rounded-full blur-[80px] opacity-30 animate-[orbFloat_15s_ease-in-out_infinite]"
           style={{
-            background: 'rgba(150, 112, 194, 0.18)',
+            background: 'rgba(249, 115, 22, 0.18)',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
@@ -112,7 +112,7 @@ export default function Login() {
 
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(252, 100, 35, 0.1) 0%, rgba(57, 128, 234, 0.1) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)' }} />
 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
           <div>
@@ -120,14 +120,14 @@ export default function Login() {
             <Link to="/" className="flex items-center gap-3 mb-12">
               <div
                 className="h-12 w-12 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)' }}
               >
                 <span className="text-white font-bold text-2xl">S</span>
               </div>
               <span
                 className="text-3xl font-bold"
                 style={{
-                  background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}
@@ -139,7 +139,7 @@ export default function Login() {
             <h1 className="text-4xl font-bold mb-4 leading-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               Revenue Operating System
               <br />
-              <span style={{ color: '#FC6423' }}>with Trust-Gated Autopilot</span>
+              <span style={{ color: '#f97316' }}>with Trust-Gated Autopilot</span>
             </h1>
             <p className="text-lg max-w-md" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
               AI-powered marketing intelligence with real-time attribution, signal health monitoring, and automated optimization across all ad platforms.
@@ -172,7 +172,7 @@ export default function Login() {
               { value: '4.2x', label: 'Avg ROAS Lift' },
             ].map((stat) => (
               <div key={stat.label}>
-                <div className="text-2xl font-bold" style={{ color: '#FC6423' }}>{stat.value}</div>
+                <div className="text-2xl font-bold" style={{ color: '#f97316' }}>{stat.value}</div>
                 <div className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{stat.label}</div>
               </div>
             ))}
@@ -187,14 +187,14 @@ export default function Login() {
           <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
             <div
               className="h-10 w-10 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #f97316 0%, #06b6d4 100%)' }}
             >
               <span className="text-white font-bold text-xl">S</span>
             </div>
             <span
               className="text-2xl font-bold"
               style={{
-                background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)',
+                background: 'linear-gradient(135deg, #f97316 0%, #06b6d4 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}
@@ -250,7 +250,7 @@ export default function Login() {
                       background: 'rgba(255, 255, 255, 0.06)',
                       border: '1px solid rgba(255, 255, 255, 0.12)'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#FC6423'}
+                    onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                     placeholder="name@company.com"
                     required
@@ -268,7 +268,7 @@ export default function Login() {
                   <Link
                     to="/forgot-password"
                     className="text-sm hover:underline"
-                    style={{ color: '#FC6423' }}
+                    style={{ color: '#f97316' }}
                   >
                     Forgot password?
                   </Link>
@@ -287,7 +287,7 @@ export default function Login() {
                       background: 'rgba(255, 255, 255, 0.06)',
                       border: '1px solid rgba(255, 255, 255, 0.12)'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#FC6423'}
+                    onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                     placeholder="Enter your password"
                     required
@@ -312,7 +312,7 @@ export default function Login() {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded"
-                  style={{ accentColor: '#FC6423' }}
+                  style={{ accentColor: '#f97316' }}
                 />
                 <label htmlFor="remember" className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                   Remember me for 30 days
@@ -325,7 +325,7 @@ export default function Login() {
                 disabled={isLoading}
                 className="w-full py-3.5 rounded-xl font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  background: '#FC6423',
+                  background: '#f97316',
                   boxShadow: '0 4px 20px rgba(252, 100, 35, 0.4)'
                 }}
                 onMouseOver={(e) => {
@@ -425,7 +425,7 @@ export default function Login() {
             {/* Sign up link */}
             <p className="text-center text-sm mt-6" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
               Don't have an account?{' '}
-              <Link to="/signup" className="font-medium hover:underline" style={{ color: '#FC6423' }}>
+              <Link to="/signup" className="font-medium hover:underline" style={{ color: '#f97316' }}>
                 Sign up
               </Link>
             </p>
@@ -434,9 +434,9 @@ export default function Login() {
           {/* Footer */}
           <p className="text-center text-xs mt-6" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
             By signing in, you agree to our{' '}
-            <a href="#" className="hover:underline" style={{ color: '#FC6423' }}>Terms of Service</a>
+            <a href="#" className="hover:underline" style={{ color: '#f97316' }}>Terms of Service</a>
             {' '}and{' '}
-            <a href="#" className="hover:underline" style={{ color: '#FC6423' }}>Privacy Policy</a>
+            <a href="#" className="hover:underline" style={{ color: '#f97316' }}>Privacy Policy</a>
           </p>
         </div>
       </div>

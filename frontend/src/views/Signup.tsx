@@ -139,15 +139,15 @@ export default function Signup() {
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       <div
         className="absolute w-[600px] h-[600px] rounded-full blur-[80px] opacity-50 animate-[orbFloat_15s_ease-in-out_infinite]"
-        style={{ background: 'rgba(252, 100, 35, 0.25)', top: '-200px', left: '-200px' }}
+        style={{ background: 'rgba(168, 85, 247, 0.25)', top: '-200px', left: '-200px' }}
       />
       <div
         className="absolute w-[500px] h-[500px] rounded-full blur-[80px] opacity-50 animate-[orbFloat_15s_ease-in-out_infinite]"
-        style={{ background: 'rgba(57, 128, 234, 0.25)', bottom: '-150px', right: '-150px', animationDelay: '-5s' }}
+        style={{ background: 'rgba(6, 182, 212, 0.25)', bottom: '-150px', right: '-150px', animationDelay: '-5s' }}
       />
       <div
         className="absolute w-[400px] h-[400px] rounded-full blur-[80px] opacity-40 animate-[orbFloat_15s_ease-in-out_infinite]"
-        style={{ background: 'rgba(150, 112, 194, 0.18)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', animationDelay: '-10s' }}
+        style={{ background: 'rgba(249, 115, 22, 0.18)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', animationDelay: '-10s' }}
       />
     </div>
   );
@@ -165,7 +165,7 @@ export default function Signup() {
   // OTP Verification Step
   if (step === 'verify-phone') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0C1B2C' }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#030303' }}>
         <BackgroundOrbs />
         <style>{animationStyles}</style>
         <div className="max-w-md w-full relative z-10">
@@ -174,13 +174,13 @@ export default function Signup() {
               className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
               style={{ background: 'rgba(252, 100, 35, 0.1)' }}
             >
-              <PhoneIcon className="w-10 h-10" style={{ color: '#FC6423' }} />
+              <PhoneIcon className="w-10 h-10" style={{ color: '#f97316' }} />
             </div>
             <h1 className="text-2xl font-bold text-white mb-4">Verify your WhatsApp</h1>
             <p className="text-sm mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
               We've sent a 6-digit code to your WhatsApp
             </p>
-            <p className="font-medium mb-8" style={{ color: '#FC6423' }}>
+            <p className="font-medium mb-8" style={{ color: '#f97316' }}>
               {formData?.phone}
             </p>
 
@@ -201,7 +201,7 @@ export default function Signup() {
                 onClick={handleVerifyOTP}
                 disabled={verifyOTPMutation.isPending || otpCode.length !== 6}
                 className="w-full py-3.5 rounded-xl font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: '#FC6423', boxShadow: '0 4px 20px rgba(252, 100, 35, 0.4)' }}
+                style={{ background: '#f97316', boxShadow: '0 4px 20px rgba(252, 100, 35, 0.4)' }}
               >
                 {verifyOTPMutation.isPending ? (
                   <span className="flex items-center justify-center gap-2">
@@ -218,7 +218,7 @@ export default function Signup() {
                 onClick={handleResendOTP}
                 disabled={otpCountdown > 0 || sendOTPMutation.isPending}
                 className="text-sm transition-colors disabled:opacity-50"
-                style={{ color: '#FC6423' }}
+                style={{ color: '#f97316' }}
               >
                 {sendOTPMutation.isPending ? 'Sending...' : otpCountdown > 0 ? `Resend code in ${otpCountdown}s` : 'Resend code'}
               </button>
@@ -240,7 +240,7 @@ export default function Signup() {
   // Success Step
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0C1B2C' }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#030303' }}>
         <BackgroundOrbs />
         <style>{animationStyles}</style>
         <div className="max-w-md w-full relative z-10">
@@ -258,8 +258,8 @@ export default function Signup() {
 
             <div className="mb-8 p-4 rounded-xl" style={{ background: 'rgba(252, 100, 35, 0.1)', border: '1px solid rgba(252, 100, 35, 0.2)' }}>
               <div className="flex items-center justify-center gap-2 mb-2">
-                <EnvelopeIcon className="w-5 h-5" style={{ color: '#FC6423' }} />
-                <span className="font-medium" style={{ color: '#FC6423' }}>Verify your email</span>
+                <EnvelopeIcon className="w-5 h-5" style={{ color: '#f97316' }} />
+                <span className="font-medium" style={{ color: '#f97316' }}>Verify your email</span>
               </div>
               <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                 We've sent a verification link to <span className="text-white">{formData?.email}</span>.
@@ -271,7 +271,7 @@ export default function Signup() {
               <button
                 onClick={() => navigate('/login')}
                 className="w-full py-3.5 rounded-xl font-semibold text-white transition-all"
-                style={{ background: '#FC6423', boxShadow: '0 4px 20px rgba(252, 100, 35, 0.4)' }}
+                style={{ background: '#f97316', boxShadow: '0 4px 20px rgba(252, 100, 35, 0.4)' }}
               >
                 Go to Login
               </button>
@@ -279,7 +279,7 @@ export default function Signup() {
                 Didn't receive the email?{' '}
                 <button
                   onClick={() => navigate(`/verify-email?email=${encodeURIComponent(formData?.email || '')}`)}
-                  style={{ color: '#FC6423' }}
+                  style={{ color: '#f97316' }}
                 >
                   Resend verification
                 </button>
@@ -293,21 +293,21 @@ export default function Signup() {
 
   // Main Signup Form
   return (
-    <div className="min-h-screen flex" style={{ background: '#0C1B2C' }}>
+    <div className="min-h-screen flex" style={{ background: '#030303' }}>
       <BackgroundOrbs />
       <style>{animationStyles}</style>
 
       {/* Left side - Brand */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(252, 100, 35, 0.1) 0%, rgba(57, 128, 234, 0.1) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)' }} />
 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
           <div>
             <Link to="/" className="flex items-center gap-3 mb-12">
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)' }}>
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f97316 0%, #06b6d4 100%)' }}>
                 <span className="text-white font-bold text-2xl">S</span>
               </div>
-              <span className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #f97316 0%, #06b6d4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Stratum AI
               </span>
             </Link>
@@ -315,7 +315,7 @@ export default function Signup() {
             <h1 className="text-4xl font-bold mb-4 leading-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               Start optimizing your
               <br />
-              <span style={{ color: '#FC6423' }}>ad campaigns today</span>
+              <span style={{ color: '#f97316' }}>ad campaigns today</span>
             </h1>
             <p className="text-lg max-w-md" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
               Join thousands of marketing teams who trust Stratum AI to deliver better ROAS with confidence.
@@ -344,7 +344,7 @@ export default function Signup() {
               { value: '4.2x', label: 'Avg ROAS Lift' },
             ].map((stat) => (
               <div key={stat.label}>
-                <div className="text-2xl font-bold" style={{ color: '#FC6423' }}>{stat.value}</div>
+                <div className="text-2xl font-bold" style={{ color: '#f97316' }}>{stat.value}</div>
                 <div className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{stat.label}</div>
               </div>
             ))}
@@ -358,10 +358,10 @@ export default function Signup() {
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <Link to="/" className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)' }}>
+              <div className="h-10 w-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f97316 0%, #06b6d4 100%)' }}>
                 <span className="text-white font-bold text-xl">S</span>
               </div>
-              <span className="text-2xl font-bold" style={{ background: 'linear-gradient(135deg, #FC6423 0%, #3980EA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span className="text-2xl font-bold" style={{ background: 'linear-gradient(135deg, #f97316 0%, #06b6d4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Stratum AI
               </span>
             </Link>
@@ -373,7 +373,7 @@ export default function Signup() {
               <h2 className="text-2xl font-bold text-white mb-2">Create your account</h2>
               <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                 Already have an account?{' '}
-                <Link to="/login" className="font-medium hover:underline" style={{ color: '#FC6423' }}>Sign in</Link>
+                <Link to="/login" className="font-medium hover:underline" style={{ color: '#f97316' }}>Sign in</Link>
               </p>
             </div>
 
@@ -396,7 +396,7 @@ export default function Signup() {
                     placeholder="John Doe"
                     className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
                     style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = '#FC6423'}
+                    onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                   />
                 </div>
@@ -414,7 +414,7 @@ export default function Signup() {
                     placeholder="you@company.com"
                     className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
                     style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = '#FC6423'}
+                    onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                   />
                 </div>
@@ -446,7 +446,7 @@ export default function Signup() {
                     placeholder="Min. 8 characters"
                     className="w-full pl-12 pr-12 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
                     style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = '#FC6423'}
+                    onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-white transition-colors" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -467,7 +467,7 @@ export default function Signup() {
                     placeholder="Confirm your password"
                     className="w-full pl-12 pr-12 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
                     style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = '#FC6423'}
+                    onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                   />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-white transition-colors" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -479,12 +479,12 @@ export default function Signup() {
 
               {/* Terms */}
               <div className="flex items-start gap-3">
-                <input {...register('acceptTerms')} type="checkbox" id="terms" className="mt-1 w-4 h-4 rounded" style={{ accentColor: '#FC6423' }} />
+                <input {...register('acceptTerms')} type="checkbox" id="terms" className="mt-1 w-4 h-4 rounded" style={{ accentColor: '#f97316' }} />
                 <label htmlFor="terms" className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                   I agree to the{' '}
-                  <a href="/terms" style={{ color: '#FC6423' }}>Terms of Service</a>
+                  <a href="/terms" style={{ color: '#f97316' }}>Terms of Service</a>
                   {' '}and{' '}
-                  <a href="/privacy" style={{ color: '#FC6423' }}>Privacy Policy</a>
+                  <a href="/privacy" style={{ color: '#f97316' }}>Privacy Policy</a>
                 </label>
               </div>
               {errors.acceptTerms && <p className="text-sm" style={{ color: '#ef4444' }}>{errors.acceptTerms.message}</p>}
@@ -494,7 +494,7 @@ export default function Signup() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full py-3.5 rounded-xl font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: '#FC6423', boxShadow: '0 4px 20px rgba(252, 100, 35, 0.4)' }}
+                style={{ background: '#f97316', boxShadow: '0 4px 20px rgba(252, 100, 35, 0.4)' }}
                 onMouseOver={(e) => { if (!isLoading) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(252, 100, 35, 0.5)'; } }}
                 onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(252, 100, 35, 0.4)'; }}
               >
@@ -543,9 +543,9 @@ export default function Signup() {
           {/* Footer */}
           <p className="text-center text-xs mt-6" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
             By creating an account, you agree to our{' '}
-            <a href="#" className="hover:underline" style={{ color: '#FC6423' }}>Terms of Service</a>
+            <a href="#" className="hover:underline" style={{ color: '#f97316' }}>Terms of Service</a>
             {' '}and{' '}
-            <a href="#" className="hover:underline" style={{ color: '#FC6423' }}>Privacy Policy</a>
+            <a href="#" className="hover:underline" style={{ color: '#f97316' }}>Privacy Policy</a>
           </p>
         </div>
       </div>

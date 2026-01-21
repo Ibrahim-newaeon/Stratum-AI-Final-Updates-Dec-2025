@@ -7,34 +7,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Dark Theme (default) - Infobip inspired */
-            --bg-primary: #0C1B2C;
-            --bg-secondary: #14283E;
+            /* Dark Theme (default) - 2026 Pure Black Theme */
+            --bg-primary: #030303;
+            --bg-secondary: #0a0a0a;
+            --bg-tertiary: #121212;
             --bg-card: rgba(255, 255, 255, 0.04);
             --bg-glass: rgba(255, 255, 255, 0.06);
             --border-glass: rgba(255, 255, 255, 0.12);
             --text-primary: #ffffff;
             --text-secondary: rgba(255, 255, 255, 0.75);
             --text-muted: rgba(255, 255, 255, 0.5);
-            --shadow-color: rgba(0, 0, 0, 0.4);
-            --accent-blue: #3980EA;
-            --accent-purple: #9670C2;
-            --accent-cyan: #78ADFC;
-            --accent-green: #6DCFA7;
-            --accent-orange: #FC6423;
+            --shadow-color: rgba(0, 0, 0, 0.6);
+            --accent-purple: #a855f7;
+            --accent-cyan: #06b6d4;
+            --accent-orange: #f97316;
+            --accent-green: #22c55e;
+            --accent-blue: #3b82f6;
             --accent-pink: #ec4899;
-            --gradient-primary: linear-gradient(135deg, #FC6423 0%, #D1521C 50%, #3980EA 100%);
-            --gradient-glow: linear-gradient(135deg, rgba(252, 100, 35, 0.5) 0%, rgba(57, 128, 234, 0.5) 100%);
-            /* Infobip global colors */
-            --infobip-orange: #FC6423;
-            --infobip-orange-dark: #D1521C;
-            --infobip-blue: #3980EA;
-            --infobip-blue-dark: #222E42;
-            --infobip-blue-darker: #14283E;
-            --infobip-blue-light: #EEF2FC;
-            --infobip-purple: #9670C2;
-            --infobip-green: #6DCFA7;
-            --infobip-black: #0C1B2C;
+            --gradient-primary: linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%);
+            --gradient-glow: linear-gradient(135deg, rgba(168, 85, 247, 0.5) 0%, rgba(6, 182, 212, 0.5) 100%);
+            /* 2026 Theme Colors */
+            --theme-purple: #a855f7;
+            --theme-purple-dark: #7e22ce;
+            --theme-cyan: #06b6d4;
+            --theme-cyan-dark: #0891b2;
+            --theme-orange: #f97316;
+            --theme-orange-dark: #ea580c;
+            --theme-green: #22c55e;
+            --theme-black: #030303;
         }
 
         [data-theme="light"] {
@@ -91,9 +91,9 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(252, 100, 35, 0.12) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(57, 128, 234, 0.1) 0%, transparent 50%),
-                        radial-gradient(ellipse at 50% 50%, rgba(150, 112, 194, 0.06) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 30% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(249, 115, 22, 0.08) 0%, transparent 50%);
             animation: bgMove 20s ease-in-out infinite;
         }
 
@@ -101,14 +101,14 @@
             position: absolute;
             border-radius: 50%;
             filter: blur(80px);
-            opacity: 0.5;
+            opacity: 0.4;
             animation: orbFloat 15s ease-in-out infinite;
         }
 
         .orb-1 {
             width: 600px;
             height: 600px;
-            background: rgba(252, 100, 35, 0.25);
+            background: rgba(168, 85, 247, 0.25);
             top: -200px;
             left: -200px;
             animation-delay: 0s;
@@ -117,7 +117,7 @@
         .orb-2 {
             width: 500px;
             height: 500px;
-            background: rgba(57, 128, 234, 0.25);
+            background: rgba(6, 182, 212, 0.25);
             bottom: -150px;
             right: -150px;
             animation-delay: -5s;
@@ -126,7 +126,7 @@
         .orb-3 {
             width: 400px;
             height: 400px;
-            background: rgba(150, 112, 194, 0.18);
+            background: rgba(249, 115, 22, 0.18);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
