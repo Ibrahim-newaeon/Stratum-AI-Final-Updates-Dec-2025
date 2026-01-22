@@ -104,7 +104,7 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
 
 interface OnboardingChecklistProps {
   tenantId?: string
-  variant?: 'sidebar' | 'modal' | 'inline'
+  variant?: 'sidebar' | 'modal' | 'inline' | 'horizontal'
   onComplete?: () => void
 }
 
@@ -251,6 +251,71 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
           </motion.div>
         </motion.div>
       </AnimatePresence>
+    )
+  }
+
+  // Horizontal variant - shows as a bar at the top
+  if (variant === 'horizontal') {
+    return (
+      <div className="bg-card/50 backdrop-blur-sm border-b px-6 py-3">
+        <div className="flex items-center gap-6">
+          {/* Progress indicator */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+              <Rocket className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <span className="text-sm font-medium">Getting Started</span>
+              <span className="text-xs text-muted-foreground ml-2">{completedCount}/{totalCount}</span>
+            </div>
+          </div>
+
+          {/* Horizontal steps */}
+          <div className="flex-1 flex items-center gap-2 overflow-x-auto">
+            {checklist.slice(0, 4).map((item, index) => {
+              const Icon = item.icon
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => !item.completed && handleAction(item)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all",
+                    item.completed
+                      ? "bg-green-500/10 text-green-600"
+                      : "bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {item.completed ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : (
+                    <Icon className="h-3.5 w-3.5" />
+                  )}
+                  {item.title}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Progress bar */}
+          <div className="flex items-center gap-3">
+            <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">{progress}%</span>
+          </div>
+
+          {/* Dismiss button */}
+          <button
+            onClick={dismiss}
+            className="p-1 rounded hover:bg-accent transition-colors"
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
     )
   }
 

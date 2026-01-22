@@ -517,6 +517,9 @@ export default function DashboardLayout() {
           </div>
         </header>
 
+        {/* Horizontal Onboarding Bar */}
+        <OnboardingChecklist variant="horizontal" />
+
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6">
           <AnimatePresence mode="wait">
@@ -545,9 +548,6 @@ export default function DashboardLayout() {
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-
-      {/* Onboarding Checklist */}
-      <OnboardingChecklist variant="sidebar" />
       </div>
     </div>
   )
