@@ -63,6 +63,7 @@ const SuperAdminBenchmarks = lazy(() => import('./views/superadmin/Benchmarks'))
 const SuperAdminAudit = lazy(() => import('./views/superadmin/Audit'))
 const SuperAdminBilling = lazy(() => import('./views/superadmin/Billing'))
 const SuperAdminSystem = lazy(() => import('./views/superadmin/System'))
+const SuperAdminCMS = lazy(() => import('./views/superadmin/CMS'))
 
 // Tenant-scoped views (Campaign Builder)
 const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'))
@@ -111,6 +112,8 @@ const FeaturesPage = lazy(() => import('./views/pages/Features'))
 const PricingPage = lazy(() => import('./views/pages/Pricing'))
 const IntegrationsPage = lazy(() => import('./views/pages/Integrations'))
 const ApiDocsPage = lazy(() => import('./views/pages/ApiDocs'))
+// Direct import (not lazy) for testing
+import TestPage from './views/pages/TestPage'
 
 // Public pages (Solutions)
 const CDPSolutionPage = lazy(() => import('./views/pages/solutions/CDP'))
@@ -122,6 +125,7 @@ const TrustEnginePage = lazy(() => import('./views/pages/solutions/TrustEngine')
 const AboutPage = lazy(() => import('./views/pages/company/About'))
 const CareersPage = lazy(() => import('./views/pages/company/Careers'))
 const BlogPage = lazy(() => import('./views/pages/company/Blog'))
+const BlogPostPage = lazy(() => import('./views/pages/company/BlogPost'))
 const ContactPage = lazy(() => import('./views/pages/company/Contact'))
 
 // Public pages (Legal)
@@ -228,6 +232,12 @@ function App() {
                 }
               />
 
+              {/* Test page (public) - for debugging routing */}
+              <Route
+                path="/test-page"
+                element={<TestPage />}
+              />
+
               {/* Product pages (public) */}
               <Route
                 path="/features"
@@ -318,6 +328,14 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <BlogPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/blog/:slug"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <BlogPostPage />
                   </Suspense>
                 }
               />
@@ -702,6 +720,16 @@ function App() {
                     <ProtectedRoute requiredRole="superadmin">
                       <Suspense fallback={<LoadingSpinner />}>
                         <SuperAdminSystem />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/cms"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminCMS />
                       </Suspense>
                     </ProtectedRoute>
                   }

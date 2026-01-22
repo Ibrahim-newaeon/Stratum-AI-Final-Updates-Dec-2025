@@ -59,6 +59,8 @@ from app.api.v1.endpoints import (
     notifications,
     changelog,
     slack,
+    # CMS (Content Management System)
+    cms,
 )
 
 api_router = APIRouter()
@@ -388,4 +390,10 @@ api_router.include_router(
 api_router.include_router(
     slack.router,
     tags=["Slack Integration"],
+)
+
+# CMS (Content Management System - Blog, Pages, Contact)
+api_router.include_router(
+    cms.router,
+    tags=["CMS"],
 )

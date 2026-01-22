@@ -1,72 +1,37 @@
 /**
  * Blog Page
- * Company blog and articles
+ * Company blog and articles - fetches from CMS API
  */
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
-import { NewspaperIcon, CalendarIcon, UserIcon } from '@heroicons/react/24/outline';
-
-const posts = [
-  {
-    title: 'Introducing Trust-Gated Autopilot: The Future of Marketing Automation',
-    excerpt:
-      'Learn how our new Trust-Gated Autopilot feature ensures automations only execute when your data is healthy.',
-    author: 'Sarah Chen',
-    date: 'Jan 15, 2026',
-    category: 'Product',
-    readTime: '5 min read',
-  },
-  {
-    title: 'How Signal Health Monitoring Saved One Company $2M in Ad Spend',
-    excerpt:
-      'A case study on how real-time signal health monitoring prevented a major data quality issue from impacting campaign performance.',
-    author: 'Marcus Rodriguez',
-    date: 'Jan 10, 2026',
-    category: 'Case Study',
-    readTime: '8 min read',
-  },
-  {
-    title: 'The Complete Guide to CDP Implementation in 2026',
-    excerpt:
-      'Everything you need to know about implementing a Customer Data Platform, from planning to activation.',
-    author: 'Emily Watson',
-    date: 'Jan 5, 2026',
-    category: 'Guide',
-    readTime: '12 min read',
-  },
-  {
-    title: 'Multi-Platform Audience Sync: Best Practices for Match Rate Optimization',
-    excerpt:
-      'Tips and strategies for maximizing your audience match rates across Meta, Google, TikTok, and Snapchat.',
-    author: 'David Kim',
-    date: 'Dec 28, 2025',
-    category: 'Tutorial',
-    readTime: '7 min read',
-  },
-  {
-    title: 'Understanding RFM Analysis for E-commerce Growth',
-    excerpt:
-      'How to use Recency, Frequency, and Monetary analysis to segment customers and drive revenue growth.',
-    author: 'Lisa Thompson',
-    date: 'Dec 20, 2025',
-    category: 'Guide',
-    readTime: '10 min read',
-  },
-  {
-    title: 'The Rise of Privacy-First Marketing: What You Need to Know',
-    excerpt:
-      'Navigating the cookieless future with first-party data strategies and privacy-compliant audience targeting.',
-    author: 'James Park',
-    date: 'Dec 15, 2025',
-    category: 'Industry',
-    readTime: '6 min read',
-  },
-];
-
-const categories = ['All', 'Product', 'Case Study', 'Guide', 'Tutorial', 'Industry'];
+import { NewspaperIcon, CalendarIcon, UserIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { usePosts, useCategories } from '@/api/cms';
 
 export default function Blog() {
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { data: postsData, isLoading: postsLoading } = usePosts({
+    category: selectedCategory,
+    search: searchQuery || undefined,
+    limit: 12,
+  });
+
+  const { data: categoriesData } = useCategories();
+
+  const posts = postsData?.items || [];
+  const categories = categoriesData || [];
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
     <PageLayout>
       {/* Hero Section */}
@@ -112,17 +77,30 @@ export default function Blog() {
       <section className="py-6 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-3 justify-center">
+            <button
+              onClick={() => setSelectedCategory(undefined)}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: !selectedCategory ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                color: '#ffffff',
+              }}
+            >
+              All
+            </button>
             {categories.map((category) => (
               <button
-                key={category}
+                key={category.id}
+                onClick={() => setSelectedCategory(category.slug)}
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
                 style={{
-                  background: category === 'All' ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
+                  background:
+                    selectedCategory === category.slug ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                   color: '#ffffff',
                 }}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>
@@ -132,52 +110,102 @@ export default function Blog() {
       {/* Posts Grid */}
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post) => (
-              <article
-                key={post.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02] cursor-pointer group"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
-              >
-                <div className="flex items-center gap-2 mb-4">
-                  <span
-                    className="text-xs px-2 py-1 rounded"
+          {postsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="p-6 rounded-2xl animate-pulse"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
+                  <div className="h-4 bg-white/10 rounded w-1/4 mb-4" />
+                  <div className="h-6 bg-white/10 rounded w-3/4 mb-3" />
+                  <div className="h-4 bg-white/10 rounded w-full mb-2" />
+                  <div className="h-4 bg-white/10 rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-12">
+              <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>No posts found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {posts.map((post) => (
+                <Link
+                  key={post.id}
+                  to={`/blog/${post.slug}`}
+                  className="block"
+                >
+                  <article
+                    className="p-6 rounded-2xl transition-all hover:scale-[1.02] cursor-pointer group h-full"
                     style={{
-                      background: 'rgba(168, 85, 247, 0.1)',
-                      color: '#a855f7',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
                     }}
                   >
-                    {post.category}
-                  </span>
-                  <span className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                    {post.readTime}
-                  </span>
-                </div>
-                <h2 className="text-lg font-semibold text-white mb-3 group-hover:text-orange-500 transition-colors">
-                  {post.title}
-                </h2>
-                <p className="text-sm mb-4" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                  {post.excerpt}
-                </p>
-                <div
-                  className="flex items-center gap-4 text-xs"
-                  style={{ color: 'rgba(255, 255, 255, 0.5)' }}
-                >
-                  <span className="flex items-center gap-1">
-                    <UserIcon className="w-3 h-3" />
-                    {post.author}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <CalendarIcon className="w-3 h-3" />
-                    {post.date}
-                  </span>
-                </div>
-              </article>
-            ))}
-          </div>
+                    {post.featured_image_url && (
+                      <div className="mb-4 rounded-lg overflow-hidden">
+                        <img
+                          src={post.featured_image_url}
+                          alt={post.title}
+                          className="w-full h-40 object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-4">
+                      {post.category && (
+                        <span
+                          className="text-xs px-2 py-1 rounded"
+                          style={{
+                            background: 'rgba(168, 85, 247, 0.1)',
+                            color: '#a855f7',
+                          }}
+                        >
+                          {post.category.name}
+                        </span>
+                      )}
+                      {post.reading_time_minutes && (
+                        <span
+                          className="text-xs flex items-center gap-1"
+                          style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                        >
+                          <ClockIcon className="w-3 h-3" />
+                          {post.reading_time_minutes} min read
+                        </span>
+                      )}
+                    </div>
+                    <h2 className="text-lg font-semibold text-white mb-3 group-hover:text-orange-500 transition-colors">
+                      {post.title}
+                    </h2>
+                    {post.excerpt && (
+                      <p className="text-sm mb-4" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                        {post.excerpt}
+                      </p>
+                    )}
+                    <div
+                      className="flex items-center gap-4 text-xs"
+                      style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                    >
+                      {post.author && (
+                        <span className="flex items-center gap-1">
+                          <UserIcon className="w-3 h-3" />
+                          {post.author.name}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <CalendarIcon className="w-3 h-3" />
+                        {formatDate(post.published_at || post.created_at)}
+                      </span>
+                    </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

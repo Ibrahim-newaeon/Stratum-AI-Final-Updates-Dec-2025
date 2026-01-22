@@ -1,6 +1,6 @@
 /**
  * Contact Page
- * Contact form and information
+ * Contact form and information - submits to CMS API
  */
 
 import { useState } from 'react';
@@ -9,7 +9,10 @@ import {
   EnvelopeIcon,
   MapPinIcon,
   ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
+import { useSubmitContact } from '@/api/cms';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -19,12 +22,60 @@ export default function Contact() {
     subject: '',
     message: '',
   });
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submitContact = useSubmitContact();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
+    setError(null);
+
+    try {
+      await submitContact.mutateAsync(formData);
+      setSubmitted(true);
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        subject: '',
+        message: '',
+      });
+    } catch (err) {
+      setError('Failed to submit your message. Please try again.');
+    }
   };
+
+  if (submitted) {
+    return (
+      <PageLayout>
+        <div className="py-32 px-6">
+          <div className="max-w-xl mx-auto text-center">
+            <div
+              className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+              style={{ background: 'rgba(34, 197, 94, 0.1)' }}
+            >
+              <CheckCircleIcon className="w-10 h-10 text-green-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-4">Message Sent!</h1>
+            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              Thank you for reaching out. We'll get back to you as soon as possible.
+            </p>
+            <button
+              onClick={() => setSubmitted(false)}
+              className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+              style={{
+                background: '#f97316',
+                boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+              }}
+            >
+              Send Another Message
+            </button>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
@@ -152,6 +203,20 @@ export default function Contact() {
                 }}
               >
                 <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
+
+                {error && (
+                  <div
+                    className="flex items-center gap-3 p-4 rounded-xl mb-6"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                    }}
+                  >
+                    <ExclamationCircleIcon className="w-5 h-5 text-red-500" />
+                    <p className="text-red-400">{error}</p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <label className="block text-sm font-medium text-white mb-2">Name</label>
@@ -236,13 +301,14 @@ export default function Contact() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+                  disabled={submitContact.isPending}
+                  className="w-full py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: '#f97316',
                     boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
                   }}
                 >
-                  Send Message
+                  {submitContact.isPending ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             </div>

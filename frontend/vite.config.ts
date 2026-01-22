@@ -15,7 +15,9 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        // In Docker, use 'api' (service name) to reach the backend container
+        // Locally, use 'localhost:8000'
+        target: process.env.DOCKER_ENV === 'true' ? 'http://api:8000' : 'http://localhost:8000',
         changeOrigin: true,
       },
     },

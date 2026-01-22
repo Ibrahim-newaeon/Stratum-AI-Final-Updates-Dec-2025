@@ -190,6 +190,19 @@ from app.models.settings import (
     SlackIntegration,
 )
 
+# CMS (Content Management System) models
+from app.models.cms import (
+    CMSPostStatus,
+    CMSContentType,
+    CMSPageStatus,
+    CMSCategory,
+    CMSTag,
+    CMSAuthor,
+    CMSPost,
+    CMSPage,
+    CMSContactSubmission,
+)
+
 __all__ = [
     # Enums
     "UserRole",
@@ -337,4 +350,14 @@ __all__ = [
     "ChangelogEntry",
     "ChangelogReadStatus",
     "SlackIntegration",
+    # CMS (Content Management System)
+    "CMSPostStatus",
+    "CMSContentType",
+    "CMSPageStatus",
+    "CMSCategory",
+    "CMSTag",
+    "CMSAuthor",
+    "CMSPost",
+    "CMSPage",
+    "CMSContactSubmission",
 ]

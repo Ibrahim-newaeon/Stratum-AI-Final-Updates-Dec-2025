@@ -37,6 +37,7 @@ import {
   AdjustmentsHorizontalIcon,
   DocumentChartBarIcon,
   UserMinusIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { BackgroundEffects } from '@/components/ui/background-effects'
@@ -249,18 +250,32 @@ export default function DashboardLayout() {
           <div className="border-t p-4 space-y-1">
             {/* Superadmin Dashboard - only for superadmins */}
             {user?.role === 'superadmin' && (
-              <NavLink
-                to="/dashboard/superadmin"
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  location.pathname.startsWith('/dashboard/superadmin')
-                    ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                )}
-              >
-                <ShieldCheckIcon className="h-5 w-5" />
-                Superadmin
-              </NavLink>
+              <>
+                <NavLink
+                  to="/dashboard/superadmin"
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    location.pathname === '/dashboard/superadmin'
+                      ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  )}
+                >
+                  <ShieldCheckIcon className="h-5 w-5" />
+                  Superadmin
+                </NavLink>
+                <NavLink
+                  to="/dashboard/superadmin/cms"
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    location.pathname === '/dashboard/superadmin/cms'
+                      ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  )}
+                >
+                  <DocumentTextIcon className="h-5 w-5" />
+                  CMS
+                </NavLink>
+              </>
             )}
             <NavLink
               to="/dashboard/tenants"
