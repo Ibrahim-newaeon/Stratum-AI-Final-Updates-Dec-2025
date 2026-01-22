@@ -127,6 +127,7 @@ const CareersPage = lazy(() => import('./views/pages/company/Careers'))
 const BlogPage = lazy(() => import('./views/pages/company/Blog'))
 const BlogPostPage = lazy(() => import('./views/pages/company/BlogPost'))
 const ContactPage = lazy(() => import('./views/pages/company/Contact'))
+const FAQPage = lazy(() => import('./views/pages/company/FAQ'))
 
 // Public pages (Legal)
 const PrivacyPage = lazy(() => import('./views/pages/legal/Privacy'))
@@ -344,6 +345,14 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <ContactPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/faq"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <FAQPage />
                   </Suspense>
                 }
               />

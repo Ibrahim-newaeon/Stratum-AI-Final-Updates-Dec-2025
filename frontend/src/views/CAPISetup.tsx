@@ -33,8 +33,8 @@ const PLATFORMS = [
     color: 'bg-blue-500',
     description: 'Facebook & Instagram Conversion API',
     credentials: [
-      { field: 'pixel_id', label: 'Pixel ID', placeholder: '123456789012345', help: 'Found in Events Manager > Data Sources' },
-      { field: 'access_token', label: 'Access Token', placeholder: 'EAABsbCS...', help: 'System User Token from Business Settings', sensitive: true },
+      { field: 'pixel_id', label: 'Pixel ID', placeholder: '123456789012345', help: 'Found in Events Manager > Data Sources > Your Pixel' },
+      { field: 'access_token', label: 'CAPI Access Token', placeholder: 'EAABsbCS...', help: 'System User Token for Conversions API. Go to Business Settings > System Users > Generate Token with ads_management and ads_read permissions', sensitive: true },
     ],
   },
   {
@@ -56,8 +56,8 @@ const PLATFORMS = [
     color: 'bg-black',
     description: 'TikTok Events API',
     credentials: [
-      { field: 'pixel_code', label: 'Pixel Code', placeholder: 'CXXXXXXXXXX', help: 'Found in TikTok Ads Manager > Events' },
-      { field: 'access_token', label: 'Access Token', placeholder: '', help: 'Long-lived access token', sensitive: true },
+      { field: 'pixel_code', label: 'Pixel Code', placeholder: 'CXXXXXXXXXX', help: 'Found in TikTok Ads Manager > Events > Manage > Web Events' },
+      { field: 'access_token', label: 'Events API Access Token', placeholder: '', help: 'Long-lived access token from TikTok Events Manager for server-side event tracking', sensitive: true },
     ],
   },
   {
@@ -67,8 +67,8 @@ const PLATFORMS = [
     color: 'bg-yellow-400',
     description: 'Snapchat Conversion API',
     credentials: [
-      { field: 'pixel_id', label: 'Pixel ID', placeholder: '', help: 'Found in Snap Pixel setup' },
-      { field: 'access_token', label: 'Access Token', placeholder: '', help: 'From Snapchat Business Manager', sensitive: true },
+      { field: 'pixel_id', label: 'Pixel ID', placeholder: '', help: 'Found in Snap Pixel setup in Ads Manager' },
+      { field: 'access_token', label: 'CAPI Access Token', placeholder: '', help: 'Conversions API token from Snapchat Business Manager > Snap Pixel > Conversions API', sensitive: true },
     ],
   },
   {
@@ -78,10 +78,10 @@ const PLATFORMS = [
     color: 'bg-green-500',
     description: 'WhatsApp Business Cloud API',
     credentials: [
-      { field: 'phone_number_id', label: 'Phone Number ID', placeholder: '1234567890123456', help: 'From WhatsApp Business Manager > Phone Numbers' },
-      { field: 'business_account_id', label: 'Business Account ID', placeholder: '1234567890123456', help: 'WhatsApp Business Account ID from Meta Business Suite' },
-      { field: 'access_token', label: 'Access Token', placeholder: 'EAABsbCS...', help: 'Permanent token from System User in Business Settings', sensitive: true },
-      { field: 'webhook_verify_token', label: 'Webhook Verify Token', placeholder: 'your_verify_token', help: 'Custom token for webhook verification' },
+      { field: 'phone_number_id', label: 'Phone Number ID', placeholder: '1234567890123456', help: 'From Meta Business Suite > WhatsApp Manager > Phone Numbers' },
+      { field: 'business_account_id', label: 'Business Account ID', placeholder: '1234567890123456', help: 'WhatsApp Business Account ID (WABA ID) from Meta Business Suite' },
+      { field: 'access_token', label: 'WhatsApp Cloud API Token', placeholder: 'EAABsbCS...', help: 'Permanent System User token with whatsapp_business_messaging permission from Business Settings', sensitive: true },
+      { field: 'webhook_verify_token', label: 'Webhook Verify Token', placeholder: 'your_verify_token', help: 'Custom string you create for webhook verification (must match webhook config)' },
     ],
   },
 ]
@@ -236,7 +236,11 @@ export function CAPISetup() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Conversion API Setup</h1>
           <p className="text-muted-foreground mt-1">
-            Connect ad platforms to stream first-party data and boost ROAS by 30-50%
+            Connect ad platforms to stream first-party conversion data (purchases, leads, sign-ups) and boost ROAS by 30-50%
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            <span>This is for <strong>server-side event tracking only</strong>. To manage ad accounts & campaigns, use <a href="/dashboard/tenants" className="text-primary hover:underline">Tenant Settings → Connect Platforms</a></span>
           </p>
         </div>
         <div className="flex items-center gap-2">

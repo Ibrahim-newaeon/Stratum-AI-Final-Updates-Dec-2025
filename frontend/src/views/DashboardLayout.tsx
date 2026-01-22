@@ -38,6 +38,8 @@ import {
   DocumentChartBarIcon,
   UserMinusIcon,
   DocumentTextIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { BackgroundEffects } from '@/components/ui/background-effects'
@@ -85,9 +87,11 @@ export default function DashboardLayout() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [learningHubOpen, setLearningHubOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'))
+  const [superadminExpanded, setSuperadminExpanded] = useState(location.pathname.startsWith('/dashboard/superadmin'))
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [whatsNewOpen, setWhatsNewOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
@@ -138,11 +142,19 @@ export default function DashboardLayout() {
       <aside
         data-tour="sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 transform glass-strong border-r border-white/10 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed inset-y-0 left-0 z-50 w-64 border-r border-white/10 transition-all duration-300 ease-in-out',
+          'bg-[#0a0a0a]',
+          // Mobile: slide in/out
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          // Desktop: collapse/expand
+          'lg:translate-x-0',
+          sidebarCollapsed ? 'lg:w-0 lg:border-r-0 lg:overflow-hidden' : 'lg:w-64'
         )}
       >
-        <div className="flex h-full flex-col">
+        <div className={cn(
+          "flex h-full flex-col w-64 transition-opacity duration-200",
+          sidebarCollapsed ? "lg:opacity-0" : "lg:opacity-100"
+        )}>
           {/* Logo */}
           <div className="flex h-16 items-center justify-between px-4 border-b">
             <div className="flex items-center gap-2">
@@ -248,34 +260,54 @@ export default function DashboardLayout() {
 
           {/* Admin & Settings at bottom */}
           <div className="border-t p-4 space-y-1">
-            {/* Superadmin Dashboard - only for superadmins */}
+            {/* Superadmin Section with Submenu - only for superadmins */}
             {user?.role === 'superadmin' && (
-              <>
-                <NavLink
-                  to="/dashboard/superadmin"
+              <div className="pt-2">
+                <button
+                  onClick={() => setSuperadminExpanded(!superadminExpanded)}
                   className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                    location.pathname === '/dashboard/superadmin'
-                      ? 'bg-gradient-stratum text-white shadow-glow-sm'
+                    'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    location.pathname.startsWith('/dashboard/superadmin')
+                      ? 'bg-purple-500/10 text-purple-400'
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   )}
                 >
-                  <ShieldCheckIcon className="h-5 w-5" />
-                  Superadmin
-                </NavLink>
-                <NavLink
-                  to="/dashboard/superadmin/cms"
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                    location.pathname === '/dashboard/superadmin/cms'
-                      ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  )}
-                >
-                  <DocumentTextIcon className="h-5 w-5" />
-                  CMS
-                </NavLink>
-              </>
+                  <div className="flex items-center gap-3">
+                    <ShieldCheckIcon className="h-5 w-5" />
+                    <span>Superadmin</span>
+                  </div>
+                  <ChevronDownIcon className={cn('h-4 w-4 transition-transform', superadminExpanded && 'rotate-180')} />
+                </button>
+                {superadminExpanded && (
+                  <div className="mt-1 ml-4 pl-4 border-l border-white/10 space-y-1">
+                    <NavLink
+                      to="/dashboard/superadmin"
+                      end
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200',
+                        location.pathname === '/dashboard/superadmin'
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      )}
+                    >
+                      <ChartPieIcon className="h-4 w-4" />
+                      Dashboard
+                    </NavLink>
+                    <NavLink
+                      to="/dashboard/superadmin/cms"
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200',
+                        location.pathname === '/dashboard/superadmin/cms'
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      )}
+                    >
+                      <DocumentTextIcon className="h-4 w-4" />
+                      CMS
+                    </NavLink>
+                  </div>
+                )}
+              </div>
             )}
             <NavLink
               to="/dashboard/tenants"
@@ -354,8 +386,27 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
+      {/* Sidebar Toggle Button - Desktop only */}
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className={cn(
+          'hidden lg:flex fixed top-1/2 -translate-y-1/2 z-50 h-8 w-8 items-center justify-center rounded-full bg-[#1a1a1a] border border-white/10 text-muted-foreground hover:text-white hover:bg-[#2a2a2a] transition-all duration-300 shadow-lg',
+          sidebarCollapsed ? 'left-2' : 'left-[252px]'
+        )}
+        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {sidebarCollapsed ? (
+          <ChevronRightIcon className="h-4 w-4" />
+        ) : (
+          <ChevronLeftIcon className="h-4 w-4" />
+        )}
+      </button>
+
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className={cn(
+        "flex flex-1 flex-col overflow-hidden transition-all duration-300",
+        sidebarCollapsed ? "lg:ml-0" : "lg:ml-64"
+      )}>
         {/* Top header */}
         <header className="flex h-16 items-center justify-between border-b border-white/10 glass-strong px-4 lg:px-6">
           <button

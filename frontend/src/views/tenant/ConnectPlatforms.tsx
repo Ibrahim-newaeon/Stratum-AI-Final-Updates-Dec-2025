@@ -191,7 +191,11 @@ export default function ConnectPlatforms() {
       <div>
         <h1 className="text-2xl font-bold">Connect Platforms</h1>
         <p className="text-muted-foreground">
-          Connect your advertising accounts to start building campaigns
+          Connect your advertising accounts via OAuth to manage campaigns and access ad accounts
+        </p>
+        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+          <ExclamationTriangleIcon className="w-3 h-3" />
+          <span>This grants access to <strong>ad accounts & campaigns</strong>. For server-side conversion tracking (CAPI), go to <a href="/dashboard/capi-setup" className="text-primary hover:underline">CAPI Setup</a></span>
         </p>
       </div>
 
