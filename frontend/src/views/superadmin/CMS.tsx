@@ -258,7 +258,14 @@ export default function CMS() {
   const handleCreateAuthor = async () => {
     const name = prompt('Enter author name:')
     if (name) {
-      await createAuthor.mutateAsync({ name })
+      try {
+        await createAuthor.mutateAsync({ name })
+        // Force refetch authors list after successful creation
+        await refetchAuthors()
+      } catch (error: any) {
+        console.error('Failed to create author:', error)
+        alert(error?.response?.data?.detail || error?.message || 'Failed to create author. The name might already exist.')
+      }
     }
   }
 

@@ -468,7 +468,7 @@ async def submit_contact_form(
     return APIResponse(
         success=True,
         data={"submitted": True},
-        message="Thank you for your message. We'll get back to you soon!",
+        message="Thank you for reaching out. We will review your inquiry and our team will contact you at the earliest opportunity.",
     )
 
 
@@ -1387,6 +1387,19 @@ async def admin_create_author(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
 
     slug = body.slug or slugify(body.name)
+
+    # Check for duplicate slug
+    existing = await db.execute(select(CMSAuthor).where(CMSAuthor.slug == slug))
+    if existing.scalar_one_or_none():
+        # Generate unique slug by appending a number
+        counter = 1
+        base_slug = slug
+        while True:
+            slug = f"{base_slug}-{counter}"
+            check = await db.execute(select(CMSAuthor).where(CMSAuthor.slug == slug))
+            if not check.scalar_one_or_none():
+                break
+            counter += 1
 
     author = CMSAuthor(
         user_id=body.user_id,

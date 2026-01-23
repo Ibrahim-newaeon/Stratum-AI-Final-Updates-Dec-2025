@@ -40,6 +40,7 @@ import {
   DocumentTextIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  GiftIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { BackgroundEffects } from '@/components/ui/background-effects'
@@ -464,9 +465,7 @@ export default function DashboardLayout() {
               className="relative p-2 rounded-lg hover:bg-accent transition-colors"
               title="What's New"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
+              <GiftIcon className="h-5 w-5" />
               {hasNewUpdates && (
                 <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
               )}
