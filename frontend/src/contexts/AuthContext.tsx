@@ -63,7 +63,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
 
       if (!response.ok) {
-        return { success: false, error: data.detail || 'Login failed' }
+        // Handle Pydantic validation errors (array of {type, loc, msg, input, ctx})
+        let errorMessage = 'Login failed'
+        if (data.detail) {
+          if (typeof data.detail === 'string') {
+            errorMessage = data.detail
+          } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+            // Extract message from first validation error
+            errorMessage = data.detail[0].msg || data.detail[0].message || 'Validation error'
+          } else if (typeof data.detail === 'object' && data.detail.msg) {
+            errorMessage = data.detail.msg
+          }
+        }
+        return { success: false, error: errorMessage }
       }
 
       // Store tokens
