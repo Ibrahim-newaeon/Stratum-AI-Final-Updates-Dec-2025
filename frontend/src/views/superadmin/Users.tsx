@@ -17,7 +17,15 @@ import {
   EnvelopeIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
-import api from '@/lib/axios'
+
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('access_token')
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  }
+}
 
 interface User {
   id: number
@@ -67,16 +75,24 @@ export default function SuperAdminUsers() {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['superadmin-users'],
     queryFn: async () => {
-      const response = await api.get('/api/v1/users')
-      return response.data
+      const response = await fetch('/api/v1/users', {
+        headers: getAuthHeaders(),
+      })
+      if (!response.ok) throw new Error('Failed to fetch users')
+      return response.json()
     },
   })
 
   // Invite user mutation
   const inviteUser = useMutation({
     mutationFn: async (data: { email: string; role: string; full_name?: string }) => {
-      const response = await api.post('/api/v1/users/invite', data)
-      return response.data
+      const response = await fetch('/api/v1/users/invite', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      })
+      if (!response.ok) throw new Error('Failed to invite user')
+      return response.json()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['superadmin-users'] })
@@ -90,8 +106,13 @@ export default function SuperAdminUsers() {
   // Update user mutation
   const updateUser = useMutation({
     mutationFn: async ({ userId, data }: { userId: number; data: { role?: string; is_active?: boolean } }) => {
-      const response = await api.patch(`/api/v1/users/${userId}`, data)
-      return response.data
+      const response = await fetch(`/api/v1/users/${userId}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      })
+      if (!response.ok) throw new Error('Failed to update user')
+      return response.json()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['superadmin-users'] })
@@ -103,8 +124,12 @@ export default function SuperAdminUsers() {
   // Delete user mutation
   const deleteUser = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await api.delete(`/api/v1/users/${userId}`)
-      return response.data
+      const response = await fetch(`/api/v1/users/${userId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      })
+      if (!response.ok) throw new Error('Failed to delete user')
+      return response.json()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['superadmin-users'] })
