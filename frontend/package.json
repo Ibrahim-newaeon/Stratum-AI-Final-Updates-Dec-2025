@@ -57,6 +57,7 @@
     "react-countup": "^6.5.3",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^2.2.2",
+    "react-helmet-async": "^2.0.4",
     "react-hook-form": "^7.71.1",
     "react-i18next": "^14.0.5",
     "react-joyride": "^2.8.0",
