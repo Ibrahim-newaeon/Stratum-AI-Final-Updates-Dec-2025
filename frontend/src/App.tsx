@@ -142,6 +142,7 @@ const CaseStudiesPage = lazy(() => import('./views/pages/resources/CaseStudies')
 const ResourcesPage = lazy(() => import('./views/pages/resources/Resources'))
 const StatusPage = lazy(() => import('./views/pages/resources/Status'))
 const ComparisonPage = lazy(() => import('./views/pages/resources/Comparison'))
+const GlossaryPage = lazy(() => import('./views/pages/resources/Glossary'))
 
 function App() {
   return (
@@ -445,6 +446,14 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <ComparisonPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/glossary"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <GlossaryPage />
                   </Suspense>
                 }
               />
