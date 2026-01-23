@@ -1,6 +1,7 @@
 /**
  * FAQ Page - Battle Card Style
  * Interactive FAQ with category filtering and expandable cards
+ * Supports CMS integration with fallback to hardcoded content
  */
 
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import {
   BoltIcon,
 } from '@heroicons/react/24/outline';
 import { SEO, pageSEO } from '@/components/common/SEO';
+import { useAllFAQItems, type FAQItem as CMSFAQItem } from '@/api/cms';
 
 interface FAQItem {
   id: string;
@@ -34,7 +36,8 @@ const categories = [
   { id: 'support', name: 'Support', icon: UserGroupIcon, color: 'text-pink-400' },
 ];
 
-const faqs: FAQItem[] = [
+// Fallback FAQ data when CMS content is not available
+const fallbackFaqs: FAQItem[] = [
   // Pricing & Plans
   {
     id: '1',
@@ -151,9 +154,25 @@ const faqs: FAQItem[] = [
   },
 ];
 
+// Convert CMS FAQ items to local format
+function convertCMSFaqs(cmsItems: CMSFAQItem[]): FAQItem[] {
+  return cmsItems.map((item) => ({
+    id: item.id,
+    question: item.question,
+    answer: item.answer,
+    category: item.category,
+  }));
+}
+
 export default function FAQ() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch from CMS with fallback
+  const { data: cmsFaqs, isLoading } = useAllFAQItems();
+
+  // Use CMS data if available and has content, otherwise use fallback
+  const faqs = (cmsFaqs && cmsFaqs.length > 0) ? convertCMSFaqs(cmsFaqs) : fallbackFaqs;
 
   const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
@@ -174,37 +193,18 @@ export default function FAQ() {
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(168, 85, 247, 0.1)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              color: '#a855f7',
-            }}
-          >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm mb-6">
             <QuestionMarkCircleIcon className="w-4 h-4" />
             Help Center
           </div>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
-          >
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             <span className="text-white">Frequently Asked</span>
             <br />
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
+            <span className="bg-gradient-stratum bg-clip-text text-transparent">
               Questions
             </span>
           </h1>
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto mb-8"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-          >
+          <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-8">
             Everything you need to know about Stratum AI. Can&apos;t find what you&apos;re looking for?{' '}
             <a href="/contact" className="text-orange-500 hover:underline">
               Contact our team
@@ -219,11 +219,7 @@ export default function FAQ() {
               placeholder="Search questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-all focus:ring-2 focus:ring-purple-500/50"
-              style={{
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-              }}
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none transition-all focus:ring-2 focus:ring-purple-500/50"
             />
           </div>
         </div>
@@ -277,7 +273,7 @@ export default function FAQ() {
               <p className="text-white/60">No questions found matching your search.</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-5 ${isLoading ? 'opacity-50' : ''}`}>
               {filteredFaqs.map((faq) => {
                 const Icon = getCategoryIcon(faq.category);
                 const categoryData = categories.find((c) => c.id === faq.category);
@@ -331,7 +327,7 @@ export default function FAQ() {
                     </h3>
 
                     {/* Answer */}
-                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                    <p className="text-sm text-white/60 leading-relaxed">
                       {faq.answer}
                     </p>
                   </div>
@@ -345,13 +341,7 @@ export default function FAQ() {
       {/* Contact CTA */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-8 rounded-3xl"
-            style={{
-              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
+          <div className="p-8 rounded-3xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-white/10">
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
               Still have questions?
             </h2>
@@ -361,21 +351,13 @@ export default function FAQ() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/contact"
-                className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
-                style={{
-                  background: '#f97316',
-                  boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
-                }}
+                className="px-6 py-3 rounded-xl font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/40"
               >
                 Contact Support
               </a>
               <a
                 href="mailto:sales@stratum.ai"
-                className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:bg-white/10"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                }}
+                className="px-6 py-3 rounded-xl font-semibold text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 Email Us
               </a>

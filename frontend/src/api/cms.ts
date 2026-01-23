@@ -1315,3 +1315,272 @@ export const WORKFLOW_STATUS_CONFIG: Record<PostStatus, {
 export const getStatusConfig = (status: PostStatus) => {
   return WORKFLOW_STATUS_CONFIG[status] || WORKFLOW_STATUS_CONFIG.draft
 }
+
+// =============================================================================
+// Landing Page Content Hooks (Features, FAQ, Pricing)
+// =============================================================================
+
+/**
+ * Content category slugs for landing page content
+ */
+export const CONTENT_CATEGORIES = {
+  FEATURES: 'landing-features',
+  FAQ: 'landing-faq',
+  PRICING: 'landing-pricing',
+  FAQ_PRICING: 'faq-pricing',
+  FAQ_FEATURES: 'faq-features',
+  FAQ_TRUST_ENGINE: 'faq-trust-engine',
+  FAQ_INTEGRATIONS: 'faq-integrations',
+  FAQ_DATA: 'faq-data',
+  FAQ_SUPPORT: 'faq-support',
+} as const
+
+/**
+ * Feature layer structure for landing page
+ */
+export interface FeatureLayer {
+  id: string
+  name: string
+  description: string
+  color: string
+  bgColor: string
+  borderColor: string
+  iconName: string
+  displayOrder: number
+  features: FeatureItem[]
+}
+
+export interface FeatureItem {
+  id: string
+  title: string
+  description: string
+  iconName: string
+  displayOrder: number
+}
+
+/**
+ * FAQ item structure
+ */
+export interface FAQItem {
+  id: string
+  question: string
+  answer: string
+  category: string
+  displayOrder: number
+}
+
+/**
+ * Pricing tier structure
+ */
+export interface PricingTier {
+  id: string
+  name: string
+  description: string
+  price: string
+  period: string
+  adSpend: string
+  features: string[]
+  cta: string
+  ctaLink: string
+  highlighted: boolean
+  badge?: string
+  displayOrder: number
+}
+
+/**
+ * Trust badge structure
+ */
+export interface TrustBadge {
+  id: string
+  icon: string
+  text: string
+  displayOrder: number
+}
+
+/**
+ * Fetch posts by category slug
+ */
+async function fetchPostsByCategory(
+  categorySlug: string,
+  status: PostStatus = 'published'
+): Promise<CMSPost[]> {
+  try {
+    const response = await apiClient.get<{ posts: CMSPost[]; total: number }>(
+      `/cms/posts?category=${categorySlug}&status=${status}`
+    )
+    return response.data.posts || []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Parse feature layers from CMS posts
+ * Posts should have metadata with layer info
+ */
+function parseFeatureLayers(posts: CMSPost[]): FeatureLayer[] {
+  // Group posts by layer (stored in metadata.layer)
+  const layers = new Map<string, FeatureLayer>()
+
+  posts.forEach((post) => {
+    const meta = (post.meta || {}) as Record<string, unknown>
+    const layerId = (meta.layerId as string) || 'default'
+
+    if (!layers.has(layerId)) {
+      layers.set(layerId, {
+        id: layerId,
+        name: (meta.layerName as string) || 'Features',
+        description: (meta.layerDescription as string) || '',
+        color: (meta.layerColor as string) || 'from-stratum-500 to-cyan-500',
+        bgColor: (meta.layerBgColor as string) || 'bg-stratum-500/10',
+        borderColor: (meta.layerBorderColor as string) || 'border-stratum-500/20',
+        iconName: (meta.layerIcon as string) || 'SparklesIcon',
+        displayOrder: (meta.layerOrder as number) || 0,
+        features: [],
+      })
+    }
+
+    const layer = layers.get(layerId)!
+    layer.features.push({
+      id: post.id,
+      title: post.title,
+      description: post.excerpt || '',
+      iconName: (meta.featureIcon as string) || 'ChartBarIcon',
+      displayOrder: (meta.displayOrder as number) || 0,
+    })
+  })
+
+  // Sort layers and features
+  return Array.from(layers.values())
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((layer) => ({
+      ...layer,
+      features: layer.features.sort((a, b) => a.displayOrder - b.displayOrder),
+    }))
+}
+
+/**
+ * Parse FAQ items from CMS posts
+ */
+function parseFAQItems(posts: CMSPost[]): FAQItem[] {
+  return posts
+    .map((post) => {
+      const meta = (post.meta || {}) as Record<string, unknown>
+      return {
+        id: post.id,
+        question: post.title,
+        answer: post.content || post.excerpt || '',
+        category: (meta.faqCategory as string) || 'general',
+        displayOrder: (meta.displayOrder as number) || 0,
+      }
+    })
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+}
+
+/**
+ * Parse pricing tiers from CMS posts
+ */
+function parsePricingTiers(posts: CMSPost[]): PricingTier[] {
+  return posts
+    .map((post) => {
+      const meta = (post.meta || {}) as Record<string, unknown>
+      return {
+        id: post.id,
+        name: post.title,
+        description: post.excerpt || '',
+        price: (meta.price as string) || '$0',
+        period: (meta.period as string) || '/month',
+        adSpend: (meta.adSpend as string) || '',
+        features: (meta.features as string[]) || [],
+        cta: (meta.cta as string) || 'Get Started',
+        ctaLink: (meta.ctaLink as string) || '/signup',
+        highlighted: (meta.highlighted as boolean) || false,
+        badge: meta.badge as string | undefined,
+        displayOrder: (meta.displayOrder as number) || 0,
+      }
+    })
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+}
+
+/**
+ * Hook: Fetch feature layers for landing page
+ */
+export const useFeatureLayers = () => {
+  return useQuery({
+    queryKey: [...cmsKeys.posts(), 'features'],
+    queryFn: async () => {
+      const posts = await fetchPostsByCategory(CONTENT_CATEGORIES.FEATURES)
+      return parseFeatureLayers(posts)
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Hook: Fetch FAQ items
+ */
+export const useFAQItems = (category?: string) => {
+  return useQuery({
+    queryKey: [...cmsKeys.posts(), 'faq', category],
+    queryFn: async () => {
+      // Fetch all FAQ posts
+      const categorySlug = category
+        ? `faq-${category}`
+        : CONTENT_CATEGORIES.FAQ
+      const posts = await fetchPostsByCategory(categorySlug)
+      return parseFAQItems(posts)
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook: Fetch all FAQ items from all categories
+ */
+export const useAllFAQItems = () => {
+  return useQuery({
+    queryKey: [...cmsKeys.posts(), 'faq', 'all'],
+    queryFn: async () => {
+      // Fetch from main FAQ category
+      const posts = await fetchPostsByCategory(CONTENT_CATEGORIES.FAQ)
+      return parseFAQItems(posts)
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook: Fetch pricing tiers
+ */
+export const usePricingTiers = () => {
+  return useQuery({
+    queryKey: [...cmsKeys.posts(), 'pricing'],
+    queryFn: async () => {
+      const posts = await fetchPostsByCategory(CONTENT_CATEGORIES.PRICING)
+      return parsePricingTiers(posts)
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook: Fetch trust badges
+ */
+export const useTrustBadges = () => {
+  return useQuery({
+    queryKey: [...cmsKeys.posts(), 'trust-badges'],
+    queryFn: async () => {
+      const posts = await fetchPostsByCategory('landing-trust-badges')
+      return posts.map((post) => {
+        const meta = (post.meta || {}) as Record<string, unknown>
+        return {
+          id: post.id,
+          icon: (meta.icon as string) || '✓',
+          text: post.title,
+          displayOrder: (meta.displayOrder as number) || 0,
+        }
+      }).sort((a, b) => a.displayOrder - b.displayOrder) as TrustBadge[]
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
