@@ -370,11 +370,25 @@ async def update_user(
             detail="User not found",
         )
 
+    # Check if user is protected (root admin)
+    if user.is_protected:
+        # Protected users cannot have their role changed or be deactivated
+        if update_data.role is not None and update_data.role.lower() != user.role.value:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot change role of protected admin account",
+            )
+        if update_data.is_active is not None and not update_data.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot deactivate protected admin account",
+            )
+
     # Update fields
     if update_data.full_name is not None:
         user.full_name = encrypt_pii(update_data.full_name) if update_data.full_name else None
 
-    if update_data.role is not None:
+    if update_data.role is not None and not user.is_protected:
         role_map = {
             "admin": UserRole.ADMIN,
             "manager": UserRole.MANAGER,
@@ -382,7 +396,7 @@ async def update_user(
         }
         user.role = role_map.get(update_data.role.lower(), user.role)
 
-    if update_data.is_active is not None:
+    if update_data.is_active is not None and not user.is_protected:
         user.is_active = update_data.is_active
 
     await db.commit()
@@ -452,6 +466,13 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
+        )
+
+    # Cannot delete protected users (root admin)
+    if user.is_protected:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot remove protected admin account",
         )
 
     # Soft delete

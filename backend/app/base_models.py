@@ -239,6 +239,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_protected: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # Cannot be deleted/demoted
     last_login_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
