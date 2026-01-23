@@ -415,7 +415,7 @@ export interface WorkflowHistoryEntry {
   performed_by_id?: number
   comment?: string
   version_number?: number
-  metadata?: Record<string, unknown>
+  extra_data?: Record<string, unknown>
   created_at?: string
 }
 

@@ -163,7 +163,7 @@ def upgrade() -> None:
 
         # Context
         sa.Column('comment', sa.Text(), nullable=True),
-        sa.Column('metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column('extra_data', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
 
         # Version reference
         sa.Column('version_number', sa.Integer(), nullable=True),

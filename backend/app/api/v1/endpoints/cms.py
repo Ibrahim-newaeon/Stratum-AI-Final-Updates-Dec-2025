@@ -2287,7 +2287,7 @@ async def schedule_post(
         performed_by_id=user_id,
         comment=f"Scheduled for {scheduled_at.isoformat()}",
         version_number=post.version,
-        metadata={"scheduled_at": scheduled_at.isoformat()},
+        extra_data={"scheduled_at": scheduled_at.isoformat()},
     )
     db.add(workflow_log)
 
@@ -2548,7 +2548,7 @@ async def get_post_workflow_history(
                     "performed_by_id": log.performed_by_id,
                     "comment": log.comment,
                     "version_number": log.version_number,
-                    "metadata": log.metadata,
+                    "extra_data": log.extra_data,
                     "created_at": log.created_at.isoformat() if log.created_at else None,
                 }
                 for log in logs
@@ -2708,7 +2708,7 @@ async def restore_post_version(
         performed_by_id=user_id,
         comment=f"Restored to version {version}",
         version_number=post.version,
-        metadata={"restored_from_version": version},
+        extra_data={"restored_from_version": version},
     )
     db.add(workflow_log)
 

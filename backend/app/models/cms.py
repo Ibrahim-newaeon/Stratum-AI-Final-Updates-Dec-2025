@@ -630,7 +630,7 @@ class CMSWorkflowLog(Base, TimestampMixin):
 
     # Context
     comment = Column(Text, nullable=True)  # Review notes, rejection reason, etc.
-    metadata = Column(JSONB, nullable=True)  # Additional structured data
+    extra_data = Column(JSONB, nullable=True)  # Additional structured data (renamed from metadata - reserved)
 
     # Version reference (which version was affected)
     version_number = Column(Integer, nullable=True)

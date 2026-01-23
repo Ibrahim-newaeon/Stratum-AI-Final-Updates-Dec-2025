@@ -2410,7 +2410,7 @@ def publish_scheduled_cms_posts():
                     performed_by_id=post.approved_by_id,  # Use the approver as the publisher
                     comment=f"Auto-published via scheduled publishing (scheduled_at: {post.scheduled_at.isoformat()})",
                     version_number=post.version,
-                    metadata={
+                    extra_data={
                         "scheduled_at": post.scheduled_at.isoformat(),
                         "published_at": now.isoformat(),
                         "auto_published": True,
@@ -2499,7 +2499,7 @@ def publish_cms_post(self, post_id: str, published_by_id: int = None):
                 performed_by_id=published_by_id or post.approved_by_id,
                 comment="Published via async task",
                 version_number=post.version,
-                metadata={
+                extra_data={
                     "published_at": now.isoformat(),
                     "triggered_by": published_by_id,
                 },
