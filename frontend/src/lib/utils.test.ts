@@ -86,11 +86,11 @@ describe('formatCompactNumber', () => {
   })
 
   it('should handle exactly 1 million', () => {
-    expect(formatCompactNumber(1000000)).toBe('1.0M')
+    expect(formatCompactNumber(1000000)).toBe('1M')
   })
 
   it('should handle exactly 1 thousand', () => {
-    expect(formatCompactNumber(1000)).toBe('1.0K')
+    expect(formatCompactNumber(1000)).toBe('1K')
   })
 })
 
@@ -168,12 +168,12 @@ describe('getPlatformColor', () => {
   })
 
   it('should return correct color for meta', () => {
-    expect(getPlatformColor('meta')).toBe('#1877F2')
+    expect(getPlatformColor('meta')).toBe('#0866FF')
   })
 
   it('should be case insensitive', () => {
     expect(getPlatformColor('GOOGLE')).toBe('#4285F4')
-    expect(getPlatformColor('Meta')).toBe('#1877F2')
+    expect(getPlatformColor('Meta')).toBe('#0866FF')
   })
 
   it('should return default color for unknown platforms', () => {

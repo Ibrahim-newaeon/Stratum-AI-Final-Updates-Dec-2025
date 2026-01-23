@@ -81,3 +81,44 @@ export function formatRelativeTime(date: Date | string): string {
   if (diffDays < 7) return `${diffDays}d ago`
   return then.toLocaleDateString()
 }
+
+/**
+ * Format a number with thousands separators
+ */
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value)
+}
+
+/**
+ * Calculate percentage change between two values
+ */
+export function calculateChange(current: number, previous: number): number {
+  if (previous === 0) return 0
+  return Math.round(((current - previous) / previous) * 100)
+}
+
+/**
+ * Get initials from a name (max 2 characters)
+ */
+export function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('')
+}
+
+/**
+ * Truncate a string to a specified length with ellipsis
+ */
+export function truncate(str: string, length: number): string {
+  if (str.length <= length) return str
+  return str.slice(0, length) + '...'
+}
+
+/**
+ * Generate a random unique ID
+ */
+export function generateId(): string {
+  return Math.random().toString(36).substring(2, 9)
+}
