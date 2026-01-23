@@ -75,6 +75,11 @@ const SuperAdminSystem = lazy(() => import('./views/superadmin/System'))
 const SuperAdminCMS = lazy(() => import('./views/superadmin/CMS'))
 const SuperAdminUsers = lazy(() => import('./views/superadmin/Users'))
 
+// CMS (Content Management System) - Separate Portal
+const CMSLogin = lazy(() => import('./views/CMSLogin'))
+const CMSLayout = lazy(() => import('./views/CMSLayout'))
+const CMSDashboard = lazy(() => import('./views/cms/CMSDashboard'))
+
 // Tenant-scoped views (Campaign Builder)
 const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'))
 const AdAccounts = lazy(() => import('./views/tenant/AdAccounts'))
@@ -235,6 +240,118 @@ function App() {
                   </Suspense>
                 }
               />
+
+              {/* CMS Login (public) */}
+              <Route
+                path="/cms-login"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <CMSLogin />
+                  </Suspense>
+                }
+              />
+
+              {/* CMS Portal (protected - admin/superadmin only) */}
+              <Route
+                path="/cms"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CMSLayout />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              >
+                <Route
+                  index
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <CMSDashboard />
+                    </Suspense>
+                  }
+                />
+                {/* Posts Management */}
+                <Route
+                  path="posts"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* Categories Management */}
+                <Route
+                  path="categories"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* Authors Management */}
+                <Route
+                  path="authors"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* Contact Submissions */}
+                <Route
+                  path="contacts"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* Pages Management */}
+                <Route
+                  path="pages"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* Landing Content - Features */}
+                <Route
+                  path="landing/features"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* Landing Content - FAQ */}
+                <Route
+                  path="landing/faq"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* Landing Content - Pricing */}
+                <Route
+                  path="landing/pricing"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+                {/* CMS Settings */}
+                <Route
+                  path="settings"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SuperAdminCMS />
+                    </Suspense>
+                  }
+                />
+              </Route>
 
               {/* CDP ROI Calculator (public) */}
               <Route
