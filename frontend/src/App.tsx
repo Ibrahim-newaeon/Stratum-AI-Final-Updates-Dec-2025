@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
+import { HelmetProvider } from 'react-helmet-async'
 import DashboardLayout from './views/DashboardLayout'
 import TenantLayout from './views/TenantLayout'
 import { Toaster } from './components/ui/toaster'
@@ -12,6 +13,14 @@ import LoadingSpinner from './components/common/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import OnboardingGuard from './components/auth/OnboardingGuard'
 import { SkipToContent } from './components/ui/skip-to-content'
+import { useDocumentDirection } from './hooks/useDocumentDirection'
+import { OfflineIndicator } from './components/common/OfflineIndicator'
+
+// Component to handle document direction - must be inside i18n provider
+function DocumentDirectionHandler() {
+  useDocumentDirection();
+  return null;
+}
 
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./views/Landing'))
@@ -144,14 +153,18 @@ const ResourcesPage = lazy(() => import('./views/pages/resources/Resources'))
 const StatusPage = lazy(() => import('./views/pages/resources/Status'))
 const ComparisonPage = lazy(() => import('./views/pages/resources/Comparison'))
 const GlossaryPage = lazy(() => import('./views/pages/resources/Glossary'))
+const NotFound = lazy(() => import('./views/NotFound'))
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <DemoProvider>
-          <TooltipProvider delayDuration={300}>
-            <JoyrideProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <DemoProvider>
+            <TooltipProvider delayDuration={300}>
+              <JoyrideProvider>
+            {/* Sync HTML lang/dir with i18n */}
+            <DocumentDirectionHandler />
             {/* Skip to content link for keyboard accessibility */}
             <SkipToContent />
             <div className="min-h-screen bg-background" id="main-content" role="main">
@@ -1121,16 +1134,25 @@ function App() {
               {/* Legacy route redirects */}
               <Route path="/overview" element={<Navigate to="/dashboard/overview" replace />} />
 
-              {/* Catch all - redirect to landing for unauthenticated, dashboard for authenticated */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* 404 - Page Not Found */}
+              <Route
+                path="*"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <NotFound />
+                  </Suspense>
+                }
+              />
               </Routes>
               <Toaster />
+              <OfflineIndicator />
             </div>
-            </JoyrideProvider>
-          </TooltipProvider>
-        </DemoProvider>
-      </AuthProvider>
-    </ThemeProvider>
+              </JoyrideProvider>
+            </TooltipProvider>
+          </DemoProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   )
 }
 

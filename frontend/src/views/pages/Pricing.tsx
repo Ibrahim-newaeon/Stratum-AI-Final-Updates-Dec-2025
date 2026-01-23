@@ -6,6 +6,7 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { CheckIcon } from '@heroicons/react/24/outline';
+import { SEO, pageSEO } from '@/components/common/SEO';
 
 const tiers = [
   {
@@ -70,6 +71,7 @@ const tiers = [
 export default function Pricing() {
   return (
     <PageLayout>
+      <SEO {...pageSEO.pricing} url="https://stratum-ai.com/pricing" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">

@@ -119,35 +119,38 @@
   }
 }
 
-/* RTL Support */
+/* RTL Support - Enhanced for 2026 */
+:root {
+  --direction: ltr;
+  --rtl-multiplier: 1;
+}
+
 [dir="rtl"] {
+  --direction: rtl;
+  --rtl-multiplier: -1;
   text-align: right;
 }
 
-[dir="rtl"] .flex {
+/* RTL-aware flex layout (use .flex-row-force to override) */
+[dir="rtl"] .flex:not(.flex-row-force):not(.flex-col):not(.flex-col-reverse) {
   flex-direction: row-reverse;
 }
 
-[dir="rtl"] .flex-row-reverse {
+[dir="rtl"] .flex-row-reverse:not(.flex-row-force) {
   flex-direction: row;
 }
 
-[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]) {
+/* Space utilities RTL */
+[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-6 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-8 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
 }
 
-[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 1;
-}
-
-[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 1;
-}
-
-[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 1;
-}
-
+/* Margin utilities RTL */
 [dir="rtl"] .ml-auto {
   margin-left: 0;
   margin-right: auto;
@@ -158,6 +161,14 @@
   margin-left: auto;
 }
 
+[dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+[dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+[dir="rtl"] .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+[dir="rtl"] .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+[dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+[dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+
+/* Position utilities RTL */
 [dir="rtl"] .left-0 {
   left: auto;
   right: 0;
@@ -168,14 +179,130 @@
   left: 0;
 }
 
-[dir="rtl"] .pl-10 {
-  padding-left: 0;
-  padding-right: 2.5rem;
+[dir="rtl"] .left-4 {
+  left: auto;
+  right: 1rem;
 }
 
-[dir="rtl"] .pr-4 {
-  padding-right: 0;
-  padding-left: 1rem;
+[dir="rtl"] .right-4 {
+  right: auto;
+  left: 1rem;
+}
+
+/* Padding utilities RTL */
+[dir="rtl"] .pl-4 { padding-left: 0; padding-right: 1rem; }
+[dir="rtl"] .pr-4 { padding-right: 0; padding-left: 1rem; }
+[dir="rtl"] .pl-6 { padding-left: 0; padding-right: 1.5rem; }
+[dir="rtl"] .pr-6 { padding-right: 0; padding-left: 1.5rem; }
+[dir="rtl"] .pl-10 { padding-left: 0; padding-right: 2.5rem; }
+[dir="rtl"] .pl-12 { padding-left: 0; padding-right: 3rem; }
+[dir="rtl"] .pr-12 { padding-right: 0; padding-left: 3rem; }
+
+/* Border radius RTL */
+[dir="rtl"] .rounded-l-lg { border-radius: 0 0.5rem 0.5rem 0; }
+[dir="rtl"] .rounded-r-lg { border-radius: 0.5rem 0 0 0.5rem; }
+
+/* RTL-aware transform for chevrons/arrows */
+[dir="rtl"] .rtl\:rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* RTL-aware animations */
+@keyframes slide-in-from-end {
+  from {
+    transform: translateX(calc(100% * var(--rtl-multiplier)));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-from-start {
+  from {
+    transform: translateX(calc(-100% * var(--rtl-multiplier)));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-to-end {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% * var(--rtl-multiplier)));
+  }
+}
+
+@keyframes slide-out-to-start {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% * var(--rtl-multiplier)));
+  }
+}
+
+/* RTL-aware animation utilities */
+.animate-slide-in-from-end {
+  animation: slide-in-from-end 0.3s ease-out;
+}
+
+.animate-slide-in-from-start {
+  animation: slide-in-from-start 0.3s ease-out;
+}
+
+.animate-slide-out-to-end {
+  animation: slide-out-to-end 0.3s ease-out;
+}
+
+.animate-slide-out-to-start {
+  animation: slide-out-to-start 0.3s ease-out;
+}
+
+/* Slide in from bottom animation */
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-from-bottom {
+  animation: slide-in-from-bottom 0.3s ease-out;
+}
+
+/* Text alignment override for specific elements in RTL */
+[dir="rtl"] .text-left-force {
+  text-align: left !important;
+}
+
+[dir="rtl"] .text-right-force {
+  text-align: right !important;
+}
+
+/* Bidirectional text isolation for mixed content */
+.bdi {
+  unicode-bidi: isolate;
+}
+
+/* Numbers and URLs should always be LTR even in RTL context */
+[dir="rtl"] .ltr-content {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Force LTR for specific form inputs (phone numbers, URLs, etc.) */
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="email"] {
+  direction: ltr;
+  text-align: left;
 }
 
 /* Custom scrollbar */

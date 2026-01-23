@@ -363,8 +363,26 @@ export default {
   			standard: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
   			enter: 'cubic-bezier(0.16, 1, 0.3, 1)',
   			exit: 'cubic-bezier(0.7, 0, 0.84, 0)'
+  		},
+  		// Z-index scale for consistent layering
+  		zIndex: {
+  			'hide': '-1',
+  			'base': '0',
+  			'raised': '1',
+  			'dropdown': '10',
+  			'sticky': '20',
+  			'header': '30',
+  			'overlay': '40',
+  			'modal': '50',
+  			'popover': '60',
+  			'toast': '70',
+  			'tooltip': '80',
+  			'max': '9999',
   		}
   	}
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    require('tailwindcss-rtl'),
+  ],
 }

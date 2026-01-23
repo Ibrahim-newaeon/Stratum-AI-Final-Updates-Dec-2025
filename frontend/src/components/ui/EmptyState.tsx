@@ -36,27 +36,27 @@ interface EmptyStateProps {
 
 const defaultContent: Record<EmptyStateVariant, { icon: React.ReactNode; title: string; description: string }> = {
   'no-data': {
-    icon: <BarChart3 className="w-6 h-6" />,
+    icon: <BarChart3 className="w-6 h-6" aria-hidden="true" />,
     title: 'No data available',
     description: 'There\'s no data to display yet. Data will appear here once available.',
   },
   'no-results': {
-    icon: <SearchX className="w-6 h-6" />,
+    icon: <SearchX className="w-6 h-6" aria-hidden="true" />,
     title: 'No results found',
     description: 'No items match your current filters. Try adjusting your search criteria.',
   },
   'no-filters': {
-    icon: <Filter className="w-6 h-6" />,
+    icon: <Filter className="w-6 h-6" aria-hidden="true" />,
     title: 'No filters selected',
     description: 'Select at least one filter to view data.',
   },
   'error': {
-    icon: <FileX className="w-6 h-6" />,
+    icon: <FileX className="w-6 h-6" aria-hidden="true" />,
     title: 'Unable to load data',
     description: 'Something went wrong while loading the data. Please try again.',
   },
   'empty': {
-    icon: <Inbox className="w-6 h-6" />,
+    icon: <Inbox className="w-6 h-6" aria-hidden="true" />,
     title: 'Nothing here yet',
     description: 'This section is empty. Get started by adding your first item.',
   },

@@ -22,6 +22,8 @@ import {
 import { useSignup, useResendVerification, useSendWhatsAppOTP, useVerifyWhatsAppOTP } from '@/api/auth';
 import { OTPInput } from '@/components/ui/otp-input';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { SEO, pageSEO } from '@/components/common/SEO';
+import { PasswordStrength } from '@/components/ui/password-strength';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -75,11 +77,15 @@ export default function Signup() {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
     defaultValues: { phone: '+1 ' },
   });
+
+  // Watch password for strength meter
+  const passwordValue = watch('password', '');
 
   const startOTPCountdown = () => {
     setOtpCountdown(60);
@@ -294,6 +300,7 @@ export default function Signup() {
   // Main Signup Form
   return (
     <div className="min-h-screen flex" style={{ background: '#030303' }}>
+      <SEO {...pageSEO.signup} url="https://stratum-ai.com/signup" />
       <BackgroundOrbs />
       <style>{animationStyles}</style>
 
@@ -379,17 +386,25 @@ export default function Signup() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {apiError && (
-                <div className="flex items-center gap-2 p-3 rounded-lg text-sm" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-                  <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
+                <div
+                  id="api-error"
+                  role="alert"
+                  aria-live="polite"
+                  className="flex items-center gap-2 p-3 rounded-lg text-sm"
+                  style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+                >
+                  <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
                   <span>{apiError}</span>
                 </div>
               )}
 
               {/* Name */}
               <div>
-                <label className="text-sm font-medium text-white block mb-2">Full name</label>
+                <label className="text-sm font-medium text-white block mb-2">
+                  Full name <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} aria-hidden="true" />
                   <input
                     {...register('name')}
                     type="text"
@@ -398,16 +413,20 @@ export default function Signup() {
                     style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                    aria-invalid={!!errors.name}
+                    required
                   />
                 </div>
-                {errors.name && <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.name.message}</p>}
+                {errors.name && <p className="mt-1 text-sm" role="alert" style={{ color: '#ef4444' }}>{errors.name.message}</p>}
               </div>
 
               {/* Email */}
               <div>
-                <label className="text-sm font-medium text-white block mb-2">Email address</label>
+                <label className="text-sm font-medium text-white block mb-2">
+                  Email address <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
                 <div className="relative">
-                  <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                  <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} aria-hidden="true" />
                   <input
                     {...register('email')}
                     type="email"
@@ -416,14 +435,18 @@ export default function Signup() {
                     style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                    aria-invalid={!!errors.email}
+                    required
                   />
                 </div>
-                {errors.email && <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.email.message}</p>}
+                {errors.email && <p className="mt-1 text-sm" role="alert" style={{ color: '#ef4444' }}>{errors.email.message}</p>}
               </div>
 
               {/* Phone */}
               <div>
-                <label className="text-sm font-medium text-white block mb-2">WhatsApp number</label>
+                <label className="text-sm font-medium text-white block mb-2">
+                  WhatsApp number <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
                 <Controller
                   name="phone"
                   control={control}
@@ -437,9 +460,11 @@ export default function Signup() {
 
               {/* Password */}
               <div>
-                <label className="text-sm font-medium text-white block mb-2">Password</label>
+                <label className="text-sm font-medium text-white block mb-2">
+                  Password <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} aria-hidden="true" />
                   <input
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
@@ -448,19 +473,35 @@ export default function Signup() {
                     style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                    aria-describedby="password-strength password-error"
+                    aria-invalid={!!errors.password}
+                    required
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-white transition-colors" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-white transition-colors"
+                    style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeSlashIcon className="w-5 h-5" aria-hidden="true" /> : <EyeIcon className="w-5 h-5" aria-hidden="true" />}
                   </button>
                 </div>
-                {errors.password && <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.password.message}</p>}
+                {/* Password Strength Meter */}
+                <div id="password-strength" className="mt-2">
+                  <PasswordStrength password={passwordValue} />
+                </div>
+                {errors.password && <p id="password-error" className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.password.message}</p>}
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label className="text-sm font-medium text-white block mb-2">Confirm password</label>
+                <label className="text-sm font-medium text-white block mb-2">
+                  Confirm password <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} aria-hidden="true" />
                   <input
                     {...register('confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -469,12 +510,21 @@ export default function Signup() {
                     style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = '#f97316'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                    aria-invalid={!!errors.confirmPassword}
+                    required
                   />
-                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-white transition-colors" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                    {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-white transition-colors"
+                    style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    aria-pressed={showConfirmPassword}
+                  >
+                    {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" aria-hidden="true" /> : <EyeIcon className="w-5 h-5" aria-hidden="true" />}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.confirmPassword.message}</p>}
+                {errors.confirmPassword && <p className="mt-1 text-sm" role="alert" style={{ color: '#ef4444' }}>{errors.confirmPassword.message}</p>}
               </div>
 
               {/* Terms */}

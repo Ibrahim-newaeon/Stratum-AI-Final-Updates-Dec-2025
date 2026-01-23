@@ -24,8 +24,10 @@ export function ThemeToggle() {
               : 'text-muted-foreground hover:text-foreground'
           )}
           title={option.label}
+          aria-label={`Switch to ${option.label} theme`}
+          aria-pressed={theme === option.value}
         >
-          <option.icon className="h-4 w-4" />
+          <option.icon className="h-4 w-4" aria-hidden="true" />
         </button>
       ))}
     </div>

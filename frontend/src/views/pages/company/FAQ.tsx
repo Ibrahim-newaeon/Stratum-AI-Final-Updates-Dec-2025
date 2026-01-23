@@ -15,6 +15,7 @@ import {
   UserGroupIcon,
   BoltIcon,
 } from '@heroicons/react/24/outline';
+import { SEO, pageSEO } from '@/components/common/SEO';
 
 interface FAQItem {
   id: string;
@@ -38,7 +39,7 @@ const faqs: FAQItem[] = [
   {
     id: '1',
     question: 'What pricing plans does Stratum AI offer?',
-    answer: 'We offer four tiers: Starter ($299/mo) for small teams, Growth ($799/mo) for scaling businesses, Scale ($1,999/mo) for enterprises, and custom Enterprise plans. Each tier includes increasing levels of ad spend capacity, signals, and features.',
+    answer: 'We offer three tiers: Starter ($499/mo) for growing teams, Professional ($1,499/mo) for scaling businesses with advanced automation, and custom Enterprise plans for large organizations. Each tier includes a 14-day free trial with full feature access.',
     category: 'pricing',
   },
   {
@@ -169,6 +170,7 @@ export default function FAQ() {
 
   return (
     <PageLayout>
+      <SEO {...pageSEO.faq} url="https://stratum-ai.com/faq" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
