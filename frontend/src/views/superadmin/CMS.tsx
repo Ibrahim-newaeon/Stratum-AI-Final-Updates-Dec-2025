@@ -25,6 +25,18 @@ import {
   MailOpen,
   AlertTriangle,
   CheckCircle,
+  Clock,
+  Send,
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  Calendar,
+  Rocket,
+  Archive,
+  RotateCcw,
+  History,
+  GitBranch,
+  XCircle,
 } from 'lucide-react'
 import {
   useAdminPosts,
@@ -49,6 +61,20 @@ import {
   useDeletePage,
   useMarkContactRead,
   useMarkContactSpam,
+  // 2026 Workflow hooks
+  useSubmitForReview,
+  useApprovePost,
+  useRejectPost,
+  useRequestChanges,
+  useSchedulePost,
+  usePublishPost,
+  useUnpublishPost,
+  useArchivePost,
+  useWorkflowHistory,
+  useVersionHistory,
+  useRestoreVersion,
+  WORKFLOW_STATUS_CONFIG,
+  getStatusConfig,
   CMSPost,
   CMSCategory,
   CMSTag,
@@ -70,11 +96,30 @@ const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
   { id: 'contacts', label: 'Contact Inbox', icon: <MessageSquare className="w-4 h-4" /> },
 ]
 
+// 2026 Workflow Status Colors
 const statusColors: Record<PostStatus, string> = {
   draft: 'bg-neutral-600 text-neutral-200',
+  in_review: 'bg-yellow-600 text-yellow-200',
+  changes_requested: 'bg-orange-600 text-orange-200',
+  approved: 'bg-emerald-600 text-emerald-200',
   scheduled: 'bg-blue-600 text-blue-200',
   published: 'bg-green-600 text-green-200',
-  archived: 'bg-orange-600 text-orange-200',
+  unpublished: 'bg-neutral-500 text-neutral-200',
+  archived: 'bg-neutral-700 text-neutral-300',
+  rejected: 'bg-red-600 text-red-200',
+}
+
+// Status icons for visual clarity
+const statusIcons: Record<PostStatus, React.ReactNode> = {
+  draft: <Edit2 className="w-3 h-3" />,
+  in_review: <Clock className="w-3 h-3" />,
+  changes_requested: <MessageCircle className="w-3 h-3" />,
+  approved: <ThumbsUp className="w-3 h-3" />,
+  scheduled: <Calendar className="w-3 h-3" />,
+  published: <Rocket className="w-3 h-3" />,
+  unpublished: <XCircle className="w-3 h-3" />,
+  archived: <Archive className="w-3 h-3" />,
+  rejected: <ThumbsDown className="w-3 h-3" />,
 }
 
 export default function CMS() {
@@ -84,6 +129,17 @@ export default function CMS() {
   const [showPostEditor, setShowPostEditor] = useState(false)
   const [editingPost, setEditingPost] = useState<CMSPost | undefined>()
   const [page, setPage] = useState(1)
+
+  // 2026 Workflow state
+  const [selectedPostForWorkflow, setSelectedPostForWorkflow] = useState<CMSPost | null>(null)
+  const [showWorkflowHistory, setShowWorkflowHistory] = useState(false)
+  const [showVersionHistory, setShowVersionHistory] = useState(false)
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [showChangesModal, setShowChangesModal] = useState(false)
+  const [scheduleDate, setScheduleDate] = useState('')
+  const [rejectReason, setRejectReason] = useState('')
+  const [changesNotes, setChangesNotes] = useState('')
 
   // Data hooks
   const { data: postsData, isLoading: postsLoading, refetch: refetchPosts } = useAdminPosts({
@@ -118,6 +174,29 @@ export default function CMS() {
   const deletePage = useDeletePage()
   const markContactRead = useMarkContactRead()
   const markContactSpam = useMarkContactSpam()
+
+  // 2026 Workflow mutation hooks
+  const submitForReview = useSubmitForReview()
+  const approvePost = useApprovePost()
+  const rejectPost = useRejectPost()
+  const requestChanges = useRequestChanges()
+  const schedulePost = useSchedulePost()
+  const publishPost = usePublishPost()
+  const unpublishPost = useUnpublishPost()
+  const archivePost = useArchivePost()
+  const restoreVersion = useRestoreVersion()
+
+  // Workflow history hooks (conditional)
+  const { data: workflowHistoryData } = useWorkflowHistory(
+    selectedPostForWorkflow?.id || '',
+    1,
+    50
+  )
+  const { data: versionHistoryData } = useVersionHistory(
+    selectedPostForWorkflow?.id || '',
+    1,
+    50
+  )
 
   // Handlers
   const handleCreatePost = () => {
@@ -197,6 +276,218 @@ export default function CMS() {
     await markContactSpam.mutateAsync({ id, isSpam })
   }
 
+  // 2026 Workflow handlers
+  const handleSubmitForReview = async (post: CMSPost) => {
+    try {
+      await submitForReview.mutateAsync({ postId: post.id })
+    } catch (error) {
+      console.error('Failed to submit for review:', error)
+    }
+  }
+
+  const handleApprove = async (post: CMSPost) => {
+    try {
+      await approvePost.mutateAsync({ postId: post.id })
+    } catch (error) {
+      console.error('Failed to approve:', error)
+    }
+  }
+
+  const handleReject = async () => {
+    if (!selectedPostForWorkflow || rejectReason.length < 10) return
+    try {
+      await rejectPost.mutateAsync({
+        postId: selectedPostForWorkflow.id,
+        reason: rejectReason,
+      })
+      setShowRejectModal(false)
+      setRejectReason('')
+      setSelectedPostForWorkflow(null)
+    } catch (error) {
+      console.error('Failed to reject:', error)
+    }
+  }
+
+  const handleRequestChanges = async () => {
+    if (!selectedPostForWorkflow || changesNotes.length < 10) return
+    try {
+      await requestChanges.mutateAsync({
+        postId: selectedPostForWorkflow.id,
+        notes: changesNotes,
+      })
+      setShowChangesModal(false)
+      setChangesNotes('')
+      setSelectedPostForWorkflow(null)
+    } catch (error) {
+      console.error('Failed to request changes:', error)
+    }
+  }
+
+  const handleSchedule = async () => {
+    if (!selectedPostForWorkflow || !scheduleDate) return
+    try {
+      await schedulePost.mutateAsync({
+        postId: selectedPostForWorkflow.id,
+        scheduledAt: new Date(scheduleDate).toISOString(),
+      })
+      setShowScheduleModal(false)
+      setScheduleDate('')
+      setSelectedPostForWorkflow(null)
+    } catch (error) {
+      console.error('Failed to schedule:', error)
+    }
+  }
+
+  const handlePublish = async (post: CMSPost) => {
+    try {
+      await publishPost.mutateAsync(post.id)
+    } catch (error) {
+      console.error('Failed to publish:', error)
+    }
+  }
+
+  const handleUnpublish = async (post: CMSPost) => {
+    try {
+      await unpublishPost.mutateAsync(post.id)
+    } catch (error) {
+      console.error('Failed to unpublish:', error)
+    }
+  }
+
+  const handleArchive = async (post: CMSPost) => {
+    if (confirm('Are you sure you want to archive this post?')) {
+      try {
+        await archivePost.mutateAsync(post.id)
+      } catch (error) {
+        console.error('Failed to archive:', error)
+      }
+    }
+  }
+
+  const openWorkflowHistory = (post: CMSPost) => {
+    setSelectedPostForWorkflow(post)
+    setShowWorkflowHistory(true)
+  }
+
+  const openVersionHistory = (post: CMSPost) => {
+    setSelectedPostForWorkflow(post)
+    setShowVersionHistory(true)
+  }
+
+  // Get available workflow actions for a post based on its status
+  const getWorkflowActions = (post: CMSPost) => {
+    const actions: { label: string; icon: React.ReactNode; action: () => void; variant?: string }[] = []
+
+    switch (post.status) {
+      case 'draft':
+      case 'changes_requested':
+      case 'rejected':
+        actions.push({
+          label: 'Submit for Review',
+          icon: <Send className="w-4 h-4" />,
+          action: () => handleSubmitForReview(post),
+        })
+        actions.push({
+          label: 'Schedule',
+          icon: <Calendar className="w-4 h-4" />,
+          action: () => { setSelectedPostForWorkflow(post); setShowScheduleModal(true) },
+        })
+        actions.push({
+          label: 'Publish Now',
+          icon: <Rocket className="w-4 h-4" />,
+          action: () => handlePublish(post),
+          variant: 'success',
+        })
+        break
+
+      case 'in_review':
+        actions.push({
+          label: 'Approve',
+          icon: <ThumbsUp className="w-4 h-4" />,
+          action: () => handleApprove(post),
+          variant: 'success',
+        })
+        actions.push({
+          label: 'Request Changes',
+          icon: <MessageCircle className="w-4 h-4" />,
+          action: () => { setSelectedPostForWorkflow(post); setShowChangesModal(true) },
+          variant: 'warning',
+        })
+        actions.push({
+          label: 'Reject',
+          icon: <ThumbsDown className="w-4 h-4" />,
+          action: () => { setSelectedPostForWorkflow(post); setShowRejectModal(true) },
+          variant: 'danger',
+        })
+        break
+
+      case 'approved':
+        actions.push({
+          label: 'Schedule',
+          icon: <Calendar className="w-4 h-4" />,
+          action: () => { setSelectedPostForWorkflow(post); setShowScheduleModal(true) },
+        })
+        actions.push({
+          label: 'Publish Now',
+          icon: <Rocket className="w-4 h-4" />,
+          action: () => handlePublish(post),
+          variant: 'success',
+        })
+        break
+
+      case 'scheduled':
+        actions.push({
+          label: 'Publish Now',
+          icon: <Rocket className="w-4 h-4" />,
+          action: () => handlePublish(post),
+          variant: 'success',
+        })
+        break
+
+      case 'published':
+        actions.push({
+          label: 'Unpublish',
+          icon: <XCircle className="w-4 h-4" />,
+          action: () => handleUnpublish(post),
+          variant: 'warning',
+        })
+        actions.push({
+          label: 'Archive',
+          icon: <Archive className="w-4 h-4" />,
+          action: () => handleArchive(post),
+        })
+        break
+
+      case 'unpublished':
+        actions.push({
+          label: 'Publish',
+          icon: <Rocket className="w-4 h-4" />,
+          action: () => handlePublish(post),
+          variant: 'success',
+        })
+        actions.push({
+          label: 'Archive',
+          icon: <Archive className="w-4 h-4" />,
+          action: () => handleArchive(post),
+        })
+        break
+    }
+
+    // Always add history actions
+    actions.push({
+      label: 'Workflow History',
+      icon: <History className="w-4 h-4" />,
+      action: () => openWorkflowHistory(post),
+    })
+    actions.push({
+      label: 'Version History',
+      icon: <GitBranch className="w-4 h-4" />,
+      action: () => openVersionHistory(post),
+    })
+
+    return actions
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case 'posts':
@@ -222,8 +513,13 @@ export default function CMS() {
                 >
                   <option value="">All Status</option>
                   <option value="draft">Draft</option>
+                  <option value="in_review">In Review</option>
+                  <option value="changes_requested">Changes Requested</option>
+                  <option value="approved">Approved</option>
                   <option value="scheduled">Scheduled</option>
                   <option value="published">Published</option>
+                  <option value="unpublished">Unpublished</option>
+                  <option value="rejected">Rejected</option>
                   <option value="archived">Archived</option>
                 </select>
               </div>
@@ -253,42 +549,90 @@ export default function CMS() {
                     </tr>
                   </thead>
                   <tbody>
-                    {postsData?.posts.map((post) => (
-                      <tr key={post.id} className="border-t border-neutral-800 hover:bg-neutral-800/30">
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-white">{post.title}</div>
-                          <div className="text-sm text-neutral-500">/blog/{post.slug}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={cn('px-2 py-1 text-xs rounded-full', statusColors[post.status])}>
-                            {post.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-neutral-400">{post.author?.name || '-'}</td>
-                        <td className="px-4 py-3 text-neutral-400">{post.view_count}</td>
-                        <td className="px-4 py-3 text-neutral-400 text-sm">
-                          {new Date(post.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleEditPost(post)}
-                              className="p-2 text-neutral-400 hover:text-white transition-colors"
-                              title="Edit"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeletePost(post.id)}
-                              className="p-2 text-neutral-400 hover:text-red-400 transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {postsData?.posts.map((post) => {
+                      const workflowActions = getWorkflowActions(post)
+                      return (
+                        <tr key={post.id} className="border-t border-neutral-800 hover:bg-neutral-800/30">
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-white">{post.title}</div>
+                            <div className="text-sm text-neutral-500">/blog/{post.slug}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={cn('px-2 py-1 text-xs rounded-full inline-flex items-center gap-1', statusColors[post.status])}>
+                              {statusIcons[post.status]}
+                              {post.status.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-neutral-400">{post.author?.name || '-'}</td>
+                          <td className="px-4 py-3 text-neutral-400">{post.view_count}</td>
+                          <td className="px-4 py-3 text-neutral-400 text-sm">
+                            {new Date(post.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              {/* Quick workflow actions based on status */}
+                              {workflowActions.slice(0, 2).map((action, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={action.action}
+                                  className={cn(
+                                    'p-1.5 rounded text-xs transition-colors',
+                                    action.variant === 'success' && 'text-green-400 hover:bg-green-500/20',
+                                    action.variant === 'warning' && 'text-yellow-400 hover:bg-yellow-500/20',
+                                    action.variant === 'danger' && 'text-red-400 hover:bg-red-500/20',
+                                    !action.variant && 'text-neutral-400 hover:text-white hover:bg-neutral-700'
+                                  )}
+                                  title={action.label}
+                                >
+                                  {action.icon}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => handleEditPost(post)}
+                                className="p-1.5 text-neutral-400 hover:text-white transition-colors"
+                                title="Edit"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <div className="relative group">
+                                <button
+                                  className="p-1.5 text-neutral-400 hover:text-white transition-colors"
+                                  title="More actions"
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                                <div className="absolute right-0 top-full mt-1 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                  {workflowActions.map((action, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={action.action}
+                                      className={cn(
+                                        'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors',
+                                        action.variant === 'success' && 'text-green-400 hover:bg-green-500/20',
+                                        action.variant === 'warning' && 'text-yellow-400 hover:bg-yellow-500/20',
+                                        action.variant === 'danger' && 'text-red-400 hover:bg-red-500/20',
+                                        !action.variant && 'text-neutral-300 hover:bg-neutral-700'
+                                      )}
+                                    >
+                                      {action.icon}
+                                      {action.label}
+                                    </button>
+                                  ))}
+                                  <hr className="border-neutral-700 my-1" />
+                                  <button
+                                    onClick={() => handleDeletePost(post.id)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-400 hover:bg-red-500/20 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
                 {postsData?.total === 0 && (
@@ -696,6 +1040,215 @@ export default function CMS() {
           }}
           isLoading={createPost.isPending || updatePost.isPending}
         />
+      )}
+
+      {/* Schedule Modal */}
+      {showScheduleModal && selectedPostForWorkflow && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-white mb-4">Schedule Post</h3>
+            <p className="text-neutral-400 text-sm mb-4">
+              Schedule "{selectedPostForWorkflow.title}" for future publishing.
+            </p>
+            <input
+              type="datetime-local"
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
+              className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setShowScheduleModal(false); setScheduleDate(''); setSelectedPostForWorkflow(null) }}
+                className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSchedule}
+                disabled={!scheduleDate || schedulePost.isPending}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {schedulePost.isPending ? 'Scheduling...' : 'Schedule'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && selectedPostForWorkflow && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-white mb-4">Reject Post</h3>
+            <p className="text-neutral-400 text-sm mb-4">
+              Reject "{selectedPostForWorkflow.title}". Please provide a reason (min 10 characters).
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Reason for rejection..."
+              rows={4}
+              className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white mb-4 resize-none"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setShowRejectModal(false); setRejectReason(''); setSelectedPostForWorkflow(null) }}
+                className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={rejectReason.length < 10 || rejectPost.isPending}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {rejectPost.isPending ? 'Rejecting...' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Changes Modal */}
+      {showChangesModal && selectedPostForWorkflow && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-white mb-4">Request Changes</h3>
+            <p className="text-neutral-400 text-sm mb-4">
+              Request changes on "{selectedPostForWorkflow.title}". Describe what needs to be changed (min 10 characters).
+            </p>
+            <textarea
+              value={changesNotes}
+              onChange={(e) => setChangesNotes(e.target.value)}
+              placeholder="Describe required changes..."
+              rows={4}
+              className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white mb-4 resize-none"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setShowChangesModal(false); setChangesNotes(''); setSelectedPostForWorkflow(null) }}
+                className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestChanges}
+                disabled={changesNotes.length < 10 || requestChanges.isPending}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {requestChanges.isPending ? 'Submitting...' : 'Request Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workflow History Modal */}
+      {showWorkflowHistory && selectedPostForWorkflow && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Workflow History</h3>
+              <button
+                onClick={() => { setShowWorkflowHistory(false); setSelectedPostForWorkflow(null) }}
+                className="p-2 text-neutral-400 hover:text-white transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-neutral-400 text-sm mb-4">
+              Audit trail for "{selectedPostForWorkflow.title}"
+            </p>
+            <div className="flex-1 overflow-y-auto space-y-3">
+              {workflowHistoryData?.history.map((entry) => (
+                <div key={entry.id} className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={cn(
+                      'px-2 py-0.5 text-xs rounded-full',
+                      entry.to_status && statusColors[entry.to_status as PostStatus]
+                    )}>
+                      {entry.action.replace('_', ' ')}
+                    </span>
+                    <span className="text-xs text-neutral-500">
+                      {entry.created_at && new Date(entry.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  {entry.from_status && entry.to_status && (
+                    <div className="text-sm text-neutral-400">
+                      {entry.from_status.replace('_', ' ')} → {entry.to_status.replace('_', ' ')}
+                    </div>
+                  )}
+                  {entry.comment && (
+                    <p className="text-sm text-neutral-300 mt-2">{entry.comment}</p>
+                  )}
+                </div>
+              ))}
+              {workflowHistoryData?.history.length === 0 && (
+                <div className="text-center py-8 text-neutral-500">No workflow history yet</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Version History Modal */}
+      {showVersionHistory && selectedPostForWorkflow && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Version History</h3>
+              <button
+                onClick={() => { setShowVersionHistory(false); setSelectedPostForWorkflow(null) }}
+                className="p-2 text-neutral-400 hover:text-white transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-neutral-400 text-sm mb-4">
+              Content versions for "{selectedPostForWorkflow.title}" (Current: v{versionHistoryData?.current_version || 1})
+            </p>
+            <div className="flex-1 overflow-y-auto space-y-3">
+              {versionHistoryData?.versions.map((version) => (
+                <div key={version.id} className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="px-2 py-0.5 text-xs bg-blue-600/20 text-blue-400 rounded-full">
+                      Version {version.version}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-neutral-500">
+                        {version.created_at && new Date(version.created_at).toLocaleString()}
+                      </span>
+                      {version.version !== versionHistoryData?.current_version && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Restore to version ${version.version}?`)) {
+                              restoreVersion.mutate({ postId: selectedPostForWorkflow.id, version: version.version })
+                            }
+                          }}
+                          className="p-1 text-neutral-400 hover:text-white transition-colors"
+                          title="Restore this version"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium text-white">{version.title}</div>
+                  {version.change_summary && (
+                    <p className="text-sm text-neutral-400 mt-1">{version.change_summary}</p>
+                  )}
+                  <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+                    {version.word_count && <span>{version.word_count} words</span>}
+                    {version.reading_time_minutes && <span>{version.reading_time_minutes} min read</span>}
+                  </div>
+                </div>
+              ))}
+              {versionHistoryData?.versions.length === 0 && (
+                <div className="text-center py-8 text-neutral-500">No version history yet</div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
