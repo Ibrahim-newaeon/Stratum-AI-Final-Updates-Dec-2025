@@ -2358,3 +2358,225 @@ def compute_all_cdp_funnels(tenant_id: int = None):
 
     logger.info(f"Queued {task_count} CDP funnel computation tasks")
     return {"tasks_queued": task_count}
+
+
+# =============================================================================
+# CMS (Content Management System) Tasks - 2026 Workflow
+# =============================================================================
+
+@shared_task
+def publish_scheduled_cms_posts():
+    """
+    Process scheduled CMS posts and publish them when their scheduled_at time arrives.
+
+    2026 Standard: Automated scheduled publishing with audit trail.
+    This task runs every minute via Celery Beat.
+    """
+    from uuid import UUID
+    from app.models.cms import CMSPost, CMSPostStatus, CMSWorkflowAction, CMSWorkflowLog
+
+    logger.info("Processing scheduled CMS posts")
+
+    with SyncSessionLocal() as db:
+        now = datetime.now(timezone.utc)
+
+        # Find all posts that are scheduled and ready to publish
+        posts_to_publish = db.execute(
+            select(CMSPost).where(
+                CMSPost.status == CMSPostStatus.SCHEDULED.value,
+                CMSPost.scheduled_at <= now,
+                CMSPost.is_deleted == False,
+            )
+        ).scalars().all()
+
+        published_count = 0
+        failed_count = 0
+
+        for post in posts_to_publish:
+            try:
+                # Store previous status for audit
+                previous_status = post.status
+
+                # Update post status to published
+                post.status = CMSPostStatus.PUBLISHED.value
+                post.published_at = now
+
+                # Create workflow log entry
+                workflow_log = CMSWorkflowLog(
+                    post_id=post.id,
+                    action=CMSWorkflowAction.PUBLISHED.value,
+                    from_status=previous_status,
+                    to_status=CMSPostStatus.PUBLISHED.value,
+                    performed_by_id=post.approved_by_id,  # Use the approver as the publisher
+                    comment=f"Auto-published via scheduled publishing (scheduled_at: {post.scheduled_at.isoformat()})",
+                    version_number=post.version,
+                    metadata={
+                        "scheduled_at": post.scheduled_at.isoformat(),
+                        "published_at": now.isoformat(),
+                        "auto_published": True,
+                    },
+                )
+                db.add(workflow_log)
+
+                db.commit()
+                published_count += 1
+
+                logger.info(f"Published scheduled CMS post: {post.id} - {post.title}")
+
+            except Exception as e:
+                db.rollback()
+                failed_count += 1
+                logger.error(f"Failed to publish scheduled CMS post {post.id}: {e}")
+
+        logger.info(f"Scheduled CMS publishing complete: {published_count} published, {failed_count} failed")
+        return {
+            "status": "success",
+            "published_count": published_count,
+            "failed_count": failed_count,
+            "timestamp": now.isoformat(),
+        }
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    max_retries=3,
+)
+def publish_cms_post(self, post_id: str, published_by_id: int = None):
+    """
+    Publish a single CMS post immediately.
+
+    Args:
+        post_id: UUID of the post to publish
+        published_by_id: User ID who triggered the publish (optional)
+    """
+    from uuid import UUID
+    from app.models.cms import CMSPost, CMSPostStatus, CMSWorkflowAction, CMSWorkflowLog
+
+    logger.info(f"Publishing CMS post {post_id}")
+
+    with SyncSessionLocal() as db:
+        post = db.execute(
+            select(CMSPost).where(
+                CMSPost.id == UUID(post_id),
+                CMSPost.is_deleted == False,
+            )
+        ).scalar_one_or_none()
+
+        if not post:
+            logger.warning(f"CMS post {post_id} not found")
+            return {"status": "not_found", "post_id": post_id}
+
+        # Check if post is in a publishable state
+        publishable_states = [
+            CMSPostStatus.APPROVED.value,
+            CMSPostStatus.SCHEDULED.value,
+        ]
+        if post.status not in publishable_states:
+            logger.warning(f"CMS post {post_id} cannot be published (status: {post.status})")
+            return {
+                "status": "error",
+                "message": f"Post cannot be published from status: {post.status}",
+                "post_id": post_id,
+            }
+
+        try:
+            now = datetime.now(timezone.utc)
+            previous_status = post.status
+
+            # Update post
+            post.status = CMSPostStatus.PUBLISHED.value
+            post.published_at = now
+
+            # Create workflow log
+            workflow_log = CMSWorkflowLog(
+                post_id=post.id,
+                action=CMSWorkflowAction.PUBLISHED.value,
+                from_status=previous_status,
+                to_status=CMSPostStatus.PUBLISHED.value,
+                performed_by_id=published_by_id or post.approved_by_id,
+                comment="Published via async task",
+                version_number=post.version,
+                metadata={
+                    "published_at": now.isoformat(),
+                    "triggered_by": published_by_id,
+                },
+            )
+            db.add(workflow_log)
+
+            db.commit()
+
+            logger.info(f"Published CMS post: {post_id} - {post.title}")
+            return {
+                "status": "success",
+                "post_id": post_id,
+                "title": post.title,
+                "published_at": now.isoformat(),
+            }
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to publish CMS post {post_id}: {e}")
+            raise
+
+
+@shared_task
+def create_cms_post_version(post_id: str, created_by_id: int, change_summary: str = None):
+    """
+    Create a version snapshot of a CMS post.
+
+    Called automatically when content is updated.
+    """
+    from uuid import UUID
+    from app.models.cms import CMSPost, CMSPostVersion
+
+    logger.info(f"Creating version snapshot for CMS post {post_id}")
+
+    with SyncSessionLocal() as db:
+        post = db.execute(
+            select(CMSPost).where(CMSPost.id == UUID(post_id))
+        ).scalar_one_or_none()
+
+        if not post:
+            logger.warning(f"CMS post {post_id} not found")
+            return {"status": "not_found", "post_id": post_id}
+
+        try:
+            # Create version snapshot
+            version = CMSPostVersion(
+                post_id=post.id,
+                version=post.version,
+                title=post.title,
+                slug=post.slug,
+                excerpt=post.excerpt,
+                content=post.content,
+                content_json=post.content_json,
+                meta_title=post.meta_title,
+                meta_description=post.meta_description,
+                featured_image_url=post.featured_image_url,
+                created_by_id=created_by_id,
+                change_summary=change_summary,
+                word_count=post.word_count,
+                reading_time_minutes=post.reading_time_minutes,
+            )
+            db.add(version)
+
+            # Increment post version
+            post.version += 1
+            post.current_version_id = version.id
+
+            db.commit()
+
+            logger.info(f"Created version {version.version} for CMS post {post_id}")
+            return {
+                "status": "success",
+                "post_id": post_id,
+                "version": version.version,
+            }
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to create version for CMS post {post_id}: {e}")
+            raise

@@ -37,6 +37,12 @@ from app.models.cms import (
     CMSContactSubmission,
     CMSPostStatus,
     CMSPageStatus,
+    CMSWorkflowAction,
+    CMSWorkflowLog,
+    CMSPostVersion,
+    CMSRole,
+    CMS_PERMISSIONS,
+    has_permission,
     cms_post_tags,
 )
 from app.schemas.cms import (
@@ -1934,4 +1940,788 @@ async def admin_mark_contact_spam(
             is_spam=contact.is_spam,
             created_at=contact.created_at,
         ),
+    )
+
+
+# =============================================================================
+# 2026 Workflow Endpoints
+# =============================================================================
+
+@router.post("/admin/posts/{post_id}/submit-for-review", response_model=APIResponse[dict])
+async def submit_post_for_review(
+    request: Request,
+    post_id: UUID,
+    reviewer_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Submit a post for review (2026 Workflow).
+
+    Transitions: DRAFT -> IN_REVIEW
+    Allowed roles: Author, Contributor (with Author+ upgrade), Editor, Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    # Check if post can be submitted (must be DRAFT or CHANGES_REQUESTED)
+    allowed_states = [CMSPostStatus.DRAFT.value, CMSPostStatus.CHANGES_REQUESTED.value]
+    if post.status not in allowed_states:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Post cannot be submitted for review from status: {post.status}"
+        )
+
+    # Store previous status for audit
+    previous_status = post.status
+
+    # Update post
+    post.status = CMSPostStatus.IN_REVIEW.value
+    post.submitted_at = datetime.now(timezone.utc)
+    post.submitted_by_id = user_id
+    if reviewer_id:
+        post.assigned_reviewer_id = reviewer_id
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.SUBMITTED_FOR_REVIEW.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.IN_REVIEW.value,
+        performed_by_id=user_id,
+        comment=f"Submitted for review" + (f" (assigned to reviewer {reviewer_id})" if reviewer_id else ""),
+        version_number=post.version,
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} submitted for review by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+            "submitted_at": post.submitted_at.isoformat(),
+            "assigned_reviewer_id": post.assigned_reviewer_id,
+        },
+        message="Post submitted for review successfully",
+    )
+
+
+@router.post("/admin/posts/{post_id}/approve", response_model=APIResponse[dict])
+async def approve_post(
+    request: Request,
+    post_id: UUID,
+    notes: Optional[str] = None,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Approve a post (2026 Workflow).
+
+    Transitions: IN_REVIEW -> APPROVED
+    Allowed roles: Reviewer, Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    # Check if post can be approved
+    if post.status != CMSPostStatus.IN_REVIEW.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Post cannot be approved from status: {post.status}"
+        )
+
+    previous_status = post.status
+
+    # Update post
+    post.status = CMSPostStatus.APPROVED.value
+    post.approved_at = datetime.now(timezone.utc)
+    post.approved_by_id = user_id
+    post.reviewed_at = datetime.now(timezone.utc)
+    post.reviewed_by_id = user_id
+    if notes:
+        post.review_notes = notes
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.APPROVED.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.APPROVED.value,
+        performed_by_id=user_id,
+        comment=notes or "Post approved",
+        version_number=post.version,
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} approved by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+            "approved_at": post.approved_at.isoformat(),
+            "approved_by_id": post.approved_by_id,
+        },
+        message="Post approved successfully",
+    )
+
+
+@router.post("/admin/posts/{post_id}/reject", response_model=APIResponse[dict])
+async def reject_post(
+    request: Request,
+    post_id: UUID,
+    reason: str = Query(..., min_length=10, description="Rejection reason (required)"),
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Reject a post (2026 Workflow).
+
+    Transitions: IN_REVIEW -> REJECTED
+    Allowed roles: Reviewer, Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if post.status != CMSPostStatus.IN_REVIEW.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Post cannot be rejected from status: {post.status}"
+        )
+
+    previous_status = post.status
+
+    # Update post
+    post.status = CMSPostStatus.REJECTED.value
+    post.rejected_at = datetime.now(timezone.utc)
+    post.rejected_by_id = user_id
+    post.rejection_reason = reason
+    post.reviewed_at = datetime.now(timezone.utc)
+    post.reviewed_by_id = user_id
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.REJECTED.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.REJECTED.value,
+        performed_by_id=user_id,
+        comment=reason,
+        version_number=post.version,
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} rejected by user {user_id}: {reason}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+            "rejected_at": post.rejected_at.isoformat(),
+            "rejection_reason": post.rejection_reason,
+        },
+        message="Post rejected",
+    )
+
+
+@router.post("/admin/posts/{post_id}/request-changes", response_model=APIResponse[dict])
+async def request_post_changes(
+    request: Request,
+    post_id: UUID,
+    notes: str = Query(..., min_length=10, description="Change request notes (required)"),
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Request changes on a post (2026 Workflow).
+
+    Transitions: IN_REVIEW -> CHANGES_REQUESTED
+    Allowed roles: Reviewer, Editor, Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if post.status != CMSPostStatus.IN_REVIEW.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot request changes from status: {post.status}"
+        )
+
+    previous_status = post.status
+
+    # Update post
+    post.status = CMSPostStatus.CHANGES_REQUESTED.value
+    post.reviewed_at = datetime.now(timezone.utc)
+    post.reviewed_by_id = user_id
+    post.review_notes = notes
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.CHANGES_REQUESTED.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.CHANGES_REQUESTED.value,
+        performed_by_id=user_id,
+        comment=notes,
+        version_number=post.version,
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Changes requested on post {post_id} by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+            "review_notes": post.review_notes,
+        },
+        message="Changes requested on post",
+    )
+
+
+@router.post("/admin/posts/{post_id}/schedule", response_model=APIResponse[dict])
+async def schedule_post(
+    request: Request,
+    post_id: UUID,
+    scheduled_at: datetime = Query(..., description="Scheduled publish datetime (UTC)"),
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Schedule a post for future publishing (2026 Workflow).
+
+    Transitions: APPROVED -> SCHEDULED
+    Allowed roles: Editor, Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    # Validate scheduled_at is in the future
+    now = datetime.now(timezone.utc)
+    if scheduled_at.tzinfo is None:
+        scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+    if scheduled_at <= now:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Scheduled time must be in the future"
+        )
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    # Can schedule from APPROVED or DRAFT (for quick workflow)
+    allowed_states = [CMSPostStatus.APPROVED.value, CMSPostStatus.DRAFT.value]
+    if post.status not in allowed_states:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Post cannot be scheduled from status: {post.status}"
+        )
+
+    previous_status = post.status
+
+    # Update post
+    post.status = CMSPostStatus.SCHEDULED.value
+    post.scheduled_at = scheduled_at
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.SCHEDULED.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.SCHEDULED.value,
+        performed_by_id=user_id,
+        comment=f"Scheduled for {scheduled_at.isoformat()}",
+        version_number=post.version,
+        metadata={"scheduled_at": scheduled_at.isoformat()},
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} scheduled for {scheduled_at} by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+            "scheduled_at": post.scheduled_at.isoformat(),
+        },
+        message=f"Post scheduled for {scheduled_at.isoformat()}",
+    )
+
+
+@router.post("/admin/posts/{post_id}/publish", response_model=APIResponse[dict])
+async def publish_post_immediately(
+    request: Request,
+    post_id: UUID,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Publish a post immediately (2026 Workflow).
+
+    Transitions: APPROVED/SCHEDULED -> PUBLISHED
+    Allowed roles: Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    # Can publish from APPROVED, SCHEDULED, or DRAFT (for quick workflow)
+    allowed_states = [
+        CMSPostStatus.APPROVED.value,
+        CMSPostStatus.SCHEDULED.value,
+        CMSPostStatus.DRAFT.value,
+    ]
+    if post.status not in allowed_states:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Post cannot be published from status: {post.status}"
+        )
+
+    previous_status = post.status
+    now = datetime.now(timezone.utc)
+
+    # Update post
+    post.status = CMSPostStatus.PUBLISHED.value
+    post.published_at = now
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.PUBLISHED.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.PUBLISHED.value,
+        performed_by_id=user_id,
+        comment="Published immediately",
+        version_number=post.version,
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} published by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+            "published_at": post.published_at.isoformat(),
+        },
+        message="Post published successfully",
+    )
+
+
+@router.post("/admin/posts/{post_id}/unpublish", response_model=APIResponse[dict])
+async def unpublish_post(
+    request: Request,
+    post_id: UUID,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Unpublish a post (2026 Workflow).
+
+    Transitions: PUBLISHED -> UNPUBLISHED
+    Allowed roles: Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if post.status != CMSPostStatus.PUBLISHED.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Post cannot be unpublished from status: {post.status}"
+        )
+
+    previous_status = post.status
+
+    # Update post
+    post.status = CMSPostStatus.UNPUBLISHED.value
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.UNPUBLISHED.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.UNPUBLISHED.value,
+        performed_by_id=user_id,
+        comment="Post unpublished",
+        version_number=post.version,
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} unpublished by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+        },
+        message="Post unpublished",
+    )
+
+
+@router.post("/admin/posts/{post_id}/archive", response_model=APIResponse[dict])
+async def archive_post(
+    request: Request,
+    post_id: UUID,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Archive a post (2026 Workflow).
+
+    Transitions: Any -> ARCHIVED
+    Allowed roles: Editor-in-Chief, Admin, Super Admin
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    previous_status = post.status
+
+    # Update post
+    post.status = CMSPostStatus.ARCHIVED.value
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.ARCHIVED.value,
+        from_status=previous_status,
+        to_status=CMSPostStatus.ARCHIVED.value,
+        performed_by_id=user_id,
+        comment="Post archived",
+        version_number=post.version,
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} archived by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "status": post.status,
+        },
+        message="Post archived",
+    )
+
+
+@router.get("/admin/posts/{post_id}/workflow-history", response_model=APIResponse[dict])
+async def get_post_workflow_history(
+    request: Request,
+    post_id: UUID,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Get workflow history for a post (2026 Workflow).
+    Returns audit trail of all status changes and actions.
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    # Verify post exists
+    result = await db.execute(
+        select(CMSPost).where(CMSPost.id == post_id)
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    # Count total
+    count_result = await db.execute(
+        select(func.count(CMSWorkflowLog.id)).where(CMSWorkflowLog.post_id == post_id)
+    )
+    total = count_result.scalar() or 0
+
+    # Fetch workflow history
+    result = await db.execute(
+        select(CMSWorkflowLog)
+        .where(CMSWorkflowLog.post_id == post_id)
+        .order_by(desc(CMSWorkflowLog.created_at))
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    logs = result.scalars().all()
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "history": [
+                {
+                    "id": str(log.id),
+                    "action": log.action,
+                    "from_status": log.from_status,
+                    "to_status": log.to_status,
+                    "performed_by_id": log.performed_by_id,
+                    "comment": log.comment,
+                    "version_number": log.version_number,
+                    "metadata": log.metadata,
+                    "created_at": log.created_at.isoformat() if log.created_at else None,
+                }
+                for log in logs
+            ],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        },
+    )
+
+
+@router.get("/admin/posts/{post_id}/versions", response_model=APIResponse[dict])
+async def get_post_versions(
+    request: Request,
+    post_id: UUID,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Get version history for a post (2026 Content Versioning).
+    Returns all content snapshots for rollback and audit.
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    # Verify post exists
+    result = await db.execute(
+        select(CMSPost).where(CMSPost.id == post_id)
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    # Count total
+    count_result = await db.execute(
+        select(func.count(CMSPostVersion.id)).where(CMSPostVersion.post_id == post_id)
+    )
+    total = count_result.scalar() or 0
+
+    # Fetch versions
+    result = await db.execute(
+        select(CMSPostVersion)
+        .where(CMSPostVersion.post_id == post_id)
+        .order_by(desc(CMSPostVersion.version))
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    versions = result.scalars().all()
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "current_version": post.version,
+            "versions": [
+                {
+                    "id": str(v.id),
+                    "version": v.version,
+                    "title": v.title,
+                    "slug": v.slug,
+                    "excerpt": v.excerpt,
+                    "change_summary": v.change_summary,
+                    "change_type": v.change_type,
+                    "word_count": v.word_count,
+                    "reading_time_minutes": v.reading_time_minutes,
+                    "created_by_id": v.created_by_id,
+                    "created_at": v.created_at.isoformat() if v.created_at else None,
+                }
+                for v in versions
+            ],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        },
+    )
+
+
+@router.post("/admin/posts/{post_id}/restore-version/{version}", response_model=APIResponse[dict])
+async def restore_post_version(
+    request: Request,
+    post_id: UUID,
+    version: int,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[dict]:
+    """
+    Restore a post to a previous version (2026 Content Versioning).
+    Creates a new version with the restored content.
+    """
+    if not await check_superadmin(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    user_id = getattr(request.state, "user_id", None)
+
+    # Get post
+    result = await db.execute(
+        select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    # Get the version to restore
+    result = await db.execute(
+        select(CMSPostVersion).where(
+            and_(
+                CMSPostVersion.post_id == post_id,
+                CMSPostVersion.version == version,
+            )
+        )
+    )
+    version_to_restore = result.scalar_one_or_none()
+
+    if not version_to_restore:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Version {version} not found")
+
+    # Create a snapshot of current state before restoring
+    current_snapshot = CMSPostVersion(
+        post_id=post.id,
+        version=post.version,
+        title=post.title,
+        slug=post.slug,
+        excerpt=post.excerpt,
+        content=post.content,
+        content_json=post.content_json,
+        meta_title=post.meta_title,
+        meta_description=post.meta_description,
+        featured_image_url=post.featured_image_url,
+        created_by_id=user_id,
+        change_summary=f"Auto-saved before restoring to version {version}",
+        word_count=post.word_count,
+        reading_time_minutes=post.reading_time_minutes,
+    )
+    db.add(current_snapshot)
+
+    # Restore content from version
+    post.title = version_to_restore.title
+    post.slug = version_to_restore.slug
+    post.excerpt = version_to_restore.excerpt
+    post.content = version_to_restore.content
+    post.content_json = version_to_restore.content_json
+    post.meta_title = version_to_restore.meta_title
+    post.meta_description = version_to_restore.meta_description
+    post.featured_image_url = version_to_restore.featured_image_url
+    post.word_count = version_to_restore.word_count
+    post.reading_time_minutes = version_to_restore.reading_time_minutes
+    post.version += 1
+
+    # Create workflow log
+    workflow_log = CMSWorkflowLog(
+        post_id=post.id,
+        action=CMSWorkflowAction.RESTORED.value,
+        from_status=post.status,
+        to_status=post.status,
+        performed_by_id=user_id,
+        comment=f"Restored to version {version}",
+        version_number=post.version,
+        metadata={"restored_from_version": version},
+    )
+    db.add(workflow_log)
+
+    await db.commit()
+
+    logger.info(f"Post {post_id} restored to version {version} by user {user_id}")
+
+    return APIResponse(
+        success=True,
+        data={
+            "post_id": str(post_id),
+            "restored_from_version": version,
+            "new_version": post.version,
+        },
+        message=f"Post restored to version {version}",
     )

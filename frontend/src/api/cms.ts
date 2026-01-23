@@ -12,10 +12,46 @@ import { apiClient, ApiResponse } from './client'
 // TypeScript Types
 // =============================================================================
 
-// Status Types
-export type PostStatus = 'draft' | 'scheduled' | 'published' | 'archived'
-export type ContentType = 'blog_post' | 'case_study' | 'guide' | 'whitepaper' | 'announcement'
-export type PageStatus = 'draft' | 'published' | 'archived'
+// Status Types (2026 Workflow Standard)
+export type PostStatus =
+  | 'draft'
+  | 'in_review'
+  | 'changes_requested'
+  | 'approved'
+  | 'scheduled'
+  | 'published'
+  | 'unpublished'
+  | 'archived'
+  | 'rejected'
+
+export type ContentType = 'blog_post' | 'case_study' | 'guide' | 'whitepaper' | 'announcement' | 'newsletter' | 'press_release'
+export type PageStatus = 'draft' | 'in_review' | 'approved' | 'published' | 'archived'
+
+// 2026 CMS Roles
+export type CMSRole =
+  | 'super_admin'
+  | 'admin'
+  | 'editor_in_chief'
+  | 'editor'
+  | 'author'
+  | 'contributor'
+  | 'reviewer'
+  | 'viewer'
+
+// 2026 Workflow Actions
+export type WorkflowAction =
+  | 'created'
+  | 'updated'
+  | 'submitted_for_review'
+  | 'approved'
+  | 'rejected'
+  | 'changes_requested'
+  | 'scheduled'
+  | 'published'
+  | 'unpublished'
+  | 'archived'
+  | 'restored'
+  | 'deleted'
 
 // Category Types
 export interface CMSCategory {
@@ -368,6 +404,72 @@ export interface ContactFilters {
 }
 
 // =============================================================================
+// 2026 Workflow Types
+// =============================================================================
+
+export interface WorkflowHistoryEntry {
+  id: string
+  action: WorkflowAction
+  from_status?: string
+  to_status?: string
+  performed_by_id?: number
+  comment?: string
+  version_number?: number
+  metadata?: Record<string, unknown>
+  created_at?: string
+}
+
+export interface WorkflowHistoryResponse {
+  post_id: string
+  history: WorkflowHistoryEntry[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export interface PostVersion {
+  id: string
+  version: number
+  title: string
+  slug: string
+  excerpt?: string
+  change_summary?: string
+  change_type?: string
+  word_count?: number
+  reading_time_minutes?: number
+  created_by_id?: number
+  created_at?: string
+}
+
+export interface VersionHistoryResponse {
+  post_id: string
+  current_version: number
+  versions: PostVersion[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export interface WorkflowActionResponse {
+  post_id: string
+  status: PostStatus
+  submitted_at?: string
+  approved_at?: string
+  rejected_at?: string
+  scheduled_at?: string
+  published_at?: string
+  assigned_reviewer_id?: number
+  rejection_reason?: string
+  review_notes?: string
+}
+
+export interface RestoreVersionResponse {
+  post_id: string
+  restored_from_version: number
+  new_version: number
+}
+
+// =============================================================================
 // Query Keys
 // =============================================================================
 
@@ -394,6 +496,11 @@ export const cmsKeys = {
   // Contacts
   contacts: () => [...cmsKeys.all, 'contacts'] as const,
   contactsList: (filters: ContactFilters) => [...cmsKeys.contacts(), 'list', filters] as const,
+  // 2026 Workflow
+  workflow: () => [...cmsKeys.all, 'workflow'] as const,
+  workflowHistory: (postId: string) => [...cmsKeys.workflow(), 'history', postId] as const,
+  versions: () => [...cmsKeys.all, 'versions'] as const,
+  versionHistory: (postId: string) => [...cmsKeys.versions(), postId] as const,
 }
 
 // =============================================================================
@@ -894,4 +1001,317 @@ export const useMarkContactSpam = () => {
       queryClient.invalidateQueries({ queryKey: cmsKeys.contacts() })
     },
   })
+}
+
+// =============================================================================
+// 2026 Workflow API Functions
+// =============================================================================
+
+export const submitPostForReview = async (
+  postId: string,
+  reviewerId?: number
+): Promise<WorkflowActionResponse> => {
+  const params = reviewerId ? `?reviewer_id=${reviewerId}` : ''
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/submit-for-review${params}`
+  )
+  return response.data.data
+}
+
+export const approvePost = async (
+  postId: string,
+  notes?: string
+): Promise<WorkflowActionResponse> => {
+  const params = notes ? `?notes=${encodeURIComponent(notes)}` : ''
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/approve${params}`
+  )
+  return response.data.data
+}
+
+export const rejectPost = async (
+  postId: string,
+  reason: string
+): Promise<WorkflowActionResponse> => {
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/reject?reason=${encodeURIComponent(reason)}`
+  )
+  return response.data.data
+}
+
+export const requestPostChanges = async (
+  postId: string,
+  notes: string
+): Promise<WorkflowActionResponse> => {
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/request-changes?notes=${encodeURIComponent(notes)}`
+  )
+  return response.data.data
+}
+
+export const schedulePost = async (
+  postId: string,
+  scheduledAt: string
+): Promise<WorkflowActionResponse> => {
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/schedule?scheduled_at=${encodeURIComponent(scheduledAt)}`
+  )
+  return response.data.data
+}
+
+export const publishPostImmediately = async (
+  postId: string
+): Promise<WorkflowActionResponse> => {
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/publish`
+  )
+  return response.data.data
+}
+
+export const unpublishPost = async (
+  postId: string
+): Promise<WorkflowActionResponse> => {
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/unpublish`
+  )
+  return response.data.data
+}
+
+export const archivePost = async (
+  postId: string
+): Promise<WorkflowActionResponse> => {
+  const response = await apiClient.post<ApiResponse<WorkflowActionResponse>>(
+    `/cms/admin/posts/${postId}/archive`
+  )
+  return response.data.data
+}
+
+export const fetchWorkflowHistory = async (
+  postId: string,
+  page = 1,
+  pageSize = 20
+): Promise<WorkflowHistoryResponse> => {
+  const response = await apiClient.get<ApiResponse<WorkflowHistoryResponse>>(
+    `/cms/admin/posts/${postId}/workflow-history?page=${page}&page_size=${pageSize}`
+  )
+  return response.data.data
+}
+
+export const fetchVersionHistory = async (
+  postId: string,
+  page = 1,
+  pageSize = 20
+): Promise<VersionHistoryResponse> => {
+  const response = await apiClient.get<ApiResponse<VersionHistoryResponse>>(
+    `/cms/admin/posts/${postId}/versions?page=${page}&page_size=${pageSize}`
+  )
+  return response.data.data
+}
+
+export const restorePostVersion = async (
+  postId: string,
+  version: number
+): Promise<RestoreVersionResponse> => {
+  const response = await apiClient.post<ApiResponse<RestoreVersionResponse>>(
+    `/cms/admin/posts/${postId}/restore-version/${version}`
+  )
+  return response.data.data
+}
+
+// =============================================================================
+// 2026 Workflow React Query Hooks
+// =============================================================================
+
+export const useSubmitForReview = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, reviewerId }: { postId: string; reviewerId?: number }) =>
+      submitPostForReview(postId, reviewerId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const useApprovePost = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, notes }: { postId: string; notes?: string }) =>
+      approvePost(postId, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const useRejectPost = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, reason }: { postId: string; reason: string }) =>
+      rejectPost(postId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const useRequestChanges = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, notes }: { postId: string; notes: string }) =>
+      requestPostChanges(postId, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const useSchedulePost = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, scheduledAt }: { postId: string; scheduledAt: string }) =>
+      schedulePost(postId, scheduledAt),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const usePublishPost = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (postId: string) => publishPostImmediately(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const useUnpublishPost = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (postId: string) => unpublishPost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const useArchivePost = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (postId: string) => archivePost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+    },
+  })
+}
+
+export const useWorkflowHistory = (postId: string, page = 1, pageSize = 20) => {
+  return useQuery({
+    queryKey: cmsKeys.workflowHistory(postId),
+    queryFn: () => fetchWorkflowHistory(postId, page, pageSize),
+    enabled: !!postId,
+  })
+}
+
+export const useVersionHistory = (postId: string, page = 1, pageSize = 20) => {
+  return useQuery({
+    queryKey: cmsKeys.versionHistory(postId),
+    queryFn: () => fetchVersionHistory(postId, page, pageSize),
+    enabled: !!postId,
+  })
+}
+
+export const useRestoreVersion = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, version }: { postId: string; version: number }) =>
+      restorePostVersion(postId, version),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: cmsKeys.posts() })
+      queryClient.invalidateQueries({ queryKey: cmsKeys.versionHistory(variables.postId) })
+      queryClient.invalidateQueries({ queryKey: cmsKeys.workflowHistory(variables.postId) })
+    },
+  })
+}
+
+// =============================================================================
+// 2026 Workflow Status Helpers
+// =============================================================================
+
+export const WORKFLOW_STATUS_CONFIG: Record<PostStatus, {
+  label: string
+  color: string
+  bgColor: string
+  description: string
+  allowedActions: string[]
+}> = {
+  draft: {
+    label: 'Draft',
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/20',
+    description: 'Work in progress, not yet submitted',
+    allowedActions: ['submit_for_review', 'schedule', 'publish'],
+  },
+  in_review: {
+    label: 'In Review',
+    color: 'text-yellow-400',
+    bgColor: 'bg-yellow-500/20',
+    description: 'Waiting for reviewer approval',
+    allowedActions: ['approve', 'reject', 'request_changes'],
+  },
+  changes_requested: {
+    label: 'Changes Requested',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/20',
+    description: 'Reviewer requested modifications',
+    allowedActions: ['submit_for_review'],
+  },
+  approved: {
+    label: 'Approved',
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
+    description: 'Ready to publish or schedule',
+    allowedActions: ['publish', 'schedule'],
+  },
+  scheduled: {
+    label: 'Scheduled',
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/20',
+    description: 'Will be published automatically',
+    allowedActions: ['publish', 'unschedule'],
+  },
+  published: {
+    label: 'Published',
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/20',
+    description: 'Live and visible to readers',
+    allowedActions: ['unpublish', 'archive'],
+  },
+  unpublished: {
+    label: 'Unpublished',
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/20',
+    description: 'Temporarily taken offline',
+    allowedActions: ['publish', 'archive'],
+  },
+  archived: {
+    label: 'Archived',
+    color: 'text-gray-500',
+    bgColor: 'bg-gray-600/20',
+    description: 'Permanently archived',
+    allowedActions: ['restore'],
+  },
+  rejected: {
+    label: 'Rejected',
+    color: 'text-red-400',
+    bgColor: 'bg-red-500/20',
+    description: 'Did not pass review',
+    allowedActions: ['submit_for_review'],
+  },
+}
+
+export const getStatusConfig = (status: PostStatus) => {
+  return WORKFLOW_STATUS_CONFIG[status] || WORKFLOW_STATUS_CONFIG.draft
 }

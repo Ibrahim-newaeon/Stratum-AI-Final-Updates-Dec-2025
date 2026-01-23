@@ -167,6 +167,17 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=0, hour="*/2"),
         "options": {"queue": "cdp"},
     },
+
+    # ==========================================================================
+    # CMS (Content Management System) Scheduled Tasks
+    # ==========================================================================
+
+    # Process scheduled CMS posts every minute (2026 Workflow)
+    "publish-scheduled-cms-posts": {
+        "task": "app.workers.tasks.publish_scheduled_cms_posts",
+        "schedule": crontab(minute="*"),
+        "options": {"queue": "default"},
+    },
 }
 
 
