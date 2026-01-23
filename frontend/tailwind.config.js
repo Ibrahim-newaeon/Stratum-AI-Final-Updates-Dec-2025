@@ -54,13 +54,13 @@ export default {
   				'100': '#f3e8ff',
   				'200': '#e9d5ff',
   				'300': '#d8b4fe',
-  				'400': '#c084fc',
-  				'500': '#a855f7',
-  				'600': '#9333ea',
-  				'700': '#7e22ce',
-  				'800': '#6b21a8',
-  				'900': '#581c87',
-  				'950': '#3b0764'
+  				'400': '#A78BFA',      // 2026: More electric violet hover
+  				'500': '#8B5CF6',      // 2026: Primary brand electric violet
+  				'600': '#7C3AED',      // 2026: Active/pressed
+  				'700': '#6D28D9',
+  				'800': '#5B21B6',
+  				'900': '#4C1D95',
+  				'950': '#2E1065'
   			},
   			cyan: {
   				'50': '#ecfeff',
@@ -68,7 +68,7 @@ export default {
   				'200': '#a5f3fc',
   				'300': '#67e8f9',
   				'400': '#22d3ee',
-  				'500': '#06b6d4',
+  				'500': '#00D4FF',      // 2026: Electric cyan
   				'600': '#0891b2',
   				'700': '#0e7490',
   				'800': '#155e75',
@@ -80,20 +80,20 @@ export default {
   			tiktok: '#00F2EA',
   			snapchat: '#FFFC00',
   			whatsapp: '#25D366',
-  			success: '#22C55E',
-  			warning: '#FACC15',
-  			danger: '#EF4444',
-  			info: '#3B82F6',
-  			insight: '#F97316',
+  			success: '#00FF88',        // 2026: Neon green
+  			warning: '#FFB800',        // 2026: Amber glow
+  			danger: '#FF4757',         // 2026: Neon red
+  			info: '#00B4FF',           // 2026: Electric blue
+  			insight: '#FF6B6B',        // 2026: Coral accent
   			surface: {
-  				primary: '#060606',
-  				secondary: '#0A0A0A',
-  				tertiary: '#121212',
-  				elevated: 'rgba(255,255,255,0.04)'
+  				primary: '#020204',    // 2026: Near-black with blue hint
+  				secondary: '#0A0A0F',  // 2026: Subtle blue undertone
+  				tertiary: '#12121A',   // 2026: Elevated with depth
+  				elevated: '#1A1A26'    // 2026: Cards/dialogs
   			},
-  			'text-primary': '#FFFFFF',
-  			'text-secondary': '#A7AABB',
-  			'text-muted': '#6E7482',
+  			'text-primary': '#FAFAFA',     // 2026: Slightly softer white
+  			'text-secondary': '#94A3B8',   // 2026: Cooler gray
+  			'text-muted': '#64748B',       // 2026: Slate muted
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',
@@ -145,10 +145,11 @@ export default {
   			'display-2xl': ['72px', { lineHeight: '1', fontWeight: '800', letterSpacing: '-0.03em' }],
   		},
   		boxShadow: {
-  			'glow-sm': '0 0 10px rgba(168, 85, 247, 0.15)',
-  			glow: '0 0 22px rgba(168, 85, 247, 0.18)',
-  			'glow-lg': '0 0 30px rgba(168, 85, 247, 0.25)',
-  			'glow-insight': '0 0 18px rgba(249, 115, 22, 0.22)',
+  			'glow-sm': '0 0 12px rgba(139, 92, 246, 0.2)',      // 2026: Electric violet glow
+  			glow: '0 0 20px rgba(139, 92, 246, 0.4)',           // 2026: Primary glow
+  			'glow-lg': '0 0 32px rgba(139, 92, 246, 0.5)',      // 2026: Large glow
+  			'glow-insight': '0 0 20px rgba(255, 107, 107, 0.4)', // 2026: Coral glow
+				'glow-cyan': '0 0 20px rgba(0, 212, 255, 0.4)',         // 2026: Cyan glow
   			card: '0 4px 12px rgba(0, 0, 0, 0.20)',
   			'card-hover': '0 10px 30px rgba(0, 0, 0, 0.28)'
   		},
@@ -176,8 +177,8 @@ export default {
   		},
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-  			'gradient-stratum': 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-  			'gradient-stratum-soft': 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)'
+  			'gradient-stratum': 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)', // 2026: Holographic
+  			'gradient-stratum-soft': 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 212, 255, 0.05) 100%)'
   		},
   		keyframes: {
   			'accordion-down': {

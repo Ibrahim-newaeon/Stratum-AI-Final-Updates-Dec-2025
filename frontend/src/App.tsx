@@ -135,6 +135,14 @@ const TermsPage = lazy(() => import('./views/pages/legal/Terms'))
 const SecurityPage = lazy(() => import('./views/pages/legal/Security'))
 const DPAPage = lazy(() => import('./views/pages/legal/DPA'))
 
+// Public pages (Resources)
+const DocsPage = lazy(() => import('./views/pages/resources/Docs'))
+const ChangelogPage = lazy(() => import('./views/pages/resources/Changelog'))
+const CaseStudiesPage = lazy(() => import('./views/pages/resources/CaseStudies'))
+const ResourcesPage = lazy(() => import('./views/pages/resources/Resources'))
+const StatusPage = lazy(() => import('./views/pages/resources/Status'))
+const ComparisonPage = lazy(() => import('./views/pages/resources/Comparison'))
+
 function App() {
   return (
     <ThemeProvider>
@@ -387,6 +395,56 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <DPAPage />
+                  </Suspense>
+                }
+              />
+
+              {/* Resources pages (public) */}
+              <Route
+                path="/docs"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <DocsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/changelog"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ChangelogPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/case-studies"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <CaseStudiesPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/resources"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ResourcesPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/status"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <StatusPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/compare"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ComparisonPage />
                   </Suspense>
                 }
               />

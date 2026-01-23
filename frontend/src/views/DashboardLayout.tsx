@@ -138,12 +138,12 @@ export default function DashboardLayout() {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* 2026 Sidebar */}
       <aside
         data-tour="sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 border-r border-white/10 transition-all duration-300 ease-in-out',
-          'bg-[#0a0a0a]',
+          'fixed inset-y-0 left-0 z-50 w-64 border-r border-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          'bg-[#020204]',  // 2026 OLED-optimized surface
           // Mobile: slide in/out
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
           // Desktop: collapse/expand
@@ -386,11 +386,14 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Sidebar Toggle Button - Desktop only */}
+      {/* 2026 Sidebar Toggle Button - Desktop only */}
       <button
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         className={cn(
-          'hidden lg:flex fixed top-1/2 -translate-y-1/2 z-50 h-8 w-8 items-center justify-center rounded-full bg-[#1a1a1a] border border-white/10 text-muted-foreground hover:text-white hover:bg-[#2a2a2a] transition-all duration-300 shadow-lg',
+          'hidden lg:flex fixed top-1/2 -translate-y-1/2 z-50 h-8 w-8 items-center justify-center rounded-full',
+          'bg-[#1A1A26] border border-white/[0.08] text-muted-foreground',  // 2026 elevated surface
+          'hover:text-white hover:bg-[#252532] hover:border-[rgba(139,92,246,0.2)]',  // 2026 hover glow hint
+          'transition-all duration-200 shadow-lg',
           sidebarCollapsed ? 'left-2' : 'left-[252px]'
         )}
         title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -407,8 +410,8 @@ export default function DashboardLayout() {
         "flex flex-1 flex-col overflow-hidden transition-all duration-300",
         sidebarCollapsed ? "lg:ml-0" : "lg:ml-64"
       )}>
-        {/* Top header */}
-        <header className="flex h-16 items-center justify-between border-b border-white/10 glass-strong px-4 lg:px-6">
+        {/* 2026 Top header */}
+        <header className="flex h-16 items-center justify-between border-b border-white/[0.06] glass-elevated px-4 lg:px-6">
           <button
             className="lg:hidden p-2 rounded-md hover:bg-accent"
             onClick={() => setSidebarOpen(true)}
