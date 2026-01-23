@@ -64,6 +64,7 @@ const SuperAdminAudit = lazy(() => import('./views/superadmin/Audit'))
 const SuperAdminBilling = lazy(() => import('./views/superadmin/Billing'))
 const SuperAdminSystem = lazy(() => import('./views/superadmin/System'))
 const SuperAdminCMS = lazy(() => import('./views/superadmin/CMS'))
+const SuperAdminUsers = lazy(() => import('./views/superadmin/Users'))
 
 // Tenant-scoped views (Campaign Builder)
 const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'))
@@ -806,6 +807,16 @@ function App() {
                     <ProtectedRoute requiredRole="superadmin">
                       <Suspense fallback={<LoadingSpinner />}>
                         <SuperAdminCMS />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="superadmin/users"
+                  element={
+                    <ProtectedRoute requiredRole="superadmin">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <SuperAdminUsers />
                       </Suspense>
                     </ProtectedRoute>
                   }

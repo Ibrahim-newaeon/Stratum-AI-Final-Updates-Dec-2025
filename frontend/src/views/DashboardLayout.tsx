@@ -305,6 +305,18 @@ export default function DashboardLayout() {
                       <DocumentTextIcon className="h-4 w-4" />
                       CMS
                     </NavLink>
+                    <NavLink
+                      to="/dashboard/superadmin/users"
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200',
+                        location.pathname === '/dashboard/superadmin/users'
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      )}
+                    >
+                      <UserGroupIcon className="h-4 w-4" />
+                      Users
+                    </NavLink>
                   </div>
                 )}
               </div>
