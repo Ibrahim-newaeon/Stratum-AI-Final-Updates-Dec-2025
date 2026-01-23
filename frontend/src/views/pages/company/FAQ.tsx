@@ -7,8 +7,6 @@ import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   QuestionMarkCircleIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
   MagnifyingGlassIcon,
   CurrencyDollarIcon,
   CogIcon,
@@ -17,7 +15,6 @@ import {
   UserGroupIcon,
   BoltIcon,
 } from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
 
 interface FAQItem {
   id: string;
@@ -156,7 +153,6 @@ const faqs: FAQItem[] = [
 export default function FAQ() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
@@ -169,11 +165,6 @@ export default function FAQ() {
   const getCategoryIcon = (categoryId: string) => {
     const category = categories.find((c) => c.id === categoryId);
     return category?.icon || QuestionMarkCircleIcon;
-  };
-
-  const getCategoryColor = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.color || 'text-white';
   };
 
   return (
@@ -243,18 +234,30 @@ export default function FAQ() {
             {categories.map((category) => {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;
+              const colorMap: Record<string, string> = {
+                'text-green-400': '#22c55e',
+                'text-purple-400': '#a855f7',
+                'text-cyan-400': '#06b6d4',
+                'text-orange-400': '#f97316',
+                'text-blue-400': '#3b82f6',
+                'text-pink-400': '#ec4899',
+                'text-white': '#ffffff',
+              };
+              const accentColor = colorMap[category.color] || '#a855f7';
+
               return (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={cn(
-                    'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all',
-                    isSelected
-                      ? 'bg-white/10 text-white border border-white/20'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
-                  )}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    isSelected ? 'text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                  style={{
+                    background: isSelected ? `${accentColor}20` : 'rgba(255, 255, 255, 0.04)',
+                    border: `1px solid ${isSelected ? `${accentColor}40` : 'rgba(255, 255, 255, 0.08)'}`,
+                  }}
                 >
-                  <Icon className={cn('w-4 h-4', isSelected ? category.color : '')} />
+                  <Icon className="w-4 h-4" style={{ color: isSelected ? accentColor : undefined }} />
                   {category.name}
                 </button>
               );
@@ -263,83 +266,77 @@ export default function FAQ() {
         </div>
       </section>
 
-      {/* FAQ Battle Cards */}
+      {/* FAQ Cards Grid - Battle Card Style */}
       <section className="py-12 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="space-y-4">
-            {filteredFaqs.length === 0 ? (
-              <div className="text-center py-12">
-                <QuestionMarkCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                <p className="text-white/60">No questions found matching your search.</p>
-              </div>
-            ) : (
-              filteredFaqs.map((faq) => {
+        <div className="max-w-7xl mx-auto">
+          {filteredFaqs.length === 0 ? (
+            <div className="text-center py-12">
+              <QuestionMarkCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <p className="text-white/60">No questions found matching your search.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredFaqs.map((faq) => {
                 const Icon = getCategoryIcon(faq.category);
-                const isExpanded = expandedId === faq.id;
+                const categoryData = categories.find((c) => c.id === faq.category);
+                const colorMap: Record<string, string> = {
+                  'text-green-400': '#22c55e',
+                  'text-purple-400': '#a855f7',
+                  'text-cyan-400': '#06b6d4',
+                  'text-orange-400': '#f97316',
+                  'text-blue-400': '#3b82f6',
+                  'text-pink-400': '#ec4899',
+                  'text-white': '#ffffff',
+                };
+                const accentColor = colorMap[categoryData?.color || 'text-purple-400'] || '#a855f7';
 
                 return (
                   <div
                     key={faq.id}
-                    className={cn(
-                      'rounded-2xl transition-all cursor-pointer overflow-hidden',
-                      isExpanded
-                        ? 'bg-white/[0.08] border border-white/20 shadow-lg'
-                        : 'bg-white/[0.04] border border-white/10 hover:bg-white/[0.06] hover:border-white/15'
-                    )}
-                    onClick={() => setExpandedId(isExpanded ? null : faq.id)}
+                    className="group p-6 rounded-2xl transition-all duration-300 hover:scale-[1.02]"
+                    style={{
+                      background: `linear-gradient(135deg, ${accentColor}08 0%, transparent 100%)`,
+                      border: `1px solid ${accentColor}20`,
+                    }}
                   >
-                    {/* Card Header */}
-                    <div className="p-6 flex items-start gap-4">
-                      <div
-                        className={cn(
-                          'flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center',
-                          isExpanded ? 'bg-purple-500/20' : 'bg-white/10'
-                        )}
-                      >
-                        <Icon className={cn('w-5 h-5', getCategoryColor(faq.category))} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4">
-                          <h3 className="text-lg font-semibold text-white pr-4">{faq.question}</h3>
-                          <div
-                            className={cn(
-                              'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors',
-                              isExpanded ? 'bg-purple-500/20' : 'bg-white/10'
-                            )}
-                          >
-                            {isExpanded ? (
-                              <ChevronUpIcon className="w-4 h-4 text-purple-400" />
-                            ) : (
-                              <ChevronDownIcon className="w-4 h-4 text-white/60" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span
-                            className={cn(
-                              'text-xs px-2 py-0.5 rounded-full',
-                              'bg-white/10 text-white/60'
-                            )}
-                          >
-                            {categories.find((c) => c.id === faq.category)?.name}
-                          </span>
-                        </div>
-                      </div>
+                    {/* Icon */}
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
+                      style={{
+                        background: `${accentColor}15`,
+                        border: `1px solid ${accentColor}30`,
+                      }}
+                    >
+                      <Icon className="w-6 h-6" style={{ color: accentColor }} />
                     </div>
 
-                    {/* Expanded Answer */}
-                    {isExpanded && (
-                      <div className="px-6 pb-6 pt-0">
-                        <div className="ml-14 pl-4 border-l-2 border-purple-500/30">
-                          <p className="text-white/70 leading-relaxed">{faq.answer}</p>
-                        </div>
-                      </div>
-                    )}
+                    {/* Category Tag */}
+                    <div className="mb-3">
+                      <span
+                        className="text-xs font-medium px-2 py-1 rounded-full"
+                        style={{
+                          background: `${accentColor}15`,
+                          color: accentColor,
+                        }}
+                      >
+                        {categoryData?.name}
+                      </span>
+                    </div>
+
+                    {/* Question */}
+                    <h3 className="text-lg font-semibold text-white mb-3 leading-snug">
+                      {faq.question}
+                    </h3>
+
+                    {/* Answer */}
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                      {faq.answer}
+                    </p>
                   </div>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
         </div>
       </section>
 
