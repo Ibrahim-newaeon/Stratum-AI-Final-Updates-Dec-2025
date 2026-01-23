@@ -34,6 +34,8 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sentry/react": "^10.36.0",
     "@tanstack/react-query": "^5.90.19",
+    "@tiptap/extension-bubble-menu": "^3.16.0",
+    "@tiptap/extension-floating-menu": "^3.16.0",
     "@tiptap/extension-image": "^3.16.0",
     "@tiptap/extension-link": "^3.16.0",
     "@tiptap/extension-placeholder": "^3.16.0",

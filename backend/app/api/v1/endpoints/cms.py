@@ -110,7 +110,7 @@ def count_words(content: Optional[str]) -> Optional[int]:
 
 async def check_superadmin(request: Request) -> bool:
     """Check if the current user is a superadmin."""
-    user_role = getattr(request.state, "user_role", None)
+    user_role = getattr(request.state, "role", None)
     return user_role == "superadmin"
 
 
