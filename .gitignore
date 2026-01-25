@@ -10,10 +10,11 @@ dist/
 build/
 *.egg-info/
 
-# Environment files (keep .env.example)
+# Environment files (keep .env.example and .env.production.example)
 .env
 .env.local
 .env.*.local
+.env.production
 
 # IDE
 .idea/
@@ -53,3 +54,15 @@ sample_training_data.csv
 CLAUDE.local.md
 .claude/state/
 tmpclaude-*
+
+# SSL certificates (server-side only)
+/etc/letsencrypt/
+
+# Backup files
+*.bak
+backup_*/
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule.db
+celerybeat.pid
