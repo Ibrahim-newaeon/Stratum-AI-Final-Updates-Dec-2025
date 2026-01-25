@@ -17,7 +17,7 @@ import {
   BuildingOfficeIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline'
-import { useRegister } from '@/api/auth'
+import { useSignup } from '@/api/auth'
 import { SEO, pageSEO } from '@/components/common/SEO'
 
 // Apple Style Theme
@@ -53,7 +53,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const registerMutation = useRegister()
+  const registerMutation = useSignup()
   const isLoading = registerMutation.isPending
   const apiError = registerMutation.error?.message
 
