@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -11,7 +11,13 @@
     <meta name="description" content="AI-powered marketing intelligence with Trust-Gated Autopilot. Real-time attribution, signal health monitoring, and automated optimization across Meta, Google, TikTok, and Snapchat." />
     <meta name="keywords" content="marketing intelligence, CDP, customer data platform, ad optimization, ROAS, attribution, Meta ads, Google ads, TikTok ads, trust engine" />
     <meta name="author" content="Stratum AI" />
-    <meta name="theme-color" content="#8B5CF6" />
+
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#0a0a0f" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0a0a0f" media="(prefers-color-scheme: light)" />
+    <meta name="msapplication-navbutton-color" content="#0a0a0f" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -28,16 +34,233 @@
     <meta name="twitter:description" content="AI-powered marketing intelligence with Trust-Gated Autopilot." />
     <meta name="twitter:image" content="https://stratum-ai.com/og-image.png" />
 
-    <!-- Google Fonts - Inter for English, Cairo for Arabic -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Preload critical resources -->
-    <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2" crossorigin>
+    <style>
+      /* ============================================
+         STRATUM AI - HOLOGLASS THEME SYSTEM
+         Dark Glass + Gold + Cyan
+      ============================================ */
+
+      :root {
+        /* Shared Design Tokens */
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --radius-2xl: 24px;
+        --radius-full: 9999px;
+
+        /* Transitions */
+        --transition-fast: 150ms ease;
+        --transition-base: 200ms ease;
+        --transition-slow: 300ms ease;
+
+        /* Shadows */
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+        /* HoloGlass Theme Colors */
+        --gold: #D4AF37;
+        --gold-bright: #F4D03F;
+        --gold-muted: #B8860B;
+        --cyan: #14F0C6;
+        --cyan-hover: #00CED1;
+        --cyan-deep: #0891B2;
+      }
+
+      /* ============================================
+         DARK THEME (Default) - HoloGlass
+      ============================================ */
+      .dark {
+        --bg-base: #0a0a0f;
+        --bg-elevated: #12121a;
+        --bg-surface: #1a1a24;
+        --bg-card: rgba(255, 255, 255, 0.03);
+        --bg-hover: rgba(255, 255, 255, 0.05);
+        --bg-active: rgba(212, 175, 55, 0.15);
+
+        --border-subtle: rgba(255, 255, 255, 0.06);
+        --border-default: rgba(255, 255, 255, 0.08);
+        --border-emphasis: rgba(212, 175, 55, 0.2);
+        --border-gold: rgba(212, 175, 55, 0.1);
+
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --text-muted: rgba(255, 255, 255, 0.5);
+        --text-faint: rgba(255, 255, 255, 0.3);
+
+        --accent-primary: #D4AF37;
+        --accent-secondary: #14F0C6;
+        --accent-gradient: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+
+        --status-success: #22C55E;
+        --status-warning: #F59E0B;
+        --status-error: #EF4444;
+        --status-info: #14F0C6;
+
+        --glow-gold: rgba(212, 175, 55, 0.3);
+        --glow-cyan: rgba(20, 240, 198, 0.2);
+
+        color-scheme: dark;
+      }
+
+      /* ============================================
+         LIGHT THEME - HoloGlass Light variant
+      ============================================ */
+      .light {
+        --bg-base: #0a0a0f;
+        --bg-elevated: #12121a;
+        --bg-surface: #1a1a24;
+        --bg-card: rgba(255, 255, 255, 0.03);
+        --bg-hover: rgba(255, 255, 255, 0.05);
+        --bg-active: rgba(212, 175, 55, 0.15);
+
+        --border-subtle: rgba(255, 255, 255, 0.06);
+        --border-default: rgba(255, 255, 255, 0.08);
+        --border-emphasis: rgba(212, 175, 55, 0.2);
+        --border-gold: rgba(212, 175, 55, 0.1);
+
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --text-muted: rgba(255, 255, 255, 0.5);
+        --text-faint: rgba(255, 255, 255, 0.3);
+
+        --accent-primary: #D4AF37;
+        --accent-secondary: #14F0C6;
+        --accent-gradient: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+
+        --status-success: #22C55E;
+        --status-warning: #F59E0B;
+        --status-error: #EF4444;
+        --status-info: #14F0C6;
+
+        --glow-gold: rgba(212, 175, 55, 0.3);
+        --glow-cyan: rgba(20, 240, 198, 0.2);
+
+        color-scheme: dark;
+      }
+
+      /* ============================================
+         BASE STYLES
+      ============================================ */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        background-color: var(--bg-base);
+        transition: background-color var(--transition-slow);
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        transition: background-color var(--transition-slow), color var(--transition-slow);
+      }
+
+      /* ============================================
+         LOADING STATE
+      ============================================ */
+      #root:empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: radial-gradient(ellipse at 0% 0%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+                    radial-gradient(ellipse at 100% 100%, rgba(20, 240, 198, 0.02) 0%, transparent 50%),
+                    var(--bg-base);
+      }
+
+      #root:empty::after {
+        content: '';
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border-emphasis);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* ============================================
+         SELECTION & SCROLLBAR
+      ============================================ */
+      ::selection {
+        background: var(--gold);
+        color: black;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(212, 175, 55, 0.3);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(212, 175, 55, 0.5);
+      }
+
+      /* ============================================
+         UTILITY CLASSES
+      ============================================ */
+      .glass-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-gold);
+        border-radius: var(--radius-lg);
+        backdrop-filter: blur(40px);
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+      }
+
+      .accent-glow {
+        box-shadow: 0 0 20px var(--glow-gold);
+      }
+
+      .gold-gradient {
+        background: var(--accent-gradient);
+      }
+
+      .gold-text {
+        color: var(--gold);
+      }
+
+      .cyan-text {
+        color: var(--cyan);
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Initialize theme - HoloGlass is always dark
+      (function() {
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('stratum-theme', 'dark');
+      })();
+    </script>
   </body>
 </html>

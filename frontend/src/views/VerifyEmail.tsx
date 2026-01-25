@@ -1,193 +1,256 @@
-import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+/**
+ * Verify Email Page - APPLE STYLE LIGHT EDITION
+ * Clean white + blue accent + professional
+ */
+
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   EnvelopeIcon,
-} from '@heroicons/react/24/outline';
-import { useVerifyEmail, useResendVerification } from '@/api/auth';
+} from '@heroicons/react/24/outline'
+import { useVerifyEmail, useResendVerification } from '@/api/auth'
+
+// Apple Style Theme
+const theme = {
+  blue: '#007AFF',
+  blueHover: '#0056CC',
+  blueLight: '#E8F4FF',
+  bgBase: '#FFFFFF',
+  bgElevated: '#F5F5F7',
+  bgSurface: '#FFFFFF',
+  textPrimary: '#1D1D1F',
+  textSecondary: '#424245',
+  textMuted: '#86868B',
+  border: 'rgba(0, 0, 0, 0.08)',
+  success: '#34C759',
+  danger: '#FF3B30',
+}
 
 export default function VerifyEmail() {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
-  const emailParam = searchParams.get('email');
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token')
+  const emailParam = searchParams.get('email')
 
-  const [resendEmail, setResendEmail] = useState(emailParam || '');
-  const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendEmail, setResendEmail] = useState(emailParam || '')
+  const [resendSuccess, setResendSuccess] = useState(false)
 
-  const verifyMutation = useVerifyEmail();
-  const resendMutation = useResendVerification();
+  const verifyMutation = useVerifyEmail()
+  const resendMutation = useResendVerification()
 
-  const isLoading = verifyMutation.isPending;
-  const isSuccess = verifyMutation.isSuccess;
-  const error = verifyMutation.error?.message ||
-    (verifyMutation.isError ? 'Verification failed' : '');
+  const isLoading = verifyMutation.isPending
+  const isSuccess = verifyMutation.isSuccess
+  const error = verifyMutation.error?.message || (verifyMutation.isError ? 'Verification failed' : '')
 
   const handleResend = () => {
-    if (!resendEmail) return;
-
+    if (!resendEmail) return
     resendMutation.mutate(
       { email: resendEmail },
-      {
-        onSuccess: () => {
-          setResendSuccess(true);
-        },
-      }
-    );
-  };
+      { onSuccess: () => setResendSuccess(true) }
+    )
+  }
 
   useEffect(() => {
     if (token && !verifyMutation.isPending && !verifyMutation.isSuccess && !verifyMutation.isError) {
-      verifyMutation.mutate({ token });
+      verifyMutation.mutate({ token })
     }
-  }, [token]);
+  }, [token])
 
-  // No token provided
+  // No token
   if (!token) {
     return (
-      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
         <div className="max-w-md w-full text-center">
-          <div className="motion-enter">
-            <div className="w-20 h-20 rounded-full bg-danger/10 flex items-center justify-center mx-auto mb-6">
-              <ExclamationTriangleIcon className="w-10 h-10 text-danger" />
+          <div
+            className="p-8 rounded-2xl"
+            style={{
+              background: theme.bgSurface,
+              border: `1px solid ${theme.border}`,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+            }}
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+              style={{ background: '#FEF2F2' }}
+            >
+              <ExclamationTriangleIcon className="w-8 h-8" style={{ color: theme.danger }} />
             </div>
-            <h1 className="text-h1 text-white mb-4">Invalid verification link</h1>
-            <p className="text-body text-text-secondary mb-8">
-              The verification link is missing or invalid. Please check your email for the correct link.
+            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>Invalid verification link</h1>
+            <p className="mb-6" style={{ color: theme.textMuted }}>
+              The verification link is missing or invalid.
             </p>
             <Link
               to="/login"
-              className="inline-block w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body text-center
-                         hover:shadow-glow transition-all duration-base"
+              className="block w-full py-3 rounded-xl text-white font-semibold text-center transition-all duration-200"
+              style={{ background: theme.blue }}
             >
               Back to login
             </Link>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
+  // Loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
         <div className="max-w-md w-full text-center">
-          <div className="motion-enter">
-            {/* Logo */}
-            <div className="flex items-center justify-center gap-2 mb-12">
-              <div className="w-10 h-10 rounded-lg bg-gradient-stratum flex items-center justify-center">
-                <span className="text-white font-bold text-h3">S</span>
+          <div
+            className="p-8 rounded-2xl"
+            style={{
+              background: theme.bgSurface,
+              border: `1px solid ${theme.border}`,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+            }}
+          >
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <div
+                className="h-10 w-10 rounded-xl flex items-center justify-center"
+                style={{ background: theme.blue }}
+              >
+                <span className="text-white font-semibold text-lg">S</span>
               </div>
-              <span className="text-h2 text-white font-semibold">Stratum AI</span>
+              <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>Stratum AI</span>
             </div>
-
-            {/* Loading spinner */}
-            <div className="w-16 h-16 rounded-full border-4 border-stratum-500/20 border-t-stratum-500 animate-spin mx-auto mb-6" />
-
-            <h1 className="text-h2 text-white mb-2">Verifying your email</h1>
-            <p className="text-body text-text-secondary">
-              Please wait while we verify your email address...
-            </p>
+            <div
+              className="w-12 h-12 rounded-full mx-auto mb-6 animate-spin"
+              style={{
+                border: `3px solid ${theme.blueLight}`,
+                borderTopColor: theme.blue,
+              }}
+            />
+            <h1 className="text-xl font-semibold mb-2" style={{ color: theme.textPrimary }}>Verifying your email</h1>
+            <p style={{ color: theme.textMuted }}>Please wait...</p>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
+  // Success
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
         <div className="max-w-md w-full text-center">
-          <div className="motion-enter">
-            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-              <CheckCircleIcon className="w-10 h-10 text-success" />
+          <div
+            className="p-8 rounded-2xl"
+            style={{
+              background: theme.bgSurface,
+              border: `1px solid ${theme.border}`,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+            }}
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+              style={{ background: `${theme.success}15` }}
+            >
+              <CheckCircleIcon className="w-8 h-8" style={{ color: theme.success }} />
             </div>
-            <h1 className="text-h1 text-white mb-4">Email verified!</h1>
-            <p className="text-body text-text-secondary mb-8">
-              Your email has been successfully verified. You can now sign in to your account.
+            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>Email verified!</h1>
+            <p className="mb-6" style={{ color: theme.textMuted }}>
+              Your email has been verified. You can now sign in.
             </p>
             <Link
               to="/login"
-              className="inline-block w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body text-center
-                         hover:shadow-glow transition-all duration-base"
+              className="block w-full py-3 rounded-xl text-white font-semibold text-center transition-all duration-200"
+              style={{ background: theme.blue }}
+              onMouseEnter={(e) => e.currentTarget.style.background = theme.blueHover}
+              onMouseLeave={(e) => e.currentTarget.style.background = theme.blue}
             >
               Sign in to your account
             </Link>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
-  // Error state
+  // Error
   return (
-    <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
       <div className="max-w-md w-full text-center">
-        <div className="motion-enter">
-          <div className="w-20 h-20 rounded-full bg-danger/10 flex items-center justify-center mx-auto mb-6">
-            <ExclamationTriangleIcon className="w-10 h-10 text-danger" />
+        <div
+          className="p-8 rounded-2xl"
+          style={{
+            background: theme.bgSurface,
+            border: `1px solid ${theme.border}`,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+          }}
+        >
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+            style={{ background: '#FEF2F2' }}
+          >
+            <ExclamationTriangleIcon className="w-8 h-8" style={{ color: theme.danger }} />
           </div>
-          <h1 className="text-h1 text-white mb-4">Verification failed</h1>
-          <p className="text-body text-text-secondary mb-6">
+          <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>Verification failed</h1>
+          <p className="mb-6" style={{ color: theme.textMuted }}>
             {error || 'The verification link is invalid or has expired.'}
           </p>
 
-          {/* Resend form */}
           {!resendSuccess ? (
-            <div className="space-y-4 mb-6">
-              <p className="text-meta text-text-muted">
-                Enter your email to receive a new verification link:
-              </p>
+            <div className="space-y-4">
+              <p className="text-sm" style={{ color: theme.textMuted }}>Enter your email to get a new link:</p>
               <div className="relative">
-                <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
                 <input
                   type="email"
                   value={resendEmail}
                   onChange={(e) => setResendEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-secondary border border-white/10
-                             text-white placeholder-text-muted text-body
-                             focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
-                             transition-all duration-base outline-none"
+                  placeholder="name@company.com"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl outline-none transition-all duration-200"
+                  style={{
+                    background: theme.bgElevated,
+                    border: `1px solid ${theme.border}`,
+                    color: theme.textPrimary,
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = theme.blue
+                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = theme.border
+                    e.target.style.boxShadow = 'none'
+                  }}
                 />
               </div>
               <button
                 onClick={handleResend}
                 disabled={!resendEmail || resendMutation.isPending}
-                className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
-                           hover:shadow-glow transition-all duration-base
-                           disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 rounded-xl text-white font-semibold disabled:opacity-50 transition-all duration-200"
+                style={{ background: theme.blue }}
+                onMouseEnter={(e) => {
+                  if (!resendMutation.isPending) e.currentTarget.style.background = theme.blueHover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = theme.blue
+                }}
               >
-                {resendMutation.isPending ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Sending...
-                  </span>
-                ) : (
-                  'Resend verification email'
-                )}
+                {resendMutation.isPending ? 'Sending...' : 'Resend verification email'}
               </button>
             </div>
           ) : (
-            <div className="mb-6 p-4 rounded-xl bg-success/10 border border-success/20">
-              <CheckCircleIcon className="w-6 h-6 text-success mx-auto mb-2" />
-              <p className="text-body text-success">
-                Verification email sent! Check your inbox.
-              </p>
+            <div
+              className="p-4 rounded-xl"
+              style={{ background: `${theme.success}15` }}
+            >
+              <CheckCircleIcon className="w-6 h-6 mx-auto mb-2" style={{ color: theme.success }} />
+              <p style={{ color: theme.success }}>Verification email sent!</p>
             </div>
           )}
 
           <Link
             to="/login"
-            className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors"
+            className="inline-block mt-6 text-sm font-medium transition-colors hover:underline"
+            style={{ color: theme.blue }}
           >
             Back to login
           </Link>
         </div>
       </div>
     </div>
-  );
+  )
 }

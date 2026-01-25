@@ -1,8 +1,13 @@
-import { useState } from 'react'
+/**
+ * Dashboard Layout - APPLE STYLE LIGHT EDITION
+ * Clean white + blue accent + professional
+ */
+
+import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fadeInUp, staggerContainer, listItem, dropdownVariants, transitions } from '@/lib/animations'
+import { dropdownVariants } from '@/lib/animations'
 import {
   HomeIcon,
   ChartBarIcon,
@@ -13,7 +18,6 @@ import {
   TrophyIcon,
   Bars3Icon,
   XMarkIcon,
-  BellIcon,
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
   Squares2X2Icon,
@@ -43,9 +47,7 @@ import {
   GiftIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
-import { BackgroundEffects } from '@/components/ui/background-effects'
 import LearningHub from '@/components/guide/LearningHub'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { CommandPalette } from '@/components/ui/command-palette'
 import { DemoBanner } from '@/components/demo/DemoBanner'
 import { NotificationCenter, NotificationBell } from '@/components/notifications/NotificationCenter'
@@ -53,6 +55,22 @@ import { WhatsNewModal, useWhatsNew } from '@/components/changelog/WhatsNew'
 import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { useAuth } from '@/contexts/AuthContext'
+
+// Apple Style Theme - Light Mode
+const theme = {
+  blue: '#007AFF',
+  blueHover: '#0056CC',
+  blueLight: '#E8F4FF',
+  bgBase: '#FFFFFF',
+  bgElevated: '#F5F5F7',
+  bgSurface: '#FFFFFF',
+  textPrimary: '#1D1D1F',
+  textSecondary: '#424245',
+  textMuted: '#86868B',
+  border: 'rgba(0, 0, 0, 0.08)',
+  success: '#34C759',
+  danger: '#FF3B30',
+}
 
 const navigation = [
   { name: 'nav.overview', href: '/dashboard/overview', icon: HomeIcon, tourId: 'nav-overview', dataTour: 'overview' },
@@ -67,7 +85,6 @@ const navigation = [
   { name: 'nav.whatsapp', href: '/dashboard/whatsapp', icon: ChatBubbleLeftRightIcon, tourId: 'nav-whatsapp' },
 ]
 
-// CDP Navigation with sub-items
 const cdpNavigation = [
   { name: 'CDP Overview', href: '/dashboard/cdp', icon: CircleStackIcon },
   { name: 'Profiles', href: '/dashboard/cdp/profiles', icon: UserGroupIcon },
@@ -98,10 +115,16 @@ export default function DashboardLayout() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const { hasNewUpdates } = useWhatsNew()
 
+  // Set light theme
+  useEffect(() => {
+    document.documentElement.classList.remove('dark')
+    document.documentElement.classList.add('light')
+    localStorage.setItem('stratum-theme', 'light')
+  }, [])
+
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'ar' : 'en'
     i18n.changeLanguage(newLang)
-    // Update document direction for RTL support
     document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr'
   }
 
@@ -117,451 +140,467 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      {/* Demo mode banner */}
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: theme.bgElevated }}>
       <DemoBanner variant="top" />
 
-      {/* 2026 Dark Theme Background Effects */}
-      <BackgroundEffects showOrbs={true} />
-
-      <div className="flex flex-1 overflow-hidden">
-      {/* Mobile sidebar overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* 2026 Sidebar */}
-      <aside
-        data-tour="sidebar"
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 border-r border-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
-          'bg-[#020204]',  // 2026 OLED-optimized surface
-          // Mobile: slide in/out
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-          // Desktop: collapse/expand
-          'lg:translate-x-0',
-          sidebarCollapsed ? 'lg:w-0 lg:border-r-0 lg:overflow-hidden' : 'lg:w-64'
-        )}
-      >
-        <div className={cn(
-          "flex h-full flex-col w-64 transition-opacity duration-200",
-          sidebarCollapsed ? "lg:opacity-0" : "lg:opacity-100"
-        )}>
-          {/* Logo */}
-          <div className="flex h-16 items-center justify-between px-4 border-b">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-stratum flex items-center justify-center shadow-glow-sm">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-xl font-bold bg-gradient-stratum bg-clip-text text-transparent">Stratum AI</span>
-            </div>
-            <button
-              className="lg:hidden p-2 rounded-md hover:bg-accent"
+      <div className="flex flex-1 overflow-hidden relative z-10">
+        {/* Mobile sidebar overlay */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 lg:hidden"
+              style={{ background: 'rgba(0, 0, 0, 0.3)' }}
               onClick={() => setSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Sidebar */}
+        <aside
+          data-tour="sidebar"
+          className={cn(
+            'fixed inset-y-0 left-0 z-50 w-64 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+            'lg:translate-x-0',
+            sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64'
+          )}
+          style={{
+            background: theme.bgBase,
+            borderRight: `1px solid ${theme.border}`,
+          }}
+        >
+          <div className={cn(
+            "flex h-full flex-col w-64 transition-opacity duration-200",
+            sidebarCollapsed ? "lg:opacity-0" : "lg:opacity-100"
+          )}>
+            {/* Logo */}
+            <div
+              className="flex h-16 items-center justify-between px-4"
+              style={{ borderBottom: `1px solid ${theme.border}` }}
             >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-1" id="sidebar-nav">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href
-              return (
-                <NavLink
-                  key={item.name}
-                  to={item.href}
-                  id={item.tourId}
-                  data-tour={item.dataTour}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                    isActive
-                      ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  )}
-                  onClick={() => setSidebarOpen(false)}
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-8 w-8 rounded-lg flex items-center justify-center"
+                  style={{ background: theme.blue }}
                 >
-                  <item.icon className="h-5 w-5" />
-                  {t(item.name)}
-                </NavLink>
-              )
-            })}
-
-            {/* CDP Section with Submenu */}
-            <div className="pt-2">
-              <button
-                onClick={() => setCdpExpanded(!cdpExpanded)}
-                className={cn(
-                  'w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  location.pathname.startsWith('/dashboard/cdp')
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <CircleStackIcon className="h-5 w-5" />
-                  <span>CDP</span>
+                  <span className="text-white font-bold text-sm">S</span>
                 </div>
-                <ChevronDownIcon
-                  className={cn(
-                    'h-4 w-4 transition-transform duration-200',
-                    cdpExpanded ? 'rotate-180' : ''
-                  )}
-                />
+                <span className="text-lg font-bold" style={{ color: theme.textPrimary }}>
+                  Stratum AI
+                </span>
+              </div>
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="hidden lg:flex p-1.5 rounded-md transition-colors"
+                style={{ color: theme.textMuted }}
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
               </button>
-
-              <AnimatePresence>
-                {cdpExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="ml-4 mt-1 space-y-1 border-l-2 border-muted pl-3 overflow-hidden"
-                  >
-                    {cdpNavigation.map((item, index) => {
-                      const isActive = location.pathname === item.href
-                      return (
-                        <motion.div
-                          key={item.name}
-                          initial={{ opacity: 0, x: -12 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.03, duration: 0.2 }}
-                        >
-                          <NavLink
-                            to={item.href}
-                            className={cn(
-                              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                              isActive
-                                ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                            )}
-                            onClick={() => setSidebarOpen(false)}
-                          >
-                            <item.icon className="h-4 w-4" />
-                            {item.name}
-                          </NavLink>
-                        </motion.div>
-                      )
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <button
+                className="lg:hidden p-1.5 rounded-md transition-colors"
+                style={{ color: theme.textMuted }}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
-          </nav>
 
-          {/* Admin & Settings at bottom */}
-          <div className="border-t p-4 space-y-1">
-            {/* Superadmin Section with Submenu - only for superadmins */}
-            {user?.role === 'superadmin' && (
+            {/* Navigation */}
+            <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="sidebar-nav">
+              {navigation.map((item) => {
+                const isActive = location.pathname === item.href
+                return (
+                  <NavLink
+                    key={item.name}
+                    to={item.href}
+                    id={item.tourId}
+                    data-tour={item.dataTour}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
+                    style={{
+                      background: isActive ? theme.blueLight : 'transparent',
+                      color: isActive ? theme.blue : theme.textSecondary,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = theme.bgElevated
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'transparent'
+                      }
+                    }}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <item.icon
+                      className="h-5 w-5"
+                      style={{ color: isActive ? theme.blue : theme.textMuted }}
+                    />
+                    {t(item.name)}
+                  </NavLink>
+                )
+              })}
+
+              {/* CDP Section */}
               <div className="pt-2">
                 <button
-                  onClick={() => setSuperadminExpanded(!superadminExpanded)}
-                  className={cn(
-                    'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                    location.pathname.startsWith('/dashboard/superadmin')
-                      ? 'bg-purple-500/10 text-purple-400'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                  )}
+                  onClick={() => setCdpExpanded(!cdpExpanded)}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
+                  style={{
+                    background: location.pathname.startsWith('/dashboard/cdp') ? theme.blueLight : 'transparent',
+                    color: location.pathname.startsWith('/dashboard/cdp') ? theme.blue : theme.textSecondary,
+                  }}
                 >
                   <div className="flex items-center gap-3">
-                    <ShieldCheckIcon className="h-5 w-5" />
-                    <span>Superadmin</span>
-                  </div>
-                  <ChevronDownIcon className={cn('h-4 w-4 transition-transform', superadminExpanded && 'rotate-180')} />
-                </button>
-                {superadminExpanded && (
-                  <div className="mt-1 ml-4 pl-4 border-l border-white/10 space-y-1">
-                    <NavLink
-                      to="/dashboard/superadmin"
-                      end
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200',
-                        location.pathname === '/dashboard/superadmin'
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                      )}
-                    >
-                      <ChartPieIcon className="h-4 w-4" />
-                      Dashboard
-                    </NavLink>
-                    <NavLink
-                      to="/dashboard/superadmin/cms"
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200',
-                        location.pathname === '/dashboard/superadmin/cms'
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                      )}
-                    >
-                      <DocumentTextIcon className="h-4 w-4" />
-                      CMS
-                    </NavLink>
-                    <NavLink
-                      to="/dashboard/superadmin/users"
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200',
-                        location.pathname === '/dashboard/superadmin/users'
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                      )}
-                    >
-                      <UserGroupIcon className="h-4 w-4" />
-                      Users
-                    </NavLink>
-                  </div>
-                )}
-              </div>
-            )}
-            <NavLink
-              to="/dashboard/tenants"
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/dashboard/tenants'
-                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              )}
-            >
-              <BuildingOffice2Icon className="h-5 w-5" />
-              {t('nav.tenants')}
-            </NavLink>
-            <NavLink
-              to="/dashboard/ml-training"
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/dashboard/ml-training'
-                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              )}
-            >
-              <CpuChipIcon className="h-5 w-5" />
-              {t('nav.mlTraining')}
-            </NavLink>
-            <NavLink
-              to="/dashboard/capi-setup"
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/dashboard/capi-setup'
-                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              )}
-            >
-              <SignalIcon className="h-5 w-5" />
-              {t('nav.capiSetup')}
-            </NavLink>
-            <NavLink
-              to="/dashboard/data-quality"
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/dashboard/data-quality'
-                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              )}
-            >
-              <ChartPieIcon className="h-5 w-5" />
-              {t('nav.dataQuality')}
-            </NavLink>
-            <NavLink
-              to="/dashboard/emq-dashboard"
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/dashboard/emq-dashboard'
-                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              )}
-            >
-              <CircleStackIcon className="h-5 w-5" />
-              {t('nav.emqDashboard')}
-            </NavLink>
-            <NavLink
-              to="/dashboard/settings"
-              data-tour="settings"
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                location.pathname === '/dashboard/settings'
-                  ? 'bg-gradient-stratum text-white shadow-glow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              )}
-            >
-              <CogIcon className="h-5 w-5" />
-              {t('nav.settings')}
-            </NavLink>
-          </div>
-        </div>
-      </aside>
-
-      {/* 2026 Sidebar Toggle Button - Desktop only */}
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className={cn(
-          'hidden lg:flex fixed top-1/2 -translate-y-1/2 z-50 h-8 w-8 items-center justify-center rounded-full',
-          'bg-[#1A1A26] border border-white/[0.08] text-muted-foreground',  // 2026 elevated surface
-          'hover:text-white hover:bg-[#252532] hover:border-[rgba(139,92,246,0.2)]',  // 2026 hover glow hint
-          'transition-all duration-200 shadow-lg',
-          sidebarCollapsed ? 'left-2' : 'left-[252px]'
-        )}
-        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {sidebarCollapsed ? (
-          <ChevronRightIcon className="h-4 w-4" />
-        ) : (
-          <ChevronLeftIcon className="h-4 w-4" />
-        )}
-      </button>
-
-      {/* Main content */}
-      <div className={cn(
-        "flex flex-1 flex-col overflow-hidden transition-all duration-300",
-        sidebarCollapsed ? "lg:ml-0" : "lg:ml-64"
-      )}>
-        {/* 2026 Top header */}
-        <header className="flex h-16 items-center justify-between border-b border-white/[0.06] glass-elevated px-4 lg:px-6">
-          <button
-            className="lg:hidden p-2 rounded-md hover:bg-accent"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Bars3Icon className="h-6 w-6" />
-          </button>
-
-          <div className="flex-1 flex items-center justify-center">
-            {/* Command Palette - Global Search */}
-            <CommandPalette />
-          </div>
-
-          {/* Header actions */}
-          <div className="flex items-center gap-3">
-            {/* Theme toggle */}
-            <ThemeToggle />
-
-            {/* Learning Hub toggle */}
-            <button
-              className="p-2 rounded-lg hover:bg-accent transition-colors"
-              onClick={() => setLearningHubOpen(!learningHubOpen)}
-              title="Learning Hub"
-            >
-              <BookOpenIcon className="h-5 w-5" />
-            </button>
-
-            {/* Language toggle */}
-            <button
-              className="px-3 py-1.5 rounded-lg border text-sm font-medium hover:bg-accent transition-colors"
-              onClick={toggleLanguage}
-            >
-              {i18n.language === 'en' ? 'AR' : 'EN'}
-            </button>
-
-            {/* What's New */}
-            <button
-              onClick={() => setWhatsNewOpen(true)}
-              className="relative p-2 rounded-lg hover:bg-accent transition-colors"
-              title="What's New"
-            >
-              <GiftIcon className="h-5 w-5" />
-              {hasNewUpdates && (
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
-              )}
-            </button>
-
-            {/* Notifications */}
-            <NotificationBell onClick={() => setNotificationsOpen(true)} unreadCount={3} />
-
-            {/* User menu */}
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors"
-              >
-                <div className="h-7 w-7 rounded-full bg-gradient-stratum flex items-center justify-center">
-                  <span className="text-white text-xs font-medium">{getUserInitials()}</span>
-                </div>
-                <div className="hidden lg:block text-left">
-                  <span className="text-sm font-medium block">{user?.name || 'User'}</span>
-                  <span className="text-xs text-muted-foreground capitalize">{user?.role || 'user'}</span>
-                </div>
-              </button>
-
-              {/* Dropdown menu */}
-              <AnimatePresence>
-                {userMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setUserMenuOpen(false)}
+                    <CircleStackIcon
+                      className="h-5 w-5"
+                      style={{
+                        color: location.pathname.startsWith('/dashboard/cdp') ? theme.blue : theme.textMuted
+                      }}
                     />
+                    <span>CDP</span>
+                  </div>
+                  <ChevronDownIcon
+                    className={cn('h-4 w-4 transition-transform duration-200', cdpExpanded && 'rotate-180')}
+                    style={{ color: theme.textMuted }}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {cdpExpanded && (
                     <motion.div
-                      variants={dropdownVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="absolute right-0 mt-2 w-48 py-2 rounded-lg border bg-card shadow-lg z-50"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="mt-1 ml-3 pl-3 space-y-0.5 overflow-hidden"
+                      style={{ borderLeft: `2px solid ${theme.blueLight}` }}
                     >
-                      <div className="px-4 py-2 border-b">
-                        <p className="text-sm font-medium">{user?.name}</p>
-                        <p className="text-xs text-muted-foreground">{user?.email}</p>
-                      </div>
-                      <NavLink
-                        to="/dashboard/settings"
-                        className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <CogIcon className="w-4 h-4" />
-                        {t('common.settings')}
-                      </NavLink>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
-                      >
-                        <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                        {t('common.logout')}
-                      </button>
+                      {cdpNavigation.map((item, index) => {
+                        const isActive = location.pathname === item.href
+                        return (
+                          <motion.div
+                            key={item.name}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.02, duration: 0.15 }}
+                          >
+                            <NavLink
+                              to={item.href}
+                              className="flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition-all duration-150"
+                              style={{
+                                background: isActive ? theme.blueLight : 'transparent',
+                                color: isActive ? theme.blue : theme.textSecondary,
+                              }}
+                              onClick={() => setSidebarOpen(false)}
+                            >
+                              <item.icon
+                                className="h-4 w-4"
+                                style={{ color: isActive ? theme.blue : theme.textMuted }}
+                              />
+                              {item.name}
+                            </NavLink>
+                          </motion.div>
+                        )
+                      })}
                     </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+                  )}
+                </AnimatePresence>
+              </div>
+            </nav>
+
+            {/* Bottom section */}
+            <div className="px-3 py-4 space-y-1" style={{ borderTop: `1px solid ${theme.border}` }}>
+              {/* Superadmin */}
+              {user?.role === 'superadmin' && (
+                <div>
+                  <button
+                    onClick={() => setSuperadminExpanded(!superadminExpanded)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
+                    style={{
+                      background: location.pathname.startsWith('/dashboard/superadmin') ? theme.blueLight : 'transparent',
+                      color: location.pathname.startsWith('/dashboard/superadmin') ? theme.blue : theme.textSecondary,
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ShieldCheckIcon className="h-5 w-5" style={{ color: theme.textMuted }} />
+                      <span>Superadmin</span>
+                    </div>
+                    <ChevronDownIcon
+                      className={cn('h-4 w-4 transition-transform', superadminExpanded && 'rotate-180')}
+                      style={{ color: theme.textMuted }}
+                    />
+                  </button>
+                  {superadminExpanded && (
+                    <div className="mt-1 ml-3 pl-3 space-y-0.5" style={{ borderLeft: `2px solid ${theme.blueLight}` }}>
+                      {[
+                        { href: '/dashboard/superadmin', icon: ChartPieIcon, name: 'Dashboard', end: true },
+                        { href: '/dashboard/superadmin/cms', icon: DocumentTextIcon, name: 'CMS' },
+                        { href: '/dashboard/superadmin/users', icon: UserGroupIcon, name: 'Users' },
+                      ].map((item) => (
+                        <NavLink
+                          key={item.href}
+                          to={item.href}
+                          end={item.end}
+                          className="flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition-all duration-150"
+                          style={{
+                            background: location.pathname === item.href ? theme.blueLight : 'transparent',
+                            color: location.pathname === item.href ? theme.blue : theme.textSecondary,
+                          }}
+                        >
+                          <item.icon className="h-4 w-4" style={{ color: theme.textMuted }} />
+                          {item.name}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Other nav items */}
+              {[
+                { href: '/dashboard/tenants', icon: BuildingOffice2Icon, name: 'nav.tenants' },
+                { href: '/dashboard/ml-training', icon: CpuChipIcon, name: 'nav.mlTraining' },
+                { href: '/dashboard/capi-setup', icon: SignalIcon, name: 'nav.capiSetup' },
+                { href: '/dashboard/data-quality', icon: ChartPieIcon, name: 'nav.dataQuality' },
+                { href: '/dashboard/emq-dashboard', icon: CircleStackIcon, name: 'nav.emqDashboard' },
+                { href: '/dashboard/settings', icon: CogIcon, name: 'nav.settings', dataTour: 'settings' },
+              ].map((item) => {
+                const isActive = location.pathname === item.href
+                return (
+                  <NavLink
+                    key={item.href}
+                    to={item.href}
+                    data-tour={item.dataTour}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
+                    style={{
+                      background: isActive ? theme.blueLight : 'transparent',
+                      color: isActive ? theme.blue : theme.textSecondary,
+                    }}
+                  >
+                    <item.icon
+                      className="h-5 w-5"
+                      style={{ color: isActive ? theme.blue : theme.textMuted }}
+                    />
+                    {t(item.name)}
+                  </NavLink>
+                )
+              })}
+            </div>
+
+            {/* User section */}
+            <div className="px-3 py-4" style={{ borderTop: `1px solid ${theme.border}` }}>
+              <div className="flex items-center gap-3 px-2">
+                <div
+                  className="h-8 w-8 rounded-full flex items-center justify-center"
+                  style={{ background: theme.blueLight }}
+                >
+                  <span className="text-xs font-medium" style={{ color: theme.blue }}>
+                    {getUserInitials()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: theme.textPrimary }}>
+                    {user?.name || 'User'}
+                  </p>
+                  <p className="text-xs truncate capitalize" style={{ color: theme.textMuted }}>
+                    {user?.role || 'user'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </header>
+        </aside>
 
-        {/* Horizontal Onboarding Bar */}
-        <OnboardingChecklist variant="horizontal" />
+        {/* Sidebar expand button */}
+        {sidebarCollapsed && (
+          <button
+            onClick={() => setSidebarCollapsed(false)}
+            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-lg transition-all duration-200"
+            style={{
+              background: theme.bgBase,
+              border: `1px solid ${theme.border}`,
+              color: theme.blue,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+            }}
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </button>
+        )}
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="h-full"
+        {/* Main content */}
+        <div className={cn(
+          "flex flex-1 flex-col overflow-hidden transition-all duration-300",
+          sidebarCollapsed ? "lg:ml-0" : "lg:ml-64"
+        )}>
+          {/* Header */}
+          <header
+            className="flex h-14 items-center justify-between px-4 lg:px-6"
+            style={{
+              background: theme.bgBase,
+              borderBottom: `1px solid ${theme.border}`,
+            }}
+          >
+            <button
+              className="lg:hidden p-2 rounded-lg transition-colors"
+              style={{ color: theme.textMuted }}
+              onClick={() => setSidebarOpen(true)}
             >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
+              <Bars3Icon className="h-5 w-5" />
+            </button>
 
-      {/* Learning Hub Sidebar */}
-      <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
+            <div className="flex-1 flex items-center justify-center">
+              <CommandPalette />
+            </div>
 
-      {/* Notification Center */}
-      <NotificationCenter isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+            {/* Header actions */}
+            <div className="flex items-center gap-2">
+              <button
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: theme.textMuted }}
+                onClick={() => setLearningHubOpen(!learningHubOpen)}
+                title="Learning Hub"
+                onMouseEnter={(e) => e.currentTarget.style.color = theme.blue}
+                onMouseLeave={(e) => e.currentTarget.style.color = theme.textMuted}
+              >
+                <BookOpenIcon className="h-5 w-5" />
+              </button>
 
-      {/* What's New Modal */}
-      <WhatsNewModal isOpen={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
+              <button
+                className="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+                style={{
+                  color: theme.textMuted,
+                  border: `1px solid ${theme.border}`,
+                }}
+                onClick={toggleLanguage}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = theme.blue
+                  e.currentTarget.style.color = theme.blue
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = theme.border
+                  e.currentTarget.style.color = theme.textMuted
+                }}
+              >
+                {i18n.language === 'en' ? 'AR' : 'EN'}
+              </button>
 
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+              <button
+                onClick={() => setWhatsNewOpen(true)}
+                className="relative p-2 rounded-lg transition-colors"
+                style={{ color: theme.textMuted }}
+                title="What's New"
+                onMouseEnter={(e) => e.currentTarget.style.color = theme.blue}
+                onMouseLeave={(e) => e.currentTarget.style.color = theme.textMuted}
+              >
+                <GiftIcon className="h-5 w-5" />
+                {hasNewUpdates && (
+                  <span
+                    className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full"
+                    style={{ background: theme.danger }}
+                  />
+                )}
+              </button>
+
+              <NotificationBell onClick={() => setNotificationsOpen(true)} unreadCount={3} />
+
+              {/* User menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 p-1.5 rounded-lg transition-colors"
+                  style={{ background: userMenuOpen ? theme.bgElevated : 'transparent' }}
+                >
+                  <div
+                    className="h-7 w-7 rounded-full flex items-center justify-center"
+                    style={{ background: theme.blueLight }}
+                  >
+                    <span className="text-xs font-medium" style={{ color: theme.blue }}>
+                      {getUserInitials()}
+                    </span>
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                      <motion.div
+                        variants={dropdownVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="absolute right-0 mt-2 w-48 py-1 rounded-lg z-50"
+                        style={{
+                          background: theme.bgBase,
+                          border: `1px solid ${theme.border}`,
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                        }}
+                      >
+                        <div className="px-3 py-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                          <p className="text-sm font-medium" style={{ color: theme.textPrimary }}>
+                            {user?.name}
+                          </p>
+                          <p className="text-xs" style={{ color: theme.textMuted }}>
+                            {user?.email}
+                          </p>
+                        </div>
+                        <NavLink
+                          to="/dashboard/settings"
+                          className="flex items-center gap-2 px-3 py-2 text-sm transition-colors"
+                          style={{ color: theme.textSecondary }}
+                          onClick={() => setUserMenuOpen(false)}
+                          onMouseEnter={(e) => e.currentTarget.style.background = theme.bgElevated}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <CogIcon className="w-4 h-4" />
+                          {t('common.settings')}
+                        </NavLink>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors"
+                          style={{ color: theme.danger }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = theme.bgElevated}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                          {t('common.logout')}
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </header>
+
+          <OnboardingChecklist variant="horizontal" />
+
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="h-full"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
+
+        <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
+        <NotificationCenter isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+        <WhatsNewModal isOpen={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
+        <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </div>
     </div>
   )
