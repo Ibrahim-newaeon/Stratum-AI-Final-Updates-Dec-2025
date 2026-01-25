@@ -2,13 +2,13 @@
 
 **Revenue Operating System with Trust-Gated Autopilot Architecture**
 
-[![Version](https://img.shields.io/badge/version-1.1.0-purple.svg)](https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025/releases/tag/v1.1.0)
+[![Version](https://img.shields.io/badge/version-1.1.0-purple.svg)](https://github.com/Ibrahim-newaeon/Javna-StratumAi/releases/tag/v1.1.0)
 [![Tests](https://img.shields.io/badge/tests-231%20passed-brightgreen.svg)](#production-validation)
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](#)
 
 ## Documentation
 
-**[View Full Documentation](https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/)**
+**[View Full Documentation](https://ibrahim-newaeon.github.io/Javna-StratumAi/)**
 
 Interactive documentation including:
 - First-time user journey flow diagrams
@@ -161,8 +161,8 @@ stratum-ai/
 
 ## Links
 
-- [Full Documentation](https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/)
-- [Release v1.0.0](https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025/releases/tag/v1.0.0)
+- [Full Documentation](https://ibrahim-newaeon.github.io/Javna-StratumAi/)
+- [Release v1.0.0](https://github.com/Ibrahim-newaeon/Javna-StratumAi/releases/tag/v1.0.0)
 - [API Reference](http://localhost:8000/docs) (when running locally)
 
 ---

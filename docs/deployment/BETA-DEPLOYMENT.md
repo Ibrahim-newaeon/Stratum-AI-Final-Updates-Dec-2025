@@ -43,7 +43,7 @@ SSH into your Droplet and run:
 ssh root@<droplet-ip>
 
 # Download and run setup
-curl -fsSL https://raw.githubusercontent.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025/main/scripts/deploy-beta.sh -o /tmp/deploy.sh
+curl -fsSL https://raw.githubusercontent.com/Ibrahim-newaeon/Javna-StratumAi/main/scripts/deploy-beta.sh -o /tmp/deploy.sh
 chmod +x /tmp/deploy.sh
 /tmp/deploy.sh setup
 ```

@@ -70,7 +70,7 @@ setup() {
         git reset --hard origin/main
     else
         log_info "Cloning repository..."
-        git clone https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025.git $APP_DIR
+        git clone https://github.com/Ibrahim-newaeon/Javna-StratumAi.git $APP_DIR
     fi
 
     cd $APP_DIR
