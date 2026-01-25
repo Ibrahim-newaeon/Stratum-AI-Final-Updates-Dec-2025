@@ -13,8 +13,8 @@
 
     <style>
         /* ========================================
-           STRATUM AI LANDING - HOLOGLASS EDITION
-           Dark Glass + Gold Precision + Cyan Interactions
+           STRATUM AI LANDING - TRUST THEME
+           Dark Premium + Blue-Cyan System + Gold CTAs
         ======================================== */
 
         *, *::before, *::after {
@@ -26,35 +26,41 @@
         :root {
             --transition: 0.3s ease;
 
-            /* HoloGlass Colors */
+            /* Primary Blue-Cyan System (Trust & Technology) */
+            --blue: #0066CC;
+            --blue-light: #3399FF;
+            --blue-deep: #004499;
+            --cyan: #00D4FF;
+            --cyan-soft: #67E8F9;
+            --cyan-deep: #0891B2;
+
+            /* Gold Accent (Success & CTAs only) */
             --gold: #D4AF37;
             --gold-bright: #F4D03F;
             --gold-muted: #B8860B;
-            --cyan: #14F0C6;
-            --cyan-hover: #00CED1;
-            --cyan-deep: #0891B2;
 
-            /* Backgrounds */
-            --bg-base: #0a0a0f;
-            --bg-elevated: #12121a;
-            --bg-surface: #1a1a24;
-            --bg-card: rgba(255, 255, 255, 0.03);
-            --bg-card-solid: #14141c;
-            --bg-hover: rgba(255, 255, 255, 0.05);
+            /* Backgrounds - Better contrast */
+            --bg-base: #030712;
+            --bg-elevated: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-card: rgba(15, 23, 42, 0.8);
+            --bg-card-solid: #0f172a;
+            --bg-hover: rgba(59, 130, 246, 0.1);
 
             /* Borders */
-            --border: rgba(255, 255, 255, 0.08);
-            --border-gold: rgba(212, 175, 55, 0.1);
-            --border-hover: rgba(212, 175, 55, 0.3);
+            --border: rgba(148, 163, 184, 0.1);
+            --border-accent: rgba(0, 212, 255, 0.2);
+            --border-hover: rgba(0, 212, 255, 0.4);
 
             /* Text */
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --text-muted: rgba(255, 255, 255, 0.5);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
 
             /* Effects */
-            --glow-gold: rgba(212, 175, 55, 0.3);
-            --glow-cyan: rgba(20, 240, 198, 0.2);
+            --glow-blue: rgba(0, 102, 204, 0.4);
+            --glow-cyan: rgba(0, 212, 255, 0.3);
+            --glow-gold: rgba(212, 175, 55, 0.4);
 
             /* Status */
             --success: #22C55E;
@@ -91,8 +97,8 @@
             left: -200px;
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.06) 0%, transparent 70%);
-            filter: blur(80px);
+            background: radial-gradient(circle, rgba(0, 102, 204, 0.08) 0%, transparent 70%);
+            filter: blur(100px);
         }
 
         .bg-effects::after {
@@ -102,8 +108,8 @@
             right: -150px;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(20, 240, 198, 0.04) 0%, transparent 70%);
-            filter: blur(80px);
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.06) 0%, transparent 70%);
+            filter: blur(100px);
         }
 
         /* ========================================
@@ -141,14 +147,14 @@
             width: 36px;
             height: 36px;
             border-radius: 10px;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-muted) 100%);
+            background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
             font-size: 1rem;
-            color: black;
-            box-shadow: 0 4px 16px var(--glow-gold);
+            color: white;
+            box-shadow: 0 4px 16px var(--glow-blue);
         }
 
         .logo-text {
@@ -225,8 +231,8 @@
         }
 
         .btn-outline:hover {
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--cyan);
+            background: rgba(0, 212, 255, 0.1);
         }
 
         .mobile-menu-btn {
@@ -264,10 +270,10 @@
             gap: 0.5rem;
             padding: 0.5rem 1rem;
             background: var(--bg-card);
-            border: 1px solid var(--border-gold);
+            border: 1px solid var(--border-accent);
             border-radius: 100px;
             font-size: 0.85rem;
-            color: var(--gold);
+            color: var(--cyan);
             margin-bottom: 2rem;
             backdrop-filter: blur(10px);
         }
@@ -294,7 +300,7 @@
         }
 
         .hero h1 .gradient-text {
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--blue-light) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -330,7 +336,7 @@
         .stat-value {
             font-size: 2.5rem;
             font-weight: 800;
-            color: var(--gold);
+            color: var(--cyan);
             line-height: 1;
         }
 
@@ -387,6 +393,7 @@
             padding: 6rem 2rem;
             position: relative;
             z-index: 1;
+            background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-elevated) 100%);
         }
 
         .features-inner {
@@ -402,11 +409,11 @@
         .section-badge {
             display: inline-flex;
             padding: 0.4rem 1rem;
-            background: rgba(212, 175, 55, 0.1);
+            background: rgba(0, 102, 204, 0.15);
             border-radius: 100px;
             font-size: 0.8rem;
             font-weight: 600;
-            color: var(--gold);
+            color: var(--blue-light);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 1rem;
@@ -435,23 +442,23 @@
         .feature-card {
             padding: 2rem;
             background: var(--bg-card);
-            border: 1px solid var(--border-gold);
+            border: 1px solid var(--border-accent);
             border-radius: 16px;
             backdrop-filter: blur(40px);
             transition: all var(--transition);
         }
 
         .feature-card:hover {
-            border-color: var(--gold);
+            border-color: var(--cyan);
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
         }
 
         .feature-icon {
             width: 48px;
             height: 48px;
             border-radius: 12px;
-            background: rgba(212, 175, 55, 0.1);
+            background: rgba(0, 102, 204, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -502,15 +509,15 @@
             width: 56px;
             height: 56px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
-            color: black;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%);
+            color: white;
             font-size: 1.5rem;
             font-weight: 800;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
-            box-shadow: 0 8px 24px var(--glow-gold);
+            box-shadow: 0 8px 24px var(--glow-blue);
         }
 
         .step-title {
@@ -531,6 +538,7 @@
             padding: 6rem 2rem;
             position: relative;
             z-index: 1;
+            background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-elevated) 100%);
         }
 
         .cdp-inner {
@@ -589,7 +597,7 @@
 
         .cdp-visual {
             background: var(--bg-card);
-            border: 1px solid var(--border-gold);
+            border: 1px solid var(--border-accent);
             border-radius: 20px;
             padding: 2rem;
             aspect-ratio: 4/3;
@@ -605,8 +613,8 @@
         }
 
         .cdp-visual-placeholder svg {
-            stroke: var(--gold);
-            opacity: 0.5;
+            stroke: var(--cyan);
+            opacity: 0.6;
         }
 
         /* ========================================
@@ -679,7 +687,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 1rem;
-            color: var(--gold);
+            color: var(--blue-light);
         }
 
         .footer-links {
@@ -783,7 +791,7 @@
             left: 1rem;
             right: 1rem;
             background: var(--bg-surface);
-            border: 1px solid var(--border-gold);
+            border: 1px solid var(--border-accent);
             border-radius: 16px;
             padding: 1rem;
             z-index: 999;
@@ -850,8 +858,8 @@
 
         /* Selection */
         ::selection {
-            background: var(--gold);
-            color: black;
+            background: var(--cyan);
+            color: var(--bg-base);
         }
 
         /* ========================================
@@ -862,6 +870,7 @@
             position: relative;
             z-index: 1;
             overflow: hidden;
+            background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-base) 100%);
         }
 
         .usp-slider-inner {
@@ -915,7 +924,7 @@
             align-items: center;
             padding: 3rem;
             background: var(--bg-card);
-            border: 1px solid var(--border-gold);
+            border: 1px solid var(--border-accent);
             border-radius: 24px;
             backdrop-filter: blur(40px);
         }
@@ -928,13 +937,13 @@
             width: 64px;
             height: 64px;
             border-radius: 16px;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+            background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 8px 32px var(--glow-gold);
+            box-shadow: 0 8px 32px var(--glow-blue);
         }
 
         .usp-card-title {
@@ -945,7 +954,7 @@
         }
 
         .usp-card-title span {
-            color: var(--gold);
+            color: var(--cyan);
         }
 
         .usp-card-description {
@@ -1006,7 +1015,7 @@
         .usp-visual-stat {
             font-size: 3rem;
             font-weight: 800;
-            color: var(--gold);
+            color: var(--cyan);
             display: block;
         }
 
@@ -1045,8 +1054,8 @@
         }
 
         .usp-dot.active {
-            background: var(--gold);
-            box-shadow: 0 0 12px var(--glow-gold);
+            background: var(--cyan);
+            box-shadow: 0 0 12px var(--glow-cyan);
             width: 32px;
             border-radius: 6px;
         }
@@ -1071,9 +1080,9 @@
         }
 
         .usp-arrow:hover {
-            background: rgba(212, 175, 55, 0.1);
-            border-color: var(--gold);
-            color: var(--gold);
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--cyan);
+            color: var(--cyan);
         }
 
         .usp-arrow svg {
@@ -1097,7 +1106,7 @@
 
         .usp-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--gold) 0%, var(--cyan) 100%);
+            background: linear-gradient(90deg, var(--blue) 0%, var(--cyan) 100%);
             width: 0%;
             transition: width 0.1s linear;
         }
