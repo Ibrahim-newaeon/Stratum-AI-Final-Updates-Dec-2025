@@ -1,6 +1,6 @@
 /**
- * Dashboard Layout - APPLE STYLE LIGHT EDITION
- * Clean white + blue accent + professional
+ * Dashboard Layout - DARK THEME EDITION
+ * Matches landing page with purple/cyan gradients
  */
 
 import { useState, useEffect } from 'react'
@@ -56,20 +56,23 @@ import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { useAuth } from '@/contexts/AuthContext'
 
-// Apple Style Theme - Light Mode
+// Dark Theme - Purple/Cyan Gradients (matches landing page)
 const theme = {
-  blue: '#007AFF',
-  blueHover: '#0056CC',
-  blueLight: '#E8F4FF',
-  bgBase: '#FFFFFF',
-  bgElevated: '#F5F5F7',
-  bgSurface: '#FFFFFF',
-  textPrimary: '#1D1D1F',
-  textSecondary: '#424245',
-  textMuted: '#86868B',
-  border: 'rgba(0, 0, 0, 0.08)',
-  success: '#34C759',
-  danger: '#FF3B30',
+  purple: '#a855f7',
+  cyan: '#06b6d4',
+  purpleLight: 'rgba(168, 85, 247, 0.15)',
+  cyanLight: 'rgba(6, 182, 212, 0.15)',
+  bgBase: '#030303',
+  bgElevated: '#0a0a0a',
+  bgSurface: '#111111',
+  textPrimary: '#ffffff',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textMuted: 'rgba(255, 255, 255, 0.5)',
+  border: 'rgba(255, 255, 255, 0.08)',
+  success: '#22c55e',
+  danger: '#ef4444',
+  // Gradient for accents
+  gradient: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
 }
 
 const navigation = [
@@ -115,11 +118,11 @@ export default function DashboardLayout() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const { hasNewUpdates } = useWhatsNew()
 
-  // Set light theme
+  // Set dark theme
   useEffect(() => {
-    document.documentElement.classList.remove('dark')
-    document.documentElement.classList.add('light')
-    localStorage.setItem('stratum-theme', 'light')
+    document.documentElement.classList.remove('light')
+    document.documentElement.classList.add('dark')
+    localStorage.setItem('stratum-theme', 'dark')
   }, [])
 
   const toggleLanguage = () => {
@@ -185,11 +188,18 @@ export default function DashboardLayout() {
               <div className="flex items-center gap-3">
                 <div
                   className="h-8 w-8 rounded-lg flex items-center justify-center"
-                  style={{ background: theme.blue }}
+                  style={{ background: theme.gradient }}
                 >
                   <span className="text-white font-bold text-sm">S</span>
                 </div>
-                <span className="text-lg font-bold" style={{ color: theme.textPrimary }}>
+                <span
+                  className="text-lg font-bold"
+                  style={{
+                    background: theme.gradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   Stratum AI
                 </span>
               </div>
@@ -221,8 +231,8 @@ export default function DashboardLayout() {
                     data-tour={item.dataTour}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
                     style={{
-                      background: isActive ? theme.blueLight : 'transparent',
-                      color: isActive ? theme.blue : theme.textSecondary,
+                      background: isActive ? theme.purpleLight : 'transparent',
+                      color: isActive ? theme.purple : theme.textSecondary,
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
@@ -238,7 +248,7 @@ export default function DashboardLayout() {
                   >
                     <item.icon
                       className="h-5 w-5"
-                      style={{ color: isActive ? theme.blue : theme.textMuted }}
+                      style={{ color: isActive ? theme.purple : theme.textMuted }}
                     />
                     {t(item.name)}
                   </NavLink>
@@ -251,15 +261,15 @@ export default function DashboardLayout() {
                   onClick={() => setCdpExpanded(!cdpExpanded)}
                   className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
                   style={{
-                    background: location.pathname.startsWith('/dashboard/cdp') ? theme.blueLight : 'transparent',
-                    color: location.pathname.startsWith('/dashboard/cdp') ? theme.blue : theme.textSecondary,
+                    background: location.pathname.startsWith('/dashboard/cdp') ? theme.purpleLight : 'transparent',
+                    color: location.pathname.startsWith('/dashboard/cdp') ? theme.purple : theme.textSecondary,
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <CircleStackIcon
                       className="h-5 w-5"
                       style={{
-                        color: location.pathname.startsWith('/dashboard/cdp') ? theme.blue : theme.textMuted
+                        color: location.pathname.startsWith('/dashboard/cdp') ? theme.purple : theme.textMuted
                       }}
                     />
                     <span>CDP</span>
@@ -278,7 +288,7 @@ export default function DashboardLayout() {
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                       className="mt-1 ml-3 pl-3 space-y-0.5 overflow-hidden"
-                      style={{ borderLeft: `2px solid ${theme.blueLight}` }}
+                      style={{ borderLeft: `2px solid ${theme.purpleLight}` }}
                     >
                       {cdpNavigation.map((item, index) => {
                         const isActive = location.pathname === item.href
@@ -293,14 +303,14 @@ export default function DashboardLayout() {
                               to={item.href}
                               className="flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition-all duration-150"
                               style={{
-                                background: isActive ? theme.blueLight : 'transparent',
-                                color: isActive ? theme.blue : theme.textSecondary,
+                                background: isActive ? theme.purpleLight : 'transparent',
+                                color: isActive ? theme.purple : theme.textSecondary,
                               }}
                               onClick={() => setSidebarOpen(false)}
                             >
                               <item.icon
                                 className="h-4 w-4"
-                                style={{ color: isActive ? theme.blue : theme.textMuted }}
+                                style={{ color: isActive ? theme.purple : theme.textMuted }}
                               />
                               {item.name}
                             </NavLink>
@@ -322,8 +332,8 @@ export default function DashboardLayout() {
                     onClick={() => setSuperadminExpanded(!superadminExpanded)}
                     className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
                     style={{
-                      background: location.pathname.startsWith('/dashboard/superadmin') ? theme.blueLight : 'transparent',
-                      color: location.pathname.startsWith('/dashboard/superadmin') ? theme.blue : theme.textSecondary,
+                      background: location.pathname.startsWith('/dashboard/superadmin') ? theme.purpleLight : 'transparent',
+                      color: location.pathname.startsWith('/dashboard/superadmin') ? theme.purple : theme.textSecondary,
                     }}
                   >
                     <div className="flex items-center gap-3">
@@ -336,7 +346,7 @@ export default function DashboardLayout() {
                     />
                   </button>
                   {superadminExpanded && (
-                    <div className="mt-1 ml-3 pl-3 space-y-0.5" style={{ borderLeft: `2px solid ${theme.blueLight}` }}>
+                    <div className="mt-1 ml-3 pl-3 space-y-0.5" style={{ borderLeft: `2px solid ${theme.purpleLight}` }}>
                       {[
                         { href: '/dashboard/superadmin', icon: ChartPieIcon, name: 'Dashboard', end: true },
                         { href: '/dashboard/superadmin/cms', icon: DocumentTextIcon, name: 'CMS' },
@@ -348,8 +358,8 @@ export default function DashboardLayout() {
                           end={item.end}
                           className="flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition-all duration-150"
                           style={{
-                            background: location.pathname === item.href ? theme.blueLight : 'transparent',
-                            color: location.pathname === item.href ? theme.blue : theme.textSecondary,
+                            background: location.pathname === item.href ? theme.purpleLight : 'transparent',
+                            color: location.pathname === item.href ? theme.purple : theme.textSecondary,
                           }}
                         >
                           <item.icon className="h-4 w-4" style={{ color: theme.textMuted }} />
@@ -378,13 +388,13 @@ export default function DashboardLayout() {
                     data-tour={item.dataTour}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
                     style={{
-                      background: isActive ? theme.blueLight : 'transparent',
-                      color: isActive ? theme.blue : theme.textSecondary,
+                      background: isActive ? theme.purpleLight : 'transparent',
+                      color: isActive ? theme.purple : theme.textSecondary,
                     }}
                   >
                     <item.icon
                       className="h-5 w-5"
-                      style={{ color: isActive ? theme.blue : theme.textMuted }}
+                      style={{ color: isActive ? theme.purple : theme.textMuted }}
                     />
                     {t(item.name)}
                   </NavLink>
@@ -397,9 +407,9 @@ export default function DashboardLayout() {
               <div className="flex items-center gap-3 px-2">
                 <div
                   className="h-8 w-8 rounded-full flex items-center justify-center"
-                  style={{ background: theme.blueLight }}
+                  style={{ background: theme.purpleLight }}
                 >
-                  <span className="text-xs font-medium" style={{ color: theme.blue }}>
+                  <span className="text-xs font-medium" style={{ color: theme.purple }}>
                     {getUserInitials()}
                   </span>
                 </div>
@@ -424,7 +434,7 @@ export default function DashboardLayout() {
             style={{
               background: theme.bgBase,
               border: `1px solid ${theme.border}`,
-              color: theme.blue,
+              color: theme.purple,
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
             }}
           >
@@ -464,7 +474,7 @@ export default function DashboardLayout() {
                 style={{ color: theme.textMuted }}
                 onClick={() => setLearningHubOpen(!learningHubOpen)}
                 title="Learning Hub"
-                onMouseEnter={(e) => e.currentTarget.style.color = theme.blue}
+                onMouseEnter={(e) => e.currentTarget.style.color = theme.purple}
                 onMouseLeave={(e) => e.currentTarget.style.color = theme.textMuted}
               >
                 <BookOpenIcon className="h-5 w-5" />
@@ -478,8 +488,8 @@ export default function DashboardLayout() {
                 }}
                 onClick={toggleLanguage}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = theme.blue
-                  e.currentTarget.style.color = theme.blue
+                  e.currentTarget.style.borderColor = theme.purple
+                  e.currentTarget.style.color = theme.purple
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = theme.border
@@ -494,7 +504,7 @@ export default function DashboardLayout() {
                 className="relative p-2 rounded-lg transition-colors"
                 style={{ color: theme.textMuted }}
                 title="What's New"
-                onMouseEnter={(e) => e.currentTarget.style.color = theme.blue}
+                onMouseEnter={(e) => e.currentTarget.style.color = theme.purple}
                 onMouseLeave={(e) => e.currentTarget.style.color = theme.textMuted}
               >
                 <GiftIcon className="h-5 w-5" />
@@ -517,9 +527,9 @@ export default function DashboardLayout() {
                 >
                   <div
                     className="h-7 w-7 rounded-full flex items-center justify-center"
-                    style={{ background: theme.blueLight }}
+                    style={{ background: theme.purpleLight }}
                   >
-                    <span className="text-xs font-medium" style={{ color: theme.blue }}>
+                    <span className="text-xs font-medium" style={{ color: theme.purple }}>
                       {getUserInitials()}
                     </span>
                   </div>
