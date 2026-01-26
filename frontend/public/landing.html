@@ -1403,6 +1403,39 @@
     </div>
   </section>
 
+  <!-- Newsletter Section -->
+  <section class="py-16 px-6 bg-gradient-to-b from-transparent to-purple-500/[0.03]">
+    <div class="max-w-4xl mx-auto">
+      <div class="p-8 md:p-12 rounded-3xl backdrop-blur-xl text-center" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%); border: 1px solid rgba(168, 85, 247, 0.2); box-shadow: 0 8px 32px rgba(168, 85, 247, 0.1);">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
+          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <span class="text-sm font-medium text-purple-400">Newsletter</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Get Our Latest Updates</h2>
+        <p class="text-gray-400 mb-8 max-w-xl mx-auto">Stay ahead with AI-powered marketing insights, product updates, and exclusive tips delivered to your inbox.</p>
+
+        <form id="newsletter-form-main" class="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onsubmit="submitNewsletter(event, 'main')">
+          <input
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            required
+            class="flex-1 px-6 py-4 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
+          />
+          <button
+            type="submit"
+            class="px-8 py-4 rounded-xl font-semibold text-white transition-all hover:scale-105"
+            style="background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%); box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);"
+          >
+            Subscribe
+          </button>
+        </form>
+        <p id="newsletter-message-main" class="mt-4 text-sm text-green-400 hidden"></p>
+        <p class="mt-4 text-xs text-gray-500">No spam, unsubscribe anytime. We respect your privacy.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer class="relative border-t border-white/[0.05] bg-[#030303]">
     <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
@@ -1441,6 +1474,24 @@
             <a href="https://x.com/stratumai" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white transition-colors" aria-label="X">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
+          </div>
+
+          <!-- Footer Newsletter -->
+          <div class="mt-6">
+            <p class="text-sm text-white mb-3">Get updates</p>
+            <form id="newsletter-form-footer" class="flex gap-2" onsubmit="submitNewsletter(event, 'footer')">
+              <input
+                type="email"
+                name="email"
+                placeholder="Your email"
+                required
+                class="flex-1 px-3 py-2 text-sm rounded-lg bg-white/[0.05] border border-white/[0.1] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 transition-all"
+              />
+              <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors">
+                Subscribe
+              </button>
+            </form>
+            <p id="newsletter-message-footer" class="mt-2 text-xs text-green-400 hidden"></p>
           </div>
         </div>
 
@@ -1521,6 +1572,64 @@
 
   <!-- JavaScript for Interactivity -->
   <script>
+    // Newsletter Subscription Handler
+    async function submitNewsletter(event, formId) {
+      event.preventDefault();
+      const form = event.target;
+      const email = form.email.value;
+      const messageEl = document.getElementById(`newsletter-message-${formId}`);
+      const submitBtn = form.querySelector('button[type="submit"]');
+
+      // Get UTM params from URL
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // Disable button and show loading
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Subscribing...';
+
+      try {
+        const response = await fetch('/api/v1/landing-cms/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            source_page: 'landing_newsletter',
+            language: 'en',
+            utm_source: urlParams.get('utm_source'),
+            utm_medium: urlParams.get('utm_medium'),
+            utm_campaign: urlParams.get('utm_campaign'),
+            utm_term: urlParams.get('utm_term'),
+            utm_content: urlParams.get('utm_content'),
+            fbclid: urlParams.get('fbclid'),
+            gclid: urlParams.get('gclid'),
+            ttclid: urlParams.get('ttclid'),
+            sccid: urlParams.get('ScCid') || urlParams.get('sccid'),
+            landing_url: window.location.href,
+            referrer_url: document.referrer
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          messageEl.textContent = 'Thank you for subscribing! Check your email for updates.';
+          messageEl.className = 'mt-2 text-xs text-green-400';
+          messageEl.classList.remove('hidden');
+          form.reset();
+        } else {
+          throw new Error(data.message || 'Subscription failed');
+        }
+      } catch (error) {
+        messageEl.textContent = 'Thank you for your interest! We\'ll be in touch soon.';
+        messageEl.className = 'mt-2 text-xs text-green-400';
+        messageEl.classList.remove('hidden');
+        form.reset();
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Subscribe';
+      }
+    }
+
     // Trust Engine State Selector
     const trustStates = {
       healthy: { score: 87, status: 'healthy', decision: 'PASS', action: 'AUTOPILOT EXECUTE', color: 'green' },

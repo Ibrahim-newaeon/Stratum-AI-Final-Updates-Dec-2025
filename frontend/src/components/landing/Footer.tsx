@@ -1,6 +1,45 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const urlParams = new URLSearchParams(window.location.search);
+
+    try {
+      const response = await fetch('/api/v1/landing-cms/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          source_page: 'footer_newsletter',
+          language: 'en',
+          utm_source: urlParams.get('utm_source'),
+          utm_medium: urlParams.get('utm_medium'),
+          utm_campaign: urlParams.get('utm_campaign'),
+          landing_url: window.location.href,
+          referrer_url: document.referrer,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setMessage('Thank you for subscribing!');
+        setEmail('');
+      }
+    } catch {
+      setMessage('Thank you for your interest!');
+      setEmail('');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const links = {
     Product: [
       { name: 'Features', href: '/features' },
@@ -139,6 +178,31 @@ export function Footer() {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
               </a>
+            </div>
+
+            {/* Newsletter Signup */}
+            <div className="mt-6">
+              <p className="text-sm font-medium text-gray-900 mb-2">Get updates</p>
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your email"
+                  required
+                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? '...' : 'Subscribe'}
+                </button>
+              </form>
+              {message && (
+                <p className="mt-2 text-xs text-green-600">{message}</p>
+              )}
             </div>
           </div>
 
