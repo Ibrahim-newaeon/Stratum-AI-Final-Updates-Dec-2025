@@ -44,7 +44,7 @@ stripe>=7.0.0,<11.0.0
 
 # Two-Factor Authentication
 pyotp>=2.9.0,<3.0.0
-qrcode[pil]>=7.4.0,<8.0.0
+qrcode[pil]>=7.4.0,<9.0.0
 
 # ML / Data Science
 scikit-learn>=1.4.0,<2.0.0
