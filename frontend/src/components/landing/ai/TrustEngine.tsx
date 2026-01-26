@@ -97,11 +97,6 @@ export default function TrustEngine() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
-            <ShieldCheckIcon className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm font-medium text-cyan-400">Unique to Stratum AI</span>
-          </div>
-
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             <span className="text-white">Trust-Gated</span>
             <br />

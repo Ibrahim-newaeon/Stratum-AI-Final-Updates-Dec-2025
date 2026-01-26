@@ -146,11 +146,6 @@ export default function AIFeatures() {
           transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-            <LightBulbIcon className="w-4 h-4 text-purple-400" />
-            <span className="text-sm font-medium text-purple-400">6 AI Models Built-In</span>
-          </div>
-
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             <span className="text-white">Predictive Intelligence</span>
             <br />
