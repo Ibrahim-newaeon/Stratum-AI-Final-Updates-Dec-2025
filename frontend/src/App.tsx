@@ -160,6 +160,9 @@ const ComparisonPage = lazy(() => import('./views/pages/resources/Comparison'))
 const GlossaryPage = lazy(() => import('./views/pages/resources/Glossary'))
 const NotFound = lazy(() => import('./views/NotFound'))
 
+// Announcement pages
+const AudienceSyncLaunch = lazy(() => import('./views/pages/announcements/AudienceSyncLaunch'))
+
 function App() {
   return (
     <HelmetProvider>
@@ -585,6 +588,16 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingSpinner />}>
                     <GlossaryPage />
+                  </Suspense>
+                }
+              />
+
+              {/* Announcement pages */}
+              <Route
+                path="/announcements/audience-sync"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AudienceSyncLaunch />
                   </Suspense>
                 }
               />
