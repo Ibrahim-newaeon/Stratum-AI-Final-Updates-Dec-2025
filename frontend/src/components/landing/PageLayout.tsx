@@ -1,7 +1,7 @@
 /**
  * PageLayout Component
  * Shared layout for all public-facing pages with header and footer
- * Theme: 2026 Electric Neon / OLED-Optimized
+ * Theme: Vibe.co Clean Light Design
  */
 
 import { useState, useEffect } from 'react';
@@ -43,44 +43,34 @@ export function PageLayout({ children }: PageLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#020204' }}>
-      {/* 2026 Animated Background Orbs - Electric Neon */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-        <div className="orb orb-3" />
-        <div className="orb orb-4" />
-      </div>
-
-      {/* 2026 Header / Navigation - Glass Elevated */}
+    <div className="min-h-screen flex flex-col" style={{ background: '#FFFFFF' }}>
+      {/* Vibe.co Clean Light Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
           isScrolled ? 'py-3' : 'py-4'
         }`}
         style={{
-          background: isScrolled ? 'rgba(2, 2, 4, 0.95)' : 'rgba(2, 2, 4, 0.8)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          borderBottom: '1px solid rgba(139, 92, 246, 0.1)',
-          boxShadow: isScrolled ? '0 4px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.05)' : 'none',
+          background: '#FFFFFF',
+          borderBottom: isScrolled ? '1px solid #E5E7EB' : '1px solid transparent',
+          boxShadow: isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.08)' : 'none',
         }}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
           <nav className="flex items-center justify-between">
-            {/* 2026 Logo - Electric Holographic */}
+            {/* Vibe Logo - Indigo Gradient */}
             <Link to="/" className="flex items-center gap-3 group">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.4)]"
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-hover:shadow-[0_4px_14px_rgba(79,70,229,0.4)]"
                 style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
                 }}
               >
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span
-                className="text-xl font-bold animate-[logoShine_3s_ease-in-out_infinite]"
+                className="text-xl font-bold"
                 style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
+                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
@@ -96,10 +86,10 @@ export function PageLayout({ children }: PageLayoutProps) {
                   key={link.name}
                   to={link.href}
                   className={`nav-link relative text-sm font-medium py-2 transition-colors ${
-                    isActiveLink(link.href) ? 'text-white font-semibold' : ''
+                    isActiveLink(link.href) ? 'font-semibold' : ''
                   }`}
                   style={{
-                    color: isActiveLink(link.href) ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
+                    color: isActiveLink(link.href) ? '#000000' : '#6B7280',
                     letterSpacing: '0.01em',
                   }}
                 >
@@ -109,60 +99,60 @@ export function PageLayout({ children }: PageLayoutProps) {
                       isActiveLink(link.href) ? 'w-full' : 'w-0'
                     }`}
                     style={{
-                      background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
+                      background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
                     }}
                   />
                 </Link>
               ))}
             </div>
 
-            {/* 2026 CTA Buttons */}
+            {/* Vibe CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
               <Link
                 to="/login"
-                className="text-sm font-medium py-2 px-4 transition-all duration-200 hover:text-white"
-                style={{ color: 'rgba(255, 255, 255, 0.75)' }}
+                className="text-sm font-medium py-2 px-4 transition-all duration-200 hover:text-black"
+                style={{ color: '#374151' }}
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="cta-button px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200"
+                className="cta-button px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all duration-200"
                 style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-                  boxShadow: '0 4px 20px rgba(139, 92, 246, 0.4)',
+                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
+                  boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
                 }}
               >
                 Get Started
               </Link>
             </div>
 
-            {/* 2026 Mobile Menu Button */}
+            {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 rounded-lg transition-all duration-200"
               style={{
-                background: 'rgba(139, 92, 246, 0.1)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
+                background: '#F3F4F6',
+                border: '1px solid #E5E7EB',
               }}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
-                <XMarkIcon className="w-6 h-6 text-white" />
+                <XMarkIcon className="w-6 h-6 text-gray-700" />
               ) : (
-                <Bars3Icon className="w-6 h-6 text-white" />
+                <Bars3Icon className="w-6 h-6 text-gray-700" />
               )}
             </button>
           </nav>
 
-          {/* 2026 Mobile Menu - Glass Effect */}
+          {/* Mobile Menu - Light Theme */}
           {isMobileMenuOpen && (
             <div
               className="lg:hidden mt-4 py-4 rounded-2xl"
               style={{
-                background: 'rgba(10, 10, 15, 0.9)',
-                backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(139, 92, 246, 0.15)',
+                background: '#FFFFFF',
+                border: '1px solid #E5E7EB',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               }}
             >
               <div className="flex flex-col gap-2 px-4">
@@ -172,27 +162,28 @@ export function PageLayout({ children }: PageLayoutProps) {
                     to={link.href}
                     className="py-3 px-4 rounded-lg text-sm font-medium transition-colors"
                     style={{
-                      color: isActiveLink(link.href) ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
-                      background: isActiveLink(link.href) ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                      color: isActiveLink(link.href) ? '#000000' : '#6B7280',
+                      background: isActiveLink(link.href) ? '#F3F4F6' : 'transparent',
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}
                   </Link>
                 ))}
-                <hr className="border-white/10 my-2" />
+                <hr className="border-gray-200 my-2" />
                 <Link
                   to="/login"
-                  className="py-3 px-4 rounded-lg text-sm font-medium text-white/75"
+                  className="py-3 px-4 rounded-lg text-sm font-medium"
+                  style={{ color: '#374151' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/signup"
-                  className="py-3 px-4 rounded-xl text-sm font-semibold text-white text-center"
+                  className="py-3 px-4 rounded-lg text-sm font-semibold text-white text-center"
                   style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
                   }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -213,67 +204,10 @@ export function PageLayout({ children }: PageLayoutProps) {
       {/* Footer */}
       <Footer />
 
-      {/* 2026 CSS for animations - Electric Neon */}
+      {/* Vibe.co Light Theme CSS */}
       <style>{`
-        @keyframes orbFloat {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(50px, -50px) scale(1.1); }
-          50% { transform: translate(-30px, 30px) scale(0.95); }
-          75% { transform: translate(30px, 50px) scale(1.05); }
-        }
-
-        @keyframes logoShine {
-          0%, 100% { filter: brightness(1); }
-          50% { filter: brightness(1.15); }
-        }
-
-        .orb {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(80px);
-          opacity: 0.35;
-          animation: orbFloat 15s ease-in-out infinite;
-        }
-
-        .orb-1 {
-          width: 600px;
-          height: 600px;
-          background: rgba(139, 92, 246, 0.2);  /* 2026 Electric violet */
-          top: -200px;
-          left: -200px;
-          animation-delay: 0s;
-        }
-
-        .orb-2 {
-          width: 500px;
-          height: 500px;
-          background: rgba(0, 212, 255, 0.18);  /* 2026 Electric cyan */
-          bottom: -150px;
-          right: -150px;
-          animation-delay: -5s;
-        }
-
-        .orb-3 {
-          width: 400px;
-          height: 400px;
-          background: rgba(255, 107, 107, 0.15);  /* 2026 Coral */
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          animation-delay: -10s;
-        }
-
-        .orb-4 {
-          width: 300px;
-          height: 300px;
-          background: rgba(0, 255, 136, 0.1);  /* 2026 Neon green */
-          bottom: 20%;
-          left: 10%;
-          animation-delay: -7s;
-        }
-
         .nav-link:hover {
-          color: #ffffff !important;
+          color: #000000 !important;
         }
 
         .nav-link:hover .nav-link-underline {
@@ -282,13 +216,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
         .cta-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5) !important;  /* 2026 Electric violet glow */
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .orb {
-            animation: none !important;
-          }
+          box-shadow: 0 8px 24px rgba(79, 70, 229, 0.5) !important;
         }
       `}</style>
     </div>

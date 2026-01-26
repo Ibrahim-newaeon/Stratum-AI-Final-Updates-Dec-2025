@@ -29,7 +29,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-white/5" style={{ background: '#030303' }}>
+    <footer className="border-t border-gray-200" style={{ background: '#FFFFFF' }}>
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
           {/* Brand */}
@@ -38,15 +38,23 @@ export function Footer() {
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
                 }}
               >
                 <span className="text-white font-bold text-lg">S</span>
               </div>
-              <span className="text-xl text-white font-semibold">Stratum AI</span>
+              <span
+                className="text-xl font-semibold"
+                style={{
+                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Stratum AI
+              </span>
             </Link>
-            <p className="text-sm mb-6 max-w-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+            <p className="text-sm mb-6 max-w-xs" style={{ color: '#6B7280' }}>
               AI-Powered Revenue Operating System with Trust-Gated Autopilot.
             </p>
 
@@ -57,8 +65,8 @@ export function Footer() {
                 href="https://x.com/stratumai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:opacity-80"
-                style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                className="transition-colors hover:text-indigo-600"
+                style={{ color: '#6B7280' }}
                 aria-label="Follow us on X"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -70,8 +78,8 @@ export function Footer() {
                 href="https://linkedin.com/company/stratumai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:opacity-80"
-                style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                className="transition-colors hover:text-indigo-600"
+                style={{ color: '#6B7280' }}
                 aria-label="Follow us on LinkedIn"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -88,14 +96,14 @@ export function Footer() {
           {/* Links */}
           {Object.entries(links).map(([category, items]) => (
             <div key={category}>
-              <h4 className="text-sm text-white font-semibold mb-4">{category}</h4>
+              <h4 className="text-sm text-gray-900 font-semibold mb-4">{category}</h4>
               <ul className="space-y-3">
                 {items.map((item) => (
                   <li key={item.name}>
                     <Link
                       to={item.href}
-                      className="text-sm transition-colors hover:text-white"
-                      style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                      className="text-sm transition-colors hover:text-indigo-600"
+                      style={{ color: '#6B7280' }}
                     >
                       {item.name}
                     </Link>
@@ -107,15 +115,15 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+        <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs" style={{ color: '#9CA3AF' }}>
             &copy; {new Date().getFullYear()} Stratum AI. All rights reserved.
           </p>
 
           <div className="flex items-center gap-6">
             <span
               className="flex items-center gap-2 text-xs"
-              style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              style={{ color: '#9CA3AF' }}
             >
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               All systems operational

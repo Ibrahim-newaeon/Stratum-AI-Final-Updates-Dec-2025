@@ -135,6 +135,17 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			// Vibe.co Design System
+  			vibe: {
+  				indigo: {
+  					light: '#4F46E5',
+  					DEFAULT: '#3730A3',
+  					dark: '#312E81'
+  				},
+  				bg: '#FFFFFF',
+  				text: '#000000',
+  				'text-secondary': '#6B7280'
   			}
   		},
   		borderRadius: {
