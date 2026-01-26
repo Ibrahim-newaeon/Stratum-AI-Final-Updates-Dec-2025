@@ -204,14 +204,29 @@ export function Benchmarks() {
 
       {/* Benchmark Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {benchmarkMetrics.map((metric) => {
+        {benchmarkMetrics.map((metric, index) => {
           const isAboveAvg = metric.invertTrend
             ? metric.yours < metric.industry
             : metric.yours > metric.industry
           const diff = ((metric.yours - metric.industry) / metric.industry) * 100
+          const colors = [
+            { bg: 'rgba(168, 85, 247, 0.1)', border: 'rgba(168, 85, 247, 0.2)', shadow: 'rgba(168, 85, 247, 0.1)' }, // Purple
+            { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.2)', shadow: 'rgba(34, 197, 94, 0.1)' }, // Green
+            { bg: 'rgba(217, 38, 101, 0.1)', border: 'rgba(217, 38, 101, 0.2)', shadow: 'rgba(217, 38, 101, 0.1)' }, // Magenta
+            { bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.2)', shadow: 'rgba(249, 115, 22, 0.1)' }, // Orange
+          ]
+          const color = colors[index % colors.length]
 
           return (
-            <div key={metric.label} className="p-4 rounded-xl border bg-card">
+            <div
+              key={metric.label}
+              className="p-4 rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
+              style={{
+                background: color.bg,
+                border: `1px solid ${color.border}`,
+                boxShadow: `0 8px 32px ${color.shadow}`,
+              }}
+            >
               <div className="flex items-center justify-between mb-2">
                 <SmartTooltip content={metric.tooltip} position="top">
                   <span className="text-sm text-muted-foreground flex items-center gap-1 cursor-help">
@@ -261,11 +276,18 @@ export function Benchmarks() {
       </div>
 
       {/* Your Competitors Section */}
-      <div className="rounded-xl border bg-card p-5">
+      <div
+        className="rounded-xl p-5 backdrop-blur-xl"
+        style={{
+          background: 'rgba(99, 102, 241, 0.08)',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.1)',
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" />
+              <Target className="w-5 h-5 text-indigo-500" />
               Your Tracked Competitors
             </h3>
             <p className="text-xs text-muted-foreground">
@@ -297,7 +319,14 @@ export function Benchmarks() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {(competitorsData?.items || []).slice(0, 6).map((competitor) => (
-              <div key={competitor.id} className="p-3 rounded-lg border bg-background">
+              <div
+                key={competitor.id}
+                className="p-3 rounded-lg backdrop-blur-xl transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'rgba(234, 179, 8, 0.1)',
+                  border: '1px solid rgba(234, 179, 8, 0.2)',
+                }}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="font-medium text-sm">{competitor.name}</p>
@@ -335,7 +364,14 @@ export function Benchmarks() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Competitor Comparison */}
-        <div className="rounded-xl border bg-card p-5">
+        <div
+          className="rounded-xl p-5 backdrop-blur-xl"
+          style={{
+            background: 'rgba(168, 85, 247, 0.08)',
+            border: '1px solid rgba(168, 85, 247, 0.2)',
+            boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
+          }}
+        >
           <h3 className="font-semibold mb-4">{t('benchmarks.competitorComparison')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -369,7 +405,14 @@ export function Benchmarks() {
         </div>
 
         {/* Performance Radar */}
-        <div className="rounded-xl border bg-card p-5">
+        <div
+          className="rounded-xl p-5 backdrop-blur-xl"
+          style={{
+            background: 'rgba(217, 38, 101, 0.08)',
+            border: '1px solid rgba(217, 38, 101, 0.2)',
+            boxShadow: '0 8px 32px rgba(217, 38, 101, 0.1)',
+          }}
+        >
           <h3 className="font-semibold mb-4">{t('benchmarks.performanceRadar')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -415,11 +458,18 @@ export function Benchmarks() {
       </div>
 
       {/* Demographics Heatmap */}
-      <div className="rounded-xl border bg-card p-5">
+      <div
+        className="rounded-xl p-5 backdrop-blur-xl"
+        style={{
+          background: 'rgba(34, 197, 94, 0.08)',
+          border: '1px solid rgba(34, 197, 94, 0.2)',
+          boxShadow: '0 8px 32px rgba(34, 197, 94, 0.1)',
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
+              <Users className="w-5 h-5 text-green-500" />
               {t('benchmarks.demographicsHeatmap')}
             </h3>
             <p className="text-xs text-muted-foreground">{t('benchmarks.ctrBySegment')}</p>
@@ -471,11 +521,18 @@ export function Benchmarks() {
       </div>
 
       {/* Geographic Performance */}
-      <div className="rounded-xl border bg-card p-5">
+      <div
+        className="rounded-xl p-5 backdrop-blur-xl"
+        style={{
+          background: 'rgba(249, 115, 22, 0.08)',
+          border: '1px solid rgba(249, 115, 22, 0.2)',
+          boxShadow: '0 8px 32px rgba(249, 115, 22, 0.1)',
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <Globe className="w-5 h-5 text-primary" />
+              <Globe className="w-5 h-5 text-orange-500" />
               {t('benchmarks.geographicPerformance')}
             </h3>
             <p className="text-xs text-muted-foreground">{t('benchmarks.performanceByRegion')}</p>
@@ -484,7 +541,15 @@ export function Benchmarks() {
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {mockGeoData.map((region) => (
-            <div key={region.region} className="p-4 rounded-lg border bg-background">
+            <div
+              key={region.region}
+              className="p-4 rounded-lg backdrop-blur-xl transition-all hover:scale-[1.02]"
+              style={{
+                background: 'rgba(168, 85, 247, 0.1)',
+                border: '1px solid rgba(168, 85, 247, 0.2)',
+                boxShadow: '0 4px 16px rgba(168, 85, 247, 0.1)',
+              }}
+            >
               <p className="font-medium text-sm mb-2">{region.region}</p>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">

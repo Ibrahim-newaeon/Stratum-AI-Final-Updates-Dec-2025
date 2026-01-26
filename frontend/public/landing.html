@@ -79,6 +79,15 @@
     .tooltip { position: relative; }
     .tooltip-content { position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; padding: 8px 12px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px; color: #9ca3af; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 50; }
     .tooltip:hover .tooltip-content { opacity: 1; }
+
+    /* RTL Support */
+    [dir="rtl"] { font-family: 'Inter', 'Tahoma', 'Arial', sans-serif; }
+    [dir="rtl"] .text-left { text-align: right; }
+    [dir="rtl"] .text-right { text-align: left; }
+    [dir="rtl"] .ml-auto { margin-right: auto; margin-left: 0; }
+    [dir="rtl"] .mr-auto { margin-left: auto; margin-right: 0; }
+    [dir="rtl"] .space-x-4 > * + * { margin-left: 0; margin-right: 1rem; }
+    [dir="rtl"] .gap-3 { gap: 0.75rem; }
   </style>
   <!-- PDF Generation Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -294,6 +303,24 @@
 
         <!-- Right Side Actions -->
         <div class="flex items-center gap-4">
+          <!-- Language Toggle -->
+          <div class="relative lang-toggle">
+            <button onclick="toggleLangMenu()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+              <span id="current-lang" class="uppercase">EN</span>
+            </button>
+            <div id="lang-menu" class="hidden absolute top-full mt-2 right-0 py-2 rounded-xl min-w-[120px] bg-[#0a0a0a]/98 border border-white/10 shadow-2xl z-50">
+              <button onclick="setLanguage('en')" class="lang-option w-full px-4 py-2 text-sm text-left text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-between" data-lang="en">
+                <span>English</span>
+                <span class="lang-check w-2 h-2 rounded-full bg-green-500 hidden"></span>
+              </button>
+              <button onclick="setLanguage('ar')" class="lang-option w-full px-4 py-2 text-sm text-left text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-between" data-lang="ar">
+                <span>العربية</span>
+                <span class="lang-check w-2 h-2 rounded-full bg-green-500 hidden"></span>
+              </button>
+            </div>
+          </div>
+
           <a href="/login" class="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block">Sign In</a>
           <a href="/signup" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:shadow-lg hover:shadow-purple-500/25">
             <span>Start Free Trial</span>
@@ -314,6 +341,20 @@
         <a href="#trust" class="block text-sm text-gray-400 hover:text-white py-2">Trust Engine</a>
         <a href="#pricing" class="block text-sm text-gray-400 hover:text-white py-2">Pricing</a>
         <a href="#compare" class="block text-sm text-gray-400 hover:text-white py-2">Compare</a>
+
+        <!-- Mobile Language Toggle -->
+        <div class="pt-4 border-t border-white/10">
+          <p class="text-xs text-gray-500 mb-2">Language</p>
+          <div class="flex gap-2">
+            <button onclick="setLanguage('en')" id="mobile-lang-en" class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-white/5 border border-white/10 text-gray-400">
+              English
+            </button>
+            <button onclick="setLanguage('ar')" id="mobile-lang-ar" class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-white/5 border border-white/10 text-gray-400">
+              العربية
+            </button>
+          </div>
+        </div>
+
         <div class="pt-4 border-t border-white/10 space-y-3">
           <a href="/login" class="block text-sm text-gray-400 hover:text-white py-2">Sign In</a>
           <a href="/signup" class="block w-full text-center btn-primary px-5 py-2.5 rounded-xl text-sm font-medium">
@@ -329,6 +370,85 @@
     document.getElementById('mobile-menu-btn').addEventListener('click', function() {
       document.getElementById('mobile-menu').classList.toggle('hidden');
     });
+
+    // Language Toggle Functions
+    let currentLanguage = localStorage.getItem('i18nextLng') || 'en';
+
+    function initLanguage() {
+      // Set initial state
+      updateLanguageUI(currentLanguage);
+      applyLanguageDirection(currentLanguage);
+    }
+
+    function toggleLangMenu() {
+      const menu = document.getElementById('lang-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function setLanguage(lang) {
+      currentLanguage = lang;
+      localStorage.setItem('i18nextLng', lang);
+      updateLanguageUI(lang);
+      applyLanguageDirection(lang);
+      document.getElementById('lang-menu').classList.add('hidden');
+    }
+
+    function updateLanguageUI(lang) {
+      // Update header display
+      document.getElementById('current-lang').textContent = lang.toUpperCase();
+
+      // Update desktop dropdown indicators
+      document.querySelectorAll('.lang-option').forEach(btn => {
+        const btnLang = btn.getAttribute('data-lang');
+        const check = btn.querySelector('.lang-check');
+        if (btnLang === lang) {
+          btn.classList.add('text-white');
+          btn.classList.remove('text-gray-400');
+          check.classList.remove('hidden');
+        } else {
+          btn.classList.remove('text-white');
+          btn.classList.add('text-gray-400');
+          check.classList.add('hidden');
+        }
+      });
+
+      // Update mobile buttons
+      const mobileEn = document.getElementById('mobile-lang-en');
+      const mobileAr = document.getElementById('mobile-lang-ar');
+      if (mobileEn && mobileAr) {
+        if (lang === 'en') {
+          mobileEn.style.background = 'rgba(168, 85, 247, 0.2)';
+          mobileEn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+          mobileEn.style.color = '#ffffff';
+          mobileAr.style.background = 'rgba(255, 255, 255, 0.05)';
+          mobileAr.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          mobileAr.style.color = 'rgb(156, 163, 175)';
+        } else {
+          mobileAr.style.background = 'rgba(168, 85, 247, 0.2)';
+          mobileAr.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+          mobileAr.style.color = '#ffffff';
+          mobileEn.style.background = 'rgba(255, 255, 255, 0.05)';
+          mobileEn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          mobileEn.style.color = 'rgb(156, 163, 175)';
+        }
+      }
+    }
+
+    function applyLanguageDirection(lang) {
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+    }
+
+    // Close language menu when clicking outside
+    document.addEventListener('click', function(e) {
+      const langToggle = e.target.closest('.lang-toggle');
+      if (!langToggle) {
+        document.getElementById('lang-menu').classList.add('hidden');
+      }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initLanguage);
   </script>
 
   <!-- Hero Section -->
@@ -1350,17 +1470,17 @@
     </div>
 
     <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
-      <!-- Badge -->
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
+      <!-- Main Headline -->
+      <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-4 relative inline-block">
+        <span class="text-white">Stop Guessing.</span><br>
+        <span class="gradient-text">Start Predicting.</span>
+      </h2>
+
+      <!-- Badge - Under Header -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6">
         <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
         <span class="text-sm text-gray-300">Ready to transform your revenue operations?</span>
       </div>
-
-      <!-- Main Headline -->
-      <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
-        <span class="text-white">Stop Guessing.</span><br>
-        <span class="gradient-text">Start Predicting.</span>
-              </h2>
 
       <!-- Subheadline -->
       <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">

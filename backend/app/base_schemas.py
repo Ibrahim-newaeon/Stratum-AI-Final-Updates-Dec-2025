@@ -542,7 +542,8 @@ class CompetitorBase(BaseSchema):
 class CompetitorCreate(CompetitorBase):
     """Competitor creation request."""
 
-    pass
+    country: Optional[str] = Field(None, max_length=10, description="Country code for ad library filtering")
+    platforms: Optional[list[str]] = Field(None, description="Ad platforms to track")
 
 
 class CompetitorUpdate(BaseSchema):

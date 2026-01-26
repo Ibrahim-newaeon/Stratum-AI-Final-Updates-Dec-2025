@@ -360,7 +360,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-card border shadow-xl mx-4">
+      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl bg-card border shadow-xl mx-4">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div>
@@ -414,38 +414,38 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[50vh]">
+        <div className="p-8 overflow-y-auto max-h-[60vh]">
           {/* Platform Selection Step */}
           {currentStep === 'platform' && (
-            <div className="space-y-4">
-              <p className="text-muted-foreground">{t('campaigns.create.selectPlatform')}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <p className="text-muted-foreground text-lg">{t('campaigns.create.selectPlatform')}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {PLATFORMS.map(platform => (
                   <button
                     key={platform.id}
                     onClick={() => updateFormData('platform', platform.id)}
                     className={cn(
-                      'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
+                      'flex flex-col items-center gap-4 p-6 rounded-xl border-2 transition-all text-center relative',
                       formData.platform === platform.id
                         ? 'border-primary bg-primary/5'
                         : 'border-transparent bg-muted/50 hover:bg-muted'
                     )}
                   >
+                    {formData.platform === platform.id && (
+                      <Check className="w-5 h-5 text-primary absolute top-3 right-3" />
+                    )}
                     <div
                       className={cn(
-                        'w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg',
+                        'w-16 h-16 rounded-xl flex items-center justify-center text-white font-bold text-2xl',
                         platform.color
                       )}
                     >
                       {platform.name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{platform.name}</h3>
+                      <h3 className="font-semibold text-foreground text-lg">{platform.name}</h3>
                       <p className="text-sm text-muted-foreground">{platform.description}</p>
                     </div>
-                    {formData.platform === platform.id && (
-                      <Check className="w-5 h-5 text-primary ml-auto" />
-                    )}
                   </button>
                 ))}
               </div>

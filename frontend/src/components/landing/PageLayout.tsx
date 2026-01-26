@@ -6,7 +6,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -24,7 +25,25 @@ const navLinks = [
 export function PageLayout({ children }: PageLayoutProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const location = useLocation();
+  const { i18n } = useTranslation();
+
+  const currentLanguage = i18n.language || 'en';
+  const isRTL = currentLanguage === 'ar';
+
+  const toggleLanguage = (lang: string) => {
+    i18n.changeLanguage(lang);
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+    setIsLangMenuOpen(false);
+  };
+
+  // Set initial direction based on language
+  useEffect(() => {
+    document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = currentLanguage;
+  }, [currentLanguage]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,6 +52,20 @@ export function PageLayout({ children }: PageLayoutProps) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close language menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.lang-toggle')) {
+        setIsLangMenuOpen(false);
+      }
+    };
+    if (isLangMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [isLangMenuOpen]);
 
   const isActiveLink = (href: string) => {
     if (href === '/solutions/cdp') {
@@ -108,6 +141,54 @@ export function PageLayout({ children }: PageLayoutProps) {
 
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
+              {/* Language Toggle */}
+              <div className="relative lang-toggle">
+                <button
+                  onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5"
+                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                  aria-label="Change language"
+                >
+                  <GlobeAltIcon className="w-4 h-4" />
+                  <span className="uppercase">{currentLanguage}</span>
+                </button>
+                {isLangMenuOpen && (
+                  <div
+                    className="absolute top-full mt-2 right-0 py-2 rounded-xl min-w-[120px] z-50"
+                    style={{
+                      background: 'rgba(10, 10, 10, 0.98)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    <button
+                      onClick={() => toggleLanguage('en')}
+                      className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/5 flex items-center justify-between ${
+                        currentLanguage === 'en' ? 'text-white' : ''
+                      }`}
+                      style={{ color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)' }}
+                    >
+                      <span>English</span>
+                      {currentLanguage === 'en' && (
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => toggleLanguage('ar')}
+                      className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/5 flex items-center justify-between ${
+                        currentLanguage === 'ar' ? 'text-white' : ''
+                      }`}
+                      style={{ color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)' }}
+                    >
+                      <span>العربية</span>
+                      {currentLanguage === 'ar' && (
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <Link
                 to="/login"
                 className="text-sm font-medium py-2 px-4 transition-all duration-200 hover:text-white"
@@ -170,6 +251,41 @@ export function PageLayout({ children }: PageLayoutProps) {
                     {link.name}
                   </Link>
                 ))}
+                <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} className="my-2" />
+
+                {/* Mobile Language Toggle */}
+                <div className="px-4 py-2">
+                  <p className="text-xs mb-2" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Language</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => toggleLanguage('en')}
+                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        currentLanguage === 'en' ? 'text-white' : ''
+                      }`}
+                      style={{
+                        background: currentLanguage === 'en' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: currentLanguage === 'en' ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                      }}
+                    >
+                      English
+                    </button>
+                    <button
+                      onClick={() => toggleLanguage('ar')}
+                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        currentLanguage === 'ar' ? 'text-white' : ''
+                      }`}
+                      style={{
+                        background: currentLanguage === 'ar' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: currentLanguage === 'ar' ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                      }}
+                    >
+                      العربية
+                    </button>
+                  </div>
+                </div>
+
                 <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} className="my-2" />
                 <Link
                   to="/login"

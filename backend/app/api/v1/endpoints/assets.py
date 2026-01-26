@@ -6,9 +6,12 @@ Creative asset management for DAM functionality.
 Implements Module B: Digital Asset Management.
 """
 
+import os
+import uuid
+from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +25,11 @@ from app.schemas import (
     CreativeAssetUpdate,
     PaginatedResponse,
 )
+
+# Upload directory configuration
+UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/tmp/uploads/assets")
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".webm", ".mov"}
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -199,6 +207,80 @@ async def create_asset(
         success=True,
         data=CreativeAssetResponse.model_validate(asset),
         message="Asset created successfully",
+    )
+
+
+@router.post("/upload", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED)
+async def upload_asset(
+    request: Request,
+    file: UploadFile = File(...),
+    folder_id: Optional[str] = None,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Upload a new asset file.
+
+    Accepts image and video files up to 50MB.
+    Supported formats: jpg, jpeg, png, gif, webp, mp4, webm, mov
+    """
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    # Validate file extension
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type not allowed. Supported: {', '.join(ALLOWED_EXTENSIONS)}",
+        )
+
+    # Read file content
+    content = await file.read()
+
+    # Validate file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large. Maximum size: {MAX_FILE_SIZE // (1024 * 1024)}MB",
+        )
+
+    # Generate unique filename
+    unique_id = uuid.uuid4().hex
+    filename = f"{unique_id}{file_ext}"
+
+    # Ensure upload directory exists
+    tenant_upload_dir = os.path.join(UPLOAD_DIR, str(tenant_id))
+    os.makedirs(tenant_upload_dir, exist_ok=True)
+
+    # Save file
+    file_path = os.path.join(tenant_upload_dir, filename)
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    # Determine asset type from extension
+    video_extensions = {".mp4", ".webm", ".mov"}
+    asset_type = AssetType.video if file_ext in video_extensions else AssetType.image
+
+    # Create asset record
+    asset = CreativeAsset(
+        tenant_id=tenant_id,
+        name=file.filename or filename,
+        asset_type=asset_type,
+        file_url=f"/uploads/assets/{tenant_id}/{filename}",
+        folder=folder_id,
+        file_size_bytes=len(content),
+        file_format=file_ext.lstrip("."),
+    )
+
+    db.add(asset)
+    await db.commit()
+    await db.refresh(asset)
+
+    logger.info("asset_uploaded", asset_id=asset.id, tenant_id=tenant_id, filename=filename)
+
+    return APIResponse(
+        success=True,
+        data=CreativeAssetResponse.model_validate(asset),
+        message="Asset uploaded successfully",
     )
 
 

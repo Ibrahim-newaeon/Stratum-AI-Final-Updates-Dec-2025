@@ -287,28 +287,63 @@ export function Competitors() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border bg-card">
+        <div
+          className="p-4 rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
+          style={{
+            background: 'rgba(168, 85, 247, 0.1)',
+            border: '1px solid rgba(168, 85, 247, 0.2)',
+            boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
+          }}
+        >
           <div className="text-sm text-muted-foreground mb-1">Tracked Competitors</div>
           <div className="text-2xl font-bold">{stats.totalCompetitors}</div>
         </div>
-        <div className="p-4 rounded-xl border bg-card">
+        <div
+          className="p-4 rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
+          style={{
+            background: 'rgba(34, 197, 94, 0.1)',
+            border: '1px solid rgba(34, 197, 94, 0.2)',
+            boxShadow: '0 8px 32px rgba(34, 197, 94, 0.1)',
+          }}
+        >
           <div className="text-sm text-muted-foreground mb-1">Active Tracking</div>
           <div className="text-2xl font-bold text-green-500">{stats.activeTracking}</div>
         </div>
-        <div className="p-4 rounded-xl border bg-card">
+        <div
+          className="p-4 rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
+          style={{
+            background: 'rgba(6, 182, 212, 0.1)',
+            border: '1px solid rgba(6, 182, 212, 0.2)',
+            boxShadow: '0 8px 32px rgba(6, 182, 212, 0.1)',
+          }}
+        >
           <div className="text-sm text-muted-foreground mb-1">Avg Keyword Overlap</div>
           <div className="text-2xl font-bold">{stats.avgKeywordOverlap}%</div>
         </div>
-        <div className="p-4 rounded-xl border bg-card">
+        <div
+          className="p-4 rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
+          style={{
+            background: 'rgba(249, 115, 22, 0.1)',
+            border: '1px solid rgba(249, 115, 22, 0.2)',
+            boxShadow: '0 8px 32px rgba(249, 115, 22, 0.1)',
+          }}
+        >
           <div className="text-sm text-muted-foreground mb-1">Creatives Tracked</div>
           <div className="text-2xl font-bold">{stats.totalCreatives}</div>
         </div>
       </div>
 
       {/* Share of Voice */}
-      <div className="rounded-xl border bg-card p-6">
+      <div
+        className="rounded-xl p-6 backdrop-blur-xl"
+        style={{
+          background: 'rgba(168, 85, 247, 0.08)',
+          border: '1px solid rgba(168, 85, 247, 0.2)',
+          boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
+        }}
+      >
         <div className="flex items-center gap-3 mb-4">
-          <ChartBarIcon className="w-5 h-5 text-primary" />
+          <ChartBarIcon className="w-5 h-5 text-purple-500" />
           <h2 className="font-semibold">Share of Voice</h2>
         </div>
         <div className="flex items-center gap-2 mb-4">
@@ -366,9 +401,14 @@ export function Competitors() {
           <div
             key={competitor.id}
             className={cn(
-              'p-4 rounded-xl border bg-card hover:shadow-md transition-all cursor-pointer',
+              'p-4 rounded-xl backdrop-blur-xl transition-all cursor-pointer hover:scale-[1.01]',
               selectedCompetitor === competitor.id && 'ring-2 ring-primary'
             )}
+            style={{
+              background: 'rgba(99, 102, 241, 0.08)',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              boxShadow: '0 8px 32px rgba(99, 102, 241, 0.08)',
+            }}
             onClick={() => setSelectedCompetitor(
               selectedCompetitor === competitor.id ? null : competitor.id
             )}
@@ -479,8 +519,15 @@ export function Competitors() {
       </div>
 
       {/* Keyword Overlap Table */}
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b">
+      <div
+        className="rounded-xl overflow-hidden backdrop-blur-xl"
+        style={{
+          background: 'rgba(6, 182, 212, 0.08)',
+          border: '1px solid rgba(6, 182, 212, 0.2)',
+          boxShadow: '0 8px 32px rgba(6, 182, 212, 0.1)',
+        }}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-cyan-500/20">
           <h2 className="font-semibold">Keyword Overlap</h2>
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border hover:bg-muted transition-colors">
             <ArrowPathIcon className="w-4 h-4" />
@@ -488,7 +535,7 @@ export function Competitors() {
           </button>
         </div>
         <table className="w-full">
-          <thead className="bg-muted/50 border-b">
+          <thead className="bg-cyan-500/10 border-b border-cyan-500/20">
             <tr>
               <th className="p-4 text-left text-sm font-medium">Keyword</th>
               <th className="p-4 text-center text-sm font-medium">Your Position</th>

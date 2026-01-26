@@ -59,23 +59,12 @@ export default function AICTA() {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center" ref={ref}>
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/10 mb-8"
-        >
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm text-gray-300">Ready to transform your revenue operations?</span>
-        </motion.div>
-
         {/* Main Headline */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.1, duration: 0.6 }}
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
+          transition={{ duration: 0.6 }}
+          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-4"
         >
           <span className="text-white">Stop Guessing.</span>
           <br />
@@ -83,6 +72,17 @@ export default function AICTA() {
             Start Predicting.
           </span>
         </motion.h2>
+
+        {/* Badge - Under Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.1, duration: 0.6 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/10 mb-6"
+        >
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-sm text-gray-300">Ready to transform your revenue operations?</span>
+        </motion.div>
 
         {/* Subheadline */}
         <motion.p
