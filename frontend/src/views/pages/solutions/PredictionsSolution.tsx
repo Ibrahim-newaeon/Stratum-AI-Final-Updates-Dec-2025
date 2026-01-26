@@ -260,11 +260,12 @@ export default function PredictionsSolution() {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div
-            className="p-12 rounded-3xl"
+            className="p-12 rounded-3xl backdrop-blur-xl"
             style={{
               background:
-                'linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+                'linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
+              border: '1px solid rgba(236, 72, 153, 0.3)',
+              boxShadow: '0 8px 32px rgba(236, 72, 153, 0.15), 0 8px 32px rgba(168, 85, 247, 0.15)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">

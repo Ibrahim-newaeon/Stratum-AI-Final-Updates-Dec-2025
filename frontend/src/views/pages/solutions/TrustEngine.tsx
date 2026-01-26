@@ -285,11 +285,12 @@ export default function TrustEngineSolution() {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div
-            className="p-12 rounded-3xl"
+            className="p-12 rounded-3xl backdrop-blur-xl"
             style={{
               background:
-                'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+                'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
+              border: '1px solid rgba(34, 197, 94, 0.3)',
+              boxShadow: '0 8px 32px rgba(34, 197, 94, 0.15), 0 8px 32px rgba(6, 182, 212, 0.15)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">
