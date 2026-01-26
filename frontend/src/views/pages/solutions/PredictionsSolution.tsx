@@ -21,6 +21,7 @@ const predictions = [
     description:
       'Identify at-risk customers before they leave. Get actionable retention recommendations.',
     accuracy: '94%',
+    color: '#ef4444',
   },
   {
     icon: CurrencyDollarIcon,
@@ -28,6 +29,7 @@ const predictions = [
     description:
       'Predict customer lifetime value at acquisition. Optimize acquisition spend accordingly.',
     accuracy: '91%',
+    color: '#22c55e',
   },
   {
     icon: ArrowTrendingUpIcon,
@@ -35,6 +37,7 @@ const predictions = [
     description:
       'Accurate revenue predictions based on historical patterns and market signals.',
     accuracy: '89%',
+    color: '#3b82f6',
   },
   {
     icon: LightBulbIcon,
@@ -42,6 +45,7 @@ const predictions = [
     description:
       'AI-powered recommendations for the optimal next engagement for each customer.',
     accuracy: '87%',
+    color: '#f97316',
   },
 ];
 
@@ -180,21 +184,22 @@ export default function PredictionsSolution() {
             {predictions.map((pred) => (
               <div
                 key={pred.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl transition-all hover:scale-[1.02] backdrop-blur-xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: `${pred.color}15`,
+                  border: `1px solid ${pred.color}30`,
+                  boxShadow: `0 8px 32px ${pred.color}10`,
                 }}
               >
                 <div className="flex items-start gap-4">
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{
-                      background: 'rgba(236, 72, 153, 0.1)',
-                      border: '1px solid rgba(236, 72, 153, 0.2)',
+                      background: `${pred.color}25`,
+                      border: `1px solid ${pred.color}40`,
                     }}
                   >
-                    <pred.icon className="w-6 h-6" style={{ color: '#ec4899' }} />
+                    <pred.icon className="w-6 h-6" style={{ color: pred.color }} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">

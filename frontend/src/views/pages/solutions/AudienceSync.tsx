@@ -26,31 +26,37 @@ const features = [
     icon: BoltIcon,
     title: 'One-Click Sync',
     description: 'Push segments to any platform instantly. No engineering required.',
+    color: '#f97316',
   },
   {
     icon: ClockIcon,
     title: 'Auto-Refresh',
     description: 'Configurable sync intervals keep your audiences fresh 24/7.',
+    color: '#06b6d4',
   },
   {
     icon: ChartBarIcon,
     title: 'Match Rate Tracking',
     description: 'Monitor match rates and optimize identifier coverage.',
+    color: '#22c55e',
   },
   {
     icon: ShieldCheckIcon,
     title: 'Privacy-Safe',
     description: 'Hashed identifiers ensure PII never leaves your control.',
+    color: '#a855f7',
   },
   {
     icon: CloudArrowUpIcon,
     title: 'Flexible Export',
     description: 'Export as CSV or JSON with custom attributes anytime.',
+    color: '#3b82f6',
   },
   {
     icon: ArrowPathIcon,
     title: 'Sync History',
     description: 'Full audit trail of all sync operations and metrics.',
+    color: '#ec4899',
   },
 ];
 
@@ -187,13 +193,14 @@ export default function AudienceSyncSolution() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl transition-all hover:scale-[1.02] backdrop-blur-xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: `${feature.color}15`,
+                  border: `1px solid ${feature.color}30`,
+                  boxShadow: `0 8px 32px ${feature.color}10`,
                 }}
               >
-                <feature.icon className="w-10 h-10 mb-4" style={{ color: '#06b6d4' }} />
+                <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                   {feature.description}

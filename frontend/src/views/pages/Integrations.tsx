@@ -6,6 +6,14 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 
+const categoryColors: Record<string, string> = {
+  'Ad Platforms': '#f97316',
+  'Analytics & Attribution': '#06b6d4',
+  'CRM & Sales': '#a855f7',
+  'E-commerce': '#22c55e',
+  'Communication': '#3b82f6',
+};
+
 const integrations = {
   'Ad Platforms': [
     { name: 'Meta Ads', description: 'Facebook & Instagram advertising', logo: 'M' },
@@ -83,40 +91,45 @@ export default function Integrations() {
       {/* Integrations Grid */}
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
-          {Object.entries(integrations).map(([category, items]) => (
-            <div key={category} className="mb-16">
-              <h2 className="text-2xl font-bold text-white mb-8">{category}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {items.map((integration) => (
-                  <div
-                    key={integration.name}
-                    className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold"
-                        style={{
-                          background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                        }}
-                      >
-                        {integration.logo}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white">{integration.name}</h3>
-                        <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                          {integration.description}
-                        </p>
+          {Object.entries(integrations).map(([category, items]) => {
+            const color = categoryColors[category] || '#a855f7';
+            return (
+              <div key={category} className="mb-16">
+                <h2 className="text-2xl font-bold text-white mb-8">{category}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {items.map((integration) => (
+                    <div
+                      key={integration.name}
+                      className="p-6 rounded-2xl transition-all hover:scale-[1.02] group backdrop-blur-xl"
+                      style={{
+                        background: `${color}15`,
+                        border: `1px solid ${color}30`,
+                        boxShadow: `0 8px 32px ${color}10`,
+                      }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold"
+                          style={{
+                            background: `${color}40`,
+                            border: `1px solid ${color}60`,
+                          }}
+                        >
+                          {integration.logo}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-white">{integration.name}</h3>
+                          <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                            {integration.description}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

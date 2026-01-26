@@ -63,26 +63,31 @@ const features = [
     icon: CloudArrowUpIcon,
     title: 'One-Click Sync',
     description: 'Push your CDP segments to all ad platforms with a single click. No manual exports or uploads required.',
+    color: '#f97316',
   },
   {
     icon: ClockIcon,
     title: 'Auto-Refresh',
     description: 'Keep audiences fresh with configurable sync intervals from 1 hour to 1 week. Set it and forget it.',
+    color: '#06b6d4',
   },
   {
     icon: UserGroupIcon,
     title: 'Smart Matching',
     description: 'Hashed identifier matching for emails, phones, and MAIDs ensures privacy while maximizing match rates.',
+    color: '#22c55e',
   },
   {
     icon: ChartBarIcon,
     title: 'Match Rate Analytics',
     description: 'Track match rates, profiles synced, and audience health across all platforms in one dashboard.',
+    color: '#a855f7',
   },
   {
     icon: ShieldCheckIcon,
     title: 'Privacy-First',
     description: 'All PII is hashed before transmission. GDPR and CCPA compliant by design.',
+    color: '#3b82f6',
   },
 ];
 
@@ -223,15 +228,16 @@ export default function AudienceSyncLaunch() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl"
+                className="p-6 rounded-2xl backdrop-blur-xl transition-all hover:scale-[1.02]"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: `${feature.color}15`,
+                  border: `1px solid ${feature.color}30`,
+                  boxShadow: `0 8px 32px ${feature.color}10`,
                 }}
               >
                 <feature.icon
                   className="w-10 h-10 mb-4"
-                  style={{ color: '#a855f7' }}
+                  style={{ color: feature.color }}
                 />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>

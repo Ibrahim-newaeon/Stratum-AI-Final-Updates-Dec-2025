@@ -20,36 +20,42 @@ const features = [
     title: '360° Customer Profiles',
     description:
       'Unified view from anonymous visitor to loyal customer. Real-time enrichment from every interaction.',
+    color: '#a855f7',
   },
   {
     icon: CubeTransparentIcon,
     title: 'Identity Resolution',
     description:
       'Connect the dots across devices and channels. Visual identity graph shows every connection.',
+    color: '#06b6d4',
   },
   {
     icon: ChartBarIcon,
     title: 'Smart Segmentation',
     description:
       'Build segments with behavioral rules, RFM scores, and lifecycle stages. Preview before you publish.',
+    color: '#22c55e',
   },
   {
     icon: ArrowPathIcon,
     title: 'Multi-Platform Sync',
     description:
       'Push segments to Meta, Google, TikTok & Snapchat instantly. Auto-sync keeps your audiences fresh.',
+    color: '#f97316',
   },
   {
     icon: SparklesIcon,
     title: 'Predictive Analytics',
     description:
       'Churn prediction, LTV forecasting, and next-best-action recommendations powered by ML.',
+    color: '#ec4899',
   },
   {
     icon: ShieldCheckIcon,
     title: 'Privacy-First',
     description:
       'Consent management, GDPR/CCPA compliance, and hashed PII for secure platform sync.',
+    color: '#3b82f6',
   },
 ];
 
@@ -155,13 +161,14 @@ export default function CDPSolution() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl transition-all hover:scale-[1.02] backdrop-blur-xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: `${feature.color}15`,
+                  border: `1px solid ${feature.color}30`,
+                  boxShadow: `0 8px 32px ${feature.color}10`,
                 }}
               >
-                <feature.icon className="w-10 h-10 mb-4" style={{ color: '#a855f7' }} />
+                <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                   {feature.description}

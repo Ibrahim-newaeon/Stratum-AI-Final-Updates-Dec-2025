@@ -257,17 +257,18 @@ export default function TrustEngineSolution() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: 'Prevent Bad Decisions', desc: 'Never optimize on corrupted data' },
-              { title: 'Reduce Manual Oversight', desc: 'Automated safety checks 24/7' },
-              { title: 'Audit Trail', desc: 'Full logging of all gate decisions' },
-              { title: 'Customizable Thresholds', desc: 'Set your own risk tolerance' },
+              { title: 'Prevent Bad Decisions', desc: 'Never optimize on corrupted data', color: '#ef4444' },
+              { title: 'Reduce Manual Oversight', desc: 'Automated safety checks 24/7', color: '#22c55e' },
+              { title: 'Audit Trail', desc: 'Full logging of all gate decisions', color: '#a855f7' },
+              { title: 'Customizable Thresholds', desc: 'Set your own risk tolerance', color: '#06b6d4' },
             ].map((benefit) => (
               <div
                 key={benefit.title}
-                className="p-6 rounded-2xl text-center"
+                className="p-6 rounded-2xl text-center backdrop-blur-xl transition-all hover:scale-[1.02]"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: `${benefit.color}15`,
+                  border: `1px solid ${benefit.color}30`,
+                  boxShadow: `0 8px 32px ${benefit.color}10`,
                 }}
               >
                 <h3 className="font-semibold text-white mb-2">{benefit.title}</h3>

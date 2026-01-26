@@ -179,16 +179,17 @@ export default function Features() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
+                className="p-6 rounded-2xl transition-all hover:scale-[1.02] group backdrop-blur-xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: `${feature.color}15`,
+                  border: `1px solid ${feature.color}30`,
+                  boxShadow: `0 8px 32px ${feature.color}10`,
                 }}
               >
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                   style={{
-                    background: `${feature.color}20`,
+                    background: `${feature.color}25`,
                     border: `1px solid ${feature.color}40`,
                   }}
                 >
