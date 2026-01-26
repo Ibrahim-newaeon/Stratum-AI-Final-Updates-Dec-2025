@@ -15,10 +15,10 @@ import {
 } from '@heroicons/react/24/outline';
 
 const platforms = [
-  { name: 'Meta', description: 'Custom Audiences API', color: '#1877F2' },
-  { name: 'Google', description: 'Customer Match API', color: '#4285F4' },
-  { name: 'TikTok', description: 'DMP Custom Audience', color: '#000000' },
-  { name: 'Snapchat', description: 'SAM Audience Match', color: '#FFFC00' },
+  { name: 'Meta', description: 'Custom Audiences API' },
+  { name: 'Google', description: 'Customer Match API' },
+  { name: 'TikTok', description: 'DMP Custom Audience' },
+  { name: 'Snapchat', description: 'SAM Audience Match' },
 ];
 
 const features = [
@@ -115,15 +115,15 @@ export default function AudienceSyncSolution() {
             {platforms.map((platform) => (
               <div
                 key={platform.name}
-                className="p-6 rounded-2xl text-center transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl text-center transition-all hover:scale-[1.02] group"
                 style={{
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                 }}
               >
                 <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-3"
-                  style={{ background: platform.color }}
+                  className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl mx-auto mb-3 transition-colors"
+                  style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.8)' }}
                 >
                   {platform.name[0]}
                 </div>

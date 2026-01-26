@@ -25,7 +25,6 @@ const platforms = [
       </svg>
     ),
     description: 'Custom Audiences API',
-    color: '#1877F2',
   },
   {
     name: 'Google',
@@ -38,7 +37,6 @@ const platforms = [
       </svg>
     ),
     description: 'Customer Match API',
-    color: '#4285F4',
   },
   {
     name: 'TikTok',
@@ -48,7 +46,6 @@ const platforms = [
       </svg>
     ),
     description: 'DMP Custom Audience API',
-    color: '#000000',
   },
   {
     name: 'Snapchat',
@@ -58,7 +55,6 @@ const platforms = [
       </svg>
     ),
     description: 'Audience Match SAM API',
-    color: '#FFFC00',
   },
 ];
 
@@ -187,15 +183,15 @@ export default function AudienceSyncLaunch() {
             {platforms.map((platform) => (
               <div
                 key={platform.name}
-                className="p-6 rounded-2xl text-center transition-all hover:scale-105"
+                className="p-6 rounded-2xl text-center transition-all hover:scale-105 group"
                 style={{
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                 }}
               >
                 <div
-                  className="w-16 h-16 rounded-xl mx-auto mb-4 flex items-center justify-center"
-                  style={{ background: `${platform.color}20`, color: platform.color }}
+                  className="w-16 h-16 rounded-xl mx-auto mb-4 flex items-center justify-center transition-colors"
+                  style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}
                 >
                   {platform.logo}
                 </div>
