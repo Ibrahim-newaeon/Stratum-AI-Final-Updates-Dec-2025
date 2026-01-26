@@ -1,6 +1,6 @@
 /**
- * Signup Page - APPLE STYLE LIGHT EDITION
- * Clean white + blue accent + professional
+ * Signup Page - DARK THEME EDITION
+ * Purple/cyan gradient + dark background
  */
 
 import { useState } from 'react'
@@ -20,19 +20,20 @@ import {
 import { useSignup } from '@/api/auth'
 import { SEO, pageSEO } from '@/components/common/SEO'
 
-// Apple Style Theme
+// Dark Theme
 const theme = {
-  blue: '#007AFF',
-  blueHover: '#0056CC',
-  blueLight: '#E8F4FF',
-  bgBase: '#FFFFFF',
-  bgElevated: '#F5F5F7',
-  bgSurface: '#FFFFFF',
-  textPrimary: '#1D1D1F',
-  textSecondary: '#424245',
-  textMuted: '#86868B',
-  border: 'rgba(0, 0, 0, 0.08)',
-  success: '#34C759',
+  purple: '#a855f7',
+  cyan: '#06b6d4',
+  purpleHover: '#9333ea',
+  purpleLight: 'rgba(168, 85, 247, 0.1)',
+  bgBase: '#030303',
+  bgElevated: '#0a0a0a',
+  bgSurface: '#111111',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#E5E7EB',
+  textMuted: '#9CA3AF',
+  border: 'rgba(255, 255, 255, 0.1)',
+  success: '#22c55e',
 }
 
 const signupSchema = z.object({
@@ -82,11 +83,11 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: theme.bgElevated }}>
+    <div className="min-h-screen flex" style={{ background: theme.bgBase }}>
       <SEO {...pageSEO.signup} url="https://stratum-ai.com/signup" />
 
       {/* LEFT PANEL - BRANDING */}
-      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgBase }}>
+      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgElevated }}>
         <div
           className="absolute inset-y-0 right-0 w-px"
           style={{ background: theme.border }}
@@ -97,7 +98,7 @@ export default function Signup() {
             <Link to="/" className="flex items-center gap-3 mb-16 group">
               <div
                 className="h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
-                style={{ background: theme.blue }}
+                style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
               >
                 <span className="text-white font-semibold text-lg">S</span>
               </div>
@@ -105,7 +106,14 @@ export default function Signup() {
                 <span className="text-xl font-semibold tracking-tight" style={{ color: theme.textPrimary }}>
                   Stratum AI
                 </span>
-                <div className="text-xs tracking-widest uppercase" style={{ color: theme.blue }}>
+                <div
+                  className="text-xs tracking-widest uppercase"
+                  style={{
+                    background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   Revenue OS
                 </div>
               </div>
@@ -114,7 +122,13 @@ export default function Signup() {
             <h1 className="text-4xl font-semibold mb-4 leading-tight" style={{ color: theme.textPrimary, letterSpacing: '-0.02em' }}>
               Start optimizing<br />
               your revenue with<br />
-              <span style={{ color: theme.blue }}>AI-powered</span> insights
+              <span
+                style={{
+                  background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >AI-powered</span> insights
             </h1>
             <p className="text-lg max-w-md leading-relaxed" style={{ color: theme.textMuted }}>
               Join 150+ growth teams using Stratum to automate marketing decisions and recover lost revenue.
@@ -160,7 +174,7 @@ export default function Signup() {
           <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
             <div
               className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{ background: theme.blue }}
+              style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
             >
               <span className="text-white font-semibold text-lg">S</span>
             </div>
@@ -173,7 +187,7 @@ export default function Signup() {
             style={{
               background: theme.bgSurface,
               border: `1px solid ${theme.border}`,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
             }}
           >
             <div className="text-center mb-8">
@@ -186,9 +200,9 @@ export default function Signup() {
                 <div
                   className="flex items-center gap-3 p-4 rounded-xl text-sm"
                   style={{
-                    background: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
-                    color: '#DC2626',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#EF4444',
                   }}
                 >
                   <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
@@ -212,8 +226,8 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.blue
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                      e.target.style.borderColor = theme.purple
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border
@@ -240,8 +254,8 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.blue
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                      e.target.style.borderColor = theme.purple
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border
@@ -268,8 +282,8 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.blue
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                      e.target.style.borderColor = theme.purple
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border
@@ -296,8 +310,8 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.blue
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                      e.target.style.borderColor = theme.purple
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border
@@ -332,8 +346,8 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.blue
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                      e.target.style.borderColor = theme.purple
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border
@@ -357,12 +371,12 @@ export default function Signup() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 mt-2"
-                style={{ background: theme.blue }}
+                style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
                 onMouseEnter={(e) => {
-                  if (!isLoading) e.currentTarget.style.background = theme.blueHover
+                  if (!isLoading) e.currentTarget.style.opacity = '0.9'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = theme.blue
+                  e.currentTarget.style.opacity = '1'
                 }}
               >
                 {isLoading ? (
@@ -385,7 +399,7 @@ export default function Signup() {
               <Link
                 to="/login"
                 className="font-medium transition-colors hover:underline"
-                style={{ color: theme.blue }}
+                style={{ color: theme.purple }}
               >
                 Sign in
               </Link>

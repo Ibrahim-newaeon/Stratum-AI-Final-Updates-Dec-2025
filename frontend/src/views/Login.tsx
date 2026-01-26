@@ -1,6 +1,6 @@
 /**
- * Login Page - APPLE STYLE LIGHT EDITION
- * Clean white + blue accent + professional
+ * Login Page - DARK THEME EDITION
+ * Purple/cyan gradient + dark background
  */
 
 import { useState } from 'react'
@@ -15,19 +15,20 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { SEO, pageSEO } from '@/components/common/SEO'
 
-// Apple Style Theme
+// Dark Theme
 const theme = {
-  blue: '#007AFF',
-  blueHover: '#0056CC',
-  blueLight: '#E8F4FF',
-  bgBase: '#FFFFFF',
-  bgElevated: '#F5F5F7',
-  bgSurface: '#FFFFFF',
-  textPrimary: '#1D1D1F',
-  textSecondary: '#424245',
-  textMuted: '#86868B',
-  border: 'rgba(0, 0, 0, 0.08)',
-  success: '#34C759',
+  purple: '#a855f7',
+  cyan: '#06b6d4',
+  purpleHover: '#9333ea',
+  purpleLight: 'rgba(168, 85, 247, 0.1)',
+  bgBase: '#030303',
+  bgElevated: '#0a0a0a',
+  bgSurface: '#111111',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#E5E7EB',
+  textMuted: '#9CA3AF',
+  border: 'rgba(255, 255, 255, 0.1)',
+  success: '#22c55e',
 }
 
 export default function Login() {
@@ -91,11 +92,11 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: theme.bgElevated }}>
+    <div className="min-h-screen flex" style={{ background: theme.bgBase }}>
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
 
       {/* LEFT PANEL - BRANDING */}
-      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgBase }}>
+      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgElevated }}>
         <div
           className="absolute inset-y-0 right-0 w-px"
           style={{ background: theme.border }}
@@ -106,7 +107,7 @@ export default function Login() {
             <Link to="/" className="flex items-center gap-3 mb-16 group">
               <div
                 className="h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
-                style={{ background: theme.blue }}
+                style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
               >
                 <span className="text-white font-semibold text-lg">S</span>
               </div>
@@ -114,7 +115,14 @@ export default function Login() {
                 <span className="text-xl font-semibold tracking-tight" style={{ color: theme.textPrimary }}>
                   Stratum AI
                 </span>
-                <div className="text-xs tracking-widest uppercase" style={{ color: theme.blue }}>
+                <div
+                  className="text-xs tracking-widest uppercase"
+                  style={{
+                    background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   Revenue OS
                 </div>
               </div>
@@ -123,7 +131,13 @@ export default function Login() {
             <h1 className="text-4xl font-semibold mb-4 leading-tight" style={{ color: theme.textPrimary, letterSpacing: '-0.02em' }}>
               Revenue Operating<br />
               System with<br />
-              <span style={{ color: theme.blue }}>Trust-Gated</span> Autopilot
+              <span
+                style={{
+                  background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >Trust-Gated</span> Autopilot
             </h1>
             <p className="text-lg max-w-md leading-relaxed" style={{ color: theme.textMuted }}>
               AI-powered marketing intelligence with real-time attribution and automated optimization.
@@ -137,7 +151,7 @@ export default function Login() {
                   key={platform}
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-300"
                   style={{
-                    background: theme.bgElevated,
+                    background: theme.bgSurface,
                     color: theme.textMuted,
                     border: `1px solid ${theme.border}`,
                   }}
@@ -174,7 +188,7 @@ export default function Login() {
           <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
             <div
               className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{ background: theme.blue }}
+              style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
             >
               <span className="text-white font-semibold text-lg">S</span>
             </div>
@@ -186,7 +200,7 @@ export default function Login() {
             style={{
               background: theme.bgSurface,
               border: `1px solid ${theme.border}`,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
             }}
           >
             <div className="text-center mb-8">
@@ -199,9 +213,9 @@ export default function Login() {
                 <div
                   className="flex items-center gap-3 p-4 rounded-xl text-sm"
                   style={{
-                    background: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
-                    color: '#DC2626',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#EF4444',
                   }}
                 >
                   <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
@@ -210,7 +224,7 @@ export default function Login() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Email</label>
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Work Email</label>
                 <div className="relative">
                   <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
                   <input
@@ -224,8 +238,8 @@ export default function Login() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.blue
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                      e.target.style.borderColor = theme.purple
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border
@@ -244,7 +258,7 @@ export default function Login() {
                   <Link
                     to="/forgot-password"
                     className="text-sm transition-colors hover:underline"
-                    style={{ color: theme.blue }}
+                    style={{ color: theme.purple }}
                   >
                     Forgot?
                   </Link>
@@ -262,8 +276,8 @@ export default function Login() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.blue
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                      e.target.style.borderColor = theme.purple
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border
@@ -290,7 +304,7 @@ export default function Login() {
                   onClick={() => setRememberMe(!rememberMe)}
                   className="w-5 h-5 rounded flex items-center justify-center transition-all duration-200"
                   style={{
-                    background: rememberMe ? theme.blue : theme.bgElevated,
+                    background: rememberMe ? `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` : theme.bgElevated,
                     border: rememberMe ? 'none' : `1px solid ${theme.border}`,
                   }}
                 >
@@ -307,12 +321,12 @@ export default function Login() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
-                style={{ background: theme.blue }}
+                style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
                 onMouseEnter={(e) => {
-                  if (!isLoading) e.currentTarget.style.background = theme.blueHover
+                  if (!isLoading) e.currentTarget.style.opacity = '0.9'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = theme.blue
+                  e.currentTarget.style.opacity = '1'
                 }}
               >
                 {isLoading ? (
@@ -329,40 +343,6 @@ export default function Login() {
               </button>
             </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full" style={{ borderTop: `1px solid ${theme.border}` }} />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-4 text-sm" style={{ background: theme.bgSurface, color: theme.textMuted }}>
-                  or
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {['Google', 'Microsoft'].map((provider) => (
-                <button
-                  key={provider}
-                  type="button"
-                  className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-200"
-                  style={{
-                    background: theme.bgElevated,
-                    border: `1px solid ${theme.border}`,
-                    color: theme.textSecondary,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = theme.blue
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = theme.border
-                  }}
-                >
-                  {provider}
-                </button>
-              ))}
-            </div>
-
             <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${theme.border}` }}>
               <p className="text-center text-xs mb-3" style={{ color: theme.textMuted }}>Quick Demo Access</p>
               <div className="grid grid-cols-3 gap-2">
@@ -378,8 +358,8 @@ export default function Login() {
                       color: theme.textMuted,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = theme.blue
-                      e.currentTarget.style.color = theme.blue
+                      e.currentTarget.style.borderColor = theme.purple
+                      e.currentTarget.style.color = theme.purple
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = theme.border
@@ -397,7 +377,7 @@ export default function Login() {
               <Link
                 to="/signup"
                 className="font-medium transition-colors hover:underline"
-                style={{ color: theme.blue }}
+                style={{ color: theme.purple }}
               >
                 Sign up
               </Link>

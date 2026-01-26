@@ -1,13 +1,12 @@
 /**
  * PageLayout Component
  * Shared layout for all public-facing pages with header and footer
- * Theme: Vibe.co Clean Light Design
+ * Theme: Dark with Purple/Cyan gradients
  */
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Footer } from './Footer';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -43,26 +42,27 @@ export function PageLayout({ children }: PageLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#FFFFFF' }}>
-      {/* Vibe.co Clean Light Header */}
+    <div className="min-h-screen flex flex-col" style={{ background: '#030303' }}>
+      {/* Dark Theme Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
           isScrolled ? 'py-3' : 'py-4'
         }`}
         style={{
-          background: '#FFFFFF',
-          borderBottom: isScrolled ? '1px solid #E5E7EB' : '1px solid transparent',
-          boxShadow: isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.08)' : 'none',
+          background: isScrolled ? 'rgba(3, 3, 3, 0.95)' : 'rgba(3, 3, 3, 0.8)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
         }}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
           <nav className="flex items-center justify-between">
-            {/* Vibe Logo - Indigo Gradient */}
+            {/* Logo - Purple/Cyan Gradient */}
             <Link to="/" className="flex items-center gap-3 group">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-hover:shadow-[0_4px_14px_rgba(79,70,229,0.4)]"
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
                 style={{
-                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                  boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)',
                 }}
               >
                 <span className="text-white font-bold text-lg">S</span>
@@ -70,7 +70,7 @@ export function PageLayout({ children }: PageLayoutProps) {
               <span
                 className="text-xl font-bold"
                 style={{
-                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
@@ -89,7 +89,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     isActiveLink(link.href) ? 'font-semibold' : ''
                   }`}
                   style={{
-                    color: isActiveLink(link.href) ? '#000000' : '#6B7280',
+                    color: isActiveLink(link.href) ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                     letterSpacing: '0.01em',
                   }}
                 >
@@ -99,31 +99,31 @@ export function PageLayout({ children }: PageLayoutProps) {
                       isActiveLink(link.href) ? 'w-full' : 'w-0'
                     }`}
                     style={{
-                      background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
+                      background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
                     }}
                   />
                 </Link>
               ))}
             </div>
 
-            {/* Vibe CTA Buttons */}
+            {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
               <Link
                 to="/login"
-                className="text-sm font-medium py-2 px-4 transition-all duration-200 hover:text-black"
-                style={{ color: '#374151' }}
+                className="text-sm font-medium py-2 px-4 transition-all duration-200 hover:text-white"
+                style={{ color: 'rgba(255, 255, 255, 0.6)' }}
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="cta-button px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all duration-200"
+                className="cta-button px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200"
                 style={{
-                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
-                  boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                  boxShadow: '0 4px 14px rgba(168, 85, 247, 0.4)',
                 }}
               >
-                Get Started
+                Start Free Trial
               </Link>
             </div>
 
@@ -131,28 +131,28 @@ export function PageLayout({ children }: PageLayoutProps) {
             <button
               className="lg:hidden p-2 rounded-lg transition-all duration-200"
               style={{
-                background: '#F3F4F6',
-                border: '1px solid #E5E7EB',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
-                <XMarkIcon className="w-6 h-6 text-gray-700" />
+                <XMarkIcon className="w-6 h-6 text-white" />
               ) : (
-                <Bars3Icon className="w-6 h-6 text-gray-700" />
+                <Bars3Icon className="w-6 h-6 text-white" />
               )}
             </button>
           </nav>
 
-          {/* Mobile Menu - Light Theme */}
+          {/* Mobile Menu - Dark Theme */}
           {isMobileMenuOpen && (
             <div
               className="lg:hidden mt-4 py-4 rounded-2xl"
               style={{
-                background: '#FFFFFF',
-                border: '1px solid #E5E7EB',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                background: 'rgba(10, 10, 10, 0.98)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
               }}
             >
               <div className="flex flex-col gap-2 px-4">
@@ -162,32 +162,32 @@ export function PageLayout({ children }: PageLayoutProps) {
                     to={link.href}
                     className="py-3 px-4 rounded-lg text-sm font-medium transition-colors"
                     style={{
-                      color: isActiveLink(link.href) ? '#000000' : '#6B7280',
-                      background: isActiveLink(link.href) ? '#F3F4F6' : 'transparent',
+                      color: isActiveLink(link.href) ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                      background: isActiveLink(link.href) ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}
                   </Link>
                 ))}
-                <hr className="border-gray-200 my-2" />
+                <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} className="my-2" />
                 <Link
                   to="/login"
                   className="py-3 px-4 rounded-lg text-sm font-medium"
-                  style={{ color: '#374151' }}
+                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/signup"
-                  className="py-3 px-4 rounded-lg text-sm font-semibold text-white text-center"
+                  className="py-3 px-4 rounded-xl text-sm font-semibold text-white text-center"
                   style={{
-                    background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
+                    background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
                   }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Get Started
+                  Start Free Trial
                 </Link>
               </div>
             </div>
@@ -201,13 +201,153 @@ export function PageLayout({ children }: PageLayoutProps) {
       {/* Main Content */}
       <main className="flex-1 relative z-10">{children}</main>
 
-      {/* Footer */}
-      <Footer />
+      {/* Dark Theme Footer */}
+      <footer style={{ background: '#030303', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+        <div className="max-w-7xl mx-auto px-6 py-16">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+            {/* Brand */}
+            <div className="col-span-2">
+              <Link to="/" className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                  }}
+                >
+                  <span className="text-white font-bold text-lg">S</span>
+                </div>
+                <span
+                  className="text-xl font-semibold"
+                  style={{
+                    background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  Stratum AI
+                </span>
+              </Link>
+              <p className="text-sm mb-6 max-w-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                AI-Powered Revenue Operating System with Trust-Gated Autopilot.
+              </p>
 
-      {/* Vibe.co Light Theme CSS */}
+              {/* Social links */}
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://x.com/stratumai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-purple-400"
+                  style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                  aria-label="Follow us on X"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+                <a
+                  href="https://linkedin.com/company/stratumai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-purple-400"
+                  style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                  aria-label="Follow us on LinkedIn"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      fillRule="evenodd"
+                      d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Links */}
+            {[
+              {
+                title: 'Product',
+                links: [
+                  { name: 'Features', href: '/features' },
+                  { name: 'Pricing', href: '/pricing' },
+                  { name: 'Integrations', href: '/integrations' },
+                  { name: 'API Docs', href: '/api-docs' },
+                ],
+              },
+              {
+                title: 'Solutions',
+                links: [
+                  { name: 'CDP', href: '/solutions/cdp' },
+                  { name: 'Audience Sync', href: '/solutions/audience-sync' },
+                  { name: 'Predictions', href: '/solutions/predictions' },
+                  { name: 'Trust Engine', href: '/solutions/trust-engine' },
+                ],
+              },
+              {
+                title: 'Company',
+                links: [
+                  { name: 'About', href: '/about' },
+                  { name: 'Careers', href: '/careers' },
+                  { name: 'Blog', href: '/blog' },
+                  { name: 'Contact', href: '/contact' },
+                ],
+              },
+              {
+                title: 'Legal',
+                links: [
+                  { name: 'Privacy', href: '/privacy' },
+                  { name: 'Terms', href: '/terms' },
+                  { name: 'Security', href: '/security' },
+                  { name: 'DPA', href: '/dpa' },
+                ],
+              },
+            ].map((section) => (
+              <div key={section.title}>
+                <h4 className="text-sm text-white font-semibold mb-4">{section.title}</h4>
+                <ul className="space-y-3">
+                  {section.links.map((link) => (
+                    <li key={link.name}>
+                      <Link
+                        to={link.href}
+                        className="text-sm transition-colors hover:text-purple-400"
+                        style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom bar */}
+          <div
+            className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4"
+            style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}
+          >
+            <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+              &copy; {new Date().getFullYear()} Stratum AI. All rights reserved.
+            </p>
+
+            <div className="flex items-center gap-6">
+              <span
+                className="flex items-center gap-2 text-xs"
+                style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+              >
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                All systems operational
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Dark Theme CSS */}
       <style>{`
         .nav-link:hover {
-          color: #000000 !important;
+          color: #ffffff !important;
         }
 
         .nav-link:hover .nav-link-underline {
@@ -216,7 +356,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
         .cta-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(79, 70, 229, 0.5) !important;
+          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.5) !important;
         }
       `}</style>
     </div>

@@ -80,12 +80,86 @@
     .tooltip-content { position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; padding: 8px 12px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px; color: #9ca3af; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 50; }
     .tooltip:hover .tooltip-content { opacity: 1; }
   </style>
+  <!-- PDF Generation Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    async function downloadBattleCard() {
+      const btn = event.target.closest('button');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating PDF...';
+      btn.disabled = true;
+
+      try {
+        // Expand all categories first
+        ['ai', 'cdp', 'activation'].forEach(cat => {
+          const features = document.getElementById(cat + '-features');
+          if (features && features.classList.contains('hidden')) {
+            features.classList.remove('hidden');
+          }
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        const compareSection = document.querySelector('#compare .rounded-3xl');
+        const canvas = await html2canvas(compareSection, {
+          backgroundColor: '#030303',
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('l', 'mm', 'a4');
+
+        // Add header
+        pdf.setFillColor(3, 3, 3);
+        pdf.rect(0, 0, 297, 210, 'F');
+
+        pdf.setFontSize(24);
+        pdf.setTextColor(168, 85, 247);
+        pdf.text('Stratum AI', 15, 20);
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text('Sales Battle Card - Competitive Comparison', 15, 28);
+
+        // Add table image
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 267;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 15, 35, imgWidth, Math.min(imgHeight, 160));
+
+        // Footer
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text('Generated from stratum-ai.com | ' + new Date().toLocaleDateString(), 15, 200);
+
+        pdf.save('Stratum-AI-Battle-Card.pdf');
+      } catch (error) {
+        console.error('PDF generation failed:', error);
+        alert('Failed to generate PDF. Please try again.');
+      }
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  </script>
 </head>
 <body class="antialiased">
+  <!-- Announcement Bar -->
+  <div class="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 bg-[length:200%_100%] animate-gradient-x">
+    <div class="max-w-7xl mx-auto px-6 py-2 flex items-center justify-center gap-3">
+      <span class="text-sm font-medium text-white">New: Multi-Platform Audience Sync is live!</span>
+      <a href="#features" class="text-sm font-semibold text-white underline underline-offset-2 hover:no-underline">Learn more →</a>
+    </div>
+  </div>
+
   <!-- Navigation -->
-  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#030303]/80 backdrop-blur-xl">
+  <nav class="fixed top-10 left-0 right-0 z-50 border-b border-white/5 bg-[#030303]/80 backdrop-blur-xl">
     <div class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
+        <!-- Logo -->
         <a href="/" class="flex items-center gap-3">
           <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-cyan-500 to-orange-500 p-[1px]">
             <div class="absolute inset-[1px] rounded-xl bg-[#030303] flex items-center justify-center">
@@ -94,22 +168,171 @@
           </div>
           <span class="text-xl font-semibold tracking-tight">Stratum AI</span>
         </a>
-        <div class="hidden md:flex items-center gap-8">
-          <a href="#features" class="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
-          <a href="#trust" class="text-sm text-gray-400 hover:text-white transition-colors">Trust Engine</a>
-          <a href="#compare" class="text-sm text-gray-400 hover:text-white transition-colors">Compare</a>
-          <a href="#pricing" class="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center gap-1">
+          <!-- Product Dropdown -->
+          <div class="relative group">
+            <button class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+              Product
+              <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div class="w-64 p-2 rounded-xl bg-[#0a0a0a] border border-white/10 shadow-2xl">
+                <a href="#features" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Features</div>
+                    <div class="text-xs text-gray-500">All platform capabilities</div>
+                  </div>
+                </a>
+                <a href="#trust" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Trust Engine</div>
+                    <div class="text-xs text-gray-500">AI safety & verification</div>
+                  </div>
+                </a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Integrations</div>
+                    <div class="text-xs text-gray-500">Connect your stack</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Solutions Dropdown -->
+          <div class="relative group">
+            <button class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+              Solutions
+              <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div class="w-64 p-2 rounded-xl bg-[#0a0a0a] border border-white/10 shadow-2xl">
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">CDP</div>
+                    <div class="text-xs text-gray-500">Customer Data Platform</div>
+                  </div>
+                </a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Audience Sync</div>
+                    <div class="text-xs text-gray-500">Multi-platform targeting</div>
+                  </div>
+                </a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Predictions</div>
+                    <div class="text-xs text-gray-500">AI-powered forecasting</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pricing -->
+          <a href="#pricing" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
+
+          <!-- Resources Dropdown -->
+          <div class="relative group">
+            <button class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+              Resources
+              <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div class="w-64 p-2 rounded-xl bg-[#0a0a0a] border border-white/10 shadow-2xl">
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Documentation</div>
+                    <div class="text-xs text-gray-500">Guides & API reference</div>
+                  </div>
+                </a>
+                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Blog</div>
+                    <div class="text-xs text-gray-500">News & insights</div>
+                  </div>
+                </a>
+                <a href="#compare" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-white">Compare</div>
+                    <div class="text-xs text-gray-500">See how we stack up</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Right Side Actions -->
         <div class="flex items-center gap-4">
-          <a href="/login" class="text-sm text-gray-400 hover:text-white transition-colors">Sign In</a>
-          <a href="/signup" class="px-4 py-2 rounded-xl text-sm font-medium bg-white/5 border border-white/10 hover:bg-white/10 transition-all">Start Free Trial</a>
+          <a href="/login" class="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block">Sign In</a>
+          <a href="/signup" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:shadow-lg hover:shadow-purple-500/25">
+            <span>Start Free Trial</span>
+          </a>
+
+          <!-- Mobile Menu Button -->
+          <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-400 hover:text-white">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-[#030303]">
+      <div class="px-6 py-4 space-y-4">
+        <a href="#features" class="block text-sm text-gray-400 hover:text-white py-2">Features</a>
+        <a href="#trust" class="block text-sm text-gray-400 hover:text-white py-2">Trust Engine</a>
+        <a href="#pricing" class="block text-sm text-gray-400 hover:text-white py-2">Pricing</a>
+        <a href="#compare" class="block text-sm text-gray-400 hover:text-white py-2">Compare</a>
+        <div class="pt-4 border-t border-white/10 space-y-3">
+          <a href="/login" class="block text-sm text-gray-400 hover:text-white py-2">Sign In</a>
+          <a href="/signup" class="block w-full text-center btn-primary px-5 py-2.5 rounded-xl text-sm font-medium">
+            <span>Start Free Trial</span>
+          </a>
         </div>
       </div>
     </div>
   </nav>
 
+  <script>
+    // Mobile menu toggle
+    document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+  </script>
+
   <!-- Hero Section -->
-  <section class="relative min-h-screen flex items-center justify-center pt-20 pb-12 overflow-hidden">
+  <section class="relative min-h-screen flex items-center justify-center pt-32 pb-12 overflow-hidden">
     <!-- Neural Network Background -->
     <div class="absolute inset-0 overflow-hidden opacity-[0.03]">
       <svg class="absolute w-full h-full" viewBox="0 0 1000 1000">
@@ -278,9 +501,10 @@
           <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
           <span class="text-sm font-medium text-purple-400">6 AI Models Built-In</span>
         </div>
-        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
           <span class="text-white">Predictive Intelligence</span><br>
-          <span class="gradient-text-purple">Not Just Analytics</span>
+          <span class="gradient-text">Not Just Analytics</span>
+          <div class="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 rounded-full"></div>
         </h2>
         <p class="text-lg text-gray-400 max-w-2xl mx-auto">
           Every model is trained on YOUR data. No generic predictions—tailored insights for your unique business patterns.
@@ -452,9 +676,10 @@
           <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
           <span class="text-sm font-medium text-cyan-400">Unique to Stratum AI</span>
         </div>
-        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
           <span class="text-white">Trust-Gated</span><br>
-          <span class="gradient-text-cyan">Autopilot</span>
+          <span class="gradient-text">Autopilot</span>
+          <div class="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 rounded-full"></div>
         </h2>
         <p class="text-lg text-gray-400 max-w-2xl mx-auto">
           The only platform that <span class="text-white font-medium">refuses to execute bad recommendations</span>.
@@ -606,14 +831,15 @@
           <svg class="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
           <span class="text-sm font-medium text-orange-400">Competitive Battle Card</span>
         </div>
-        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
           <span class="text-white">See How We</span><br>
-          <span class="gradient-text-orange">Stack Up</span>
+          <span class="gradient-text">Stack Up</span>
+          <div class="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 rounded-full"></div>
         </h2>
         <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
           The only platform with Trust-Gated execution, built-in AI predictions, and visual identity resolution.
         </p>
-        <button onclick="alert('Battle Card PDF download')" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all text-sm font-medium text-white">
+        <button onclick="downloadBattleCard()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 transition-all text-sm font-medium text-white shadow-lg shadow-purple-500/25">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Download Sales Battle Card (PDF)
         </button>
@@ -797,9 +1023,10 @@
           <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
           <span class="text-sm font-medium text-green-400">AI-Powered Pricing</span>
         </div>
-        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
           <span class="text-white">Pay for the AI</span><br>
-          <span class="gradient-text-green">Power You Need</span>
+          <span class="gradient-text">Power You Need</span>
+          <div class="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 rounded-full"></div>
         </h2>
         <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
           All plans include the core platform. Upgrade for advanced AI models and higher limits.
@@ -919,9 +1146,10 @@
     <div class="relative z-10 max-w-7xl mx-auto px-6">
       <!-- Section Header -->
       <div class="text-center mb-10">
-        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
-          <span class="text-white">Trusted by</span>
-          <span class="gradient-text-cyan">Revenue Teams</span>
+        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
+          <span class="text-white">Trusted by </span>
+          <span class="gradient-text">Revenue Teams</span>
+          <div class="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 rounded-full"></div>
         </h2>
         <p class="text-lg text-gray-400 max-w-2xl mx-auto">
           See what growth and marketing leaders say about switching to AI-powered revenue operations.
@@ -1091,9 +1319,10 @@
       </div>
 
       <!-- Main Headline -->
-      <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+      <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
         <span class="text-white">Stop Guessing.</span><br>
         <span class="gradient-text">Start Predicting.</span>
+        <div class="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 rounded-full"></div>
       </h2>
 
       <!-- Subheadline -->
