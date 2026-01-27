@@ -28,9 +28,8 @@ repos:
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: detect-private-key
-# Temporarily disabled for initial setup - re-enable after workflow established
-      # - id: no-commit-to-branch
-      #   args: [--branch, main, --branch, master]
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
 
   # ==========================================================================
   # Python - Ruff (Linting & Formatting)
