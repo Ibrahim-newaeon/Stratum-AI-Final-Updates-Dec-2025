@@ -81,7 +81,6 @@ ignore = [
     "S108",   # Insecure temp file (false positives for /tmp paths)
     "S110",   # try-except-pass (intentional robustness)
     "S112",   # try-except-continue (intentional)
-    "S311",   # Pseudo-random generators (non-crypto use)
     "S608",   # SQL injection (manual review needed - often false positive)
     "SIM102", # Nested if statements (28 violations - readability)
     "SIM108", # Use ternary operator (22 violations - readability)
@@ -95,11 +94,11 @@ fixable = ["ALL"]
 unfixable = []
 
 [lint.per-file-ignores]
-# Tests can use assert and print
-"**/tests/**/*.py" = ["S101", "T20", "B011"]
-"**/test_*.py" = ["S101", "T20", "B011"]
-# Allow print in CLI/scripts
-"**/scripts/**/*.py" = ["T20"]
+# Tests can use assert, print, and non-crypto random
+"**/tests/**/*.py" = ["S101", "T20", "B011", "S311"]
+"**/test_*.py" = ["S101", "T20", "B011", "S311"]
+# Allow print and non-crypto random in CLI/scripts
+"**/scripts/**/*.py" = ["T20", "S311"]
 # Migrations have specific patterns
 "**/migrations/**/*.py" = ["E501", "N"]
 "**/alembic/**/*.py" = ["E501", "N"]

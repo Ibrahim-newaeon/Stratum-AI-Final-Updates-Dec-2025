@@ -301,11 +301,11 @@ async def fetch_attribution_metrics(
 
     import random
 
-    base_revenue = random.uniform(5000, 50000)
-    base_conversions = random.randint(50, 500)
+    base_revenue = random.uniform(5000, 50000)  # noqa: S311 - simulated metrics
+    base_conversions = random.randint(50, 500)  # noqa: S311
 
     # Simulate typical variance (platform usually higher)
-    variance_factor = random.uniform(1.05, 1.35)
+    variance_factor = random.uniform(1.05, 1.35)  # noqa: S311
 
     return {
         "ga4_revenue": base_revenue,

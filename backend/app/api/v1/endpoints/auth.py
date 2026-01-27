@@ -6,7 +6,7 @@ Authentication and authorization endpoints.
 Handles login, registration, token refresh, password reset, and WhatsApp verification.
 """
 
-import random
+import secrets
 import string
 from datetime import UTC, datetime
 from typing import Optional
@@ -235,8 +235,8 @@ class VerifyOTPResponse(BaseModel):
 
 
 def generate_otp(length: int = 6) -> str:
-    """Generate a random numeric OTP code."""
-    return "".join(random.choices(string.digits, k=length))
+    """Generate a cryptographically secure numeric OTP code."""
+    return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
 async def get_redis_client() -> redis.Redis:
@@ -343,8 +343,8 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
         # OTP is valid - delete it and create verification token
         await redis_client.delete(otp_key)
 
-        # Create a verification token (valid for 30 minutes)
-        verification_token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+        # Create a cryptographically secure verification token (valid for 30 minutes)
+        verification_token = secrets.token_urlsafe(24)
         verification_key = f"phone_verified:{phone_number}"
         await redis_client.setex(verification_key, 1800, verification_token)  # 30 min expiry
 
@@ -427,8 +427,8 @@ async def login(
                 detail=f"Account locked due to too many failed MFA attempts. Try again in {remaining} minutes.",
             )
 
-        # Generate temporary MFA session token
-        mfa_session_token = "".join(random.choices(string.ascii_letters + string.digits, k=64))
+        # Generate cryptographically secure temporary MFA session token
+        mfa_session_token = secrets.token_urlsafe(48)
 
         # Store session data in Redis (user_id, email, tenant_id, ip, user_agent)
         try:

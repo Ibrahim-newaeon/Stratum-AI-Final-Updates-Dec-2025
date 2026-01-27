@@ -274,8 +274,8 @@ class CompetitorBenchmarkingService:
                     p75=p75,
                     p90=p90,
                     mean=mean,
-                    sample_size=random.randint(500, 2000),
-                    last_updated=datetime.now(UTC) - timedelta(days=random.randint(1, 7)),
+                    sample_size=random.randint(500, 2000),  # noqa: S311 - mock data
+                    last_updated=datetime.now(UTC) - timedelta(days=random.randint(1, 7)),  # noqa: S311
                 )
 
         return benchmarks
