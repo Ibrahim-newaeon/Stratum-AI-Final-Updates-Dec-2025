@@ -5,7 +5,7 @@
 Background tasks for CMS content publishing and scheduling.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 
 from celery import shared_task
@@ -29,7 +29,7 @@ def publish_scheduled_cms_posts():
     from app.models.cms import CMSPost, CMSPostStatus
 
     with SyncSessionLocal() as db:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Get posts scheduled for publishing
         posts = (
@@ -75,9 +75,7 @@ def publish_cms_post(self, post_id: str, published_by_id: Optional[int] = None):
     from app.models.cms import CMSPost, CMSPostStatus, CMSPostVersion
 
     with SyncSessionLocal() as db:
-        post = db.execute(
-            select(CMSPost).where(CMSPost.id == post_id)
-        ).scalar_one_or_none()
+        post = db.execute(select(CMSPost).where(CMSPost.id == post_id)).scalar_one_or_none()
 
         if not post:
             logger.warning(f"Post {post_id} not found")
@@ -99,7 +97,7 @@ def publish_cms_post(self, post_id: str, published_by_id: Optional[int] = None):
 
             # Update post status
             post.status = CMSPostStatus.PUBLISHED
-            post.published_at = datetime.now(timezone.utc)
+            post.published_at = datetime.now(UTC)
             post.published_by_id = published_by_id
             post.version += 1
 
@@ -150,9 +148,7 @@ def create_cms_post_version(
     from app.models.cms import CMSPost, CMSPostVersion
 
     with SyncSessionLocal() as db:
-        post = db.execute(
-            select(CMSPost).where(CMSPost.id == post_id)
-        ).scalar_one_or_none()
+        post = db.execute(select(CMSPost).where(CMSPost.id == post_id)).scalar_one_or_none()
 
         if not post:
             logger.warning(f"Post {post_id} not found")

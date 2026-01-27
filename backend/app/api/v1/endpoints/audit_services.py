@@ -22,36 +22,41 @@ Security features:
 - Structured audit logging
 """
 
-from datetime import datetime, timezone, date
-from typing import List, Optional, Dict, Any
+import threading
 import time
 from collections import defaultdict
-import threading
+from datetime import UTC, date, datetime
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db, get_tenant_id
 from app.core.logging import get_logger
+from app.ml.ab_testing import ModelABTestingService
+from app.ml.explainability import ModelExplainer
+from app.ml.ltv_predictor import CustomerBehavior, LTVPredictor
+from app.ml.retraining_pipeline import RetrainingPipeline as ModelRetrainingPipeline
 from app.models import User
+from app.services.audience_insights_service import AudienceInsightsService, AudienceType
+from app.services.budget_reallocation_service import (
+    BudgetReallocationService,
+    CampaignBudgetState,
+    ReallocationConfig,
+    ReallocationStrategy,
+)
+from app.services.competitor_benchmarking_service import (
+    CompetitorBenchmarkingService,
+    Industry,
+    Region,
+)
+from app.services.conversion_latency_service import ConversionLatencyTracker
+from app.services.creative_performance_service import CreativePerformanceService
 
 # Import services
 from app.services.emq_measurement_service import RealEMQService as EMQMeasurementService
 from app.services.offline_conversion_service import OfflineConversionService
-from app.ml.ab_testing import ModelABTestingService
-from app.services.conversion_latency_service import ConversionLatencyTracker
-from app.services.creative_performance_service import CreativePerformanceService
-from app.services.competitor_benchmarking_service import (
-    CompetitorBenchmarkingService, Industry, Region
-)
-from app.services.budget_reallocation_service import (
-    BudgetReallocationService, ReallocationConfig, CampaignBudgetState, ReallocationStrategy
-)
-from app.services.audience_insights_service import AudienceInsightsService, AudienceType
-from app.ml.ltv_predictor import LTVPredictor, CustomerBehavior
-from app.ml.explainability import ModelExplainer
-from app.ml.retraining_pipeline import RetrainingPipeline as ModelRetrainingPipeline
+from app.tenancy.deps import get_current_user, get_db, get_tenant_id
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/audit-services", tags=["audit-services"])
@@ -61,12 +66,13 @@ router = APIRouter(prefix="/audit-services", tags=["audit-services"])
 # Rate Limiting
 # =============================================================================
 
+
 class RateLimiter:
     """Simple in-memory rate limiter for API protection."""
 
     def __init__(self, requests_per_minute: int = 60):
         self.requests_per_minute = requests_per_minute
-        self.requests: Dict[str, List[float]] = defaultdict(list)
+        self.requests: dict[str, list[float]] = defaultdict(list)
         self._lock = threading.Lock()
 
     def is_allowed(self, key: str) -> bool:
@@ -100,8 +106,7 @@ async def check_rate_limit(
     key = f"{tenant_id}:{current_user.id}"
     if not limiter.is_allowed(key):
         logger.warning(
-            "Rate limit exceeded",
-            extra={"user_id": str(current_user.id), "tenant_id": tenant_id}
+            "Rate limit exceeded", extra={"user_id": str(current_user.id), "tenant_id": tenant_id}
         )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -129,14 +134,15 @@ async def check_batch_rate_limit(
 # Role-Based Access Control
 # =============================================================================
 
+
 async def require_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Require admin role for endpoint access."""
-    if not hasattr(current_user, 'role') or current_user.role not in ('admin', 'superadmin'):
+    if not hasattr(current_user, "role") or current_user.role not in ("admin", "superadmin"):
         logger.warning(
             "Unauthorized admin access attempt",
-            extra={"user_id": str(current_user.id), "email": current_user.email}
+            extra={"user_id": str(current_user.id), "email": current_user.email},
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -149,11 +155,11 @@ async def require_manager_or_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Require manager or admin role for endpoint access."""
-    allowed_roles = ('manager', 'admin', 'superadmin')
-    if not hasattr(current_user, 'role') or current_user.role not in allowed_roles:
+    allowed_roles = ("manager", "admin", "superadmin")
+    if not hasattr(current_user, "role") or current_user.role not in allowed_roles:
         logger.warning(
             "Unauthorized manager access attempt",
-            extra={"user_id": str(current_user.id), "email": current_user.email}
+            extra={"user_id": str(current_user.id), "email": current_user.email},
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -166,6 +172,7 @@ async def require_manager_or_admin(
 # Audit Logging
 # =============================================================================
 
+
 class AuditLogger:
     """Structured audit logging for compliance and debugging."""
 
@@ -176,7 +183,7 @@ class AuditLogger:
         tenant_id: int,
         resource_type: str,
         resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
         success: bool = True,
     ):
         """Log an audit event."""
@@ -189,7 +196,7 @@ class AuditLogger:
             "resource_id": resource_id,
             "details": details or {},
             "success": success,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         if success:
             logger.info(f"Audit: {operation} on {resource_type}", extra=log_data)
@@ -204,7 +211,7 @@ audit_log = AuditLogger()
 # Service Configuration (Admin)
 # =============================================================================
 
-_service_config: Dict[str, Dict[str, Any]] = {
+_service_config: dict[str, dict[str, Any]] = {
     "emq": {
         "enabled": True,
         "cache_ttl_seconds": 300,
@@ -260,6 +267,7 @@ _service_config: Dict[str, Dict[str, Any]] = {
 # Pydantic Schemas
 # =============================================================================
 
+
 # EMQ Schemas
 class EMQMeasurementRequest(BaseModel):
     platform: str
@@ -276,7 +284,7 @@ class EMQMeasurementResponse(BaseModel):
     parameter_quality: Optional[float] = None
     event_coverage: Optional[float] = None
     match_rate: Optional[float] = None
-    recommendations: Optional[List[str]] = None
+    recommendations: Optional[list[str]] = None
     error: Optional[str] = None
 
 
@@ -294,7 +302,7 @@ class OfflineConversionRecord(BaseModel):
 
 class OfflineConversionUploadRequest(BaseModel):
     platform: str
-    conversions: List[OfflineConversionRecord]
+    conversions: list[OfflineConversionRecord]
     batch_name: Optional[str] = None
 
 
@@ -304,7 +312,7 @@ class OfflineConversionUploadResponse(BaseModel):
     total_records: int
     successful: int = 0
     failed: int = 0
-    errors: Optional[List[str]] = None
+    errors: Optional[list[str]] = None
 
 
 # Model A/B Testing Schemas
@@ -365,15 +373,15 @@ class BenchmarkRequest(BaseModel):
     industry: str
     region: str = "GLOBAL"
     platform: str
-    metrics: Dict[str, float]
+    metrics: dict[str, float]
 
 
 class BenchmarkResponse(BaseModel):
     industry: str
     platform: str
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
     overall_score: float
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 # Budget Reallocation Schemas
@@ -383,11 +391,11 @@ class CampaignBudgetInput(BaseModel):
     platform: str
     current_daily_budget: float
     current_spend: float
-    performance_metrics: Dict[str, float]
+    performance_metrics: dict[str, float]
 
 
 class ReallocationPlanRequest(BaseModel):
-    campaigns: List[CampaignBudgetInput]
+    campaigns: list[CampaignBudgetInput]
     strategy: str = "ROAS_MAXIMIZATION"
     min_campaign_budget: float = 10.0
     max_change_percent: float = 50.0
@@ -398,8 +406,8 @@ class ReallocationPlanResponse(BaseModel):
     status: str
     total_budget: float
     campaigns_affected: int
-    changes: List[Dict[str, Any]]
-    projected_impact: Dict[str, float]
+    changes: list[dict[str, Any]]
+    projected_impact: dict[str, float]
 
 
 # Audience Insights Schemas
@@ -413,9 +421,9 @@ class AudiencePerformanceRequest(BaseModel):
 
 class AudienceInsightResponse(BaseModel):
     audience_type: str
-    predicted_metrics: Dict[str, float]
+    predicted_metrics: dict[str, float]
     quality_score: Optional[float] = None
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 # LTV Prediction Schemas
@@ -447,14 +455,14 @@ class LTVPredictionResponse(BaseModel):
 # Explainability Schemas
 class ExplainPredictionRequest(BaseModel):
     model_name: str
-    features: Dict[str, float]
+    features: dict[str, float]
     prediction: float
 
 
 class ExplanationResponse(BaseModel):
     model_name: str
     prediction: float
-    top_factors: List[Dict[str, Any]]
+    top_factors: list[dict[str, Any]]
     summary: str
     confidence: float
 
@@ -462,6 +470,7 @@ class ExplanationResponse(BaseModel):
 # =============================================================================
 # EMQ Measurement Endpoints
 # =============================================================================
+
 
 @router.post("/emq/measure", response_model=EMQMeasurementResponse)
 async def measure_emq(
@@ -528,6 +537,7 @@ async def get_emq_history(
 # Offline Conversion Endpoints
 # =============================================================================
 
+
 @router.post("/offline-conversions/upload", response_model=OfflineConversionUploadResponse)
 async def upload_offline_conversions(
     request: OfflineConversionUploadRequest,
@@ -539,8 +549,9 @@ async def upload_offline_conversions(
     """
     Upload offline conversions to ad platforms.
     """
-    from app.services.offline_conversion_service import OfflineConversion
     import uuid
+
+    from app.services.offline_conversion_service import OfflineConversion
 
     try:
         service = OfflineConversionService()
@@ -548,18 +559,20 @@ async def upload_offline_conversions(
         # Convert to OfflineConversion objects
         conversions = []
         for i, conv in enumerate(request.conversions):
-            conversions.append(OfflineConversion(
-                conversion_id=f"{request.batch_name or 'batch'}_{tenant_id}_{i}_{uuid.uuid4().hex[:8]}",
-                platform=request.platform,
-                event_name=conv.event_name,
-                event_time=conv.event_time,
-                conversion_value=conv.value or 0.0,
-                currency=conv.currency or "USD",
-                email=conv.email,
-                phone=conv.phone,
-                external_id=conv.external_id,
-                click_id=conv.click_id,
-            ))
+            conversions.append(
+                OfflineConversion(
+                    conversion_id=f"{request.batch_name or 'batch'}_{tenant_id}_{i}_{uuid.uuid4().hex[:8]}",
+                    platform=request.platform,
+                    event_name=conv.event_name,
+                    event_time=conv.event_time,
+                    conversion_value=conv.value or 0.0,
+                    currency=conv.currency or "USD",
+                    email=conv.email,
+                    phone=conv.phone,
+                    external_id=conv.external_id,
+                    click_id=conv.click_id,
+                )
+            )
 
         result = await service.upload_conversions(
             conversions=conversions,
@@ -610,6 +623,7 @@ async def list_conversion_batches(
 # Model A/B Testing Endpoints
 # =============================================================================
 
+
 @router.post("/experiments", response_model=ExperimentResponse)
 async def create_experiment(
     request: CreateExperimentRequest,
@@ -658,21 +672,23 @@ async def list_experiments(
         status=status,
     )
 
-    return {"data": [
-        {
-            "id": exp.id,
-            "name": exp.name,
-            "model_name": exp.model_name,
-            "status": exp.status.value,
-            "champion_version": exp.champion_version,
-            "challenger_version": exp.challenger_version,
-            "traffic_split": exp.traffic_split,
-            "champion_predictions": exp.champion_predictions,
-            "challenger_predictions": exp.challenger_predictions,
-            "created_at": exp.created_at.isoformat() if exp.created_at else None,
-        }
-        for exp in experiments
-    ]}
+    return {
+        "data": [
+            {
+                "id": exp.id,
+                "name": exp.name,
+                "model_name": exp.model_name,
+                "status": exp.status.value,
+                "champion_version": exp.champion_version,
+                "challenger_version": exp.challenger_version,
+                "traffic_split": exp.traffic_split,
+                "champion_predictions": exp.champion_predictions,
+                "challenger_predictions": exp.challenger_predictions,
+                "created_at": exp.created_at.isoformat() if exp.created_at else None,
+            }
+            for exp in experiments
+        ]
+    }
 
 
 @router.post("/experiments/{experiment_id}/start")
@@ -714,7 +730,8 @@ async def stop_experiment(
 # Conversion Latency Endpoints
 # =============================================================================
 
-@router.get("/latency/stats", response_model=List[LatencyStatsResponse])
+
+@router.get("/latency/stats", response_model=list[LatencyStatsResponse])
 async def get_latency_stats(
     platform: Optional[str] = None,
     event_type: Optional[str] = None,
@@ -736,15 +753,17 @@ async def get_latency_stats(
         for et in event_types:
             stats = tracker.get_stats(p, et, period_hours)
             if stats and stats.count > 0:
-                stats_list.append(LatencyStatsResponse(
-                    platform=p,
-                    event_type=et,
-                    event_count=stats.count,
-                    avg_latency_ms=stats.avg_ms,
-                    median_latency_ms=stats.median_ms,
-                    p95_latency_ms=stats.p95_ms,
-                    p99_latency_ms=stats.p99_ms,
-                ))
+                stats_list.append(
+                    LatencyStatsResponse(
+                        platform=p,
+                        event_type=et,
+                        event_count=stats.count,
+                        avg_latency_ms=stats.avg_ms,
+                        median_latency_ms=stats.median_ms,
+                        p95_latency_ms=stats.p95_ms,
+                        p99_latency_ms=stats.p99_ms,
+                    )
+                )
 
     return stats_list
 
@@ -776,6 +795,7 @@ async def get_latency_timeline(
 # =============================================================================
 # Creative Performance Endpoints
 # =============================================================================
+
 
 @router.post("/creatives/record-metrics")
 async def record_creative_metrics(
@@ -858,6 +878,7 @@ async def get_top_creatives(
 # =============================================================================
 # Competitor Benchmarking Endpoints
 # =============================================================================
+
 
 @router.post("/benchmarks/compare", response_model=BenchmarkResponse)
 async def compare_to_benchmarks(
@@ -942,6 +963,7 @@ async def get_industry_report(
 # =============================================================================
 # Budget Reallocation Endpoints
 # =============================================================================
+
 
 @router.post("/budget/reallocation-plan", response_model=ReallocationPlanResponse)
 async def create_reallocation_plan(
@@ -1074,6 +1096,7 @@ async def rollback_reallocation_plan(
 # Audience Insights Endpoints
 # =============================================================================
 
+
 @router.post("/audiences/predict-performance", response_model=AudienceInsightResponse)
 async def predict_audience_performance(
     request: AudiencePerformanceRequest,
@@ -1120,16 +1143,18 @@ async def get_audience_insights(
     service = AudienceInsightsService()
     insights = service.get_insights(audience_id)
 
-    return {"data": [
-        {
-            "type": i.insight_type,
-            "severity": i.severity,
-            "title": i.title,
-            "description": i.description,
-            "recommendation": i.recommendation,
-        }
-        for i in insights
-    ]}
+    return {
+        "data": [
+            {
+                "type": i.insight_type,
+                "severity": i.severity,
+                "title": i.title,
+                "description": i.description,
+                "recommendation": i.recommendation,
+            }
+            for i in insights
+        ]
+    }
 
 
 @router.get("/audiences/recommendations")
@@ -1148,22 +1173,25 @@ async def get_audience_recommendations(
         limit=limit,
     )
 
-    return {"data": [
-        {
-            "audience_id": r.audience_id,
-            "action": r.action,
-            "priority": r.priority,
-            "title": r.title,
-            "description": r.description,
-            "expected_impact": r.expected_impact,
-        }
-        for r in recommendations
-    ]}
+    return {
+        "data": [
+            {
+                "audience_id": r.audience_id,
+                "action": r.action,
+                "priority": r.priority,
+                "title": r.title,
+                "description": r.description,
+                "expected_impact": r.expected_impact,
+            }
+            for r in recommendations
+        ]
+    }
 
 
 # =============================================================================
 # LTV Prediction Endpoints
 # =============================================================================
+
 
 @router.post("/ltv/predict", response_model=LTVPredictionResponse)
 async def predict_customer_ltv(
@@ -1208,7 +1236,7 @@ async def predict_customer_ltv(
 
 @router.post("/ltv/batch-predict")
 async def batch_predict_ltv(
-    customers: List[CustomerBehaviorInput],
+    customers: list[CustomerBehaviorInput],
     db: AsyncSession = Depends(get_db),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
@@ -1233,13 +1261,15 @@ async def batch_predict_ltv(
             email_opens_first_week=cust.email_opens_first_week,
         )
         pred = predictor.predict(behavior)
-        predictions.append({
-            "customer_id": pred.customer_id,
-            "segment": pred.segment.value,
-            "predicted_ltv_365d": pred.predicted_ltv_365d,
-            "churn_probability": pred.churn_probability,
-            "max_cac": pred.recommended_cac_max,
-        })
+        predictions.append(
+            {
+                "customer_id": pred.customer_id,
+                "segment": pred.segment.value,
+                "predicted_ltv_365d": pred.predicted_ltv_365d,
+                "churn_probability": pred.churn_probability,
+                "max_cac": pred.recommended_cac_max,
+            }
+        )
 
     return {"predictions": predictions}
 
@@ -1255,11 +1285,36 @@ async def get_ltv_segments(
     """
     return {
         "segments": [
-            {"name": "VIP", "value": "vip", "ltv_threshold": 1000, "description": "Top 5% customers"},
-            {"name": "High Value", "value": "high_value", "ltv_threshold": 500, "description": "Top 25% customers"},
-            {"name": "Medium Value", "value": "medium_value", "ltv_threshold": 200, "description": "25-75% customers"},
-            {"name": "Low Value", "value": "low_value", "ltv_threshold": 0, "description": "Bottom 25% customers"},
-            {"name": "At Risk", "value": "at_risk", "ltv_threshold": None, "description": "Customers with declining value"},
+            {
+                "name": "VIP",
+                "value": "vip",
+                "ltv_threshold": 1000,
+                "description": "Top 5% customers",
+            },
+            {
+                "name": "High Value",
+                "value": "high_value",
+                "ltv_threshold": 500,
+                "description": "Top 25% customers",
+            },
+            {
+                "name": "Medium Value",
+                "value": "medium_value",
+                "ltv_threshold": 200,
+                "description": "25-75% customers",
+            },
+            {
+                "name": "Low Value",
+                "value": "low_value",
+                "ltv_threshold": 0,
+                "description": "Bottom 25% customers",
+            },
+            {
+                "name": "At Risk",
+                "value": "at_risk",
+                "ltv_threshold": None,
+                "description": "Customers with declining value",
+            },
         ]
     }
 
@@ -1267,6 +1322,7 @@ async def get_ltv_segments(
 # =============================================================================
 # Explainability Endpoints
 # =============================================================================
+
 
 @router.post("/explain/prediction", response_model=ExplanationResponse)
 async def explain_prediction(
@@ -1305,6 +1361,7 @@ async def explain_prediction(
 # =============================================================================
 # Model Retraining Endpoints
 # =============================================================================
+
 
 @router.post("/models/retrain")
 async def trigger_model_retraining(
@@ -1357,6 +1414,7 @@ async def get_retraining_status(
 # =============================================================================
 # Health & Admin Endpoints
 # =============================================================================
+
 
 @router.get("/health")
 async def audit_services_health():
@@ -1425,7 +1483,7 @@ async def audit_services_health():
     return {
         "status": "healthy" if all_healthy else "degraded",
         "services": services_status,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -1459,7 +1517,7 @@ async def get_audit_services_metrics(
             "pending_approval": 0,
             "executed_today": 0,
         },
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -1467,9 +1525,11 @@ async def get_audit_services_metrics(
 # Admin Configuration Endpoints
 # =============================================================================
 
+
 class ServiceConfigUpdate(BaseModel):
     """Schema for updating service configuration."""
-    config: Dict[str, Any]
+
+    config: dict[str, Any]
 
 
 @router.get("/admin/config")
@@ -1489,7 +1549,7 @@ async def get_all_service_config(
     )
     return {
         "config": _service_config,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -1631,14 +1691,11 @@ async def get_services_status(
     """
     Get enabled/disabled status of all services (admin only).
     """
-    status_map = {
-        name: config.get("enabled", True)
-        for name, config in _service_config.items()
-    }
+    status_map = {name: config.get("enabled", True) for name, config in _service_config.items()}
 
     return {
         "services": status_map,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -1696,13 +1753,14 @@ async def clear_service_cache(
     return {
         "success": True,
         "caches_cleared": cleared,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
 # =============================================================================
 # Rate Limit Status (Admin)
 # =============================================================================
+
 
 @router.get("/admin/rate-limits")
 async def get_rate_limit_status(
@@ -1730,6 +1788,7 @@ async def get_rate_limit_status(
 # =============================================================================
 # Service Info Endpoint
 # =============================================================================
+
 
 @router.get("/info")
 async def get_audit_services_info():

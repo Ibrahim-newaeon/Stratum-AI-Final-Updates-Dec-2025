@@ -12,23 +12,23 @@ This service handles:
 """
 
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Any, Optional
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.cdp import (
-    CDPProfile,
     CDPEvent,
+    CDPProfile,
     CDPSegment,
     CDPSegmentMembership,
-    SegmentType,
     SegmentStatus,
+    SegmentType,
 )
 
 logger = structlog.get_logger()
@@ -75,9 +75,9 @@ class SegmentEvaluator:
     async def evaluate_profile(
         self,
         profile: CDPProfile,
-        rules: Dict,
-        profile_events: Optional[List[CDPEvent]] = None,
-    ) -> Tuple[bool, Optional[float]]:
+        rules: dict,
+        profile_events: Optional[list[CDPEvent]] = None,
+    ) -> tuple[bool, Optional[float]]:
         """
         Evaluate if a profile matches segment rules.
 
@@ -95,9 +95,7 @@ class SegmentEvaluator:
 
         # Evaluate individual conditions
         for condition in conditions:
-            matches, score = await self._evaluate_condition(
-                profile, condition, profile_events
-            )
+            matches, score = await self._evaluate_condition(profile, condition, profile_events)
             results.append(matches)
             if score is not None:
                 scores.append(score)
@@ -126,9 +124,9 @@ class SegmentEvaluator:
     async def _evaluate_condition(
         self,
         profile: CDPProfile,
-        condition: Dict,
-        profile_events: Optional[List[CDPEvent]] = None,
-    ) -> Tuple[bool, Optional[float]]:
+        condition: dict,
+        profile_events: Optional[list[CDPEvent]] = None,
+    ) -> tuple[bool, Optional[float]]:
         """Evaluate a single condition against a profile."""
         field = condition.get("field", "")
         operator = condition.get("operator", "")
@@ -150,9 +148,7 @@ class SegmentEvaluator:
             elif field_type == "identifier":
                 actual_value = await self._get_identifier_value(profile, field_parts[1])
             elif field_type == "event":
-                actual_value = await self._get_event_value(
-                    profile, field_parts[1:], profile_events
-                )
+                actual_value = await self._get_event_value(profile, field_parts[1:], profile_events)
             elif field_type == "data":
                 actual_value = self._get_profile_data_value(profile, field_parts[1:])
             else:
@@ -187,7 +183,7 @@ class SegmentEvaluator:
         traits = profile.computed_traits or {}
         return traits.get(trait_name)
 
-    def _get_profile_data_value(self, profile: CDPProfile, path: List[str]) -> Any:
+    def _get_profile_data_value(self, profile: CDPProfile, path: list[str]) -> Any:
         """Get a nested value from profile_data JSON."""
         data = profile.profile_data or {}
         for key in path:
@@ -197,9 +193,7 @@ class SegmentEvaluator:
                 return None
         return data
 
-    async def _get_identifier_value(
-        self, profile: CDPProfile, identifier_type: str
-    ) -> Any:
+    async def _get_identifier_value(self, profile: CDPProfile, identifier_type: str) -> Any:
         """Check if profile has a specific identifier type."""
         if profile.identifiers:
             for ident in profile.identifiers:
@@ -210,8 +204,8 @@ class SegmentEvaluator:
     async def _get_event_value(
         self,
         profile: CDPProfile,
-        path: List[str],
-        profile_events: Optional[List[CDPEvent]] = None,
+        path: list[str],
+        profile_events: Optional[list[CDPEvent]] = None,
     ) -> Any:
         """
         Get event-based values.
@@ -261,7 +255,7 @@ class SegmentEvaluator:
 
     def _compare_values(
         self, actual: Any, operator: str, expected: Any
-    ) -> Tuple[bool, Optional[float]]:
+    ) -> tuple[bool, Optional[float]]:
         """Compare actual value against expected using operator."""
         if actual is None and operator not in ["is_null", "is_not_null"]:
             return False, None
@@ -320,7 +314,7 @@ class SegmentEvaluator:
                 # expected is number of days
                 actual_dt = self._parse_datetime(actual)
                 if actual_dt:
-                    cutoff = datetime.now(timezone.utc) - timedelta(days=int(expected))
+                    cutoff = datetime.now(UTC) - timedelta(days=int(expected))
                     result = actual_dt >= cutoff
                 else:
                     result = False
@@ -371,10 +365,10 @@ class SegmentService:
     async def create_segment(
         self,
         name: str,
-        rules: Dict,
+        rules: dict,
         segment_type: str = SegmentType.DYNAMIC.value,
         description: Optional[str] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         auto_refresh: bool = True,
         refresh_interval_hours: int = 24,
         created_by_user_id: Optional[int] = None,
@@ -412,8 +406,7 @@ class SegmentService:
     async def get_segment(self, segment_id: UUID) -> Optional[CDPSegment]:
         """Get a segment by ID."""
         result = await self.db.execute(
-            select(CDPSegment)
-            .where(
+            select(CDPSegment).where(
                 CDPSegment.id == segment_id,
                 CDPSegment.tenant_id == self.tenant_id,
             )
@@ -426,7 +419,7 @@ class SegmentService:
         segment_type: Optional[str] = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> Tuple[List[CDPSegment], int]:
+    ) -> tuple[list[CDPSegment], int]:
         """List segments with optional filtering."""
         query = select(CDPSegment).where(CDPSegment.tenant_id == self.tenant_id)
 
@@ -443,9 +436,7 @@ class SegmentService:
 
         # Get segments
         result = await self.db.execute(
-            query.order_by(CDPSegment.created_at.desc())
-            .offset(offset)
-            .limit(limit)
+            query.order_by(CDPSegment.created_at.desc()).offset(offset).limit(limit)
         )
         segments = list(result.scalars().all())
 
@@ -505,7 +496,7 @@ class SegmentService:
         self,
         segment_id: UUID,
         batch_size: int = 1000,
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """
         Compute segment membership for all profiles.
 
@@ -515,7 +506,7 @@ class SegmentService:
         if not segment:
             return 0, 0
 
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
         segment.status = SegmentStatus.COMPUTING.value
         await self.db.flush()
 
@@ -539,14 +530,11 @@ class SegmentService:
                     break
 
                 for profile in profiles:
-                    matches, score = await self.evaluator.evaluate_profile(
-                        profile, segment.rules
-                    )
+                    matches, score = await self.evaluator.evaluate_profile(profile, segment.rules)
 
                     # Check current membership
                     membership_result = await self.db.execute(
-                        select(CDPSegmentMembership)
-                        .where(
+                        select(CDPSegmentMembership).where(
                             CDPSegmentMembership.segment_id == segment_id,
                             CDPSegmentMembership.profile_id == profile.id,
                         )
@@ -574,19 +562,18 @@ class SegmentService:
                         if existing and existing.is_active:
                             # Remove from segment
                             existing.is_active = False
-                            existing.removed_at = datetime.now(timezone.utc)
+                            existing.removed_at = datetime.now(UTC)
                             removed_count += 1
 
                 offset += batch_size
                 await self.db.flush()
 
             # Update segment metadata
-            duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+            duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
             # Get final count
             count_result = await self.db.execute(
-                select(func.count(CDPSegmentMembership.id))
-                .where(
+                select(func.count(CDPSegmentMembership.id)).where(
                     CDPSegmentMembership.segment_id == segment_id,
                     CDPSegmentMembership.is_active == True,
                 )
@@ -595,11 +582,11 @@ class SegmentService:
 
             segment.status = SegmentStatus.ACTIVE.value
             segment.profile_count = profile_count
-            segment.last_computed_at = datetime.now(timezone.utc)
+            segment.last_computed_at = datetime.now(UTC)
             segment.computation_duration_ms = duration_ms
 
             if segment.auto_refresh:
-                segment.next_refresh_at = datetime.now(timezone.utc) + timedelta(
+                segment.next_refresh_at = datetime.now(UTC) + timedelta(
                     hours=segment.refresh_interval_hours
                 )
 
@@ -630,9 +617,9 @@ class SegmentService:
 
     async def preview_segment(
         self,
-        rules: Dict,
+        rules: dict,
         limit: int = 100,
-    ) -> Tuple[int, List[CDPProfile]]:
+    ) -> tuple[int, list[CDPProfile]]:
         """
         Preview segment membership without saving.
 
@@ -673,8 +660,7 @@ class SegmentService:
 
             # Get total profile count
             count_result = await self.db.execute(
-                select(func.count(CDPProfile.id))
-                .where(CDPProfile.tenant_id == self.tenant_id)
+                select(func.count(CDPProfile.id)).where(CDPProfile.tenant_id == self.tenant_id)
             )
             total_profiles = count_result.scalar() or 0
             estimated_count = int(total_profiles * match_rate)
@@ -692,12 +678,11 @@ class SegmentService:
         segment_id: UUID,
         limit: int = 100,
         offset: int = 0,
-    ) -> Tuple[List[CDPProfile], int]:
+    ) -> tuple[list[CDPProfile], int]:
         """Get profiles in a segment."""
         # Get total count
         count_result = await self.db.execute(
-            select(func.count(CDPSegmentMembership.id))
-            .where(
+            select(func.count(CDPSegmentMembership.id)).where(
                 CDPSegmentMembership.segment_id == segment_id,
                 CDPSegmentMembership.is_active == True,
             )
@@ -733,8 +718,7 @@ class SegmentService:
 
         # Check if already member
         existing_result = await self.db.execute(
-            select(CDPSegmentMembership)
-            .where(
+            select(CDPSegmentMembership).where(
                 CDPSegmentMembership.segment_id == segment_id,
                 CDPSegmentMembership.profile_id == profile_id,
             )
@@ -772,8 +756,7 @@ class SegmentService:
             return False
 
         result = await self.db.execute(
-            select(CDPSegmentMembership)
-            .where(
+            select(CDPSegmentMembership).where(
                 CDPSegmentMembership.segment_id == segment_id,
                 CDPSegmentMembership.profile_id == profile_id,
                 CDPSegmentMembership.is_active == True,
@@ -783,7 +766,7 @@ class SegmentService:
 
         if membership:
             membership.is_active = False
-            membership.removed_at = datetime.now(timezone.utc)
+            membership.removed_at = datetime.now(UTC)
             segment.profile_count = max(0, segment.profile_count - 1)
             await self.db.flush()
             return True
@@ -793,7 +776,7 @@ class SegmentService:
     async def get_profile_segments(
         self,
         profile_id: UUID,
-    ) -> List[CDPSegment]:
+    ) -> list[CDPSegment]:
         """Get all segments a profile belongs to."""
         result = await self.db.execute(
             select(CDPSegment)

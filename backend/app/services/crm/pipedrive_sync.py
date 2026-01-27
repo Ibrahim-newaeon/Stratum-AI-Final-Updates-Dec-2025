@@ -6,23 +6,23 @@ Pipedrive data synchronization service.
 Syncs persons and deals from Pipedrive to CDP profiles.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from datetime import UTC, datetime
+from typing import Any, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.cdp import (
+    CDPEvent,
     CDPProfile,
     CDPProfileIdentifier,
-    CDPEvent,
-    LifecycleStage,
     IdentifierType,
+    LifecycleStage,
 )
-from app.models.crm import CRMConnection, CRMSyncLog, CRMProvider
+from app.models.crm import CRMProvider, CRMSyncLog
 from app.services.cdp.identity_resolution import IdentityResolutionService
+
 from .pipedrive_client import PipedriveClient, hash_email, hash_phone
 
 logger = get_logger(__name__)
@@ -45,7 +45,7 @@ class PipedriveSyncService:
         self.client = PipedriveClient(db, tenant_id)
         self.identity_service = IdentityResolutionService(db, tenant_id)
 
-    async def sync_all(self, full_sync: bool = False) -> Dict[str, Any]:
+    async def sync_all(self, full_sync: bool = False) -> dict[str, Any]:
         """
         Run full synchronization.
 
@@ -55,7 +55,7 @@ class PipedriveSyncService:
         Returns:
             Sync results summary
         """
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
         results = {
             "persons_synced": 0,
             "persons_created": 0,
@@ -108,7 +108,7 @@ class PipedriveSyncService:
 
         return results
 
-    async def _sync_persons(self, since: Optional[datetime] = None) -> Dict[str, Any]:
+    async def _sync_persons(self, since: Optional[datetime] = None) -> dict[str, Any]:
         """Sync persons from Pipedrive."""
         results = {
             "persons_synced": 0,
@@ -160,7 +160,7 @@ class PipedriveSyncService:
 
         return results
 
-    async def _process_person(self, person: Dict[str, Any]) -> bool:
+    async def _process_person(self, person: dict[str, Any]) -> bool:
         """
         Process a single Pipedrive person.
 
@@ -186,24 +186,30 @@ class PipedriveSyncService:
         # Build identifiers
         identifiers = []
         if email:
-            identifiers.append({
-                "type": IdentifierType.EMAIL.value,
-                "value": email,
-                "hash": hash_email(email),
-            })
+            identifiers.append(
+                {
+                    "type": IdentifierType.EMAIL.value,
+                    "value": email,
+                    "hash": hash_email(email),
+                }
+            )
         if phone:
-            identifiers.append({
-                "type": IdentifierType.PHONE.value,
-                "value": phone,
-                "hash": hash_phone(phone),
-            })
+            identifiers.append(
+                {
+                    "type": IdentifierType.PHONE.value,
+                    "value": phone,
+                    "hash": hash_phone(phone),
+                }
+            )
 
         # Add external ID
-        identifiers.append({
-            "type": IdentifierType.EXTERNAL_ID.value,
-            "value": f"pipedrive:{person_id}",
-            "hash": f"pipedrive:{person_id}",
-        })
+        identifiers.append(
+            {
+                "type": IdentifierType.EXTERNAL_ID.value,
+                "value": f"pipedrive:{person_id}",
+                "hash": f"pipedrive:{person_id}",
+            }
+        )
 
         if not identifiers:
             return False
@@ -214,15 +220,17 @@ class PipedriveSyncService:
 
         # Update profile data
         profile_data = profile.profile_data or {}
-        profile_data.update({
-            "pipedrive_id": person_id,
-            "first_name": person.get("first_name"),
-            "last_name": person.get("last_name"),
-            "name": person.get("name"),
-            "org_id": person.get("org_id"),
-            "org_name": person.get("org_name"),
-            "owner_id": person.get("owner_id"),
-        })
+        profile_data.update(
+            {
+                "pipedrive_id": person_id,
+                "first_name": person.get("first_name"),
+                "last_name": person.get("last_name"),
+                "name": person.get("name"),
+                "org_id": person.get("org_id"),
+                "org_name": person.get("org_name"),
+                "owner_id": person.get("owner_id"),
+            }
+        )
 
         # Add custom fields if present
         for key, value in person.items():
@@ -239,11 +247,11 @@ class PipedriveSyncService:
         elif email:
             profile.lifecycle_stage = LifecycleStage.KNOWN.value
 
-        profile.last_seen_at = datetime.now(timezone.utc)
+        profile.last_seen_at = datetime.now(UTC)
 
         return created
 
-    async def _sync_deals(self, since: Optional[datetime] = None) -> Dict[str, Any]:
+    async def _sync_deals(self, since: Optional[datetime] = None) -> dict[str, Any]:
         """Sync deals from Pipedrive."""
         results = {
             "deals_synced": 0,
@@ -291,7 +299,7 @@ class PipedriveSyncService:
 
         return results
 
-    async def _process_deal(self, deal: Dict[str, Any]) -> None:
+    async def _process_deal(self, deal: dict[str, Any]) -> None:
         """Process a single Pipedrive deal."""
         deal_id = deal.get("id")
         person_id = deal.get("person_id")
@@ -309,8 +317,8 @@ class PipedriveSyncService:
             tenant_id=self.tenant_id,
             profile_id=profile.id,
             event_name="PipedriveDeal",
-            event_time=datetime.now(timezone.utc),
-            received_at=datetime.now(timezone.utc),
+            event_time=datetime.now(UTC),
+            received_at=datetime.now(UTC),
             idempotency_key=f"pipedrive_deal_{deal_id}",
             properties={
                 "deal_id": deal_id,
@@ -361,13 +369,13 @@ class PipedriveSyncService:
 
     async def _log_sync(
         self,
-        results: Dict[str, Any],
+        results: dict[str, Any],
         start_time: datetime,
         status: str,
         error: Optional[str] = None,
     ) -> None:
         """Log sync results."""
-        duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+        duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
         log = CRMSyncLog(
             tenant_id=self.tenant_id,
@@ -375,7 +383,7 @@ class PipedriveSyncService:
             sync_type="full",
             status=status,
             started_at=start_time,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(UTC),
             duration_ms=duration_ms,
             records_processed=results.get("persons_synced", 0) + results.get("deals_synced", 0),
             records_created=results.get("persons_created", 0) + results.get("deals_created", 0),

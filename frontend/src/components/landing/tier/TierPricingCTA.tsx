@@ -14,7 +14,7 @@ const pricingTooltips = {
   savings: 'Save by committing to annual billing. Cancel anytime with prorated refund.',
   soc2: 'SOC 2 Type II certified. Your data security is audited annually.',
   gdpr: 'Full GDPR compliance with consent management and data deletion.',
-  noCard: 'Start your trial instantly. Add payment only when you\'re ready to continue.',
+  noCard: "Start your trial instantly. Add payment only when you're ready to continue.",
   cancel: 'No contracts or commitments. Downgrade or cancel with one click.',
 };
 
@@ -68,13 +68,13 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
           </h2>
           <p className="text-lg text-gray-400 max-w-xl mx-auto">
             {id === 'enterprise'
-              ? 'Custom pricing tailored to your organization\'s needs.'
+              ? "Custom pricing tailored to your organization's needs."
               : 'Start your 14-day free trial today. No credit card required.'}
           </p>
         </div>
 
         {/* Pricing Card */}
-        <Card className={`relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-white/10 shadow-xl`}>
+        <Card className="relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-white/10 shadow-xl">
           {/* Gradient accent */}
           <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradientClass}`} />
 
@@ -95,7 +95,9 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                 <div className="mb-6">
                   <div className="text-sm text-gray-500 mb-2">{name} Plan</div>
                   <div className="flex items-baseline gap-2">
-                    <span className={`text-6xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+                    <span
+                      className={`text-6xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+                    >
                       {pricing.price}
                     </span>
                     {pricing.period && (
@@ -123,11 +125,11 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                     </span>
                   </SmartTooltip>
                   {pricing.savings && (
-                    <SmartTooltip
-                      content={pricingTooltips.savings}
-                      position="right"
-                    >
-                      <Badge variant="outline" className="mt-3 text-green-400 border-green-500/30 bg-green-500/10 cursor-help">
+                    <SmartTooltip content={pricingTooltips.savings} position="right">
+                      <Badge
+                        variant="outline"
+                        className="mt-3 text-green-400 border-green-500/30 bg-green-500/10 cursor-help"
+                      >
                         {pricing.savings}
                       </Badge>
                     </SmartTooltip>
@@ -161,7 +163,9 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                 <ul className="space-y-3">
                   {keyFeatures.map((feature) => (
                     <li key={feature.name} className="flex items-start gap-3">
-                      <div className={`mt-0.5 p-1 rounded-full bg-gradient-to-r ${gradientClass} bg-opacity-20`}>
+                      <div
+                        className={`mt-0.5 p-1 rounded-full bg-gradient-to-r ${gradientClass} bg-opacity-20`}
+                      >
                         <CheckIcon className="w-3 h-3 text-white" />
                       </div>
                       <div>
@@ -179,11 +183,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
             {/* Trust Badges */}
             <div className="flex flex-wrap justify-center gap-4">
               {trustBadges.map((badge, i) => (
-                <SmartTooltip
-                  key={i}
-                  content={badge.tooltip}
-                  position="top"
-                >
+                <SmartTooltip key={i} content={badge.tooltip} position="top">
                   <Badge
                     variant="outline"
                     className="px-4 py-2 text-sm bg-gray-900/50 border-white/10 text-gray-400 cursor-help"

@@ -11,23 +11,23 @@ Features:
 - Historical COGS tracking
 """
 
-from datetime import date, datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
 import csv
 import io
+from datetime import date, datetime
+from typing import Any, Optional
+from uuid import UUID
 
-from sqlalchemy import select, and_, or_, update, delete
+from sqlalchemy import and_, delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.profit import (
+    COGSSource,
+    COGSUpload,
+    MarginRule,
+    MarginType,
     ProductCatalog,
     ProductMargin,
-    MarginRule,
-    COGSUpload,
-    MarginType,
-    COGSSource,
 )
 
 logger = get_logger(__name__)
@@ -97,7 +97,13 @@ class COGSService:
         )
 
         # Calculate total COGS
-        total_cogs = (cogs_cents or 0) + shipping_cost_cents + handling_cost_cents + platform_fee_cents + payment_processing_cents
+        total_cogs = (
+            (cogs_cents or 0)
+            + shipping_cost_cents
+            + handling_cost_cents
+            + platform_fee_cents
+            + payment_processing_cents
+        )
 
         # Determine margin type
         margin_type = MarginType.PERCENTAGE if cogs_percentage else MarginType.FIXED_AMOUNT
@@ -154,7 +160,7 @@ class COGSService:
     async def get_cogs_history(
         self,
         product_id: UUID,
-    ) -> List[ProductMargin]:
+    ) -> list[ProductMargin]:
         """Get COGS history for a product."""
         result = await self.db.execute(
             select(ProductMargin)
@@ -165,11 +171,11 @@ class COGSService:
 
     async def bulk_update_cogs(
         self,
-        updates: List[Dict[str, Any]],
+        updates: list[dict[str, Any]],
         effective_date: Optional[date] = None,
         source: COGSSource = COGSSource.CSV_UPLOAD,
         user_id: Optional[int] = None,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """
         Bulk update COGS for multiple products.
 
@@ -280,16 +286,14 @@ class COGSService:
     async def list_margin_rules(
         self,
         active_only: bool = True,
-    ) -> List[MarginRule]:
+    ) -> list[MarginRule]:
         """List all margin rules."""
         conditions = [MarginRule.tenant_id == self.tenant_id]
         if active_only:
             conditions.append(MarginRule.is_active == True)
 
         result = await self.db.execute(
-            select(MarginRule)
-            .where(and_(*conditions))
-            .order_by(MarginRule.priority)
+            select(MarginRule).where(and_(*conditions)).order_by(MarginRule.priority)
         )
         return list(result.scalars().all())
 
@@ -313,9 +317,17 @@ class COGSService:
             return None
 
         allowed_fields = [
-            "name", "description", "priority", "category", "subcategory",
-            "platform", "campaign_id", "margin_type", "default_margin_percentage",
-            "default_cogs_percentage", "is_active",
+            "name",
+            "description",
+            "priority",
+            "category",
+            "subcategory",
+            "platform",
+            "campaign_id",
+            "margin_type",
+            "default_margin_percentage",
+            "default_cogs_percentage",
+            "is_active",
         ]
 
         for field, value in kwargs.items():
@@ -440,10 +452,12 @@ class COGSIngestionService:
         await self.db.commit()
         await self.db.refresh(upload)
 
-        logger.info(f"COGS CSV upload {upload.id}: {upload.rows_succeeded} succeeded, {upload.rows_failed} failed")
+        logger.info(
+            f"COGS CSV upload {upload.id}: {upload.rows_succeeded} succeeded, {upload.rows_failed} failed"
+        )
         return upload
 
-    def _parse_csv_row(self, row: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    def _parse_csv_row(self, row: dict[str, str]) -> Optional[dict[str, Any]]:
         """Parse a CSV row into COGS update data."""
         sku = row.get("sku", "").strip()
         if not sku:
@@ -452,37 +466,37 @@ class COGSIngestionService:
         data = {"sku": sku}
 
         # COGS value (check multiple column names)
-        if "cogs_cents" in row and row["cogs_cents"]:
+        if row.get("cogs_cents"):
             data["cogs_cents"] = int(float(row["cogs_cents"]))
-        elif "cogs" in row and row["cogs"]:
+        elif row.get("cogs"):
             # Assume dollars, convert to cents
             data["cogs_cents"] = int(float(row["cogs"]) * 100)
-        elif "cogs_percentage" in row and row["cogs_percentage"]:
+        elif row.get("cogs_percentage"):
             data["cogs_percentage"] = float(row["cogs_percentage"])
-        elif "cogs_pct" in row and row["cogs_pct"]:
+        elif row.get("cogs_pct"):
             data["cogs_percentage"] = float(row["cogs_pct"])
         else:
             return None  # No COGS data
 
         # Optional costs
-        if "shipping_cost" in row and row["shipping_cost"]:
+        if row.get("shipping_cost"):
             data["shipping_cost_cents"] = int(float(row["shipping_cost"]) * 100)
-        if "shipping_cost_cents" in row and row["shipping_cost_cents"]:
+        if row.get("shipping_cost_cents"):
             data["shipping_cost_cents"] = int(float(row["shipping_cost_cents"]))
 
-        if "handling_cost" in row and row["handling_cost"]:
+        if row.get("handling_cost"):
             data["handling_cost_cents"] = int(float(row["handling_cost"]) * 100)
-        if "handling_cost_cents" in row and row["handling_cost_cents"]:
+        if row.get("handling_cost_cents"):
             data["handling_cost_cents"] = int(float(row["handling_cost_cents"]))
 
-        if "platform_fee" in row and row["platform_fee"]:
+        if row.get("platform_fee"):
             data["platform_fee_cents"] = int(float(row["platform_fee"]) * 100)
-        if "platform_fee_cents" in row and row["platform_fee_cents"]:
+        if row.get("platform_fee_cents"):
             data["platform_fee_cents"] = int(float(row["platform_fee_cents"]))
 
-        if "payment_processing" in row and row["payment_processing"]:
+        if row.get("payment_processing"):
             data["payment_processing_cents"] = int(float(row["payment_processing"]) * 100)
-        if "payment_processing_cents" in row and row["payment_processing_cents"]:
+        if row.get("payment_processing_cents"):
             data["payment_processing_cents"] = int(float(row["payment_processing_cents"]))
 
         return data
@@ -490,7 +504,7 @@ class COGSIngestionService:
     async def get_upload_history(
         self,
         limit: int = 50,
-    ) -> List[COGSUpload]:
+    ) -> list[COGSUpload]:
         """Get COGS upload history."""
         result = await self.db.execute(
             select(COGSUpload)

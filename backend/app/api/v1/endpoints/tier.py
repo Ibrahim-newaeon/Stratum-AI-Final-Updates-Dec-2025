@@ -9,26 +9,22 @@ available features, and limits. The tier is determined from the database based
 on the authenticated user's tenant.
 """
 
-from typing import List
-
 from fastapi import APIRouter, Depends, Request
 
+from app.core.feature_gate import (
+    get_current_tier_dependency,
+    get_tier_features_for_tenant,
+)
 from app.core.tiers import (
-    Feature,
-    SubscriptionTier,
-    has_feature,
-    get_tier_limit,
-    get_available_features,
-    get_tier_info,
     TIER_FEATURES,
     TIER_LIMITS,
     TIER_PRICING,
-)
-from app.core.feature_gate import (
-    get_current_tier,
-    get_current_tier_dependency,
-    get_tenant_tier,
-    get_tier_features_for_tenant,
+    Feature,
+    SubscriptionTier,
+    get_available_features,
+    get_tier_info,
+    get_tier_limit,
+    has_feature,
 )
 
 router = APIRouter(prefix="/tier", tags=["tier"])
@@ -45,7 +41,7 @@ async def get_current_tier_info(
     Returns tier name, features, limits, and pricing info based on
     the authenticated user's tenant subscription.
     """
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
     if tenant_id:
         return await get_tier_features_for_tenant(tenant_id)
 
@@ -89,7 +85,11 @@ async def check_feature_access(
         # Find required tier
         required_tier = None
         if not available:
-            for t in [SubscriptionTier.STARTER, SubscriptionTier.PROFESSIONAL, SubscriptionTier.ENTERPRISE]:
+            for t in [
+                SubscriptionTier.STARTER,
+                SubscriptionTier.PROFESSIONAL,
+                SubscriptionTier.ENTERPRISE,
+            ]:
                 if feature in TIER_FEATURES.get(t, set()):
                     required_tier = t.value
                     break
@@ -148,14 +148,20 @@ async def get_all_tiers(
     Useful for displaying upgrade options.
     """
     tiers = []
-    for tier in [SubscriptionTier.STARTER, SubscriptionTier.PROFESSIONAL, SubscriptionTier.ENTERPRISE]:
+    for tier in [
+        SubscriptionTier.STARTER,
+        SubscriptionTier.PROFESSIONAL,
+        SubscriptionTier.ENTERPRISE,
+    ]:
         info = get_tier_info(tier)
         pricing = TIER_PRICING.get(tier, {})
-        tiers.append({
-            **info,
-            "pricing": pricing,
-            "is_current": tier == current_tier,
-        })
+        tiers.append(
+            {
+                **info,
+                "pricing": pricing,
+                "is_current": tier == current_tier,
+            }
+        )
 
     return {
         "current_tier": current_tier.value,

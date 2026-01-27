@@ -25,13 +25,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
+from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
 from app.models import Tenant, User, UserRole
-from app.core.security import get_password_hash, hash_pii_for_lookup, encrypt_pii
-
 
 # Default CMS admin credentials (should be changed after first login)
 DEFAULT_EMAIL = "cms-admin@stratum.ai"
@@ -47,9 +46,7 @@ async def seed_cms_admin(email: str, password: str, name: str):
     # Create async engine
     engine = create_async_engine(settings.database_url, echo=False)
 
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     print("=" * 60)
     print("  Stratum AI - CMS Root Admin Setup")
@@ -58,22 +55,18 @@ async def seed_cms_admin(email: str, password: str, name: str):
     async with async_session() as db:
         try:
             # Check if protected admin already exists
-            result = await db.execute(
-                select(User).where(User.is_protected == True)
-            )
+            result = await db.execute(select(User).where(User.is_protected == True))
             existing_protected = result.scalar_one_or_none()
 
             if existing_protected:
                 print(f"\n[!] Protected admin already exists (ID: {existing_protected.id})")
-                print(f"    This account cannot be recreated.")
+                print("    This account cannot be recreated.")
                 print("\n    To reset, you must manually update the database.")
                 return
 
             # Check if user with this email already exists
             email_hash = hash_pii_for_lookup(email.lower())
-            result = await db.execute(
-                select(User).where(User.email_hash == email_hash)
-            )
+            result = await db.execute(select(User).where(User.email_hash == email_hash))
             existing_user = result.scalar_one_or_none()
 
             if existing_user:
@@ -88,9 +81,7 @@ async def seed_cms_admin(email: str, password: str, name: str):
                 return
 
             # Check for existing platform tenant or create one
-            result = await db.execute(
-                select(Tenant).where(Tenant.slug == DEFAULT_TENANT_SLUG)
-            )
+            result = await db.execute(select(Tenant).where(Tenant.slug == DEFAULT_TENANT_SLUG))
             tenant = result.scalar_one_or_none()
 
             if not tenant:
@@ -135,13 +126,13 @@ async def seed_cms_admin(email: str, password: str, name: str):
             print(f"      Created user: {email}")
             print(f"      User ID: {user.id}")
             print(f"      Role: {user.role.value}")
-            print(f"      Protected: Yes (cannot be deleted or demoted)")
+            print("      Protected: Yes (cannot be deleted or demoted)")
 
             print("\n" + "=" * 60)
             print("  CMS Root Admin created successfully!")
             print("=" * 60)
             print("\n  Login at: /cms-login")
-            print(f"\n  Credentials:")
+            print("\n  Credentials:")
             print(f"    Email:     {email}")
             print(f"    Password:  {password}")
             print("\n  IMPORTANT: Change the password after first login!")
@@ -162,23 +153,15 @@ async def seed_cms_admin(email: str, password: str, name: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Create protected CMS root admin account"
+    parser = argparse.ArgumentParser(description="Create protected CMS root admin account")
+    parser.add_argument(
+        "--email", default=DEFAULT_EMAIL, help=f"Admin email (default: {DEFAULT_EMAIL})"
     )
     parser.add_argument(
-        "--email",
-        default=DEFAULT_EMAIL,
-        help=f"Admin email (default: {DEFAULT_EMAIL})"
+        "--password", default=DEFAULT_PASSWORD, help="Admin password (default: hidden)"
     )
     parser.add_argument(
-        "--password",
-        default=DEFAULT_PASSWORD,
-        help="Admin password (default: hidden)"
-    )
-    parser.add_argument(
-        "--name",
-        default=DEFAULT_NAME,
-        help=f"Admin display name (default: {DEFAULT_NAME})"
+        "--name", default=DEFAULT_NAME, help=f"Admin display name (default: {DEFAULT_NAME})"
     )
 
     args = parser.parse_args()

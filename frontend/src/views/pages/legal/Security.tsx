@@ -4,12 +4,12 @@
 
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  ShieldCheckIcon,
+  DocumentCheckIcon,
+  EyeIcon,
+  KeyIcon,
   LockClosedIcon,
   ServerIcon,
-  KeyIcon,
-  EyeIcon,
-  DocumentCheckIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 
 const securityFeatures = [

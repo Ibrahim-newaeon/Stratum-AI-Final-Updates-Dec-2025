@@ -41,23 +41,18 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
-
     # Task execution settings
     task_acks_late=True,  # Acknowledge after task completes (for reliability)
     task_reject_on_worker_lost=True,
     task_track_started=True,
-
     # Retry settings
     task_default_retry_delay=60,  # 1 minute
     task_max_retries=3,
-
     # Worker settings
     worker_prefetch_multiplier=1,  # One task at a time for memory efficiency
     worker_concurrency=4,
-
     # Result settings
     result_expires=86400,  # Results expire after 24 hours
-
     # Task routing (organized by domain module)
     task_routes={
         # Sync tasks
@@ -79,7 +74,6 @@ celery_app.conf.update(
         # WhatsApp tasks
         "app.workers.tasks.whatsapp.*": {"queue": "default"},
     },
-
     # Task time limits
     task_time_limit=600,  # 10 minutes hard limit
     task_soft_time_limit=540,  # 9 minutes soft limit (for graceful shutdown)
@@ -95,7 +89,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute="*/15"),
         "options": {"queue": "rules"},
     },
-
     # ==========================================================================
     # Data Sync Tasks
     # ==========================================================================
@@ -104,7 +97,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=0),
         "options": {"queue": "sync"},
     },
-
     # ==========================================================================
     # Competitor Intelligence Tasks
     # ==========================================================================
@@ -113,7 +105,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=0, hour="*/6"),
         "options": {"queue": "intel"},
     },
-
     # ==========================================================================
     # ML & Forecasting Tasks
     # ==========================================================================
@@ -127,7 +118,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute="*/30"),
         "options": {"queue": "ml"},
     },
-
     # ==========================================================================
     # Creative & Scoring Tasks
     # ==========================================================================
@@ -141,7 +131,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=0, hour=4),
         "options": {"queue": "default"},
     },
-
     # ==========================================================================
     # Audit & Monitoring Tasks
     # ==========================================================================
@@ -155,7 +144,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=30),
         "options": {"queue": "default"},
     },
-
     # ==========================================================================
     # Billing & Usage Tasks
     # ==========================================================================
@@ -169,7 +157,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=0, hour=1),
         "options": {"queue": "default"},
     },
-
     # ==========================================================================
     # WhatsApp Tasks
     # ==========================================================================
@@ -178,7 +165,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute="*"),
         "options": {"queue": "default"},
     },
-
     # ==========================================================================
     # CDP (Customer Data Platform) Tasks
     # ==========================================================================
@@ -192,7 +178,6 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=0, hour="*/2"),
         "options": {"queue": "cdp"},
     },
-
     # ==========================================================================
     # CMS (Content Management System) Tasks
     # ==========================================================================

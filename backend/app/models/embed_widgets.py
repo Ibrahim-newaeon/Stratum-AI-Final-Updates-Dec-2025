@@ -17,55 +17,66 @@ Tier Alignment:
 - Enterprise: White-label (no branding), custom domains
 """
 
-from datetime import datetime, timedelta
-from typing import Optional
-from uuid import uuid4
 import enum
-import secrets
 import hashlib
+import secrets
+from datetime import datetime
+from uuid import uuid4
 
 from sqlalchemy import (
-    Column, String, Integer, DateTime, Text, ForeignKey,
-    Index, Boolean, BigInteger, Numeric, UniqueConstraint
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, TimestampMixin
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class WidgetType(str, enum.Enum):
     """Types of embeddable widgets."""
-    SIGNAL_HEALTH = "signal_health"          # Signal health badge/gauge
-    ROAS_DISPLAY = "roas_display"            # ROAS metric display
+
+    SIGNAL_HEALTH = "signal_health"  # Signal health badge/gauge
+    ROAS_DISPLAY = "roas_display"  # ROAS metric display
     CAMPAIGN_PERFORMANCE = "campaign_performance"  # Mini campaign table
     TRUST_GATE_STATUS = "trust_gate_status"  # Trust gate indicator
-    SPEND_TRACKER = "spend_tracker"          # Ad spend tracker
-    ANOMALY_ALERT = "anomaly_alert"          # Anomaly alert badge
+    SPEND_TRACKER = "spend_tracker"  # Ad spend tracker
+    ANOMALY_ALERT = "anomaly_alert"  # Anomaly alert badge
 
 
 class WidgetSize(str, enum.Enum):
     """Widget size presets."""
-    BADGE = "badge"        # Small badge (120x40)
-    COMPACT = "compact"    # Compact card (200x100)
+
+    BADGE = "badge"  # Small badge (120x40)
+    COMPACT = "compact"  # Compact card (200x100)
     STANDARD = "standard"  # Standard card (300x200)
-    LARGE = "large"        # Large card (400x300)
-    CUSTOM = "custom"      # Custom dimensions
+    LARGE = "large"  # Large card (400x300)
+    CUSTOM = "custom"  # Custom dimensions
 
 
 class BrandingLevel(str, enum.Enum):
     """Branding visibility levels by tier."""
-    FULL = "full"          # Starter: Full Stratum branding
-    MINIMAL = "minimal"    # Professional: Small "Powered by Stratum"
-    NONE = "none"          # Enterprise: No branding (white-label)
+
+    FULL = "full"  # Starter: Full Stratum branding
+    MINIMAL = "minimal"  # Professional: Small "Powered by Stratum"
+    NONE = "none"  # Enterprise: No branding (white-label)
 
 
 class TokenStatus(str, enum.Enum):
     """Embed token status."""
+
     ACTIVE = "active"
     REVOKED = "revoked"
     EXPIRED = "expired"
@@ -75,11 +86,13 @@ class TokenStatus(str, enum.Enum):
 # Widget Configuration Model
 # =============================================================================
 
+
 class EmbedWidget(Base, TimestampMixin):
     """
     Widget configuration for embedding on external sites.
     Each widget has its own access token and domain restrictions.
     """
+
     __tablename__ = "embed_widgets"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -149,6 +162,7 @@ class EmbedWidget(Base, TimestampMixin):
 # Embed Token Model
 # =============================================================================
 
+
 class EmbedToken(Base, TimestampMixin):
     """
     Secure, domain-bound embed tokens.
@@ -159,6 +173,7 @@ class EmbedToken(Base, TimestampMixin):
     - Short expiration with refresh rotation
     - Read-only access only
     """
+
     __tablename__ = "embed_tokens"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -179,7 +194,7 @@ class EmbedToken(Base, TimestampMixin):
 
     # Token identification
     token_prefix = Column(String(8), nullable=False)  # First 8 chars for identification
-    token_hash = Column(String(64), nullable=False)   # SHA-256 hash of full token
+    token_hash = Column(String(64), nullable=False)  # SHA-256 hash of full token
 
     # Domain binding (CRITICAL for security)
     allowed_domains = Column(ARRAY(String(255)), nullable=False)
@@ -264,11 +279,13 @@ class EmbedToken(Base, TimestampMixin):
 # Domain Whitelist Model
 # =============================================================================
 
+
 class EmbedDomainWhitelist(Base, TimestampMixin):
     """
     Pre-approved domains for embed widgets.
     Enterprise tier can add unlimited domains.
     """
+
     __tablename__ = "embed_domain_whitelist"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -297,8 +314,7 @@ class EmbedDomainWhitelist(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_embed_domain_whitelist_tenant", "tenant_id"),
         UniqueConstraint(
-            "tenant_id", "domain_pattern",
-            name="uq_embed_domain_whitelist_tenant_domain"
+            "tenant_id", "domain_pattern", name="uq_embed_domain_whitelist_tenant_domain"
         ),
     )
 
@@ -310,11 +326,13 @@ class EmbedDomainWhitelist(Base, TimestampMixin):
 # Widget View Log (for analytics)
 # =============================================================================
 
+
 class EmbedWidgetView(Base):
     """
     Anonymized view log for widget analytics.
     Does not store PII, only aggregated metrics.
     """
+
     __tablename__ = "embed_widget_views"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)

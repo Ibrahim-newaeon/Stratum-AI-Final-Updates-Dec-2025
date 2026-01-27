@@ -3,38 +3,38 @@
  * Advanced profile search with filtering and export capabilities
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  Search,
-  Filter,
-  Download,
-  Users,
-  X,
-  Loader2,
-  Eye,
-  Mail,
-  Phone,
+  Activity,
   Calendar,
   DollarSign,
-  Activity,
-  RefreshCw,
+  Download,
+  Eye,
   FileJson,
   FileText,
-  User,
+  Filter,
+  Loader2,
+  Mail,
+  Phone,
+  RefreshCw,
+  Search,
   Tag,
   Target,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  User,
+  Users,
+  X,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useSearchProfiles,
-  useExportAudience,
-  useProfileStatistics,
-  useSegments,
-  ProfileSearchParams,
   CDPProfile,
   LifecycleStage,
+  ProfileSearchParams,
   RFMSegment,
-} from '@/api/cdp'
+  useExportAudience,
+  useProfileStatistics,
+  useSearchProfiles,
+  useSegments,
+} from '@/api/cdp';
 
 // Lifecycle stages
 const LIFECYCLE_STAGES: { value: LifecycleStage; label: string; color: string }[] = [
@@ -42,7 +42,7 @@ const LIFECYCLE_STAGES: { value: LifecycleStage; label: string; color: string }[
   { value: 'known', label: 'Known', color: 'bg-blue-500' },
   { value: 'customer', label: 'Customer', color: 'bg-green-500' },
   { value: 'churned', label: 'Churned', color: 'bg-red-500' },
-]
+];
 
 // RFM segments for filtering
 const RFM_SEGMENTS: { value: RFMSegment; label: string }[] = [
@@ -57,7 +57,7 @@ const RFM_SEGMENTS: { value: RFMSegment; label: string }[] = [
   { value: 'cannot_lose', label: "Can't Lose" },
   { value: 'hibernating', label: 'Hibernating' },
   { value: 'lost', label: 'Lost' },
-]
+];
 
 // Sort options
 const SORT_OPTIONS = [
@@ -66,25 +66,25 @@ const SORT_OPTIONS = [
   { value: 'total_events', label: 'Total Events' },
   { value: 'total_revenue', label: 'Total Revenue' },
   { value: 'created_at', label: 'Created Date' },
-]
+];
 
 interface FilterPanelProps {
-  filters: ProfileSearchParams
-  onFilterChange: (filters: ProfileSearchParams) => void
-  onClear: () => void
+  filters: ProfileSearchParams;
+  onFilterChange: (filters: ProfileSearchParams) => void;
+  onClear: () => void;
 }
 
 function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
-  const { data: segmentsData } = useSegments()
-  const segments = segmentsData?.segments || []
+  const { data: segmentsData } = useSegments();
+  const segments = segmentsData?.segments || [];
 
   const updateFilter = (key: keyof ProfileSearchParams, value: unknown) => {
-    onFilterChange({ ...filters, [key]: value })
-  }
+    onFilterChange({ ...filters, [key]: value });
+  };
 
-  const activeFilterCount = Object.values(filters).filter(v =>
-    v !== undefined && v !== '' && (!Array.isArray(v) || v.length > 0)
-  ).length
+  const activeFilterCount = Object.values(filters).filter(
+    (v) => v !== undefined && v !== '' && (!Array.isArray(v) || v.length > 0)
+  ).length;
 
   return (
     <div className="p-4 rounded-xl border bg-card space-y-4">
@@ -116,11 +116,11 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
             <button
               key={stage.value}
               onClick={() => {
-                const current = filters.lifecycle_stages || []
+                const current = filters.lifecycle_stages || [];
                 const updated = current.includes(stage.value)
-                  ? current.filter(s => s !== stage.value)
-                  : [...current, stage.value]
-                updateFilter('lifecycle_stages', updated)
+                  ? current.filter((s) => s !== stage.value)
+                  : [...current, stage.value];
+                updateFilter('lifecycle_stages', updated);
               }}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors',
@@ -159,12 +159,16 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
         <label className="block text-sm font-medium mb-2">RFM Segment</label>
         <select
           value={filters.rfm_segments?.[0] || ''}
-          onChange={(e) => updateFilter('rfm_segments', e.target.value ? [e.target.value as RFMSegment] : [])}
+          onChange={(e) =>
+            updateFilter('rfm_segments', e.target.value ? [e.target.value as RFMSegment] : [])
+          }
           className="w-full px-3 py-2 rounded-lg border bg-background"
         >
           <option value="">All RFM segments</option>
           {RFM_SEGMENTS.map((segment) => (
-            <option key={segment.value} value={segment.value}>{segment.label}</option>
+            <option key={segment.value} value={segment.value}>
+              {segment.label}
+            </option>
           ))}
         </select>
       </div>
@@ -178,7 +182,12 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
           </label>
           <select
             value={filters.has_email === undefined ? '' : String(filters.has_email)}
-            onChange={(e) => updateFilter('has_email', e.target.value === '' ? undefined : e.target.value === 'true')}
+            onChange={(e) =>
+              updateFilter(
+                'has_email',
+                e.target.value === '' ? undefined : e.target.value === 'true'
+              )
+            }
             className="w-full px-3 py-2 rounded-lg border bg-background"
           >
             <option value="">Any</option>
@@ -193,7 +202,12 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
           </label>
           <select
             value={filters.has_phone === undefined ? '' : String(filters.has_phone)}
-            onChange={(e) => updateFilter('has_phone', e.target.value === '' ? undefined : e.target.value === 'true')}
+            onChange={(e) =>
+              updateFilter(
+                'has_phone',
+                e.target.value === '' ? undefined : e.target.value === 'true'
+              )
+            }
             className="w-full px-3 py-2 rounded-lg border bg-background"
           >
             <option value="">Any</option>
@@ -213,7 +227,9 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
           <input
             type="number"
             value={filters.min_events || ''}
-            onChange={(e) => updateFilter('min_events', e.target.value ? Number(e.target.value) : undefined)}
+            onChange={(e) =>
+              updateFilter('min_events', e.target.value ? Number(e.target.value) : undefined)
+            }
             placeholder="0"
             min={0}
             className="w-full px-3 py-2 rounded-lg border bg-background"
@@ -227,7 +243,9 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
           <input
             type="number"
             value={filters.max_events || ''}
-            onChange={(e) => updateFilter('max_events', e.target.value ? Number(e.target.value) : undefined)}
+            onChange={(e) =>
+              updateFilter('max_events', e.target.value ? Number(e.target.value) : undefined)
+            }
             placeholder="No limit"
             min={0}
             className="w-full px-3 py-2 rounded-lg border bg-background"
@@ -245,7 +263,9 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
           <input
             type="number"
             value={filters.min_revenue || ''}
-            onChange={(e) => updateFilter('min_revenue', e.target.value ? Number(e.target.value) : undefined)}
+            onChange={(e) =>
+              updateFilter('min_revenue', e.target.value ? Number(e.target.value) : undefined)
+            }
             placeholder="$0"
             min={0}
             className="w-full px-3 py-2 rounded-lg border bg-background"
@@ -259,7 +279,9 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
           <input
             type="number"
             value={filters.max_revenue || ''}
-            onChange={(e) => updateFilter('max_revenue', e.target.value ? Number(e.target.value) : undefined)}
+            onChange={(e) =>
+              updateFilter('max_revenue', e.target.value ? Number(e.target.value) : undefined)
+            }
             placeholder="No limit"
             min={0}
             className="w-full px-3 py-2 rounded-lg border bg-background"
@@ -303,7 +325,12 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
         </label>
         <select
           value={filters.is_customer === undefined ? '' : String(filters.is_customer)}
-          onChange={(e) => updateFilter('is_customer', e.target.value === '' ? undefined : e.target.value === 'true')}
+          onChange={(e) =>
+            updateFilter(
+              'is_customer',
+              e.target.value === '' ? undefined : e.target.value === 'true'
+            )
+          }
           className="w-full px-3 py-2 rounded-lg border bg-background"
         >
           <option value="">All profiles</option>
@@ -312,17 +339,17 @@ function FilterPanel({ filters, onFilterChange, onClear }: FilterPanelProps) {
         </select>
       </div>
     </div>
-  )
+  );
 }
 
 // Profile card component
 interface ProfileCardProps {
-  profile: CDPProfile
-  onView: () => void
+  profile: CDPProfile;
+  onView: () => void;
 }
 
 function ProfileCard({ profile, onView }: ProfileCardProps) {
-  const lifecycleConfig = LIFECYCLE_STAGES.find(s => s.value === profile.lifecycle_stage)
+  const lifecycleConfig = LIFECYCLE_STAGES.find((s) => s.value === profile.lifecycle_stage);
 
   return (
     <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-all">
@@ -336,20 +363,16 @@ function ProfileCard({ profile, onView }: ProfileCardProps) {
               {profile.external_id || profile.id.slice(0, 12) + '...'}
             </div>
             <div className="flex items-center gap-2">
-              <span className={cn(
-                'w-2 h-2 rounded-full',
-                lifecycleConfig?.color || 'bg-gray-500'
-              )} />
+              <span
+                className={cn('w-2 h-2 rounded-full', lifecycleConfig?.color || 'bg-gray-500')}
+              />
               <span className="text-xs text-muted-foreground capitalize">
                 {profile.lifecycle_stage}
               </span>
             </div>
           </div>
         </div>
-        <button
-          onClick={onView}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
-        >
+        <button onClick={onView} className="p-2 rounded-lg hover:bg-muted transition-colors">
           <Eye className="w-4 h-4" />
         </button>
       </div>
@@ -390,28 +413,28 @@ function ProfileCard({ profile, onView }: ProfileCardProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export function ProfileSearch() {
-  const [showFilters, setShowFilters] = useState(true)
-  const [query, setQuery] = useState('')
+  const [showFilters, setShowFilters] = useState(true);
+  const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<ProfileSearchParams>({
     limit: 20,
     sort_by: 'last_seen_at',
     sort_order: 'desc',
     include_identifiers: true,
-  })
-  const [selectedProfile, setSelectedProfile] = useState<CDPProfile | null>(null)
+  });
+  const [selectedProfile, setSelectedProfile] = useState<CDPProfile | null>(null);
 
   const searchParams: ProfileSearchParams = {
     ...filters,
     query: query || undefined,
-  }
+  };
 
-  const { data: searchResult, isLoading, refetch } = useSearchProfiles(searchParams)
-  const { data: statistics } = useProfileStatistics()
-  const exportMutation = useExportAudience()
+  const { data: searchResult, isLoading, refetch } = useSearchProfiles(searchParams);
+  const { data: statistics } = useProfileStatistics();
+  const exportMutation = useExportAudience();
 
   const handleClearFilters = () => {
     setFilters({
@@ -419,49 +442,49 @@ export function ProfileSearch() {
       sort_by: 'last_seen_at',
       sort_order: 'desc',
       include_identifiers: true,
-    })
-    setQuery('')
-  }
+    });
+    setQuery('');
+  };
 
   const handleExport = async (format: 'json' | 'csv') => {
     const exportParams = {
       ...filters,
       format,
       limit: 50000, // Max export limit
-    }
+    };
 
     try {
-      const result = await exportMutation.mutateAsync(exportParams)
+      const result = await exportMutation.mutateAsync(exportParams);
 
       if (format === 'csv' && result instanceof Blob) {
         // Download CSV
-        const url = URL.createObjectURL(result)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `profiles_export_${new Date().toISOString().split('T')[0]}.csv`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
+        const url = URL.createObjectURL(result);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `profiles_export_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       } else if (format === 'json') {
         // Download JSON
-        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `profiles_export_${new Date().toISOString().split('T')[0]}.json`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
+        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `profiles_export_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Export failed:', error)
+      console.error('Export failed:', error);
     }
-  }
+  };
 
-  const profiles = searchResult?.profiles || []
-  const total = searchResult?.total || 0
+  const profiles = searchResult?.profiles || [];
+  const total = searchResult?.total || 0;
 
   return (
     <div className="space-y-6">
@@ -533,7 +556,9 @@ export function ProfileSearch() {
               <Activity className="w-4 h-4" />
               Active (30d)
             </div>
-            <div className="text-2xl font-bold">{statistics.active_profiles_30d.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {statistics.active_profiles_30d.toLocaleString()}
+            </div>
           </div>
         </div>
       )}
@@ -566,16 +591,25 @@ export function ProfileSearch() {
             </div>
             <select
               value={filters.sort_by}
-              onChange={(e) => setFilters({ ...filters, sort_by: e.target.value as ProfileSearchParams['sort_by'] })}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  sort_by: e.target.value as ProfileSearchParams['sort_by'],
+                })
+              }
               className="px-3 py-2 rounded-lg border bg-background"
             >
               {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
             <select
               value={filters.sort_order}
-              onChange={(e) => setFilters({ ...filters, sort_order: e.target.value as 'asc' | 'desc' })}
+              onChange={(e) =>
+                setFilters({ ...filters, sort_order: e.target.value as 'asc' | 'desc' })
+              }
               className="px-3 py-2 rounded-lg border bg-background"
             >
               <option value="desc">Descending</option>
@@ -689,11 +723,14 @@ export function ProfileSearch() {
                   </div>
                   <div className="text-sm text-muted-foreground">ID: {selectedProfile.id}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className={cn(
-                      'px-2 py-0.5 rounded-full text-xs font-medium',
-                      LIFECYCLE_STAGES.find(s => s.value === selectedProfile.lifecycle_stage)?.color || 'bg-gray-500',
-                      'text-white'
-                    )}>
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 rounded-full text-xs font-medium',
+                        LIFECYCLE_STAGES.find((s) => s.value === selectedProfile.lifecycle_stage)
+                          ?.color || 'bg-gray-500',
+                        'text-white'
+                      )}
+                    >
                       {selectedProfile.lifecycle_stage}
                     </span>
                   </div>
@@ -704,19 +741,27 @@ export function ProfileSearch() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-3 rounded-lg bg-muted/50">
                   <div className="text-xs text-muted-foreground">Events</div>
-                  <div className="font-semibold">{selectedProfile.total_events.toLocaleString()}</div>
+                  <div className="font-semibold">
+                    {selectedProfile.total_events.toLocaleString()}
+                  </div>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/50">
                   <div className="text-xs text-muted-foreground">Sessions</div>
-                  <div className="font-semibold">{selectedProfile.total_sessions.toLocaleString()}</div>
+                  <div className="font-semibold">
+                    {selectedProfile.total_sessions.toLocaleString()}
+                  </div>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/50">
                   <div className="text-xs text-muted-foreground">Purchases</div>
-                  <div className="font-semibold">{selectedProfile.total_purchases.toLocaleString()}</div>
+                  <div className="font-semibold">
+                    {selectedProfile.total_purchases.toLocaleString()}
+                  </div>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/50">
                   <div className="text-xs text-muted-foreground">Revenue</div>
-                  <div className="font-semibold">${selectedProfile.total_revenue.toLocaleString()}</div>
+                  <div className="font-semibold">
+                    ${selectedProfile.total_revenue.toLocaleString()}
+                  </div>
                 </div>
               </div>
 
@@ -725,12 +770,17 @@ export function ProfileSearch() {
                 <h4 className="font-medium mb-2">Identifiers</h4>
                 <div className="space-y-2">
                   {selectedProfile.identifiers?.map((id, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                    >
                       <div className="flex items-center gap-2">
                         <Tag className="w-4 h-4 text-muted-foreground" />
                         <span className="font-medium capitalize">{id.identifier_type}</span>
                         {id.is_primary && (
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-primary/10 text-primary">Primary</span>
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-primary/10 text-primary">
+                            Primary
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -765,19 +815,27 @@ export function ProfileSearch() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">First Seen:</span>
-                  <span className="ml-2">{new Date(selectedProfile.first_seen_at).toLocaleString()}</span>
+                  <span className="ml-2">
+                    {new Date(selectedProfile.first_seen_at).toLocaleString()}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Last Seen:</span>
-                  <span className="ml-2">{new Date(selectedProfile.last_seen_at).toLocaleString()}</span>
+                  <span className="ml-2">
+                    {new Date(selectedProfile.last_seen_at).toLocaleString()}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Created:</span>
-                  <span className="ml-2">{new Date(selectedProfile.created_at).toLocaleString()}</span>
+                  <span className="ml-2">
+                    {new Date(selectedProfile.created_at).toLocaleString()}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Updated:</span>
-                  <span className="ml-2">{new Date(selectedProfile.updated_at).toLocaleString()}</span>
+                  <span className="ml-2">
+                    {new Date(selectedProfile.updated_at).toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -785,7 +843,7 @@ export function ProfileSearch() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default ProfileSearch
+export default ProfileSearch;

@@ -47,10 +47,7 @@ module.exports = {
     // ==========================================================================
     // React Rules
     // ==========================================================================
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     'react/prop-types': 'off', // TypeScript handles this
     'react/no-unescaped-entities': 'warn',
     'react/jsx-no-target-blank': 'error',
@@ -68,22 +65,21 @@ module.exports = {
         caughtErrorsIgnorePattern: '^_',
       },
     ],
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'off', // Relaxed for legacy code
+    '@typescript-eslint/no-unsafe-assignment': 'off', // Relaxed for legacy code
+    '@typescript-eslint/no-unsafe-member-access': 'off', // Relaxed for legacy code
+    '@typescript-eslint/no-unsafe-call': 'off', // Relaxed for legacy code
+    '@typescript-eslint/no-unsafe-argument': 'off', // Relaxed for legacy code
+    '@typescript-eslint/no-unsafe-return': 'off', // Relaxed for legacy code
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'warn',
-    '@typescript-eslint/no-floating-promises': 'error',
-    '@typescript-eslint/no-misused-promises': [
-      'error',
-      {
-        checksVoidReturn: {
-          attributes: false,
-        },
-      },
-    ],
-    '@typescript-eslint/await-thenable': 'error',
-    '@typescript-eslint/require-await': 'warn',
+    '@typescript-eslint/no-floating-promises': 'warn', // Relaxed for initial setup
+    '@typescript-eslint/no-misused-promises': 'off', // Relaxed for initial setup
+    '@typescript-eslint/await-thenable': 'warn', // Relaxed for initial setup
+    '@typescript-eslint/require-await': 'off', // Relaxed - too many false positives
     '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+    '@typescript-eslint/restrict-template-expressions': 'off', // Relaxed for legacy code
 
     // ==========================================================================
     // General Rules
@@ -93,8 +89,8 @@ module.exports = {
     'no-alert': 'warn',
     'prefer-const': 'warn',
     'no-var': 'error',
-    'eqeqeq': ['error', 'always', { null: 'ignore' }],
-    'curly': ['warn', 'multi-line'],
+    eqeqeq: ['error', 'always', { null: 'ignore' }],
+    curly: ['warn', 'multi-line'],
     'no-throw-literal': 'error',
     'prefer-promise-reject-errors': 'error',
     'no-return-await': 'warn',

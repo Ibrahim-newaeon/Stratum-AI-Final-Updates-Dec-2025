@@ -6,21 +6,21 @@ Service layer for managing tenant feature flags.
 Handles fetching, updating, and caching of feature configurations.
 """
 
-from typing import Dict, Any, Optional
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Tenant
 from app.features.flags import (
-    get_default_features,
-    merge_features,
-    FeatureFlags,
-    FeatureFlagsUpdate,
     FEATURE_CATEGORIES,
     FEATURE_DESCRIPTIONS,
+    FeatureFlags,
+    FeatureFlagsUpdate,
+    get_default_features,
+    merge_features,
 )
+from app.models import Tenant
 
 
 class FeatureFlagsService:
@@ -29,7 +29,7 @@ class FeatureFlagsService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_tenant_features(self, tenant_id: int) -> Dict[str, Any]:
+    async def get_tenant_features(self, tenant_id: int) -> dict[str, Any]:
         """
         Get complete feature flags for a tenant.
 
@@ -70,7 +70,7 @@ class FeatureFlagsService:
         tenant_id: int,
         updates: FeatureFlagsUpdate,
         updated_by_user_id: Optional[int] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update tenant feature flags (merge with existing overrides).
 
@@ -83,9 +83,7 @@ class FeatureFlagsService:
             Updated feature flags
         """
         # Get current overrides
-        result = await self.db.execute(
-            select(Tenant.feature_flags).where(Tenant.id == tenant_id)
-        )
+        result = await self.db.execute(select(Tenant.feature_flags).where(Tenant.id == tenant_id))
         current_overrides = result.scalar_one_or_none() or {}
 
         # Merge updates
@@ -98,7 +96,7 @@ class FeatureFlagsService:
             .where(Tenant.id == tenant_id)
             .values(
                 feature_flags=new_overrides,
-                updated_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(UTC),
             )
         )
         await self.db.commit()
@@ -106,7 +104,7 @@ class FeatureFlagsService:
         # Return merged features
         return await self.get_tenant_features(tenant_id)
 
-    async def reset_tenant_features(self, tenant_id: int) -> Dict[str, Any]:
+    async def reset_tenant_features(self, tenant_id: int) -> dict[str, Any]:
         """
         Reset tenant features to plan defaults.
 
@@ -121,7 +119,7 @@ class FeatureFlagsService:
             .where(Tenant.id == tenant_id)
             .values(
                 feature_flags={},
-                updated_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(UTC),
             )
         )
         await self.db.commit()
@@ -150,16 +148,16 @@ class FeatureFlagsService:
             return value > 0
         return bool(value)
 
-    def get_feature_categories(self) -> Dict[str, Any]:
+    def get_feature_categories(self) -> dict[str, Any]:
         """Get feature categories for UI grouping."""
         return FEATURE_CATEGORIES
 
-    def get_feature_descriptions(self) -> Dict[str, str]:
+    def get_feature_descriptions(self) -> dict[str, str]:
         """Get feature descriptions for UI display."""
         return FEATURE_DESCRIPTIONS
 
 
-async def get_tenant_features(db: AsyncSession, tenant_id: int) -> Dict[str, Any]:
+async def get_tenant_features(db: AsyncSession, tenant_id: int) -> dict[str, Any]:
     """
     Convenience function to get tenant features.
 

@@ -16,13 +16,13 @@ Features:
 """
 
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
-from uuid import uuid4
+from datetime import UTC, datetime, timedelta
 from enum import Enum
+from typing import Any, Optional
+from uuid import uuid4
 
-from sqlalchemy import select, and_, func, desc
+from sqlalchemy import and_, desc, func, select
 
 from app.db.session import async_session_factory
 
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class DeliveryStatus(str, Enum):
     """CAPI delivery status."""
+
     SUCCESS = "success"
     FAILED = "failed"
     RETRYING = "retrying"
@@ -43,6 +44,7 @@ class DeliveryLogEntry:
     """
     Represents a CAPI delivery log entry.
     """
+
     id: str
     tenant_id: int
     platform: str
@@ -55,12 +57,12 @@ class DeliveryLogEntry:
     retry_count: int
     error_message: Optional[str]
     request_id: Optional[str]
-    platform_response: Optional[Dict[str, Any]]
+    platform_response: Optional[dict[str, Any]]
     user_data_hash: Optional[str]  # Hashed PII for correlation without storing PII
     event_value: Optional[float]
     currency: Optional[str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -83,6 +85,7 @@ class DeliveryLogEntry:
 @dataclass
 class DeliveryMetrics:
     """Aggregated delivery metrics."""
+
     total_events: int = 0
     successful: int = 0
     failed: int = 0
@@ -92,8 +95,8 @@ class DeliveryMetrics:
     p50_latency_ms: float = 0.0
     p95_latency_ms: float = 0.0
     p99_latency_ms: float = 0.0
-    by_platform: Dict[str, Dict[str, int]] = None
-    by_event_type: Dict[str, Dict[str, int]] = None
+    by_platform: dict[str, dict[str, int]] = None
+    by_event_type: dict[str, dict[str, int]] = None
     period_start: Optional[datetime] = None
     period_end: Optional[datetime] = None
 
@@ -113,7 +116,7 @@ class DeliveryLogger:
     """
 
     # In-memory buffer for batch inserts
-    _buffer: List[DeliveryLogEntry] = []
+    _buffer: list[DeliveryLogEntry] = []
     _buffer_max_size: int = 100
     _last_flush: datetime = None
 
@@ -125,7 +128,7 @@ class DeliveryLogger:
             buffer_size: Number of entries to buffer before flushing
         """
         self._buffer_max_size = buffer_size
-        self._last_flush = datetime.now(timezone.utc)
+        self._last_flush = datetime.now(UTC)
 
     async def log_delivery(
         self,
@@ -139,7 +142,7 @@ class DeliveryLogger:
         retry_count: int = 0,
         error_message: Optional[str] = None,
         request_id: Optional[str] = None,
-        platform_response: Optional[Dict[str, Any]] = None,
+        platform_response: Optional[dict[str, Any]] = None,
         user_data_hash: Optional[str] = None,
         event_value: Optional[float] = None,
         currency: Optional[str] = None,
@@ -166,7 +169,7 @@ class DeliveryLogger:
         Returns:
             Created DeliveryLogEntry
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         entry = DeliveryLogEntry(
             id=str(uuid4()),
@@ -191,9 +194,10 @@ class DeliveryLogger:
         self._buffer.append(entry)
 
         # Flush if buffer is full or enough time has passed
-        if len(self._buffer) >= self._buffer_max_size:
-            await self.flush()
-        elif (now - self._last_flush).total_seconds() > 30:
+        if (
+            len(self._buffer) >= self._buffer_max_size
+            or (now - self._last_flush).total_seconds() > 30
+        ):
             await self.flush()
 
         # Log for immediate visibility
@@ -202,7 +206,7 @@ class DeliveryLogger:
             log_level,
             f"CAPI Delivery: platform={platform} event={event_name} "
             f"status={status.value} latency={latency_ms:.0f}ms "
-            f"event_id={event_id or 'N/A'}"
+            f"event_id={event_id or 'N/A'}",
         )
 
         return entry
@@ -214,7 +218,7 @@ class DeliveryLogger:
 
         entries_to_flush = self._buffer.copy()
         self._buffer.clear()
-        self._last_flush = datetime.now(timezone.utc)
+        self._last_flush = datetime.now(UTC)
 
         try:
             async with async_session_factory() as db:
@@ -237,7 +241,9 @@ class DeliveryLogger:
                         request_id=entry.request_id,
                         platform_response=entry.platform_response,
                         user_data_hash=entry.user_data_hash,
-                        event_value_cents=int(entry.event_value * 100) if entry.event_value else None,
+                        event_value_cents=int(entry.event_value * 100)
+                        if entry.event_value
+                        else None,
                         currency=entry.currency,
                     )
                     db.add(db_entry)
@@ -260,7 +266,7 @@ class DeliveryLogger:
         end_time: Optional[datetime] = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[DeliveryLogEntry]:
+    ) -> list[DeliveryLogEntry]:
         """
         Get delivery history with filters.
 
@@ -281,9 +287,7 @@ class DeliveryLogger:
             from app.models.capi_delivery import CAPIDeliveryLog
 
             async with async_session_factory() as db:
-                query = select(CAPIDeliveryLog).where(
-                    CAPIDeliveryLog.tenant_id == tenant_id
-                )
+                query = select(CAPIDeliveryLog).where(CAPIDeliveryLog.tenant_id == tenant_id)
 
                 if platform:
                     query = query.where(CAPIDeliveryLog.platform == platform)
@@ -346,7 +350,7 @@ class DeliveryLogger:
             DeliveryMetrics object
         """
         if not end_time:
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(UTC)
         if not start_time:
             start_time = end_time - timedelta(hours=24)
 
@@ -370,12 +374,12 @@ class DeliveryLogger:
                 result = await db.execute(
                     select(
                         func.count(CAPIDeliveryLog.id).label("total"),
-                        func.count(CAPIDeliveryLog.id).filter(
-                            CAPIDeliveryLog.status == "success"
-                        ).label("successful"),
-                        func.count(CAPIDeliveryLog.id).filter(
-                            CAPIDeliveryLog.status == "failed"
-                        ).label("failed"),
+                        func.count(CAPIDeliveryLog.id)
+                        .filter(CAPIDeliveryLog.status == "success")
+                        .label("successful"),
+                        func.count(CAPIDeliveryLog.id)
+                        .filter(CAPIDeliveryLog.status == "failed")
+                        .label("failed"),
                         func.avg(CAPIDeliveryLog.latency_ms).label("avg_latency"),
                     ).where(base_filter)
                 )
@@ -451,17 +455,16 @@ class DeliveryLogger:
         Returns:
             Number of entries deleted
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+        cutoff = datetime.now(UTC) - timedelta(days=retention_days)
 
         try:
-            from app.models.capi_delivery import CAPIDeliveryLog
             from sqlalchemy import delete
+
+            from app.models.capi_delivery import CAPIDeliveryLog
 
             async with async_session_factory() as db:
                 result = await db.execute(
-                    delete(CAPIDeliveryLog).where(
-                        CAPIDeliveryLog.delivery_time < cutoff
-                    )
+                    delete(CAPIDeliveryLog).where(CAPIDeliveryLog.delivery_time < cutoff)
                 )
                 await db.commit()
 

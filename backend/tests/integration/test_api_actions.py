@@ -12,10 +12,10 @@ Tests cover:
 - Bulk operations
 """
 
-import pytest
 from datetime import date
-from httpx import AsyncClient
 
+import pytest
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.integration
 
@@ -64,8 +64,9 @@ class TestActionsQueue:
         db_session,
     ):
         """Test action dismissal."""
-        from app.models.trust_layer import FactActionsQueue
         import json
+
+        from app.models.trust_layer import FactActionsQueue
 
         # Create a new action to dismiss
         action = FactActionsQueue(
@@ -98,8 +99,9 @@ class TestActionsQueue:
         db_session,
     ):
         """Test bulk action approval."""
-        from app.models.trust_layer import FactActionsQueue
         import json
+
+        from app.models.trust_layer import FactActionsQueue
 
         # Create multiple actions
         action_ids = []
@@ -140,8 +142,9 @@ class TestActionValidation:
         db_session,
     ):
         """Test that actions respect budget change caps."""
-        from app.models.trust_layer import FactActionsQueue
         import json
+
+        from app.models.trust_layer import FactActionsQueue
 
         # Create an action that exceeds caps
         large_action = FactActionsQueue(
@@ -176,12 +179,13 @@ class TestActionValidation:
         db_session,
     ):
         """Test that actions are blocked when signal health is degraded."""
+        import json
+
         from app.models.trust_layer import (
             FactActionsQueue,
             FactSignalHealthDaily,
             SignalHealthStatus,
         )
-        import json
 
         # Set signal health to degraded
         health = FactSignalHealthDaily(

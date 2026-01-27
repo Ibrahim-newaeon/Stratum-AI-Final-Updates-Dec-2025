@@ -12,21 +12,21 @@ Features:
 - Writeback history tracking
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
-from uuid import UUID
 import enum
+from datetime import UTC, datetime
+from typing import Any, Optional
+from uuid import UUID
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.crm import (
     CRMConnection,
+    CRMConnectionStatus,
     CRMContact,
     CRMDeal,
     Touchpoint,
-    CRMConnectionStatus,
 )
 from app.services.crm.hubspot_client import HubSpotClient
 
@@ -221,6 +221,7 @@ PROPERTY_GROUP = {
 
 class WritebackStatus(str, enum.Enum):
     """Writeback operation status."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -242,7 +243,7 @@ class HubSpotWritebackService:
         self.db = db
         self.tenant_id = tenant_id
 
-    async def setup_custom_properties(self) -> Dict[str, Any]:
+    async def setup_custom_properties(self) -> dict[str, Any]:
         """
         Create Stratum custom properties in HubSpot.
 
@@ -326,7 +327,7 @@ class HubSpotWritebackService:
         contact_id: Optional[UUID] = None,
         modified_since: Optional[datetime] = None,
         batch_size: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Sync contact attribution data to HubSpot.
 
@@ -381,16 +382,18 @@ class HubSpotWritebackService:
                     "stratum_attribution_confidence": attribution.get("confidence"),
                     "stratum_total_ad_spend": attribution.get("total_spend"),
                     "stratum_touchpoints_count": attribution.get("touchpoints_count"),
-                    "stratum_last_sync": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                    "stratum_last_sync": datetime.now(UTC).strftime("%Y-%m-%d"),
                 }
 
                 # Remove None values
                 properties = {k: v for k, v in properties.items() if v is not None}
 
-                updates.append({
-                    "id": contact.provider_contact_id,
-                    "properties": properties,
-                })
+                updates.append(
+                    {
+                        "id": contact.provider_contact_id,
+                        "properties": properties,
+                    }
+                )
 
         if not updates:
             return {
@@ -409,7 +412,7 @@ class HubSpotWritebackService:
 
         # Update local sync timestamps
         for contact in contacts:
-            contact.last_synced_at = datetime.now(timezone.utc)
+            contact.last_synced_at = datetime.now(UTC)
         await self.db.commit()
 
         logger.info(
@@ -431,7 +434,7 @@ class HubSpotWritebackService:
         deal_id: Optional[UUID] = None,
         modified_since: Optional[datetime] = None,
         batch_size: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Sync deal attribution data to HubSpot.
 
@@ -487,16 +490,18 @@ class HubSpotWritebackService:
                 "stratum_net_profit": attribution.get("net_profit"),
                 "stratum_days_to_close": attribution.get("days_to_close"),
                 "stratum_touchpoints_count": attribution.get("touchpoints_count"),
-                "stratum_last_sync": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "stratum_last_sync": datetime.now(UTC).strftime("%Y-%m-%d"),
             }
 
             # Remove None values
             properties = {k: v for k, v in properties.items() if v is not None}
 
-            updates.append({
-                "id": deal.provider_deal_id,
-                "properties": properties,
-            })
+            updates.append(
+                {
+                    "id": deal.provider_deal_id,
+                    "properties": properties,
+                }
+            )
 
         if not updates:
             return {
@@ -515,7 +520,7 @@ class HubSpotWritebackService:
 
         # Update local sync timestamps
         for deal in deals:
-            deal.last_synced_at = datetime.now(timezone.utc)
+            deal.last_synced_at = datetime.now(UTC)
         await self.db.commit()
 
         logger.info(
@@ -537,7 +542,7 @@ class HubSpotWritebackService:
         sync_contacts: bool = True,
         sync_deals: bool = True,
         modified_since: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run full writeback sync for all contacts and deals.
 
@@ -551,26 +556,22 @@ class HubSpotWritebackService:
         """
         results = {
             "status": "completed",
-            "started_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(UTC).isoformat(),
             "contacts": None,
             "deals": None,
         }
 
         if sync_contacts:
-            results["contacts"] = await self.sync_contact_attribution(
-                modified_since=modified_since
-            )
+            results["contacts"] = await self.sync_contact_attribution(modified_since=modified_since)
             if results["contacts"]["status"] == "failed":
                 results["status"] = "partial"
 
         if sync_deals:
-            results["deals"] = await self.sync_deal_attribution(
-                modified_since=modified_since
-            )
+            results["deals"] = await self.sync_deal_attribution(modified_since=modified_since)
             if results["deals"]["status"] == "failed":
                 results["status"] = "partial"
 
-        results["completed_at"] = datetime.now(timezone.utc).isoformat()
+        results["completed_at"] = datetime.now(UTC).isoformat()
 
         # Update connection last sync time
         conn_result = await self.db.execute(
@@ -583,13 +584,13 @@ class HubSpotWritebackService:
         )
         connection = conn_result.scalar_one_or_none()
         if connection:
-            connection.last_sync_at = datetime.now(timezone.utc)
+            connection.last_sync_at = datetime.now(UTC)
             connection.last_sync_status = results["status"]
             await self.db.commit()
 
         return results
 
-    async def _get_contact_attribution(self, contact_id: UUID) -> Dict[str, Any]:
+    async def _get_contact_attribution(self, contact_id: UUID) -> dict[str, Any]:
         """Get attribution data for a contact from touchpoints."""
         # Get touchpoints for this contact
         result = await self.db.execute(
@@ -607,9 +608,7 @@ class HubSpotWritebackService:
         last_touch = touchpoints[-1]
 
         # Calculate total spend
-        total_spend = sum(
-            (tp.attributed_spend_cents or 0) / 100 for tp in touchpoints
-        )
+        total_spend = sum((tp.attributed_spend_cents or 0) / 100 for tp in touchpoints)
 
         return {
             "platform": last_touch.platform,
@@ -617,19 +616,21 @@ class HubSpotWritebackService:
             "campaign_name": last_touch.campaign_name,
             "adset_id": last_touch.adset_id,
             "ad_id": last_touch.ad_id,
-            "first_touch_source": f"{first_touch.platform}:{first_touch.campaign_name}" if first_touch.campaign_name else first_touch.platform,
-            "last_touch_source": f"{last_touch.platform}:{last_touch.campaign_name}" if last_touch.campaign_name else last_touch.platform,
+            "first_touch_source": f"{first_touch.platform}:{first_touch.campaign_name}"
+            if first_touch.campaign_name
+            else first_touch.platform,
+            "last_touch_source": f"{last_touch.platform}:{last_touch.campaign_name}"
+            if last_touch.campaign_name
+            else last_touch.platform,
             "confidence": max((tp.match_confidence or 0) * 100 for tp in touchpoints),
             "total_spend": round(total_spend, 2) if total_spend > 0 else None,
             "touchpoints_count": len(touchpoints),
         }
 
-    async def _get_deal_attribution(self, deal_id: UUID) -> Dict[str, Any]:
+    async def _get_deal_attribution(self, deal_id: UUID) -> dict[str, Any]:
         """Get attribution data for a deal."""
         # Get deal
-        result = await self.db.execute(
-            select(CRMDeal).where(CRMDeal.id == deal_id)
-        )
+        result = await self.db.execute(select(CRMDeal).where(CRMDeal.id == deal_id))
         deal = result.scalar_one_or_none()
 
         if not deal:
@@ -646,9 +647,7 @@ class HubSpotWritebackService:
             touchpoints = tp_result.scalars().all()
 
         # Calculate metrics
-        total_spend = sum(
-            (tp.attributed_spend_cents or 0) / 100 for tp in touchpoints
-        )
+        total_spend = sum((tp.attributed_spend_cents or 0) / 100 for tp in touchpoints)
 
         deal_amount = (deal.amount_cents or 0) / 100
 
@@ -681,7 +680,9 @@ class HubSpotWritebackService:
             "platform": primary_tp.platform if primary_tp else None,
             "campaign_id": primary_tp.campaign_id if primary_tp else None,
             "campaign_name": primary_tp.campaign_name if primary_tp else None,
-            "attribution_model": deal.attribution_model.value if deal.attribution_model else "last_touch",
+            "attribution_model": deal.attribution_model.value
+            if deal.attribution_model
+            else "last_touch",
             "attributed_spend": round(total_spend, 2) if total_spend > 0 else None,
             "revenue_roas": round(revenue_roas, 2) if revenue_roas else None,
             "profit_roas": round(profit_roas, 2) if profit_roas else None,
@@ -692,7 +693,7 @@ class HubSpotWritebackService:
             "touchpoints_count": len(touchpoints),
         }
 
-    async def get_writeback_status(self) -> Dict[str, Any]:
+    async def get_writeback_status(self) -> dict[str, Any]:
         """Get current writeback configuration and status."""
         # Get connection
         result = await self.db.execute(
@@ -711,14 +712,12 @@ class HubSpotWritebackService:
 
         # Count records to sync
         contacts_count = await self.db.execute(
-            select(func.count()).select_from(CRMContact).where(
-                CRMContact.tenant_id == self.tenant_id
-            )
+            select(func.count())
+            .select_from(CRMContact)
+            .where(CRMContact.tenant_id == self.tenant_id)
         )
         deals_count = await self.db.execute(
-            select(func.count()).select_from(CRMDeal).where(
-                CRMDeal.tenant_id == self.tenant_id
-            )
+            select(func.count()).select_from(CRMDeal).where(CRMDeal.tenant_id == self.tenant_id)
         )
 
         return {
@@ -726,7 +725,9 @@ class HubSpotWritebackService:
             "connected": True,
             "provider_account_id": connection.provider_account_id,
             "provider_account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection.last_sync_at
+            else None,
             "last_sync_status": connection.last_sync_status,
             "contacts_count": contacts_count.scalar(),
             "deals_count": deals_count.scalar(),

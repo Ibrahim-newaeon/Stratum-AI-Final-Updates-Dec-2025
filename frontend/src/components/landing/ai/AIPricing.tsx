@@ -6,13 +6,13 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
 import {
-  CheckIcon,
-  XMarkIcon,
-  SparklesIcon,
-  RocketLaunchIcon,
-  BuildingOffice2Icon,
   ArrowRightIcon,
-  InformationCircleIcon
+  BuildingOffice2Icon,
+  CheckIcon,
+  InformationCircleIcon,
+  RocketLaunchIcon,
+  SparklesIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 type BillingCycle = 'monthly' | 'annual';
@@ -42,8 +42,8 @@ const pricingTiers = [
       profiles: '50K',
       events: '500K/mo',
       platforms: 2,
-      users: 3
-    }
+      users: 3,
+    },
   },
   {
     id: 'professional',
@@ -61,8 +61,8 @@ const pricingTiers = [
       profiles: '500K',
       events: '5M/mo',
       platforms: 4,
-      users: 10
-    }
+      users: 10,
+    },
   },
   {
     id: 'enterprise',
@@ -80,9 +80,9 @@ const pricingTiers = [
       profiles: 'Unlimited',
       events: 'Unlimited',
       platforms: 'All',
-      users: 'Unlimited'
-    }
-  }
+      users: 'Unlimited',
+    },
+  },
 ];
 
 const featureCategories = [
@@ -91,57 +91,110 @@ const featureCategories = [
     features: [
       { name: 'ROAS Predictor', starter: false, professional: true, enterprise: true },
       { name: 'Conversion Predictor', starter: false, professional: true, enterprise: true },
-      { name: 'LTV Predictor', starter: 'Basic', professional: true, enterprise: true, tooltip: 'Starter: 30-day only. Pro+: All timeframes' },
+      {
+        name: 'LTV Predictor',
+        starter: 'Basic',
+        professional: true,
+        enterprise: true,
+        tooltip: 'Starter: 30-day only. Pro+: All timeframes',
+      },
       { name: 'Churn Predictor', starter: false, professional: true, enterprise: true },
       { name: 'Creative Lifecycle', starter: false, professional: true, enterprise: true },
-      { name: 'ROAS Forecaster', starter: false, professional: '30-day', enterprise: true, tooltip: 'Enterprise: Up to 365-day forecasts' }
-    ]
+      {
+        name: 'ROAS Forecaster',
+        starter: false,
+        professional: '30-day',
+        enterprise: true,
+        tooltip: 'Enterprise: Up to 365-day forecasts',
+      },
+    ],
   },
   {
     category: 'Trust Engine',
     features: [
       { name: 'Signal Health Scoring', starter: true, professional: true, enterprise: true },
       { name: 'Trust-Gated Autopilot', starter: false, professional: true, enterprise: true },
-      { name: 'Anomaly Detection', starter: 'Basic', professional: true, enterprise: true, tooltip: 'Starter: Z-score only. Pro+: ML-enhanced' },
-      { name: 'Custom Thresholds', starter: false, professional: true, enterprise: true }
-    ]
+      {
+        name: 'Anomaly Detection',
+        starter: 'Basic',
+        professional: true,
+        enterprise: true,
+        tooltip: 'Starter: Z-score only. Pro+: ML-enhanced',
+      },
+      { name: 'Custom Thresholds', starter: false, professional: true, enterprise: true },
+    ],
   },
   {
     category: 'CDP Features',
     features: [
       { name: 'Identity Resolution', starter: true, professional: true, enterprise: true },
       { name: 'Visual Identity Graph', starter: false, professional: true, enterprise: true },
-      { name: 'RFM Segmentation', starter: '5 segments', professional: '11 segments', enterprise: '11 + custom' },
-      { name: 'Event Processing', starter: 'Real-time', professional: 'Real-time', enterprise: 'Real-time + replay' }
-    ]
+      {
+        name: 'RFM Segmentation',
+        starter: '5 segments',
+        professional: '11 segments',
+        enterprise: '11 + custom',
+      },
+      {
+        name: 'Event Processing',
+        starter: 'Real-time',
+        professional: 'Real-time',
+        enterprise: 'Real-time + replay',
+      },
+    ],
   },
   {
     category: 'Audience Activation',
     features: [
-      { name: 'Platform Sync', starter: '2 platforms', professional: '4 platforms', enterprise: 'All + custom' },
-      { name: 'Auto-Sync Scheduling', starter: 'Daily', professional: 'Hourly', enterprise: 'Real-time' },
+      {
+        name: 'Platform Sync',
+        starter: '2 platforms',
+        professional: '4 platforms',
+        enterprise: 'All + custom',
+      },
+      {
+        name: 'Auto-Sync Scheduling',
+        starter: 'Daily',
+        professional: 'Hourly',
+        enterprise: 'Real-time',
+      },
       { name: 'Match Rate Tracking', starter: true, professional: true, enterprise: true },
-      { name: 'Custom Exports', starter: 'CSV', professional: 'CSV + JSON', enterprise: 'All formats + API' }
-    ]
+      {
+        name: 'Custom Exports',
+        starter: 'CSV',
+        professional: 'CSV + JSON',
+        enterprise: 'All formats + API',
+      },
+    ],
   },
   {
     category: 'Analytics & Tools',
     features: [
       { name: 'What-If Simulator', starter: false, professional: true, enterprise: true },
-      { name: 'A/B Testing', starter: false, professional: 'Basic', enterprise: 'Advanced + power analysis' },
+      {
+        name: 'A/B Testing',
+        starter: false,
+        professional: 'Basic',
+        enterprise: 'Advanced + power analysis',
+      },
       { name: 'Model Explainability (SHAP)', starter: false, professional: true, enterprise: true },
-      { name: 'Budget Optimizer', starter: false, professional: true, enterprise: true }
-    ]
+      { name: 'Budget Optimizer', starter: false, professional: true, enterprise: true },
+    ],
   },
   {
     category: 'Support & Security',
     features: [
-      { name: 'Support', starter: 'Email', professional: 'Priority + Chat', enterprise: 'Dedicated CSM' },
+      {
+        name: 'Support',
+        starter: 'Email',
+        professional: 'Priority + Chat',
+        enterprise: 'Dedicated CSM',
+      },
       { name: 'SLA', starter: '99.5%', professional: '99.9%', enterprise: '99.99%' },
       { name: 'SSO/SAML', starter: false, professional: true, enterprise: true },
-      { name: 'Custom Training', starter: false, professional: false, enterprise: true }
-    ]
-  }
+      { name: 'Custom Training', starter: false, professional: false, enterprise: true },
+    ],
+  },
 ];
 
 const FeatureValue = ({ value }: { value: boolean | string }) => {
@@ -163,9 +216,7 @@ const FeatureValue = ({ value }: { value: boolean | string }) => {
       </div>
     );
   }
-  return (
-    <span className="text-xs text-gray-300 text-center">{value}</span>
-  );
+  return <span className="text-xs text-gray-300 text-center">{value}</span>;
 };
 
 export default function AIPricing() {
@@ -317,7 +368,9 @@ export default function AIPricing() {
                       <div className="text-xs text-gray-500">Events</div>
                     </div>
                     <div>
-                      <div className="text-lg font-semibold text-white">{tier.limits.platforms}</div>
+                      <div className="text-lg font-semibold text-white">
+                        {tier.limits.platforms}
+                      </div>
                       <div className="text-xs text-gray-500">Platforms</div>
                     </div>
                     <div>
@@ -345,7 +398,12 @@ export default function AIPricing() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </motion.svg>
           </button>
         </div>
@@ -355,7 +413,7 @@ export default function AIPricing() {
           initial={false}
           animate={{
             height: showAllFeatures ? 'auto' : 0,
-            opacity: showAllFeatures ? 1 : 0
+            opacity: showAllFeatures ? 1 : 0,
           }}
           transition={{ duration: 0.4 }}
           className="overflow-hidden"

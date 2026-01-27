@@ -16,8 +16,7 @@ from datetime import datetime, timedelta
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("stratum.example")
 
@@ -36,10 +35,10 @@ async def example_meta_integration():
     7. Executing the action (if approved)
     """
     from app.stratum import (
-        Platform,
         AutomationAction,
         EMQScore,
         PerformanceMetrics,
+        Platform,
     )
     from app.stratum.core import (
         SignalHealthCalculator,
@@ -55,7 +54,7 @@ async def example_meta_integration():
         "app_id": "YOUR_APP_ID",
         "app_secret": "YOUR_APP_SECRET",
         "access_token": "YOUR_ACCESS_TOKEN",
-        "pixel_id": "YOUR_PIXEL_ID"
+        "pixel_id": "YOUR_PIXEL_ID",
     }
 
     # For this example, we'll simulate the workflow
@@ -94,8 +93,8 @@ async def example_meta_integration():
             spend=100.0 + i * 5,
             conversions=20 + i,
             cpa=5.0 + (i * 0.1),
-            date_start=datetime.now() - timedelta(days=7-i),
-            date_end=datetime.now() - timedelta(days=6-i),
+            date_start=datetime.now() - timedelta(days=7 - i),
+            date_end=datetime.now() - timedelta(days=6 - i),
         )
         recent_metrics.append(metrics)
     logger.info("  Generated 7 days of metrics data")
@@ -107,7 +106,7 @@ async def example_meta_integration():
         platform=Platform.META,
         account_id="act_123456789",
         emq_scores=emq_scores,
-        recent_metrics=recent_metrics
+        recent_metrics=recent_metrics,
     )
     logger.info(f"  Signal Health Score: {signal_health.score}/100")
     logger.info(f"    EMQ Component: {signal_health.emq_score}")
@@ -125,7 +124,7 @@ async def example_meta_integration():
         entity_id="1234567890",
         action_type="update_budget",
         parameters={"daily_budget": 150.00},
-        signal_health_at_creation=signal_health.score
+        signal_health_at_creation=signal_health.score,
     )
     logger.info("  Action: Update campaign budget to $150/day")
 
@@ -184,7 +183,7 @@ async def example_multi_platform_sync():
                 campaign_id=f"{platform.value}_campaign_1",
                 campaign_name=f"{platform.value.title()} - Furniture Sales Q1",
                 daily_budget=100.0,
-                last_synced=datetime.now()
+                last_synced=datetime.now(),
             ),
             UnifiedCampaign(
                 platform=platform,
@@ -192,8 +191,8 @@ async def example_multi_platform_sync():
                 campaign_id=f"{platform.value}_campaign_2",
                 campaign_name=f"{platform.value.title()} - Brand Awareness",
                 daily_budget=50.0,
-                last_synced=datetime.now()
-            )
+                last_synced=datetime.now(),
+            ),
         ]
 
         all_campaigns.extend(simulated_campaigns)
@@ -211,7 +210,9 @@ async def example_multi_platform_sync():
     for platform in platforms:
         platform_campaigns = [c for c in all_campaigns if c.platform == platform]
         platform_budget = sum(c.daily_budget or 0 for c in platform_campaigns)
-        logger.info(f"  {platform.value.title()}: {len(platform_campaigns)} campaigns, ${platform_budget:.2f}/day")
+        logger.info(
+            f"  {platform.value.title()}: {len(platform_campaigns)} campaigns, ${platform_budget:.2f}/day"
+        )
 
 
 async def example_budget_optimization():
@@ -221,9 +222,9 @@ async def example_budget_optimization():
     This demonstrates how Stratum's autopilot might automatically
     reallocate budget based on performance.
     """
-    from app.stratum import Platform, AutomationAction
-    from app.stratum.models import PerformanceMetrics, EMQScore
+    from app.stratum import AutomationAction, Platform
     from app.stratum.core import TrustGatedAutopilot
+    from app.stratum.models import EMQScore, PerformanceMetrics
 
     logger.info("\n" + "=" * 60)
     logger.info("BUDGET OPTIMIZATION EXAMPLE")
@@ -241,10 +242,12 @@ async def example_budget_optimization():
 
     logger.info("\n[PERF] Current Campaign Performance:")
     for cp in campaigns_performance:
-        logger.info(f"  {cp['name']}: ${cp['spend']} spend, {cp['conversions']} conv, {cp['roas']}x ROAS")
+        logger.info(
+            f"  {cp['name']}: ${cp['spend']} spend, {cp['conversions']} conv, {cp['roas']}x ROAS"
+        )
 
     # Optimization logic: shift budget from worst to best
-    sorted_campaigns = sorted(campaigns_performance, key=lambda x: x['roas'], reverse=True)
+    sorted_campaigns = sorted(campaigns_performance, key=lambda x: x["roas"], reverse=True)
     best = sorted_campaigns[0]
     worst = sorted_campaigns[-1]
 
@@ -259,19 +262,19 @@ async def example_budget_optimization():
             platform=Platform.META,
             account_id="act_123",
             entity_type="campaign",
-            entity_id=worst['id'],
+            entity_id=worst["id"],
             action_type="update_budget",
             parameters={"daily_budget": 80.0},  # Reduce by $20
-            signal_health_at_creation=75.0
+            signal_health_at_creation=75.0,
         ),
         AutomationAction(
             platform=Platform.META,
             account_id="act_123",
             entity_type="campaign",
-            entity_id=best['id'],
+            entity_id=best["id"],
             action_type="update_budget",
             parameters={"daily_budget": 120.0},  # Increase by $20
-            signal_health_at_creation=75.0
+            signal_health_at_creation=75.0,
         ),
     ]
 
@@ -279,25 +282,25 @@ async def example_budget_optimization():
     emq_scores = [EMQScore(platform=Platform.META, event_name="Purchase", score=8.0)]
     recent_metrics = [
         PerformanceMetrics(
-            impressions=30000, clicks=600, spend=300, conversions=65,
+            impressions=30000,
+            clicks=600,
+            spend=300,
+            conversions=65,
             date_start=datetime.now() - timedelta(days=1),
-            date_end=datetime.now()
+            date_end=datetime.now(),
         )
     ]
 
     logger.info("\n[GATE] Trust Gate Evaluation:")
     for action in actions:
         can_proceed, result = await autopilot.can_execute(
-            action=action,
-            emq_scores=emq_scores,
-            recent_metrics=recent_metrics
+            action=action, emq_scores=emq_scores, recent_metrics=recent_metrics
         )
 
         campaign_name = next(
-            (c['name'] for c in campaigns_performance if c['id'] == action.entity_id),
-            "Unknown"
+            (c["name"] for c in campaigns_performance if c["id"] == action.entity_id), "Unknown"
         )
-        new_budget = action.parameters.get('daily_budget')
+        new_budget = action.parameters.get("daily_budget")
 
         if can_proceed:
             logger.info(f"  [OK] {campaign_name} -> ${new_budget}: APPROVED")

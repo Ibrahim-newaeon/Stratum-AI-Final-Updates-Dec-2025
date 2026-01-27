@@ -4,37 +4,37 @@
  * Used on ALL dashboard pages
  */
 
-import { cn } from '@/lib/utils'
-import { ConfidenceBandBadge, getConfidenceBand } from './ConfidenceBandBadge'
-import { AutopilotModeBanner, type AutopilotMode } from './AutopilotModeBanner'
-import { BudgetAtRiskChip } from './BudgetAtRiskChip'
-import { VolatilityBadge } from './VolatilityBadge'
+import { cn } from '@/lib/utils';
+import { ConfidenceBandBadge, getConfidenceBand } from './ConfidenceBandBadge';
+import { type AutopilotMode, AutopilotModeBanner } from './AutopilotModeBanner';
+import { BudgetAtRiskChip } from './BudgetAtRiskChip';
+import { VolatilityBadge } from './VolatilityBadge';
 import {
+  ChevronRightIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/outline';
 
 interface TrustStatusHeaderProps {
-  emqScore: number
-  autopilotMode: AutopilotMode
-  budgetAtRisk: number
-  svi?: number // Signal Volatility Index
-  currency?: string
-  onViewDetails?: () => void
-  compact?: boolean
-  className?: string
+  emqScore: number;
+  autopilotMode: AutopilotMode;
+  budgetAtRisk: number;
+  svi?: number; // Signal Volatility Index
+  currency?: string;
+  onViewDetails?: () => void;
+  compact?: boolean;
+  className?: string;
 }
 
 function getEmqStatus(score: number) {
-  const band = getConfidenceBand(score)
+  const band = getConfidenceBand(score);
   if (band === 'reliable') {
     return {
       icon: ShieldCheckIcon,
       color: 'text-success',
       bgColor: 'bg-success/10',
       message: 'Data is trustworthy for decision-making',
-    }
+    };
   }
   if (band === 'directional') {
     return {
@@ -42,14 +42,14 @@ function getEmqStatus(score: number) {
       color: 'text-warning',
       bgColor: 'bg-warning/10',
       message: 'Data shows trends but may have gaps',
-    }
+    };
   }
   return {
     icon: ShieldExclamationIcon,
     color: 'text-danger',
     bgColor: 'bg-danger/10',
     message: 'Data quality too low for reliable decisions',
-  }
+  };
 }
 
 export function TrustStatusHeader({
@@ -62,15 +62,17 @@ export function TrustStatusHeader({
   compact = false,
   className,
 }: TrustStatusHeaderProps) {
-  const status = getEmqStatus(emqScore)
-  const StatusIcon = status.icon
+  const status = getEmqStatus(emqScore);
+  const StatusIcon = status.icon;
 
   if (compact) {
     return (
-      <div className={cn(
-        'flex items-center gap-4 p-3 rounded-xl bg-surface-secondary border border-white/10',
-        className
-      )}>
+      <div
+        className={cn(
+          'flex items-center gap-4 p-3 rounded-xl bg-surface-secondary border border-white/10',
+          className
+        )}
+      >
         <div className="flex items-center gap-2">
           <StatusIcon className={cn('w-5 h-5', status.color)} />
           <span className="text-lg font-bold text-white">{emqScore}</span>
@@ -91,14 +93,16 @@ export function TrustStatusHeader({
           </>
         )}
       </div>
-    )
+    );
   }
 
   return (
-    <div className={cn(
-      'rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden',
-      className
-    )}>
+    <div
+      className={cn(
+        'rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden',
+        className
+      )}
+    >
       {/* Main header */}
       <div className="p-6">
         <div className="flex items-start justify-between">
@@ -147,24 +151,22 @@ export function TrustStatusHeader({
       </div>
 
       {/* "Can I trust today?" quick answer */}
-      <div className={cn(
-        'px-6 py-4 border-t',
-        status.bgColor,
-        'border-white/10'
-      )}>
+      <div className={cn('px-6 py-4 border-t', status.bgColor, 'border-white/10')}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-medium text-white">Can I trust today?</span>
             <span className={cn('font-semibold', status.color)}>
-              {emqScore >= 90 ? 'Yes, data is reliable' :
-               emqScore >= 60 ? 'Partially, use with caution' :
-               'No, fix data issues first'}
+              {emqScore >= 90
+                ? 'Yes, data is reliable'
+                : emqScore >= 60
+                  ? 'Partially, use with caution'
+                  : 'No, fix data issues first'}
             </span>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default TrustStatusHeader
+export default TrustStatusHeader;

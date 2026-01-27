@@ -3,37 +3,37 @@
  * Visual interface for creating and managing customer segments with rule-based conditions
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  Users,
-  Plus,
-  Trash2,
-  Save,
-  RefreshCw,
+  Calendar,
   ChevronDown,
   ChevronRight,
-  Layers,
-  Eye,
-  Search,
-  Calendar,
-  Hash,
-  Type,
-  ToggleLeft,
   Clock,
+  Eye,
+  Hash,
+  Layers,
   Loader2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Plus,
+  RefreshCw,
+  Save,
+  Search,
+  ToggleLeft,
+  Trash2,
+  Type,
+  Users,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useSegments,
-  useCreateSegment,
-  useUpdateSegment,
-  useDeleteSegment,
-  useComputeSegment,
-  usePreviewSegment,
   CDPSegment,
-  SegmentRules,
   SegmentCondition,
-} from '@/api/cdp'
+  SegmentRules,
+  useComputeSegment,
+  useCreateSegment,
+  useDeleteSegment,
+  usePreviewSegment,
+  useSegments,
+  useUpdateSegment,
+} from '@/api/cdp';
 
 // Condition operators by field type
 const OPERATORS = {
@@ -63,18 +63,21 @@ const OPERATORS = {
     { value: 'greater_than', label: 'after' },
     { value: 'less_than', label: 'before' },
   ],
-  boolean: [
-    { value: 'equals', label: 'is' },
-  ],
+  boolean: [{ value: 'equals', label: 'is' }],
   list: [
     { value: 'in', label: 'is one of' },
     { value: 'not_in', label: 'is not one of' },
   ],
-}
+};
 
 // Available fields for conditions
 const AVAILABLE_FIELDS = [
-  { name: 'lifecycle_stage', label: 'Lifecycle Stage', type: 'list', options: ['anonymous', 'known', 'customer', 'churned'] },
+  {
+    name: 'lifecycle_stage',
+    label: 'Lifecycle Stage',
+    type: 'list',
+    options: ['anonymous', 'known', 'customer', 'churned'],
+  },
   { name: 'total_events', label: 'Total Events', type: 'number' },
   { name: 'total_revenue', label: 'Total Revenue', type: 'number' },
   { name: 'first_seen_at', label: 'First Seen', type: 'date' },
@@ -84,34 +87,53 @@ const AVAILABLE_FIELDS = [
   { name: 'profile_data.city', label: 'City', type: 'string' },
   { name: 'profile_data.source', label: 'Source', type: 'string' },
   { name: 'computed_traits.ltv', label: 'Lifetime Value', type: 'number' },
-  { name: 'computed_traits.rfm.rfm_segment', label: 'RFM Segment', type: 'list', options: ['champions', 'loyal_customers', 'potential_loyalists', 'new_customers', 'promising', 'need_attention', 'about_to_sleep', 'at_risk', 'cannot_lose', 'hibernating', 'lost'] },
-]
+  {
+    name: 'computed_traits.rfm.rfm_segment',
+    label: 'RFM Segment',
+    type: 'list',
+    options: [
+      'champions',
+      'loyal_customers',
+      'potential_loyalists',
+      'new_customers',
+      'promising',
+      'need_attention',
+      'about_to_sleep',
+      'at_risk',
+      'cannot_lose',
+      'hibernating',
+      'lost',
+    ],
+  },
+];
 
 interface ConditionBuilderProps {
-  condition: SegmentCondition
-  onChange: (condition: SegmentCondition) => void
-  onRemove: () => void
+  condition: SegmentCondition;
+  onChange: (condition: SegmentCondition) => void;
+  onRemove: () => void;
 }
 
 function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderProps) {
-  const field = AVAILABLE_FIELDS.find(f => f.name === condition.field)
-  const fieldType = field?.type || 'string'
-  const operators = OPERATORS[fieldType as keyof typeof OPERATORS] || OPERATORS.string
+  const field = AVAILABLE_FIELDS.find((f) => f.name === condition.field);
+  const fieldType = field?.type || 'string';
+  const operators = OPERATORS[fieldType as keyof typeof OPERATORS] || OPERATORS.string;
 
   const getFieldIcon = () => {
     switch (fieldType) {
-      case 'number': return <Hash className="w-4 h-4" />
-      case 'date': return <Calendar className="w-4 h-4" />
-      case 'boolean': return <ToggleLeft className="w-4 h-4" />
-      default: return <Type className="w-4 h-4" />
+      case 'number':
+        return <Hash className="w-4 h-4" />;
+      case 'date':
+        return <Calendar className="w-4 h-4" />;
+      case 'boolean':
+        return <ToggleLeft className="w-4 h-4" />;
+      default:
+        return <Type className="w-4 h-4" />;
     }
-  }
+  };
 
   return (
     <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg border">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        {getFieldIcon()}
-      </div>
+      <div className="flex items-center gap-2 text-muted-foreground">{getFieldIcon()}</div>
 
       {/* Field selector */}
       <select
@@ -120,8 +142,10 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
         className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[160px]"
       >
         <option value="">Select field...</option>
-        {AVAILABLE_FIELDS.map(f => (
-          <option key={f.name} value={f.name}>{f.label}</option>
+        {AVAILABLE_FIELDS.map((f) => (
+          <option key={f.name} value={f.name}>
+            {f.label}
+          </option>
         ))}
       </select>
 
@@ -131,8 +155,10 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
         onChange={(e) => onChange({ ...condition, operator: e.target.value })}
         className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[140px]"
       >
-        {operators.map(op => (
-          <option key={op.value} value={op.value}>{op.label}</option>
+        {operators.map((op) => (
+          <option key={op.value} value={op.value}>
+            {op.label}
+          </option>
         ))}
       </select>
 
@@ -146,8 +172,10 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
               className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[140px]"
             >
               <option value="">Select value...</option>
-              {field.options.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
+              {field.options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
               ))}
             </select>
           ) : fieldType === 'boolean' ? (
@@ -163,10 +191,12 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
             <input
               type={fieldType === 'number' ? 'number' : 'text'}
               value={condition.value as string}
-              onChange={(e) => onChange({
-                ...condition,
-                value: fieldType === 'number' ? Number(e.target.value) : e.target.value
-              })}
+              onChange={(e) =>
+                onChange({
+                  ...condition,
+                  value: fieldType === 'number' ? Number(e.target.value) : e.target.value,
+                })
+              }
               placeholder="Enter value..."
               className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[140px]"
             />
@@ -182,78 +212,70 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
         <Trash2 className="w-4 h-4" />
       </button>
     </div>
-  )
+  );
 }
 
 interface RuleGroupBuilderProps {
-  group: SegmentRules
-  onChange: (group: SegmentRules) => void
-  onRemove?: () => void
-  depth?: number
+  group: SegmentRules;
+  onChange: (group: SegmentRules) => void;
+  onRemove?: () => void;
+  depth?: number;
 }
 
 function RuleGroupBuilder({ group, onChange, onRemove, depth = 0 }: RuleGroupBuilderProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const addCondition = () => {
     onChange({
       ...group,
-      conditions: [
-        ...(group.conditions || []),
-        { field: '', operator: 'equals', value: '' }
-      ]
-    })
-  }
+      conditions: [...(group.conditions || []), { field: '', operator: 'equals', value: '' }],
+    });
+  };
 
   const updateCondition = (index: number, condition: SegmentCondition) => {
-    const newConditions = [...(group.conditions || [])]
-    newConditions[index] = condition
-    onChange({ ...group, conditions: newConditions })
-  }
+    const newConditions = [...(group.conditions || [])];
+    newConditions[index] = condition;
+    onChange({ ...group, conditions: newConditions });
+  };
 
   const removeCondition = (index: number) => {
     onChange({
       ...group,
-      conditions: (group.conditions || []).filter((_: SegmentCondition, i: number) => i !== index)
-    })
-  }
+      conditions: (group.conditions || []).filter((_: SegmentCondition, i: number) => i !== index),
+    });
+  };
 
   const addGroup = () => {
     onChange({
       ...group,
-      groups: [
-        ...(group.groups || []),
-        { logic: 'and', conditions: [], groups: [] }
-      ]
-    })
-  }
+      groups: [...(group.groups || []), { logic: 'and', conditions: [], groups: [] }],
+    });
+  };
 
   const updateGroup = (index: number, subGroup: SegmentRules) => {
-    const newGroups = [...(group.groups || [])]
-    newGroups[index] = subGroup
-    onChange({ ...group, groups: newGroups })
-  }
+    const newGroups = [...(group.groups || [])];
+    newGroups[index] = subGroup;
+    onChange({ ...group, groups: newGroups });
+  };
 
   const removeGroup = (index: number) => {
     onChange({
       ...group,
-      groups: (group.groups || []).filter((_: SegmentRules, i: number) => i !== index)
-    })
-  }
+      groups: (group.groups || []).filter((_: SegmentRules, i: number) => i !== index),
+    });
+  };
 
   return (
-    <div className={cn(
-      'rounded-lg border',
-      depth === 0 ? 'bg-card p-4' : 'bg-muted/20 p-3 ml-4'
-    )}>
+    <div className={cn('rounded-lg border', depth === 0 ? 'bg-card p-4' : 'bg-muted/20 p-3 ml-4')}>
       {/* Group header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-muted rounded"
-          >
-            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          <button onClick={() => setIsExpanded(!isExpanded)} className="p-1 hover:bg-muted rounded">
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
           </button>
           <Layers className="w-4 h-4 text-primary" />
           <span className="text-sm font-medium">Match</span>
@@ -323,45 +345,45 @@ function RuleGroupBuilder({ group, onChange, onRemove, depth = 0 }: RuleGroupBui
         </div>
       )}
     </div>
-  )
+  );
 }
 
 interface SegmentFormProps {
-  segment?: CDPSegment
-  onSave: () => void
-  onCancel: () => void
+  segment?: CDPSegment;
+  onSave: () => void;
+  onCancel: () => void;
 }
 
 function SegmentForm({ segment, onSave, onCancel }: SegmentFormProps) {
-  const [name, setName] = useState(segment?.name || '')
-  const [description, setDescription] = useState(segment?.description || '')
+  const [name, setName] = useState(segment?.name || '');
+  const [description, setDescription] = useState(segment?.description || '');
   const [segmentType, setSegmentType] = useState<'dynamic' | 'static'>(
     segment?.segment_type === 'static' ? 'static' : 'dynamic'
-  )
+  );
   const [rules, setRules] = useState<SegmentRules>(
     (segment?.rules as unknown as SegmentRules) || { logic: 'and', conditions: [], groups: [] }
-  )
-  const [autoRefresh, setAutoRefresh] = useState(segment?.auto_refresh ?? true)
-  const [refreshInterval, setRefreshInterval] = useState(segment?.refresh_interval_hours || 24)
+  );
+  const [autoRefresh, setAutoRefresh] = useState(segment?.auto_refresh ?? true);
+  const [refreshInterval, setRefreshInterval] = useState(segment?.refresh_interval_hours || 24);
 
-  const createMutation = useCreateSegment()
-  const updateMutation = useUpdateSegment()
-  const previewMutation = usePreviewSegment()
+  const createMutation = useCreateSegment();
+  const updateMutation = useUpdateSegment();
+  const previewMutation = usePreviewSegment();
 
-  const [previewCount, setPreviewCount] = useState<number | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const handlePreview = async () => {
-    setPreviewLoading(true)
+    setPreviewLoading(true);
     try {
-      const result = await previewMutation.mutateAsync({ rules })
-      setPreviewCount(result.estimated_count)
+      const result = await previewMutation.mutateAsync({ rules });
+      setPreviewCount(result.estimated_count);
     } catch (error) {
-      console.error('Preview failed:', error)
+      console.error('Preview failed:', error);
     } finally {
-      setPreviewLoading(false)
+      setPreviewLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async () => {
     const data = {
@@ -371,21 +393,21 @@ function SegmentForm({ segment, onSave, onCancel }: SegmentFormProps) {
       rules,
       auto_refresh: autoRefresh,
       refresh_interval_hours: refreshInterval,
-    }
+    };
 
     try {
       if (segment) {
-        await updateMutation.mutateAsync({ segmentId: segment.id, update: data })
+        await updateMutation.mutateAsync({ segmentId: segment.id, update: data });
       } else {
-        await createMutation.mutateAsync(data)
+        await createMutation.mutateAsync(data);
       }
-      onSave()
+      onSave();
     } catch (error) {
-      console.error('Save failed:', error)
+      console.error('Save failed:', error);
     }
-  }
+  };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -443,15 +465,13 @@ function SegmentForm({ segment, onSave, onCancel }: SegmentFormProps) {
               Preview
             </button>
           </div>
-          <RuleGroupBuilder
-            group={rules}
-            onChange={setRules}
-          />
+          <RuleGroupBuilder group={rules} onChange={setRules} />
           {previewCount !== null && (
             <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
               <span className="text-sm">
-                Estimated <strong>{previewCount.toLocaleString()}</strong> profiles match these rules
+                Estimated <strong>{previewCount.toLocaleString()}</strong> profiles match these
+                rules
               </span>
             </div>
           )}
@@ -505,55 +525,52 @@ function SegmentForm({ segment, onSave, onCancel }: SegmentFormProps) {
           disabled={!name || isLoading}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
         >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {segment ? 'Update Segment' : 'Create Segment'}
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 export function SegmentBuilder() {
-  const [showForm, setShowForm] = useState(false)
-  const [selectedSegment, setSelectedSegment] = useState<CDPSegment | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [showForm, setShowForm] = useState(false);
+  const [selectedSegment, setSelectedSegment] = useState<CDPSegment | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: segmentsData, isLoading, refetch } = useSegments()
-  const deleteMutation = useDeleteSegment()
-  const computeMutation = useComputeSegment()
+  const { data: segmentsData, isLoading, refetch } = useSegments();
+  const deleteMutation = useDeleteSegment();
+  const computeMutation = useComputeSegment();
 
-  const segments = segmentsData?.segments || []
-  const filteredSegments = segments.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const segments = segmentsData?.segments || [];
+  const filteredSegments = segments.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleEdit = (segment: CDPSegment) => {
-    setSelectedSegment(segment)
-    setShowForm(true)
-  }
+    setSelectedSegment(segment);
+    setShowForm(true);
+  };
 
   const handleDelete = async (segmentId: string) => {
     if (confirm('Are you sure you want to delete this segment?')) {
-      await deleteMutation.mutateAsync(segmentId)
-      refetch()
+      await deleteMutation.mutateAsync(segmentId);
+      refetch();
     }
-  }
+  };
 
   const handleCompute = async (segmentId: string) => {
-    await computeMutation.mutateAsync(segmentId)
-    refetch()
-  }
+    await computeMutation.mutateAsync(segmentId);
+    refetch();
+  };
 
   const handleFormSave = () => {
-    setShowForm(false)
-    setSelectedSegment(null)
-    refetch()
-  }
+    setShowForm(false);
+    setSelectedSegment(null);
+    refetch();
+  };
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -561,20 +578,28 @@ export function SegmentBuilder() {
       computing: 'bg-blue-500/10 text-blue-500',
       stale: 'bg-amber-500/10 text-amber-500',
       draft: 'bg-gray-500/10 text-gray-500',
-    }
+    };
     return (
-      <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', styles[status] || styles.draft)}>
+      <span
+        className={cn(
+          'px-2 py-0.5 rounded-full text-xs font-medium',
+          styles[status] || styles.draft
+        )}
+      >
         {status}
       </span>
-    )
-  }
+    );
+  };
 
   if (showForm) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setShowForm(false); setSelectedSegment(null) }}
+            onClick={() => {
+              setShowForm(false);
+              setSelectedSegment(null);
+            }}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <ChevronDown className="w-5 h-5 rotate-90" />
@@ -586,10 +611,13 @@ export function SegmentBuilder() {
         <SegmentForm
           segment={selectedSegment || undefined}
           onSave={handleFormSave}
-          onCancel={() => { setShowForm(false); setSelectedSegment(null) }}
+          onCancel={() => {
+            setShowForm(false);
+            setSelectedSegment(null);
+          }}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -686,7 +714,9 @@ export function SegmentBuilder() {
                   disabled={computeMutation.isPending}
                   className="px-3 py-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium transition-colors"
                 >
-                  <RefreshCw className={cn('w-4 h-4', computeMutation.isPending && 'animate-spin')} />
+                  <RefreshCw
+                    className={cn('w-4 h-4', computeMutation.isPending && 'animate-spin')}
+                  />
                 </button>
                 <button
                   onClick={() => handleDelete(segment.id)}
@@ -700,7 +730,7 @@ export function SegmentBuilder() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default SegmentBuilder
+export default SegmentBuilder;

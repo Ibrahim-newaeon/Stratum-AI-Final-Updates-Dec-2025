@@ -4,46 +4,51 @@
  * Multi-touch attribution analysis with data-driven models (Markov, Shapley).
  */
 
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   useAttributionSummary,
-  useTopConversionPaths,
   useCompareModels,
+  useTopConversionPaths,
   useTrainedModels,
   useTrainMarkovModel,
   useTrainShapleyModel,
-} from '@/api/hooks'
+} from '@/api/hooks';
 import {
-  ChartPieIcon,
   ArrowPathIcon,
-  BeakerIcon,
-  LightBulbIcon,
   ArrowsRightLeftIcon,
+  BeakerIcon,
+  ChartPieIcon,
+  LightBulbIcon,
   SparklesIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
-import type { AttributionModel, AttributionSummary as ApiAttributionSummary, ConversionPath as ApiConversionPath, TrainedAttributionModel as ApiTrainedModel } from '@/api/attribution'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import type {
+  AttributionSummary as ApiAttributionSummary,
+  ConversionPath as ApiConversionPath,
+  TrainedAttributionModel as ApiTrainedModel,
+  AttributionModel,
+} from '@/api/attribution';
 
-type TabType = 'overview' | 'models' | 'paths' | 'compare'
+type TabType = 'overview' | 'models' | 'paths' | 'compare';
 
 // Extended local types for UI display
 interface DisplaySummary {
-  totalConversions: number
-  totalRevenue: number
-  channelBreakdown: ApiAttributionSummary[]
+  totalConversions: number;
+  totalRevenue: number;
+  channelBreakdown: ApiAttributionSummary[];
 }
 
 interface DisplayPath extends Omit<ApiConversionPath, 'path'> {
-  path: string[]  // Convert string path to array for display
-  totalRevenue: number
-  avgTimeToConversion: number
+  path: string[]; // Convert string path to array for display
+  totalRevenue: number;
+  avgTimeToConversion: number;
 }
 
 interface DisplayTrainedModel extends Partial<ApiTrainedModel> {
-  name?: string
-  trainedAt?: string
-  accuracy?: number
+  name?: string;
+  trainedAt?: string;
+  accuracy?: number;
 }
 
 const modelLabels: Record<AttributionModel, string> = {
@@ -55,62 +60,75 @@ const modelLabels: Record<AttributionModel, string> = {
   w_shaped: 'W-Shaped',
   markov: 'Markov Chain',
   shapley: 'Shapley Value',
-}
+};
 
 export default function Attribution() {
-  useParams<{ tenantId: string }>()
-  const [activeTab, setActiveTab] = useState<TabType>('overview')
-  const [selectedModel, setSelectedModel] = useState<AttributionModel>('linear')
+  useParams<{ tenantId: string }>();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [selectedModel, setSelectedModel] = useState<AttributionModel>('linear');
   const [dateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
-  })
+  });
 
   const { data: summaryData } = useAttributionSummary({
     ...dateRange,
     model: selectedModel,
-  })
-  const { data: topPathsData } = useTopConversionPaths({ ...dateRange, limit: 10 })
+  });
+  const { data: topPathsData } = useTopConversionPaths({ ...dateRange, limit: 10 });
   const { data: comparisonData } = useCompareModels({
     ...dateRange,
     models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'] as AttributionModel[],
-  })
-  const { data: trainedModelsData } = useTrainedModels()
-  const trainMarkov = useTrainMarkovModel()
-  const trainShapley = useTrainShapleyModel()
+  });
+  const { data: trainedModelsData } = useTrainedModels();
+  const trainMarkov = useTrainMarkovModel();
+  const trainShapley = useTrainShapleyModel();
 
   // Transform API data to display format
-  const summary: DisplaySummary | null = summaryData ? {
-    totalConversions: summaryData.reduce((sum, s) => sum + s.conversions, 0),
-    totalRevenue: summaryData.reduce((sum, s) => sum + s.attributedRevenue, 0),
-    channelBreakdown: summaryData,
-  } : null
+  const summary: DisplaySummary | null = summaryData
+    ? {
+        totalConversions: summaryData.reduce((sum, s) => sum + s.conversions, 0),
+        totalRevenue: summaryData.reduce((sum, s) => sum + s.attributedRevenue, 0),
+        channelBreakdown: summaryData,
+      }
+    : null;
 
-  const topPaths: DisplayPath[] = (topPathsData ?? []).map(p => ({
+  const topPaths: DisplayPath[] = (topPathsData ?? []).map((p) => ({
     ...p,
-    path: p.path.split(' > '),  // Split path string into array
+    path: p.path.split(' > '), // Split path string into array
     totalRevenue: p.revenue,
     avgTimeToConversion: p.avgDaysToConvert,
-  }))
+  }));
 
   // Use the proper AttributionComparison type from API
-  const comparison = comparisonData
+  const comparison = comparisonData;
 
-  const trainedModels: DisplayTrainedModel[] = (trainedModelsData ?? []).map(m => ({
-    ...m,
-    name: m.modelName,
-    trainedAt: m.createdAt,
-    accuracy: m.validationAccuracy,
-  } as DisplayTrainedModel))
+  const trainedModels: DisplayTrainedModel[] = (trainedModelsData ?? []).map(
+    (m) =>
+      ({
+        ...m,
+        name: m.modelName,
+        trainedAt: m.createdAt,
+        accuracy: m.validationAccuracy,
+      }) as DisplayTrainedModel
+  );
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
     { id: 'models' as TabType, label: 'AI Models' },
     { id: 'paths' as TabType, label: 'Conversion Paths' },
     { id: 'compare' as TabType, label: 'Model Comparison' },
-  ]
+  ];
 
-  const models: AttributionModel[] = ['first_touch', 'last_touch', 'linear', 'time_decay', 'position_based', 'markov', 'shapley']
+  const models: AttributionModel[] = [
+    'first_touch',
+    'last_touch',
+    'linear',
+    'time_decay',
+    'position_based',
+    'markov',
+    'shapley',
+  ];
 
   return (
     <div className="space-y-6">
@@ -219,13 +237,20 @@ export default function Attribution() {
               <div>
                 <h3 className="font-medium">About {modelLabels[selectedModel]}</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {selectedModel === 'first_touch' && 'Gives 100% credit to the first touchpoint in the customer journey.'}
-                  {selectedModel === 'last_touch' && 'Gives 100% credit to the last touchpoint before conversion.'}
-                  {selectedModel === 'linear' && 'Distributes credit equally across all touchpoints in the journey.'}
-                  {selectedModel === 'time_decay' && 'Gives more credit to touchpoints closer to the conversion time.'}
-                  {selectedModel === 'position_based' && 'Gives 40% to first, 40% to last, and 20% distributed among middle touchpoints.'}
-                  {selectedModel === 'markov' && 'Uses transition probabilities to determine each channel\'s contribution to conversions.'}
-                  {selectedModel === 'shapley' && 'Uses game theory to fairly distribute credit based on each channel\'s marginal contribution.'}
+                  {selectedModel === 'first_touch' &&
+                    'Gives 100% credit to the first touchpoint in the customer journey.'}
+                  {selectedModel === 'last_touch' &&
+                    'Gives 100% credit to the last touchpoint before conversion.'}
+                  {selectedModel === 'linear' &&
+                    'Distributes credit equally across all touchpoints in the journey.'}
+                  {selectedModel === 'time_decay' &&
+                    'Gives more credit to touchpoints closer to the conversion time.'}
+                  {selectedModel === 'position_based' &&
+                    'Gives 40% to first, 40% to last, and 20% distributed among middle touchpoints.'}
+                  {selectedModel === 'markov' &&
+                    "Uses transition probabilities to determine each channel's contribution to conversions."}
+                  {selectedModel === 'shapley' &&
+                    "Uses game theory to fairly distribute credit based on each channel's marginal contribution."}
                 </p>
               </div>
             </div>
@@ -310,7 +335,9 @@ export default function Attribution() {
                 {trainedModels?.map((model) => (
                   <tr key={model.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium">{model.name}</td>
-                    <td className="px-4 py-3 text-sm capitalize">{model.modelType?.replace('_', ' ') ?? '-'}</td>
+                    <td className="px-4 py-3 text-sm capitalize">
+                      {model.modelType?.replace('_', ' ') ?? '-'}
+                    </td>
                     <td className="px-4 py-3 text-sm">
                       {model.trainedAt ? new Date(model.trainedAt).toLocaleDateString() : '-'}
                     </td>
@@ -321,9 +348,12 @@ export default function Attribution() {
                       <span
                         className={cn(
                           'px-2 py-1 rounded-full text-xs',
-                          model.status === 'active' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                          model.status === 'training' && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
-                          model.status === 'failed' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                          model.status === 'active' &&
+                            'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+                          model.status === 'training' &&
+                            'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
+                          model.status === 'failed' &&
+                            'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
                         )}
                       >
                         {model.status}
@@ -404,7 +434,7 @@ export default function Attribution() {
                   <th className="px-4 py-3 text-left text-sm font-medium">Channel</th>
                   {comparison.models.map((model) => (
                     <th key={model} className="px-4 py-3 text-right text-sm font-medium">
-                      {modelLabels[model as AttributionModel] || model}
+                      {modelLabels[model] || model}
                     </th>
                   ))}
                 </tr>
@@ -415,7 +445,7 @@ export default function Attribution() {
                     <td className="px-4 py-3 font-medium">{channel.channel}</td>
                     {comparison.models.map((model) => (
                       <td key={model} className="px-4 py-3 text-right">
-                        ${channel.byModel[model as AttributionModel]?.revenue?.toLocaleString() || '0'}
+                        ${channel.byModel[model]?.revenue?.toLocaleString() || '0'}
                       </td>
                     ))}
                   </tr>
@@ -426,5 +456,5 @@ export default function Attribution() {
         </div>
       )}
     </div>
-  )
+  );
 }

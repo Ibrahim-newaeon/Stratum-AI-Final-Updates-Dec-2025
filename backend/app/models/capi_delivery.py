@@ -13,19 +13,16 @@ These tables provide persistent storage for:
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import (
-    Column, String, Integer, DateTime, Float, Text, ForeignKey,
-    Index, BigInteger
-)
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import BigInteger, Column, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
-
 # =============================================================================
 # CAPI Delivery Log
 # =============================================================================
+
 
 class CAPIDeliveryLog(Base):
     """
@@ -37,6 +34,7 @@ class CAPIDeliveryLog(Base):
     - EMQ calculation from real delivery data
     - Performance monitoring
     """
+
     __tablename__ = "capi_delivery_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -90,6 +88,7 @@ class CAPIDeliveryLog(Base):
 # Dead Letter Queue Entry
 # =============================================================================
 
+
 class CAPIDeadLetterEntry(Base):
     """
     Dead Letter Queue entries for failed CAPI events.
@@ -99,6 +98,7 @@ class CAPIDeadLetterEntry(Base):
     - Automated replay when issues are resolved
     - Root cause analysis
     """
+
     __tablename__ = "capi_dead_letter_queue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -114,7 +114,9 @@ class CAPIDeadLetterEntry(Base):
 
     # Failure information
     failure_reason = Column(Text, nullable=False)
-    failure_category = Column(String(50), nullable=False)  # network_error, rate_limited, auth_error, etc.
+    failure_category = Column(
+        String(50), nullable=False
+    )  # network_error, rate_limited, auth_error, etc.
     error_message = Column(Text, nullable=False)
     retry_count = Column(Integer, nullable=False)
     max_retries = Column(Integer, nullable=False)
@@ -133,7 +135,9 @@ class CAPIDeadLetterEntry(Base):
     last_failure_at = Column(DateTime(timezone=True), nullable=False)
     recovered_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -152,6 +156,7 @@ class CAPIDeadLetterEntry(Base):
 # Deduplication Persistence (Optional)
 # =============================================================================
 
+
 class CAPIEventDedupeRecord(Base):
     """
     Optional persistent deduplication records.
@@ -161,6 +166,7 @@ class CAPIEventDedupeRecord(Base):
     - Long-term deduplication (beyond Redis TTL)
     - Audit trail of processed events
     """
+
     __tablename__ = "capi_event_dedupe"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -193,6 +199,7 @@ class CAPIEventDedupeRecord(Base):
 # CAPI Delivery Aggregates (for dashboards)
 # =============================================================================
 
+
 class CAPIDeliveryDailyStats(Base):
     """
     Pre-aggregated daily delivery statistics.
@@ -200,6 +207,7 @@ class CAPIDeliveryDailyStats(Base):
     Reduces query load for dashboards and reporting.
     Populated by scheduled job.
     """
+
     __tablename__ = "capi_delivery_daily_stats"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -235,7 +243,9 @@ class CAPIDeliveryDailyStats(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

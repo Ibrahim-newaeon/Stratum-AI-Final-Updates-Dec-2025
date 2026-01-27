@@ -2,32 +2,32 @@
  * CDP Profiles - Profile viewer and manager
  */
 
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  MagnifyingGlassIcon,
-  FunnelIcon,
   ArrowDownTrayIcon,
-  UserCircleIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  DevicePhoneMobileIcon,
-  CurrencyDollarIcon,
   CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  XMarkIcon,
+  CurrencyDollarIcon,
+  DevicePhoneMobileIcon,
+  EnvelopeIcon,
   EyeIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  PhoneIcon,
+  UserCircleIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
-  useSearchProfiles,
+  type CDPProfile,
+  type IdentifierType,
+  type LifecycleStage,
   useCDPProfile,
   useExportAudience,
-  type CDPProfile,
-  type LifecycleStage,
-  type IdentifierType,
-} from '@/api/cdp'
+  useSearchProfiles,
+} from '@/api/cdp';
 
 // Lifecycle Stage Badge
 function LifecycleBadge({ stage }: { stage: LifecycleStage }) {
@@ -36,13 +36,13 @@ function LifecycleBadge({ stage }: { stage: LifecycleStage }) {
     known: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
     customer: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     churned: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  }
+  };
 
   return (
     <span className={cn('px-2 py-1 rounded-full text-xs font-medium capitalize', config[stage])}>
       {stage}
     </span>
-  )
+  );
 }
 
 // Identifier Icon
@@ -53,20 +53,14 @@ function IdentifierIcon({ type }: { type: IdentifierType }) {
     device_id: DevicePhoneMobileIcon,
     anonymous_id: UserCircleIcon,
     external_id: UserCircleIcon,
-  }
-  const Icon = icons[type] || UserCircleIcon
-  return <Icon className="h-4 w-4 text-muted-foreground" />
+  };
+  const Icon = icons[type] || UserCircleIcon;
+  return <Icon className="h-4 w-4 text-muted-foreground" />;
 }
 
 // Profile Detail Modal
-function ProfileDetailModal({
-  profileId,
-  onClose,
-}: {
-  profileId: string
-  onClose: () => void
-}) {
-  const { data: profile, isLoading } = useCDPProfile(profileId)
+function ProfileDetailModal({ profileId, onClose }: { profileId: string; onClose: () => void }) {
+  const { data: profile, isLoading } = useCDPProfile(profileId);
 
   if (isLoading) {
     return (
@@ -75,15 +69,18 @@ function ProfileDetailModal({
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
       </div>
-    )
+    );
   }
 
   if (!profile) {
-    return null
+    return null;
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
       <div
         className="bg-card rounded-xl border shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -99,10 +96,7 @@ function ProfileDetailModal({
               <p className="text-sm text-muted-foreground font-mono">{profile.id.slice(0, 8)}...</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
@@ -143,7 +137,9 @@ function ProfileDetailModal({
                   <div className="flex items-center gap-3">
                     <IdentifierIcon type={id.identifier_type} />
                     <div>
-                      <p className="text-sm font-medium capitalize">{id.identifier_type.replace('_', ' ')}</p>
+                      <p className="text-sm font-medium capitalize">
+                        {id.identifier_type.replace('_', ' ')}
+                      </p>
                       <p className="text-xs text-muted-foreground font-mono">
                         {id.identifier_hash.slice(0, 16)}...
                       </p>
@@ -151,7 +147,9 @@ function ProfileDetailModal({
                   </div>
                   <div className="text-right">
                     {id.is_primary && (
-                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded">Primary</span>
+                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded">
+                        Primary
+                      </span>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
                       Score: {(id.confidence_score * 100).toFixed(0)}%
@@ -220,7 +218,7 @@ function ProfileDetailModal({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Filter Panel
@@ -230,15 +228,15 @@ function FilterPanel({
   onClose,
 }: {
   filters: {
-    lifecycle_stages?: LifecycleStage[]
-    has_email?: boolean
-    has_phone?: boolean
-    is_customer?: boolean
-  }
-  onFilterChange: (filters: typeof filters) => void
-  onClose: () => void
+    lifecycle_stages?: LifecycleStage[];
+    has_email?: boolean;
+    has_phone?: boolean;
+    is_customer?: boolean;
+  };
+  onFilterChange: (filters: typeof filters) => void;
+  onClose: () => void;
 }) {
-  const lifecycleOptions: LifecycleStage[] = ['anonymous', 'known', 'customer', 'churned']
+  const lifecycleOptions: LifecycleStage[] = ['anonymous', 'known', 'customer', 'churned'];
 
   return (
     <div className="bg-card rounded-xl border p-4 space-y-4">
@@ -257,11 +255,14 @@ function FilterPanel({
             <button
               key={stage}
               onClick={() => {
-                const current = filters.lifecycle_stages || []
+                const current = filters.lifecycle_stages || [];
                 const updated = current.includes(stage)
                   ? current.filter((s) => s !== stage)
-                  : [...current, stage]
-                onFilterChange({ ...filters, lifecycle_stages: updated.length > 0 ? updated : undefined })
+                  : [...current, stage];
+                onFilterChange({
+                  ...filters,
+                  lifecycle_stages: updated.length > 0 ? updated : undefined,
+                });
               }}
               className={cn(
                 'px-3 py-1 rounded-full text-sm capitalize transition-colors',
@@ -282,7 +283,9 @@ function FilterPanel({
           <input
             type="checkbox"
             checked={filters.has_email || false}
-            onChange={(e) => onFilterChange({ ...filters, has_email: e.target.checked || undefined })}
+            onChange={(e) =>
+              onFilterChange({ ...filters, has_email: e.target.checked || undefined })
+            }
             className="rounded border-gray-300"
           />
           <span className="text-sm">Has Email</span>
@@ -291,7 +294,9 @@ function FilterPanel({
           <input
             type="checkbox"
             checked={filters.has_phone || false}
-            onChange={(e) => onFilterChange({ ...filters, has_phone: e.target.checked || undefined })}
+            onChange={(e) =>
+              onFilterChange({ ...filters, has_phone: e.target.checked || undefined })
+            }
             className="rounded border-gray-300"
           />
           <span className="text-sm">Has Phone</span>
@@ -303,7 +308,9 @@ function FilterPanel({
         <input
           type="checkbox"
           checked={filters.is_customer || false}
-          onChange={(e) => onFilterChange({ ...filters, is_customer: e.target.checked || undefined })}
+          onChange={(e) =>
+            onFilterChange({ ...filters, is_customer: e.target.checked || undefined })
+          }
           className="rounded border-gray-300"
         />
         <span className="text-sm">Customers Only</span>
@@ -317,22 +324,22 @@ function FilterPanel({
         Clear All Filters
       </button>
     </div>
-  )
+  );
 }
 
 export default function CDPProfiles() {
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [showFilters, setShowFilters] = useState(false)
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [filters, setFilters] = useState<{
-    lifecycle_stages?: LifecycleStage[]
-    has_email?: boolean
-    has_phone?: boolean
-    is_customer?: boolean
-  }>({})
+    lifecycle_stages?: LifecycleStage[];
+    has_email?: boolean;
+    has_phone?: boolean;
+    is_customer?: boolean;
+  }>({});
 
-  const pageSize = 20
+  const pageSize = 20;
 
   const { data, isLoading } = useSearchProfiles({
     query: search || undefined,
@@ -344,28 +351,28 @@ export default function CDPProfiles() {
     is_customer: filters.is_customer,
     sort_by: 'last_seen_at',
     sort_order: 'desc',
-  })
+  });
 
-  const exportMutation = useExportAudience()
+  const exportMutation = useExportAudience();
 
-  const totalPages = Math.ceil((data?.total || 0) / pageSize)
+  const totalPages = Math.ceil((data?.total || 0) / pageSize);
 
   const handleExport = async () => {
     try {
-      await exportMutation.mutateAsync({ format: 'csv', limit: 1000 })
+      await exportMutation.mutateAsync({ format: 'csv', limit: 1000 });
     } catch (error) {
-      console.error('Export failed:', error)
+      console.error('Export failed:', error);
     }
-  }
+  };
 
   const activeFilterCount = useMemo(() => {
-    let count = 0
-    if (filters.lifecycle_stages?.length) count++
-    if (filters.has_email) count++
-    if (filters.has_phone) count++
-    if (filters.is_customer) count++
-    return count
-  }, [filters])
+    let count = 0;
+    if (filters.lifecycle_stages?.length) count++;
+    if (filters.has_email) count++;
+    if (filters.has_phone) count++;
+    if (filters.is_customer) count++;
+    return count;
+  }, [filters]);
 
   return (
     <div className="space-y-6">
@@ -397,8 +404,8 @@ export default function CDPProfiles() {
             type="text"
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
+              setSearch(e.target.value);
+              setPage(1);
             }}
             placeholder="Search by email, phone, or ID..."
             className="w-full pl-10 pr-4 py-2 border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
@@ -426,8 +433,8 @@ export default function CDPProfiles() {
         <FilterPanel
           filters={filters}
           onFilterChange={(newFilters) => {
-            setFilters(newFilters)
-            setPage(1)
+            setFilters(newFilters);
+            setPage(1);
           }}
           onClose={() => setShowFilters(false)}
         />
@@ -439,13 +446,27 @@ export default function CDPProfiles() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Profile</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Lifecycle</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Identifiers</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Events</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Revenue</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Last Seen</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Profile
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Lifecycle
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Identifiers
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Events
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Revenue
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Last Seen
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -472,7 +493,9 @@ export default function CDPProfiles() {
                           <UserCircleIcon className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium font-mono text-sm">{profile.id.slice(0, 8)}...</p>
+                          <p className="font-medium font-mono text-sm">
+                            {profile.id.slice(0, 8)}...
+                          </p>
                           {profile.external_id && (
                             <p className="text-xs text-muted-foreground">{profile.external_id}</p>
                           )}
@@ -484,9 +507,9 @@ export default function CDPProfiles() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        {profile.identifiers?.slice(0, 3).map((id, i) => (
-                          <IdentifierIcon key={i} type={id.identifier_type} />
-                        ))}
+                        {profile.identifiers
+                          ?.slice(0, 3)
+                          .map((id, i) => <IdentifierIcon key={i} type={id.identifier_type} />)}
                         {(profile.identifiers?.length || 0) > 3 && (
                           <span className="text-xs text-muted-foreground">
                             +{(profile.identifiers?.length || 0) - 3}
@@ -527,7 +550,8 @@ export default function CDPProfiles() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t">
             <p className="text-sm text-muted-foreground">
-              Showing {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, data?.total || 0)} of {data?.total?.toLocaleString()} profiles
+              Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, data?.total || 0)} of{' '}
+              {data?.total?.toLocaleString()} profiles
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -560,5 +584,5 @@ export default function CDPProfiles() {
         />
       )}
     </div>
-  )
+  );
 }

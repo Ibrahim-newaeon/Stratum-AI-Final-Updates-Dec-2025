@@ -8,17 +8,18 @@ From AI_Logic_Formulas_Pseudocode.md Section 4.
 Goal: Catch "something broke" early.
 """
 
-from typing import List, Optional
 import statistics
+from typing import Optional
+
 from app.analytics.logic.types import (
+    AlertSeverity,
     AnomalyParams,
     AnomalyResult,
-    AlertSeverity,
 )
 
 
 def anomaly_zscore(
-    metric_series: List[float],
+    metric_series: list[float],
     current_value: float,
     window: int = 14,
 ) -> float:
@@ -65,10 +66,10 @@ def get_severity(zscore: float) -> AlertSeverity:
 
 
 def detect_anomalies(
-    metrics_series: dict[str, List[float]],
+    metrics_series: dict[str, list[float]],
     current_values: dict[str, float],
     params: Optional[AnomalyParams] = None,
-) -> List[AnomalyResult]:
+) -> list[AnomalyResult]:
     """
     Detect anomalies across multiple metrics.
 
@@ -99,7 +100,9 @@ def detect_anomalies(
 
         if is_anomaly or abs(z) >= 2.0:  # Include near-anomalies for visibility
             # Calculate baseline stats
-            window_series = series[-params.window_days:] if len(series) > params.window_days else series
+            window_series = (
+                series[-params.window_days :] if len(series) > params.window_days else series
+            )
             try:
                 baseline_mean = statistics.mean(window_series)
                 baseline_std = statistics.stdev(window_series) if len(window_series) > 1 else 0.0
@@ -107,16 +110,18 @@ def detect_anomalies(
                 baseline_mean = 0.0
                 baseline_std = 0.0
 
-            anomalies.append(AnomalyResult(
-                metric=metric,
-                zscore=round(z, 2),
-                severity=get_severity(z) if is_anomaly else AlertSeverity.LOW,
-                current_value=current,
-                baseline_mean=round(baseline_mean, 2),
-                baseline_std=round(baseline_std, 2),
-                is_anomaly=is_anomaly,
-                direction="high" if z > 0 else "low",
-            ))
+            anomalies.append(
+                AnomalyResult(
+                    metric=metric,
+                    zscore=round(z, 2),
+                    severity=get_severity(z) if is_anomaly else AlertSeverity.LOW,
+                    current_value=current,
+                    baseline_mean=round(baseline_mean, 2),
+                    baseline_std=round(baseline_std, 2),
+                    is_anomaly=is_anomaly,
+                    direction="high" if z > 0 else "low",
+                )
+            )
 
     # Sort by absolute Z-score (most significant first)
     anomalies.sort(key=lambda x: abs(x.zscore), reverse=True)
@@ -126,7 +131,7 @@ def detect_anomalies(
 
 def detect_entity_anomalies(
     entity_id: str,
-    metrics_history: dict[str, List[float]],
+    metrics_history: dict[str, list[float]],
     current_metrics: dict[str, float],
     params: Optional[AnomalyParams] = None,
 ) -> dict:
@@ -159,7 +164,9 @@ def detect_entity_anomalies(
 def generate_anomaly_message(anomaly: AnomalyResult) -> str:
     """Generate human-readable message for an anomaly."""
     direction = "increased" if anomaly.direction == "high" else "decreased"
-    pct_change = abs(anomaly.current_value - anomaly.baseline_mean) / max(anomaly.baseline_mean, 1) * 100
+    pct_change = (
+        abs(anomaly.current_value - anomaly.baseline_mean) / max(anomaly.baseline_mean, 1) * 100
+    )
 
     return (
         f"{anomaly.metric} {direction} significantly "

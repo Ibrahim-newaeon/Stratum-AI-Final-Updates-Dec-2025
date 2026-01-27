@@ -45,7 +45,7 @@ async def example_whatsapp_messaging():
         "phone_number_id": "YOUR_PHONE_NUMBER_ID",
         "access_token": "YOUR_ACCESS_TOKEN",
         "business_account_id": "YOUR_WABA_ID",
-        "pixel_id": "YOUR_META_PIXEL_ID"  # For conversion tracking
+        "pixel_id": "YOUR_META_PIXEL_ID",  # For conversion tracking
     }
 
     logger.info("\n[INIT] Step 1: Initialize WhatsApp Adapter")
@@ -60,9 +60,9 @@ async def example_whatsapp_messaging():
 
     # Step 1: Send welcome template
     logger.info("\n[SEND] Step 2: Send Welcome Template")
-    logger.info("""
+    logger.info(f"""
     await adapter.send_template_message(
-        to="{phone}",
+        to="{customer_phone}",
         template_name="welcome_furniture",
         language="ar",
         components=[
@@ -75,15 +75,15 @@ async def example_whatsapp_messaging():
             }}
         ]
     )
-    """.format(phone=customer_phone))
+    """)
 
     logger.info("   [OK] Template sent: Welcome + 20% discount offer")
 
     # Step 2: Send interactive product menu
     logger.info("\n[SEND] Step 3: Send Interactive Product Menu")
-    logger.info("""
+    logger.info(f"""
     await adapter.send_interactive_message(
-        to="{phone}",
+        to="{customer_phone}",
         interactive_type="list",
         body_text="Choose the type of furniture you're looking for:",
         action={{
@@ -106,7 +106,7 @@ async def example_whatsapp_messaging():
             ]
         }}
     )
-    """.format(phone=customer_phone))
+    """)
 
     logger.info("   [OK] Interactive menu sent")
 
@@ -118,9 +118,9 @@ async def example_whatsapp_messaging():
 
     # Step 4: Send product details
     logger.info("\n[SEND] Step 5: Send Product Details with Buttons")
-    logger.info("""
+    logger.info(f"""
     await adapter.send_interactive_message(
-        to="{phone}",
+        to="{customer_phone}",
         interactive_type="button",
         body_text="Luxury Corner Sofa - 7 Seats\\n\\nPrice: 4,500 SAR\\nDelivery: Free to Riyadh\\nWarranty: 5 years",
         header={{"type": "image", "image": {{"link": "https://..."}}}},
@@ -132,7 +132,7 @@ async def example_whatsapp_messaging():
             ]
         }}
     )
-    """.format(phone=customer_phone))
+    """)
 
     logger.info("   [OK] Product card sent with action buttons")
 
@@ -143,9 +143,9 @@ async def example_whatsapp_messaging():
 
     # Step 6: Send order confirmation template
     logger.info("\n[SEND] Step 7: Send Order Confirmation Template")
-    logger.info("""
+    logger.info(f"""
     await adapter.send_template_message(
-        to="{phone}",
+        to="{customer_phone}",
         template_name="order_confirmation",
         language="ar",
         components=[
@@ -160,20 +160,20 @@ async def example_whatsapp_messaging():
             }}
         ]
     )
-    """.format(phone=customer_phone))
+    """)
 
     logger.info("   [OK] Order confirmation sent")
 
     # Step 7: Track conversion
     logger.info("\n[TRACK] Step 8: Track Conversion to Meta CAPI")
-    logger.info("""
+    logger.info(f"""
     result = await adapter.mark_conversion(
-        wa_id="{phone}",
+        wa_id="{customer_phone}",
         value=4500.0,
         currency="SAR",
         event_name="Purchase"
     )
-    """.format(phone=customer_phone))
+    """)
 
     logger.info("   [OK] Conversion tracked to Meta CAPI for attribution")
     logger.info("   -> Click-to-WhatsApp ad will get purchase attribution")
@@ -183,11 +183,7 @@ async def example_server_side_conversions():
     """
     Example: Sending conversion events to all platforms for improved EMQ.
     """
-    from app.stratum.conversions import (
-        ConversionEvent,
-        UserData,
-        EventType
-    )
+    from app.stratum.conversions import ConversionEvent, EventType, UserData
 
     logger.info("\n" + "=" * 60)
     logger.info("SERVER-SIDE CONVERSIONS API EXAMPLE")
@@ -231,10 +227,10 @@ async def example_server_side_conversions():
             "value": 4500.0,
             "content_ids": ["SKU-SOFA-7SEAT"],
             "content_type": "product",
-            "num_items": 1
+            "num_items": 1,
         },
         event_source_url="https://midasfurniture.sa/checkout/success",
-        action_source="website"
+        action_source="website",
     )
 
     logger.info(f"   Event: {event.event_name.value}")

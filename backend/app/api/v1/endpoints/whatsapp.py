@@ -8,8 +8,8 @@ Implements Module G: WhatsApp Messaging.
 
 import hashlib
 import hmac
-from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
@@ -50,9 +50,7 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
         return True  # Skip verification in development
 
     expected_signature = hmac.new(
-        settings.whatsapp_app_secret.encode("utf-8"),
-        payload,
-        hashlib.sha256
+        settings.whatsapp_app_secret.encode("utf-8"), payload, hashlib.sha256
     ).hexdigest()
 
     # Meta sends signature as "sha256=<hash>"
@@ -97,9 +95,9 @@ class WhatsAppTemplateCreate(BaseModel):
     header_content: Optional[str] = None
     body_text: str
     footer_text: Optional[str] = Field(None, max_length=60)
-    header_variables: List[str] = []
-    body_variables: List[str] = []
-    buttons: List[dict] = []
+    header_variables: list[str] = []
+    body_variables: list[str] = []
+    buttons: list[dict] = []
 
 
 class WhatsAppTemplateResponse(BaseModel):
@@ -127,7 +125,7 @@ class WhatsAppMessageSend(BaseModel):
 
 
 class WhatsAppBroadcastRequest(BaseModel):
-    contact_ids: List[int] = Field(..., description="List of contact IDs to send to")
+    contact_ids: list[int] = Field(..., description="List of contact IDs to send to")
     template_name: str = Field(..., description="Template name to use")
     template_variables: dict = Field(default={}, description="Variables for the template")
 
@@ -136,7 +134,7 @@ class WhatsAppBroadcastResponse(BaseModel):
     success: bool
     total_recipients: int
     messages_queued: int
-    failed_contacts: List[int]
+    failed_contacts: list[int]
     message: str
 
 
@@ -195,8 +193,8 @@ async def list_contacts(
         query = query.where(WhatsAppContact.opt_in_status == opt_in_status)
     if search:
         query = query.where(
-            (WhatsAppContact.phone_number.ilike(f"%{search}%")) |
-            (WhatsAppContact.display_name.ilike(f"%{search}%"))
+            (WhatsAppContact.phone_number.ilike(f"%{search}%"))
+            | (WhatsAppContact.display_name.ilike(f"%{search}%"))
         )
 
     # Count total
@@ -270,16 +268,18 @@ async def create_contact(
 
 class BulkContactCreate(BaseModel):
     """Schema for bulk contact import."""
-    contacts: List[WhatsAppContactCreate]
+
+    contacts: list[WhatsAppContactCreate]
 
 
 class BulkImportResult(BaseModel):
     """Result of bulk import operation."""
+
     total: int
     success: int
     failed: int
-    errors: List[dict] = []
-    created_ids: List[int] = []
+    errors: list[dict] = []
+    created_ids: list[int] = []
 
 
 @router.post("/contacts/bulk", response_model=APIResponse[BulkImportResult])
@@ -312,11 +312,13 @@ async def bulk_import_contacts(
                 )
             )
             if existing.scalar_one_or_none():
-                errors.append({
-                    "index": idx,
-                    "phone": contact_data.phone_number,
-                    "error": "Duplicate phone number"
-                })
+                errors.append(
+                    {
+                        "index": idx,
+                        "phone": contact_data.phone_number,
+                        "error": "Duplicate phone number",
+                    }
+                )
                 failed_count += 1
                 continue
 
@@ -335,17 +337,15 @@ async def bulk_import_contacts(
             success_count += 1
 
         except Exception as e:
-            errors.append({
-                "index": idx,
-                "phone": contact_data.phone_number,
-                "error": str(e)
-            })
+            errors.append({"index": idx, "phone": contact_data.phone_number, "error": str(e)})
             failed_count += 1
 
     # Commit all successful inserts
     await db.commit()
 
-    logger.info(f"Bulk imported {success_count} contacts for tenant {tenant_id}, {failed_count} failed")
+    logger.info(
+        f"Bulk imported {success_count} contacts for tenant {tenant_id}, {failed_count} failed"
+    )
 
     return APIResponse(
         success=True,
@@ -362,6 +362,7 @@ async def bulk_import_contacts(
 
 class WhatsAppContactUpdate(BaseModel):
     """Schema for updating a contact."""
+
     display_name: Optional[str] = None
     country_code: Optional[str] = None
 
@@ -460,10 +461,11 @@ async def verify_contact(
 
     # Generate 6-digit verification code
     import secrets
+
     verification_code = str(secrets.randbelow(900000) + 100000)
 
     contact.verification_code = verification_code
-    contact.verification_expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+    contact.verification_expires_at = datetime.now(UTC) + timedelta(minutes=15)
 
     await db.commit()
 
@@ -478,21 +480,14 @@ async def verify_contact(
             template_name="verification_code",  # Pre-approved Meta template
             language_code="en",
             components=[
-                {
-                    "type": "body",
-                    "parameters": [
-                        {"type": "text", "text": verification_code}
-                    ]
-                },
+                {"type": "body", "parameters": [{"type": "text", "text": verification_code}]},
                 {
                     "type": "button",
                     "sub_type": "url",
                     "index": "0",
-                    "parameters": [
-                        {"type": "text", "text": verification_code}
-                    ]
-                }
-            ]
+                    "parameters": [{"type": "text", "text": verification_code}],
+                },
+            ],
         )
         logger.info(f"Verification code sent to contact {contact_id}")
     except WhatsAppAPIError as e:
@@ -529,7 +524,7 @@ async def opt_in_contact(
         raise HTTPException(status_code=404, detail="Contact not found")
 
     contact.opt_in_status = WhatsAppOptInStatus.OPTED_IN
-    contact.opt_in_at = datetime.now(timezone.utc)
+    contact.opt_in_at = datetime.now(UTC)
     contact.opt_in_method = method
 
     await db.commit()
@@ -565,7 +560,7 @@ async def opt_out_contact(
         raise HTTPException(status_code=404, detail="Contact not found")
 
     contact.opt_in_status = WhatsAppOptInStatus.OPTED_OUT
-    contact.opt_out_at = datetime.now(timezone.utc)
+    contact.opt_out_at = datetime.now(UTC)
 
     await db.commit()
 
@@ -664,9 +659,7 @@ async def create_template(
             if template_data.header_type == "text":
                 header_component["text"] = template_data.header_content
                 if template_data.header_variables:
-                    header_component["example"] = {
-                        "header_text": template_data.header_variables
-                    }
+                    header_component["example"] = {"header_text": template_data.header_variables}
             components.append(header_component)
 
         # Add body (required)
@@ -675,24 +668,26 @@ async def create_template(
             "text": template_data.body_text,
         }
         if template_data.body_variables:
-            body_component["example"] = {
-                "body_text": [template_data.body_variables]
-            }
+            body_component["example"] = {"body_text": [template_data.body_variables]}
         components.append(body_component)
 
         # Add footer if present
         if template_data.footer_text:
-            components.append({
-                "type": "FOOTER",
-                "text": template_data.footer_text,
-            })
+            components.append(
+                {
+                    "type": "FOOTER",
+                    "text": template_data.footer_text,
+                }
+            )
 
         # Add buttons if present
         if template_data.buttons:
-            components.append({
-                "type": "BUTTONS",
-                "buttons": template_data.buttons,
-            })
+            components.append(
+                {
+                    "type": "BUTTONS",
+                    "buttons": template_data.buttons,
+                }
+            )
 
         # Submit to Meta
         response = await whatsapp_client.create_template(
@@ -831,13 +826,14 @@ async def send_message(
 
     # Update contact stats
     contact.message_count += 1
-    contact.last_message_at = datetime.now(timezone.utc)
+    contact.last_message_at = datetime.now(UTC)
 
     await db.commit()
     await db.refresh(message)
 
     # Queue for async sending via Celery worker
     from app.workers.tasks import send_whatsapp_message
+
     send_whatsapp_message.delay(
         tenant_id=tenant_id,
         message_id=message.id,
@@ -914,7 +910,7 @@ async def send_broadcast(
 
         # Update contact stats
         contact.message_count += 1
-        contact.last_message_at = datetime.now(timezone.utc)
+        contact.last_message_at = datetime.now(UTC)
 
         messages_queued += 1
 
@@ -923,6 +919,7 @@ async def send_broadcast(
     # Queue messages for async sending
     if messages_queued > 0:
         from app.workers.tasks import send_whatsapp_broadcast
+
         send_whatsapp_broadcast.delay(
             tenant_id=tenant_id,
             template_name=broadcast_data.template_name,
@@ -934,7 +931,9 @@ async def send_broadcast(
     template.usage_count += messages_queued
     await db.commit()
 
-    logger.info(f"Broadcast queued: {messages_queued} messages to {len(broadcast_data.contact_ids)} contacts")
+    logger.info(
+        f"Broadcast queued: {messages_queued} messages to {len(broadcast_data.contact_ids)} contacts"
+    )
 
     return APIResponse(
         success=True,
@@ -1036,8 +1035,7 @@ async def whatsapp_webhook(
         if not verify_webhook_signature(raw_body, x_hub_signature_256):
             logger.warning("Invalid webhook signature received")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid webhook signature"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook signature"
             )
     else:
         logger.warning("No webhook signature header received")
@@ -1065,7 +1063,7 @@ async def whatsapp_webhook(
 
                         if message:
                             message.status = new_status
-                            ts = datetime.fromtimestamp(int(timestamp), tz=timezone.utc)
+                            ts = datetime.fromtimestamp(int(timestamp), tz=UTC)
 
                             if new_status == "sent":
                                 message.sent_at = ts
@@ -1104,7 +1102,9 @@ async def verify_webhook(
 # =============================================================================
 # Conversation Endpoints
 # =============================================================================
-@router.get("/conversations", response_model=APIResponse[PaginatedResponse[WhatsAppConversationResponse]])
+@router.get(
+    "/conversations", response_model=APIResponse[PaginatedResponse[WhatsAppConversationResponse]]
+)
 async def list_conversations(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -1123,7 +1123,7 @@ async def list_conversations(
     if active_only:
         query = query.where(
             WhatsAppConversation.is_active == True,
-            WhatsAppConversation.expires_at > datetime.now(timezone.utc),
+            WhatsAppConversation.expires_at > datetime.now(UTC),
         )
 
     # Count total

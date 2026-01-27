@@ -20,18 +20,18 @@ Required Scopes:
 Docs: https://developers.facebook.com/docs/marketing-api/overview/authorization
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Optional
 
 import aiohttp
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.oauth.base import (
+    AdAccountInfo,
     OAuthService,
     OAuthState,
     OAuthTokens,
-    AdAccountInfo,
 )
 
 logger = get_logger(__name__)
@@ -78,7 +78,7 @@ class MetaOAuthService(OAuthService):
     def get_authorization_url(
         self,
         state: OAuthState,
-        scopes: Optional[List[str]] = None,
+        scopes: Optional[list[str]] = None,
     ) -> str:
         """
         Generate Meta OAuth authorization URL.
@@ -142,7 +142,9 @@ class MetaOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Meta token exchange failed", error=error_data)
-                    raise Exception(f"Token exchange failed: {error_data.get('error', {}).get('message', 'Unknown error')}")
+                    raise Exception(
+                        f"Token exchange failed: {error_data.get('error', {}).get('message', 'Unknown error')}"
+                    )
 
                 token_data = await resp.json()
 
@@ -219,7 +221,9 @@ class MetaOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Meta token refresh failed", error=error_data)
-                    raise Exception(f"Token refresh failed: {error_data.get('error', {}).get('message', 'Unknown error')}")
+                    raise Exception(
+                        f"Token refresh failed: {error_data.get('error', {}).get('message', 'Unknown error')}"
+                    )
 
                 token_data = await resp.json()
 
@@ -236,7 +240,7 @@ class MetaOAuthService(OAuthService):
     async def fetch_ad_accounts(
         self,
         access_token: str,
-    ) -> List[AdAccountInfo]:
+    ) -> list[AdAccountInfo]:
         """
         Fetch ad accounts accessible by the authenticated user.
 
@@ -264,7 +268,9 @@ class MetaOAuthService(OAuthService):
                     if resp.status != 200:
                         error_data = await resp.json()
                         self.logger.error("Failed to fetch ad accounts", error=error_data)
-                        raise Exception(f"Failed to fetch ad accounts: {error_data.get('error', {}).get('message', 'Unknown error')}")
+                        raise Exception(
+                            f"Failed to fetch ad accounts: {error_data.get('error', {}).get('message', 'Unknown error')}"
+                        )
 
                     data = await resp.json()
 
@@ -284,18 +290,24 @@ class MetaOAuthService(OAuthService):
                     }
                     account_status = status_map.get(account.get("account_status", 1), "unknown")
 
-                    accounts.append(AdAccountInfo(
-                        account_id=account.get("id", ""),  # Format: act_123456789
-                        name=account.get("name", "Unnamed Account"),
-                        business_name=account.get("business_name"),
-                        currency=account.get("currency", "USD"),
-                        timezone=account.get("timezone_name", "UTC"),
-                        status=account_status,
-                        spend_cap=float(account.get("spend_cap", 0)) / 100 if account.get("spend_cap") else None,
-                        amount_spent=float(account.get("amount_spent", 0)) / 100 if account.get("amount_spent") else None,
-                        permissions=account.get("capabilities", []),
-                        raw_data=account,
-                    ))
+                    accounts.append(
+                        AdAccountInfo(
+                            account_id=account.get("id", ""),  # Format: act_123456789
+                            name=account.get("name", "Unnamed Account"),
+                            business_name=account.get("business_name"),
+                            currency=account.get("currency", "USD"),
+                            timezone=account.get("timezone_name", "UTC"),
+                            status=account_status,
+                            spend_cap=float(account.get("spend_cap", 0)) / 100
+                            if account.get("spend_cap")
+                            else None,
+                            amount_spent=float(account.get("amount_spent", 0)) / 100
+                            if account.get("amount_spent")
+                            else None,
+                            permissions=account.get("capabilities", []),
+                            raw_data=account,
+                        )
+                    )
 
                 # Handle pagination
                 paging = data.get("paging", {})
@@ -336,4 +348,4 @@ class MetaOAuthService(OAuthService):
         """Calculate expiration datetime from expires_in seconds."""
         if expires_in is None:
             return None
-        return datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        return datetime.now(UTC) + timedelta(seconds=expires_in)

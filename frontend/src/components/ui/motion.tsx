@@ -5,19 +5,19 @@
  */
 
 import React from 'react';
-import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
+import { AnimatePresence, HTMLMotionProps, motion } from 'framer-motion';
 import {
-  pageTransition,
+  buttonVariants,
+  cardVariants,
   fadeIn,
   fadeInUp,
+  listItem,
+  modalContent,
+  modalOverlay,
+  pageTransition,
   scaleIn,
   staggerContainer,
-  listItem,
-  cardVariants,
   statCardVariants,
-  modalOverlay,
-  modalContent,
-  buttonVariants,
   toastVariants,
   transitions,
 } from '@/lib/animations';
@@ -32,10 +32,7 @@ interface PageTransitionProps {
   className?: string;
 }
 
-export const PageTransition: React.FC<PageTransitionProps> = ({
-  children,
-  className,
-}) => {
+export const PageTransition: React.FC<PageTransitionProps> = ({ children, className }) => {
   return (
     <motion.div
       variants={pageTransition}
@@ -103,12 +100,7 @@ interface ScaleInProps extends HTMLMotionProps<'div'> {
   delay?: number;
 }
 
-export const ScaleIn: React.FC<ScaleInProps> = ({
-  children,
-  className,
-  delay = 0,
-  ...props
-}) => {
+export const ScaleIn: React.FC<ScaleInProps> = ({ children, className, delay = 0, ...props }) => {
   return (
     <motion.div
       variants={scaleIn}
@@ -167,11 +159,7 @@ interface StaggerItemProps extends HTMLMotionProps<'div'> {
   className?: string;
 }
 
-export const StaggerItem: React.FC<StaggerItemProps> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const StaggerItem: React.FC<StaggerItemProps> = ({ children, className, ...props }) => {
   return (
     <motion.div variants={listItem} className={className} {...props}>
       {children}
@@ -224,12 +212,7 @@ interface StatCardProps extends HTMLMotionProps<'div'> {
   index?: number;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({
-  children,
-  className,
-  index = 0,
-  ...props
-}) => {
+export const StatCard: React.FC<StatCardProps> = ({ children, className, index = 0, ...props }) => {
   return (
     <motion.div
       variants={statCardVariants}
@@ -254,17 +237,9 @@ interface AnimatedListProps {
   className?: string;
 }
 
-export const AnimatedList: React.FC<AnimatedListProps> = ({
-  children,
-  className,
-}) => {
+export const AnimatedList: React.FC<AnimatedListProps> = ({ children, className }) => {
   return (
-    <motion.ul
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-      className={className}
-    >
+    <motion.ul variants={staggerContainer} initial="hidden" animate="visible" className={className}>
       {children}
     </motion.ul>
   );
@@ -371,11 +346,7 @@ interface AnimatedToastProps {
   isVisible: boolean;
 }
 
-export const AnimatedToast: React.FC<AnimatedToastProps> = ({
-  children,
-  className,
-  isVisible,
-}) => {
+export const AnimatedToast: React.FC<AnimatedToastProps> = ({ children, className, isVisible }) => {
   return (
     <AnimatePresence>
       {isVisible && (
@@ -431,10 +402,7 @@ interface PresenceProps {
   mode?: 'sync' | 'wait' | 'popLayout';
 }
 
-export const Presence: React.FC<PresenceProps> = ({
-  children,
-  mode = 'wait',
-}) => {
+export const Presence: React.FC<PresenceProps> = ({ children, mode = 'wait' }) => {
   return <AnimatePresence mode={mode}>{children}</AnimatePresence>;
 };
 
@@ -449,10 +417,7 @@ interface SkeletonProps {
 export const AnimatedSkeleton: React.FC<SkeletonProps> = ({ className }) => {
   return (
     <motion.div
-      className={cn(
-        'relative overflow-hidden rounded-md bg-white/5',
-        className
-      )}
+      className={cn('relative overflow-hidden rounded-md bg-white/5', className)}
       animate={{ opacity: [0.5, 1, 0.5] }}
       transition={{
         duration: 1.5,

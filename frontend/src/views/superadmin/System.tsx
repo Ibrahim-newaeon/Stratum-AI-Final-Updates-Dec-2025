@@ -4,100 +4,100 @@
  * Pipeline health, API status, queue monitoring, and system metrics
  */
 
-import { useState, useEffect } from 'react'
-import { cn } from '@/lib/utils'
-import { useSystemHealth } from '@/api/hooks'
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useSystemHealth } from '@/api/hooks';
 import {
-  ServerIcon,
-  CpuChipIcon,
-  CircleStackIcon,
-  CloudIcon,
-  SignalIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
   ArrowPathIcon,
-  ChartBarIcon,
   BoltIcon,
-} from '@heroicons/react/24/outline'
+  ChartBarIcon,
+  CheckCircleIcon,
+  CircleStackIcon,
+  ClockIcon,
+  CloudIcon,
+  CpuChipIcon,
+  ExclamationTriangleIcon,
+  ServerIcon,
+  SignalIcon,
+} from '@heroicons/react/24/outline';
 
-type ServiceStatus = 'healthy' | 'degraded' | 'down'
-type QueueStatus = 'running' | 'paused' | 'stalled'
+type ServiceStatus = 'healthy' | 'degraded' | 'down';
+type QueueStatus = 'running' | 'paused' | 'stalled';
 
 interface Service {
-  id: string
-  name: string
-  status: ServiceStatus
-  uptime: number
-  latency: number
-  lastCheck: Date
-  version: string
+  id: string;
+  name: string;
+  status: ServiceStatus;
+  uptime: number;
+  latency: number;
+  lastCheck: Date;
+  version: string;
 }
 
 interface QueueInfo {
-  id: string
-  name: string
-  status: QueueStatus
-  pending: number
-  processing: number
-  completed: number
-  failed: number
-  avgProcessTime: number
+  id: string;
+  name: string;
+  status: QueueStatus;
+  pending: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  avgProcessTime: number;
 }
 
 interface PlatformConnector {
-  platform: string
-  status: ServiceStatus
-  lastSync: Date
-  syncDuration: number
-  errors: number
-  recordsProcessed: number
+  platform: string;
+  status: ServiceStatus;
+  lastSync: Date;
+  syncDuration: number;
+  errors: number;
+  recordsProcessed: number;
 }
 
 export default function System() {
-  const [refreshing, setRefreshing] = useState(false)
-  const [lastRefresh, setLastRefresh] = useState(new Date())
-  const [queueStates, setQueueStates] = useState<Record<string, QueueStatus>>({})
-  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({})
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [queueStates, setQueueStates] = useState<Record<string, QueueStatus>>({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [confirmDialog, setConfirmDialog] = useState<{
-    open: boolean
-    type: 'pause' | 'resume' | 'retry'
-    queueId: string
-    queueName: string
-  } | null>(null)
+    open: boolean;
+    type: 'pause' | 'resume' | 'retry';
+    queueId: string;
+    queueName: string;
+  } | null>(null);
 
   // Fetch system health from API
-  const { data: healthData, refetch } = useSystemHealth()
+  const { data: healthData, refetch } = useSystemHealth();
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setLastRefresh(new Date())
-      refetch()
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [refetch])
+      setLastRefresh(new Date());
+      refetch();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   const handleRefresh = async () => {
-    setRefreshing(true)
+    setRefreshing(true);
     try {
-      await refetch()
-      setLastRefresh(new Date())
+      await refetch();
+      setLastRefresh(new Date());
     } finally {
-      setRefreshing(false)
+      setRefreshing(false);
     }
-  }
+  };
 
   // Handle queue pause/resume toggle
   const handleQueueToggle = (queueId: string, queueName: string, currentStatus: QueueStatus) => {
-    const actionType = currentStatus === 'running' ? 'pause' : 'resume'
+    const actionType = currentStatus === 'running' ? 'pause' : 'resume';
     setConfirmDialog({
       open: true,
       type: actionType,
       queueId,
       queueName,
-    })
-  }
+    });
+  };
 
   // Handle retry failed jobs
   const handleRetryFailed = (queueId: string, queueName: string) => {
@@ -106,69 +106,181 @@ export default function System() {
       type: 'retry',
       queueId,
       queueName,
-    })
-  }
+    });
+  };
 
   // Execute confirmed action
   const handleConfirmAction = async () => {
-    if (!confirmDialog) return
+    if (!confirmDialog) return;
 
-    const { type, queueId, queueName } = confirmDialog
-    const loadingKey = `${type}-${queueId}`
+    const { type, queueId, queueName } = confirmDialog;
+    const loadingKey = `${type}-${queueId}`;
 
-    setActionLoading(prev => ({ ...prev, [loadingKey]: true }))
-    setConfirmDialog(null)
+    setActionLoading((prev) => ({ ...prev, [loadingKey]: true }));
+    setConfirmDialog(null);
 
     try {
       // Simulate API call - replace with actual API integration
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (type === 'pause') {
-        setQueueStates(prev => ({ ...prev, [queueId]: 'paused' }))
-        console.log(`Queue "${queueName}" paused successfully`)
+        setQueueStates((prev) => ({ ...prev, [queueId]: 'paused' }));
+        console.log(`Queue "${queueName}" paused successfully`);
       } else if (type === 'resume') {
-        setQueueStates(prev => ({ ...prev, [queueId]: 'running' }))
-        console.log(`Queue "${queueName}" resumed successfully`)
+        setQueueStates((prev) => ({ ...prev, [queueId]: 'running' }));
+        console.log(`Queue "${queueName}" resumed successfully`);
       } else if (type === 'retry') {
-        console.log(`Retrying failed jobs in queue "${queueName}"`)
+        console.log(`Retrying failed jobs in queue "${queueName}"`);
         // Trigger refetch to get updated queue status
-        await refetch()
+        await refetch();
       }
     } catch (error) {
-      console.error(`Failed to ${type} queue "${queueName}":`, error)
+      console.error(`Failed to ${type} queue "${queueName}":`, error);
     } finally {
-      setActionLoading(prev => ({ ...prev, [loadingKey]: false }))
+      setActionLoading((prev) => ({ ...prev, [loadingKey]: false }));
     }
-  }
+  };
 
   // Get effective queue status (local override or from data)
   const getEffectiveQueueStatus = (queue: QueueInfo): QueueStatus => {
-    return queueStates[queue.id] ?? queue.status
-  }
+    return queueStates[queue.id] ?? queue.status;
+  };
 
   // Default mock data for fallback
   const mockServices: Service[] = [
-    { id: 'api', name: 'API Gateway', status: 'healthy', uptime: 99.99, latency: 45, lastCheck: new Date(), version: '2.4.1' },
-    { id: 'auth', name: 'Auth Service', status: 'healthy', uptime: 99.95, latency: 32, lastCheck: new Date(), version: '1.8.0' },
-    { id: 'sync', name: 'Sync Engine', status: 'degraded', uptime: 98.5, latency: 1250, lastCheck: new Date(), version: '3.1.2' },
-    { id: 'ml', name: 'ML Pipeline', status: 'healthy', uptime: 99.8, latency: 890, lastCheck: new Date(), version: '2.0.0' },
-    { id: 'db', name: 'Database Cluster', status: 'healthy', uptime: 99.99, latency: 12, lastCheck: new Date(), version: 'PostgreSQL 15' },
-    { id: 'cache', name: 'Cache Layer', status: 'healthy', uptime: 99.99, latency: 2, lastCheck: new Date(), version: 'Redis 7.0' },
-  ]
+    {
+      id: 'api',
+      name: 'API Gateway',
+      status: 'healthy',
+      uptime: 99.99,
+      latency: 45,
+      lastCheck: new Date(),
+      version: '2.4.1',
+    },
+    {
+      id: 'auth',
+      name: 'Auth Service',
+      status: 'healthy',
+      uptime: 99.95,
+      latency: 32,
+      lastCheck: new Date(),
+      version: '1.8.0',
+    },
+    {
+      id: 'sync',
+      name: 'Sync Engine',
+      status: 'degraded',
+      uptime: 98.5,
+      latency: 1250,
+      lastCheck: new Date(),
+      version: '3.1.2',
+    },
+    {
+      id: 'ml',
+      name: 'ML Pipeline',
+      status: 'healthy',
+      uptime: 99.8,
+      latency: 890,
+      lastCheck: new Date(),
+      version: '2.0.0',
+    },
+    {
+      id: 'db',
+      name: 'Database Cluster',
+      status: 'healthy',
+      uptime: 99.99,
+      latency: 12,
+      lastCheck: new Date(),
+      version: 'PostgreSQL 15',
+    },
+    {
+      id: 'cache',
+      name: 'Cache Layer',
+      status: 'healthy',
+      uptime: 99.99,
+      latency: 2,
+      lastCheck: new Date(),
+      version: 'Redis 7.0',
+    },
+  ];
 
   const mockQueues: QueueInfo[] = [
-    { id: 'sync', name: 'Platform Sync', status: 'running', pending: 45, processing: 12, completed: 15420, failed: 3, avgProcessTime: 2.5 },
-    { id: 'notifications', name: 'Notifications', status: 'running', pending: 8, processing: 2, completed: 8932, failed: 0, avgProcessTime: 0.3 },
-    { id: 'reports', name: 'Report Generation', status: 'running', pending: 15, processing: 3, completed: 1245, failed: 2, avgProcessTime: 45 },
-    { id: 'ml-inference', name: 'ML Inference', status: 'running', pending: 120, processing: 8, completed: 45678, failed: 12, avgProcessTime: 1.2 },
-  ]
+    {
+      id: 'sync',
+      name: 'Platform Sync',
+      status: 'running',
+      pending: 45,
+      processing: 12,
+      completed: 15420,
+      failed: 3,
+      avgProcessTime: 2.5,
+    },
+    {
+      id: 'notifications',
+      name: 'Notifications',
+      status: 'running',
+      pending: 8,
+      processing: 2,
+      completed: 8932,
+      failed: 0,
+      avgProcessTime: 0.3,
+    },
+    {
+      id: 'reports',
+      name: 'Report Generation',
+      status: 'running',
+      pending: 15,
+      processing: 3,
+      completed: 1245,
+      failed: 2,
+      avgProcessTime: 45,
+    },
+    {
+      id: 'ml-inference',
+      name: 'ML Inference',
+      status: 'running',
+      pending: 120,
+      processing: 8,
+      completed: 45678,
+      failed: 12,
+      avgProcessTime: 1.2,
+    },
+  ];
 
   const mockConnectors: PlatformConnector[] = [
-    { platform: 'Meta', status: 'healthy', lastSync: new Date(Date.now() - 5 * 60 * 1000), syncDuration: 45, errors: 0, recordsProcessed: 125000 },
-    { platform: 'Google', status: 'healthy', lastSync: new Date(Date.now() - 3 * 60 * 1000), syncDuration: 32, errors: 0, recordsProcessed: 89000 },
-    { platform: 'TikTok', status: 'degraded', lastSync: new Date(Date.now() - 15 * 60 * 1000), syncDuration: 180, errors: 5, recordsProcessed: 45000 },
-    { platform: 'Snapchat', status: 'down', lastSync: new Date(Date.now() - 2 * 60 * 60 * 1000), syncDuration: 0, errors: 15, recordsProcessed: 0 },
-  ]
+    {
+      platform: 'Meta',
+      status: 'healthy',
+      lastSync: new Date(Date.now() - 5 * 60 * 1000),
+      syncDuration: 45,
+      errors: 0,
+      recordsProcessed: 125000,
+    },
+    {
+      platform: 'Google',
+      status: 'healthy',
+      lastSync: new Date(Date.now() - 3 * 60 * 1000),
+      syncDuration: 32,
+      errors: 0,
+      recordsProcessed: 89000,
+    },
+    {
+      platform: 'TikTok',
+      status: 'degraded',
+      lastSync: new Date(Date.now() - 15 * 60 * 1000),
+      syncDuration: 180,
+      errors: 5,
+      recordsProcessed: 45000,
+    },
+    {
+      platform: 'Snapchat',
+      status: 'down',
+      lastSync: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      syncDuration: 0,
+      errors: 15,
+      recordsProcessed: 0,
+    },
+  ];
 
   const mockSystemMetrics = {
     cpu: 42,
@@ -178,100 +290,104 @@ export default function System() {
     activeConnections: 1250,
     requestsPerMinute: 4520,
     errorRate: 0.02,
-  }
+  };
 
   // Use API data or fallback to mock data
-  const services: Service[] = healthData?.services?.map(s => ({
-    id: s.name.toLowerCase().replace(/\s+/g, '-'),
-    name: s.name,
-    status: s.status,
-    uptime: s.uptime,
-    latency: s.latency,
-    lastCheck: new Date(),
-    version: s.version,
-  })) ?? mockServices
+  const services: Service[] =
+    healthData?.services?.map((s) => ({
+      id: s.name.toLowerCase().replace(/\s+/g, '-'),
+      name: s.name,
+      status: s.status,
+      uptime: s.uptime,
+      latency: s.latency,
+      lastCheck: new Date(),
+      version: s.version,
+    })) ?? mockServices;
 
-  const queues: QueueInfo[] = healthData?.queues?.map(q => ({
-    id: q.name.toLowerCase().replace(/\s+/g, '-'),
-    name: q.name,
-    status: q.status,
-    pending: q.pending,
-    processing: q.processing,
-    completed: q.completed,
-    failed: q.failed,
-    avgProcessTime: q.avgProcessTime,
-  })) ?? mockQueues
+  const queues: QueueInfo[] =
+    healthData?.queues?.map((q) => ({
+      id: q.name.toLowerCase().replace(/\s+/g, '-'),
+      name: q.name,
+      status: q.status,
+      pending: q.pending,
+      processing: q.processing,
+      completed: q.completed,
+      failed: q.failed,
+      avgProcessTime: q.avgProcessTime,
+    })) ?? mockQueues;
 
-  const connectors: PlatformConnector[] = healthData?.connectors?.map(c => ({
-    platform: c.platform,
-    status: c.status,
-    lastSync: new Date(c.lastSync),
-    syncDuration: 0,
-    errors: c.errors,
-    recordsProcessed: c.recordsProcessed,
-  })) ?? mockConnectors
+  const connectors: PlatformConnector[] =
+    healthData?.connectors?.map((c) => ({
+      platform: c.platform,
+      status: c.status,
+      lastSync: new Date(c.lastSync),
+      syncDuration: 0,
+      errors: c.errors,
+      recordsProcessed: c.recordsProcessed,
+    })) ?? mockConnectors;
 
-  const systemMetrics = healthData?.metrics ?? mockSystemMetrics
+  const systemMetrics = healthData?.metrics ?? mockSystemMetrics;
 
   const getStatusColor = (status: ServiceStatus | QueueStatus) => {
     switch (status) {
       case 'healthy':
       case 'running':
-        return 'text-success'
+        return 'text-success';
       case 'degraded':
       case 'paused':
-        return 'text-warning'
+        return 'text-warning';
       case 'down':
       case 'stalled':
-        return 'text-danger'
+        return 'text-danger';
     }
-  }
+  };
 
   const getStatusBg = (status: ServiceStatus | QueueStatus) => {
     switch (status) {
       case 'healthy':
       case 'running':
-        return 'bg-success/10'
+        return 'bg-success/10';
       case 'degraded':
       case 'paused':
-        return 'bg-warning/10'
+        return 'bg-warning/10';
       case 'down':
       case 'stalled':
-        return 'bg-danger/10'
+        return 'bg-danger/10';
     }
-  }
+  };
 
   const getStatusIcon = (status: ServiceStatus) => {
     switch (status) {
       case 'healthy':
-        return <CheckCircleIcon className="w-5 h-5 text-success" />
+        return <CheckCircleIcon className="w-5 h-5 text-success" />;
       case 'degraded':
-        return <ExclamationTriangleIcon className="w-5 h-5 text-warning" />
+        return <ExclamationTriangleIcon className="w-5 h-5 text-warning" />;
       case 'down':
-        return <ExclamationTriangleIcon className="w-5 h-5 text-danger" />
+        return <ExclamationTriangleIcon className="w-5 h-5 text-danger" />;
     }
-  }
+  };
 
   const formatDuration = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
-    return `${Math.floor(seconds / 3600)}h`
-  }
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+    return `${Math.floor(seconds / 3600)}h`;
+  };
 
   const formatTime = (date: Date) => {
-    const mins = Math.floor((Date.now() - date.getTime()) / 60000)
-    if (mins < 1) return 'Just now'
-    if (mins < 60) return `${mins}m ago`
-    const hours = Math.floor(mins / 60)
-    return `${hours}h ago`
-  }
+    const mins = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    return `${hours}h ago`;
+  };
 
   const overallStatus: ServiceStatus =
-    services.some(s => s.status === 'down') || connectors.some(c => c.status === 'down')
+    services.some((s) => s.status === 'down') || connectors.some((c) => c.status === 'down')
       ? 'down'
-      : services.some(s => s.status === 'degraded') || connectors.some(c => c.status === 'degraded')
+      : services.some((s) => s.status === 'degraded') ||
+          connectors.some((c) => c.status === 'degraded')
         ? 'degraded'
-        : 'healthy'
+        : 'healthy';
 
   return (
     <div className="space-y-6">
@@ -317,8 +433,9 @@ export default function System() {
             {overallStatus === 'down' && 'System Issues Detected'}
           </span>
           <p className="text-sm text-text-muted">
-            {services.filter(s => s.status === 'healthy').length}/{services.length} services healthy,{' '}
-            {connectors.filter(c => c.status === 'healthy').length}/{connectors.length} connectors online
+            {services.filter((s) => s.status === 'healthy').length}/{services.length} services
+            healthy, {connectors.filter((c) => c.status === 'healthy').length}/{connectors.length}{' '}
+            connectors online
           </p>
         </div>
       </div>
@@ -330,7 +447,12 @@ export default function System() {
             <CpuChipIcon className="w-4 h-4" />
             CPU
           </div>
-          <div className={cn('text-2xl font-bold', systemMetrics.cpu > 80 ? 'text-danger' : 'text-white')}>
+          <div
+            className={cn(
+              'text-2xl font-bold',
+              systemMetrics.cpu > 80 ? 'text-danger' : 'text-white'
+            )}
+          >
             {systemMetrics.cpu}%
           </div>
         </div>
@@ -340,7 +462,12 @@ export default function System() {
             <CircleStackIcon className="w-4 h-4" />
             Memory
           </div>
-          <div className={cn('text-2xl font-bold', systemMetrics.memory > 85 ? 'text-warning' : 'text-white')}>
+          <div
+            className={cn(
+              'text-2xl font-bold',
+              systemMetrics.memory > 85 ? 'text-warning' : 'text-white'
+            )}
+          >
             {systemMetrics.memory}%
           </div>
         </div>
@@ -386,7 +513,12 @@ export default function System() {
             <ExclamationTriangleIcon className="w-4 h-4" />
             Error Rate
           </div>
-          <div className={cn('text-2xl font-bold', systemMetrics.errorRate > 1 ? 'text-danger' : 'text-success')}>
+          <div
+            className={cn(
+              'text-2xl font-bold',
+              systemMetrics.errorRate > 1 ? 'text-danger' : 'text-success'
+            )}
+          >
             {systemMetrics.errorRate}%
           </div>
         </div>
@@ -450,7 +582,9 @@ export default function System() {
                   <div className="flex items-center gap-6 text-sm">
                     <div className="text-right">
                       <div className="text-text-muted">Records</div>
-                      <div className="text-white">{connector.recordsProcessed.toLocaleString()}</div>
+                      <div className="text-white">
+                        {connector.recordsProcessed.toLocaleString()}
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="text-text-muted">Errors</div>
@@ -488,11 +622,11 @@ export default function System() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {queues.map((queue) => {
-                const effectiveStatus = getEffectiveQueueStatus(queue)
-                const isPauseLoading = actionLoading[`pause-${queue.id}`]
-                const isResumeLoading = actionLoading[`resume-${queue.id}`]
-                const isRetryLoading = actionLoading[`retry-${queue.id}`]
-                const isToggleLoading = isPauseLoading || isResumeLoading
+                const effectiveStatus = getEffectiveQueueStatus(queue);
+                const isPauseLoading = actionLoading[`pause-${queue.id}`];
+                const isResumeLoading = actionLoading[`resume-${queue.id}`];
+                const isRetryLoading = actionLoading[`retry-${queue.id}`];
+                const isToggleLoading = isPauseLoading || isResumeLoading;
 
                 return (
                   <tr key={queue.id} className="hover:bg-white/5 transition-colors">
@@ -510,13 +644,17 @@ export default function System() {
                     </td>
                     <td className="p-4 text-right text-white">{queue.pending}</td>
                     <td className="p-4 text-right text-stratum-400">{queue.processing}</td>
-                    <td className="p-4 text-right text-success">{queue.completed.toLocaleString()}</td>
+                    <td className="p-4 text-right text-success">
+                      {queue.completed.toLocaleString()}
+                    </td>
                     <td className="p-4 text-right">
                       <span className={queue.failed > 0 ? 'text-danger' : 'text-text-muted'}>
                         {queue.failed}
                       </span>
                     </td>
-                    <td className="p-4 text-right text-text-muted">{formatDuration(queue.avgProcessTime)}</td>
+                    <td className="p-4 text-right text-text-muted">
+                      {formatDuration(queue.avgProcessTime)}
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <button
@@ -532,8 +670,10 @@ export default function System() {
                               <ArrowPathIcon className="w-3 h-3 animate-spin" />
                               {isPauseLoading ? 'Pausing...' : 'Resuming...'}
                             </span>
+                          ) : effectiveStatus === 'running' ? (
+                            'Pause'
                           ) : (
-                            effectiveStatus === 'running' ? 'Pause' : 'Resume'
+                            'Resume'
                           )}
                         </button>
                         {queue.failed > 0 && (
@@ -558,7 +698,7 @@ export default function System() {
                       </div>
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
@@ -592,19 +732,22 @@ export default function System() {
             <p className="text-text-secondary mb-6">
               {confirmDialog.type === 'pause' && (
                 <>
-                  Are you sure you want to pause the <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
+                  Are you sure you want to pause the{' '}
+                  <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
                   This will stop processing new jobs until resumed.
                 </>
               )}
               {confirmDialog.type === 'resume' && (
                 <>
-                  Are you sure you want to resume the <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
+                  Are you sure you want to resume the{' '}
+                  <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
                   Job processing will continue immediately.
                 </>
               )}
               {confirmDialog.type === 'retry' && (
                 <>
-                  Are you sure you want to retry all failed jobs in the <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
+                  Are you sure you want to retry all failed jobs in the{' '}
+                  <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
                   This will re-queue all failed jobs for processing.
                 </>
               )}
@@ -620,9 +763,12 @@ export default function System() {
                 onClick={handleConfirmAction}
                 className={cn(
                   'px-4 py-2 rounded-lg font-medium transition-colors',
-                  confirmDialog.type === 'pause' && 'bg-warning/20 text-warning hover:bg-warning/30',
-                  confirmDialog.type === 'resume' && 'bg-success/20 text-success hover:bg-success/30',
-                  confirmDialog.type === 'retry' && 'bg-stratum-500/20 text-stratum-400 hover:bg-stratum-500/30'
+                  confirmDialog.type === 'pause' &&
+                    'bg-warning/20 text-warning hover:bg-warning/30',
+                  confirmDialog.type === 'resume' &&
+                    'bg-success/20 text-success hover:bg-success/30',
+                  confirmDialog.type === 'retry' &&
+                    'bg-stratum-500/20 text-stratum-400 hover:bg-stratum-500/30'
                 )}
               >
                 {confirmDialog.type === 'pause' && 'Pause Queue'}
@@ -634,5 +780,5 @@ export default function System() {
         </div>
       )}
     </div>
-  )
+  );
 }

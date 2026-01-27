@@ -21,15 +21,16 @@ from fastapi import HTTPException, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.base_models import Tenant, User, Campaign
+from app.base_models import Campaign, Tenant, User
 from app.core.logging import get_logger
-from app.core.tiers import SubscriptionTier, get_tier_limits, TierLimits
+from app.core.tiers import SubscriptionTier, TierLimits, get_tier_limits
 
 logger = get_logger(__name__)
 
 
 class LimitType(str, Enum):
     """Types of limits that can be checked."""
+
     USERS = "users"
     AD_ACCOUNTS = "ad_accounts"
     SEGMENTS = "segments"
@@ -41,6 +42,7 @@ class LimitType(str, Enum):
 @dataclass
 class LimitCheckResult:
     """Result of a limit check."""
+
     allowed: bool
     current_count: int
     max_allowed: int
@@ -58,9 +60,7 @@ class TenantLimitService:
 
     async def get_tenant_limits(self, tenant_id: int) -> TierLimits:
         """Get the limits for a tenant based on their tier."""
-        result = await self.db.execute(
-            select(Tenant).where(Tenant.id == tenant_id)
-        )
+        result = await self.db.execute(select(Tenant).where(Tenant.id == tenant_id))
         tenant = result.scalar_one_or_none()
 
         if not tenant:
@@ -68,10 +68,10 @@ class TenantLimitService:
 
         # Map plan names to subscription tiers (handles 'free' -> 'starter')
         plan_mapping = {
-            'free': SubscriptionTier.STARTER,
-            'starter': SubscriptionTier.STARTER,
-            'professional': SubscriptionTier.PROFESSIONAL,
-            'enterprise': SubscriptionTier.ENTERPRISE,
+            "free": SubscriptionTier.STARTER,
+            "starter": SubscriptionTier.STARTER,
+            "professional": SubscriptionTier.PROFESSIONAL,
+            "enterprise": SubscriptionTier.ENTERPRISE,
         }
         tier = plan_mapping.get(tenant.plan.lower(), SubscriptionTier.STARTER)
         return get_tier_limits(tier)
@@ -95,7 +95,9 @@ class TenantLimitService:
             current_count=current_count,
             max_allowed=limits.max_users,
             limit_type=LimitType.USERS,
-            message=None if allowed else f"User limit reached ({limits.max_users}). Upgrade to add more users.",
+            message=None
+            if allowed
+            else f"User limit reached ({limits.max_users}). Upgrade to add more users.",
         )
 
     async def check_ad_account_limit(self, tenant_id: int) -> LimitCheckResult:
@@ -116,7 +118,9 @@ class TenantLimitService:
             current_count=current_count,
             max_allowed=limits.max_ad_accounts,
             limit_type=LimitType.AD_ACCOUNTS,
-            message=None if allowed else f"Ad account limit reached ({limits.max_ad_accounts}). Upgrade for more accounts.",
+            message=None
+            if allowed
+            else f"Ad account limit reached ({limits.max_ad_accounts}). Upgrade for more accounts.",
         )
 
     async def check_segment_limit(self, tenant_id: int) -> LimitCheckResult:
@@ -127,8 +131,7 @@ class TenantLimitService:
         from app.models.cdp import CDPSegment
 
         result = await self.db.execute(
-            select(func.count(CDPSegment.id))
-            .where(CDPSegment.tenant_id == tenant_id)
+            select(func.count(CDPSegment.id)).where(CDPSegment.tenant_id == tenant_id)
         )
         current_count = result.scalar() or 0
 
@@ -138,7 +141,9 @@ class TenantLimitService:
             current_count=current_count,
             max_allowed=limits.max_segments,
             limit_type=LimitType.SEGMENTS,
-            message=None if allowed else f"Segment limit reached ({limits.max_segments}). Upgrade for more segments.",
+            message=None
+            if allowed
+            else f"Segment limit reached ({limits.max_segments}). Upgrade for more segments.",
         )
 
     async def check_automation_limit(self, tenant_id: int) -> LimitCheckResult:
@@ -160,7 +165,9 @@ class TenantLimitService:
             current_count=current_count,
             max_allowed=limits.max_automations,
             limit_type=LimitType.AUTOMATIONS,
-            message=None if allowed else f"Automation limit reached ({limits.max_automations}). Upgrade for more.",
+            message=None
+            if allowed
+            else f"Automation limit reached ({limits.max_automations}). Upgrade for more.",
         )
 
     async def check_audience_sync_platforms(self, tenant_id: int) -> LimitCheckResult:
@@ -171,8 +178,9 @@ class TenantLimitService:
 
         # Count distinct platforms used
         result = await self.db.execute(
-            select(func.count(func.distinct(PlatformAudience.platform)))
-            .where(PlatformAudience.tenant_id == tenant_id)
+            select(func.count(func.distinct(PlatformAudience.platform))).where(
+                PlatformAudience.tenant_id == tenant_id
+            )
         )
         current_count = result.scalar() or 0
 
@@ -182,7 +190,9 @@ class TenantLimitService:
             current_count=current_count,
             max_allowed=limits.max_audience_sync_platforms,
             limit_type=LimitType.AUDIENCE_SYNC_PLATFORMS,
-            message=None if allowed else f"Platform limit reached ({limits.max_audience_sync_platforms}). Upgrade for more platforms.",
+            message=None
+            if allowed
+            else f"Platform limit reached ({limits.max_audience_sync_platforms}). Upgrade for more platforms.",
         )
 
     async def get_usage_summary(self, tenant_id: int) -> dict:
@@ -199,27 +209,37 @@ class TenantLimitService:
             "users": {
                 "current": users.current_count,
                 "max": users.max_allowed,
-                "percentage": (users.current_count / users.max_allowed * 100) if users.max_allowed > 0 else 0,
+                "percentage": (users.current_count / users.max_allowed * 100)
+                if users.max_allowed > 0
+                else 0,
             },
             "ad_accounts": {
                 "current": ad_accounts.current_count,
                 "max": ad_accounts.max_allowed,
-                "percentage": (ad_accounts.current_count / ad_accounts.max_allowed * 100) if ad_accounts.max_allowed > 0 else 0,
+                "percentage": (ad_accounts.current_count / ad_accounts.max_allowed * 100)
+                if ad_accounts.max_allowed > 0
+                else 0,
             },
             "segments": {
                 "current": segments.current_count,
                 "max": segments.max_allowed,
-                "percentage": (segments.current_count / segments.max_allowed * 100) if segments.max_allowed > 0 else 0,
+                "percentage": (segments.current_count / segments.max_allowed * 100)
+                if segments.max_allowed > 0
+                else 0,
             },
             "automations": {
                 "current": automations.current_count,
                 "max": automations.max_allowed,
-                "percentage": (automations.current_count / automations.max_allowed * 100) if automations.max_allowed > 0 else 0,
+                "percentage": (automations.current_count / automations.max_allowed * 100)
+                if automations.max_allowed > 0
+                else 0,
             },
             "audience_sync_platforms": {
                 "current": platforms.current_count,
                 "max": platforms.max_allowed,
-                "percentage": (platforms.current_count / platforms.max_allowed * 100) if platforms.max_allowed > 0 else 0,
+                "percentage": (platforms.current_count / platforms.max_allowed * 100)
+                if platforms.max_allowed > 0
+                else 0,
             },
             "api_rate_limit_per_minute": limits.api_rate_limit_per_minute,
             "data_retention_days": limits.data_retention_days,

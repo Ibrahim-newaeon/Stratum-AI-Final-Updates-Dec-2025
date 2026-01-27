@@ -3,11 +3,20 @@
  * UI for managing privacy consent settings and viewing consent status
  */
 
-import { useState } from 'react'
-import { Shield, Users, CheckCircle, XCircle, RefreshCw, Download, Search, Filter } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '@/api/client'
+import { useState } from 'react';
+import {
+  CheckCircle,
+  Download,
+  Filter,
+  RefreshCw,
+  Search,
+  Shield,
+  Users,
+  XCircle,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/api/client';
 
 // Consent types
 const CONSENT_TYPES = [
@@ -15,24 +24,24 @@ const CONSENT_TYPES = [
   { value: 'ads', label: 'Advertising', description: 'Personalized advertising' },
   { value: 'email', label: 'Email Marketing', description: 'Marketing emails' },
   { value: 'sms', label: 'SMS Marketing', description: 'Marketing text messages' },
-]
+];
 
 interface ConsentStats {
-  consent_type: string
-  total_profiles: number
-  granted: number
-  revoked: number
-  grant_rate: number
+  consent_type: string;
+  total_profiles: number;
+  granted: number;
+  revoked: number;
+  grant_rate: number;
 }
 
 interface ConsentProfile {
-  profile_id: string
-  email?: string
-  consent_type: string
-  granted: boolean
-  granted_at?: string
-  revoked_at?: string
-  source?: string
+  profile_id: string;
+  email?: string;
+  consent_type: string;
+  granted: boolean;
+  granted_at?: string;
+  revoked_at?: string;
+  source?: string;
 }
 
 // Custom hook for consent statistics
@@ -47,15 +56,18 @@ function useConsentStats(tenantId: number) {
         granted: Math.floor(Math.random() * 8000) + 500,
         revoked: Math.floor(Math.random() * 2000) + 100,
         grant_rate: Math.random() * 40 + 50,
-      }))
-      return stats
+      }));
+      return stats;
     },
     staleTime: 60 * 1000,
-  })
+  });
 }
 
 // Custom hook for consent profiles
-function useConsentProfiles(tenantId: number, filters: { consent_type?: string; granted?: boolean }) {
+function useConsentProfiles(
+  tenantId: number,
+  filters: { consent_type?: string; granted?: boolean }
+) {
   return useQuery({
     queryKey: ['cdp-consent-profiles', tenantId, filters],
     queryFn: async () => {
@@ -67,34 +79,34 @@ function useConsentProfiles(tenantId: number, filters: { consent_type?: string; 
         granted: filters.granted !== undefined ? filters.granted : Math.random() > 0.3,
         granted_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
         source: ['web_form', 'api', 'import', 'preference_center'][i % 4],
-      }))
-      return { profiles, total: 150 }
+      }));
+      return { profiles, total: 150 };
     },
     staleTime: 30 * 1000,
-  })
+  });
 }
 
 export function ConsentManager() {
-  const [selectedType, setSelectedType] = useState<string | undefined>(undefined)
-  const [grantedFilter, setGrantedFilter] = useState<boolean | undefined>(undefined)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
+  const [grantedFilter, setGrantedFilter] = useState<boolean | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // For demo purposes, use tenant ID 1
-  const tenantId = 1
+  const tenantId = 1;
 
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useConsentStats(tenantId)
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useConsentStats(tenantId);
   const { data: profilesData, isLoading: profilesLoading } = useConsentProfiles(tenantId, {
     consent_type: selectedType,
     granted: grantedFilter,
-  })
+  });
 
-  const profiles = profilesData?.profiles || []
+  const profiles = profilesData?.profiles || [];
 
   const handleExportConsent = async (consentType?: string) => {
     // In production, this would trigger a real export
-    console.log('Exporting consent data for:', consentType || 'all')
-    alert('Export started. Check your email for the download link.')
-  }
+    console.log('Exporting consent data for:', consentType || 'all');
+    alert('Export started. Check your email for the download link.');
+  };
 
   return (
     <div className="space-y-6">
@@ -128,62 +140,62 @@ export function ConsentManager() {
 
       {/* Consent Stats Cards */}
       <div className="grid grid-cols-4 gap-4">
-        {statsLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-4 rounded-xl border bg-card animate-pulse">
-              <div className="h-4 w-24 bg-muted rounded mb-2" />
-              <div className="h-8 w-16 bg-muted rounded" />
-            </div>
-          ))
-        ) : (
-          stats?.map((stat) => {
-            const typeInfo = CONSENT_TYPES.find((t) => t.value === stat.consent_type)
-            return (
-              <div
-                key={stat.consent_type}
-                className={cn(
-                  'p-4 rounded-xl border bg-card cursor-pointer hover:border-primary/50 transition-colors',
-                  selectedType === stat.consent_type && 'border-primary'
-                )}
-                onClick={() =>
-                  setSelectedType(selectedType === stat.consent_type ? undefined : stat.consent_type)
-                }
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {typeInfo?.label || stat.consent_type}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-xs px-2 py-0.5 rounded-full',
-                      stat.grant_rate >= 70
-                        ? 'bg-green-500/10 text-green-600'
-                        : stat.grant_rate >= 50
-                        ? 'bg-yellow-500/10 text-yellow-600'
-                        : 'bg-red-500/10 text-red-600'
-                    )}
-                  >
-                    {stat.grant_rate.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="text-2xl font-bold">{stat.granted.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">
-                  of {stat.total_profiles.toLocaleString()} profiles
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-xs">
-                  <span className="flex items-center gap-1 text-green-600">
-                    <CheckCircle className="w-3 h-3" />
-                    {stat.granted}
-                  </span>
-                  <span className="flex items-center gap-1 text-red-600">
-                    <XCircle className="w-3 h-3" />
-                    {stat.revoked}
-                  </span>
-                </div>
+        {statsLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="p-4 rounded-xl border bg-card animate-pulse">
+                <div className="h-4 w-24 bg-muted rounded mb-2" />
+                <div className="h-8 w-16 bg-muted rounded" />
               </div>
-            )
-          })
-        )}
+            ))
+          : stats?.map((stat) => {
+              const typeInfo = CONSENT_TYPES.find((t) => t.value === stat.consent_type);
+              return (
+                <div
+                  key={stat.consent_type}
+                  className={cn(
+                    'p-4 rounded-xl border bg-card cursor-pointer hover:border-primary/50 transition-colors',
+                    selectedType === stat.consent_type && 'border-primary'
+                  )}
+                  onClick={() =>
+                    setSelectedType(
+                      selectedType === stat.consent_type ? undefined : stat.consent_type
+                    )
+                  }
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {typeInfo?.label || stat.consent_type}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-0.5 rounded-full',
+                        stat.grant_rate >= 70
+                          ? 'bg-green-500/10 text-green-600'
+                          : stat.grant_rate >= 50
+                            ? 'bg-yellow-500/10 text-yellow-600'
+                            : 'bg-red-500/10 text-red-600'
+                      )}
+                    >
+                      {stat.grant_rate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="text-2xl font-bold">{stat.granted.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">
+                    of {stat.total_profiles.toLocaleString()} profiles
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-xs">
+                    <span className="flex items-center gap-1 text-green-600">
+                      <CheckCircle className="w-3 h-3" />
+                      {stat.granted}
+                    </span>
+                    <span className="flex items-center gap-1 text-red-600">
+                      <XCircle className="w-3 h-3" />
+                      {stat.revoked}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
       </div>
 
       {/* Filters */}
@@ -271,9 +283,12 @@ export function ConsentManager() {
                 </tr>
               ) : (
                 profiles.map((profile) => {
-                  const typeInfo = CONSENT_TYPES.find((t) => t.value === profile.consent_type)
+                  const typeInfo = CONSENT_TYPES.find((t) => t.value === profile.consent_type);
                   return (
-                    <tr key={`${profile.profile_id}-${profile.consent_type}`} className="hover:bg-muted/50">
+                    <tr
+                      key={`${profile.profile_id}-${profile.consent_type}`}
+                      className="hover:bg-muted/50"
+                    >
                       <td className="px-4 py-3">
                         <div>
                           <div className="font-medium">{profile.email || 'Anonymous'}</div>
@@ -311,7 +326,7 @@ export function ConsentManager() {
                         </span>
                       </td>
                     </tr>
-                  )
+                  );
                 })
               )}
             </tbody>
@@ -354,5 +369,5 @@ export function ConsentManager() {
         </div>
       </div>
     </div>
-  )
+  );
 }

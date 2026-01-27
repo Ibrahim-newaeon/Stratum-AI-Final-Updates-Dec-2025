@@ -9,11 +9,10 @@ platform type. This enables dynamic adapter selection at runtime.
 """
 
 import logging
-from typing import Dict, Type, Optional
+from typing import Optional
 
+from app.stratum.adapters.base import AdapterError, BaseAdapter
 from app.stratum.models import Platform
-from app.stratum.adapters.base import BaseAdapter, AdapterError
-
 
 logger = logging.getLogger("stratum.adapters.registry")
 
@@ -35,7 +34,7 @@ class AdapterRegistry:
     """
 
     _instance: Optional["AdapterRegistry"] = None
-    _adapters: Dict[Platform, Type[BaseAdapter]] = {}
+    _adapters: dict[Platform, type[BaseAdapter]] = {}
 
     def __new__(cls) -> "AdapterRegistry":
         """Singleton pattern for global registry."""
@@ -44,7 +43,7 @@ class AdapterRegistry:
         return cls._instance
 
     @classmethod
-    def register(cls, platform: Platform, adapter_class: Type[BaseAdapter]) -> None:
+    def register(cls, platform: Platform, adapter_class: type[BaseAdapter]) -> None:
         """
         Register an adapter class for a platform.
 
@@ -59,7 +58,7 @@ class AdapterRegistry:
     def get_adapter(
         cls,
         platform: Platform,
-        credentials: Dict[str, str],
+        credentials: dict[str, str],
     ) -> BaseAdapter:
         """
         Get an adapter instance for a platform.
@@ -81,7 +80,7 @@ class AdapterRegistry:
         return adapter_class(credentials)
 
     @classmethod
-    def list_registered(cls) -> Dict[str, str]:
+    def list_registered(cls) -> dict[str, str]:
         """List all registered adapters."""
         return {
             platform.value: adapter_class.__name__
@@ -94,7 +93,7 @@ class AdapterRegistry:
         return platform in cls._adapters
 
 
-def get_adapter(platform: Platform, credentials: Dict[str, str]) -> BaseAdapter:
+def get_adapter(platform: Platform, credentials: dict[str, str]) -> BaseAdapter:
     """
     Convenience function to get an adapter.
 
@@ -114,10 +113,10 @@ def register_default_adapters() -> None:
 
     This should be called during application startup.
     """
-    from app.stratum.adapters.meta_adapter import MetaAdapter
     from app.stratum.adapters.google_adapter import GoogleAdsAdapter
-    from app.stratum.adapters.tiktok_adapter import TikTokAdapter
+    from app.stratum.adapters.meta_adapter import MetaAdapter
     from app.stratum.adapters.snapchat_adapter import SnapchatAdapter
+    from app.stratum.adapters.tiktok_adapter import TikTokAdapter
 
     AdapterRegistry.register(Platform.META, MetaAdapter)
     AdapterRegistry.register(Platform.GOOGLE, GoogleAdsAdapter)

@@ -5,7 +5,10 @@ export function CTA() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-32 border-y border-gray-200 relative overflow-hidden" style={{ background: '#FFFFFF' }}>
+    <section
+      className="py-32 border-y border-gray-200 relative overflow-hidden"
+      style={{ background: '#FFFFFF' }}
+    >
       {/* Subtle background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-indigo-100/40 via-indigo-50/20 to-indigo-100/40 blur-3xl opacity-50" />
@@ -25,8 +28,8 @@ export function CTA() {
         </h2>
 
         <p className="text-body text-gray-500 max-w-2xl mx-auto mb-10">
-          Join marketing teams who trust Stratum AI to optimize their campaigns
-          with confidence. No credit card required to start.
+          Join marketing teams who trust Stratum AI to optimize their campaigns with confidence. No
+          credit card required to start.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -6,12 +6,12 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
 import {
-  CheckIcon,
-  XMarkIcon,
-  MinusIcon,
-  TrophyIcon,
   ArrowDownTrayIcon,
-  SparklesIcon
+  CheckIcon,
+  MinusIcon,
+  SparklesIcon,
+  TrophyIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 type FeatureStatus = 'yes' | 'no' | 'partial' | 'unique';
@@ -36,7 +36,7 @@ const competitors = [
   { id: 'segment', name: 'Segment' },
   { id: 'mparticle', name: 'mParticle' },
   { id: 'hightouch', name: 'Hightouch' },
-  { id: 'hubspot', name: 'HubSpot' }
+  { id: 'hubspot', name: 'HubSpot' },
 ];
 
 const featureCategories = [
@@ -47,34 +47,70 @@ const featureCategories = [
       {
         feature: 'Trust-Gated Execution',
         tooltip: 'Only execute when signal health passes safety thresholds',
-        competitors: { stratum: 'unique', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
+        competitors: {
+          stratum: 'unique',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'ROAS Prediction',
         tooltip: 'ML-powered return on ad spend forecasting',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'LTV Prediction',
         tooltip: 'Customer lifetime value forecasting',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'partial' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'partial',
+        },
       },
       {
         feature: 'Churn Prediction',
         tooltip: 'Identify at-risk customers before they leave',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'partial', hightouch: 'no', hubspot: 'partial' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'partial',
+          hightouch: 'no',
+          hubspot: 'partial',
+        },
       },
       {
         feature: 'Creative Fatigue Detection',
         tooltip: 'Predict ad creative burnout before performance drops',
-        competitors: { stratum: 'unique', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
+        competitors: {
+          stratum: 'unique',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'Model Explainability (SHAP)',
         tooltip: 'See why AI made each recommendation',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
-      }
-    ]
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
+      },
+    ],
   },
   {
     name: 'CDP & Data',
@@ -82,27 +118,57 @@ const featureCategories = [
     features: [
       {
         feature: 'Identity Resolution',
-        competitors: { stratum: 'yes', segment: 'yes', mparticle: 'yes', hightouch: 'partial', hubspot: 'partial' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'yes',
+          mparticle: 'yes',
+          hightouch: 'partial',
+          hubspot: 'partial',
+        },
       },
       {
         feature: 'Visual Identity Graph',
         tooltip: 'Interactive visualization of identity connections',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'RFM Segmentation (Built-in)',
         tooltip: '11 behavioral segments automatically classified',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'Real-time Event Processing',
-        competitors: { stratum: 'yes', segment: 'yes', mparticle: 'yes', hightouch: 'partial', hubspot: 'partial' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'yes',
+          mparticle: 'yes',
+          hightouch: 'partial',
+          hubspot: 'partial',
+        },
       },
       {
         feature: 'Anomaly Detection',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'yes', hightouch: 'no', hubspot: 'no' }
-      }
-    ]
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'yes',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
+      },
+    ],
   },
   {
     name: 'Audience Activation',
@@ -111,21 +177,45 @@ const featureCategories = [
       {
         feature: 'Multi-Platform Sync (4+)',
         tooltip: 'Meta, Google, TikTok, Snapchat',
-        competitors: { stratum: 'yes', segment: 'yes', mparticle: 'yes', hightouch: 'yes', hubspot: 'partial' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'yes',
+          mparticle: 'yes',
+          hightouch: 'yes',
+          hubspot: 'partial',
+        },
       },
       {
         feature: 'Auto-Sync Scheduling',
-        competitors: { stratum: 'yes', segment: 'yes', mparticle: 'yes', hightouch: 'yes', hubspot: 'partial' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'yes',
+          mparticle: 'yes',
+          hightouch: 'yes',
+          hubspot: 'partial',
+        },
       },
       {
         feature: 'Match Rate Tracking',
-        competitors: { stratum: 'yes', segment: 'partial', mparticle: 'yes', hightouch: 'partial', hubspot: 'no' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'partial',
+          mparticle: 'yes',
+          hightouch: 'partial',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'Manual CSV/JSON Export',
-        competitors: { stratum: 'yes', segment: 'yes', mparticle: 'yes', hightouch: 'yes', hubspot: 'yes' }
-      }
-    ]
+        competitors: {
+          stratum: 'yes',
+          segment: 'yes',
+          mparticle: 'yes',
+          hightouch: 'yes',
+          hubspot: 'yes',
+        },
+      },
+    ],
   },
   {
     name: 'Analytics & Optimization',
@@ -134,22 +224,46 @@ const featureCategories = [
       {
         feature: 'Signal Health Scoring',
         tooltip: 'Composite data quality score from 4 components',
-        competitors: { stratum: 'unique', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
+        competitors: {
+          stratum: 'unique',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'What-If Budget Simulator',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
       },
       {
         feature: 'A/B Testing Framework',
-        competitors: { stratum: 'yes', segment: 'partial', mparticle: 'partial', hightouch: 'no', hubspot: 'yes' }
+        competitors: {
+          stratum: 'yes',
+          segment: 'partial',
+          mparticle: 'partial',
+          hightouch: 'no',
+          hubspot: 'yes',
+        },
       },
       {
         feature: 'Power Analysis',
-        competitors: { stratum: 'yes', segment: 'no', mparticle: 'no', hightouch: 'no', hubspot: 'no' }
-      }
-    ]
-  }
+        competitors: {
+          stratum: 'yes',
+          segment: 'no',
+          mparticle: 'no',
+          hightouch: 'no',
+          hubspot: 'no',
+        },
+      },
+    ],
+  },
 ];
 
 const StatusIcon = ({ status }: { status: FeatureStatus }) => {
@@ -213,7 +327,8 @@ export default function BattleCard() {
           </h2>
 
           <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
-            The only platform with Trust-Gated execution, built-in AI predictions, and visual identity resolution.
+            The only platform with Trust-Gated execution, built-in AI predictions, and visual
+            identity resolution.
           </p>
 
           {/* Download Button */}
@@ -269,9 +384,7 @@ export default function BattleCard() {
                 }`}
               >
                 {comp.name}
-                {comp.highlight && (
-                  <div className="text-xs text-purple-500 mt-1">You are here</div>
-                )}
+                {comp.highlight && <div className="text-xs text-purple-500 mt-1">You are here</div>}
               </div>
             ))}
           </div>
@@ -281,7 +394,9 @@ export default function BattleCard() {
             <div key={category.name}>
               {/* Category Header */}
               <button
-                onClick={() => setExpandedCategory(expandedCategory === category.name ? null : category.name)}
+                onClick={() =>
+                  setExpandedCategory(expandedCategory === category.name ? null : category.name)
+                }
                 className="w-full grid grid-cols-6 gap-4 p-4 border-b border-white/[0.05] bg-white/[0.03] hover:bg-white/[0.05] transition-colors"
               >
                 <div className="col-span-6 flex items-center gap-2">
@@ -290,11 +405,18 @@ export default function BattleCard() {
                     className="text-gray-400"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </motion.div>
                   <span className="text-sm font-semibold text-white">{category.name}</span>
-                  <span className="text-xs text-gray-500">({category.features.length} features)</span>
+                  <span className="text-xs text-gray-500">
+                    ({category.features.length} features)
+                  </span>
                 </div>
               </button>
 
@@ -303,7 +425,7 @@ export default function BattleCard() {
                 initial={false}
                 animate={{
                   height: expandedCategory === category.name ? 'auto' : 0,
-                  opacity: expandedCategory === category.name ? 1 : 0
+                  opacity: expandedCategory === category.name ? 1 : 0,
                 }}
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
@@ -355,26 +477,33 @@ export default function BattleCard() {
           {[
             {
               title: '4 Unique Features',
-              description: 'Trust-Gated execution, creative fatigue detection, signal health scoring, and visual identity graph',
-              color: 'from-purple-500 to-violet-500'
+              description:
+                'Trust-Gated execution, creative fatigue detection, signal health scoring, and visual identity graph',
+              color: 'from-purple-500 to-violet-500',
             },
             {
               title: '6 Built-in AI Models',
-              description: 'ROAS, LTV, Churn, Conversion, Creative Lifecycle, and ROAS Forecaster—all included',
-              color: 'from-cyan-500 to-blue-500'
+              description:
+                'ROAS, LTV, Churn, Conversion, Creative Lifecycle, and ROAS Forecaster—all included',
+              color: 'from-cyan-500 to-blue-500',
             },
             {
               title: 'All-in-One Platform',
-              description: 'CDP + Predictions + Activation in one system. No integrating 5 different tools',
-              color: 'from-orange-500 to-amber-500'
-            }
+              description:
+                'CDP + Predictions + Activation in one system. No integrating 5 different tools',
+              color: 'from-orange-500 to-amber-500',
+            },
           ].map((item) => (
             <div
               key={item.title}
               className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
             >
-              <div className={`inline-flex px-3 py-1 rounded-full bg-gradient-to-r ${item.color} bg-opacity-10 mb-4`}>
-                <span className={`text-xs font-medium bg-gradient-to-r ${item.color} bg-clip-text text-transparent`}>
+              <div
+                className={`inline-flex px-3 py-1 rounded-full bg-gradient-to-r ${item.color} bg-opacity-10 mb-4`}
+              >
+                <span
+                  className={`text-xs font-medium bg-gradient-to-r ${item.color} bg-clip-text text-transparent`}
+                >
                   {item.title}
                 </span>
               </div>

@@ -15,12 +15,12 @@ Used for:
 - Diagnosing data freshness problems
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
-from collections import defaultdict
 import statistics
 import threading
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 
 from app.core.logging import get_logger
 
@@ -30,18 +30,20 @@ logger = get_logger(__name__)
 @dataclass
 class LatencyMeasurement:
     """A single latency measurement."""
+
     measurement_id: str
     platform: str
     event_type: str  # click_to_conversion, pixel_to_capi, send_to_ack
     start_time: datetime
     end_time: datetime
     latency_ms: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class LatencyStats:
     """Aggregated latency statistics."""
+
     count: int = 0
     min_ms: float = 0.0
     max_ms: float = 0.0
@@ -57,11 +59,12 @@ class LatencyStats:
 @dataclass
 class PendingConversion:
     """Tracks a pending conversion awaiting completion."""
+
     event_id: str
     platform: str
     event_type: str
     start_time: datetime
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ConversionLatencyTracker:
@@ -87,13 +90,13 @@ class ConversionLatencyTracker:
     """
 
     def __init__(self, max_pending_age_hours: int = 168):  # 7 days default
-        self._pending: Dict[str, PendingConversion] = {}
-        self._measurements: List[LatencyMeasurement] = []
+        self._pending: dict[str, PendingConversion] = {}
+        self._measurements: list[LatencyMeasurement] = []
         self._lock = threading.RLock()
         self._max_pending_age = timedelta(hours=max_pending_age_hours)
 
         # In-memory aggregated stats by platform and event type
-        self._stats_cache: Dict[str, Dict[str, List[float]]] = defaultdict(
+        self._stats_cache: dict[str, dict[str, list[float]]] = defaultdict(
             lambda: defaultdict(list)
         )
 
@@ -103,7 +106,7 @@ class ConversionLatencyTracker:
         platform: str,
         event_type: str,
         start_time: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ):
         """
         Start tracking latency for an event.
@@ -125,7 +128,7 @@ class ConversionLatencyTracker:
                 event_id=event_id,
                 platform=platform,
                 event_type=event_type,
-                start_time=start_time or datetime.now(timezone.utc),
+                start_time=start_time or datetime.now(UTC),
                 metadata=metadata or {},
             )
 
@@ -135,7 +138,7 @@ class ConversionLatencyTracker:
         platform: str,
         event_type: str,
         end_time: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> Optional[float]:
         """
         End tracking and record the latency measurement.
@@ -158,14 +161,14 @@ class ConversionLatencyTracker:
                 logger.debug(f"No pending tracking found for {key}")
                 return None
 
-            end = end_time or datetime.now(timezone.utc)
+            end = end_time or datetime.now(UTC)
 
             # Handle timezone comparison
             start = pending.start_time
             if start.tzinfo is None and end.tzinfo is not None:
-                start = start.replace(tzinfo=timezone.utc)
+                start = start.replace(tzinfo=UTC)
             elif start.tzinfo is not None and end.tzinfo is None:
-                end = end.replace(tzinfo=timezone.utc)
+                end = end.replace(tzinfo=UTC)
 
             latency_ms = (end - start).total_seconds() * 1000
 
@@ -198,8 +201,9 @@ class ConversionLatencyTracker:
 
             # Keep only last 10k latencies per platform/type for stats
             if len(self._stats_cache[platform][event_type]) > 10000:
-                self._stats_cache[platform][event_type] = \
-                    self._stats_cache[platform][event_type][-10000:]
+                self._stats_cache[platform][event_type] = self._stats_cache[platform][event_type][
+                    -10000:
+                ]
 
             return latency_ms
 
@@ -209,7 +213,7 @@ class ConversionLatencyTracker:
         event_type: str,
         latency_ms: float,
         event_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ):
         """
         Directly record a latency measurement (when start/end times are known).
@@ -222,7 +226,7 @@ class ConversionLatencyTracker:
             metadata: Optional metadata
         """
         with self._lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             measurement = LatencyMeasurement(
                 measurement_id=event_id or f"{platform}_{event_type}_{now.timestamp()}",
@@ -255,11 +259,12 @@ class ConversionLatencyTracker:
             Aggregated latency statistics
         """
         with self._lock:
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=period_hours)
+            cutoff = datetime.now(UTC) - timedelta(hours=period_hours)
 
             # Filter measurements
             measurements = [
-                m for m in self._measurements
+                m
+                for m in self._measurements
                 if m.end_time >= cutoff
                 and (platform is None or m.platform == platform)
                 and (event_type is None or m.event_type == event_type)
@@ -275,13 +280,13 @@ class ConversionLatencyTracker:
     def get_stats_by_platform(
         self,
         period_hours: int = 24,
-    ) -> Dict[str, LatencyStats]:
+    ) -> dict[str, LatencyStats]:
         """Get latency statistics grouped by platform."""
         with self._lock:
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=period_hours)
+            cutoff = datetime.now(UTC) - timedelta(hours=period_hours)
 
             # Group by platform
-            by_platform: Dict[str, List[float]] = defaultdict(list)
+            by_platform: dict[str, list[float]] = defaultdict(list)
 
             for m in self._measurements:
                 if m.end_time >= cutoff:
@@ -296,12 +301,12 @@ class ConversionLatencyTracker:
         self,
         platform: Optional[str] = None,
         period_hours: int = 24,
-    ) -> Dict[str, LatencyStats]:
+    ) -> dict[str, LatencyStats]:
         """Get latency statistics grouped by event type."""
         with self._lock:
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=period_hours)
+            cutoff = datetime.now(UTC) - timedelta(hours=period_hours)
 
-            by_type: Dict[str, List[float]] = defaultdict(list)
+            by_type: dict[str, list[float]] = defaultdict(list)
 
             for m in self._measurements:
                 if m.end_time >= cutoff:
@@ -313,7 +318,7 @@ class ConversionLatencyTracker:
                 for event_type, latencies in by_type.items()
             }
 
-    def _calculate_stats(self, latencies: List[float]) -> LatencyStats:
+    def _calculate_stats(self, latencies: list[float]) -> LatencyStats:
         """Calculate statistics from a list of latencies."""
         if not latencies:
             return LatencyStats()
@@ -340,29 +345,28 @@ class ConversionLatencyTracker:
         event_type: str,
         period_hours: int = 24,
         bucket_minutes: int = 60,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get latency over time for charting.
 
         Returns a list of time buckets with average latency.
         """
         with self._lock:
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=period_hours)
+            cutoff = datetime.now(UTC) - timedelta(hours=period_hours)
             bucket_size = timedelta(minutes=bucket_minutes)
 
             # Filter measurements
             measurements = [
-                m for m in self._measurements
-                if m.end_time >= cutoff
-                and m.platform == platform
-                and m.event_type == event_type
+                m
+                for m in self._measurements
+                if m.end_time >= cutoff and m.platform == platform and m.event_type == event_type
             ]
 
             if not measurements:
                 return []
 
             # Group by time bucket
-            buckets: Dict[datetime, List[float]] = defaultdict(list)
+            buckets: dict[datetime, list[float]] = defaultdict(list)
 
             for m in measurements:
                 # Round to bucket
@@ -377,13 +381,16 @@ class ConversionLatencyTracker:
             timeline = []
             for bucket_time in sorted(buckets.keys()):
                 latencies = buckets[bucket_time]
-                timeline.append({
-                    "timestamp": bucket_time.isoformat(),
-                    "count": len(latencies),
-                    "avg_ms": round(statistics.mean(latencies), 2),
-                    "p95_ms": round(sorted(latencies)[int(len(latencies) * 0.95)], 2)
-                        if len(latencies) > 1 else latencies[0],
-                })
+                timeline.append(
+                    {
+                        "timestamp": bucket_time.isoformat(),
+                        "count": len(latencies),
+                        "avg_ms": round(statistics.mean(latencies), 2),
+                        "p95_ms": round(sorted(latencies)[int(len(latencies) * 0.95)], 2)
+                        if len(latencies) > 1
+                        else latencies[0],
+                    }
+                )
 
             return timeline
 
@@ -392,7 +399,7 @@ class ConversionLatencyTracker:
         platform: Optional[str] = None,
         threshold_hours: float = 24,
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get conversions that exceeded a latency threshold.
 
@@ -412,8 +419,7 @@ class ConversionLatencyTracker:
                     "metadata": m.metadata,
                 }
                 for m in self._measurements
-                if m.latency_ms > threshold_ms
-                and (platform is None or m.platform == platform)
+                if m.latency_ms > threshold_ms and (platform is None or m.platform == platform)
             ]
 
             # Sort by latency descending
@@ -424,7 +430,7 @@ class ConversionLatencyTracker:
     def cleanup_stale_pending(self):
         """Remove stale pending conversions that never completed."""
         with self._lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             stale_keys = []
 
             for key, pending in self._pending.items():
@@ -438,15 +444,15 @@ class ConversionLatencyTracker:
             if stale_keys:
                 logger.info(f"Cleaned up {len(stale_keys)} stale pending conversions")
 
-    def get_pending_count(self) -> Dict[str, int]:
+    def get_pending_count(self) -> dict[str, int]:
         """Get count of pending conversions by platform."""
         with self._lock:
-            counts: Dict[str, int] = defaultdict(int)
+            counts: dict[str, int] = defaultdict(int)
             for pending in self._pending.values():
                 counts[pending.platform] += 1
             return dict(counts)
 
-    def get_diagnostics(self) -> Dict[str, Any]:
+    def get_diagnostics(self) -> dict[str, Any]:
         """Get diagnostics about the tracker state."""
         with self._lock:
             return {
@@ -456,9 +462,11 @@ class ConversionLatencyTracker:
                 "platforms_tracked": list(set(m.platform for m in self._measurements)),
                 "event_types_tracked": list(set(m.event_type for m in self._measurements)),
                 "oldest_measurement": self._measurements[0].end_time.isoformat()
-                    if self._measurements else None,
+                if self._measurements
+                else None,
                 "newest_measurement": self._measurements[-1].end_time.isoformat()
-                    if self._measurements else None,
+                if self._measurements
+                else None,
             }
 
 
@@ -470,7 +478,8 @@ latency_tracker = ConversionLatencyTracker()
 # Convenience Functions for Integration
 # =============================================================================
 
-def track_click(click_id: str, platform: str, metadata: Optional[Dict] = None):
+
+def track_click(click_id: str, platform: str, metadata: Optional[dict] = None):
     """Track a click event for conversion latency."""
     latency_tracker.start_tracking(
         event_id=click_id,
@@ -484,7 +493,7 @@ def track_conversion(
     click_id: str,
     platform: str,
     conversion_time: Optional[datetime] = None,
-    metadata: Optional[Dict] = None,
+    metadata: Optional[dict] = None,
 ) -> Optional[float]:
     """
     Track a conversion event and return the latency from click.
@@ -536,7 +545,7 @@ def track_capi_ack(
 def get_conversion_latency_stats(
     platform: Optional[str] = None,
     period_hours: int = 24,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get conversion latency statistics for EMQ calculation.
 
@@ -561,9 +570,11 @@ def get_conversion_latency_stats(
 # Advanced Conversion Latency Analytics (P0 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class LatencyAnomaly:
     """Detected anomaly in conversion latency."""
+
     anomaly_id: str
     platform: str
     event_type: str
@@ -580,6 +591,7 @@ class LatencyAnomaly:
 @dataclass
 class LatencyForecast:
     """Forecasted conversion latency."""
+
     platform: str
     event_type: str
     forecast_date: datetime
@@ -593,6 +605,7 @@ class LatencyForecast:
 @dataclass
 class AttributionWindowRecommendation:
     """Recommendation for attribution window settings."""
+
     platform: str
     current_window_days: int
     recommended_window_days: int
@@ -613,7 +626,7 @@ class LatencyAnomalyDetector:
 
     def __init__(self, sensitivity: float = 2.0):
         self.sensitivity = sensitivity
-        self._baseline_stats: Dict[str, Dict[str, float]] = {}
+        self._baseline_stats: dict[str, dict[str, float]] = {}
 
     def update_baseline(
         self,
@@ -628,7 +641,7 @@ class LatencyAnomalyDetector:
             "p95_ms": stats.p95_ms,
             "std_dev_ms": stats.std_dev_ms,
             "count": stats.count,
-            "updated_at": datetime.now(timezone.utc).timestamp(),
+            "updated_at": datetime.now(UTC).timestamp(),
         }
 
     def detect_anomalies(
@@ -636,7 +649,7 @@ class LatencyAnomalyDetector:
         platform: str,
         event_type: str,
         current_stats: LatencyStats,
-    ) -> List[LatencyAnomaly]:
+    ) -> list[LatencyAnomaly]:
         """Detect anomalies in current latency vs baseline."""
         key = f"{platform}:{event_type}"
         baseline = self._baseline_stats.get(key)
@@ -645,7 +658,7 @@ class LatencyAnomalyDetector:
             return []
 
         anomalies = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Check P95 latency
         if baseline["std_dev_ms"] > 0:
@@ -653,40 +666,48 @@ class LatencyAnomalyDetector:
 
             if z_score_p95 > self.sensitivity:
                 severity = self._calculate_severity(z_score_p95)
-                deviation = ((current_stats.p95_ms - baseline["p95_ms"]) / baseline["p95_ms"] * 100) if baseline["p95_ms"] > 0 else 0
+                deviation = (
+                    ((current_stats.p95_ms - baseline["p95_ms"]) / baseline["p95_ms"] * 100)
+                    if baseline["p95_ms"] > 0
+                    else 0
+                )
 
-                anomalies.append(LatencyAnomaly(
-                    anomaly_id=f"latency_{platform}_{event_type}_{now.timestamp()}",
-                    platform=platform,
-                    event_type=event_type,
-                    detected_at=now,
-                    severity=severity,
-                    current_latency_ms=current_stats.p95_ms,
-                    expected_latency_ms=baseline["p95_ms"],
-                    deviation_percent=round(deviation, 1),
-                    description=f"P95 latency increased by {deviation:.1f}% from baseline",
-                    impact=self._estimate_impact(event_type, deviation),
-                    recommended_action=self._get_recommendation(event_type, z_score_p95),
-                ))
+                anomalies.append(
+                    LatencyAnomaly(
+                        anomaly_id=f"latency_{platform}_{event_type}_{now.timestamp()}",
+                        platform=platform,
+                        event_type=event_type,
+                        detected_at=now,
+                        severity=severity,
+                        current_latency_ms=current_stats.p95_ms,
+                        expected_latency_ms=baseline["p95_ms"],
+                        deviation_percent=round(deviation, 1),
+                        description=f"P95 latency increased by {deviation:.1f}% from baseline",
+                        impact=self._estimate_impact(event_type, deviation),
+                        recommended_action=self._get_recommendation(event_type, z_score_p95),
+                    )
+                )
 
         # Check average latency drift
         if baseline["avg_ms"] > 0:
             avg_drift = (current_stats.avg_ms - baseline["avg_ms"]) / baseline["avg_ms"] * 100
 
             if avg_drift > 50:  # 50% increase in average
-                anomalies.append(LatencyAnomaly(
-                    anomaly_id=f"drift_{platform}_{event_type}_{now.timestamp()}",
-                    platform=platform,
-                    event_type=event_type,
-                    detected_at=now,
-                    severity="medium",
-                    current_latency_ms=current_stats.avg_ms,
-                    expected_latency_ms=baseline["avg_ms"],
-                    deviation_percent=round(avg_drift, 1),
-                    description=f"Average latency drifting upward (+{avg_drift:.1f}%)",
-                    impact="May affect attribution accuracy over time",
-                    recommended_action="Review event processing pipeline for bottlenecks",
-                ))
+                anomalies.append(
+                    LatencyAnomaly(
+                        anomaly_id=f"drift_{platform}_{event_type}_{now.timestamp()}",
+                        platform=platform,
+                        event_type=event_type,
+                        detected_at=now,
+                        severity="medium",
+                        current_latency_ms=current_stats.avg_ms,
+                        expected_latency_ms=baseline["avg_ms"],
+                        deviation_percent=round(avg_drift, 1),
+                        description=f"Average latency drifting upward (+{avg_drift:.1f}%)",
+                        impact="May affect attribution accuracy over time",
+                        recommended_action="Review event processing pipeline for bottlenecks",
+                    )
+                )
 
         return anomalies
 
@@ -739,7 +760,7 @@ class LatencyForecaster:
     """
 
     def __init__(self):
-        self._history: Dict[str, List[Tuple[datetime, LatencyStats]]] = {}
+        self._history: dict[str, list[tuple[datetime, LatencyStats]]] = {}
 
     def record_stats(self, platform: str, event_type: str, stats: LatencyStats):
         """Record stats for forecasting."""
@@ -747,10 +768,10 @@ class LatencyForecaster:
         if key not in self._history:
             self._history[key] = []
 
-        self._history[key].append((datetime.now(timezone.utc), stats))
+        self._history[key].append((datetime.now(UTC), stats))
 
         # Keep last 90 days
-        cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+        cutoff = datetime.now(UTC) - timedelta(days=90)
         self._history[key] = [(t, s) for t, s in self._history[key] if t > cutoff]
 
     def forecast(
@@ -758,7 +779,7 @@ class LatencyForecaster:
         platform: str,
         event_type: str,
         days_ahead: int = 7,
-    ) -> List[LatencyForecast]:
+    ) -> list[LatencyForecast]:
         """Forecast latency for upcoming days."""
         key = f"{platform}:{event_type}"
         history = self._history.get(key, [])
@@ -775,13 +796,13 @@ class LatencyForecaster:
         smoothed_p50 = p50_series[0]
         smoothed_p95 = p95_series[0]
 
-        for p50, p95 in zip(p50_series[1:], p95_series[1:]):
+        for p50, p95 in zip(p50_series[1:], p95_series[1:], strict=False):
             smoothed_p50 = alpha * p50 + (1 - alpha) * smoothed_p50
             smoothed_p95 = alpha * p95 + (1 - alpha) * smoothed_p95
 
         # Calculate trend
         recent = p50_series[-7:]
-        older = p50_series[-14:-7] if len(p50_series) >= 14 else p50_series[:len(p50_series)//2]
+        older = p50_series[-14:-7] if len(p50_series) >= 14 else p50_series[: len(p50_series) // 2]
 
         trend = "stable"
         if older:
@@ -801,16 +822,20 @@ class LatencyForecaster:
             # Widen confidence interval with time
             ci_multiplier = 1 + (d * 0.1)
 
-            forecasts.append(LatencyForecast(
-                platform=platform,
-                event_type=event_type,
-                forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
-                predicted_p50_ms=round(smoothed_p50, 1),
-                predicted_p95_ms=round(smoothed_p95, 1),
-                confidence_interval_low=round(max(0, smoothed_p50 - std_p50 * ci_multiplier), 1),
-                confidence_interval_high=round(smoothed_p95 + std_p95 * ci_multiplier, 1),
-                trend=trend,
-            ))
+            forecasts.append(
+                LatencyForecast(
+                    platform=platform,
+                    event_type=event_type,
+                    forecast_date=datetime.now(UTC) + timedelta(days=d),
+                    predicted_p50_ms=round(smoothed_p50, 1),
+                    predicted_p95_ms=round(smoothed_p95, 1),
+                    confidence_interval_low=round(
+                        max(0, smoothed_p50 - std_p50 * ci_multiplier), 1
+                    ),
+                    confidence_interval_high=round(smoothed_p95 + std_p95 * ci_multiplier, 1),
+                    trend=trend,
+                )
+            )
 
         return forecasts
 
@@ -889,10 +914,7 @@ class AttributionWindowOptimizer:
 
         for window in test_windows:
             coverage = self.analyze_coverage(platform, window)
-            if coverage >= target_coverage and window < best_window:
-                best_window = window
-                best_coverage = coverage
-            elif coverage > best_coverage:
+            if coverage >= target_coverage and window < best_window or coverage > best_coverage:
                 best_window = window
                 best_coverage = coverage
 
@@ -902,7 +924,9 @@ class AttributionWindowOptimizer:
         elif best_window > current_window:
             rationale = f"Consider extending window to {best_window} days to capture {best_coverage:.1f}% of conversions"
         else:
-            rationale = f"Current {current_window}-day window is optimal for {best_coverage:.1f}% coverage"
+            rationale = (
+                f"Current {current_window}-day window is optimal for {best_coverage:.1f}% coverage"
+            )
 
         return AttributionWindowRecommendation(
             platform=platform,
@@ -913,7 +937,7 @@ class AttributionWindowOptimizer:
             rationale=rationale,
         )
 
-    def get_all_recommendations(self) -> List[AttributionWindowRecommendation]:
+    def get_all_recommendations(self) -> list[AttributionWindowRecommendation]:
         """Get attribution window recommendations for all platforms."""
         recommendations = []
 

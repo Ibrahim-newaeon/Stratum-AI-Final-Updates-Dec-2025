@@ -13,8 +13,8 @@ Zoho CRM API v3 Reference:
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 from urllib.parse import urlencode
 
 import httpx
@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import encrypt_pii, decrypt_pii
+from app.core.security import decrypt_pii, encrypt_pii
 from app.models.crm import (
     CRMConnection,
     CRMConnectionStatus,
@@ -209,9 +209,7 @@ class ZohoClient:
 
         # Zoho tokens expire in 1 hour by default
         expires_in = data.get("expires_in", 3600)
-        connection.token_expires_at = datetime.now(timezone.utc) + timedelta(
-            seconds=expires_in
-        )
+        connection.token_expires_at = datetime.now(UTC) + timedelta(seconds=expires_in)
         connection.scopes = ",".join(ZOHO_SCOPES)
         connection.status = CRMConnectionStatus.CONNECTED
 
@@ -281,9 +279,7 @@ class ZohoClient:
         # Update access token (Zoho doesn't return new refresh token on refresh)
         connection.access_token_enc = encrypt_pii(data["access_token"])
         expires_in = data.get("expires_in", 3600)
-        connection.token_expires_at = datetime.now(timezone.utc) + timedelta(
-            seconds=expires_in
-        )
+        connection.token_expires_at = datetime.now(UTC) + timedelta(seconds=expires_in)
         connection.status = CRMConnectionStatus.CONNECTED
 
         await self.db.commit()
@@ -341,7 +337,7 @@ class ZohoClient:
         # Check if token needs refresh (5 min buffer)
         if connection.token_expires_at:
             buffer = timedelta(minutes=5)
-            if datetime.now(timezone.utc) >= connection.token_expires_at - buffer:
+            if datetime.now(UTC) >= connection.token_expires_at - buffer:
                 if not await self.refresh_tokens():
                     return None
                 await self.db.refresh(connection)
@@ -352,9 +348,9 @@ class ZohoClient:
         self,
         method: str,
         endpoint: str,
-        params: Optional[Dict] = None,
-        json_data: Optional[Dict] = None,
-    ) -> Optional[Dict[str, Any]]:
+        params: Optional[dict] = None,
+        json_data: Optional[dict] = None,
+    ) -> Optional[dict[str, Any]]:
         """
         Make authenticated API request to Zoho CRM.
 
@@ -423,11 +419,11 @@ class ZohoClient:
         self,
         page: int = 1,
         per_page: int = 200,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         modified_since: Optional[datetime] = None,
         sort_by: str = "Modified_Time",
         sort_order: str = "desc",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Get contacts from Zoho CRM.
 
@@ -444,12 +440,22 @@ class ZohoClient:
         """
         if fields is None:
             fields = [
-                "Email", "Phone", "Mobile", "First_Name", "Last_Name",
-                "Account_Name", "Lead_Source", "Owner",
-                "Created_Time", "Modified_Time",
+                "Email",
+                "Phone",
+                "Mobile",
+                "First_Name",
+                "Last_Name",
+                "Account_Name",
+                "Lead_Source",
+                "Owner",
+                "Created_Time",
+                "Modified_Time",
                 # UTM and tracking fields (if custom fields exist)
-                "utm_source", "utm_medium", "utm_campaign",
-                "gclid", "fbclid",
+                "utm_source",
+                "utm_medium",
+                "utm_campaign",
+                "gclid",
+                "fbclid",
             ]
 
         params = {
@@ -474,10 +480,10 @@ class ZohoClient:
     async def search_contacts(
         self,
         criteria: str,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         page: int = 1,
         per_page: int = 200,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Search contacts using COQL (Zoho CRM Object Query Language).
 
@@ -502,8 +508,8 @@ class ZohoClient:
     async def get_contact(
         self,
         contact_id: str,
-        fields: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        fields: Optional[list[str]] = None,
+    ) -> Optional[dict[str, Any]]:
         """Get a single contact by ID."""
         params = {}
         if fields:
@@ -514,18 +520,16 @@ class ZohoClient:
     async def update_contact(
         self,
         contact_id: str,
-        data: Dict[str, Any],
-    ) -> Optional[Dict[str, Any]]:
+        data: dict[str, Any],
+    ) -> Optional[dict[str, Any]]:
         """Update contact fields (for writeback)."""
-        body = {
-            "data": [{"id": contact_id, **data}]
-        }
+        body = {"data": [{"id": contact_id, **data}]}
         return await self.api_request("PUT", "/Contacts", json_data=body)
 
     async def search_contacts_by_email(
         self,
         email: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Search for a contact by email."""
         return await self.api_request(
             "GET",
@@ -541,11 +545,11 @@ class ZohoClient:
         self,
         page: int = 1,
         per_page: int = 200,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         modified_since: Optional[datetime] = None,
         sort_by: str = "Modified_Time",
         sort_order: str = "desc",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Get deals from Zoho CRM.
 
@@ -562,9 +566,16 @@ class ZohoClient:
         """
         if fields is None:
             fields = [
-                "Deal_Name", "Amount", "Stage", "Pipeline",
-                "Closing_Date", "Account_Name", "Contact_Name",
-                "Owner", "Created_Time", "Modified_Time",
+                "Deal_Name",
+                "Amount",
+                "Stage",
+                "Pipeline",
+                "Closing_Date",
+                "Account_Name",
+                "Contact_Name",
+                "Owner",
+                "Created_Time",
+                "Modified_Time",
             ]
 
         params = {
@@ -588,10 +599,10 @@ class ZohoClient:
     async def search_deals(
         self,
         criteria: str,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         page: int = 1,
         per_page: int = 200,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Search deals using COQL."""
         if fields is None:
             fields = ["Deal_Name", "Amount", "Stage", "Closing_Date"]
@@ -605,8 +616,8 @@ class ZohoClient:
     async def get_deal(
         self,
         deal_id: str,
-        fields: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        fields: Optional[list[str]] = None,
+    ) -> Optional[dict[str, Any]]:
         """Get a single deal by ID."""
         params = {}
         if fields:
@@ -617,18 +628,16 @@ class ZohoClient:
     async def update_deal(
         self,
         deal_id: str,
-        data: Dict[str, Any],
-    ) -> Optional[Dict[str, Any]]:
+        data: dict[str, Any],
+    ) -> Optional[dict[str, Any]]:
         """Update deal fields (for writeback)."""
-        body = {
-            "data": [{"id": deal_id, **data}]
-        }
+        body = {"data": [{"id": deal_id, **data}]}
         return await self.api_request("PUT", "/Deals", json_data=body)
 
     async def get_deal_contacts(
         self,
         deal_id: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get contacts associated with a deal."""
         return await self.api_request(
             "GET",
@@ -643,13 +652,19 @@ class ZohoClient:
         self,
         page: int = 1,
         per_page: int = 200,
-        fields: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        fields: Optional[list[str]] = None,
+    ) -> Optional[dict[str, Any]]:
         """Get accounts (companies) from Zoho CRM."""
         if fields is None:
             fields = [
-                "Account_Name", "Website", "Phone", "Industry",
-                "Annual_Revenue", "Owner", "Created_Time", "Modified_Time",
+                "Account_Name",
+                "Website",
+                "Phone",
+                "Industry",
+                "Annual_Revenue",
+                "Owner",
+                "Created_Time",
+                "Modified_Time",
             ]
 
         params = {
@@ -668,15 +683,22 @@ class ZohoClient:
         self,
         page: int = 1,
         per_page: int = 200,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         modified_since: Optional[datetime] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get leads from Zoho CRM."""
         if fields is None:
             fields = [
-                "Email", "Phone", "First_Name", "Last_Name",
-                "Company", "Lead_Source", "Lead_Status",
-                "Owner", "Created_Time", "Modified_Time",
+                "Email",
+                "Phone",
+                "First_Name",
+                "Last_Name",
+                "Company",
+                "Lead_Source",
+                "Lead_Status",
+                "Owner",
+                "Created_Time",
+                "Modified_Time",
             ]
 
         params = {
@@ -696,8 +718,8 @@ class ZohoClient:
 
     async def batch_update_contacts(
         self,
-        updates: List[Dict[str, Any]],
-    ) -> Optional[Dict[str, Any]]:
+        updates: list[dict[str, Any]],
+    ) -> Optional[dict[str, Any]]:
         """
         Batch update multiple contacts.
 
@@ -715,7 +737,7 @@ class ZohoClient:
         errors = []
 
         for i in range(0, len(updates), 100):
-            batch = updates[i:i + 100]
+            batch = updates[i : i + 100]
             response = await self.api_request(
                 "PUT",
                 "/Contacts",
@@ -731,8 +753,8 @@ class ZohoClient:
 
     async def batch_update_deals(
         self,
-        updates: List[Dict[str, Any]],
-    ) -> Optional[Dict[str, Any]]:
+        updates: list[dict[str, Any]],
+    ) -> Optional[dict[str, Any]]:
         """
         Batch update multiple deals.
 
@@ -749,7 +771,7 @@ class ZohoClient:
         errors = []
 
         for i in range(0, len(updates), 100):
-            batch = updates[i:i + 100]
+            batch = updates[i : i + 100]
             response = await self.api_request(
                 "PUT",
                 "/Deals",
@@ -770,9 +792,9 @@ class ZohoClient:
     async def get_module_fields(
         self,
         module: str = "Contacts",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get all fields for a module (schema)."""
-        return await self.api_request("GET", f"/settings/fields", params={"module": module})
+        return await self.api_request("GET", "/settings/fields", params={"module": module})
 
     async def create_custom_field(
         self,
@@ -780,7 +802,7 @@ class ZohoClient:
         field_label: str,
         field_type: str = "text",
         length: int = 255,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Create a custom field.
 
@@ -788,15 +810,17 @@ class ZohoClient:
         For other editions, fields must be created manually in Zoho CRM settings.
         """
         body = {
-            "fields": [{
-                "field_label": field_label,
-                "data_type": field_type,
-                "length": length,
-            }]
+            "fields": [
+                {
+                    "field_label": field_label,
+                    "data_type": field_type,
+                    "length": length,
+                }
+            ]
         }
         return await self.api_request(
             "POST",
-            f"/settings/fields",
+            "/settings/fields",
             params={"module": module},
             json_data=body,
         )
@@ -805,15 +829,15 @@ class ZohoClient:
     # Users and Organization
     # =========================================================================
 
-    async def get_users(self) -> Optional[Dict[str, Any]]:
+    async def get_users(self) -> Optional[dict[str, Any]]:
         """Get all users (sales reps) in the organization."""
         return await self.api_request("GET", "/users")
 
-    async def get_organization(self) -> Optional[Dict[str, Any]]:
+    async def get_organization(self) -> Optional[dict[str, Any]]:
         """Get organization details."""
         return await self.api_request("GET", "/org")
 
-    async def get_pipelines(self) -> Optional[Dict[str, Any]]:
+    async def get_pipelines(self) -> Optional[dict[str, Any]]:
         """Get deal pipelines and stages."""
         return await self.api_request(
             "GET",
@@ -856,7 +880,7 @@ class ZohoClient:
         self._connection = connection
         return connection
 
-    async def _get_org_info(self, access_token: str) -> Optional[Dict]:
+    async def _get_org_info(self, access_token: str) -> Optional[dict]:
         """Get Zoho organization info."""
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -869,7 +893,7 @@ class ZohoClient:
                     return data["org"][0]
         return None
 
-    async def get_connection_status(self) -> Dict[str, Any]:
+    async def get_connection_status(self) -> dict[str, Any]:
         """Get current connection status."""
         connection = await self._get_connection()
         if not connection:
@@ -885,7 +909,9 @@ class ZohoClient:
             "provider": "zoho",
             "account_id": connection.provider_account_id,
             "account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection.last_sync_at
+            else None,
             "last_sync_status": connection.last_sync_status,
             "scopes": connection.scopes.split(",") if connection.scopes else [],
         }
@@ -894,6 +920,7 @@ class ZohoClient:
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def hash_email(email: str) -> str:
     """Hash email for privacy-safe identity matching."""
@@ -908,7 +935,7 @@ def hash_phone(phone: str) -> str:
     return hashlib.sha256(normalized.encode()).hexdigest()
 
 
-def normalize_zoho_contact(zoho_contact: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_zoho_contact(zoho_contact: dict[str, Any]) -> dict[str, Any]:
     """
     Normalize Zoho contact data to internal schema.
 
@@ -933,7 +960,7 @@ def normalize_zoho_contact(zoho_contact: Dict[str, Any]) -> Dict[str, Any]:
     return normalized
 
 
-def normalize_zoho_deal(zoho_deal: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_zoho_deal(zoho_deal: dict[str, Any]) -> dict[str, Any]:
     """
     Normalize Zoho deal data to internal schema.
 

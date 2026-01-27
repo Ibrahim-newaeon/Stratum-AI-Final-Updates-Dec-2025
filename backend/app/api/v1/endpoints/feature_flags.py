@@ -14,20 +14,19 @@ Superadmin routes:
 - POST /api/superadmin/tenants/{tenant_id}/features/reset - Reset to defaults
 """
 
-from typing import Dict, Any
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_session
-from app.features.service import FeatureFlagsService
 from app.features.flags import (
-    FeatureFlagsUpdate,
     FEATURE_CATEGORIES,
     FEATURE_DESCRIPTIONS,
+    FeatureFlagsUpdate,
 )
+from app.features.service import FeatureFlagsService
 from app.schemas.response import APIResponse
-
 
 # =============================================================================
 # Tenant Routes
@@ -36,7 +35,7 @@ from app.schemas.response import APIResponse
 tenant_router = APIRouter(prefix="/tenant/{tenant_id}", tags=["feature-flags"])
 
 
-@tenant_router.get("/features", response_model=APIResponse[Dict[str, Any]])
+@tenant_router.get("/features", response_model=APIResponse[dict[str, Any]])
 async def get_tenant_features(
     request: Request,
     tenant_id: int,
@@ -63,7 +62,7 @@ async def get_tenant_features(
     )
 
 
-@tenant_router.put("/features", response_model=APIResponse[Dict[str, Any]])
+@tenant_router.put("/features", response_model=APIResponse[dict[str, Any]])
 async def update_tenant_features(
     request: Request,
     tenant_id: int,
@@ -101,7 +100,7 @@ async def update_tenant_features(
 superadmin_router = APIRouter(prefix="/superadmin", tags=["superadmin-features"])
 
 
-@superadmin_router.get("/tenants/{tenant_id}/features", response_model=APIResponse[Dict[str, Any]])
+@superadmin_router.get("/tenants/{tenant_id}/features", response_model=APIResponse[dict[str, Any]])
 async def superadmin_get_tenant_features(
     request: Request,
     tenant_id: int,
@@ -128,7 +127,7 @@ async def superadmin_get_tenant_features(
     )
 
 
-@superadmin_router.put("/tenants/{tenant_id}/features", response_model=APIResponse[Dict[str, Any]])
+@superadmin_router.put("/tenants/{tenant_id}/features", response_model=APIResponse[dict[str, Any]])
 async def superadmin_update_tenant_features(
     request: Request,
     tenant_id: int,
@@ -155,7 +154,9 @@ async def superadmin_update_tenant_features(
     )
 
 
-@superadmin_router.post("/tenants/{tenant_id}/features/reset", response_model=APIResponse[Dict[str, Any]])
+@superadmin_router.post(
+    "/tenants/{tenant_id}/features/reset", response_model=APIResponse[dict[str, Any]]
+)
 async def superadmin_reset_tenant_features(
     request: Request,
     tenant_id: int,
@@ -178,7 +179,7 @@ async def superadmin_reset_tenant_features(
     )
 
 
-@superadmin_router.get("/feature-metadata", response_model=APIResponse[Dict[str, Any]])
+@superadmin_router.get("/feature-metadata", response_model=APIResponse[dict[str, Any]])
 async def get_feature_metadata(request: Request):
     """
     Get feature categories and descriptions for UI.

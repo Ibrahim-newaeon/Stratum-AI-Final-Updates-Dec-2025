@@ -2,31 +2,31 @@
  * CDP Events - Event timeline and analytics
  */
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react';
 import {
-  ClockIcon,
-  FunnelIcon,
   ArrowDownTrayIcon,
-  ChartBarIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XMarkIcon,
   CalendarIcon,
-  MagnifyingGlassIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  ClockIcon,
+  ExclamationTriangleIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
-  useEventStatistics,
-  useEventTrends,
+  type AnomalySeverity,
+  type DailyVolume,
+  type EventByName,
   useAnomalySummary,
   useEventAnomalies,
+  useEventStatistics,
+  useEventTrends,
   useExportAudience,
-  type EventByName,
-  type DailyVolume,
-  type AnomalySeverity,
-} from '@/api/cdp'
+} from '@/api/cdp';
 
 // Severity Badge
 function SeverityBadge({ severity }: { severity: AnomalySeverity }) {
@@ -35,24 +35,24 @@ function SeverityBadge({ severity }: { severity: AnomalySeverity }) {
     medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     high: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
     critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  }
+  };
 
   return (
     <span className={cn('px-2 py-1 rounded-full text-xs font-medium capitalize', config[severity])}>
       {severity}
     </span>
-  )
+  );
 }
 
 // Daily Volume Chart
 function VolumeChart({ data, height = 200 }: { data: DailyVolume[]; height?: number }) {
-  const maxCount = Math.max(...data.map((d) => d.count), 1)
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
 
   return (
     <div className="relative" style={{ height }}>
       <div className="absolute inset-0 flex items-end gap-1">
         {data.map((day, i) => {
-          const heightPercent = (day.count / maxCount) * 100
+          const heightPercent = (day.count / maxCount) * 100;
           return (
             <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group">
               <div
@@ -66,27 +66,38 @@ function VolumeChart({ data, height = 200 }: { data: DailyVolume[]; height?: num
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
       {/* X-axis labels */}
       <div className="absolute -bottom-6 inset-x-0 flex justify-between text-xs text-muted-foreground">
-        <span>{data.length > 0 ? new Date(data[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span>
-        <span>{data.length > 0 ? new Date(data[data.length - 1].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span>
+        <span>
+          {data.length > 0
+            ? new Date(data[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : ''}
+        </span>
+        <span>
+          {data.length > 0
+            ? new Date(data[data.length - 1].date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+              })
+            : ''}
+        </span>
       </div>
     </div>
-  )
+  );
 }
 
 // Events by Name Chart (Horizontal Bar)
 function EventsBarChart({ data }: { data: EventByName[] }) {
-  const maxCount = Math.max(...data.map((d) => d.count), 1)
-  const topEvents = data.slice(0, 10)
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
+  const topEvents = data.slice(0, 10);
 
   return (
     <div className="space-y-3">
       {topEvents.map((event, i) => {
-        const widthPercent = (event.count / maxCount) * 100
+        const widthPercent = (event.count / maxCount) * 100;
         return (
           <div key={event.event_name}>
             <div className="flex justify-between text-sm mb-1">
@@ -103,16 +114,16 @@ function EventsBarChart({ data }: { data: EventByName[] }) {
               />
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 // Trend Indicator
 function TrendIndicator({ trend, change }: { trend: string; change: number }) {
-  const isUp = trend === 'up' || change > 0
-  const isDown = trend === 'down' || change < 0
+  const isUp = trend === 'up' || change > 0;
+  const isDown = trend === 'down' || change < 0;
 
   return (
     <div className="flex items-center gap-2">
@@ -122,28 +133,29 @@ function TrendIndicator({ trend, change }: { trend: string; change: number }) {
           isUp ? 'text-green-500' : isDown ? 'text-red-500' : 'text-muted-foreground'
         )}
       >
-        {isUp ? '+' : ''}{change.toFixed(1)}%
+        {isUp ? '+' : ''}
+        {change.toFixed(1)}%
       </span>
       <span className="text-sm text-muted-foreground">vs last period</span>
     </div>
-  )
+  );
 }
 
 // EMQ Distribution Chart
 function EMQDistributionChart({ data }: { data: Array<{ score_range: string; count: number }> }) {
-  const total = data.reduce((sum, d) => sum + d.count, 0)
+  const total = data.reduce((sum, d) => sum + d.count, 0);
 
   const getColor = (range: string) => {
-    if (range.includes('90') || range.includes('80-')) return 'bg-green-400'
-    if (range.includes('70') || range.includes('60-')) return 'bg-yellow-400'
-    if (range.includes('50') || range.includes('40-')) return 'bg-orange-400'
-    return 'bg-red-400'
-  }
+    if (range.includes('90') || range.includes('80-')) return 'bg-green-400';
+    if (range.includes('70') || range.includes('60-')) return 'bg-yellow-400';
+    if (range.includes('50') || range.includes('40-')) return 'bg-orange-400';
+    return 'bg-red-400';
+  };
 
   return (
     <div className="space-y-2">
       {data.map((bucket) => {
-        const percent = total > 0 ? (bucket.count / total) * 100 : 0
+        const percent = total > 0 ? (bucket.count / total) * 100 : 0;
         return (
           <div key={bucket.score_range} className="flex items-center gap-3">
             <span className="text-xs w-16 text-muted-foreground">{bucket.score_range}</span>
@@ -155,47 +167,47 @@ function EMQDistributionChart({ data }: { data: Array<{ score_range: string; cou
             </div>
             <span className="text-xs w-12 text-right">{percent.toFixed(1)}%</span>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 export default function CDPEvents() {
-  const [periodDays, setPeriodDays] = useState(30)
-  const [eventFilter, setEventFilter] = useState('')
-  const [showAnomalies, setShowAnomalies] = useState(false)
+  const [periodDays, setPeriodDays] = useState(30);
+  const [eventFilter, setEventFilter] = useState('');
+  const [showAnomalies, setShowAnomalies] = useState(false);
 
-  const { data: stats, isLoading: statsLoading } = useEventStatistics(periodDays)
-  const { data: trends, isLoading: trendsLoading } = useEventTrends(periodDays)
-  const { data: summary } = useAnomalySummary()
+  const { data: stats, isLoading: statsLoading } = useEventStatistics(periodDays);
+  const { data: trends, isLoading: trendsLoading } = useEventTrends(periodDays);
+  const { data: summary } = useAnomalySummary();
   const { data: anomalies, isLoading: anomaliesLoading } = useEventAnomalies({
     window_days: 7,
     zscore_threshold: 2.0,
-  })
-  const exportMutation = useExportAudience()
+  });
+  const exportMutation = useExportAudience();
 
   const filteredEvents = useMemo(() => {
-    if (!stats?.events_by_name) return []
-    if (!eventFilter) return stats.events_by_name
+    if (!stats?.events_by_name) return [];
+    if (!eventFilter) return stats.events_by_name;
     return stats.events_by_name.filter((e) =>
       e.event_name.toLowerCase().includes(eventFilter.toLowerCase())
-    )
-  }, [stats, eventFilter])
+    );
+  }, [stats, eventFilter]);
 
   const handleExport = async () => {
     try {
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - periodDays)
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - periodDays);
       await exportMutation.mutateAsync({
         format: 'csv',
         start_date: startDate.toISOString().split('T')[0],
         limit: 10000,
-      })
+      });
     } catch (error) {
-      console.error('Export failed:', error)
+      console.error('Export failed:', error);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -358,7 +370,10 @@ export default function CDPEvents() {
           ) : stats?.events_by_source && stats.events_by_source.length > 0 ? (
             <div className="space-y-3">
               {stats.events_by_source.map((source) => (
-                <div key={source.source_name} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div
+                  key={source.source_name}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                >
                   <span className="font-medium">{source.source_name}</span>
                   <span className="text-muted-foreground">{source.count.toLocaleString()}</span>
                 </div>
@@ -424,15 +439,18 @@ export default function CDPEvents() {
                     <p className="font-medium">{anomaly.source_name}</p>
                     <p className="text-sm text-muted-foreground">
                       {anomaly.metric}: {anomaly.current_value.toLocaleString()} (
-                      {anomaly.pct_change >= 0 ? '+' : ''}{anomaly.pct_change.toFixed(1)}% from baseline)
+                      {anomaly.pct_change >= 0 ? '+' : ''}
+                      {anomaly.pct_change.toFixed(1)}% from baseline)
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <SeverityBadge severity={anomaly.severity} />
-                    <span className={cn(
-                      'text-sm font-medium',
-                      anomaly.direction === 'high' ? 'text-red-500' : 'text-blue-500'
-                    )}>
+                    <span
+                      className={cn(
+                        'text-sm font-medium',
+                        anomaly.direction === 'high' ? 'text-red-500' : 'text-blue-500'
+                      )}
+                    >
                       {anomaly.direction === 'high' ? 'Spike' : 'Drop'}
                     </span>
                   </div>
@@ -448,5 +466,5 @@ export default function CDPEvents() {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -14,12 +14,13 @@ Interpretation:
 """
 
 from typing import Optional
+
 from app.analytics.logic.types import (
-    EntityMetrics,
     BaselineMetrics,
-    ScoringParams,
-    ScalingScoreResult,
+    EntityMetrics,
     ScalingAction,
+    ScalingScoreResult,
+    ScoringParams,
 )
 
 

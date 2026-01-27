@@ -5,12 +5,12 @@
 
 import { motion } from 'framer-motion';
 import {
-  SparklesIcon,
-  ShieldCheckIcon,
+  ArrowRightIcon,
   BoltIcon,
   ChartBarIcon,
   CpuChipIcon,
-  ArrowRightIcon
+  ShieldCheckIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 const stats = [
@@ -34,9 +34,9 @@ const fadeUpVariants = {
     transition: {
       delay: i * 0.1,
       duration: 0.6,
-      ease: [0.16, 1, 0.3, 1]
-    }
-  })
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
 };
 
 export default function AIHero() {
@@ -124,8 +124,11 @@ export default function AIHero() {
             variants={fadeUpVariants}
             className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed"
           >
-            Trust-Gated Autopilot executes revenue operations <span className="text-white font-medium">only when AI confirms data quality meets safety thresholds</span>.
-            Predict ROAS, prevent churn, and sync audiences across 4 platforms—automatically.
+            Trust-Gated Autopilot executes revenue operations{' '}
+            <span className="text-white font-medium">
+              only when AI confirms data quality meets safety thresholds
+            </span>
+            . Predict ROAS, prevent churn, and sync audiences across 4 platforms—automatically.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -194,7 +197,10 @@ export default function AIHero() {
                 key={badge.text}
                 className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.05]"
               >
-                <badge.icon className={`w-4 h-4 bg-gradient-to-r ${badge.color} bg-clip-text text-transparent`} style={{ stroke: 'url(#badge-gradient)' }} />
+                <badge.icon
+                  className={`w-4 h-4 bg-gradient-to-r ${badge.color} bg-clip-text text-transparent`}
+                  style={{ stroke: 'url(#badge-gradient)' }}
+                />
                 <span className="text-sm text-gray-400">{badge.text}</span>
               </div>
             ))}

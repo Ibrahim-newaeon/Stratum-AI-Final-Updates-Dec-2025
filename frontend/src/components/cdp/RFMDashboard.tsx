@@ -3,47 +3,50 @@
  * Visualize RFM (Recency, Frequency, Monetary) analysis and customer segmentation
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  Target,
-  Users,
-  DollarSign,
-  Calendar,
-  RefreshCw,
-  Loader2,
-  TrendingUp,
-  Crown,
-  Heart,
-  Star,
-  Zap,
-  AlertTriangle,
-  Moon,
-  Frown,
-  Clock,
-  Search,
-  ChevronRight,
-  BarChart3,
-  PieChart,
   Activity,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  AlertTriangle,
+  BarChart3,
+  Calendar,
+  ChevronRight,
+  Clock,
+  Crown,
+  DollarSign,
+  Frown,
+  Heart,
+  Loader2,
+  Moon,
+  PieChart,
+  RefreshCw,
+  Search,
+  Star,
+  Target,
+  TrendingUp,
+  Users,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useRFMSummary,
+  RFMSegment,
+  useCDPProfile,
   useComputeRFMBatch,
   useProfileRFM,
-  useCDPProfile,
-  RFMSegment,
-} from '@/api/cdp'
+  useRFMSummary,
+} from '@/api/cdp';
 
 // RFM Segment configuration
-const RFM_SEGMENTS: Record<RFMSegment, {
-  label: string
-  description: string
-  icon: React.ReactNode
-  color: string
-  bgColor: string
-  actionTip: string
-}> = {
+const RFM_SEGMENTS: Record<
+  RFMSegment,
+  {
+    label: string;
+    description: string;
+    icon: React.ReactNode;
+    color: string;
+    bgColor: string;
+    actionTip: string;
+  }
+> = {
   champions: {
     label: 'Champions',
     description: 'Best customers who bought recently, buy often and spend the most',
@@ -140,13 +143,13 @@ const RFM_SEGMENTS: Record<RFMSegment, {
     bgColor: 'bg-slate-500/10',
     actionTip: 'Analyze individually for better targeting',
   },
-}
+};
 
 // RFM Score visualization
 interface RFMScoreBarProps {
-  label: string
-  score: number
-  rawValue: string
+  label: string;
+  score: number;
+  rawValue: string;
 }
 
 function RFMScoreBar({ label, score, rawValue }: RFMScoreBarProps) {
@@ -169,21 +172,21 @@ function RFMScoreBar({ label, score, rawValue }: RFMScoreBarProps) {
       </div>
       <div className="text-xs text-muted-foreground text-right">Score: {score}/5</div>
     </div>
-  )
+  );
 }
 
 // Segment card component
 interface SegmentCardProps {
-  segment: RFMSegment
-  count: number
-  totalProfiles: number
-  isSelected: boolean
-  onClick: () => void
+  segment: RFMSegment;
+  count: number;
+  totalProfiles: number;
+  isSelected: boolean;
+  onClick: () => void;
 }
 
 function SegmentCard({ segment, count, totalProfiles, isSelected, onClick }: SegmentCardProps) {
-  const config = RFM_SEGMENTS[segment]
-  const percentage = totalProfiles > 0 ? (count / totalProfiles) * 100 : 0
+  const config = RFM_SEGMENTS[segment];
+  const percentage = totalProfiles > 0 ? (count / totalProfiles) * 100 : 0;
 
   return (
     <div
@@ -194,9 +197,7 @@ function SegmentCard({ segment, count, totalProfiles, isSelected, onClick }: Seg
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-3">
-        <div className={cn('p-2 rounded-lg', config.bgColor, config.color)}>
-          {config.icon}
-        </div>
+        <div className={cn('p-2 rounded-lg', config.bgColor, config.color)}>{config.icon}</div>
         <span className="text-2xl font-bold">{count.toLocaleString()}</span>
       </div>
       <h4 className="font-semibold mb-1">{config.label}</h4>
@@ -209,27 +210,27 @@ function SegmentCard({ segment, count, totalProfiles, isSelected, onClick }: Seg
       </div>
       <div className="text-xs text-muted-foreground mt-1">{percentage.toFixed(1)}% of profiles</div>
     </div>
-  )
+  );
 }
 
 // Profile RFM details view
 interface ProfileRFMViewProps {
-  profileId: string
-  onBack: () => void
+  profileId: string;
+  onBack: () => void;
 }
 
 function ProfileRFMView({ profileId, onBack }: ProfileRFMViewProps) {
-  const { data: profile, isLoading: profileLoading } = useCDPProfile(profileId)
-  const { data: rfm, isLoading: rfmLoading } = useProfileRFM(profileId)
+  const { data: profile, isLoading: profileLoading } = useCDPProfile(profileId);
+  const { data: rfm, isLoading: rfmLoading } = useProfileRFM(profileId);
 
-  const isLoading = profileLoading || rfmLoading
+  const isLoading = profileLoading || rfmLoading;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
-    )
+    );
   }
 
   if (!rfm || !profile) {
@@ -244,18 +245,15 @@ function ProfileRFMView({ profileId, onBack }: ProfileRFMViewProps) {
           Back to Dashboard
         </button>
       </div>
-    )
+    );
   }
 
-  const segmentConfig = RFM_SEGMENTS[rfm.rfm_segment]
+  const segmentConfig = RFM_SEGMENTS[rfm.rfm_segment];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button
-          onClick={onBack}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
-        >
+        <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
           <ChevronRight className="w-5 h-5 rotate-180" />
         </button>
         <div>
@@ -350,32 +348,28 @@ function ProfileRFMView({ profileId, onBack }: ProfileRFMViewProps) {
 
       <div className="text-xs text-muted-foreground flex items-center gap-2">
         <Clock className="w-3 h-3" />
-        Analysis window: {rfm.analysis_window_days} days · Calculated: {new Date(rfm.calculated_at).toLocaleString()}
+        Analysis window: {rfm.analysis_window_days} days · Calculated:{' '}
+        {new Date(rfm.calculated_at).toLocaleString()}
       </div>
     </div>
-  )
+  );
 }
 
 export function RFMDashboard() {
-  const [selectedSegment, setSelectedSegment] = useState<RFMSegment | null>(null)
-  const [searchProfileId, setSearchProfileId] = useState('')
-  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null)
+  const [selectedSegment, setSelectedSegment] = useState<RFMSegment | null>(null);
+  const [searchProfileId, setSearchProfileId] = useState('');
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
 
-  const { data: summary, isLoading, refetch } = useRFMSummary()
-  const computeMutation = useComputeRFMBatch()
+  const { data: summary, isLoading, refetch } = useRFMSummary();
+  const computeMutation = useComputeRFMBatch();
 
   const handleCompute = async () => {
-    await computeMutation.mutateAsync(undefined)
-    refetch()
-  }
+    await computeMutation.mutateAsync(undefined);
+    refetch();
+  };
 
   if (viewingProfileId) {
-    return (
-      <ProfileRFMView
-        profileId={viewingProfileId}
-        onBack={() => setViewingProfileId(null)}
-      />
-    )
+    return <ProfileRFMView profileId={viewingProfileId} onBack={() => setViewingProfileId(null)} />;
   }
 
   return (
@@ -416,7 +410,7 @@ export function RFMDashboard() {
           className="w-full pl-10 pr-24 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && searchProfileId) {
-              setViewingProfileId(searchProfileId)
+              setViewingProfileId(searchProfileId);
             }
           }}
         />
@@ -457,7 +451,9 @@ export function RFMDashboard() {
                 <PieChart className="w-4 h-4" />
                 Coverage
               </div>
-              <div className="text-2xl font-bold text-green-500">{summary.coverage_pct.toFixed(1)}%</div>
+              <div className="text-2xl font-bold text-green-500">
+                {summary.coverage_pct.toFixed(1)}%
+              </div>
             </div>
             <div className="p-4 rounded-xl border bg-card">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -465,7 +461,7 @@ export function RFMDashboard() {
                 Segments
               </div>
               <div className="text-2xl font-bold">
-                {Object.values(summary.segment_distribution).filter(v => v > 0).length}
+                {Object.values(summary.segment_distribution).filter((v) => v > 0).length}
               </div>
             </div>
           </div>
@@ -503,16 +499,20 @@ export function RFMDashboard() {
           {selectedSegment && (
             <div className="p-6 rounded-xl border bg-card">
               <div className="flex items-start gap-4">
-                <div className={cn(
-                  'p-3 rounded-xl',
-                  RFM_SEGMENTS[selectedSegment].bgColor,
-                  RFM_SEGMENTS[selectedSegment].color
-                )}>
+                <div
+                  className={cn(
+                    'p-3 rounded-xl',
+                    RFM_SEGMENTS[selectedSegment].bgColor,
+                    RFM_SEGMENTS[selectedSegment].color
+                  )}
+                >
                   {RFM_SEGMENTS[selectedSegment].icon}
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold">{RFM_SEGMENTS[selectedSegment].label}</h3>
-                  <p className="text-muted-foreground mt-1">{RFM_SEGMENTS[selectedSegment].description}</p>
+                  <p className="text-muted-foreground mt-1">
+                    {RFM_SEGMENTS[selectedSegment].description}
+                  </p>
                   <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
                     <div className="text-sm font-medium text-primary mb-1">Recommended Action</div>
                     <p className="text-sm">{RFM_SEGMENTS[selectedSegment].actionTip}</p>
@@ -584,7 +584,7 @@ export function RFMDashboard() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default RFMDashboard
+export default RFMDashboard;

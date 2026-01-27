@@ -9,41 +9,45 @@ import { StarIcon } from '@heroicons/react/24/solid';
 
 const testimonials = [
   {
-    quote: "Trust-Gated Autopilot is a game-changer. We've eliminated bad automation decisions completely. Our team finally sleeps at night knowing the AI won't act on degraded data.",
-    author: "Sarah Chen",
-    role: "VP of Growth",
-    company: "TechScale Inc.",
-    avatar: "SC",
-    metric: "+47% ROAS",
-    color: 'from-purple-500 to-violet-500'
+    quote:
+      "Trust-Gated Autopilot is a game-changer. We've eliminated bad automation decisions completely. Our team finally sleeps at night knowing the AI won't act on degraded data.",
+    author: 'Sarah Chen',
+    role: 'VP of Growth',
+    company: 'TechScale Inc.',
+    avatar: 'SC',
+    metric: '+47% ROAS',
+    color: 'from-purple-500 to-violet-500',
   },
   {
-    quote: "The creative fatigue prediction alone saved us $200K in wasted ad spend last quarter. We refresh creatives before they burn out, not after.",
-    author: "Marcus Johnson",
-    role: "Performance Marketing Lead",
-    company: "E-Commerce Giant",
-    avatar: "MJ",
-    metric: "-34% CPA",
-    color: 'from-cyan-500 to-blue-500'
+    quote:
+      'The creative fatigue prediction alone saved us $200K in wasted ad spend last quarter. We refresh creatives before they burn out, not after.',
+    author: 'Marcus Johnson',
+    role: 'Performance Marketing Lead',
+    company: 'E-Commerce Giant',
+    avatar: 'MJ',
+    metric: '-34% CPA',
+    color: 'from-cyan-500 to-blue-500',
   },
   {
-    quote: "Finally, a CDP that doesn't just collect data but actually tells you what to do with it. The LTV predictions are scary accurate—we now focus on the right customers.",
-    author: "Emily Rodriguez",
-    role: "Director of CRM",
-    company: "Subscription Box Co.",
-    avatar: "ER",
-    metric: "+62% LTV",
-    color: 'from-orange-500 to-amber-500'
+    quote:
+      "Finally, a CDP that doesn't just collect data but actually tells you what to do with it. The LTV predictions are scary accurate—we now focus on the right customers.",
+    author: 'Emily Rodriguez',
+    role: 'Director of CRM',
+    company: 'Subscription Box Co.',
+    avatar: 'ER',
+    metric: '+62% LTV',
+    color: 'from-orange-500 to-amber-500',
   },
   {
-    quote: "We replaced Segment + Looker + a custom ML pipeline with Stratum. One platform, 6 AI models built-in. Implementation took 2 days.",
-    author: "David Kim",
-    role: "CTO",
-    company: "Growth Startup",
-    avatar: "DK",
-    metric: "10x faster",
-    color: 'from-green-500 to-emerald-500'
-  }
+    quote:
+      'We replaced Segment + Looker + a custom ML pipeline with Stratum. One platform, 6 AI models built-in. Implementation took 2 days.',
+    author: 'David Kim',
+    role: 'CTO',
+    company: 'Growth Startup',
+    avatar: 'DK',
+    metric: '10x faster',
+    color: 'from-green-500 to-emerald-500',
+  },
 ];
 
 const logos = [
@@ -52,7 +56,7 @@ const logos = [
   { name: 'TikTok', svg: 'T' },
   { name: 'Snapchat', svg: 'S' },
   { name: 'HubSpot', svg: 'H' },
-  { name: 'Salesforce', svg: 'SF' }
+  { name: 'Salesforce', svg: 'SF' },
 ];
 
 export default function AITestimonials() {
@@ -80,7 +84,8 @@ export default function AITestimonials() {
           </h2>
 
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            See what growth and marketing leaders say about switching to AI-powered revenue operations.
+            See what growth and marketing leaders say about switching to AI-powered revenue
+            operations.
           </p>
         </motion.div>
 
@@ -100,7 +105,9 @@ export default function AITestimonials() {
               className="group relative"
             >
               {/* Gradient border effect */}
-              <div className={`absolute -inset-[1px] rounded-3xl bg-gradient-to-r ${testimonial.color} opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500`} />
+              <div
+                className={`absolute -inset-[1px] rounded-3xl bg-gradient-to-r ${testimonial.color} opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500`}
+              />
 
               <div className="relative p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all">
                 {/* Stars */}
@@ -118,18 +125,26 @@ export default function AITestimonials() {
                 {/* Author */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-semibold`}>
+                    <div
+                      className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center text-white font-semibold`}
+                    >
                       {testimonial.avatar}
                     </div>
                     <div>
                       <div className="font-medium text-white">{testimonial.author}</div>
-                      <div className="text-sm text-gray-500">{testimonial.role}, {testimonial.company}</div>
+                      <div className="text-sm text-gray-500">
+                        {testimonial.role}, {testimonial.company}
+                      </div>
                     </div>
                   </div>
 
                   {/* Metric Badge */}
-                  <div className={`px-4 py-2 rounded-full bg-gradient-to-r ${testimonial.color} bg-opacity-10`}>
-                    <span className={`text-sm font-bold bg-gradient-to-r ${testimonial.color} bg-clip-text text-transparent`}>
+                  <div
+                    className={`px-4 py-2 rounded-full bg-gradient-to-r ${testimonial.color} bg-opacity-10`}
+                  >
+                    <span
+                      className={`text-sm font-bold bg-gradient-to-r ${testimonial.color} bg-clip-text text-transparent`}
+                    >
                       {testimonial.metric}
                     </span>
                   </div>
@@ -146,7 +161,9 @@ export default function AITestimonials() {
           transition={{ delay: 0.4, duration: 0.6 }}
           className="text-center"
         >
-          <p className="text-sm text-gray-500 mb-8">Integrates with the platforms you already use</p>
+          <p className="text-sm text-gray-500 mb-8">
+            Integrates with the platforms you already use
+          </p>
 
           <div className="flex flex-wrap items-center justify-center gap-8">
             {logos.map((logo) => (
@@ -171,7 +188,7 @@ export default function AITestimonials() {
             { value: '500+', label: 'Companies' },
             { value: '$2.4B+', label: 'Revenue Optimized' },
             { value: '99.7%', label: 'Uptime SLA' },
-            { value: '4.9/5', label: 'Customer Rating' }
+            { value: '4.9/5', label: 'Customer Rating' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-1">

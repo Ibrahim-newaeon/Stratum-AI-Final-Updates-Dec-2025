@@ -3,39 +3,36 @@
  * Pie/Donut chart showing performance distribution by region
  */
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
-import { chartTheme } from '@/lib/chartTheme'
-import { PieChartSkeleton } from '@/components/ui/Skeleton'
-import { NoChartDataState } from '@/components/ui/EmptyState'
-import { ErrorBoundary, ChartErrorFallback } from '@/components/ui/ErrorBoundary'
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { chartTheme } from '@/lib/chartTheme';
+import { PieChartSkeleton } from '@/components/ui/Skeleton';
+import { NoChartDataState } from '@/components/ui/EmptyState';
+import { ChartErrorFallback, ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 interface RegionalData {
-  name: string
-  value: number
-  color?: string
+  name: string;
+  value: number;
+  color?: string;
 }
 
 interface RegionalBreakdownChartProps {
-  data: RegionalData[]
-  loading?: boolean
-  height?: number
-  title?: string
-  innerRadius?: number
-  outerRadius?: number
-  showLabels?: boolean
-  onRefresh?: () => void
+  data: RegionalData[];
+  loading?: boolean;
+  height?: number;
+  title?: string;
+  innerRadius?: number;
+  outerRadius?: number;
+  showLabels?: boolean;
+  onRefresh?: () => void;
 }
 
 // Custom legend renderer
-const CustomLegend = ({ payload }: { payload?: Array<{ value: string; color: string; payload: RegionalData }> }) => {
-  if (!payload) return null
+const CustomLegend = ({
+  payload,
+}: {
+  payload?: Array<{ value: string; color: string; payload: RegionalData }>;
+}) => {
+  if (!payload) return null;
 
   return (
     <ul className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4">
@@ -45,17 +42,13 @@ const CustomLegend = ({ payload }: { payload?: Array<{ value: string; color: str
             className="w-3 h-3 rounded-full flex-shrink-0"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-muted-foreground">
-            {entry.value}
-          </span>
-          <span className="font-medium text-foreground">
-            {entry.payload.value}%
-          </span>
+          <span className="text-muted-foreground">{entry.value}</span>
+          <span className="font-medium text-foreground">{entry.payload.value}%</span>
         </li>
       ))}
     </ul>
-  )
-}
+  );
+};
 
 function RegionalBreakdownChartInner({
   data,
@@ -65,14 +58,14 @@ function RegionalBreakdownChartInner({
   outerRadius = 100,
 }: Omit<RegionalBreakdownChartProps, 'loading' | 'onRefresh' | 'showLabels'>) {
   if (!data || data.length === 0) {
-    return <NoChartDataState />
+    return <NoChartDataState />;
   }
 
   // Assign colors if not provided
   const chartData = data.map((item, index) => ({
     ...item,
     color: item.color || chartTheme.regionColors[index % chartTheme.regionColors.length],
-  }))
+  }));
 
   return (
     <div className="rounded-xl border bg-card p-6">
@@ -104,15 +97,12 @@ function RegionalBreakdownChartInner({
               contentStyle={chartTheme.tooltip.contentStyle}
               formatter={(value: number) => [`${value}%`, 'Share']}
             />
-            <Legend
-              content={<CustomLegend />}
-              verticalAlign="bottom"
-            />
+            <Legend content={<CustomLegend />} verticalAlign="bottom" />
           </PieChart>
         </ResponsiveContainer>
       </div>
     </div>
-  )
+  );
 }
 
 export function RegionalBreakdownChart({
@@ -122,16 +112,14 @@ export function RegionalBreakdownChart({
   ...props
 }: RegionalBreakdownChartProps) {
   if (loading) {
-    return <PieChartSkeleton height={props.height} />
+    return <PieChartSkeleton height={props.height} />;
   }
 
   return (
-    <ErrorBoundary
-      fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}
-    >
+    <ErrorBoundary fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}>
       <RegionalBreakdownChartInner data={data} {...props} />
     </ErrorBoundary>
-  )
+  );
 }
 
-export default RegionalBreakdownChart
+export default RegionalBreakdownChart;

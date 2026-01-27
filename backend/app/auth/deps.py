@@ -212,6 +212,7 @@ def require_superadmin():
 # Token Generation Utilities
 # =============================================================================
 
+
 def generate_verification_token() -> str:
     """Generate a secure token for email verification."""
     return secrets.token_urlsafe(32)

@@ -14,14 +14,14 @@ Features:
 """
 
 from .capi_service import CAPIService
+from .data_quality import DataQualityAnalyzer
 from .event_mapper import AIEventMapper
 from .pii_hasher import PIIHasher
-from .data_quality import DataQualityAnalyzer
 from .platform_connectors import (
-    MetaCAPIConnector,
     GoogleCAPIConnector,
-    TikTokCAPIConnector,
+    MetaCAPIConnector,
     SnapchatCAPIConnector,
+    TikTokCAPIConnector,
 )
 
 __all__ = [

@@ -6,7 +6,7 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { CheckIcon } from '@heroicons/react/24/outline';
-import { SEO, pageSEO } from '@/components/common/SEO';
+import { pageSEO, SEO } from '@/components/common/SEO';
 
 const tiers = [
   {
@@ -144,7 +144,10 @@ export default function Pricing() {
                 <ul className="space-y-3 mb-8">
                   {tier.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
-                      <CheckIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#22c55e' }} />
+                      <CheckIcon
+                        className="w-5 h-5 flex-shrink-0 mt-0.5"
+                        style={{ color: '#22c55e' }}
+                      />
                       <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                         {feature}
                       </span>
@@ -156,9 +159,7 @@ export default function Pricing() {
                   to={tier.href}
                   className="block w-full py-3 px-6 rounded-xl text-center font-semibold transition-all"
                   style={{
-                    background: tier.highlighted
-                      ? '#f97316'
-                      : 'rgba(255, 255, 255, 0.06)',
+                    background: tier.highlighted ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
                     color: '#ffffff',
                     border: tier.highlighted ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
                     boxShadow: tier.highlighted ? '0 4px 20px rgba(249, 115, 22, 0.4)' : 'none',

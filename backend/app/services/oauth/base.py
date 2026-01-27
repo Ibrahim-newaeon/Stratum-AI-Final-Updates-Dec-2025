@@ -6,19 +6,19 @@ Abstract base class for OAuth services.
 Defines the interface that all platform OAuth implementations must follow.
 """
 
-import secrets
 import json
+import secrets
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any, Optional
 from urllib.parse import urlencode
 
 import redis.asyncio as redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import encrypt_pii, decrypt_pii
+from app.core.security import decrypt_pii, encrypt_pii
 
 logger = get_logger(__name__)
 
@@ -36,18 +36,20 @@ class OAuthState:
     user_id: int
     platform: str
     redirect_uri: str
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def to_json(self) -> str:
         """Serialize to JSON for Redis storage."""
-        return json.dumps({
-            "state_token": self.state_token,
-            "tenant_id": self.tenant_id,
-            "user_id": self.user_id,
-            "platform": self.platform,
-            "redirect_uri": self.redirect_uri,
-            "created_at": self.created_at.isoformat(),
-        })
+        return json.dumps(
+            {
+                "state_token": self.state_token,
+                "tenant_id": self.tenant_id,
+                "user_id": self.user_id,
+                "platform": self.platform,
+                "redirect_uri": self.redirect_uri,
+                "created_at": self.created_at.isoformat(),
+            }
+        )
 
     @classmethod
     def from_json(cls, data: str) -> "OAuthState":
@@ -72,14 +74,14 @@ class OAuthTokens:
     token_type: str = "Bearer"
     expires_in: Optional[int] = None  # Seconds until expiration
     expires_at: Optional[datetime] = None
-    scopes: List[str] = field(default_factory=list)
-    raw_response: Dict[str, Any] = field(default_factory=dict)
+    scopes: list[str] = field(default_factory=list)
+    raw_response: dict[str, Any] = field(default_factory=dict)
 
     def is_expired(self) -> bool:
         """Check if access token is expired."""
         if self.expires_at is None:
             return False
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
 
 @dataclass
@@ -94,8 +96,8 @@ class AdAccountInfo:
     status: str = "active"
     spend_cap: Optional[float] = None
     amount_spent: Optional[float] = None
-    permissions: List[str] = field(default_factory=list)
-    raw_data: Dict[str, Any] = field(default_factory=dict)
+    permissions: list[str] = field(default_factory=list)
+    raw_data: dict[str, Any] = field(default_factory=dict)
 
 
 class OAuthService(ABC):
@@ -221,7 +223,7 @@ class OAuthService(ABC):
     def get_authorization_url(
         self,
         state: OAuthState,
-        scopes: Optional[List[str]] = None,
+        scopes: Optional[list[str]] = None,
     ) -> str:
         """
         Generate OAuth authorization URL.
@@ -273,7 +275,7 @@ class OAuthService(ABC):
     async def fetch_ad_accounts(
         self,
         access_token: str,
-    ) -> List[AdAccountInfo]:
+    ) -> list[AdAccountInfo]:
         """
         Fetch available ad accounts for the authenticated user.
 
@@ -310,7 +312,7 @@ class OAuthService(ABC):
         base_url = settings.oauth_redirect_base_url.rstrip("/")
         return f"{base_url}/api/v1/oauth/{self.platform}/callback"
 
-    def build_url(self, base_url: str, params: Dict[str, Any]) -> str:
+    def build_url(self, base_url: str, params: dict[str, Any]) -> str:
         """Build URL with query parameters."""
         # Filter out None values
         filtered_params = {k: v for k, v in params.items() if v is not None}

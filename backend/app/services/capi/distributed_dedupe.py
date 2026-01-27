@@ -17,12 +17,13 @@ Features:
 
 import hashlib
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 
 try:
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -35,13 +36,14 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DedupeStats:
     """Statistics for deduplication performance."""
+
     total_checks: int = 0
     duplicates_found: int = 0
     unique_events: int = 0
     redis_hits: int = 0
     redis_misses: int = 0
     fallback_to_memory: int = 0
-    last_reset: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_reset: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def duplicate_rate(self) -> float:
@@ -50,7 +52,7 @@ class DedupeStats:
             return 0.0
         return (self.duplicates_found / self.total_checks) * 100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "total_checks": self.total_checks,
@@ -99,7 +101,7 @@ class DistributedEventDeduplicator:
         self._connected = False
 
         # In-memory fallback
-        self._memory_cache: Dict[str, datetime] = {}
+        self._memory_cache: dict[str, datetime] = {}
         self._memory_max_size = 100000
 
         # Statistics
@@ -137,7 +139,7 @@ class DistributedEventDeduplicator:
 
         except Exception as e:
             self._connection_attempts += 1
-            self._last_connection_attempt = datetime.now(timezone.utc)
+            self._last_connection_attempt = datetime.now(UTC)
             logger.warning(f"Failed to connect to Redis (attempt {self._connection_attempts}): {e}")
             self._connected = False
             return False
@@ -150,7 +152,7 @@ class DistributedEventDeduplicator:
             self._connected = False
             logger.info("Distributed deduplicator disconnected from Redis")
 
-    async def is_duplicate(self, event: Dict[str, Any], platform: str = "") -> bool:
+    async def is_duplicate(self, event: dict[str, Any], platform: str = "") -> bool:
         """
         Check if an event is a duplicate.
 
@@ -171,7 +173,7 @@ class DistributedEventDeduplicator:
                 # Use SETNX (SET if Not eXists) with TTL for atomic check-and-set
                 result = await self._redis.set(
                     full_key,
-                    datetime.now(timezone.utc).isoformat(),
+                    datetime.now(UTC).isoformat(),
                     nx=True,  # Only set if not exists
                     ex=self._ttl_seconds,  # Expiration in seconds
                 )
@@ -207,7 +209,7 @@ class DistributedEventDeduplicator:
         Returns:
             True if duplicate, False otherwise.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         ttl = timedelta(seconds=self._ttl_seconds)
 
         # Cleanup expired entries periodically
@@ -230,12 +232,11 @@ class DistributedEventDeduplicator:
 
     def _cleanup_memory(self):
         """Remove expired entries from memory cache."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         ttl = timedelta(seconds=self._ttl_seconds)
 
         expired_keys = [
-            key for key, timestamp in self._memory_cache.items()
-            if now - timestamp > ttl
+            key for key, timestamp in self._memory_cache.items() if now - timestamp > ttl
         ]
 
         for key in expired_keys:
@@ -248,7 +249,7 @@ class DistributedEventDeduplicator:
             for key, _ in sorted_items[:to_remove]:
                 del self._memory_cache[key]
 
-    def _generate_key(self, event: Dict[str, Any], platform: str = "") -> str:
+    def _generate_key(self, event: dict[str, Any], platform: str = "") -> str:
         """
         Generate a unique key for an event.
 
@@ -285,7 +286,7 @@ class DistributedEventDeduplicator:
         content = "|".join(str(c) for c in components)
         return hashlib.md5(content.encode()).hexdigest()
 
-    async def mark_as_seen(self, event: Dict[str, Any], platform: str = "") -> bool:
+    async def mark_as_seen(self, event: dict[str, Any], platform: str = "") -> bool:
         """
         Explicitly mark an event as seen without checking duplicate status.
 
@@ -305,7 +306,7 @@ class DistributedEventDeduplicator:
             try:
                 await self._redis.set(
                     full_key,
-                    datetime.now(timezone.utc).isoformat(),
+                    datetime.now(UTC).isoformat(),
                     ex=self._ttl_seconds,
                 )
                 return True
@@ -313,10 +314,10 @@ class DistributedEventDeduplicator:
                 logger.warning(f"Failed to mark event as seen in Redis: {e}")
 
         # Fallback to memory
-        self._memory_cache[event_key] = datetime.now(timezone.utc)
+        self._memory_cache[event_key] = datetime.now(UTC)
         return True
 
-    async def remove(self, event: Dict[str, Any], platform: str = "") -> bool:
+    async def remove(self, event: dict[str, Any], platform: str = "") -> bool:
         """
         Remove an event from the deduplication cache.
 
@@ -346,7 +347,7 @@ class DistributedEventDeduplicator:
 
         return False
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """
         Get deduplication statistics.
 
@@ -376,7 +377,7 @@ class DistributedEventDeduplicator:
         """Reset statistics counters."""
         self._stats = DedupeStats()
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform health check on the deduplicator.
 
@@ -398,7 +399,9 @@ class DistributedEventDeduplicator:
 
             if not connected:
                 health["status"] = "degraded"
-                health["warning"] = "Using in-memory fallback - duplicates may occur across processes"
+                health["warning"] = (
+                    "Using in-memory fallback - duplicates may occur across processes"
+                )
 
         return health
 

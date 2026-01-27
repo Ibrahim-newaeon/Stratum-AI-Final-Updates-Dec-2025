@@ -5,16 +5,15 @@
 Background tasks for pipeline health checks and monitoring.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from app.core.config import settings
 from app.db.session import SyncSessionLocal
-from app.models import Campaign, CampaignMetric, Tenant
-from app.workers.tasks.helpers import publish_event
+from app.models import Campaign, Tenant
 
 logger = get_task_logger(__name__)
 
@@ -31,7 +30,7 @@ def check_pipeline_health():
 
     with SyncSessionLocal() as db:
         # Check for stale campaigns (not synced in 2+ hours)
-        stale_threshold = datetime.now(timezone.utc) - timedelta(hours=2)
+        stale_threshold = datetime.now(UTC) - timedelta(hours=2)
 
         stale_campaigns = (
             db.execute(
@@ -71,10 +70,7 @@ def check_pipeline_health():
                 {
                     "type": "sync_errors",
                     "count": len(error_campaigns),
-                    "errors": [
-                        {"id": c.id, "error": c.sync_error}
-                        for c in error_campaigns[:5]
-                    ],
+                    "errors": [{"id": c.id, "error": c.sync_error} for c in error_campaigns[:5]],
                 }
             )
 
@@ -86,7 +82,7 @@ def check_pipeline_health():
             redis_client.ping()
             redis_status = "healthy"
         except Exception as e:
-            redis_status = f"unhealthy: {str(e)}"
+            redis_status = f"unhealthy: {e!s}"
             issues.append(
                 {
                     "type": "redis_connection",
@@ -96,13 +92,11 @@ def check_pipeline_health():
 
         # Check database health
         try:
-            from app.db.session import check_database_health
-
             # Note: This is async, so we check differently in sync context
             db.execute(select(func.count(Tenant.id)))
             db_status = "healthy"
         except Exception as e:
-            db_status = f"unhealthy: {str(e)}"
+            db_status = f"unhealthy: {e!s}"
             issues.append(
                 {
                     "type": "database_connection",
@@ -112,7 +106,7 @@ def check_pipeline_health():
 
     # Publish health status
     health_status = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "status": "degraded" if issues else "healthy",
         "issues": issues,
         "redis": redis_status,
@@ -124,8 +118,9 @@ def check_pipeline_health():
         logger.warning(f"Pipeline health issues detected: {issues}")
         # Publish to monitoring channel
         try:
-            import redis
             import json
+
+            import redis
 
             redis_client = redis.from_url(settings.redis_url)
             redis_client.publish("monitoring:pipeline_health", json.dumps(health_status))

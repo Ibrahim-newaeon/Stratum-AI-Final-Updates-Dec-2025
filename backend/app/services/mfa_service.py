@@ -15,18 +15,17 @@ import base64
 import hashlib
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
-from typing import Optional, List, Tuple
+from typing import Optional
 
 import pyotp
 import qrcode
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import encrypt_pii, decrypt_pii
+from app.core.security import decrypt_pii, encrypt_pii
 
 logger = get_logger(__name__)
 
@@ -54,9 +53,11 @@ BACKUP_CODE_LENGTH = 8
 # Data Models
 # =============================================================================
 
+
 @dataclass
 class TOTPSetupData:
     """Data for setting up TOTP."""
+
     secret: str
     provisioning_uri: str
     qr_code_base64: str
@@ -65,6 +66,7 @@ class TOTPSetupData:
 @dataclass
 class MFAStatus:
     """Current MFA status for a user."""
+
     enabled: bool
     verified_at: Optional[datetime]
     backup_codes_remaining: int
@@ -75,6 +77,7 @@ class MFAStatus:
 # =============================================================================
 # TOTP Functions
 # =============================================================================
+
 
 def generate_totp_secret() -> str:
     """Generate a new TOTP secret."""
@@ -163,7 +166,8 @@ def verify_totp(secret: str, code: str) -> bool:
 # Backup Codes Functions
 # =============================================================================
 
-def generate_backup_codes() -> List[str]:
+
+def generate_backup_codes() -> list[str]:
     """
     Generate a set of backup codes.
 
@@ -187,7 +191,7 @@ def hash_backup_code(code: str) -> str:
     return hashlib.sha256(normalized.encode()).hexdigest()
 
 
-def verify_backup_code(code: str, hashed_codes: List[str]) -> Tuple[bool, Optional[int]]:
+def verify_backup_code(code: str, hashed_codes: list[str]) -> tuple[bool, Optional[int]]:
     """
     Verify a backup code against stored hashes.
 
@@ -214,6 +218,7 @@ def verify_backup_code(code: str, hashed_codes: List[str]) -> Tuple[bool, Option
 # MFA Service Class
 # =============================================================================
 
+
 class MFAService:
     """Service for managing user MFA."""
 
@@ -224,9 +229,7 @@ class MFAService:
         """Get current MFA status for a user."""
         from app.base_models import User
 
-        result = await self.db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
 
         if not user:
@@ -243,7 +246,7 @@ class MFAService:
         is_locked = False
         lockout_until = user.totp_lockout_until
         if lockout_until:
-            if datetime.now(timezone.utc) < lockout_until:
+            if datetime.now(UTC) < lockout_until:
                 is_locked = True
             else:
                 # Lockout expired, clear it
@@ -303,7 +306,7 @@ class MFAService:
         self,
         user_id: int,
         code: str,
-    ) -> Tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """
         Verify TOTP code and enable MFA.
 
@@ -317,9 +320,7 @@ class MFAService:
         """
         from app.base_models import User
 
-        result = await self.db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
 
         if not user:
@@ -343,7 +344,7 @@ class MFAService:
         hashed_codes = [hash_backup_code(c) for c in backup_codes]
 
         # Enable MFA
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         await self.db.execute(
             update(User)
             .where(User.id == user_id)
@@ -376,9 +377,7 @@ class MFAService:
         """
         from app.base_models import User
 
-        result = await self.db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
 
         if not user:
@@ -413,7 +412,7 @@ class MFAService:
 
         return True
 
-    async def verify_code(self, user_id: int, code: str) -> Tuple[bool, str]:
+    async def verify_code(self, user_id: int, code: str) -> tuple[bool, str]:
         """
         Verify a TOTP or backup code during login.
 
@@ -426,9 +425,7 @@ class MFAService:
         """
         from app.base_models import User
 
-        result = await self.db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
 
         if not user:
@@ -439,8 +436,8 @@ class MFAService:
 
         # Check lockout
         if user.totp_lockout_until:
-            if datetime.now(timezone.utc) < user.totp_lockout_until:
-                remaining = (user.totp_lockout_until - datetime.now(timezone.utc)).seconds // 60
+            if datetime.now(UTC) < user.totp_lockout_until:
+                remaining = (user.totp_lockout_until - datetime.now(UTC)).seconds // 60
                 return False, f"Account locked. Try again in {remaining} minutes."
 
         # Verify code
@@ -464,7 +461,7 @@ class MFAService:
             lockout_until = None
 
             if new_attempts >= MAX_FAILED_ATTEMPTS:
-                lockout_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+                lockout_until = datetime.now(UTC) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
                 logger.warning("mfa_account_locked", user_id=user_id)
 
             await self.db.execute(
@@ -478,12 +475,15 @@ class MFAService:
             await self.db.commit()
 
             if lockout_until:
-                return False, f"Too many failed attempts. Account locked for {LOCKOUT_DURATION_MINUTES} minutes."
+                return (
+                    False,
+                    f"Too many failed attempts. Account locked for {LOCKOUT_DURATION_MINUTES} minutes.",
+                )
 
             remaining = MAX_FAILED_ATTEMPTS - new_attempts
             return False, f"Invalid code. {remaining} attempts remaining."
 
-    async def regenerate_backup_codes(self, user_id: int, code: str) -> Tuple[bool, List[str]]:
+    async def regenerate_backup_codes(self, user_id: int, code: str) -> tuple[bool, list[str]]:
         """
         Regenerate backup codes (requires valid TOTP code).
 
@@ -496,9 +496,7 @@ class MFAService:
         """
         from app.base_models import User
 
-        result = await self.db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
 
         if not user:
@@ -517,9 +515,7 @@ class MFAService:
         hashed_codes = [hash_backup_code(c) for c in backup_codes]
 
         await self.db.execute(
-            update(User)
-            .where(User.id == user_id)
-            .values(backup_codes={"codes": hashed_codes})
+            update(User).where(User.id == user_id).values(backup_codes={"codes": hashed_codes})
         )
         await self.db.commit()
 
@@ -569,28 +565,25 @@ class MFAService:
 # Convenience Functions
 # =============================================================================
 
+
 async def check_mfa_required(db: AsyncSession, user_id: int) -> bool:
     """Check if MFA verification is required for login."""
     from app.base_models import User
 
-    result = await db.execute(
-        select(User.totp_enabled).where(User.id == user_id)
-    )
+    result = await db.execute(select(User.totp_enabled).where(User.id == user_id))
     totp_enabled = result.scalar_one_or_none()
 
     return bool(totp_enabled)
 
 
-async def is_user_locked(db: AsyncSession, user_id: int) -> Tuple[bool, Optional[datetime]]:
+async def is_user_locked(db: AsyncSession, user_id: int) -> tuple[bool, Optional[datetime]]:
     """Check if user is locked out from MFA attempts."""
     from app.base_models import User
 
-    result = await db.execute(
-        select(User.totp_lockout_until).where(User.id == user_id)
-    )
+    result = await db.execute(select(User.totp_lockout_until).where(User.id == user_id))
     lockout_until = result.scalar_one_or_none()
 
-    if lockout_until and datetime.now(timezone.utc) < lockout_until:
+    if lockout_until and datetime.now(UTC) < lockout_until:
         return True, lockout_until
 
     return False, None

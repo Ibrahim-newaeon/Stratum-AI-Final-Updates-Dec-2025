@@ -82,7 +82,7 @@ Usage Examples:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Any
 
 logger = logging.getLogger("stratum.mcp")
 
@@ -101,10 +101,10 @@ MCP_TOOLS = [
                 "platform": {
                     "type": "string",
                     "enum": ["meta", "google", "tiktok", "snapchat", "all"],
-                    "description": "Filter by platform or 'all' for all platforms"
+                    "description": "Filter by platform or 'all' for all platforms",
                 }
-            }
-        }
+            },
+        },
     },
     {
         "name": "get_campaigns",
@@ -115,20 +115,17 @@ MCP_TOOLS = [
                 "platform": {
                     "type": "string",
                     "enum": ["meta", "google", "tiktok", "snapchat"],
-                    "description": "Advertising platform"
+                    "description": "Advertising platform",
                 },
-                "account_id": {
-                    "type": "string",
-                    "description": "Account ID"
-                },
+                "account_id": {"type": "string", "description": "Account ID"},
                 "status": {
                     "type": "string",
                     "enum": ["active", "paused", "all"],
-                    "description": "Filter by status"
-                }
+                    "description": "Filter by status",
+                },
             },
-            "required": ["platform", "account_id"]
-        }
+            "required": ["platform", "account_id"],
+        },
     },
     {
         "name": "get_campaign_metrics",
@@ -136,26 +133,21 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {
-                    "type": "string",
-                    "enum": ["meta", "google", "tiktok", "snapchat"]
-                },
-                "account_id": {
-                    "type": "string"
-                },
+                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "account_id": {"type": "string"},
                 "campaign_ids": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Campaign IDs to get metrics for"
+                    "description": "Campaign IDs to get metrics for",
                 },
                 "date_range": {
                     "type": "string",
                     "enum": ["today", "yesterday", "last_7_days", "last_30_days", "this_month"],
-                    "description": "Date range for metrics"
-                }
+                    "description": "Date range for metrics",
+                },
             },
-            "required": ["platform", "account_id", "campaign_ids"]
-        }
+            "required": ["platform", "account_id", "campaign_ids"],
+        },
     },
     {
         "name": "get_signal_health",
@@ -163,20 +155,12 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {
-                    "type": "string",
-                    "enum": ["meta", "google", "tiktok", "snapchat"]
-                },
-                "account_id": {
-                    "type": "string"
-                },
-                "campaign_id": {
-                    "type": "string",
-                    "description": "Optional: specific campaign"
-                }
+                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "account_id": {"type": "string"},
+                "campaign_id": {"type": "string", "description": "Optional: specific campaign"},
             },
-            "required": ["platform", "account_id"]
-        }
+            "required": ["platform", "account_id"],
+        },
     },
     {
         "name": "get_emq_scores",
@@ -184,16 +168,11 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {
-                    "type": "string",
-                    "enum": ["meta", "google", "tiktok", "snapchat"]
-                },
-                "account_id": {
-                    "type": "string"
-                }
+                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "account_id": {"type": "string"},
             },
-            "required": ["platform", "account_id"]
-        }
+            "required": ["platform", "account_id"],
+        },
     },
     {
         "name": "get_optimization_suggestions",
@@ -203,22 +182,19 @@ MCP_TOOLS = [
             "properties": {
                 "platform": {
                     "type": "string",
-                    "enum": ["meta", "google", "tiktok", "snapchat", "all"]
+                    "enum": ["meta", "google", "tiktok", "snapchat", "all"],
                 },
-                "account_id": {
-                    "type": "string",
-                    "description": "Optional: specific account"
-                },
+                "account_id": {"type": "string", "description": "Optional: specific account"},
                 "suggestion_types": {
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["budget", "bid", "creative", "audience", "emq"]
+                        "enum": ["budget", "bid", "creative", "audience", "emq"],
                     },
-                    "description": "Types of suggestions to include"
-                }
-            }
-        }
+                    "description": "Types of suggestions to include",
+                },
+            },
+        },
     },
     {
         "name": "check_trust_gate",
@@ -226,25 +202,19 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {
-                    "type": "string",
-                    "enum": ["meta", "google", "tiktok", "snapchat"]
-                },
+                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
                 "action_type": {
                     "type": "string",
-                    "enum": ["update_budget", "update_bid", "update_status", "create_campaign"]
+                    "enum": ["update_budget", "update_bid", "update_status", "create_campaign"],
                 },
-                "entity_id": {
-                    "type": "string",
-                    "description": "Campaign or ad set ID"
-                },
+                "entity_id": {"type": "string", "description": "Campaign or ad set ID"},
                 "parameters": {
                     "type": "object",
-                    "description": "Action parameters (e.g., {new_budget: 1000})"
-                }
+                    "description": "Action parameters (e.g., {new_budget: 1000})",
+                },
             },
-            "required": ["platform", "action_type", "entity_id"]
-        }
+            "required": ["platform", "action_type", "entity_id"],
+        },
     },
     {
         "name": "execute_action",
@@ -252,32 +222,21 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {
-                    "type": "string",
-                    "enum": ["meta", "google", "tiktok", "snapchat"]
-                },
+                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
                 "action_type": {
                     "type": "string",
-                    "enum": ["update_budget", "update_bid", "update_status"]
+                    "enum": ["update_budget", "update_bid", "update_status"],
                 },
-                "entity_type": {
-                    "type": "string",
-                    "enum": ["campaign", "adset", "ad"]
-                },
-                "entity_id": {
-                    "type": "string"
-                },
-                "parameters": {
-                    "type": "object",
-                    "description": "Action parameters"
-                },
+                "entity_type": {"type": "string", "enum": ["campaign", "adset", "ad"]},
+                "entity_id": {"type": "string"},
+                "parameters": {"type": "object", "description": "Action parameters"},
                 "reason": {
                     "type": "string",
-                    "description": "Reason for the action (for audit trail)"
-                }
+                    "description": "Reason for the action (for audit trail)",
+                },
             },
-            "required": ["platform", "action_type", "entity_type", "entity_id", "parameters"]
-        }
+            "required": ["platform", "action_type", "entity_type", "entity_id", "parameters"],
+        },
     },
     {
         "name": "track_conversion",
@@ -287,36 +246,27 @@ MCP_TOOLS = [
             "properties": {
                 "event_type": {
                     "type": "string",
-                    "enum": ["purchase", "lead", "add_to_cart", "view_content", "initiate_checkout"]
+                    "enum": [
+                        "purchase",
+                        "lead",
+                        "add_to_cart",
+                        "view_content",
+                        "initiate_checkout",
+                    ],
                 },
-                "value": {
-                    "type": "number",
-                    "description": "Conversion value"
-                },
-                "currency": {
-                    "type": "string",
-                    "description": "Currency code (USD, SAR, etc.)"
-                },
-                "order_id": {
-                    "type": "string",
-                    "description": "Order/transaction ID"
-                },
-                "user_email": {
-                    "type": "string",
-                    "description": "Customer email (for matching)"
-                },
-                "user_phone": {
-                    "type": "string",
-                    "description": "Customer phone (for matching)"
-                },
+                "value": {"type": "number", "description": "Conversion value"},
+                "currency": {"type": "string", "description": "Currency code (USD, SAR, etc.)"},
+                "order_id": {"type": "string", "description": "Order/transaction ID"},
+                "user_email": {"type": "string", "description": "Customer email (for matching)"},
+                "user_phone": {"type": "string", "description": "Customer phone (for matching)"},
                 "platforms": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Platforms to send to (default: all)"
-                }
+                    "description": "Platforms to send to (default: all)",
+                },
             },
-            "required": ["event_type", "value", "currency"]
-        }
+            "required": ["event_type", "value", "currency"],
+        },
     },
     {
         "name": "send_whatsapp_message",
@@ -324,25 +274,16 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "to": {
-                    "type": "string",
-                    "description": "Recipient phone number (E.164 format)"
-                },
-                "message_type": {
-                    "type": "string",
-                    "enum": ["text", "template", "interactive"]
-                },
-                "content": {
-                    "type": "string",
-                    "description": "Message content or template name"
-                },
+                "to": {"type": "string", "description": "Recipient phone number (E.164 format)"},
+                "message_type": {"type": "string", "enum": ["text", "template", "interactive"]},
+                "content": {"type": "string", "description": "Message content or template name"},
                 "template_params": {
                     "type": "object",
-                    "description": "Template parameters if using template"
-                }
+                    "description": "Template parameters if using template",
+                },
             },
-            "required": ["to", "message_type", "content"]
-        }
+            "required": ["to", "message_type", "content"],
+        },
     },
     {
         "name": "get_whatsapp_conversations",
@@ -350,23 +291,18 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "limit": {
-                    "type": "integer",
-                    "description": "Number of conversations to return"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": ["active", "converted", "all"]
-                }
-            }
-        }
-    }
+                "limit": {"type": "integer", "description": "Number of conversations to return"},
+                "status": {"type": "string", "enum": ["active", "converted", "all"]},
+            },
+        },
+    },
 ]
 
 
 # =============================================================================
 # MCP SERVER IMPLEMENTATION
 # =============================================================================
+
 
 class StratumMCPServer:
     """
@@ -384,7 +320,7 @@ class StratumMCPServer:
         # Register tools with your MCP router
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize MCP server with Stratum configuration.
 
@@ -400,12 +336,15 @@ class StratumMCPServer:
     async def initialize(self):
         """Initialize adapters and core components."""
         from app.stratum.adapters import (
-            MetaAdapter, GoogleAdsAdapter, TikTokAdapter,
-            SnapchatAdapter, WhatsAppAdapter
+            GoogleAdsAdapter,
+            MetaAdapter,
+            SnapchatAdapter,
+            TikTokAdapter,
+            WhatsAppAdapter,
         )
-        from app.stratum.events import UnifiedEventsAPI
-        from app.stratum.core.trust_gate import TrustGate
         from app.stratum.core.signal_health import SignalHealthCalculator
+        from app.stratum.core.trust_gate import TrustGate
+        from app.stratum.events import UnifiedEventsAPI
 
         # Initialize adapters based on config
         if self.config.get("meta"):
@@ -439,15 +378,11 @@ class StratumMCPServer:
         self._initialized = True
         logger.info(f"Stratum MCP Server initialized with {len(self._adapters)} adapters")
 
-    def get_tools(self) -> List[Dict[str, Any]]:
+    def get_tools(self) -> list[dict[str, Any]]:
         """Get MCP tool definitions."""
         return MCP_TOOLS
 
-    async def handle_tool_call(
-        self,
-        tool_name: str,
-        arguments: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def handle_tool_call(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """
         Handle an MCP tool call.
 
@@ -490,7 +425,7 @@ class StratumMCPServer:
     # TOOL HANDLERS
     # =========================================================================
 
-    async def _handle_get_accounts(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_accounts(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_accounts tool call."""
         platform = args.get("platform", "all")
         accounts = {}
@@ -509,7 +444,7 @@ class StratumMCPServer:
 
         return {"accounts": accounts}
 
-    async def _handle_get_campaigns(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_campaigns(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_campaigns tool call."""
         platform = args["platform"]
         account_id = args["account_id"]
@@ -520,17 +455,16 @@ class StratumMCPServer:
 
         status_filter = None if status == "all" else status.upper()
         campaigns = await self._adapters[platform].get_campaigns(
-            account_id,
-            status_filter=status_filter
+            account_id, status_filter=status_filter
         )
 
         return {
             "platform": platform,
             "account_id": account_id,
-            "campaigns": [c.__dict__ for c in campaigns]
+            "campaigns": [c.__dict__ for c in campaigns],
         }
 
-    async def _handle_get_metrics(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_metrics(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_campaign_metrics tool call."""
         platform = args["platform"]
         account_id = args["account_id"]
@@ -556,16 +490,12 @@ class StratumMCPServer:
             entity_type="campaign",
             entity_ids=campaign_ids,
             date_start=start_date,
-            date_end=end_date
+            date_end=end_date,
         )
 
-        return {
-            "platform": platform,
-            "date_range": date_range,
-            "metrics": metrics
-        }
+        return {"platform": platform, "date_range": date_range, "metrics": metrics}
 
-    async def _handle_get_signal_health(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_signal_health(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_signal_health tool call."""
         platform = args["platform"]
         account_id = args["account_id"]
@@ -584,18 +514,18 @@ class StratumMCPServer:
                     "emq_score": 82,
                     "data_freshness": 95,
                     "variance_stability": 65,
-                    "anomaly_score": 70
+                    "anomaly_score": 70,
                 },
                 "trust_gate_status": "HEALTHY",
                 "autopilot_allowed": True,
                 "recommendations": [
                     "Consider implementing CAPI for higher EMQ",
-                    "Review variance in last 3 days"
-                ]
-            }
+                    "Review variance in last 3 days",
+                ],
+            },
         }
 
-    async def _handle_get_emq(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_emq(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_emq_scores tool call."""
         platform = args["platform"]
         account_id = args["account_id"]
@@ -609,15 +539,10 @@ class StratumMCPServer:
             "platform": platform,
             "account_id": account_id,
             "emq_scores": emq_scores,
-            "targets": {
-                "Purchase": 8.5,
-                "AddToCart": 6.0,
-                "ViewContent": 4.0,
-                "Lead": 7.0
-            }
+            "targets": {"Purchase": 8.5, "AddToCart": 6.0, "ViewContent": 4.0, "Lead": 7.0},
         }
 
-    async def _handle_get_suggestions(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_suggestions(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_optimization_suggestions tool call."""
         # This would analyze account data and generate suggestions
         # For now, return sample suggestions
@@ -633,7 +558,7 @@ class StratumMCPServer:
                     "reason": "ROAS of 4.2x exceeds target of 3.0x",
                     "expected_impact": "+$2,500 revenue",
                     "confidence": "high",
-                    "trust_gate_status": "WOULD_APPROVE"
+                    "trust_gate_status": "WOULD_APPROVE",
                 },
                 {
                     "type": "emq",
@@ -641,7 +566,7 @@ class StratumMCPServer:
                     "recommendation": "Implement server-side tracking for AddToCart events",
                     "reason": "Current EMQ: 4.8, Target: 6.0",
                     "expected_impact": "+15% attributed conversions",
-                    "confidence": "high"
+                    "confidence": "high",
                 },
                 {
                     "type": "bid",
@@ -651,12 +576,12 @@ class StratumMCPServer:
                     "reason": "Manual CPC underperforming vs algorithmic bidding",
                     "expected_impact": "+18% conversions at same spend",
                     "confidence": "medium",
-                    "trust_gate_status": "WOULD_QUEUE"
-                }
+                    "trust_gate_status": "WOULD_QUEUE",
+                },
             ]
         }
 
-    async def _handle_check_trust_gate(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_check_trust_gate(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle check_trust_gate tool call."""
         platform = args["platform"]
         action_type = args["action_type"]
@@ -674,11 +599,11 @@ class StratumMCPServer:
                 "signal_health_score": 82,
                 "threshold": 70,
                 "reason": "Signal health above threshold",
-                "warnings": []
-            }
+                "warnings": [],
+            },
         }
 
-    async def _handle_execute_action(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_execute_action(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle execute_action tool call."""
         platform = args["platform"]
         action_type = args["action_type"]
@@ -698,7 +623,7 @@ class StratumMCPServer:
             entity_type=entity_type,
             entity_id=entity_id,
             action_type=action_type,
-            parameters=parameters
+            parameters=parameters,
         )
 
         # Execute through adapter
@@ -709,10 +634,10 @@ class StratumMCPServer:
             "action_id": result.action_id,
             "status": result.status,
             "result": result.result,
-            "error": result.error_message if result.status == "failed" else None
+            "error": result.error_message if result.status == "failed" else None,
         }
 
-    async def _handle_track_conversion(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_track_conversion(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle track_conversion tool call."""
         from app.stratum.events import ServerEvent, StandardEvent, UserData
 
@@ -726,13 +651,10 @@ class StratumMCPServer:
 
         event = ServerEvent(
             event_name=event_type_map.get(args["event_type"], StandardEvent.PURCHASE),
-            user_data=UserData(
-                email=args.get("user_email"),
-                phone=args.get("user_phone")
-            ),
+            user_data=UserData(email=args.get("user_email"), phone=args.get("user_phone")),
             value=args["value"],
             currency=args["currency"],
-            order_id=args.get("order_id")
+            order_id=args.get("order_id"),
         )
 
         # Would send through events API
@@ -740,10 +662,10 @@ class StratumMCPServer:
             "event_id": event.event_id,
             "event_type": args["event_type"],
             "platforms_sent": args.get("platforms", ["meta", "google", "tiktok", "snapchat"]),
-            "status": "sent"
+            "status": "sent",
         }
 
-    async def _handle_send_whatsapp(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_send_whatsapp(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle send_whatsapp_message tool call."""
         if "whatsapp" not in self._adapters:
             return {"error": "WhatsApp not configured"}
@@ -759,32 +681,26 @@ class StratumMCPServer:
             result = await adapter.send_template_message(
                 to,
                 content,  # template name
-                components=args.get("template_params", {}).get("components")
+                components=args.get("template_params", {}).get("components"),
             )
         else:
             return {"error": f"Unsupported message type: {message_type}"}
 
-        return {
-            "message_id": result.message_id,
-            "status": result.status.value,
-            "to": to
-        }
+        return {"message_id": result.message_id, "status": result.status.value, "to": to}
 
-    async def _handle_get_whatsapp_conversations(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_get_whatsapp_conversations(self, args: dict[str, Any]) -> dict[str, Any]:
         """Handle get_whatsapp_conversations tool call."""
         if "whatsapp" not in self._adapters:
             return {"error": "WhatsApp not configured"}
 
         # Would return actual conversation data
-        return {
-            "conversations": [],
-            "total": 0
-        }
+        return {"conversations": [], "total": 0}
 
 
 # =============================================================================
 # MCP SERVER RUNNER (For FastMCP or custom MCP implementation)
 # =============================================================================
+
 
 def create_mcp_server(config_path: str = "config.yaml"):
     """
@@ -808,7 +724,7 @@ def create_mcp_server(config_path: str = "config.yaml"):
     """
     import yaml
 
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
 
     return StratumMCPServer(config)

@@ -3,16 +3,16 @@
  * UI for creating and managing computed traits
  */
 
-import { useState } from 'react'
-import { Plus, Trash2, RefreshCw, Activity, Calculator, Clock, Hash } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState } from 'react';
+import { Activity, Calculator, Clock, Hash, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
+  CDPComputedTrait,
+  ComputedTraitCreate,
   useComputedTraits,
   useCreateComputedTrait,
   useDeleteComputedTrait,
-  ComputedTraitCreate,
-  CDPComputedTrait,
-} from '@/api/cdp'
+} from '@/api/cdp';
 
 const TRAIT_TYPES = [
   { value: 'count', label: 'Count', icon: Hash, description: 'Count of events' },
@@ -24,25 +24,25 @@ const TRAIT_TYPES = [
   { value: 'last', label: 'Last', icon: Clock, description: 'Most recent occurrence' },
   { value: 'unique_count', label: 'Unique Count', icon: Hash, description: 'Count unique values' },
   { value: 'exists', label: 'Exists', icon: Activity, description: 'Boolean if exists' },
-]
+];
 
 const OUTPUT_TYPES = [
   { value: 'number', label: 'Number' },
   { value: 'string', label: 'Text' },
   { value: 'boolean', label: 'Boolean' },
   { value: 'date', label: 'Date' },
-]
+];
 
 interface TraitFormData {
-  name: string
-  display_name: string
-  description: string
-  trait_type: string
-  output_type: string
-  event_name: string
-  property: string
-  time_window_days: number | null
-  default_value: string
+  name: string;
+  display_name: string;
+  description: string;
+  trait_type: string;
+  output_type: string;
+  event_name: string;
+  property: string;
+  time_window_days: number | null;
+  default_value: string;
 }
 
 const initialFormData: TraitFormData = {
@@ -55,21 +55,21 @@ const initialFormData: TraitFormData = {
   property: '',
   time_window_days: null,
   default_value: '',
-}
+};
 
 export function ComputedTraitBuilder() {
-  const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState<TraitFormData>(initialFormData)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState<TraitFormData>(initialFormData);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: traitsData, isLoading, refetch } = useComputedTraits({ active_only: false })
-  const createMutation = useCreateComputedTrait()
-  const deleteMutation = useDeleteComputedTrait()
+  const { data: traitsData, isLoading, refetch } = useComputedTraits({ active_only: false });
+  const createMutation = useCreateComputedTrait();
+  const deleteMutation = useDeleteComputedTrait();
 
-  const traits = traitsData?.traits || []
+  const traits = traitsData?.traits || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     const traitCreate: ComputedTraitCreate = {
       name: formData.name.toLowerCase().replace(/\s+/g, '_'),
@@ -83,31 +83,31 @@ export function ComputedTraitBuilder() {
         time_window_days: formData.time_window_days || undefined,
       },
       default_value: formData.default_value || undefined,
-    }
+    };
 
     try {
-      await createMutation.mutateAsync(traitCreate)
-      setFormData(initialFormData)
-      setShowForm(false)
+      await createMutation.mutateAsync(traitCreate);
+      setFormData(initialFormData);
+      setShowForm(false);
     } catch (error) {
-      console.error('Failed to create trait:', error)
+      console.error('Failed to create trait:', error);
     }
-  }
+  };
 
   const handleDelete = async (traitId: string) => {
-    setDeletingId(traitId)
+    setDeletingId(traitId);
     try {
-      await deleteMutation.mutateAsync(traitId)
+      await deleteMutation.mutateAsync(traitId);
     } catch (error) {
-      console.error('Failed to delete trait:', error)
+      console.error('Failed to delete trait:', error);
     } finally {
-      setDeletingId(null)
+      setDeletingId(null);
     }
-  }
+  };
 
   const getTraitTypeInfo = (type: string) => {
-    return TRAIT_TYPES.find((t) => t.value === type) || TRAIT_TYPES[0]
-  }
+    return TRAIT_TYPES.find((t) => t.value === type) || TRAIT_TYPES[0];
+  };
 
   return (
     <div className="space-y-6">
@@ -228,7 +228,9 @@ export function ComputedTraitBuilder() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Property (for aggregations)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Property (for aggregations)
+                  </label>
                   <input
                     type="text"
                     value={formData.property}
@@ -272,8 +274,8 @@ export function ComputedTraitBuilder() {
               <button
                 type="button"
                 onClick={() => {
-                  setShowForm(false)
-                  setFormData(initialFormData)
+                  setShowForm(false);
+                  setFormData(initialFormData);
                 }}
                 className="px-4 py-2 rounded-lg border hover:bg-muted"
               >
@@ -305,8 +307,8 @@ export function ComputedTraitBuilder() {
       ) : (
         <div className="grid gap-4">
           {traits.map((trait: CDPComputedTrait) => {
-            const typeInfo = getTraitTypeInfo(trait.trait_type)
-            const TypeIcon = typeInfo.icon
+            const typeInfo = getTraitTypeInfo(trait.trait_type);
+            const TypeIcon = typeInfo.icon;
 
             return (
               <div
@@ -359,7 +361,9 @@ export function ComputedTraitBuilder() {
                   <span
                     className={cn(
                       'px-2 py-1 rounded-full text-xs',
-                      trait.is_active ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'
+                      trait.is_active
+                        ? 'bg-green-500/10 text-green-600'
+                        : 'bg-muted text-muted-foreground'
                     )}
                   >
                     {trait.is_active ? 'Active' : 'Inactive'}
@@ -372,10 +376,10 @@ export function ComputedTraitBuilder() {
                   </p>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }

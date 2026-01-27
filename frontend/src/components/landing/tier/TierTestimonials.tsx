@@ -1,4 +1,4 @@
-import { StarIcon, BuildingOffice2Icon, UsersIcon } from '@heroicons/react/24/solid';
+import { BuildingOffice2Icon, StarIcon, UsersIcon } from '@heroicons/react/24/solid';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { TierContent, TierTestimonial } from '@/config/tierLandingContent';
@@ -22,7 +22,7 @@ function TestimonialCard({
         {/* Stars */}
         <div className="flex gap-1 mb-4">
           {[1, 2, 3, 4, 5].map((star) => (
-            <StarIcon key={star} className={`w-4 h-4 text-amber-400`} />
+            <StarIcon key={star} className="w-4 h-4 text-amber-400" />
           ))}
         </div>
 
@@ -35,7 +35,9 @@ function TestimonialCard({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             {/* Avatar placeholder */}
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-white font-bold text-lg`}>
+            <div
+              className={`w-12 h-12 rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-white font-bold text-lg`}
+            >
               {testimonial.author.charAt(0)}
             </div>
             <div>
@@ -54,7 +56,9 @@ function TestimonialCard({
           {/* Metric Badge */}
           {testimonial.metric && (
             <div className="text-right">
-              <div className={`text-xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+              <div
+                className={`text-xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+              >
                 {testimonial.metric.value}
               </div>
               <div className="text-xs text-gray-500">{testimonial.metric.label}</div>
@@ -87,8 +91,8 @@ export function TierTestimonials({ content }: TierTestimonialsProps) {
             Loved by{' '}
             <span className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
               {name}
-            </span>
-            {' '}customers
+            </span>{' '}
+            customers
           </h2>
           <p className="text-lg text-gray-400 max-w-xl mx-auto">
             See how teams like yours are getting results with Stratum AI.
@@ -96,13 +100,11 @@ export function TierTestimonials({ content }: TierTestimonialsProps) {
         </div>
 
         {/* Testimonials Grid */}
-        <div className={`grid gap-6 ${testimonials.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
+        <div
+          className={`grid gap-6 ${testimonials.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}
+        >
           {testimonials.map((testimonial, index) => (
-            <TestimonialCard
-              key={index}
-              testimonial={testimonial}
-              visuals={visuals}
-            />
+            <TestimonialCard key={index} testimonial={testimonial} visuals={visuals} />
           ))}
         </div>
 
@@ -114,7 +116,9 @@ export function TierTestimonials({ content }: TierTestimonialsProps) {
             { value: '4.2x', label: 'Average ROAS' },
           ].map((stat, i) => (
             <div key={i} className="text-center">
-              <div className={`text-3xl md:text-4xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+              <div
+                className={`text-3xl md:text-4xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+              >
                 {stat.value}
               </div>
               <div className="text-sm text-gray-500 mt-1">{stat.label}</div>

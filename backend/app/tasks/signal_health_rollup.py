@@ -6,17 +6,16 @@ Celery task for daily signal health rollup.
 Aggregates platform metrics and calculates health status for each tenant.
 """
 
-from datetime import date, datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
 import logging
+from datetime import UTC, date, datetime, timedelta
+from typing import Any, Optional
 
 from celery import shared_task
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
 from app.models.trust_layer import FactSignalHealthDaily, SignalHealthStatus
-
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +53,7 @@ PLATFORMS = ["meta", "google", "tiktok", "snapchat"]
 # Helper Functions
 # =============================================================================
 
+
 def determine_status(
     emq_score: Optional[float],
     event_loss_pct: Optional[float],
@@ -66,30 +66,43 @@ def determine_status(
     Returns the worst status among all metrics.
     """
     # Check critical thresholds
-    if any([
-        emq_score is not None and emq_score < THRESHOLDS["critical"]["emq_score_below"],
-        event_loss_pct is not None and event_loss_pct > THRESHOLDS["critical"]["event_loss_above"],
-        freshness_minutes is not None and freshness_minutes > THRESHOLDS["critical"]["freshness_above"],
-        api_error_rate is not None and api_error_rate > THRESHOLDS["critical"]["api_error_above"],
-    ]):
+    if any(
+        [
+            emq_score is not None and emq_score < THRESHOLDS["critical"]["emq_score_below"],
+            event_loss_pct is not None
+            and event_loss_pct > THRESHOLDS["critical"]["event_loss_above"],
+            freshness_minutes is not None
+            and freshness_minutes > THRESHOLDS["critical"]["freshness_above"],
+            api_error_rate is not None
+            and api_error_rate > THRESHOLDS["critical"]["api_error_above"],
+        ]
+    ):
         return SignalHealthStatus.CRITICAL
 
     # Check degraded thresholds
-    if any([
-        emq_score is not None and emq_score < THRESHOLDS["degraded"]["emq_score_below"],
-        event_loss_pct is not None and event_loss_pct > THRESHOLDS["degraded"]["event_loss_above"],
-        freshness_minutes is not None and freshness_minutes > THRESHOLDS["degraded"]["freshness_above"],
-        api_error_rate is not None and api_error_rate > THRESHOLDS["degraded"]["api_error_above"],
-    ]):
+    if any(
+        [
+            emq_score is not None and emq_score < THRESHOLDS["degraded"]["emq_score_below"],
+            event_loss_pct is not None
+            and event_loss_pct > THRESHOLDS["degraded"]["event_loss_above"],
+            freshness_minutes is not None
+            and freshness_minutes > THRESHOLDS["degraded"]["freshness_above"],
+            api_error_rate is not None
+            and api_error_rate > THRESHOLDS["degraded"]["api_error_above"],
+        ]
+    ):
         return SignalHealthStatus.DEGRADED
 
     # Check risk thresholds
-    if any([
-        emq_score is not None and emq_score < THRESHOLDS["risk"]["emq_score_below"],
-        event_loss_pct is not None and event_loss_pct > THRESHOLDS["risk"]["event_loss_above"],
-        freshness_minutes is not None and freshness_minutes > THRESHOLDS["risk"]["freshness_above"],
-        api_error_rate is not None and api_error_rate > THRESHOLDS["risk"]["api_error_above"],
-    ]):
+    if any(
+        [
+            emq_score is not None and emq_score < THRESHOLDS["risk"]["emq_score_below"],
+            event_loss_pct is not None and event_loss_pct > THRESHOLDS["risk"]["event_loss_above"],
+            freshness_minutes is not None
+            and freshness_minutes > THRESHOLDS["risk"]["freshness_above"],
+            api_error_rate is not None and api_error_rate > THRESHOLDS["risk"]["api_error_above"],
+        ]
+    ):
         return SignalHealthStatus.RISK
 
     return SignalHealthStatus.OK
@@ -100,7 +113,7 @@ def generate_issues(
     event_loss_pct: Optional[float],
     freshness_minutes: Optional[int],
     api_error_rate: Optional[float],
-) -> List[str]:
+) -> list[str]:
     """Generate list of issues based on metrics."""
     issues = []
 
@@ -125,7 +138,7 @@ def generate_actions(
     freshness_minutes: Optional[int],
     api_error_rate: Optional[float],
     platform: str,
-) -> List[str]:
+) -> list[str]:
     """Generate recommended actions based on metrics."""
     actions = []
 
@@ -152,6 +165,7 @@ def generate_actions(
 # Main Task
 # =============================================================================
 
+
 @shared_task(
     name="tasks.signal_health_rollup",
     bind=True,
@@ -174,9 +188,15 @@ def signal_health_rollup(self, tenant_id: Optional[int] = None, target_date: Opt
     async def run_rollup():
         async with async_session_factory() as db:
             try:
-                rollup_date = date.fromisoformat(target_date) if target_date else date.today() - timedelta(days=1)
+                rollup_date = (
+                    date.fromisoformat(target_date)
+                    if target_date
+                    else date.today() - timedelta(days=1)
+                )
 
-                logger.info(f"Starting signal health rollup for date={rollup_date}, tenant_id={tenant_id}")
+                logger.info(
+                    f"Starting signal health rollup for date={rollup_date}, tenant_id={tenant_id}"
+                )
 
                 # Get list of tenants to process
                 if tenant_id:
@@ -185,9 +205,8 @@ def signal_health_rollup(self, tenant_id: Optional[int] = None, target_date: Opt
                     # Get all active tenants with platform connections
                     # For now, we'll use a placeholder - in production, query dim_tenant
                     from app.models.tenant import Tenant
-                    result = await db.execute(
-                        select(Tenant.id).where(Tenant.is_active == True)
-                    )
+
+                    result = await db.execute(select(Tenant.id).where(Tenant.is_active == True))
                     tenant_ids = [row[0] for row in result.all()]
 
                 records_created = 0
@@ -248,7 +267,7 @@ def signal_health_rollup(self, tenant_id: Optional[int] = None, target_date: Opt
                             existing_record.status = status
                             existing_record.issues = json.dumps(issues) if issues else None
                             existing_record.actions = json.dumps(actions) if actions else None
-                            existing_record.updated_at = datetime.now(timezone.utc)
+                            existing_record.updated_at = datetime.now(UTC)
                         else:
                             # Create new record
                             record = FactSignalHealthDaily(
@@ -268,7 +287,9 @@ def signal_health_rollup(self, tenant_id: Optional[int] = None, target_date: Opt
 
                 await db.commit()
 
-                logger.info(f"Signal health rollup completed: {records_created} records created/updated")
+                logger.info(
+                    f"Signal health rollup completed: {records_created} records created/updated"
+                )
 
                 return {
                     "status": "success",
@@ -277,7 +298,7 @@ def signal_health_rollup(self, tenant_id: Optional[int] = None, target_date: Opt
                 }
 
             except Exception as e:
-                logger.error(f"Signal health rollup failed: {str(e)}")
+                logger.error(f"Signal health rollup failed: {e!s}")
                 await db.rollback()
                 raise self.retry(exc=e)
 
@@ -289,7 +310,7 @@ async def fetch_platform_metrics(
     tenant_id: int,
     platform: str,
     target_date: date,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[dict[str, Any]]:
     """
     Fetch platform metrics for signal health calculation.
 
@@ -321,7 +342,7 @@ async def fetch_platform_metrics(
     # Calculate freshness from last sync
     freshness_minutes = None
     if connection.last_sync_at:
-        delta = datetime.now(timezone.utc) - connection.last_sync_at.replace(tzinfo=timezone.utc)
+        delta = datetime.now(UTC) - connection.last_sync_at.replace(tzinfo=UTC)
         freshness_minutes = int(delta.total_seconds() / 60)
 
     # In production, these would be calculated from actual data
@@ -337,6 +358,7 @@ async def fetch_platform_metrics(
 # =============================================================================
 # Scheduled Task Registration
 # =============================================================================
+
 
 @shared_task(name="tasks.schedule_signal_health_rollup")
 def schedule_signal_health_rollup():

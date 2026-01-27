@@ -5,66 +5,66 @@
  * Supports Meta, Google, TikTok, and Snapchat platforms.
  */
 
-import { useState, useCallback, useRef, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ChevronRightIcon,
-  ChevronLeftIcon,
   CheckIcon,
-  SparklesIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CloudArrowUpIcon,
   ExclamationTriangleIcon,
   PhotoIcon,
+  SparklesIcon,
   VideoCameraIcon,
   XMarkIcon,
-  CloudArrowUpIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
   useAdAccounts,
+  useCampaignDraft,
   useCreateCampaignDraft,
   useSubmitDraft,
-  useCampaignDraft,
-} from '@/api/campaignBuilder'
+} from '@/api/campaignBuilder';
 
-type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat'
-type BudgetType = 'daily' | 'lifetime'
-type Objective = 'sales' | 'leads' | 'traffic' | 'awareness' | 'engagement'
-type AssetType = 'image' | 'video' | 'carousel'
+type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat';
+type BudgetType = 'daily' | 'lifetime';
+type Objective = 'sales' | 'leads' | 'traffic' | 'awareness' | 'engagement';
+type AssetType = 'image' | 'video' | 'carousel';
 
 interface CreativeAsset {
-  id: string
-  file: File
-  name: string
-  type: AssetType
-  preview: string
-  size: number
-  status: 'uploading' | 'ready' | 'error'
-  headline?: string
-  description?: string
-  callToAction?: string
+  id: string;
+  file: File;
+  name: string;
+  type: AssetType;
+  preview: string;
+  size: number;
+  status: 'uploading' | 'ready' | 'error';
+  headline?: string;
+  description?: string;
+  callToAction?: string;
 }
 
 interface CampaignDraft {
-  platform: Platform | null
-  adAccountId: string
-  name: string
-  objective: Objective | null
+  platform: Platform | null;
+  adAccountId: string;
+  name: string;
+  objective: Objective | null;
   budget: {
-    type: BudgetType
-    amount: number
-    currency: string
-  }
+    type: BudgetType;
+    amount: number;
+    currency: string;
+  };
   schedule: {
-    start: string
-    end: string | null
-  }
+    start: string;
+    end: string | null;
+  };
   targeting: {
-    locations: string[]
-    ageMin: number
-    ageMax: number
-    genders: string[]
-  }
-  creatives: CreativeAsset[]
+    locations: string[];
+    ageMin: number;
+    ageMax: number;
+    genders: string[];
+  };
+  creatives: CreativeAsset[];
 }
 
 const steps = [
@@ -74,7 +74,7 @@ const steps = [
   { id: 'targeting', name: 'Targeting' },
   { id: 'creatives', name: 'Ad Creatives' },
   { id: 'review', name: 'Review & Submit' },
-]
+];
 
 const callToActionOptions = [
   { value: 'shop_now', label: 'Shop Now' },
@@ -84,11 +84,11 @@ const callToActionOptions = [
   { value: 'get_offer', label: 'Get Offer' },
   { value: 'download', label: 'Download' },
   { value: 'book_now', label: 'Book Now' },
-]
+];
 
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
-const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 const objectives: { value: Objective; label: string; description: string }[] = [
   { value: 'sales', label: 'Sales', description: 'Drive purchases and conversions' },
@@ -96,19 +96,19 @@ const objectives: { value: Objective; label: string; description: string }[] = [
   { value: 'traffic', label: 'Traffic', description: 'Send people to your website' },
   { value: 'awareness', label: 'Awareness', description: 'Reach new audiences' },
   { value: 'engagement', label: 'Engagement', description: 'Get more interactions' },
-]
+];
 
 const mockAdAccounts = [
   { id: 'act_123', name: 'Main Business Account', platform: 'meta' as Platform },
   { id: 'act_456', name: 'E-commerce Store', platform: 'meta' as Platform },
   { id: 'gads_789', name: 'Company Google Ads', platform: 'google' as Platform },
-]
+];
 
 export default function CampaignBuilder() {
-  const { tenantId, draftId } = useParams<{ tenantId: string; draftId?: string }>()
-  const tid = parseInt(tenantId || '1', 10)
-  const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState(0)
+  const { tenantId, draftId } = useParams<{ tenantId: string; draftId?: string }>();
+  const tid = parseInt(tenantId || '1', 10);
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(0);
   const [draft, setDraft] = useState<CampaignDraft>({
     platform: null,
     adAccountId: '',
@@ -130,23 +130,23 @@ export default function CampaignBuilder() {
       genders: ['all'],
     },
     creatives: [],
-  })
-  const [isDragging, setIsDragging] = useState(false)
-  const [editingAsset, setEditingAsset] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isEditing = !!draftId
+  const isEditing = !!draftId;
 
   // API hooks for ad accounts per platform
-  const { data: metaAccounts } = useAdAccounts(tid, 'meta', true)
-  const { data: googleAccounts } = useAdAccounts(tid, 'google', true)
-  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok', true)
-  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat', true)
+  const { data: metaAccounts } = useAdAccounts(tid, 'meta', true);
+  const { data: googleAccounts } = useAdAccounts(tid, 'google', true);
+  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok', true);
+  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat', true);
 
   // API mutation hooks
-  const createDraft = useCreateCampaignDraft(tid)
-  const submitDraft = useSubmitDraft(tid)
-  useCampaignDraft(tid, draftId || '') // Prefetch existing draft
+  const createDraft = useCreateCampaignDraft(tid);
+  const submitDraft = useSubmitDraft(tid);
+  useCampaignDraft(tid, draftId || ''); // Prefetch existing draft
 
   // Combine ad accounts with fallback to mock
   const adAccounts = useMemo(() => {
@@ -171,38 +171,35 @@ export default function CampaignBuilder() {
         name: acc.name,
         platform: 'snapchat' as Platform,
       })),
-    ]
-    return apiAccounts.length > 0 ? apiAccounts : mockAdAccounts
-  }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
+    ];
+    return apiAccounts.length > 0 ? apiAccounts : mockAdAccounts;
+  }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts]);
 
-  const updateDraft = <K extends keyof CampaignDraft>(
-    field: K,
-    value: CampaignDraft[K]
-  ) => {
-    setDraft(prev => ({ ...prev, [field]: value }))
-  }
+  const updateDraft = <K extends keyof CampaignDraft>(field: K, value: CampaignDraft[K]) => {
+    setDraft((prev) => ({ ...prev, [field]: value }));
+  };
 
   // File upload handlers
   const getAssetType = (file: File): AssetType => {
-    if (ACCEPTED_VIDEO_TYPES.includes(file.type)) return 'video'
-    return 'image'
-  }
+    if (ACCEPTED_VIDEO_TYPES.includes(file.type)) return 'video';
+    return 'image';
+  };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   const processFiles = useCallback((files: FileList | File[]) => {
-    const fileArray = Array.from(files)
-    const validFiles = fileArray.filter(file => {
-      const isValidType = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES].includes(file.type)
-      const isValidSize = file.size <= MAX_FILE_SIZE
-      return isValidType && isValidSize
-    })
+    const fileArray = Array.from(files);
+    const validFiles = fileArray.filter((file) => {
+      const isValidType = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES].includes(file.type);
+      const isValidSize = file.size <= MAX_FILE_SIZE;
+      return isValidType && isValidSize;
+    });
 
-    const newAssets: CreativeAsset[] = validFiles.map(file => ({
+    const newAssets: CreativeAsset[] = validFiles.map((file) => ({
       id: `asset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       file,
       name: file.name,
@@ -213,73 +210,79 @@ export default function CampaignBuilder() {
       headline: '',
       description: '',
       callToAction: 'learn_more',
-    }))
+    }));
 
-    setDraft(prev => ({
+    setDraft((prev) => ({
       ...prev,
       creatives: [...prev.creatives, ...newAssets],
-    }))
-  }, [])
+    }));
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }, [])
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    if (e.dataTransfer.files.length) {
-      processFiles(e.dataTransfer.files)
-    }
-  }, [processFiles])
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      if (e.dataTransfer.files.length) {
+        processFiles(e.dataTransfer.files);
+      }
+    },
+    [processFiles]
+  );
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.length) {
-      processFiles(e.target.files)
-    }
-    // Reset input value to allow selecting the same file again
-    e.target.value = ''
-  }, [processFiles])
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files?.length) {
+        processFiles(e.target.files);
+      }
+      // Reset input value to allow selecting the same file again
+      e.target.value = '';
+    },
+    [processFiles]
+  );
 
   const removeAsset = useCallback((id: string) => {
-    setDraft(prev => {
-      const asset = prev.creatives.find(a => a.id === id)
+    setDraft((prev) => {
+      const asset = prev.creatives.find((a) => a.id === id);
       if (asset) {
-        URL.revokeObjectURL(asset.preview)
+        URL.revokeObjectURL(asset.preview);
       }
       return {
         ...prev,
-        creatives: prev.creatives.filter(a => a.id !== id),
-      }
-    })
-  }, [])
+        creatives: prev.creatives.filter((a) => a.id !== id),
+      };
+    });
+  }, []);
 
   const updateAsset = useCallback((id: string, updates: Partial<CreativeAsset>) => {
-    setDraft(prev => ({
+    setDraft((prev) => ({
       ...prev,
-      creatives: prev.creatives.map(asset =>
+      creatives: prev.creatives.map((asset) =>
         asset.id === id ? { ...asset, ...updates } : asset
       ),
-    }))
-  }, [])
+    }));
+  }, []);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     }
-  }
+  };
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const handleSaveDraft = async () => {
     try {
@@ -302,22 +305,22 @@ export default function CampaignBuilder() {
             callToAction: c.callToAction,
           })),
         },
-      })
-      alert('Draft saved!')
-      navigate(`/app/${tenantId}/campaigns/drafts`)
+      });
+      alert('Draft saved!');
+      navigate(`/app/${tenantId}/campaigns/drafts`);
     } catch (error) {
-      console.error('Failed to save draft:', error)
+      console.error('Failed to save draft:', error);
       // Fallback for demo mode
-      alert('Draft saved (demo mode)!')
-      navigate(`/app/${tenantId}/campaigns/drafts`)
+      alert('Draft saved (demo mode)!');
+      navigate(`/app/${tenantId}/campaigns/drafts`);
     }
-  }
+  };
 
   const handleSubmitForApproval = async () => {
     try {
       if (draftId) {
-        await submitDraft.mutateAsync(draftId)
-        alert('Submitted for approval!')
+        await submitDraft.mutateAsync(draftId);
+        alert('Submitted for approval!');
       } else {
         // Save first then submit
         const newDraft = await createDraft.mutateAsync({
@@ -339,18 +342,18 @@ export default function CampaignBuilder() {
               callToAction: c.callToAction,
             })),
           },
-        })
-        await submitDraft.mutateAsync(newDraft.id)
-        alert('Submitted for approval!')
+        });
+        await submitDraft.mutateAsync(newDraft.id);
+        alert('Submitted for approval!');
       }
-      navigate(`/app/${tenantId}/campaigns/drafts`)
+      navigate(`/app/${tenantId}/campaigns/drafts`);
     } catch (error) {
-      console.error('Failed to submit:', error)
+      console.error('Failed to submit:', error);
       // Fallback for demo mode
-      alert('Submitted for approval (demo mode)!')
-      navigate(`/app/${tenantId}/campaigns/drafts`)
+      alert('Submitted for approval (demo mode)!');
+      navigate(`/app/${tenantId}/campaigns/drafts`);
     }
-  }
+  };
 
   const renderStepContent = () => {
     switch (steps[currentStep].id) {
@@ -385,7 +388,7 @@ export default function CampaignBuilder() {
                 <h3 className="text-lg font-semibold mb-4">Select Ad Account</h3>
                 <div className="space-y-2">
                   {adAccounts
-                    .filter(acc => acc.platform === draft.platform)
+                    .filter((acc) => acc.platform === draft.platform)
                     .map((acc) => (
                       <button
                         key={acc.id}
@@ -405,7 +408,7 @@ export default function CampaignBuilder() {
               </div>
             )}
           </div>
-        )
+        );
 
       case 'basics':
         return (
@@ -442,7 +445,7 @@ export default function CampaignBuilder() {
               </div>
             </div>
           </div>
-        )
+        );
 
       case 'budget':
         return (
@@ -469,12 +472,15 @@ export default function CampaignBuilder() {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                {draft.budget.type === 'daily' ? 'Daily Budget' : 'Total Budget'} ({draft.budget.currency})
+                {draft.budget.type === 'daily' ? 'Daily Budget' : 'Total Budget'} (
+                {draft.budget.currency})
               </label>
               <input
                 type="number"
                 value={draft.budget.amount}
-                onChange={(e) => updateDraft('budget', { ...draft.budget, amount: Number(e.target.value) })}
+                onChange={(e) =>
+                  updateDraft('budget', { ...draft.budget, amount: Number(e.target.value) })
+                }
                 min={1}
                 className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
@@ -486,7 +492,9 @@ export default function CampaignBuilder() {
                 <input
                   type="date"
                   value={draft.schedule.start}
-                  onChange={(e) => updateDraft('schedule', { ...draft.schedule, start: e.target.value })}
+                  onChange={(e) =>
+                    updateDraft('schedule', { ...draft.schedule, start: e.target.value })
+                  }
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
@@ -495,7 +503,9 @@ export default function CampaignBuilder() {
                 <input
                   type="date"
                   value={draft.schedule.end || ''}
-                  onChange={(e) => updateDraft('schedule', { ...draft.schedule, end: e.target.value || null })}
+                  onChange={(e) =>
+                    updateDraft('schedule', { ...draft.schedule, end: e.target.value || null })
+                  }
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
@@ -514,7 +524,7 @@ export default function CampaignBuilder() {
               </div>
             )}
           </div>
-        )
+        );
 
       case 'targeting':
         return (
@@ -537,7 +547,9 @@ export default function CampaignBuilder() {
                 <input
                   type="number"
                   value={draft.targeting.ageMin}
-                  onChange={(e) => updateDraft('targeting', { ...draft.targeting, ageMin: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateDraft('targeting', { ...draft.targeting, ageMin: Number(e.target.value) })
+                  }
                   min={13}
                   max={65}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -548,7 +560,9 @@ export default function CampaignBuilder() {
                 <input
                   type="number"
                   value={draft.targeting.ageMax}
-                  onChange={(e) => updateDraft('targeting', { ...draft.targeting, ageMax: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateDraft('targeting', { ...draft.targeting, ageMax: Number(e.target.value) })
+                  }
                   min={13}
                   max={65}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -566,7 +580,9 @@ export default function CampaignBuilder() {
                 ].map((gender) => (
                   <button
                     key={gender.value}
-                    onClick={() => updateDraft('targeting', { ...draft.targeting, genders: [gender.value] })}
+                    onClick={() =>
+                      updateDraft('targeting', { ...draft.targeting, genders: [gender.value] })
+                    }
                     className={cn(
                       'px-4 py-2 rounded-lg border-2 transition-all',
                       draft.targeting.genders.includes(gender.value)
@@ -580,7 +596,7 @@ export default function CampaignBuilder() {
               </div>
             </div>
           </div>
-        )
+        );
 
       case 'creatives':
         return (
@@ -588,7 +604,8 @@ export default function CampaignBuilder() {
             <div>
               <h3 className="text-lg font-semibold mb-2">Upload Ad Creatives</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Upload images or videos for your ad. Supported formats: JPEG, PNG, GIF, WebP, MP4, WebM.
+                Upload images or videos for your ad. Supported formats: JPEG, PNG, GIF, WebP, MP4,
+                WebM.
               </p>
 
               {/* Drag & Drop Zone */}
@@ -614,12 +631,8 @@ export default function CampaignBuilder() {
                 />
                 <CloudArrowUpIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="font-medium">Drag and drop files here</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  or click to browse
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Max file size: 100MB
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">or click to browse</p>
+                <p className="text-xs text-muted-foreground mt-2">Max file size: 100MB</p>
               </div>
             </div>
 
@@ -629,10 +642,7 @@ export default function CampaignBuilder() {
                 <h4 className="font-medium mb-3">Uploaded Assets ({draft.creatives.length})</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {draft.creatives.map((asset) => (
-                    <div
-                      key={asset.id}
-                      className="rounded-xl border bg-card overflow-hidden"
-                    >
+                    <div key={asset.id} className="rounded-xl border bg-card overflow-hidden">
                       {/* Asset Preview */}
                       <div className="relative aspect-video bg-muted">
                         {asset.type === 'video' ? (
@@ -682,7 +692,9 @@ export default function CampaignBuilder() {
                               <input
                                 type="text"
                                 value={asset.headline || ''}
-                                onChange={(e) => updateAsset(asset.id, { headline: e.target.value })}
+                                onChange={(e) =>
+                                  updateAsset(asset.id, { headline: e.target.value })
+                                }
                                 placeholder="Enter headline..."
                                 maxLength={40}
                                 className="w-full px-3 py-1.5 text-sm rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -695,7 +707,9 @@ export default function CampaignBuilder() {
                               <label className="block text-xs font-medium mb-1">Description</label>
                               <textarea
                                 value={asset.description || ''}
-                                onChange={(e) => updateAsset(asset.id, { description: e.target.value })}
+                                onChange={(e) =>
+                                  updateAsset(asset.id, { description: e.target.value })
+                                }
                                 placeholder="Enter description..."
                                 maxLength={125}
                                 rows={2}
@@ -706,10 +720,14 @@ export default function CampaignBuilder() {
                               </p>
                             </div>
                             <div>
-                              <label className="block text-xs font-medium mb-1">Call to Action</label>
+                              <label className="block text-xs font-medium mb-1">
+                                Call to Action
+                              </label>
                               <select
                                 value={asset.callToAction || 'learn_more'}
-                                onChange={(e) => updateAsset(asset.id, { callToAction: e.target.value })}
+                                onChange={(e) =>
+                                  updateAsset(asset.id, { callToAction: e.target.value })
+                                }
                                 className="w-full px-3 py-1.5 text-sm rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                               >
                                 {callToActionOptions.map((cta) => (
@@ -735,7 +753,9 @@ export default function CampaignBuilder() {
                             )}
                             {asset.callToAction && (
                               <p className="text-xs text-muted-foreground">
-                                CTA: {callToActionOptions.find(c => c.value === asset.callToAction)?.label || asset.callToAction}
+                                CTA:{' '}
+                                {callToActionOptions.find((c) => c.value === asset.callToAction)
+                                  ?.label || asset.callToAction}
                               </p>
                             )}
                             <button
@@ -757,7 +777,10 @@ export default function CampaignBuilder() {
             <div className="rounded-lg border bg-muted/30 p-4">
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <SparklesIcon className="h-4 w-4 text-primary" />
-                Platform Recommendations for {draft.platform ? draft.platform.charAt(0).toUpperCase() + draft.platform.slice(1) : 'Ads'}
+                Platform Recommendations for{' '}
+                {draft.platform
+                  ? draft.platform.charAt(0).toUpperCase() + draft.platform.slice(1)
+                  : 'Ads'}
               </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {draft.platform === 'meta' && (
@@ -788,13 +811,11 @@ export default function CampaignBuilder() {
                     <li>- Keep branding subtle and authentic</li>
                   </>
                 )}
-                {!draft.platform && (
-                  <li>- Select a platform to see specific recommendations</li>
-                )}
+                {!draft.platform && <li>- Select a platform to see specific recommendations</li>}
               </ul>
             </div>
           </div>
-        )
+        );
 
       case 'review':
         return (
@@ -845,7 +866,10 @@ export default function CampaignBuilder() {
                 <h3 className="text-lg font-semibold mb-4">Ad Creatives Preview</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {draft.creatives.map((asset) => (
-                    <div key={asset.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                    <div
+                      key={asset.id}
+                      className="relative aspect-square rounded-lg overflow-hidden bg-muted"
+                    >
                       {asset.type === 'video' ? (
                         <div className="w-full h-full flex items-center justify-center">
                           <VideoCameraIcon className="h-8 w-8 text-muted-foreground" />
@@ -882,9 +906,9 @@ export default function CampaignBuilder() {
               </ul>
             </div>
           </div>
-        )
+        );
     }
-  }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -903,10 +927,7 @@ export default function CampaignBuilder() {
         {steps.map((step, index) => (
           <div
             key={step.id}
-            className={cn(
-              'flex items-center',
-              index < steps.length - 1 && 'flex-1'
-            )}
+            className={cn('flex items-center', index < steps.length - 1 && 'flex-1')}
           >
             <div
               className={cn(
@@ -924,10 +945,7 @@ export default function CampaignBuilder() {
             </div>
             {index < steps.length - 1 && (
               <div
-                className={cn(
-                  'flex-1 h-0.5 mx-2',
-                  index < currentStep ? 'bg-primary' : 'bg-muted'
-                )}
+                className={cn('flex-1 h-0.5 mx-2', index < currentStep ? 'bg-primary' : 'bg-muted')}
               />
             )}
           </div>
@@ -977,5 +995,5 @@ export default function CampaignBuilder() {
         </div>
       </div>
     </div>
-  )
+  );
 }

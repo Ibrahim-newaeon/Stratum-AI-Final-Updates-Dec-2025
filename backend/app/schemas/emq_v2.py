@@ -6,7 +6,7 @@ Pydantic models for EMQ (Event Measurement Quality) v2 API endpoints.
 These schemas match the frontend types defined in api/emqV2.ts.
 """
 
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -42,7 +42,7 @@ class EmqScoreResponse(EMQBaseSchema):
     score: float = Field(..., ge=0, le=100, description="Overall EMQ score")
     previousScore: float = Field(..., ge=0, le=100, description="Previous period score")
     confidenceBand: Literal["reliable", "directional", "unsafe"]
-    drivers: List[EmqDriver]
+    drivers: list[EmqDriver]
     lastUpdated: str = Field(..., description="ISO timestamp of last update")
 
 
@@ -70,7 +70,7 @@ class ConfidenceDataResponse(EMQBaseSchema):
     band: Literal["reliable", "directional", "unsafe"]
     score: float
     thresholds: ConfidenceThresholds
-    factors: List[ConfidenceFactor]
+    factors: list[ConfidenceFactor]
 
 
 # =============================================================================
@@ -133,7 +133,7 @@ class EmqImpactResponse(EMQBaseSchema):
 
     totalImpact: float
     currency: str = "USD"
-    breakdown: List[ImpactBreakdown]
+    breakdown: list[ImpactBreakdown]
 
 
 # =============================================================================
@@ -151,7 +151,7 @@ class EmqVolatilityResponse(EMQBaseSchema):
 
     svi: float = Field(..., description="Signal Volatility Index")
     trend: Literal["increasing", "decreasing", "stable"]
-    weeklyData: List[VolatilityDataPoint]
+    weeklyData: list[VolatilityDataPoint]
 
 
 # =============================================================================
@@ -163,8 +163,8 @@ class AutopilotStateResponse(EMQBaseSchema):
     mode: Literal["normal", "limited", "cuts_only", "frozen"]
     reason: Optional[str] = None
     budgetAtRisk: float
-    allowedActions: List[str]
-    restrictedActions: List[str]
+    allowedActions: list[str]
+    restrictedActions: list[str]
 
 
 class AutopilotModeUpdate(EMQBaseSchema):
@@ -213,4 +213,4 @@ class EmqPortfolioResponse(EMQBaseSchema):
     byBand: BandDistribution
     atRiskBudget: float
     avgScore: float
-    topIssues: List[TopIssue]
+    topIssues: list[TopIssue]

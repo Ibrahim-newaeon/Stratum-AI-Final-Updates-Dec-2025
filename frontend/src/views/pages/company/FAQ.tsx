@@ -7,17 +7,17 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  QuestionMarkCircleIcon,
-  MagnifyingGlassIcon,
-  CurrencyDollarIcon,
-  CogIcon,
-  ShieldCheckIcon,
-  ChartBarIcon,
-  UserGroupIcon,
   BoltIcon,
+  ChartBarIcon,
+  CogIcon,
+  CurrencyDollarIcon,
+  MagnifyingGlassIcon,
+  QuestionMarkCircleIcon,
+  ShieldCheckIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
-import { SEO, pageSEO } from '@/components/common/SEO';
-import { useAllFAQItems, type FAQItem as CMSFAQItem } from '@/api/cms';
+import { pageSEO, SEO } from '@/components/common/SEO';
+import { type FAQItem as CMSFAQItem, useAllFAQItems } from '@/api/cms';
 
 interface FAQItem {
   id: string;
@@ -42,114 +42,132 @@ const fallbackFaqs: FAQItem[] = [
   {
     id: '1',
     question: 'What pricing plans does Stratum AI offer?',
-    answer: 'We offer three tiers: Starter ($499/mo) for growing teams, Professional ($1,499/mo) for scaling businesses with advanced automation, and custom Enterprise plans for large organizations. Each tier includes a 14-day free trial with full feature access.',
+    answer:
+      'We offer three tiers: Starter ($499/mo) for growing teams, Professional ($1,499/mo) for scaling businesses with advanced automation, and custom Enterprise plans for large organizations. Each tier includes a 14-day free trial with full feature access.',
     category: 'pricing',
   },
   {
     id: '2',
     question: 'Is there a free trial available?',
-    answer: 'Yes! We offer a 14-day free trial on all plans with full feature access. No credit card required to start. You can also use our Interactive Demo Mode to explore the platform with sample data before signing up.',
+    answer:
+      'Yes! We offer a 14-day free trial on all plans with full feature access. No credit card required to start. You can also use our Interactive Demo Mode to explore the platform with sample data before signing up.',
     category: 'pricing',
   },
   {
     id: '3',
     question: 'Can I change my plan later?',
-    answer: 'Absolutely. You can upgrade or downgrade your plan at any time. Upgrades take effect immediately with prorated billing. Downgrades take effect at the start of your next billing cycle.',
+    answer:
+      'Absolutely. You can upgrade or downgrade your plan at any time. Upgrades take effect immediately with prorated billing. Downgrades take effect at the start of your next billing cycle.',
     category: 'pricing',
   },
   // Features
   {
     id: '4',
     question: 'What is the Trust-Gated Autopilot?',
-    answer: 'Trust-Gated Autopilot is our core innovation. It automatically executes optimizations ONLY when signal health passes safety thresholds (70+ score). This prevents costly mistakes from bad data while maximizing automation when conditions are right.',
+    answer:
+      'Trust-Gated Autopilot is our core innovation. It automatically executes optimizations ONLY when signal health passes safety thresholds (70+ score). This prevents costly mistakes from bad data while maximizing automation when conditions are right.',
     category: 'features',
   },
   {
     id: '5',
     question: 'Which ad platforms do you support?',
-    answer: 'We support Meta (Facebook/Instagram), Google Ads, TikTok Ads, and Snapchat Ads. Our platform connects via OAuth for campaign management and CAPI for server-side conversion tracking.',
+    answer:
+      'We support Meta (Facebook/Instagram), Google Ads, TikTok Ads, and Snapchat Ads. Our platform connects via OAuth for campaign management and CAPI for server-side conversion tracking.',
     category: 'features',
   },
   {
     id: '6',
     question: 'What is the CDP and how does it work?',
-    answer: 'Our Customer Data Platform (CDP) unifies customer profiles across all touchpoints. It includes identity resolution, behavioral segmentation, RFM analysis, and one-click audience sync to all major ad platforms.',
+    answer:
+      'Our Customer Data Platform (CDP) unifies customer profiles across all touchpoints. It includes identity resolution, behavioral segmentation, RFM analysis, and one-click audience sync to all major ad platforms.',
     category: 'features',
   },
   // Trust Engine
   {
     id: '7',
     question: 'How does Signal Health scoring work?',
-    answer: 'Signal Health is a 0-100 score measuring data reliability. It factors in data freshness, completeness, consistency, and anomaly detection. Scores above 70 are "Healthy" (green), 40-70 are "Degraded" (yellow), and below 40 are "Unhealthy" (red).',
+    answer:
+      'Signal Health is a 0-100 score measuring data reliability. It factors in data freshness, completeness, consistency, and anomaly detection. Scores above 70 are "Healthy" (green), 40-70 are "Degraded" (yellow), and below 40 are "Unhealthy" (red).',
     category: 'trust-engine',
   },
   {
     id: '8',
     question: 'What happens when Signal Health drops?',
-    answer: 'When Signal Health drops below thresholds, the Trust Gate automatically blocks automated actions and alerts your team. This prevents optimizations based on unreliable data. You can still take manual actions with an override.',
+    answer:
+      'When Signal Health drops below thresholds, the Trust Gate automatically blocks automated actions and alerts your team. This prevents optimizations based on unreliable data. You can still take manual actions with an override.',
     category: 'trust-engine',
   },
   {
     id: '9',
     question: 'Can I customize Trust Gate thresholds?',
-    answer: 'Yes, on Growth plans and above. You can set custom thresholds per campaign, automation rule, or globally. Enterprise plans include advanced configuration with time-based rules and multi-signal gates.',
+    answer:
+      'Yes, on Growth plans and above. You can set custom thresholds per campaign, automation rule, or globally. Enterprise plans include advanced configuration with time-based rules and multi-signal gates.',
     category: 'trust-engine',
   },
   // Integrations
   {
     id: '10',
     question: 'How do I connect my ad accounts?',
-    answer: 'Go to Tenant Settings → Connect Platforms. Click "Connect" on any platform to start the OAuth flow. You\'ll be redirected to the platform to grant permissions, then automatically returned to Stratum AI.',
+    answer:
+      'Go to Tenant Settings → Connect Platforms. Click "Connect" on any platform to start the OAuth flow. You\'ll be redirected to the platform to grant permissions, then automatically returned to Stratum AI.',
     category: 'integrations',
   },
   {
     id: '11',
     question: 'What is CAPI and do I need it?',
-    answer: 'CAPI (Conversions API) sends conversion events server-side directly to ad platforms. This bypasses browser limitations like ad blockers and iOS privacy restrictions. It improves match rates from ~42% to 70-90%, significantly boosting ROAS.',
+    answer:
+      'CAPI (Conversions API) sends conversion events server-side directly to ad platforms. This bypasses browser limitations like ad blockers and iOS privacy restrictions. It improves match rates from ~42% to 70-90%, significantly boosting ROAS.',
     category: 'integrations',
   },
   {
     id: '12',
     question: 'Do you integrate with Slack?',
-    answer: 'Yes! Our Slack integration sends real-time Trust Gate alerts, daily performance summaries, and anomaly notifications to your chosen channels. Configure it in Settings → Integrations.',
+    answer:
+      'Yes! Our Slack integration sends real-time Trust Gate alerts, daily performance summaries, and anomaly notifications to your chosen channels. Configure it in Settings → Integrations.',
     category: 'integrations',
   },
   // Data & Privacy
   {
     id: '13',
     question: 'How do you handle my data?',
-    answer: 'We follow strict data security practices: SOC 2 Type II compliant, AES-256 encryption at rest, TLS 1.3 in transit. We never sell your data or use it for anything other than providing our service to you.',
+    answer:
+      'We follow strict data security practices: SOC 2 Type II compliant, AES-256 encryption at rest, TLS 1.3 in transit. We never sell your data or use it for anything other than providing our service to you.',
     category: 'data',
   },
   {
     id: '14',
     question: 'Are you GDPR and CCPA compliant?',
-    answer: 'Yes. We\'re fully GDPR and CCPA compliant. Our CDP includes built-in consent management, data subject request handling, and automatic PII hashing for platform syncs. DPA available for all customers.',
+    answer:
+      "Yes. We're fully GDPR and CCPA compliant. Our CDP includes built-in consent management, data subject request handling, and automatic PII hashing for platform syncs. DPA available for all customers.",
     category: 'data',
   },
   {
     id: '15',
     question: 'Where is my data stored?',
-    answer: 'Data is stored in AWS data centers. US customers use us-east-1, EU customers use eu-west-1. Enterprise plans can specify custom regions. All data is encrypted and backed up with 99.9% SLA.',
+    answer:
+      'Data is stored in AWS data centers. US customers use us-east-1, EU customers use eu-west-1. Enterprise plans can specify custom regions. All data is encrypted and backed up with 99.9% SLA.',
     category: 'data',
   },
   // Support
   {
     id: '16',
     question: 'What support options are available?',
-    answer: 'Starter: Email support (48h response). Growth: Priority email + chat (24h response). Scale: Dedicated CSM + phone support (4h response). Enterprise: 24/7 support + SLA guarantees.',
+    answer:
+      'Starter: Email support (48h response). Growth: Priority email + chat (24h response). Scale: Dedicated CSM + phone support (4h response). Enterprise: 24/7 support + SLA guarantees.',
     category: 'support',
   },
   {
     id: '17',
     question: 'Do you offer onboarding assistance?',
-    answer: 'Yes! All plans include self-service onboarding with interactive guides. Growth and above get a 1-hour kickoff call. Scale and Enterprise receive full white-glove onboarding with dedicated implementation support.',
+    answer:
+      'Yes! All plans include self-service onboarding with interactive guides. Growth and above get a 1-hour kickoff call. Scale and Enterprise receive full white-glove onboarding with dedicated implementation support.',
     category: 'support',
   },
   {
     id: '18',
     question: 'How can I contact the team?',
-    answer: 'Email us at support@stratum.ai for support, sales@stratum.ai for sales inquiries, or use the in-app chat. Enterprise customers have direct Slack channels with our team.',
+    answer:
+      'Email us at support@stratum.ai for support, sales@stratum.ai for sales inquiries, or use the in-app chat. Enterprise customers have direct Slack channels with our team.',
     category: 'support',
   },
 ];
@@ -172,7 +190,7 @@ export default function FAQ() {
   const { data: cmsFaqs, isLoading } = useAllFAQItems();
 
   // Use CMS data if available and has content, otherwise use fallback
-  const faqs = (cmsFaqs && cmsFaqs.length > 0) ? convertCMSFaqs(cmsFaqs) : fallbackFaqs;
+  const faqs = cmsFaqs && cmsFaqs.length > 0 ? convertCMSFaqs(cmsFaqs) : fallbackFaqs;
 
   const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
@@ -200,12 +218,11 @@ export default function FAQ() {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             <span className="text-white">Frequently Asked</span>
             <br />
-            <span className="bg-gradient-stratum bg-clip-text text-transparent">
-              Questions
-            </span>
+            <span className="bg-gradient-stratum bg-clip-text text-transparent">Questions</span>
           </h1>
           <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-8">
-            Everything you need to know about Stratum AI. Can&apos;t find what you&apos;re looking for?{' '}
+            Everything you need to know about Stratum AI. Can&apos;t find what you&apos;re looking
+            for?{' '}
             <a href="/contact" className="text-orange-500 hover:underline">
               Contact our team
             </a>
@@ -255,7 +272,10 @@ export default function FAQ() {
                     border: `1px solid ${isSelected ? `${accentColor}40` : 'rgba(255, 255, 255, 0.08)'}`,
                   }}
                 >
-                  <Icon className="w-4 h-4" style={{ color: isSelected ? accentColor : undefined }} />
+                  <Icon
+                    className="w-4 h-4"
+                    style={{ color: isSelected ? accentColor : undefined }}
+                  />
                   {category.name}
                 </button>
               );
@@ -273,7 +293,9 @@ export default function FAQ() {
               <p className="text-white/60">No questions found matching your search.</p>
             </div>
           ) : (
-            <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-5 ${isLoading ? 'opacity-50' : ''}`}>
+            <div
+              className={`grid md:grid-cols-2 lg:grid-cols-3 gap-5 ${isLoading ? 'opacity-50' : ''}`}
+            >
               {filteredFaqs.map((faq) => {
                 const Icon = getCategoryIcon(faq.category);
                 const categoryData = categories.find((c) => c.id === faq.category);
@@ -327,9 +349,7 @@ export default function FAQ() {
                     </h3>
 
                     {/* Answer */}
-                    <p className="text-sm text-white/60 leading-relaxed">
-                      {faq.answer}
-                    </p>
+                    <p className="text-sm text-white/60 leading-relaxed">{faq.answer}</p>
                   </div>
                 );
               })}
@@ -346,7 +366,8 @@ export default function FAQ() {
               Still have questions?
             </h2>
             <p className="text-white/60 mb-6 max-w-xl mx-auto">
-              Our team is here to help. Reach out and we&apos;ll get back to you as soon as possible.
+              Our team is here to help. Reach out and we&apos;ll get back to you as soon as
+              possible.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

@@ -5,56 +5,56 @@
  * Features motion animations and priority-based presentation.
  */
 
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Lightbulb,
-  TrendingUp,
-  TrendingDown,
   AlertCircle,
-  RefreshCw,
-  DollarSign,
-  Eye,
-  Zap,
+  CheckCircle2,
   ChevronRight,
   Clock,
-  CheckCircle2,
+  DollarSign,
+  Eye,
+  Lightbulb,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
   X,
-} from 'lucide-react'
-import { useTenantRecommendations } from '@/api/hooks/useTenantDashboard'
+  Zap,
+} from 'lucide-react';
+import { useTenantRecommendations } from '@/api/hooks/useTenantDashboard';
 
 // Local Recommendation type to match API response
 interface RecommendationAction {
-  action: string
-  label: string
-  params?: Record<string, unknown>
+  action: string;
+  label: string;
+  params?: Record<string, unknown>;
 }
 
 interface Recommendation {
-  id: string
-  type: 'scale' | 'watch' | 'fix' | 'pause' | 'creative_refresh' | 'budget_shift'
-  priority: number
-  entity_type?: string
-  entity_id?: string
-  entity_name?: string
-  title: string
-  description: string
-  impact_estimate?: string | null
-  expected_impact?: number
-  roas_impact?: number | null
-  confidence?: number
-  actions?: RecommendationAction[]
-  created_at?: string
+  id: string;
+  type: 'scale' | 'watch' | 'fix' | 'pause' | 'creative_refresh' | 'budget_shift';
+  priority: number;
+  entity_type?: string;
+  entity_id?: string;
+  entity_name?: string;
+  title: string;
+  description: string;
+  impact_estimate?: string | null;
+  expected_impact?: number;
+  roas_impact?: number | null;
+  confidence?: number;
+  actions?: RecommendationAction[];
+  created_at?: string;
 }
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/components/ui/use-toast';
 
 interface InsightsPanelProps {
-  tenantId: number
-  className?: string
-  maxItems?: number
-  onApply?: (recommendationId: string, action: string) => void | Promise<void>
-  onViewAllInsights?: () => void
-  insightsPath?: string
+  tenantId: number;
+  className?: string;
+  maxItems?: number;
+  onApply?: (recommendationId: string, action: string) => void | Promise<void>;
+  onViewAllInsights?: () => void;
+  insightsPath?: string;
 }
 
 // Quantum Ember accent colors
@@ -62,7 +62,7 @@ const quantumEmberAccent = {
   primary: 'from-orange-500 to-amber-500',
   secondary: 'from-rose-500 to-orange-500',
   tertiary: 'from-amber-400 to-yellow-500',
-}
+};
 
 const typeConfig = {
   scale: {
@@ -107,7 +107,7 @@ const typeConfig = {
     borderColor: 'border-l-blue-500',
     label: 'Budget Optimization',
   },
-}
+};
 
 const priorityLabels = {
   1: { label: 'Critical', color: 'text-red-600 bg-red-100 dark:bg-red-900/30' },
@@ -115,27 +115,28 @@ const priorityLabels = {
   3: { label: 'Medium', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
   4: { label: 'Low', color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30' },
   5: { label: 'Info', color: 'text-gray-600 bg-gray-100 dark:bg-gray-900/30' },
-}
+};
 
 const InsightCard: React.FC<{
-  recommendation: Recommendation
-  index: number
-  onDismiss?: (id: string) => void
-  onApply?: (id: string, action: string) => void
+  recommendation: Recommendation;
+  index: number;
+  onDismiss?: (id: string) => void;
+  onApply?: (id: string, action: string) => void;
 }> = ({ recommendation, index, onDismiss, onApply }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isApplying, setIsApplying] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
-  const config = typeConfig[recommendation.type as keyof typeof typeConfig] || typeConfig.watch
-  const Icon = config.icon
-  const priority = priorityLabels[recommendation.priority as keyof typeof priorityLabels] || priorityLabels[3]
+  const config = typeConfig[recommendation.type] || typeConfig.watch;
+  const Icon = config.icon;
+  const priority =
+    priorityLabels[recommendation.priority as keyof typeof priorityLabels] || priorityLabels[3];
 
   const handleApply = async (actionType: string) => {
-    setIsApplying(true)
-    onApply?.(recommendation.id, actionType)
+    setIsApplying(true);
+    onApply?.(recommendation.id, actionType);
     // Simulate API call
-    setTimeout(() => setIsApplying(false), 1000)
-  }
+    setTimeout(() => setIsApplying(false), 1000);
+  };
 
   return (
     <div
@@ -168,9 +169,7 @@ const InsightCard: React.FC<{
               <span className="text-xs text-muted-foreground">{config.label}</span>
             </div>
 
-            <h4 className="font-medium text-foreground line-clamp-1">
-              {recommendation.title}
-            </h4>
+            <h4 className="font-medium text-foreground line-clamp-1">{recommendation.title}</h4>
 
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
               {recommendation.description}
@@ -249,9 +248,7 @@ const InsightCard: React.FC<{
         {/* Expanded actions */}
         {isExpanded && recommendation.actions && recommendation.actions.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border motion-enter">
-            <p className="text-xs font-medium text-muted-foreground mb-2">
-              Recommended Actions
-            </p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Recommended Actions</p>
             <div className="space-y-2">
               {recommendation.actions.map((action: RecommendationAction, idx: number) => (
                 <button
@@ -266,11 +263,12 @@ const InsightCard: React.FC<{
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
                   `}
                 >
-                  <span className="text-sm text-foreground">
-                    {action.label}
-                  </span>
+                  <span className="text-sm text-foreground">{action.label}</span>
                   {isApplying ? (
-                    <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" aria-label="Applying..." />
+                    <RefreshCw
+                      className="h-4 w-4 text-muted-foreground animate-spin"
+                      aria-label="Applying..."
+                    />
                   ) : (
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                   )}
@@ -281,8 +279,8 @@ const InsightCard: React.FC<{
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   tenantId,
@@ -292,58 +290,60 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
   onViewAllInsights,
   insightsPath = '/insights',
 }) => {
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-  const navigate = useNavigate()
-  const { toast } = useToast()
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const { data: recommendationsData, isLoading, error, refetch } = useTenantRecommendations(
-    tenantId,
-    undefined,
-    { limit: maxItems + dismissedIds.size }
-  )
+  const {
+    data: recommendationsData,
+    isLoading,
+    error,
+    refetch,
+  } = useTenantRecommendations(tenantId, undefined, { limit: maxItems + dismissedIds.size });
 
   // Handle both array and object response shapes
   const recommendations: Recommendation[] | undefined = Array.isArray(recommendationsData)
-    ? recommendationsData as Recommendation[]
-    : (recommendationsData as { recommendations: Recommendation[] } | undefined)?.recommendations
+    ? (recommendationsData as Recommendation[])
+    : (recommendationsData as { recommendations: Recommendation[] } | undefined)?.recommendations;
 
   const handleDismiss = (id: string) => {
-    setDismissedIds((prev) => new Set([...prev, id]))
+    setDismissedIds((prev) => new Set([...prev, id]));
     toast({
       title: 'Insight dismissed',
       description: 'The insight has been removed from your list.',
-    })
-  }
+    });
+  };
 
   const handleApply = async (id: string, action: string) => {
     try {
       if (onApply) {
-        await onApply(id, action)
+        await onApply(id, action);
       }
       toast({
         title: 'Action applied',
         description: `Successfully applied "${action}" for the recommendation.`,
-      })
+      });
     } catch (error) {
       toast({
         title: 'Action failed',
-        description: error instanceof Error ? error.message : 'Failed to apply action. Please try again.',
+        description:
+          error instanceof Error ? error.message : 'Failed to apply action. Please try again.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const handleViewAllInsights = () => {
     if (onViewAllInsights) {
-      onViewAllInsights()
+      onViewAllInsights();
     } else {
-      navigate(insightsPath)
+      navigate(insightsPath);
     }
-  }
+  };
 
   const visibleRecommendations = recommendations
     ?.filter((r: Recommendation) => !dismissedIds.has(r.id))
-    .slice(0, maxItems)
+    .slice(0, maxItems);
 
   if (isLoading) {
     return (
@@ -358,7 +358,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -375,7 +375,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -391,12 +391,8 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
               <Lightbulb className="h-5 w-5 text-white" aria-hidden="true" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">
-                AI Insights
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Powered by Quantum Ember Analytics
-              </p>
+              <h3 className="text-lg font-semibold text-foreground">AI Insights</h3>
+              <p className="text-xs text-muted-foreground">Powered by Quantum Ember Analytics</p>
             </div>
           </div>
 
@@ -426,9 +422,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
           <div className="text-center py-8">
             <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-3" aria-hidden="true" />
             <p className="text-foreground font-medium">All caught up!</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              No new insights at this time
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">No new insights at this time</p>
           </div>
         )}
       </div>
@@ -445,7 +439,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default InsightsPanel
+export default InsightsPanel;

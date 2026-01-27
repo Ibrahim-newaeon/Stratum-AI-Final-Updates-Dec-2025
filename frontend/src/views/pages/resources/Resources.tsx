@@ -6,17 +6,17 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  BookOpenIcon,
-  DocumentTextIcon,
-  VideoCameraIcon,
-  PresentationChartBarIcon,
-  NewspaperIcon,
   AcademicCapIcon,
-  MicrophoneIcon,
-  ArrowRightIcon,
-  PlayIcon,
   ArrowDownTrayIcon,
+  ArrowRightIcon,
+  BookOpenIcon,
   CalendarIcon,
+  DocumentTextIcon,
+  MicrophoneIcon,
+  NewspaperIcon,
+  PlayIcon,
+  PresentationChartBarIcon,
+  VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 const resourceCategories = [
@@ -138,28 +138,33 @@ export default function ResourcesPage() {
         <section className="relative py-20 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
                 style={{
                   background: 'rgba(255, 107, 107, 0.1)',
                   border: '1px solid rgba(255, 107, 107, 0.2)',
-                }}>
+                }}
+              >
                 <AcademicCapIcon className="w-4 h-4 text-[#FF6B6B]" />
                 <span className="text-sm font-medium text-[#FF6B6B]">Resources</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Learn, Grow, and{' '}
-                <span style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   Succeed
                 </span>
               </h1>
 
               <p className="text-lg text-gray-400">
-                Everything you need to master trust-gated automation and transform your marketing performance.
+                Everything you need to master trust-gated automation and transform your marketing
+                performance.
               </p>
             </div>
           </div>
@@ -190,7 +195,10 @@ export default function ResourcesPage() {
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-1">{cat.title}</h3>
                   <p className="text-gray-400 text-sm mb-4">{cat.description}</p>
-                  <div className="flex items-center gap-2 text-sm font-medium group-hover:gap-3 transition-all" style={{ color: cat.color }}>
+                  <div
+                    className="flex items-center gap-2 text-sm font-medium group-hover:gap-3 transition-all"
+                    style={{ color: cat.color }}
+                  >
                     <span>{cat.cta}</span>
                     <ArrowRightIcon className="w-4 h-4" />
                   </div>
@@ -276,8 +284,10 @@ export default function ResourcesPage() {
                   }}
                 >
                   {webinar.isUpcoming && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded mb-3"
-                      style={{ background: 'rgba(0, 255, 136, 0.2)', color: '#00FF88' }}>
+                    <span
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded mb-3"
+                      style={{ background: 'rgba(0, 255, 136, 0.2)', color: '#00FF88' }}
+                    >
                       <CalendarIcon className="w-3 h-3" />
                       Upcoming
                     </span>
@@ -328,17 +338,22 @@ export default function ResourcesPage() {
                     border: '1px solid rgba(255, 255, 255, 0.04)',
                   }}
                 >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                    style={{ background: 'rgba(255, 107, 107, 0.15)', border: '1px solid rgba(255, 107, 107, 0.3)' }}>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                    style={{
+                      background: 'rgba(255, 107, 107, 0.15)',
+                      border: '1px solid rgba(255, 107, 107, 0.3)',
+                    }}
+                  >
                     <DocumentTextIcon className="w-5 h-5 text-[#FF6B6B]" />
                   </div>
                   <h4 className="text-white font-medium mb-2">{paper.title}</h4>
                   <p className="text-gray-400 text-sm mb-3">{paper.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">{paper.pages} pages • {paper.downloads} downloads</span>
-                    <button
-                      className="flex items-center gap-1 text-sm font-medium text-[#FF6B6B]"
-                    >
+                    <span className="text-xs text-gray-500">
+                      {paper.pages} pages • {paper.downloads} downloads
+                    </span>
+                    <button className="flex items-center gap-1 text-sm font-medium text-[#FF6B6B]">
                       <ArrowDownTrayIcon className="w-4 h-4" />
                       Download
                     </button>
@@ -355,7 +370,8 @@ export default function ResourcesPage() {
             <div
               className="p-8 rounded-2xl text-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
+                background:
+                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
                 border: '1px solid rgba(139, 92, 246, 0.2)',
               }}
             >

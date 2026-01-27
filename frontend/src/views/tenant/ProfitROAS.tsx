@@ -4,56 +4,56 @@
  * Manages products, COGS, margins, and profit calculations for True ROAS.
  */
 
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
-  useProducts,
+  useCOGSUploads,
   useMarginRules,
+  useProducts,
   useProfitSummary,
   useTrueROAS,
-  useCOGSUploads,
   useUploadCOGS,
-} from '@/api/hooks'
+} from '@/api/hooks';
 import {
-  CurrencyDollarIcon,
   ArrowTrendingUpIcon,
+  CalculatorIcon,
+  CurrencyDollarIcon,
   DocumentArrowUpIcon,
   PlusIcon,
-  CalculatorIcon,
   ShoppingBagIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'products' | 'margins' | 'cogs'
+type TabType = 'overview' | 'products' | 'margins' | 'cogs';
 
 export default function ProfitROAS() {
-  useParams<{ tenantId: string }>()
-  const [activeTab, setActiveTab] = useState<TabType>('overview')
+  useParams<{ tenantId: string }>();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [dateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
-  })
+  });
 
-  const { data: products } = useProducts()
-  const { data: marginRules } = useMarginRules()
-  const { data: profitSummary } = useProfitSummary(dateRange)
-  const { data: trueROAS } = useTrueROAS(dateRange)
-  const { data: cogsUploads } = useCOGSUploads()
-  const uploadCOGS = useUploadCOGS()
+  const { data: products } = useProducts();
+  const { data: marginRules } = useMarginRules();
+  const { data: profitSummary } = useProfitSummary(dateRange);
+  const { data: trueROAS } = useTrueROAS(dateRange);
+  const { data: cogsUploads } = useCOGSUploads();
+  const uploadCOGS = useUploadCOGS();
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
     { id: 'products' as TabType, label: 'Products' },
     { id: 'margins' as TabType, label: 'Margin Rules' },
     { id: 'cogs' as TabType, label: 'COGS Upload' },
-  ]
+  ];
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      uploadCOGS.mutate(file)
+      uploadCOGS.mutate(file);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -111,7 +111,9 @@ export default function ProfitROAS() {
                 </div>
                 <div className="text-center p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
                   <p className="text-sm text-muted-foreground mb-1">Profit ROAS</p>
-                  <p className="text-4xl font-bold text-emerald-600">{trueROAS.profitRoas.toFixed(2)}x</p>
+                  <p className="text-4xl font-bold text-emerald-600">
+                    {trueROAS.profitRoas.toFixed(2)}x
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">Net Profit / Ad Spend</p>
                 </div>
               </div>
@@ -128,7 +130,9 @@ export default function ProfitROAS() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Revenue</p>
-                    <p className="text-2xl font-bold">${profitSummary.totalRevenue.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">
+                      ${profitSummary.totalRevenue.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -139,7 +143,9 @@ export default function ProfitROAS() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total COGS</p>
-                    <p className="text-2xl font-bold">${profitSummary.totalCogs.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">
+                      ${profitSummary.totalCogs.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -150,7 +156,9 @@ export default function ProfitROAS() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Gross Profit</p>
-                    <p className="text-2xl font-bold">${profitSummary.grossProfit.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">
+                      ${profitSummary.grossProfit.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -161,7 +169,9 @@ export default function ProfitROAS() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Net Profit</p>
-                    <p className="text-2xl font-bold">${profitSummary.netProfit.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">
+                      ${profitSummary.netProfit.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -197,7 +207,9 @@ export default function ProfitROAS() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-bold">{profitSummary.grossMarginPct.toFixed(1)}%</span>
+                      <span className="text-2xl font-bold">
+                        {profitSummary.grossMarginPct.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -228,7 +240,9 @@ export default function ProfitROAS() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-bold">{profitSummary.netMarginPct.toFixed(1)}%</span>
+                      <span className="text-2xl font-bold">
+                        {profitSummary.netMarginPct.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -273,9 +287,12 @@ export default function ProfitROAS() {
                     <span
                       className={cn(
                         'px-2 py-1 rounded-full text-xs',
-                        product.status === 'active' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                        product.status === 'inactive' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
-                        product.status === 'discontinued' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                        product.status === 'active' &&
+                          'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+                        product.status === 'inactive' &&
+                          'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
+                        product.status === 'discontinued' &&
+                          'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
                       )}
                     >
                       {product.status}
@@ -323,7 +340,9 @@ export default function ProfitROAS() {
                     <td className="px-4 py-3 text-sm capitalize">{rule.appliesTo}</td>
                     <td className="px-4 py-3 text-sm capitalize">{rule.marginType}</td>
                     <td className="px-4 py-3 text-right font-medium">
-                      {rule.marginType === 'percentage' ? `${rule.marginValue}%` : `$${rule.marginValue}`}
+                      {rule.marginType === 'percentage'
+                        ? `${rule.marginValue}%`
+                        : `$${rule.marginValue}`}
                     </td>
                     <td className="px-4 py-3 text-center">{rule.priority}</td>
                     <td className="px-4 py-3 text-center">
@@ -356,12 +375,7 @@ export default function ProfitROAS() {
               Upload a CSV file with SKU and COGS columns to update product costs
             </p>
             <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer">
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
+              <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
               Choose File
             </label>
           </div>
@@ -396,10 +410,14 @@ export default function ProfitROAS() {
                       <span
                         className={cn(
                           'px-2 py-1 rounded-full text-xs',
-                          upload.status === 'completed' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                          upload.status === 'processing' && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
-                          upload.status === 'failed' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-                          upload.status === 'pending' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
+                          upload.status === 'completed' &&
+                            'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+                          upload.status === 'processing' &&
+                            'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
+                          upload.status === 'failed' &&
+                            'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
+                          upload.status === 'pending' &&
+                            'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
                         )}
                       >
                         {upload.status}
@@ -413,5 +431,5 @@ export default function ProfitROAS() {
         </div>
       )}
     </div>
-  )
+  );
 }

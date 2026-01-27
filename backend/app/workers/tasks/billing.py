@@ -5,11 +5,11 @@
 Background tasks for cost allocation and usage tracking.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from app.db.session import SyncSessionLocal
 from app.models import Campaign, CampaignMetric, Tenant
@@ -26,17 +26,13 @@ def calculate_cost_allocation():
     logger.info("Starting cost allocation calculation")
 
     with SyncSessionLocal() as db:
-        tenants = (
-            db.execute(select(Tenant).where(Tenant.is_deleted == False))
-            .scalars()
-            .all()
-        )
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         allocations = []
         for tenant in tenants:
             try:
                 # Get yesterday's metrics
-                yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).date()
+                yesterday = (datetime.now(UTC) - timedelta(days=1)).date()
 
                 metrics = (
                     db.execute(
@@ -52,12 +48,9 @@ def calculate_cost_allocation():
                 # Calculate totals by platform
                 platform_totals = {}
                 for metric in metrics:
-                    campaign = (
-                        db.execute(
-                            select(Campaign).where(Campaign.id == metric.campaign_id)
-                        )
-                        .scalar_one_or_none()
-                    )
+                    campaign = db.execute(
+                        select(Campaign).where(Campaign.id == metric.campaign_id)
+                    ).scalar_one_or_none()
                     if campaign:
                         platform = campaign.platform
                         if platform not in platform_totals:
@@ -66,15 +59,9 @@ def calculate_cost_allocation():
                                 "revenue_cents": 0,
                                 "conversions": 0,
                             }
-                        platform_totals[platform]["spend_cents"] += (
-                            metric.spend_cents or 0
-                        )
-                        platform_totals[platform]["revenue_cents"] += (
-                            metric.revenue_cents or 0
-                        )
-                        platform_totals[platform]["conversions"] += (
-                            metric.conversions or 0
-                        )
+                        platform_totals[platform]["spend_cents"] += metric.spend_cents or 0
+                        platform_totals[platform]["revenue_cents"] += metric.revenue_cents or 0
+                        platform_totals[platform]["conversions"] += metric.conversions or 0
 
                 allocations.append(
                     {
@@ -100,11 +87,7 @@ def calculate_usage_rollup():
     logger.info("Starting usage rollup calculation")
 
     with SyncSessionLocal() as db:
-        tenants = (
-            db.execute(select(Tenant).where(Tenant.is_deleted == False))
-            .scalars()
-            .all()
-        )
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         rollups = []
         for tenant in tenants:
@@ -119,7 +102,7 @@ def calculate_usage_rollup():
                 ).scalar()
 
                 # Calculate MTD spend
-                month_start = datetime.now(timezone.utc).replace(day=1).date()
+                month_start = datetime.now(UTC).replace(day=1).date()
                 mtd_spend = (
                     db.execute(
                         select(func.sum(CampaignMetric.spend_cents)).where(
@@ -135,7 +118,7 @@ def calculate_usage_rollup():
                     "active_campaigns": active_campaigns,
                     "mtd_spend_cents": mtd_spend,
                     "plan": tenant.plan,
-                    "calculated_at": datetime.now(timezone.utc).isoformat(),
+                    "calculated_at": datetime.now(UTC).isoformat(),
                 }
                 rollups.append(rollup)
 

@@ -6,12 +6,12 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  SparklesIcon,
-  ChartBarIcon,
-  UserMinusIcon,
-  CurrencyDollarIcon,
   ArrowTrendingUpIcon,
+  ChartBarIcon,
+  CurrencyDollarIcon,
   LightBulbIcon,
+  SparklesIcon,
+  UserMinusIcon,
 } from '@heroicons/react/24/outline';
 
 const predictions = [
@@ -34,16 +34,14 @@ const predictions = [
   {
     icon: ArrowTrendingUpIcon,
     title: 'Revenue Forecasting',
-    description:
-      'Accurate revenue predictions based on historical patterns and market signals.',
+    description: 'Accurate revenue predictions based on historical patterns and market signals.',
     accuracy: '89%',
     color: '#3b82f6',
   },
   {
     icon: LightBulbIcon,
     title: 'Next-Best-Action',
-    description:
-      'AI-powered recommendations for the optimal next engagement for each customer.',
+    description: 'AI-powered recommendations for the optimal next engagement for each customer.',
     accuracy: '87%',
     color: '#f97316',
   },
@@ -76,10 +74,7 @@ export default function PredictionsSolution() {
                 <br />
                 <span style={{ color: '#f97316' }}>Act Today</span>
               </h1>
-              <p
-                className="text-lg mb-8"
-                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-              >
+              <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                 Machine learning models trained on your data deliver actionable predictions for
                 churn, LTV, revenue, and optimal customer actions.
               </p>
@@ -173,9 +168,7 @@ export default function PredictionsSolution() {
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Prediction Models
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Prediction Models</h2>
             <p className="text-lg" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               Enterprise-grade ML models continuously trained on your data.
             </p>
@@ -268,9 +261,7 @@ export default function PredictionsSolution() {
               boxShadow: '0 8px 32px rgba(236, 72, 153, 0.15), 0 8px 32px rgba(168, 85, 247, 0.15)',
             }}
           >
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Start Predicting Today
-            </h2>
+            <h2 className="text-3xl font-bold text-white mb-4">Start Predicting Today</h2>
             <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               See predictions for your customers within 48 hours.
             </p>

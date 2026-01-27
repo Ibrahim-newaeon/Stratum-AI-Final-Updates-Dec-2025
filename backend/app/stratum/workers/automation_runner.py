@@ -58,31 +58,30 @@ Execution Modes
 4. **Manual Review**: Actions queued for human approval before execution
 """
 
-import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
 import asyncio
-from functools import wraps
+import logging
 import uuid
+from datetime import datetime, timedelta
+from functools import wraps
+from typing import Any
 
 try:
-    from celery import Celery, shared_task, chain, group
+    from celery import Celery, chain, group, shared_task
     from celery.schedules import crontab
+
     CELERY_AVAILABLE = True
 except ImportError:
     CELERY_AVAILABLE = False
+
     def shared_task(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
 
-from app.stratum.models import (
-    Platform,
-    AutomationAction,
-    EntityStatus
-)
-from app.stratum.core.autopilot import AutopilotEngine
 
+from app.stratum.core.autopilot import AutopilotEngine
+from app.stratum.models import AutomationAction, EntityStatus, Platform
 
 logger = logging.getLogger("stratum.workers.automation_runner")
 
@@ -92,24 +91,27 @@ if CELERY_AVAILABLE:
     from app.stratum.workers.data_sync import app
 
     # Add automation-specific schedules
-    app.conf.beat_schedule.update({
-        'run-autopilot-every-hour': {
-            'task': 'app.stratum.workers.automation_runner.run_autopilot_all',
-            'schedule': timedelta(hours=1),
-        },
-        'process-action-queue-every-5-min': {
-            'task': 'app.stratum.workers.automation_runner.process_pending_actions',
-            'schedule': timedelta(minutes=5),
-        },
-        'cleanup-completed-actions-daily': {
-            'task': 'app.stratum.workers.automation_runner.cleanup_completed_actions',
-            'schedule': crontab(hour=3, minute=0),  # 3 AM daily
-        },
-    })
+    app.conf.beat_schedule.update(
+        {
+            "run-autopilot-every-hour": {
+                "task": "app.stratum.workers.automation_runner.run_autopilot_all",
+                "schedule": timedelta(hours=1),
+            },
+            "process-action-queue-every-5-min": {
+                "task": "app.stratum.workers.automation_runner.process_pending_actions",
+                "schedule": timedelta(minutes=5),
+            },
+            "cleanup-completed-actions-daily": {
+                "task": "app.stratum.workers.automation_runner.cleanup_completed_actions",
+                "schedule": crontab(hour=3, minute=0),  # 3 AM daily
+            },
+        }
+    )
 
 
 def async_task(func):
     """Run async functions in Celery tasks."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         loop = asyncio.new_event_loop()
@@ -118,6 +120,7 @@ def async_task(func):
             return loop.run_until_complete(func(*args, **kwargs))
         finally:
             loop.close()
+
     return wrapper
 
 
@@ -125,14 +128,12 @@ def async_task(func):
 # ACTION EXECUTION TASKS
 # ============================================================================
 
+
 @shared_task(bind=True, max_retries=3)
 @async_task
 async def execute_action(
-    self,
-    action_data: Dict[str, Any],
-    credentials: Dict[str, Any],
-    force: bool = False
-) -> Dict[str, Any]:
+    self, action_data: dict[str, Any], credentials: dict[str, Any], force: bool = False
+) -> dict[str, Any]:
     """
     Execute a single automation action.
 
@@ -159,7 +160,7 @@ async def execute_action(
         "entity_id": action_data.get("entity_id"),
         "platform": action_data.get("platform"),
         "started_at": datetime.utcnow().isoformat(),
-        "status": "pending"
+        "status": "pending",
     }
 
     try:
@@ -173,7 +174,7 @@ async def execute_action(
             entity_id=action_data["entity_id"],
             action_type=action_data["action_type"],
             parameters=action_data["parameters"],
-            signal_health_at_creation=action_data.get("signal_health_at_creation", 0)
+            signal_health_at_creation=action_data.get("signal_health_at_creation", 0),
         )
 
         # Final signal health check (unless forced)
@@ -197,7 +198,9 @@ async def execute_action(
         # Record result
         result["status"] = executed_action.status
         result["result"] = executed_action.result
-        result["executed_at"] = executed_action.executed_at.isoformat() if executed_action.executed_at else None
+        result["executed_at"] = (
+            executed_action.executed_at.isoformat() if executed_action.executed_at else None
+        )
         result["completed_at"] = datetime.utcnow().isoformat()
 
         if executed_action.status == "failed":
@@ -222,11 +225,8 @@ async def execute_action(
 @shared_task(bind=True)
 @async_task
 async def execute_action_batch(
-    self,
-    actions_data: List[Dict[str, Any]],
-    credentials: Dict[str, Any],
-    platform: str
-) -> Dict[str, Any]:
+    self, actions_data: list[dict[str, Any]], credentials: dict[str, Any], platform: str
+) -> dict[str, Any]:
     """
     Execute a batch of actions for a single platform.
 
@@ -244,7 +244,7 @@ async def execute_action_batch(
         "failed": 0,
         "blocked": 0,
         "actions": [],
-        "started_at": datetime.utcnow().isoformat()
+        "started_at": datetime.utcnow().isoformat(),
     }
 
     try:
@@ -254,7 +254,7 @@ async def execute_action_batch(
         for action_data in actions_data:
             action_result = {
                 "entity_id": action_data["entity_id"],
-                "action_type": action_data["action_type"]
+                "action_type": action_data["action_type"],
             }
 
             try:
@@ -264,7 +264,7 @@ async def execute_action_batch(
                     entity_type=action_data["entity_type"],
                     entity_id=action_data["entity_id"],
                     action_type=action_data["action_type"],
-                    parameters=action_data["parameters"]
+                    parameters=action_data["parameters"],
                 )
 
                 executed = await adapter.execute_action(action)
@@ -298,15 +298,12 @@ async def execute_action_batch(
 # AUTOPILOT ORCHESTRATION TASKS
 # ============================================================================
 
+
 @shared_task(bind=True)
 @async_task
 async def run_autopilot_for_account(
-    self,
-    platform: str,
-    account_id: str,
-    credentials: Dict[str, Any],
-    targets: Dict[str, float]
-) -> Dict[str, Any]:
+    self, platform: str, account_id: str, credentials: dict[str, Any], targets: dict[str, float]
+) -> dict[str, Any]:
     """
     Run the autopilot engine for a single account.
 
@@ -324,7 +321,7 @@ async def run_autopilot_for_account(
         "actions_proposed": 0,
         "actions_approved": 0,
         "actions_queued": 0,
-        "actions_blocked": 0
+        "actions_blocked": 0,
     }
 
     try:
@@ -352,7 +349,7 @@ async def run_autopilot_for_account(
                 entity_type="campaign",
                 entity_ids=[campaign.campaign_id],
                 date_start=datetime.utcnow() - timedelta(days=1),
-                date_end=datetime.utcnow()
+                date_end=datetime.utcnow(),
             )
 
             if campaign.campaign_id not in metrics_dict:
@@ -368,7 +365,7 @@ async def run_autopilot_for_account(
                 platform=platform_enum,
                 account_id=account_id,
                 emq_scores=emq_scores,
-                recent_metrics=[metrics]
+                recent_metrics=[metrics],
             )
 
             # Evaluate autopilot rules
@@ -379,7 +376,7 @@ async def run_autopilot_for_account(
                 adsets=adsets,
                 metrics=metrics,
                 signal_health=signal_health,
-                targets=targets
+                targets=targets,
             )
 
             for rule_result in rule_results:
@@ -389,7 +386,11 @@ async def run_autopilot_for_account(
                     result["actions_proposed"] += len(rule_result["actions"])
 
                     for i, action in enumerate(rule_result["actions"]):
-                        gate_result = rule_result["gate_results"][i] if i < len(rule_result["gate_results"]) else {}
+                        gate_result = (
+                            rule_result["gate_results"][i]
+                            if i < len(rule_result["gate_results"])
+                            else {}
+                        )
                         decision = gate_result.get("decision", "blocked")
 
                         if decision == "approved":
@@ -399,9 +400,9 @@ async def run_autopilot_for_account(
                                 action_data={
                                     "platform": platform,
                                     "account_id": account_id,
-                                    **action
+                                    **action,
                                 },
-                                credentials=credentials
+                                credentials=credentials,
                             )
                         elif decision == "queued":
                             result["actions_queued"] += 1
@@ -420,7 +421,7 @@ async def run_autopilot_for_account(
 
 @shared_task
 @async_task
-async def run_autopilot_all() -> Dict[str, Any]:
+async def run_autopilot_all() -> dict[str, Any]:
     """
     Run autopilot for all enabled accounts across platforms.
 
@@ -432,11 +433,11 @@ async def run_autopilot_all() -> Dict[str, Any]:
         "started_at": datetime.utcnow().isoformat(),
         "accounts_processed": 0,
         "total_actions": 0,
-        "platforms": {}
+        "platforms": {},
     }
 
     try:
-        with open("config.yaml", "r") as f:
+        with open("config.yaml") as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
         return {"error": "Configuration file not found"}
@@ -462,10 +463,7 @@ async def run_autopilot_all() -> Dict[str, Any]:
         for account_id in account_ids:
             try:
                 account_result = await run_autopilot_for_account(
-                    platform,
-                    account_id,
-                    platform_config,
-                    targets
+                    platform, account_id, platform_config, targets
                 )
                 platform_results.append(account_result)
                 result["accounts_processed"] += 1
@@ -483,11 +481,9 @@ async def run_autopilot_all() -> Dict[str, Any]:
 # ACTION QUEUE MANAGEMENT
 # ============================================================================
 
+
 @shared_task
-def queue_action_for_review(
-    action_data: Dict[str, Any],
-    reason: str
-) -> Dict[str, Any]:
+def queue_action_for_review(action_data: dict[str, Any], reason: str) -> dict[str, Any]:
     """
     Queue an action for manual review.
 
@@ -498,7 +494,7 @@ def queue_action_for_review(
         "action": action_data,
         "reason": reason,
         "queued_at": datetime.utcnow().isoformat(),
-        "status": "pending_review"
+        "status": "pending_review",
     }
 
     # This would normally save to database
@@ -508,17 +504,13 @@ def queue_action_for_review(
 
 
 @shared_task
-def process_pending_actions() -> Dict[str, Any]:
+def process_pending_actions() -> dict[str, Any]:
     """
     Process actions that were queued for review.
 
     Runs every 5 minutes to check for manually approved actions.
     """
-    result = {
-        "processed": 0,
-        "executed": 0,
-        "rejected": 0
-    }
+    result = {"processed": 0, "executed": 0, "rejected": 0}
 
     # This would:
     # 1. Query database for actions with status="approved"
@@ -529,10 +521,7 @@ def process_pending_actions() -> Dict[str, Any]:
 
 
 @shared_task
-def approve_queued_action(
-    action_id: str,
-    approved_by: str
-) -> Dict[str, Any]:
+def approve_queued_action(action_id: str, approved_by: str) -> dict[str, Any]:
     """
     Manually approve a queued action.
 
@@ -548,16 +537,12 @@ def approve_queued_action(
         "action_id": action_id,
         "approved_by": approved_by,
         "approved_at": datetime.utcnow().isoformat(),
-        "status": "approved"
+        "status": "approved",
     }
 
 
 @shared_task
-def reject_queued_action(
-    action_id: str,
-    rejected_by: str,
-    reason: str
-) -> Dict[str, Any]:
+def reject_queued_action(action_id: str, rejected_by: str, reason: str) -> dict[str, Any]:
     """
     Reject a queued action.
     """
@@ -568,7 +553,7 @@ def reject_queued_action(
         "rejected_by": rejected_by,
         "rejected_at": datetime.utcnow().isoformat(),
         "reason": reason,
-        "status": "rejected"
+        "status": "rejected",
     }
 
 
@@ -576,14 +561,15 @@ def reject_queued_action(
 # ROLLBACK TASKS
 # ============================================================================
 
+
 @shared_task(bind=True)
 @async_task
 async def rollback_action(
     self,
-    original_action: Dict[str, Any],
-    previous_state: Dict[str, Any],
-    credentials: Dict[str, Any]
-) -> Dict[str, Any]:
+    original_action: dict[str, Any],
+    previous_state: dict[str, Any],
+    credentials: dict[str, Any],
+) -> dict[str, Any]:
     """
     Rollback a previously executed action.
 
@@ -595,7 +581,7 @@ async def rollback_action(
     result = {
         "rollback_id": rollback_id,
         "original_action": original_action,
-        "started_at": datetime.utcnow().isoformat()
+        "started_at": datetime.utcnow().isoformat(),
     }
 
     try:
@@ -610,7 +596,7 @@ async def rollback_action(
             entity_id=original_action["entity_id"],
             action_type=original_action["action_type"],
             parameters=previous_state,  # Use previous state as new parameters
-            created_by=f"rollback:{rollback_id}"
+            created_by=f"rollback:{rollback_id}",
         )
 
         executed = await adapter.execute_action(rollback_action_obj)
@@ -634,8 +620,9 @@ async def rollback_action(
 # CLEANUP TASKS
 # ============================================================================
 
+
 @shared_task
-def cleanup_completed_actions(days_to_keep: int = 30) -> Dict[str, Any]:
+def cleanup_completed_actions(days_to_keep: int = 30) -> dict[str, Any]:
     """
     Clean up old completed action records.
 
@@ -645,18 +632,16 @@ def cleanup_completed_actions(days_to_keep: int = 30) -> Dict[str, Any]:
 
     # This would delete old action records from database
 
-    return {
-        "cutoff_date": cutoff.isoformat(),
-        "status": "completed"
-    }
+    return {"cutoff_date": cutoff.isoformat(), "status": "completed"}
 
 
 # ============================================================================
 # MONITORING & STATS
 # ============================================================================
 
+
 @shared_task
-def get_automation_stats() -> Dict[str, Any]:
+def get_automation_stats() -> dict[str, Any]:
     """
     Get statistics about automation execution.
     """
@@ -664,13 +649,7 @@ def get_automation_stats() -> Dict[str, Any]:
 
     return {
         "timestamp": datetime.utcnow().isoformat(),
-        "last_24h": {
-            "total_actions": 0,
-            "succeeded": 0,
-            "failed": 0,
-            "blocked": 0,
-            "queued": 0
-        },
+        "last_24h": {"total_actions": 0, "succeeded": 0, "failed": 0, "blocked": 0, "queued": 0},
         "by_platform": {},
-        "by_action_type": {}
+        "by_action_type": {},
     }

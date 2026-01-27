@@ -3,41 +3,39 @@
  * Monitor and visualize event volume anomalies
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  AlertTriangle,
   Activity,
-  TrendingUp,
-  TrendingDown,
+  AlertCircle,
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  Info,
+  Loader2,
   Minus,
   RefreshCw,
-  Loader2,
-  BarChart3,
-  Clock,
-  Zap,
   Settings,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
   Shield,
-  ChevronDown,
-  Info,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import {
-  useEventAnomalies,
-  useAnomalySummary,
-  AnomalySeverity,
-  EventAnomaly,
-} from '@/api/cdp'
+  TrendingDown,
+  TrendingUp,
+  XCircle,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AnomalySeverity, EventAnomaly, useAnomalySummary, useEventAnomalies } from '@/api/cdp';
 
 // Severity configuration
-const SEVERITY_CONFIG: Record<AnomalySeverity, {
-  label: string
-  color: string
-  bgColor: string
-  icon: React.ReactNode
-}> = {
+const SEVERITY_CONFIG: Record<
+  AnomalySeverity,
+  {
+    label: string;
+    color: string;
+    bgColor: string;
+    icon: React.ReactNode;
+  }
+> = {
   low: {
     label: 'Low',
     color: 'text-blue-500',
@@ -62,7 +60,7 @@ const SEVERITY_CONFIG: Record<AnomalySeverity, {
     bgColor: 'bg-red-500/10',
     icon: <XCircle className="w-4 h-4" />,
   },
-}
+};
 
 // Health status configuration
 const HEALTH_CONFIG = {
@@ -96,28 +94,28 @@ const HEALTH_CONFIG = {
     bgColor: 'bg-gray-500/10',
     icon: <Info className="w-5 h-5" />,
   },
-}
+};
 
 // Trend icon component
 function TrendIcon({ trend }: { trend: 'increasing' | 'stable' | 'decreasing' }) {
   switch (trend) {
     case 'increasing':
-      return <TrendingUp className="w-4 h-4 text-green-500" />
+      return <TrendingUp className="w-4 h-4 text-green-500" />;
     case 'decreasing':
-      return <TrendingDown className="w-4 h-4 text-red-500" />
+      return <TrendingDown className="w-4 h-4 text-red-500" />;
     default:
-      return <Minus className="w-4 h-4 text-gray-500" />
+      return <Minus className="w-4 h-4 text-gray-500" />;
   }
 }
 
 // Anomaly card component
 interface AnomalyCardProps {
-  anomaly: EventAnomaly
+  anomaly: EventAnomaly;
 }
 
 function AnomalyCard({ anomaly }: AnomalyCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const severityConfig = SEVERITY_CONFIG[anomaly.severity]
+  const [isExpanded, setIsExpanded] = useState(false);
+  const severityConfig = SEVERITY_CONFIG[anomaly.severity];
 
   return (
     <div
@@ -134,11 +132,13 @@ function AnomalyCard({ anomaly }: AnomalyCardProps) {
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-semibold">{anomaly.source_name}</h4>
-              <span className={cn(
-                'px-2 py-0.5 rounded-full text-xs font-medium',
-                severityConfig.bgColor,
-                severityConfig.color
-              )}>
+              <span
+                className={cn(
+                  'px-2 py-0.5 rounded-full text-xs font-medium',
+                  severityConfig.bgColor,
+                  severityConfig.color
+                )}
+              >
                 {severityConfig.label}
               </span>
             </div>
@@ -148,11 +148,14 @@ function AnomalyCard({ anomaly }: AnomalyCardProps) {
           </div>
         </div>
         <div className="text-right">
-          <div className={cn(
-            'text-2xl font-bold',
-            anomaly.pct_change >= 0 ? 'text-red-500' : 'text-green-500'
-          )}>
-            {anomaly.pct_change >= 0 ? '+' : ''}{anomaly.pct_change.toFixed(1)}%
+          <div
+            className={cn(
+              'text-2xl font-bold',
+              anomaly.pct_change >= 0 ? 'text-red-500' : 'text-green-500'
+            )}
+          >
+            {anomaly.pct_change >= 0 ? '+' : ''}
+            {anomaly.pct_change.toFixed(1)}%
           </div>
           <div className="text-xs text-muted-foreground">from baseline</div>
         </div>
@@ -187,29 +190,29 @@ function AnomalyCard({ anomaly }: AnomalyCardProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export function AnomalyDashboard() {
-  const [windowDays, setWindowDays] = useState(7)
-  const [zscoreThreshold, setZscoreThreshold] = useState(2.0)
-  const [showSettings, setShowSettings] = useState(false)
+  const [windowDays, setWindowDays] = useState(7);
+  const [zscoreThreshold, setZscoreThreshold] = useState(2.0);
+  const [showSettings, setShowSettings] = useState(false);
 
-  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useAnomalySummary()
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useAnomalySummary();
   const {
     data: anomalies,
     isLoading: anomaliesLoading,
-    refetch: refetchAnomalies
-  } = useEventAnomalies({ window_days: windowDays, zscore_threshold: zscoreThreshold })
+    refetch: refetchAnomalies,
+  } = useEventAnomalies({ window_days: windowDays, zscore_threshold: zscoreThreshold });
 
-  const isLoading = summaryLoading || anomaliesLoading
+  const isLoading = summaryLoading || anomaliesLoading;
 
   const handleRefresh = () => {
-    refetchSummary()
-    refetchAnomalies()
-  }
+    refetchSummary();
+    refetchAnomalies();
+  };
 
-  const healthConfig = HEALTH_CONFIG[summary?.health_status || 'unknown']
+  const healthConfig = HEALTH_CONFIG[summary?.health_status || 'unknown'];
 
   return (
     <div className="space-y-6">
@@ -299,10 +302,12 @@ export function AnomalyDashboard() {
         <>
           {/* Health status banner */}
           {summary && (
-            <div className={cn(
-              'p-6 rounded-xl border flex items-center justify-between',
-              healthConfig.bgColor
-            )}>
+            <div
+              className={cn(
+                'p-6 rounded-xl border flex items-center justify-between',
+                healthConfig.bgColor
+              )}
+            >
               <div className="flex items-center gap-4">
                 <div className={cn('p-3 rounded-xl bg-background', healthConfig.color)}>
                   {healthConfig.icon}
@@ -343,11 +348,14 @@ export function AnomalyDashboard() {
                   <TrendIcon trend={summary.volume_trend} />
                   WoW Change
                 </div>
-                <div className={cn(
-                  'text-2xl font-bold',
-                  summary.wow_change_pct >= 0 ? 'text-green-500' : 'text-red-500'
-                )}>
-                  {summary.wow_change_pct >= 0 ? '+' : ''}{summary.wow_change_pct.toFixed(1)}%
+                <div
+                  className={cn(
+                    'text-2xl font-bold',
+                    summary.wow_change_pct >= 0 ? 'text-green-500' : 'text-red-500'
+                  )}
+                >
+                  {summary.wow_change_pct >= 0 ? '+' : ''}
+                  {summary.wow_change_pct.toFixed(1)}%
                 </div>
               </div>
               <div className="p-4 rounded-xl border bg-card">
@@ -392,17 +400,23 @@ export function AnomalyDashboard() {
 
               {/* Alert banners for critical/high */}
               {(anomalies.has_critical || anomalies.has_high) && (
-                <div className={cn(
-                  'mb-4 p-4 rounded-lg flex items-center gap-3',
-                  anomalies.has_critical ? 'bg-red-500/10' : 'bg-orange-500/10'
-                )}>
-                  <AlertTriangle className={cn(
-                    'w-5 h-5',
-                    anomalies.has_critical ? 'text-red-500' : 'text-orange-500'
-                  )} />
+                <div
+                  className={cn(
+                    'mb-4 p-4 rounded-lg flex items-center gap-3',
+                    anomalies.has_critical ? 'bg-red-500/10' : 'bg-orange-500/10'
+                  )}
+                >
+                  <AlertTriangle
+                    className={cn(
+                      'w-5 h-5',
+                      anomalies.has_critical ? 'text-red-500' : 'text-orange-500'
+                    )}
+                  />
                   <div>
                     <div className="font-medium">
-                      {anomalies.has_critical ? 'Critical Anomalies Detected' : 'High Severity Anomalies Detected'}
+                      {anomalies.has_critical
+                        ? 'Critical Anomalies Detected'
+                        : 'High Severity Anomalies Detected'}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Immediate attention may be required to investigate unusual data patterns
@@ -416,7 +430,8 @@ export function AnomalyDashboard() {
                   <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
                   <h3 className="font-semibold mb-2">No Anomalies Detected</h3>
                   <p className="text-sm text-muted-foreground">
-                    All event volumes are within expected ranges for the past {anomalies.analysis_period_days} days
+                    All event volumes are within expected ranges for the past{' '}
+                    {anomalies.analysis_period_days} days
                   </p>
                 </div>
               ) : (
@@ -424,16 +439,18 @@ export function AnomalyDashboard() {
                   {/* Group by severity */}
                   {['critical', 'high', 'medium', 'low'].map((severity) => {
                     const severityAnomalies = anomalies.anomalies.filter(
-                      a => a.severity === severity
-                    )
-                    if (severityAnomalies.length === 0) return null
+                      (a) => a.severity === severity
+                    );
+                    if (severityAnomalies.length === 0) return null;
 
                     return (
                       <div key={severity}>
-                        <h4 className={cn(
-                          'text-sm font-medium mb-2 capitalize',
-                          SEVERITY_CONFIG[severity as AnomalySeverity].color
-                        )}>
+                        <h4
+                          className={cn(
+                            'text-sm font-medium mb-2 capitalize',
+                            SEVERITY_CONFIG[severity as AnomalySeverity].color
+                          )}
+                        >
                           {severity} Severity ({severityAnomalies.length})
                         </h4>
                         <div className="space-y-3">
@@ -442,7 +459,7 @@ export function AnomalyDashboard() {
                           ))}
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               )}
@@ -456,17 +473,29 @@ export function AnomalyDashboard() {
               <div>
                 <div className="font-medium mb-1">How it works</div>
                 <p className="text-muted-foreground">
-                  We use Z-score statistical analysis to compare current event volumes against historical baselines.
-                  Significant deviations are flagged as anomalies.
+                  We use Z-score statistical analysis to compare current event volumes against
+                  historical baselines. Significant deviations are flagged as anomalies.
                 </p>
               </div>
               <div>
                 <div className="font-medium mb-1">Severity Levels</div>
                 <ul className="text-muted-foreground space-y-1">
-                  <li><span className="text-red-500 font-medium">Critical:</span> Z-score {'>'} 4 (extremely unusual)</li>
-                  <li><span className="text-orange-500 font-medium">High:</span> Z-score {'>'} 3 (very unusual)</li>
-                  <li><span className="text-amber-500 font-medium">Medium:</span> Z-score {'>'} 2.5 (unusual)</li>
-                  <li><span className="text-blue-500 font-medium">Low:</span> Z-score {'>'} threshold (slightly unusual)</li>
+                  <li>
+                    <span className="text-red-500 font-medium">Critical:</span> Z-score {'>'} 4
+                    (extremely unusual)
+                  </li>
+                  <li>
+                    <span className="text-orange-500 font-medium">High:</span> Z-score {'>'} 3 (very
+                    unusual)
+                  </li>
+                  <li>
+                    <span className="text-amber-500 font-medium">Medium:</span> Z-score {'>'} 2.5
+                    (unusual)
+                  </li>
+                  <li>
+                    <span className="text-blue-500 font-medium">Low:</span> Z-score {'>'} threshold
+                    (slightly unusual)
+                  </li>
                 </ul>
               </div>
             </div>
@@ -474,7 +503,7 @@ export function AnomalyDashboard() {
         </>
       )}
     </div>
-  )
+  );
 }
 
-export default AnomalyDashboard
+export default AnomalyDashboard;

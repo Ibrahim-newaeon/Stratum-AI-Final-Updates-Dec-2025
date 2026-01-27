@@ -13,18 +13,19 @@ Schemas:
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List, Dict, Any
+from typing import Any, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # =============================================================================
 # Base Configuration
 # =============================================================================
 
+
 class CDPBaseSchema(BaseModel):
     """Base schema with common configuration."""
+
     model_config = ConfigDict(
         from_attributes=True,
         str_strip_whitespace=True,
@@ -36,9 +37,13 @@ class CDPBaseSchema(BaseModel):
 # Identifier Schemas
 # =============================================================================
 
+
 class IdentifierInput(BaseModel):
     """Single identifier in an event."""
-    type: str = Field(..., description="Identifier type: email, phone, device_id, anonymous_id, external_id")
+
+    type: str = Field(
+        ..., description="Identifier type: email, phone, device_id, anonymous_id, external_id"
+    )
     value: str = Field(..., min_length=1, max_length=512, description="Identifier value")
 
     @field_validator("type")
@@ -52,6 +57,7 @@ class IdentifierInput(BaseModel):
 
 class IdentifierResponse(CDPBaseSchema):
     """Identifier in API responses."""
+
     id: UUID
     identifier_type: str
     identifier_value: Optional[str] = None
@@ -67,18 +73,21 @@ class IdentifierResponse(CDPBaseSchema):
 # Event Schemas
 # =============================================================================
 
+
 class EventContext(BaseModel):
     """Context data for an event (device, geo, campaign info)."""
+
     user_agent: Optional[str] = Field(None, max_length=1024)
     ip: Optional[str] = Field(None, max_length=45)
     locale: Optional[str] = Field(None, max_length=20)
     timezone: Optional[str] = Field(None, max_length=50)
-    screen: Optional[Dict[str, int]] = None
-    campaign: Optional[Dict[str, str]] = None
+    screen: Optional[dict[str, int]] = None
+    campaign: Optional[dict[str, str]] = None
 
 
 class EventConsent(BaseModel):
     """Consent flags sent with event."""
+
     analytics: Optional[bool] = None
     ads: Optional[bool] = None
     email: Optional[bool] = None
@@ -87,14 +96,25 @@ class EventConsent(BaseModel):
 
 class EventInput(BaseModel):
     """Single event for ingestion."""
-    event_name: str = Field(..., min_length=1, max_length=255, description="Event name (e.g., PageView, Purchase)")
+
+    event_name: str = Field(
+        ..., min_length=1, max_length=255, description="Event name (e.g., PageView, Purchase)"
+    )
     event_time: datetime = Field(..., description="When the event occurred (ISO8601)")
-    idempotency_key: Optional[str] = Field(None, max_length=128, description="Unique key for deduplication")
+    idempotency_key: Optional[str] = Field(
+        None, max_length=128, description="Unique key for deduplication"
+    )
 
-    identifiers: List[IdentifierInput] = Field(..., min_length=1, description="At least one identifier required")
+    identifiers: list[IdentifierInput] = Field(
+        ..., min_length=1, description="At least one identifier required"
+    )
 
-    properties: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Event-specific properties")
-    context: Optional[EventContext] = Field(default=None, description="Device, geo, campaign context")
+    properties: Optional[dict[str, Any]] = Field(
+        default_factory=dict, description="Event-specific properties"
+    )
+    context: Optional[EventContext] = Field(
+        default=None, description="Device, geo, campaign context"
+    )
     consent: Optional[EventConsent] = Field(default=None, description="Consent flags")
 
     @field_validator("event_name")
@@ -102,18 +122,25 @@ class EventInput(BaseModel):
     def validate_event_name(cls, v: str) -> str:
         # Allow alphanumeric, spaces, underscores, dashes
         import re
+
         if not re.match(r"^[\w\s\-]+$", v):
-            raise ValueError("Event name can only contain letters, numbers, spaces, underscores, and dashes")
+            raise ValueError(
+                "Event name can only contain letters, numbers, spaces, underscores, and dashes"
+            )
         return v
 
 
 class EventBatchInput(BaseModel):
     """Batch of events for ingestion."""
-    events: List[EventInput] = Field(..., min_length=1, max_length=1000, description="Events to ingest (max 1000)")
+
+    events: list[EventInput] = Field(
+        ..., min_length=1, max_length=1000, description="Events to ingest (max 1000)"
+    )
 
 
 class EventIngestResult(BaseModel):
     """Result for a single event ingestion."""
+
     event_id: Optional[UUID] = None
     status: str  # "accepted", "rejected", "duplicate"
     profile_id: Optional[UUID] = None
@@ -122,20 +149,22 @@ class EventIngestResult(BaseModel):
 
 class EventBatchResponse(BaseModel):
     """Response for batch event ingestion."""
+
     accepted: int
     rejected: int
     duplicates: int
-    results: List[EventIngestResult]
+    results: list[EventIngestResult]
 
 
 class EventResponse(CDPBaseSchema):
     """Event in API responses."""
+
     id: UUID
     event_name: str
     event_time: datetime
     received_at: datetime
-    properties: Dict[str, Any]
-    context: Dict[str, Any]
+    properties: dict[str, Any]
+    context: dict[str, Any]
     emq_score: Optional[Decimal] = None
     processed: bool
 
@@ -144,8 +173,10 @@ class EventResponse(CDPBaseSchema):
 # Profile Schemas
 # =============================================================================
 
+
 class ProfileResponse(CDPBaseSchema):
     """Full profile response with identifiers and metadata."""
+
     id: UUID
     tenant_id: int
     external_id: Optional[str] = None
@@ -153,8 +184,8 @@ class ProfileResponse(CDPBaseSchema):
     first_seen_at: datetime
     last_seen_at: datetime
 
-    profile_data: Dict[str, Any]
-    computed_traits: Dict[str, Any]
+    profile_data: dict[str, Any]
+    computed_traits: dict[str, Any]
 
     lifecycle_stage: str
 
@@ -163,7 +194,7 @@ class ProfileResponse(CDPBaseSchema):
     total_purchases: int
     total_revenue: Decimal
 
-    identifiers: List[IdentifierResponse] = []
+    identifiers: list[IdentifierResponse] = []
 
     created_at: datetime
     updated_at: datetime
@@ -171,7 +202,8 @@ class ProfileResponse(CDPBaseSchema):
 
 class ProfileListResponse(BaseModel):
     """Paginated list of profiles."""
-    profiles: List[ProfileResponse]
+
+    profiles: list[ProfileResponse]
     total: int
     page: int
     page_size: int
@@ -179,6 +211,7 @@ class ProfileListResponse(BaseModel):
 
 class ProfileLookupParams(BaseModel):
     """Parameters for profile lookup by identifier."""
+
     identifier_type: str = Field(..., description="Type of identifier (email, phone, etc.)")
     identifier_value: str = Field(..., description="Value to look up")
 
@@ -187,11 +220,15 @@ class ProfileLookupParams(BaseModel):
 # Source Schemas
 # =============================================================================
 
+
 class SourceCreate(BaseModel):
     """Create a new data source."""
+
     name: str = Field(..., min_length=1, max_length=255, description="Human-readable source name")
     source_type: str = Field(..., description="Source type: website, server, sgtm, import, crm")
-    config: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Source-specific configuration")
+    config: Optional[dict[str, Any]] = Field(
+        default_factory=dict, description="Source-specific configuration"
+    )
 
     @field_validator("source_type")
     @classmethod
@@ -204,11 +241,12 @@ class SourceCreate(BaseModel):
 
 class SourceResponse(CDPBaseSchema):
     """Data source in API responses."""
+
     id: UUID
     name: str
     source_type: str
     source_key: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
     is_active: bool
     event_count: int
     last_event_at: Optional[datetime] = None
@@ -218,7 +256,8 @@ class SourceResponse(CDPBaseSchema):
 
 class SourceListResponse(BaseModel):
     """List of data sources."""
-    sources: List[SourceResponse]
+
+    sources: list[SourceResponse]
     total: int
 
 
@@ -226,8 +265,10 @@ class SourceListResponse(BaseModel):
 # Consent Schemas
 # =============================================================================
 
+
 class ConsentUpdate(BaseModel):
     """Update consent for a profile."""
+
     consent_type: str = Field(..., description="Consent type: analytics, ads, email, sms, all")
     granted: bool = Field(..., description="Whether consent is granted")
     source: Optional[str] = Field(None, description="Where consent was collected")
@@ -245,6 +286,7 @@ class ConsentUpdate(BaseModel):
 
 class ConsentResponse(CDPBaseSchema):
     """Consent record in API responses."""
+
     id: UUID
     consent_type: str
     granted: bool
@@ -260,8 +302,10 @@ class ConsentResponse(CDPBaseSchema):
 # EMQ (Event Match Quality) Schemas
 # =============================================================================
 
+
 class EMQScoreResponse(BaseModel):
     """EMQ score breakdown for an event or batch."""
+
     overall_score: Decimal = Field(..., description="Overall EMQ score (0-100)")
     identifier_quality: Decimal = Field(..., description="Score for identifier quality (0-40)")
     data_completeness: Decimal = Field(..., description="Score for data completeness (0-25)")
@@ -273,26 +317,32 @@ class EMQScoreResponse(BaseModel):
 # API Response Wrappers
 # =============================================================================
 
+
 class CDPAPIResponse(BaseModel):
     """Standard API response wrapper."""
+
     success: bool = True
     data: Optional[Any] = None
     message: Optional[str] = None
-    errors: Optional[List[Dict[str, Any]]] = None
+    errors: Optional[list[dict[str, Any]]] = None
 
 
 # =============================================================================
 # Webhook Schemas
 # =============================================================================
 
+
 class WebhookCreate(BaseModel):
     """Create a new webhook destination."""
+
     name: str = Field(..., min_length=1, max_length=255, description="Human-readable webhook name")
-    url: str = Field(..., min_length=1, max_length=2048, description="Webhook destination URL (HTTPS)")
-    event_types: List[str] = Field(
+    url: str = Field(
+        ..., min_length=1, max_length=2048, description="Webhook destination URL (HTTPS)"
+    )
+    event_types: list[str] = Field(
         ...,
         min_length=1,
-        description="Event types to trigger on: event.received, profile.created, profile.updated, profile.merged, consent.updated, all"
+        description="Event types to trigger on: event.received, profile.created, profile.updated, profile.merged, consent.updated, all",
     )
     max_retries: int = Field(3, ge=0, le=10, description="Max retry attempts on failure")
     timeout_seconds: int = Field(30, ge=5, le=120, description="Request timeout in seconds")
@@ -306,8 +356,15 @@ class WebhookCreate(BaseModel):
 
     @field_validator("event_types")
     @classmethod
-    def validate_event_types(cls, v: List[str]) -> List[str]:
-        allowed = {"event.received", "profile.created", "profile.updated", "profile.merged", "consent.updated", "all"}
+    def validate_event_types(cls, v: list[str]) -> list[str]:
+        allowed = {
+            "event.received",
+            "profile.created",
+            "profile.updated",
+            "profile.merged",
+            "consent.updated",
+            "all",
+        }
         for event_type in v:
             if event_type not in allowed:
                 raise ValueError(f"Invalid event type '{event_type}'. Allowed: {allowed}")
@@ -316,9 +373,10 @@ class WebhookCreate(BaseModel):
 
 class WebhookUpdate(BaseModel):
     """Update an existing webhook."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     url: Optional[str] = Field(None, min_length=1, max_length=2048)
-    event_types: Optional[List[str]] = None
+    event_types: Optional[list[str]] = None
     is_active: Optional[bool] = None
     max_retries: Optional[int] = Field(None, ge=0, le=10)
     timeout_seconds: Optional[int] = Field(None, ge=5, le=120)
@@ -332,10 +390,17 @@ class WebhookUpdate(BaseModel):
 
     @field_validator("event_types")
     @classmethod
-    def validate_event_types(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+    def validate_event_types(cls, v: Optional[list[str]]) -> Optional[list[str]]:
         if v is None:
             return v
-        allowed = {"event.received", "profile.created", "profile.updated", "profile.merged", "consent.updated", "all"}
+        allowed = {
+            "event.received",
+            "profile.created",
+            "profile.updated",
+            "profile.merged",
+            "consent.updated",
+            "all",
+        }
         for event_type in v:
             if event_type not in allowed:
                 raise ValueError(f"Invalid event type '{event_type}'. Allowed: {allowed}")
@@ -344,10 +409,11 @@ class WebhookUpdate(BaseModel):
 
 class WebhookResponse(CDPBaseSchema):
     """Webhook in API responses."""
+
     id: UUID
     name: str
     url: str
-    event_types: List[str]
+    event_types: list[str]
     secret_key: Optional[str] = None  # Only returned on create
     is_active: bool
     last_triggered_at: Optional[datetime] = None
@@ -362,12 +428,14 @@ class WebhookResponse(CDPBaseSchema):
 
 class WebhookListResponse(BaseModel):
     """List of webhooks."""
-    webhooks: List[WebhookResponse]
+
+    webhooks: list[WebhookResponse]
     total: int
 
 
 class WebhookTestResult(BaseModel):
     """Result of webhook test request."""
+
     success: bool
     status_code: Optional[int] = None
     response_time_ms: Optional[float] = None
@@ -378,21 +446,24 @@ class WebhookTestResult(BaseModel):
 # Identity Graph Schemas
 # =============================================================================
 
+
 class IdentityLinkResponse(CDPBaseSchema):
     """Identity link (graph edge) in API responses."""
+
     id: UUID
     source_identifier_id: UUID
     target_identifier_id: UUID
     link_type: str
     confidence_score: Decimal
     is_active: bool
-    evidence: Dict[str, Any] = {}
+    evidence: dict[str, Any] = {}
     verified_at: Optional[datetime] = None
     created_at: datetime
 
 
 class IdentityGraphNode(BaseModel):
     """Node in identity graph (represents an identifier)."""
+
     id: str
     type: str
     hash: str  # Truncated hash for display
@@ -402,6 +473,7 @@ class IdentityGraphNode(BaseModel):
 
 class IdentityGraphEdge(BaseModel):
     """Edge in identity graph (represents a link)."""
+
     source: str
     target: str
     type: str
@@ -410,15 +482,17 @@ class IdentityGraphEdge(BaseModel):
 
 class IdentityGraphResponse(BaseModel):
     """Complete identity graph for a profile."""
+
     profile_id: UUID
-    nodes: List[IdentityGraphNode]
-    edges: List[IdentityGraphEdge]
+    nodes: list[IdentityGraphNode]
+    edges: list[IdentityGraphEdge]
     total_identifiers: int
     total_links: int
 
 
 class ProfileMergeRequest(BaseModel):
     """Request to manually merge two profiles."""
+
     source_profile_id: UUID = Field(..., description="Profile to be merged (will be deleted)")
     target_profile_id: UUID = Field(..., description="Profile to keep (will receive data)")
     reason: Optional[str] = Field("manual_merge", description="Reason for merge")
@@ -426,6 +500,7 @@ class ProfileMergeRequest(BaseModel):
 
 class ProfileMergeResponse(CDPBaseSchema):
     """Profile merge result in API responses."""
+
     id: UUID
     surviving_profile_id: Optional[UUID]
     merged_profile_id: UUID
@@ -438,12 +513,14 @@ class ProfileMergeResponse(CDPBaseSchema):
 
 class ProfileMergeHistoryResponse(BaseModel):
     """List of profile merges."""
-    merges: List[ProfileMergeResponse]
+
+    merges: list[ProfileMergeResponse]
     total: int
 
 
 class CanonicalIdentityResponse(CDPBaseSchema):
     """Canonical identity for a profile."""
+
     id: UUID
     profile_id: UUID
     canonical_type: Optional[str]
@@ -459,27 +536,35 @@ class CanonicalIdentityResponse(CDPBaseSchema):
 # Segment Schemas
 # =============================================================================
 
+
 class SegmentCondition(BaseModel):
     """Single condition in segment rules."""
-    field: str = Field(..., description="Field path: profile.lifecycle_stage, event.PageView.count, trait.ltv")
-    operator: str = Field(..., description="Comparison operator: equals, greater_than, contains, etc.")
+
+    field: str = Field(
+        ..., description="Field path: profile.lifecycle_stage, event.PageView.count, trait.ltv"
+    )
+    operator: str = Field(
+        ..., description="Comparison operator: equals, greater_than, contains, etc."
+    )
     value: Any = Field(..., description="Value to compare against")
 
 
 class SegmentRules(BaseModel):
     """Segment rules definition."""
+
     logic: str = Field("and", description="Logic operator: and, or")
-    conditions: List[SegmentCondition] = Field(default_factory=list)
-    groups: Optional[List["SegmentRules"]] = Field(default=None, description="Nested rule groups")
+    conditions: list[SegmentCondition] = Field(default_factory=list)
+    groups: Optional[list["SegmentRules"]] = Field(default=None, description="Nested rule groups")
 
 
 class SegmentCreate(BaseModel):
     """Create a new segment."""
+
     name: str = Field(..., min_length=1, max_length=255, description="Segment name")
     description: Optional[str] = Field(None, max_length=1000)
     segment_type: str = Field("dynamic", description="Segment type: static, dynamic, computed")
     rules: SegmentRules = Field(..., description="Segment rules/conditions")
-    tags: Optional[List[str]] = Field(default_factory=list)
+    tags: Optional[list[str]] = Field(default_factory=list)
     auto_refresh: bool = Field(True, description="Auto-refresh segment membership")
     refresh_interval_hours: int = Field(24, ge=1, le=168, description="Hours between refreshes")
 
@@ -494,30 +579,32 @@ class SegmentCreate(BaseModel):
 
 class SegmentUpdate(BaseModel):
     """Update a segment."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
     rules: Optional[SegmentRules] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
     auto_refresh: Optional[bool] = None
     refresh_interval_hours: Optional[int] = Field(None, ge=1, le=168)
 
 
 class SegmentResponse(CDPBaseSchema):
     """Segment in API responses."""
+
     id: UUID
     name: str
     slug: Optional[str]
     description: Optional[str]
     segment_type: str
     status: str
-    rules: Dict[str, Any]
+    rules: dict[str, Any]
     profile_count: int
     last_computed_at: Optional[datetime]
     computation_duration_ms: Optional[int]
     auto_refresh: bool
     refresh_interval_hours: int
     next_refresh_at: Optional[datetime]
-    tags: List[str]
+    tags: list[str]
     created_by_user_id: Optional[int]
     created_at: datetime
     updated_at: datetime
@@ -525,24 +612,28 @@ class SegmentResponse(CDPBaseSchema):
 
 class SegmentListResponse(BaseModel):
     """List of segments."""
-    segments: List[SegmentResponse]
+
+    segments: list[SegmentResponse]
     total: int
 
 
 class SegmentPreviewRequest(BaseModel):
     """Request to preview segment membership."""
+
     rules: SegmentRules
     limit: int = Field(100, ge=1, le=500)
 
 
 class SegmentPreviewResponse(BaseModel):
     """Preview of segment membership."""
+
     estimated_count: int
-    sample_profiles: List[ProfileResponse]
+    sample_profiles: list[ProfileResponse]
 
 
 class SegmentMembershipResponse(BaseModel):
     """Profile membership in a segment."""
+
     profile_id: UUID
     segment_id: UUID
     added_at: datetime
@@ -552,21 +643,25 @@ class SegmentMembershipResponse(BaseModel):
 
 class SegmentProfilesResponse(BaseModel):
     """Profiles in a segment."""
-    profiles: List[ProfileResponse]
+
+    profiles: list[ProfileResponse]
     total: int
 
 
 class ProfileSegmentsResponse(BaseModel):
     """Segments a profile belongs to."""
-    segments: List[SegmentResponse]
+
+    segments: list[SegmentResponse]
 
 
 # =============================================================================
 # Profile Deletion (GDPR) Schemas
 # =============================================================================
 
+
 class ProfileDeletionRequest(BaseModel):
     """Request to delete a profile (GDPR right to erasure)."""
+
     profile_id: UUID
     reason: Optional[str] = Field(None, description="Reason for deletion")
     delete_events: bool = Field(True, description="Also delete all events")
@@ -575,6 +670,7 @@ class ProfileDeletionRequest(BaseModel):
 
 class ProfileDeletionResponse(BaseModel):
     """Response after profile deletion."""
+
     profile_id: UUID
     deleted: bool
     events_deleted: int
@@ -588,8 +684,10 @@ class ProfileDeletionResponse(BaseModel):
 # Computed Traits Schemas
 # =============================================================================
 
+
 class ComputedTraitSourceConfig(BaseModel):
     """Source configuration for computed traits."""
+
     event_name: Optional[str] = Field(None, description="Event name to compute from")
     property: Optional[str] = Field(None, description="Property to aggregate")
     time_window_days: Optional[int] = Field(None, ge=1, le=3650, description="Time window in days")
@@ -597,10 +695,13 @@ class ComputedTraitSourceConfig(BaseModel):
 
 class ComputedTraitCreate(BaseModel):
     """Create a computed trait."""
+
     name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-z][a-z0-9_]*$")
     display_name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
-    trait_type: str = Field(..., description="count, sum, average, min, max, first, last, unique_count, exists")
+    trait_type: str = Field(
+        ..., description="count, sum, average, min, max, first, last, unique_count, exists"
+    )
     source_config: ComputedTraitSourceConfig
     output_type: str = Field("number", description="number, string, boolean, date")
     default_value: Optional[str] = None
@@ -608,7 +709,18 @@ class ComputedTraitCreate(BaseModel):
     @field_validator("trait_type")
     @classmethod
     def validate_trait_type(cls, v: str) -> str:
-        allowed = {"count", "sum", "average", "min", "max", "first", "last", "unique_count", "exists", "formula"}
+        allowed = {
+            "count",
+            "sum",
+            "average",
+            "min",
+            "max",
+            "first",
+            "last",
+            "unique_count",
+            "exists",
+            "formula",
+        }
         if v.lower() not in allowed:
             raise ValueError(f"Invalid trait type. Allowed: {allowed}")
         return v.lower()
@@ -616,12 +728,13 @@ class ComputedTraitCreate(BaseModel):
 
 class ComputedTraitResponse(CDPBaseSchema):
     """Computed trait in API responses."""
+
     id: UUID
     name: str
     display_name: str
     description: Optional[str]
     trait_type: str
-    source_config: Dict[str, Any]
+    source_config: dict[str, Any]
     output_type: str
     default_value: Optional[str]
     is_active: bool
@@ -632,12 +745,14 @@ class ComputedTraitResponse(CDPBaseSchema):
 
 class ComputedTraitListResponse(BaseModel):
     """List of computed traits."""
-    traits: List[ComputedTraitResponse]
+
+    traits: list[ComputedTraitResponse]
     total: int
 
 
 class ComputeTraitsResponse(BaseModel):
     """Response after computing traits."""
+
     profiles_processed: int
     errors: int
 
@@ -646,8 +761,10 @@ class ComputeTraitsResponse(BaseModel):
 # RFM Analysis Schemas
 # =============================================================================
 
+
 class RFMConfig(BaseModel):
     """Configuration for RFM analysis."""
+
     purchase_event_name: str = Field("Purchase", description="Event name for purchases")
     revenue_property: str = Field("total", description="Property containing revenue")
     analysis_window_days: int = Field(365, ge=30, le=1095, description="Analysis window in days")
@@ -655,6 +772,7 @@ class RFMConfig(BaseModel):
 
 class RFMScores(BaseModel):
     """RFM scores for a profile."""
+
     recency_days: int
     frequency: int
     monetary: float
@@ -669,17 +787,19 @@ class RFMScores(BaseModel):
 
 class RFMBatchResponse(BaseModel):
     """Response after batch RFM calculation."""
+
     profiles_processed: int
-    segment_distribution: Dict[str, int]
+    segment_distribution: dict[str, int]
     analysis_window_days: int
     calculated_at: str
 
 
 class RFMSummaryResponse(BaseModel):
     """RFM summary for tenant."""
+
     total_profiles: int
     profiles_with_rfm: int
-    segment_distribution: Dict[str, int]
+    segment_distribution: dict[str, int]
     coverage_pct: float
 
 
@@ -687,8 +807,10 @@ class RFMSummaryResponse(BaseModel):
 # Funnel/Journey Schemas
 # =============================================================================
 
+
 class FunnelStepCondition(BaseModel):
     """Condition for funnel step matching."""
+
     field: str = Field(..., description="Field path: properties.category, context.campaign")
     operator: str = Field("equals", description="Comparison operator")
     value: Any = Field(..., description="Value to compare against")
@@ -696,40 +818,49 @@ class FunnelStepCondition(BaseModel):
 
 class FunnelStep(BaseModel):
     """Single step in a funnel definition."""
-    step_name: str = Field(..., min_length=1, max_length=255, description="Display name for the step")
+
+    step_name: str = Field(
+        ..., min_length=1, max_length=255, description="Display name for the step"
+    )
     event_name: str = Field(..., min_length=1, max_length=255, description="Event name to match")
-    conditions: Optional[List[FunnelStepCondition]] = Field(
-        default_factory=list,
-        description="Additional conditions for step completion"
+    conditions: Optional[list[FunnelStepCondition]] = Field(
+        default_factory=list, description="Additional conditions for step completion"
     )
 
 
 class FunnelCreate(BaseModel):
     """Create a new funnel."""
+
     name: str = Field(..., min_length=1, max_length=255, description="Funnel name")
     description: Optional[str] = Field(None, max_length=1000)
-    steps: List[FunnelStep] = Field(..., min_length=2, max_length=20, description="Funnel steps (2-20 steps)")
+    steps: list[FunnelStep] = Field(
+        ..., min_length=2, max_length=20, description="Funnel steps (2-20 steps)"
+    )
     conversion_window_days: int = Field(30, ge=1, le=365, description="Max days to complete funnel")
-    step_timeout_hours: Optional[int] = Field(None, ge=1, le=720, description="Max hours between steps")
+    step_timeout_hours: Optional[int] = Field(
+        None, ge=1, le=720, description="Max hours between steps"
+    )
     auto_refresh: bool = Field(True, description="Auto-refresh funnel metrics")
     refresh_interval_hours: int = Field(24, ge=1, le=168, description="Hours between refreshes")
-    tags: Optional[List[str]] = Field(default_factory=list)
+    tags: Optional[list[str]] = Field(default_factory=list)
 
 
 class FunnelUpdate(BaseModel):
     """Update a funnel."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
-    steps: Optional[List[FunnelStep]] = Field(None, min_length=2, max_length=20)
+    steps: Optional[list[FunnelStep]] = Field(None, min_length=2, max_length=20)
     conversion_window_days: Optional[int] = Field(None, ge=1, le=365)
     step_timeout_hours: Optional[int] = Field(None, ge=1, le=720)
     auto_refresh: Optional[bool] = None
     refresh_interval_hours: Optional[int] = Field(None, ge=1, le=168)
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
 
 
 class FunnelStepMetrics(BaseModel):
     """Metrics for a single funnel step."""
+
     step: int
     name: str
     event_name: str
@@ -741,24 +872,25 @@ class FunnelStepMetrics(BaseModel):
 
 class FunnelResponse(CDPBaseSchema):
     """Funnel in API responses."""
+
     id: UUID
     name: str
     slug: Optional[str]
     description: Optional[str]
     status: str
-    steps: List[Dict[str, Any]]
+    steps: list[dict[str, Any]]
     conversion_window_days: int
     step_timeout_hours: Optional[int]
     total_entered: int
     total_converted: int
     overall_conversion_rate: Optional[Decimal]
-    step_metrics: List[Dict[str, Any]]
+    step_metrics: list[dict[str, Any]]
     last_computed_at: Optional[datetime]
     computation_duration_ms: Optional[int]
     auto_refresh: bool
     refresh_interval_hours: int
     next_refresh_at: Optional[datetime]
-    tags: List[str]
+    tags: list[str]
     created_by_user_id: Optional[int]
     created_at: datetime
     updated_at: datetime
@@ -766,28 +898,32 @@ class FunnelResponse(CDPBaseSchema):
 
 class FunnelListResponse(BaseModel):
     """List of funnels."""
-    funnels: List[FunnelResponse]
+
+    funnels: list[FunnelResponse]
     total: int
 
 
 class FunnelComputeResponse(BaseModel):
     """Response after computing funnel metrics."""
+
     funnel_id: str
     total_entered: int
     total_converted: int
     overall_conversion_rate: float
-    step_metrics: List[FunnelStepMetrics]
+    step_metrics: list[FunnelStepMetrics]
     computation_duration_ms: int
 
 
 class FunnelAnalysisRequest(BaseModel):
     """Request for funnel analysis with date filtering."""
+
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
 
 
 class FunnelStepAnalysis(BaseModel):
     """Detailed analysis for a funnel step."""
+
     step: int
     name: str
     event_name: str
@@ -799,18 +935,20 @@ class FunnelStepAnalysis(BaseModel):
 
 class FunnelAnalysisResponse(BaseModel):
     """Detailed funnel analysis response."""
+
     funnel_id: str
     funnel_name: str
     total_entered: int
     total_converted: int
     overall_conversion_rate: float
-    step_analysis: List[FunnelStepAnalysis]
+    step_analysis: list[FunnelStepAnalysis]
     avg_conversion_time_seconds: Optional[float]
-    analysis_period: Dict[str, Optional[str]]
+    analysis_period: dict[str, Optional[str]]
 
 
 class ProfileFunnelJourney(BaseModel):
     """A profile's journey through a funnel."""
+
     funnel_id: str
     funnel_name: Optional[str]
     entered_at: str
@@ -819,19 +957,21 @@ class ProfileFunnelJourney(BaseModel):
     current_step: int
     completed_steps: int
     total_steps: Optional[int]
-    step_timestamps: Dict[str, str]
+    step_timestamps: dict[str, str]
     total_duration_seconds: Optional[int]
 
 
 class ProfileFunnelJourneysResponse(BaseModel):
     """List of a profile's funnel journeys."""
+
     profile_id: str
-    journeys: List[ProfileFunnelJourney]
+    journeys: list[ProfileFunnelJourney]
 
 
 class FunnelDropOffResponse(BaseModel):
     """Profiles that dropped off at a specific funnel step."""
+
     funnel_id: str
     step: int
-    profiles: List[ProfileResponse]
+    profiles: list[ProfileResponse]
     total: int

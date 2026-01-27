@@ -18,18 +18,18 @@ Required Scopes:
 Docs: https://developers.google.com/google-ads/api/docs/oauth/overview
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Optional
 
 import aiohttp
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.oauth.base import (
+    AdAccountInfo,
     OAuthService,
     OAuthState,
     OAuthTokens,
-    AdAccountInfo,
 )
 
 logger = get_logger(__name__)
@@ -62,7 +62,7 @@ class GoogleOAuthService(OAuthService):
     def get_authorization_url(
         self,
         state: OAuthState,
-        scopes: Optional[List[str]] = None,
+        scopes: Optional[list[str]] = None,
     ) -> str:
         """
         Generate Google OAuth authorization URL.
@@ -128,7 +128,9 @@ class GoogleOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Google token exchange failed", error=error_data)
-                    raise Exception(f"Token exchange failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}")
+                    raise Exception(
+                        f"Token exchange failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}"
+                    )
 
                 token_data = await resp.json()
 
@@ -172,7 +174,9 @@ class GoogleOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Google token refresh failed", error=error_data)
-                    raise Exception(f"Token refresh failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}")
+                    raise Exception(
+                        f"Token refresh failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}"
+                    )
 
                 token_data = await resp.json()
 
@@ -191,7 +195,7 @@ class GoogleOAuthService(OAuthService):
     async def fetch_ad_accounts(
         self,
         access_token: str,
-    ) -> List[AdAccountInfo]:
+    ) -> list[AdAccountInfo]:
         """
         Fetch Google Ads customer accounts.
 
@@ -239,7 +243,9 @@ class GoogleOAuthService(OAuthService):
 
                 try:
                     # Use Google Ads Query Language to get customer details
-                    query_url = f"{GOOGLE_ADS_API_URL}/customers/{customer_id}/googleAds:searchStream"
+                    query_url = (
+                        f"{GOOGLE_ADS_API_URL}/customers/{customer_id}/googleAds:searchStream"
+                    )
                     query = """
                         SELECT
                             customer.id,
@@ -253,9 +259,7 @@ class GoogleOAuthService(OAuthService):
                     """
 
                     async with session.post(
-                        query_url,
-                        headers=headers,
-                        json={"query": query}
+                        query_url, headers=headers, json={"query": query}
                     ) as resp:
                         if resp.status != 200:
                             continue
@@ -276,25 +280,29 @@ class GoogleOAuthService(OAuthService):
                                 "CLOSED": "closed",
                             }
 
-                            accounts.append(AdAccountInfo(
-                                account_id=str(customer.get("id", customer_id)),
-                                name=customer.get("descriptiveName", f"Account {customer_id}"),
-                                business_name="Manager Account" if is_manager else None,
-                                currency=customer.get("currencyCode", "USD"),
-                                timezone=customer.get("timeZone", "UTC"),
-                                status=status_map.get(customer.get("status"), "unknown"),
-                                permissions=["STANDARD"] if not is_manager else ["MANAGER"],
-                                raw_data=customer,
-                            ))
+                            accounts.append(
+                                AdAccountInfo(
+                                    account_id=str(customer.get("id", customer_id)),
+                                    name=customer.get("descriptiveName", f"Account {customer_id}"),
+                                    business_name="Manager Account" if is_manager else None,
+                                    currency=customer.get("currencyCode", "USD"),
+                                    timezone=customer.get("timeZone", "UTC"),
+                                    status=status_map.get(customer.get("status"), "unknown"),
+                                    permissions=["STANDARD"] if not is_manager else ["MANAGER"],
+                                    raw_data=customer,
+                                )
+                            )
 
                 except Exception as e:
                     self.logger.warning(f"Failed to fetch customer {customer_id}", error=str(e))
                     # Add basic info from resource name
-                    accounts.append(AdAccountInfo(
-                        account_id=customer_id,
-                        name=f"Account {customer_id}",
-                        status="unknown",
-                    ))
+                    accounts.append(
+                        AdAccountInfo(
+                            account_id=customer_id,
+                            name=f"Account {customer_id}",
+                            status="unknown",
+                        )
+                    )
 
         return accounts
 
@@ -321,9 +329,9 @@ class GoogleOAuthService(OAuthService):
         """Calculate expiration datetime from expires_in seconds."""
         if expires_in is None:
             return None
-        return datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        return datetime.now(UTC) + timedelta(seconds=expires_in)
 
-    def _get_mock_accounts(self) -> List[AdAccountInfo]:
+    def _get_mock_accounts(self) -> list[AdAccountInfo]:
         """Return mock accounts for development/testing."""
         return [
             AdAccountInfo(

@@ -40,10 +40,11 @@ The more identifiers you pass, the higher your match rate will be.
 import hashlib
 import logging
 import re
-from datetime import datetime
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
+
 import requests
 
 logger = logging.getLogger("stratum.conversions")
@@ -51,6 +52,7 @@ logger = logging.getLogger("stratum.conversions")
 
 class EventType(str, Enum):
     """Standard conversion event types across platforms."""
+
     PAGE_VIEW = "PageView"
     VIEW_CONTENT = "ViewContent"
     ADD_TO_CART = "AddToCart"
@@ -77,6 +79,7 @@ class UserData:
     - email + phone + external_id = ~85% match rate
     - All fields = ~95% match rate
     """
+
     # PII fields (will be hashed)
     email: Optional[str] = None
     phone: Optional[str] = None
@@ -112,37 +115,37 @@ class UserData:
         if not normalized:
             return None
 
-        return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
     def _normalize(self, field_name: str, value: str) -> str:
         """Normalize field values before hashing."""
         value = value.strip().lower()
 
-        if field_name == 'email':
+        if field_name == "email":
             # Remove dots from gmail local part, lowercase
             return value
 
-        elif field_name == 'phone':
+        elif field_name == "phone":
             # Remove all non-digits, ensure E.164 format
-            digits = re.sub(r'\D', '', value)
+            digits = re.sub(r"\D", "", value)
             # Add country code if missing (assume US)
             if len(digits) == 10:
-                digits = '1' + digits
+                digits = "1" + digits
             return digits
 
-        elif field_name in ['first_name', 'last_name', 'city']:
+        elif field_name in ["first_name", "last_name", "city"]:
             # Lowercase, remove special characters
-            return re.sub(r'[^a-z]', '', value)
+            return re.sub(r"[^a-z]", "", value)
 
-        elif field_name == 'state':
+        elif field_name == "state":
             # Two-letter state code
             return value[:2]
 
-        elif field_name == 'zip_code':
+        elif field_name == "zip_code":
             # First 5 digits only
-            return re.sub(r'\D', '', value)[:5]
+            return re.sub(r"\D", "", value)[:5]
 
-        elif field_name == 'country':
+        elif field_name == "country":
             # Two-letter country code
             return value[:2]
 
@@ -172,12 +175,13 @@ class ConversionEvent:
             event_source_url="https://mysite.com/checkout/success"
         )
     """
+
     event_name: EventType
     event_time: datetime
     user_data: UserData
 
     # Event details
-    custom_data: Dict[str, Any] = field(default_factory=dict)
+    custom_data: dict[str, Any] = field(default_factory=dict)
     event_source_url: Optional[str] = None
     event_id: Optional[str] = None  # For deduplication
     action_source: str = "website"  # website, app, email, phone_call, chat, etc.
@@ -218,12 +222,7 @@ class MetaConversionsAPI:
 
     BASE_URL = "https://graph.facebook.com/v19.0"
 
-    def __init__(
-        self,
-        pixel_id: str,
-        access_token: str,
-        test_event_code: Optional[str] = None
-    ):
+    def __init__(self, pixel_id: str, access_token: str, test_event_code: Optional[str] = None):
         """
         Initialize Meta CAPI client.
 
@@ -236,11 +235,11 @@ class MetaConversionsAPI:
         self.access_token = access_token
         self.test_event_code = test_event_code
 
-    async def send_event(self, event: ConversionEvent) -> Dict[str, Any]:
+    async def send_event(self, event: ConversionEvent) -> dict[str, Any]:
         """Send a single conversion event to Meta."""
         return await self.send_events([event])
 
-    async def send_events(self, events: List[ConversionEvent]) -> Dict[str, Any]:
+    async def send_events(self, events: list[ConversionEvent]) -> dict[str, Any]:
         """
         Send multiple conversion events to Meta CAPI.
 
@@ -249,7 +248,7 @@ class MetaConversionsAPI:
         """
         payload = {
             "data": [self._format_event(e) for e in events],
-            "access_token": self.access_token
+            "access_token": self.access_token,
         }
 
         if self.test_event_code:
@@ -269,7 +268,7 @@ class MetaConversionsAPI:
             logger.error(f"Meta CAPI error: {e}")
             raise
 
-    def _format_event(self, event: ConversionEvent) -> Dict[str, Any]:
+    def _format_event(self, event: ConversionEvent) -> dict[str, Any]:
         """Format event for Meta CAPI."""
         data = {
             "event_name": event.event_name.value,
@@ -290,22 +289,22 @@ class MetaConversionsAPI:
 
         return data
 
-    def _format_user_data(self, user_data: UserData) -> Dict[str, Any]:
+    def _format_user_data(self, user_data: UserData) -> dict[str, Any]:
         """Format and hash user data for Meta."""
         data = {}
 
         # Hashed PII fields
         hash_fields = [
-            ('em', 'email'),
-            ('ph', 'phone'),
-            ('fn', 'first_name'),
-            ('ln', 'last_name'),
-            ('ct', 'city'),
-            ('st', 'state'),
-            ('zp', 'zip_code'),
-            ('country', 'country'),
-            ('db', 'date_of_birth'),
-            ('ge', 'gender'),
+            ("em", "email"),
+            ("ph", "phone"),
+            ("fn", "first_name"),
+            ("ln", "last_name"),
+            ("ct", "city"),
+            ("st", "state"),
+            ("zp", "zip_code"),
+            ("country", "country"),
+            ("db", "date_of_birth"),
+            ("ge", "gender"),
         ]
 
         for api_name, field_name in hash_fields:
@@ -315,19 +314,19 @@ class MetaConversionsAPI:
 
         # Non-hashed fields
         if user_data.external_id:
-            data['external_id'] = user_data.external_id
+            data["external_id"] = user_data.external_id
         if user_data.client_ip_address:
-            data['client_ip_address'] = user_data.client_ip_address
+            data["client_ip_address"] = user_data.client_ip_address
         if user_data.client_user_agent:
-            data['client_user_agent'] = user_data.client_user_agent
+            data["client_user_agent"] = user_data.client_user_agent
         if user_data.fbc:
-            data['fbc'] = user_data.fbc
+            data["fbc"] = user_data.fbc
         if user_data.fbp:
-            data['fbp'] = user_data.fbp
+            data["fbp"] = user_data.fbp
 
         return data
 
-    async def get_emq_score(self) -> Dict[str, Any]:
+    async def get_emq_score(self) -> dict[str, Any]:
         """
         Fetch Event Match Quality scores from Meta.
 
@@ -367,7 +366,7 @@ class GoogleEnhancedConversions:
         self,
         customer_id: str,
         conversion_action_id: str,
-        google_ads_client: Any  # GoogleAdsClient from google-ads library
+        google_ads_client: Any,  # GoogleAdsClient from google-ads library
     ):
         """
         Initialize Enhanced Conversions client.
@@ -381,7 +380,7 @@ class GoogleEnhancedConversions:
         self.conversion_action_id = conversion_action_id
         self.client = google_ads_client
 
-    async def upload_conversion(self, event: ConversionEvent) -> Dict[str, Any]:
+    async def upload_conversion(self, event: ConversionEvent) -> dict[str, Any]:
         """
         Upload a conversion with enhanced data to Google Ads.
 
@@ -436,10 +435,7 @@ class GoogleEnhancedConversions:
         response = conversion_upload_service.upload_click_conversions(request=request)
 
         # Process response
-        result = {
-            "uploaded": len(response.results),
-            "errors": []
-        }
+        result = {"uploaded": len(response.results), "errors": []}
 
         if response.partial_failure_error:
             result["errors"].append(str(response.partial_failure_error))
@@ -463,12 +459,7 @@ class TikTokEventsAPI:
 
     BASE_URL = "https://business-api.tiktok.com/open_api/v1.3/event/track"
 
-    def __init__(
-        self,
-        pixel_code: str,
-        access_token: str,
-        test_event_code: Optional[str] = None
-    ):
+    def __init__(self, pixel_code: str, access_token: str, test_event_code: Optional[str] = None):
         """
         Initialize TikTok Events API client.
 
@@ -481,11 +472,11 @@ class TikTokEventsAPI:
         self.access_token = access_token
         self.test_event_code = test_event_code
 
-    async def send_event(self, event: ConversionEvent) -> Dict[str, Any]:
+    async def send_event(self, event: ConversionEvent) -> dict[str, Any]:
         """Send a conversion event to TikTok."""
         return await self.send_events([event])
 
-    async def send_events(self, events: List[ConversionEvent]) -> Dict[str, Any]:
+    async def send_events(self, events: list[ConversionEvent]) -> dict[str, Any]:
         """Send multiple events to TikTok Events API."""
 
         # Map event types to TikTok's naming
@@ -503,7 +494,7 @@ class TikTokEventsAPI:
             "pixel_code": self.pixel_code,
             "event_source": "web",
             "event_source_id": self.pixel_code,
-            "data": []
+            "data": [],
         }
 
         if self.test_event_code:
@@ -515,7 +506,7 @@ class TikTokEventsAPI:
                 "event_time": int(event.event_time.timestamp()),
                 "event_id": event.event_id,
                 "user": self._format_user_data(event.user_data),
-                "properties": event.custom_data or {}
+                "properties": event.custom_data or {},
             }
 
             if event.event_source_url:
@@ -523,10 +514,7 @@ class TikTokEventsAPI:
 
             payload["data"].append(tiktok_event)
 
-        headers = {
-            "Access-Token": self.access_token,
-            "Content-Type": "application/json"
-        }
+        headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
 
         try:
             response = requests.post(self.BASE_URL, json=payload, headers=headers)
@@ -540,7 +528,7 @@ class TikTokEventsAPI:
             logger.error(f"TikTok Events API error: {e}")
             raise
 
-    def _format_user_data(self, user_data: UserData) -> Dict[str, Any]:
+    def _format_user_data(self, user_data: UserData) -> dict[str, Any]:
         """Format user data for TikTok."""
         data = {}
 
@@ -578,11 +566,7 @@ class SnapchatConversionsAPI:
 
     BASE_URL = "https://tr.snapchat.com/v2/conversion"
 
-    def __init__(
-        self,
-        pixel_id: str,
-        access_token: str
-    ):
+    def __init__(self, pixel_id: str, access_token: str):
         """
         Initialize Snapchat CAPI client.
 
@@ -593,7 +577,7 @@ class SnapchatConversionsAPI:
         self.pixel_id = pixel_id
         self.access_token = access_token
 
-    async def send_event(self, event: ConversionEvent) -> Dict[str, Any]:
+    async def send_event(self, event: ConversionEvent) -> dict[str, Any]:
         """Send a conversion event to Snapchat."""
 
         # Map event types to Snapchat's naming
@@ -635,7 +619,7 @@ class SnapchatConversionsAPI:
 
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         try:
@@ -668,7 +652,7 @@ class UnifiedConversionsAPI:
 
     def __init__(self):
         """Initialize with no platforms configured."""
-        self.platforms: Dict[str, Any] = {}
+        self.platforms: dict[str, Any] = {}
 
     def add_platform(self, name: str, client: Any) -> None:
         """Add a platform client."""
@@ -676,10 +660,8 @@ class UnifiedConversionsAPI:
         logger.info(f"Added {name} to UnifiedConversionsAPI")
 
     async def send_event(
-        self,
-        event: ConversionEvent,
-        platforms: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        self, event: ConversionEvent, platforms: Optional[list[str]] = None
+    ) -> dict[str, Any]:
         """
         Send a conversion event to specified platforms.
 
@@ -709,10 +691,8 @@ class UnifiedConversionsAPI:
         return results
 
     async def send_events_batch(
-        self,
-        events: List[ConversionEvent],
-        platforms: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        self, events: list[ConversionEvent], platforms: Optional[list[str]] = None
+    ) -> dict[str, Any]:
         """Send multiple events to specified platforms."""
         target_platforms = platforms or list(self.platforms.keys())
         results = {}
@@ -724,7 +704,7 @@ class UnifiedConversionsAPI:
 
             try:
                 client = self.platforms[platform_name]
-                if hasattr(client, 'send_events'):
+                if hasattr(client, "send_events"):
                     result = await client.send_events(events)
                 else:
                     # Fallback to individual sends

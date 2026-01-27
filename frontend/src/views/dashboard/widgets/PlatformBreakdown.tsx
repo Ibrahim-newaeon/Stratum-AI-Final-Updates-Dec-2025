@@ -2,15 +2,9 @@
  * PlatformBreakdown - Platform performance breakdown display
  */
 
-import {
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Loader2,
-  BarChart3,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { PlatformSummary } from '@/api/dashboard'
+import { AlertTriangle, BarChart3, CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { PlatformSummary } from '@/api/dashboard';
 
 // Platform icon components/colors
 const platformConfigs: Record<string, { color: string; bgColor: string }> = {
@@ -20,11 +14,11 @@ const platformConfigs: Record<string, { color: string; bgColor: string }> = {
   tiktok: { color: 'text-[#000000] dark:text-white', bgColor: 'bg-black/10 dark:bg-white/10' },
   snapchat: { color: 'text-[#FFFC00]', bgColor: 'bg-[#FFFC00]/10' },
   default: { color: 'text-muted-foreground', bgColor: 'bg-muted' },
-}
+};
 
 interface PlatformBreakdownProps {
-  platforms: PlatformSummary[]
-  loading?: boolean
+  platforms: PlatformSummary[];
+  loading?: boolean;
 }
 
 export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakdownProps) {
@@ -33,7 +27,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
       <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[120px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (platforms.length === 0) {
@@ -42,24 +36,24 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
         <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
         <p>No platforms connected</p>
       </div>
-    )
+    );
   }
 
-  const totalSpend = platforms.reduce((sum, p) => sum + p.spend, 0)
-  const totalRevenue = platforms.reduce((sum, p) => sum + p.revenue, 0)
+  const totalSpend = platforms.reduce((sum, p) => sum + p.spend, 0);
+  const totalRevenue = platforms.reduce((sum, p) => sum + p.revenue, 0);
 
   const getStatusIcon = (status: PlatformSummary['status']) => {
     switch (status) {
       case 'connected':
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />
+        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
       case 'error':
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'disconnected':
-        return <XCircle className="w-4 h-4 text-red-500" />
+        return <XCircle className="w-4 h-4 text-red-500" />;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -67,18 +61,18 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value)
-  }
+    }).format(value);
+  };
 
   const formatRoas = (roas: number | null) => {
-    if (roas === null) return '-'
-    return `${roas.toFixed(2)}x`
-  }
+    if (roas === null) return '-';
+    return `${roas.toFixed(2)}x`;
+  };
 
   const getPlatformConfig = (platform: string) => {
-    const key = platform.toLowerCase()
-    return platformConfigs[key] || platformConfigs.default
-  }
+    const key = platform.toLowerCase();
+    return platformConfigs[key] || platformConfigs.default;
+  };
 
   return (
     <div className="bg-card border rounded-lg">
@@ -93,8 +87,8 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
       <div className="overflow-x-auto">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
           {platforms.map((platform) => {
-            const config = getPlatformConfig(platform.platform)
-            const spendPercentage = totalSpend > 0 ? (platform.spend / totalSpend) * 100 : 0
+            const config = getPlatformConfig(platform.platform);
+            const spendPercentage = totalSpend > 0 ? (platform.spend / totalSpend) * 100 : 0;
 
             return (
               <div
@@ -161,10 +155,10 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }

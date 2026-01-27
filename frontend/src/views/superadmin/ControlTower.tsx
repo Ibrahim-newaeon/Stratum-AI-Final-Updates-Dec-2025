@@ -5,49 +5,47 @@
  * Shows portfolio KPIs, system risk, and action queue safety
  */
 
-import { useNavigate } from 'react-router-dom'
-import { cn } from '@/lib/utils'
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { ConfidenceBandBadge } from '@/components/shared';
 import {
-  ConfidenceBandBadge,
-} from '@/components/shared'
-import {
+  useChurnRisks,
   useEmqBenchmarks,
   useEmqPortfolio,
+  useRevenue,
   useSuperAdminOverview,
   useSuperAdminTenants,
-  useRevenue,
-  useChurnRisks,
-} from '@/api/hooks'
+} from '@/api/hooks';
 import {
+  ArrowTrendingUpIcon,
   BuildingOffice2Icon,
+  ChartBarIcon,
+  ChevronRightIcon,
+  Cog6ToothIcon,
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
-  ArrowTrendingUpIcon,
-  ChartBarIcon,
-  Cog6ToothIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/outline';
 
 interface TenantHealthCard {
-  id: number
-  name: string
-  emqScore: number
-  status: 'ok' | 'risk' | 'degraded' | 'critical'
-  budgetAtRisk: number
-  activeIncidents: number
-  autopilotMode: string
+  id: number;
+  name: string;
+  emqScore: number;
+  status: 'ok' | 'risk' | 'degraded' | 'critical';
+  budgetAtRisk: number;
+  activeIncidents: number;
+  autopilotMode: string;
 }
 
 export default function ControlTower() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Fetch data from multiple endpoints
-  const { data: portfolioData } = useEmqPortfolio()
-  const { data: benchmarksData } = useEmqBenchmarks()
-  const { data: overviewData } = useSuperAdminOverview()
-  const { data: tenantsData } = useSuperAdminTenants()
-  const { data: revenueData } = useRevenue()
-  const { data: churnRisksData } = useChurnRisks({ minRisk: 0.3, limit: 10 })
+  const { data: portfolioData } = useEmqPortfolio();
+  const { data: benchmarksData } = useEmqBenchmarks();
+  const { data: overviewData } = useSuperAdminOverview();
+  const { data: tenantsData } = useSuperAdminTenants();
+  const { data: revenueData } = useRevenue();
+  const { data: churnRisksData } = useChurnRisks({ minRisk: 0.3, limit: 10 });
 
   // KPIs - use API data with fallbacks
   const portfolioKpis = {
@@ -56,54 +54,109 @@ export default function ControlTower() {
     churnRisk: churnRisksData?.length ?? overviewData?.atRiskTenants ?? 3,
     margin: 68,
     totalBudgetAtRisk: portfolioData?.atRiskBudget ?? overviewData?.totalBudgetAtRisk ?? 45000,
-  }
+  };
 
   // Tenant health data
   const tenantHealth: TenantHealthCard[] = tenantsData?.items?.map((t) => ({
     id: t.id,
     name: t.name,
     emqScore: t.emqScore ?? 85,
-    status: (t.emqScore ?? 85) >= 90 ? 'ok' : (t.emqScore ?? 85) >= 60 ? 'risk' : (t.emqScore ?? 85) >= 40 ? 'degraded' : 'critical',
+    status:
+      (t.emqScore ?? 85) >= 90
+        ? 'ok'
+        : (t.emqScore ?? 85) >= 60
+          ? 'risk'
+          : (t.emqScore ?? 85) >= 40
+            ? 'degraded'
+            : 'critical',
     budgetAtRisk: t.budgetAtRisk ?? 0,
     activeIncidents: t.activeIncidents ?? 0,
     autopilotMode: 'normal',
   })) ?? [
-    { id: 1, name: 'Acme Corp', emqScore: 94, status: 'ok', budgetAtRisk: 0, activeIncidents: 0, autopilotMode: 'normal' },
-    { id: 2, name: 'TechStart Inc', emqScore: 72, status: 'risk', budgetAtRisk: 8500, activeIncidents: 1, autopilotMode: 'limited' },
-    { id: 3, name: 'GlobalBrand', emqScore: 88, status: 'ok', budgetAtRisk: 2000, activeIncidents: 0, autopilotMode: 'normal' },
-    { id: 4, name: 'FastGrowth Co', emqScore: 45, status: 'critical', budgetAtRisk: 25000, activeIncidents: 3, autopilotMode: 'frozen' },
-    { id: 5, name: 'RetailMax', emqScore: 91, status: 'ok', budgetAtRisk: 0, activeIncidents: 0, autopilotMode: 'normal' },
-  ]
+    {
+      id: 1,
+      name: 'Acme Corp',
+      emqScore: 94,
+      status: 'ok',
+      budgetAtRisk: 0,
+      activeIncidents: 0,
+      autopilotMode: 'normal',
+    },
+    {
+      id: 2,
+      name: 'TechStart Inc',
+      emqScore: 72,
+      status: 'risk',
+      budgetAtRisk: 8500,
+      activeIncidents: 1,
+      autopilotMode: 'limited',
+    },
+    {
+      id: 3,
+      name: 'GlobalBrand',
+      emqScore: 88,
+      status: 'ok',
+      budgetAtRisk: 2000,
+      activeIncidents: 0,
+      autopilotMode: 'normal',
+    },
+    {
+      id: 4,
+      name: 'FastGrowth Co',
+      emqScore: 45,
+      status: 'critical',
+      budgetAtRisk: 25000,
+      activeIncidents: 3,
+      autopilotMode: 'frozen',
+    },
+    {
+      id: 5,
+      name: 'RetailMax',
+      emqScore: 91,
+      status: 'ok',
+      budgetAtRisk: 0,
+      activeIncidents: 0,
+      autopilotMode: 'normal',
+    },
+  ];
 
   // EMQ benchmarks
   const benchmarks = benchmarksData ?? [
     { platform: 'Meta', p25: 65, p50: 78, p75: 89, tenantScore: 82, percentile: 68 },
     { platform: 'Google', p25: 72, p50: 85, p75: 94, tenantScore: 88, percentile: 72 },
     { platform: 'TikTok', p25: 55, p50: 70, p75: 82, tenantScore: 75, percentile: 65 },
-  ]
+  ];
 
   // Top issues
   const topIssues = portfolioData?.topIssues ?? [
     { driver: 'Freshness', affectedTenants: 3 },
     { driver: 'Data Loss', affectedTenants: 2 },
     { driver: 'Variance', affectedTenants: 4 },
-  ]
+  ];
 
   // Count by status
-  const statusCounts = tenantHealth.reduce((acc, t) => {
-    acc[t.status] = (acc[t.status] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const statusCounts = tenantHealth.reduce(
+    (acc, t) => {
+      acc[t.status] = (acc[t.status] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ok': return 'text-success bg-success/10 border-success/20'
-      case 'risk': return 'text-warning bg-warning/10 border-warning/20'
-      case 'degraded': return 'text-orange-400 bg-orange-500/10 border-orange-500/20'
-      case 'critical': return 'text-danger bg-danger/10 border-danger/20'
-      default: return 'text-text-muted bg-surface-tertiary border-white/10'
+      case 'ok':
+        return 'text-success bg-success/10 border-success/20';
+      case 'risk':
+        return 'text-warning bg-warning/10 border-warning/20';
+      case 'degraded':
+        return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+      case 'critical':
+        return 'text-danger bg-danger/10 border-danger/20';
+      default:
+        return 'text-text-muted bg-surface-tertiary border-white/10';
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -159,12 +212,8 @@ export default function ControlTower() {
             <ExclamationTriangleIcon className="w-4 h-4" />
             <span className="text-sm">Churn Risk</span>
           </div>
-          <div className="text-2xl font-bold text-warning">
-            {portfolioKpis.churnRisk}
-          </div>
-          <div className="text-sm text-text-muted mt-1">
-            tenants at risk
-          </div>
+          <div className="text-2xl font-bold text-warning">{portfolioKpis.churnRisk}</div>
+          <div className="text-sm text-text-muted mt-1">tenants at risk</div>
         </div>
 
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
@@ -172,9 +221,7 @@ export default function ControlTower() {
             <ChartBarIcon className="w-4 h-4" />
             <span className="text-sm">Margin</span>
           </div>
-          <div className="text-2xl font-bold text-success">
-            {portfolioKpis.margin}%
-          </div>
+          <div className="text-2xl font-bold text-success">{portfolioKpis.margin}%</div>
           <div className="flex items-center gap-1 text-success text-sm mt-1">
             <ArrowTrendingUpIcon className="w-4 h-4" />
             +2% vs target
@@ -189,22 +236,14 @@ export default function ControlTower() {
           <div className="text-2xl font-bold text-danger">
             ${(portfolioKpis.totalBudgetAtRisk / 1000).toFixed(0)}K
           </div>
-          <div className="text-sm text-text-muted mt-1">
-            across all tenants
-          </div>
+          <div className="text-sm text-text-muted mt-1">across all tenants</div>
         </div>
       </div>
 
       {/* Tenant Health by Status */}
       <div className="grid grid-cols-4 gap-4">
         {(['ok', 'risk', 'degraded', 'critical'] as const).map((status) => (
-          <div
-            key={status}
-            className={cn(
-              'p-4 rounded-xl border',
-              getStatusColor(status)
-            )}
-          >
+          <div key={status} className={cn('p-4 rounded-xl border', getStatusColor(status))}>
             <div className="flex items-center justify-between">
               <span className="text-sm capitalize">{status}</span>
               <span className="text-2xl font-bold">{statusCounts[status] || 0}</span>
@@ -238,18 +277,18 @@ export default function ControlTower() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-lg bg-surface-tertiary flex items-center justify-center">
-                        <span className="text-white font-medium">
-                          {tenant.name.charAt(0)}
-                        </span>
+                        <span className="text-white font-medium">{tenant.name.charAt(0)}</span>
                       </div>
                       <div>
                         <h4 className="font-medium text-white">{tenant.name}</h4>
                         <div className="flex items-center gap-2 mt-0.5">
                           <ConfidenceBandBadge score={tenant.emqScore} size="sm" />
-                          <span className={cn(
-                            'text-xs px-2 py-0.5 rounded capitalize',
-                            getStatusColor(tenant.status)
-                          )}>
+                          <span
+                            className={cn(
+                              'text-xs px-2 py-0.5 rounded capitalize',
+                              getStatusColor(tenant.status)
+                            )}
+                          >
                             {tenant.status}
                           </span>
                         </div>
@@ -269,7 +308,8 @@ export default function ControlTower() {
                       )}
                       {tenant.activeIncidents > 0 && (
                         <span className="text-sm text-warning">
-                          {tenant.activeIncidents} active incident{tenant.activeIncidents > 1 ? 's' : ''}
+                          {tenant.activeIncidents} active incident
+                          {tenant.activeIncidents > 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
@@ -283,7 +323,10 @@ export default function ControlTower() {
         {/* Right - System Health */}
         <div className="space-y-6">
           {/* EMQ Benchmarks */}
-          <div data-tour="emq-benchmarks" className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+          <div
+            data-tour="emq-benchmarks"
+            className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden"
+          >
             <div className="p-4 border-b border-white/10">
               <h3 className="font-semibold text-white">EMQ Benchmarks</h3>
               <p className="text-sm text-text-muted">P25 / P50 / P75 by platform</p>
@@ -320,7 +363,10 @@ export default function ControlTower() {
           </div>
 
           {/* Top Issues */}
-          <div data-tour="top-issues" className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+          <div
+            data-tour="top-issues"
+            className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden"
+          >
             <div className="p-4 border-b border-white/10">
               <h3 className="font-semibold text-white">Top Issues</h3>
               <p className="text-sm text-text-muted">Affecting most tenants</p>
@@ -329,16 +375,17 @@ export default function ControlTower() {
               {topIssues.map((issue, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <span className="text-sm text-white">{issue.driver}</span>
-                  <span className="text-sm text-danger">
-                    {issue.affectedTenants} tenants
-                  </span>
+                  <span className="text-sm text-danger">{issue.affectedTenants} tenants</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Autopilot Distribution */}
-          <div data-tour="autopilot-distribution" className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+          <div
+            data-tour="autopilot-distribution"
+            className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden"
+          >
             <div className="p-4 border-b border-white/10">
               <h3 className="font-semibold text-white">Autopilot Modes</h3>
             </div>
@@ -374,5 +421,5 @@ export default function ControlTower() {
         </div>
       </div>
     </div>
-  )
+  );
 }

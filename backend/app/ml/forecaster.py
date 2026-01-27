@@ -7,7 +7,7 @@ Uses historical data to forecast future performance.
 """
 
 from datetime import date, timedelta
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 from sqlalchemy import select
@@ -35,12 +35,12 @@ class ROASForecaster:
 
     async def forecast(
         self,
-        campaigns: List[Campaign],
+        campaigns: list[Campaign],
         days_ahead: int = 30,
         granularity: str = "daily",
         tenant_id: int = None,
         db: AsyncSession = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate ROAS forecasts for campaigns.
 
@@ -97,10 +97,10 @@ class ROASForecaster:
 
     async def _get_historical_data(
         self,
-        campaigns: List[Campaign],
+        campaigns: list[Campaign],
         tenant_id: int,
         db: AsyncSession,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Fetch historical metrics for campaigns."""
         if not db:
             return []
@@ -140,7 +140,7 @@ class ROASForecaster:
 
         return list(daily_data.values())
 
-    def _calculate_baseline(self, historical_data: List[Dict]) -> Dict[str, float]:
+    def _calculate_baseline(self, historical_data: list[dict]) -> dict[str, float]:
         """Calculate baseline metrics from historical data."""
         if not historical_data:
             return {
@@ -173,7 +173,7 @@ class ROASForecaster:
             "seasonality_factor": seasonality,
         }
 
-    def _calculate_trend(self, data: List[Dict]) -> float:
+    def _calculate_trend(self, data: list[dict]) -> float:
         """Calculate trend coefficient from historical data."""
         if len(data) < 2:
             return 0
@@ -195,11 +195,11 @@ class ROASForecaster:
 
         # Calculate slope
         n = len(x)
-        slope = (n * np.sum(x * y) - np.sum(x) * np.sum(y)) / (n * np.sum(x**2) - np.sum(x)**2)
+        slope = (n * np.sum(x * y) - np.sum(x) * np.sum(y)) / (n * np.sum(x**2) - np.sum(x) ** 2)
 
         return float(slope)
 
-    def _calculate_seasonality(self, data: List[Dict]) -> float:
+    def _calculate_seasonality(self, data: list[dict]) -> float:
         """Calculate average seasonality effect."""
         # Simplified: return average weekday vs weekend ratio
         weekday_roas = []
@@ -222,9 +222,9 @@ class ROASForecaster:
     async def _predict_day(
         self,
         forecast_date: date,
-        baseline: Dict[str, float],
+        baseline: dict[str, float],
         days_out: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate prediction for a single day."""
         # Apply trend
         base_roas = baseline["avg_roas"]
@@ -239,7 +239,7 @@ class ROASForecaster:
         # Add some variance
         np.random.seed(int(forecast_date.toordinal()))
         noise = np.random.normal(0, 0.1)
-        predicted_roas *= (1 + noise)
+        predicted_roas *= 1 + noise
 
         # Bound predictions
         predicted_roas = max(0.5, min(5.0, predicted_roas))
@@ -260,9 +260,9 @@ class ROASForecaster:
     async def _predict_week(
         self,
         week_start: date,
-        baseline: Dict[str, float],
+        baseline: dict[str, float],
         weeks_out: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate prediction for a week."""
         # Weekly aggregation
         weekly_spend = baseline["avg_daily_spend"] * 7
@@ -287,9 +287,9 @@ class ROASForecaster:
     async def _predict_month(
         self,
         month_start: date,
-        baseline: Dict[str, float],
+        baseline: dict[str, float],
         months_out: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate prediction for a month."""
         monthly_spend = baseline["avg_daily_spend"] * 30
         trend_adjustment = baseline["trend"] * months_out * 30
@@ -314,7 +314,7 @@ class ROASForecaster:
         self,
         days_ahead: int,
         granularity: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate mock forecast when no historical data available."""
         predictions = []
         today = date.today()
@@ -330,15 +330,17 @@ class ROASForecaster:
                 roas = base_roas * np.random.uniform(0.9, 1.1)
                 spend = base_spend * np.random.uniform(0.8, 1.2)
 
-                predictions.append({
-                    "date": forecast_date.isoformat(),
-                    "predicted_roas": round(roas, 3),
-                    "predicted_spend": round(spend, 2),
-                    "predicted_revenue": round(spend * roas, 2),
-                    "confidence_lower": round(roas * 0.85, 3),
-                    "confidence_upper": round(roas * 1.15, 3),
-                    "confidence": 0.75,
-                })
+                predictions.append(
+                    {
+                        "date": forecast_date.isoformat(),
+                        "predicted_roas": round(roas, 3),
+                        "predicted_spend": round(spend, 2),
+                        "predicted_revenue": round(spend * roas, 2),
+                        "confidence_lower": round(roas * 0.85, 3),
+                        "confidence_upper": round(roas * 1.15, 3),
+                        "confidence": 0.75,
+                    }
+                )
 
         return {
             "predictions": predictions,

@@ -14,18 +14,18 @@ Handles:
 - customer.created - New customer
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import stripe
 from fastapi import APIRouter, HTTPException, Request, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base_models import Tenant, User
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.security import decrypt_pii
 from app.db.session import async_session_maker
-from app.base_models import Tenant, User
 from app.services import stripe_service
 from app.services.email_service import get_email_service
 
@@ -90,9 +90,8 @@ async def stripe_webhook(request: Request):
         else:
             # In development, allow without verification
             import json
-            event = stripe.Event.construct_from(
-                json.loads(payload), stripe.api_key
-            )
+
+            event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
             logger.warning("stripe_webhook_signature_not_verified")
     except stripe.SignatureVerificationError as e:
         logger.error("stripe_webhook_invalid_signature", error=str(e))
@@ -162,6 +161,7 @@ async def stripe_webhook(request: Request):
 # Event Handlers
 # =============================================================================
 
+
 async def handle_checkout_completed(db: AsyncSession, session: dict):
     """
     Handle checkout.session.completed event.
@@ -189,9 +189,7 @@ async def handle_checkout_completed(db: AsyncSession, session: dict):
     # Update tenant with Stripe customer ID
     if customer_id:
         await db.execute(
-            update(Tenant)
-            .where(Tenant.id == tenant_id)
-            .values(stripe_customer_id=customer_id)
+            update(Tenant).where(Tenant.id == tenant_id).values(stripe_customer_id=customer_id)
         )
 
     # Sync subscription if present
@@ -288,9 +286,9 @@ async def handle_subscription_deleted(db: AsyncSession, subscription: dict):
     # Get the ended date from subscription
     ended_at = subscription.get("ended_at")
     if ended_at:
-        ended_datetime = datetime.fromtimestamp(ended_at, tz=timezone.utc)
+        ended_datetime = datetime.fromtimestamp(ended_at, tz=UTC)
     else:
-        ended_datetime = datetime.now(timezone.utc)
+        ended_datetime = datetime.now(UTC)
 
     # Update tenant to free plan with expiry
     await db.execute(
@@ -377,6 +375,7 @@ async def handle_invoice_payment_failed(db: AsyncSession, invoice: dict):
 
     # Get tenant admin users to notify
     from app.models import UserRole
+
     result = await db.execute(
         select(User).where(
             User.tenant_id == tenant.id,
@@ -438,7 +437,5 @@ async def handle_customer_created(db: AsyncSession, customer: dict):
     if tenant_id:
         tenant_id = int(tenant_id)
         await db.execute(
-            update(Tenant)
-            .where(Tenant.id == tenant_id)
-            .values(stripe_customer_id=customer_id)
+            update(Tenant).where(Tenant.id == tenant_id).values(stripe_customer_id=customer_id)
         )

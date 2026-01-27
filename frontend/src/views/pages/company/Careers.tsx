@@ -5,7 +5,7 @@
 
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
-import { BriefcaseIcon, MapPinIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
+import { BriefcaseIcon, CurrencyDollarIcon, MapPinIcon } from '@heroicons/react/24/outline';
 
 const jobs = [
   {

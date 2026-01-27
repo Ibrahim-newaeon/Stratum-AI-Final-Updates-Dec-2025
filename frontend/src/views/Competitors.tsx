@@ -5,49 +5,54 @@
  * Integrates with Meta Ads Library and Google Ads Transparency Center
  */
 
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
-import { useCompetitors, useShareOfVoice, useCreateCompetitor, useDeleteCompetitor } from '@/api/hooks'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
 import {
+  useCompetitors,
+  useCreateCompetitor,
+  useDeleteCompetitor,
+  useShareOfVoice,
+} from '@/api/hooks';
+import {
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ChartBarIcon,
+  CheckIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  GlobeAltIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-  EyeIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  GlobeAltIcon,
-  ChartBarIcon,
-  ArrowPathIcon,
-  EllipsisHorizontalIcon,
-  XMarkIcon,
-  CheckIcon,
   TrashIcon,
-  ArrowTopRightOnSquareIcon,
-} from '@heroicons/react/24/outline'
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 
 interface Competitor {
-  id: string
-  name: string
-  domain: string
-  logo: string | null
-  adSpend: number
-  adSpendTrend: number
-  shareOfVoice: number
-  keywordOverlap: number
-  creativesTracked: number
-  lastRefresh: Date
-  status: 'active' | 'paused'
-  country?: string
-  platforms?: string[]
+  id: string;
+  name: string;
+  domain: string;
+  logo: string | null;
+  adSpend: number;
+  adSpendTrend: number;
+  shareOfVoice: number;
+  keywordOverlap: number;
+  creativesTracked: number;
+  lastRefresh: Date;
+  status: 'active' | 'paused';
+  country?: string;
+  platforms?: string[];
 }
 
 interface KeywordOverlap {
-  keyword: string
-  yourPosition: number
-  competitorPosition: number
-  searchVolume: number
-  cpc: number
-  competitor: string
+  keyword: string;
+  yourPosition: number;
+  competitorPosition: number;
+  searchVolume: number;
+  cpc: number;
+  competitor: string;
 }
 
 // Countries for Meta Ads Library and Google Transparency
@@ -68,21 +73,21 @@ const COUNTRIES = [
   { code: 'IN', name: 'India', flag: '🇮🇳' },
   { code: 'PK', name: 'Pakistan', flag: '🇵🇰' },
   { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
-]
+];
 
 const PLATFORMS = [
   { id: 'meta', name: 'Meta (Facebook/Instagram)', icon: 'M' },
   { id: 'google', name: 'Google Ads', icon: 'G' },
   { id: 'tiktok', name: 'TikTok', icon: 'T' },
   { id: 'snapchat', name: 'Snapchat', icon: 'S' },
-]
+];
 
 export function Competitors() {
-  const { t: _t } = useTranslation()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { t: _t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state for new competitor
   const [newCompetitor, setNewCompetitor] = useState({
@@ -90,72 +95,85 @@ export function Competitors() {
     domain: '',
     country: 'SA',
     platforms: ['meta', 'google'] as string[],
-  })
+  });
 
-  const { data: competitorsData, refetch: refetchCompetitors } = useCompetitors()
+  const { data: competitorsData, refetch: refetchCompetitors } = useCompetitors();
   // Get last 30 days for share of voice
-  const endDate = new Date().toISOString().split('T')[0]
-  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const { data: sovData } = useShareOfVoice(startDate, endDate)
-  const createCompetitor = useCreateCompetitor()
-  const deleteCompetitor = useDeleteCompetitor()
+  const endDate = new Date().toISOString().split('T')[0];
+  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const { data: sovData } = useShareOfVoice(startDate, endDate);
+  const createCompetitor = useCreateCompetitor();
+  const deleteCompetitor = useDeleteCompetitor();
 
   // Generate Meta Ads Library URL - search by name (brand name works better)
   const getMetaAdsLibraryUrl = (name: string, country: string) => {
-    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`
-  }
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`;
+  };
 
   // Generate Google Ads Transparency URL - search by name
   const getGoogleTransparencyUrl = (name: string) => {
-    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
-  }
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`;
+  };
 
   // Handle form submission
   const handleAddCompetitor = async () => {
-    if (!newCompetitor.name || !newCompetitor.domain) return
+    if (!newCompetitor.name || !newCompetitor.domain) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       await createCompetitor.mutateAsync({
         name: newCompetitor.name,
         domain: newCompetitor.domain,
         country: newCompetitor.country,
         platforms: newCompetitor.platforms,
-      })
-      setIsModalOpen(false)
-      setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] })
-      refetchCompetitors()
+      });
+      setIsModalOpen(false);
+      setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] });
+      refetchCompetitors();
     } catch (error) {
-      console.error('Failed to add competitor:', error)
+      console.error('Failed to add competitor:', error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Handle delete competitor
   const handleDeleteCompetitor = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this competitor?')) return
+    if (!confirm('Are you sure you want to delete this competitor?')) return;
     try {
-      await deleteCompetitor.mutateAsync(id)
-      refetchCompetitors()
+      await deleteCompetitor.mutateAsync(id);
+      refetchCompetitors();
     } catch (error) {
-      console.error('Failed to delete competitor:', error)
+      console.error('Failed to delete competitor:', error);
     }
-  }
+  };
 
   // Toggle platform selection
   const togglePlatform = (platformId: string) => {
-    setNewCompetitor(prev => ({
+    setNewCompetitor((prev) => ({
       ...prev,
       platforms: prev.platforms.includes(platformId)
-        ? prev.platforms.filter(p => p !== platformId)
-        : [...prev.platforms, platformId]
-    }))
-  }
+        ? prev.platforms.filter((p) => p !== platformId)
+        : [...prev.platforms, platformId],
+    }));
+  };
 
   // Sample competitors - handle paginated response
-  const competitorsList = Array.isArray(competitorsData) ? competitorsData : (competitorsData as { data?: unknown[] } | undefined)?.data || []
-  const competitors: Competitor[] = (competitorsList as { id: string; name: string; domain: string; estimatedSpend?: number; shareOfVoice?: number; activeCreatives?: number; lastUpdated?: string; isActive?: boolean }[]).map((c) => ({
+  const competitorsList = Array.isArray(competitorsData)
+    ? competitorsData
+    : (competitorsData as { data?: unknown[] } | undefined)?.data || [];
+  const competitors: Competitor[] = (
+    competitorsList as {
+      id: string;
+      name: string;
+      domain: string;
+      estimatedSpend?: number;
+      shareOfVoice?: number;
+      activeCreatives?: number;
+      lastUpdated?: string;
+      isActive?: boolean;
+    }[]
+  ).map((c) => ({
     id: c.id,
     name: c.name,
     domain: c.domain,
@@ -220,19 +238,56 @@ export function Competitors() {
       lastRefresh: new Date(Date.now() - 12 * 60 * 60 * 1000),
       status: 'paused' as const,
     },
-  ]
+  ];
 
   const keywordOverlaps: KeywordOverlap[] = [
-    { keyword: 'marketing automation', yourPosition: 3, competitorPosition: 1, searchVolume: 12500, cpc: 8.50, competitor: 'MarketLeader Inc' },
-    { keyword: 'email campaigns', yourPosition: 2, competitorPosition: 4, searchVolume: 8900, cpc: 5.20, competitor: 'CompetitorOne' },
-    { keyword: 'ad optimization', yourPosition: 5, competitorPosition: 2, searchVolume: 6700, cpc: 12.30, competitor: 'MarketLeader Inc' },
-    { keyword: 'social media ads', yourPosition: 1, competitorPosition: 3, searchVolume: 15200, cpc: 4.80, competitor: 'NewEntrant Co' },
-    { keyword: 'ppc management', yourPosition: 4, competitorPosition: 1, searchVolume: 9800, cpc: 15.60, competitor: 'CompetitorOne' },
-  ]
+    {
+      keyword: 'marketing automation',
+      yourPosition: 3,
+      competitorPosition: 1,
+      searchVolume: 12500,
+      cpc: 8.5,
+      competitor: 'MarketLeader Inc',
+    },
+    {
+      keyword: 'email campaigns',
+      yourPosition: 2,
+      competitorPosition: 4,
+      searchVolume: 8900,
+      cpc: 5.2,
+      competitor: 'CompetitorOne',
+    },
+    {
+      keyword: 'ad optimization',
+      yourPosition: 5,
+      competitorPosition: 2,
+      searchVolume: 6700,
+      cpc: 12.3,
+      competitor: 'MarketLeader Inc',
+    },
+    {
+      keyword: 'social media ads',
+      yourPosition: 1,
+      competitorPosition: 3,
+      searchVolume: 15200,
+      cpc: 4.8,
+      competitor: 'NewEntrant Co',
+    },
+    {
+      keyword: 'ppc management',
+      yourPosition: 4,
+      competitorPosition: 1,
+      searchVolume: 9800,
+      cpc: 15.6,
+      competitor: 'CompetitorOne',
+    },
+  ];
 
   // Share of Voice data - handle API response shape
-  type ShareOfVoiceData = { you: number; competitors: { name: string; share: number }[] }
-  const shareOfVoice: ShareOfVoiceData = (sovData && !Array.isArray(sovData) ? sovData as ShareOfVoiceData : null) ?? {
+  type ShareOfVoiceData = { you: number; competitors: { name: string; share: number }[] };
+  const shareOfVoice: ShareOfVoiceData = (sovData && !Array.isArray(sovData)
+    ? (sovData as ShareOfVoiceData)
+    : null) ?? {
     you: 15,
     competitors: [
       { name: 'MarketLeader Inc', share: 35 },
@@ -240,33 +295,36 @@ export function Competitors() {
       { name: 'OldPlayer Ltd', share: 18 },
       { name: 'NewEntrant Co', share: 8 },
     ],
-  }
+  };
 
-  const filteredCompetitors = competitors.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.domain.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredCompetitors = competitors.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.domain.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`
-    return `$${value}`
-  }
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    return `$${value}`;
+  };
 
   const formatLastRefresh = (date: Date) => {
-    const hours = Math.floor((Date.now() - date.getTime()) / (60 * 60 * 1000))
-    if (hours < 1) return 'Just now'
-    if (hours < 24) return `${hours}h ago`
-    return `${Math.floor(hours / 24)}d ago`
-  }
+    const hours = Math.floor((Date.now() - date.getTime()) / (60 * 60 * 1000));
+    if (hours < 1) return 'Just now';
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  };
 
   // Stats
   const stats = {
     totalCompetitors: competitors.length,
     activeTracking: competitors.filter((c) => c.status === 'active').length,
-    avgKeywordOverlap: Math.round(competitors.reduce((sum, c) => sum + c.keywordOverlap, 0) / competitors.length),
+    avgKeywordOverlap: Math.round(
+      competitors.reduce((sum, c) => sum + c.keywordOverlap, 0) / competitors.length
+    ),
     totalCreatives: competitors.reduce((sum, c) => sum + c.creativesTracked, 0),
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -377,7 +435,9 @@ export function Competitors() {
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1'][i % 4] }}
               />
-              <span>{c.name} ({c.share}%)</span>
+              <span>
+                {c.name} ({c.share}%)
+              </span>
             </div>
           ))}
         </div>
@@ -409,9 +469,9 @@ export function Competitors() {
               border: '1px solid rgba(99, 102, 241, 0.2)',
               boxShadow: '0 8px 32px rgba(99, 102, 241, 0.08)',
             }}
-            onClick={() => setSelectedCompetitor(
-              selectedCompetitor === competitor.id ? null : competitor.id
-            )}
+            onClick={() =>
+              setSelectedCompetitor(selectedCompetitor === competitor.id ? null : competitor.id)
+            }
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -424,12 +484,14 @@ export function Competitors() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className={cn(
-                  'px-2 py-1 rounded-full text-xs',
-                  competitor.status === 'active'
-                    ? 'bg-green-500/10 text-green-500'
-                    : 'bg-muted text-muted-foreground'
-                )}>
+                <span
+                  className={cn(
+                    'px-2 py-1 rounded-full text-xs',
+                    competitor.status === 'active'
+                      ? 'bg-green-500/10 text-green-500'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
                   {competitor.status}
                 </span>
                 <button className="p-1 rounded hover:bg-muted transition-colors">
@@ -443,10 +505,12 @@ export function Competitors() {
                 <div className="text-sm text-muted-foreground">Est. Ad Spend</div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{formatCurrency(competitor.adSpend)}/mo</span>
-                  <span className={cn(
-                    'flex items-center text-xs',
-                    competitor.adSpendTrend >= 0 ? 'text-green-500' : 'text-red-500'
-                  )}>
+                  <span
+                    className={cn(
+                      'flex items-center text-xs',
+                      competitor.adSpendTrend >= 0 ? 'text-green-500' : 'text-red-500'
+                    )}
+                  >
                     {competitor.adSpendTrend >= 0 ? (
                       <ArrowTrendingUpIcon className="w-3 h-3" />
                     ) : (
@@ -505,8 +569,8 @@ export function Competitors() {
               </a>
               <button
                 onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteCompetitor(competitor.id)
+                  e.stopPropagation();
+                  handleDeleteCompetitor(competitor.id);
                 }}
                 className="ml-auto p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors"
                 title="Delete competitor"
@@ -550,25 +614,31 @@ export function Competitors() {
               <tr key={i} className="hover:bg-muted/30 transition-colors">
                 <td className="p-4 font-medium">{kw.keyword}</td>
                 <td className="p-4 text-center">
-                  <span className={cn(
-                    'px-2 py-1 rounded text-sm font-medium',
-                    kw.yourPosition <= 3 ? 'bg-green-500/10 text-green-500' :
-                    kw.yourPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
-                    'bg-muted text-muted-foreground'
-                  )}>
+                  <span
+                    className={cn(
+                      'px-2 py-1 rounded text-sm font-medium',
+                      kw.yourPosition <= 3
+                        ? 'bg-green-500/10 text-green-500'
+                        : kw.yourPosition <= 5
+                          ? 'bg-amber-500/10 text-amber-500'
+                          : 'bg-muted text-muted-foreground'
+                    )}
+                  >
                     #{kw.yourPosition}
                   </span>
                 </td>
-                <td className="p-4 text-center text-sm text-muted-foreground">
-                  {kw.competitor}
-                </td>
+                <td className="p-4 text-center text-sm text-muted-foreground">{kw.competitor}</td>
                 <td className="p-4 text-center">
-                  <span className={cn(
-                    'px-2 py-1 rounded text-sm font-medium',
-                    kw.competitorPosition <= 3 ? 'bg-red-500/10 text-red-500' :
-                    kw.competitorPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
-                    'bg-muted text-muted-foreground'
-                  )}>
+                  <span
+                    className={cn(
+                      'px-2 py-1 rounded text-sm font-medium',
+                      kw.competitorPosition <= 3
+                        ? 'bg-red-500/10 text-red-500'
+                        : kw.competitorPosition <= 5
+                          ? 'bg-amber-500/10 text-amber-500'
+                          : 'bg-muted text-muted-foreground'
+                    )}
+                  >
                     #{kw.competitorPosition}
                   </span>
                 </td>
@@ -620,13 +690,11 @@ export function Competitors() {
             <div className="p-6 space-y-5">
               {/* Competitor Name */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Competitor Name *
-                </label>
+                <label className="block text-sm font-medium mb-2">Competitor Name *</label>
                 <input
                   type="text"
                   value={newCompetitor.name}
-                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setNewCompetitor((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., Competitor Inc"
                   className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
@@ -634,13 +702,13 @@ export function Competitors() {
 
               {/* Domain/Website */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Website / Domain *
-                </label>
+                <label className="block text-sm font-medium mb-2">Website / Domain *</label>
                 <input
                   type="text"
                   value={newCompetitor.domain}
-                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, domain: e.target.value }))}
+                  onChange={(e) =>
+                    setNewCompetitor((prev) => ({ ...prev, domain: e.target.value }))
+                  }
                   placeholder="e.g., competitor.com"
                   className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
@@ -651,12 +719,12 @@ export function Competitors() {
 
               {/* Country Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Competitor's Country *
-                </label>
+                <label className="block text-sm font-medium mb-2">Competitor's Country *</label>
                 <select
                   value={newCompetitor.country}
-                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, country: e.target.value }))}
+                  onChange={(e) =>
+                    setNewCompetitor((prev) => ({ ...prev, country: e.target.value }))
+                  }
                   className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   {COUNTRIES.map((country) => (
@@ -672,9 +740,7 @@ export function Competitors() {
 
               {/* Platform Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Platforms to Track
-                </label>
+                <label className="block text-sm font-medium mb-2">Platforms to Track</label>
                 <div className="flex flex-wrap gap-2">
                   {PLATFORMS.map((platform) => (
                     <button
@@ -703,7 +769,9 @@ export function Competitors() {
               {/* Quick Links Preview - shows when name is entered */}
               {newCompetitor.name && (
                 <div className="p-4 rounded-lg bg-muted/50 space-y-3">
-                  <p className="text-sm font-medium">Preview Ad Library Links for "{newCompetitor.name}":</p>
+                  <p className="text-sm font-medium">
+                    Preview Ad Library Links for "{newCompetitor.name}":
+                  </p>
                   <div className="space-y-2">
                     <a
                       href={getMetaAdsLibraryUrl(newCompetitor.name, newCompetitor.country)}
@@ -712,7 +780,8 @@ export function Competitors() {
                       className="flex items-center gap-2 text-sm text-primary hover:underline"
                     >
                       <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                      Search "{newCompetitor.name}" in Meta Ads Library ({COUNTRIES.find(c => c.code === newCompetitor.country)?.name})
+                      Search "{newCompetitor.name}" in Meta Ads Library (
+                      {COUNTRIES.find((c) => c.code === newCompetitor.country)?.name})
                     </a>
                     <a
                       href={getGoogleTransparencyUrl(newCompetitor.name)}
@@ -758,7 +827,7 @@ export function Competitors() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default Competitors
+export default Competitors;

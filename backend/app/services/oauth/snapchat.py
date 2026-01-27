@@ -18,19 +18,19 @@ Required Scopes:
 Docs: https://developers.snap.com/api/marketing-api/Authorization
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional
 import base64
+from datetime import UTC, datetime, timedelta
+from typing import Optional
 
 import aiohttp
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.oauth.base import (
+    AdAccountInfo,
     OAuthService,
     OAuthState,
     OAuthTokens,
-    AdAccountInfo,
 )
 
 logger = get_logger(__name__)
@@ -61,7 +61,7 @@ class SnapchatOAuthService(OAuthService):
     def get_authorization_url(
         self,
         state: OAuthState,
-        scopes: Optional[List[str]] = None,
+        scopes: Optional[list[str]] = None,
     ) -> str:
         """
         Generate Snapchat OAuth authorization URL.
@@ -112,9 +112,7 @@ class SnapchatOAuthService(OAuthService):
             raise ValueError("Snapchat OAuth credentials not configured")
 
         # Snapchat requires Basic auth with client credentials
-        credentials = base64.b64encode(
-            f"{self.client_id}:{self.client_secret}".encode()
-        ).decode()
+        credentials = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
 
         async with aiohttp.ClientSession() as session:
             headers = {
@@ -132,7 +130,9 @@ class SnapchatOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Snapchat token exchange failed", error=error_data)
-                    raise Exception(f"Token exchange failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}")
+                    raise Exception(
+                        f"Token exchange failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}"
+                    )
 
                 token_data = await resp.json()
 
@@ -165,9 +165,7 @@ class SnapchatOAuthService(OAuthService):
         if not self.client_id or not self.client_secret:
             raise ValueError("Snapchat OAuth credentials not configured")
 
-        credentials = base64.b64encode(
-            f"{self.client_id}:{self.client_secret}".encode()
-        ).decode()
+        credentials = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
 
         async with aiohttp.ClientSession() as session:
             headers = {
@@ -184,7 +182,9 @@ class SnapchatOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Snapchat token refresh failed", error=error_data)
-                    raise Exception(f"Token refresh failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}")
+                    raise Exception(
+                        f"Token refresh failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}"
+                    )
 
                 token_data = await resp.json()
 
@@ -203,7 +203,7 @@ class SnapchatOAuthService(OAuthService):
     async def fetch_ad_accounts(
         self,
         access_token: str,
-    ) -> List[AdAccountInfo]:
+    ) -> list[AdAccountInfo]:
         """
         Fetch Snapchat ad accounts.
 
@@ -263,16 +263,21 @@ class SnapchatOAuthService(OAuthService):
                             "DELETED": "deleted",
                         }
 
-                        accounts.append(AdAccountInfo(
-                            account_id=account_info.get("id", ""),
-                            name=account_info.get("name", "Unnamed Account"),
-                            business_name=account_info.get("organization_id"),
-                            currency=account_info.get("currency", "USD"),
-                            timezone=account_info.get("timezone", "UTC"),
-                            status=status_map.get(account_info.get("status"), "unknown"),
-                            spend_cap=float(account_info.get("lifetime_spend_cap_micro", 0)) / 1000000 if account_info.get("lifetime_spend_cap_micro") else None,
-                            raw_data=account_info,
-                        ))
+                        accounts.append(
+                            AdAccountInfo(
+                                account_id=account_info.get("id", ""),
+                                name=account_info.get("name", "Unnamed Account"),
+                                business_name=account_info.get("organization_id"),
+                                currency=account_info.get("currency", "USD"),
+                                timezone=account_info.get("timezone", "UTC"),
+                                status=status_map.get(account_info.get("status"), "unknown"),
+                                spend_cap=float(account_info.get("lifetime_spend_cap_micro", 0))
+                                / 1000000
+                                if account_info.get("lifetime_spend_cap_micro")
+                                else None,
+                                raw_data=account_info,
+                            )
+                        )
 
                 except Exception as e:
                     self.logger.warning(f"Failed to get ad accounts for org {org_id}", error=str(e))
@@ -295,16 +300,18 @@ class SnapchatOAuthService(OAuthService):
         Returns:
             True (delete tokens from storage)
         """
-        self.logger.info("Snapchat token revocation requested - tokens will be deleted from storage")
+        self.logger.info(
+            "Snapchat token revocation requested - tokens will be deleted from storage"
+        )
         return True
 
     def _calculate_expiry(self, expires_in: Optional[int]) -> Optional[datetime]:
         """Calculate expiration datetime from expires_in seconds."""
         if expires_in is None:
             return None
-        return datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        return datetime.now(UTC) + timedelta(seconds=expires_in)
 
-    def _get_mock_accounts(self) -> List[AdAccountInfo]:
+    def _get_mock_accounts(self) -> list[AdAccountInfo]:
         """Return mock accounts for development/testing."""
         return [
             AdAccountInfo(

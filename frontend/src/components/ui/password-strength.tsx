@@ -60,7 +60,13 @@ export function PasswordStrength({ password, className }: PasswordStrengthProps)
           <span className="text-muted-foreground">Password strength</span>
           <span className={cn('font-medium', strength.color)}>{strength.label}</span>
         </div>
-        <div className="h-1.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}>
+        <div
+          className="h-1.5 bg-muted rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={percentage}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
           <div
             className={cn('h-full transition-all duration-300 rounded-full', strength.bgColor)}
             style={{ width: `${percentage}%` }}
@@ -107,7 +113,14 @@ export function PasswordStrengthBar({ password, className }: PasswordStrengthPro
 
   return (
     <div className={cn('space-y-1', className)}>
-      <div className="h-1 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100} aria-label={`Password strength: ${strength.label}`}>
+      <div
+        className="h-1 bg-muted rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Password strength: ${strength.label}`}
+      >
         <div
           className={cn('h-full transition-all duration-300 rounded-full', strength.bgColor)}
           style={{ width: `${percentage}%` }}

@@ -5,7 +5,7 @@
 Background tasks for syncing campaign data from ad platforms.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -54,7 +54,7 @@ def sync_campaign_data(self, tenant_id: int, campaign_id: int):
                 manager = MockAdNetworkManager(tenant_id)
                 network = MockAdNetwork(seed=tenant_id)
 
-                end_date = datetime.now(timezone.utc).date()
+                end_date = datetime.now(UTC).date()
                 start_date = campaign.start_date or (end_date - timedelta(days=30))
 
                 time_series = network.generate_time_series(
@@ -94,7 +94,7 @@ def sync_campaign_data(self, tenant_id: int, campaign_id: int):
 
                 # Update campaign aggregates
                 campaign.calculate_metrics()
-                campaign.last_synced_at = datetime.now(timezone.utc)
+                campaign.last_synced_at = datetime.now(UTC)
                 campaign.sync_error = None
 
             db.commit()
@@ -128,11 +128,7 @@ def sync_all_campaigns():
 
     with SyncSessionLocal() as db:
         # Get all active tenants
-        tenants = (
-            db.execute(select(Tenant).where(Tenant.is_deleted == False))
-            .scalars()
-            .all()
-        )
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         task_count = 0
         for tenant in tenants:

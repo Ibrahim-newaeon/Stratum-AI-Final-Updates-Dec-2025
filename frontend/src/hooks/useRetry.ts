@@ -3,7 +3,7 @@
  * Provides retry functionality for async operations with exponential backoff
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 interface UseRetryOptions {
   /** Maximum number of retry attempts */
@@ -35,9 +35,7 @@ interface UseRetryResult<T> {
   retry: () => Promise<T | undefined>;
 }
 
-export function useRetry<T = unknown>(
-  options: UseRetryOptions = {}
-): UseRetryResult<T> {
+export function useRetry<T = unknown>(options: UseRetryOptions = {}): UseRetryResult<T> {
   const {
     maxRetries = 3,
     baseDelay = 1000,
@@ -61,8 +59,7 @@ export function useRetry<T = unknown>(
     [baseDelay, maxDelay, exponentialBackoff]
   );
 
-  const sleep = (ms: number): Promise<void> =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+  const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
   const execute = useCallback(
     async (fn: () => Promise<T>): Promise<T> => {

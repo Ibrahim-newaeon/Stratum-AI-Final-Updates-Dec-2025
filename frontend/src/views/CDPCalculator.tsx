@@ -3,10 +3,10 @@
  * Interactive calculator to estimate the impact of improved identity resolution
  */
 
-import { Link } from 'react-router-dom'
-import { ArrowLeft, Database, Users, TrendingUp, Shield } from 'lucide-react'
-import { CDPROICalculator } from '@/components/widgets/CDPROICalculator'
-import { ErrorBoundary, WidgetErrorFallback } from '@/components/ui/ErrorBoundary'
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Database, Shield, TrendingUp, Users } from 'lucide-react';
+import { CDPROICalculator } from '@/components/widgets/CDPROICalculator';
+import { ErrorBoundary, WidgetErrorFallback } from '@/components/ui/ErrorBoundary';
 
 export default function CDPCalculator() {
   return (
@@ -40,12 +40,10 @@ export default function CDPCalculator() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Page Title */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">
-            CDP ROI Calculator
-          </h1>
+          <h1 className="text-4xl font-bold tracking-tight mb-4">CDP ROI Calculator</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Estimate the business impact of improving your customer identity resolution
-            with Stratum CDP's first-party data platform.
+            Estimate the business impact of improving your customer identity resolution with Stratum
+            CDP's first-party data platform.
           </p>
         </div>
 
@@ -100,12 +98,10 @@ export default function CDPCalculator() {
 
         {/* CTA Section */}
         <div className="text-center p-8 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-          <h2 className="text-2xl font-bold mb-4">
-            Ready to See These Results?
-          </h2>
+          <h2 className="text-2xl font-bold mb-4">Ready to See These Results?</h2>
           <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-            Start your 30-day pilot program and measure the real impact on your business.
-            Free setup consultation included.
+            Start your 30-day pilot program and measure the real impact on your business. Free setup
+            consultation included.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Link
@@ -130,13 +126,19 @@ export default function CDPCalculator() {
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <p>&copy; 2026 Stratum AI. All rights reserved.</p>
             <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Documentation</a>
+              <a href="#" className="hover:text-foreground transition-colors">
+                Privacy
+              </a>
+              <a href="#" className="hover:text-foreground transition-colors">
+                Terms
+              </a>
+              <a href="#" className="hover:text-foreground transition-colors">
+                Documentation
+              </a>
             </div>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

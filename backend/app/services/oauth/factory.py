@@ -5,16 +5,14 @@
 Factory function to get the appropriate OAuth service for a platform.
 """
 
-from typing import Dict, Type
-
 from app.services.oauth.base import OAuthService
-from app.services.oauth.meta import MetaOAuthService
 from app.services.oauth.google import GoogleOAuthService
-from app.services.oauth.tiktok import TikTokOAuthService
+from app.services.oauth.meta import MetaOAuthService
 from app.services.oauth.snapchat import SnapchatOAuthService
+from app.services.oauth.tiktok import TikTokOAuthService
 
 # Registry of OAuth services by platform
-_OAUTH_SERVICES: Dict[str, Type[OAuthService]] = {
+_OAUTH_SERVICES: dict[str, type[OAuthService]] = {
     "meta": MetaOAuthService,
     "google": GoogleOAuthService,
     "tiktok": TikTokOAuthService,
@@ -22,7 +20,7 @@ _OAUTH_SERVICES: Dict[str, Type[OAuthService]] = {
 }
 
 # Singleton instances
-_oauth_instances: Dict[str, OAuthService] = {}
+_oauth_instances: dict[str, OAuthService] = {}
 
 
 def get_oauth_service(platform: str) -> OAuthService:

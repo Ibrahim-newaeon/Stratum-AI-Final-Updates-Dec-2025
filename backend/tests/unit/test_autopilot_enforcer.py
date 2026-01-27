@@ -14,27 +14,27 @@ Tests cover:
 - Intervention logging
 """
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.autopilot.enforcer import (
     AutopilotEnforcer,
     EnforcementMode,
-    EnforcementSettings,
-    EnforcementRule,
     EnforcementResult,
-    ViolationType,
+    EnforcementRule,
+    EnforcementSettings,
     InterventionAction,
     InterventionLog,
-    send_enforcement_notification,
+    ViolationType,
     clear_enforcement_cache,
+    send_enforcement_notification,
 )
-
 
 # =============================================================================
 # Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def enforcer():
@@ -73,6 +73,7 @@ def strict_settings():
 # =============================================================================
 # Test Enforcement Settings
 # =============================================================================
+
 
 class TestEnforcementSettings:
     """Tests for enforcement settings management."""
@@ -120,6 +121,7 @@ class TestEnforcementSettings:
 # =============================================================================
 # Test Budget Enforcement
 # =============================================================================
+
 
 class TestBudgetEnforcement:
     """Tests for budget threshold enforcement."""
@@ -217,6 +219,7 @@ class TestBudgetEnforcement:
 # Test ROAS Enforcement
 # =============================================================================
 
+
 class TestROASEnforcement:
     """Tests for ROAS threshold enforcement."""
 
@@ -238,7 +241,9 @@ class TestROASEnforcement:
         )
 
         # No ROAS violation
-        roas_violations = [v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value]
+        roas_violations = [
+            v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
+        ]
         assert len(roas_violations) == 0
 
     @pytest.mark.asyncio
@@ -261,7 +266,9 @@ class TestROASEnforcement:
             metrics={"roas": 1.5},
         )
 
-        roas_violations = [v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value]
+        roas_violations = [
+            v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
+        ]
         assert len(roas_violations) == 1
         assert "1.50" in roas_violations[0]["message"]
 
@@ -269,6 +276,7 @@ class TestROASEnforcement:
 # =============================================================================
 # Test Enforcement Modes
 # =============================================================================
+
 
 class TestEnforcementModes:
     """Tests for different enforcement modes."""
@@ -369,6 +377,7 @@ class TestEnforcementModes:
 # =============================================================================
 # Test Soft-Block Confirmation
 # =============================================================================
+
 
 class TestSoftBlockConfirmation:
     """Tests for soft-block confirmation workflow."""
@@ -490,6 +499,7 @@ class TestSoftBlockConfirmation:
 # Test Kill Switch
 # =============================================================================
 
+
 class TestKillSwitch:
     """Tests for enforcement kill switch."""
 
@@ -543,6 +553,7 @@ class TestKillSwitch:
 # =============================================================================
 # Test Custom Rules
 # =============================================================================
+
 
 class TestCustomRules:
     """Tests for custom enforcement rules."""
@@ -645,6 +656,7 @@ class TestCustomRules:
 # Test Auto-Pause
 # =============================================================================
 
+
 class TestAutoPause:
     """Tests for auto-pause functionality."""
 
@@ -713,6 +725,7 @@ class TestAutoPause:
 # Test Result Serialization
 # =============================================================================
 
+
 class TestResultSerialization:
     """Tests for result serialization."""
 
@@ -740,6 +753,7 @@ class TestResultSerialization:
 # Test Notification Service
 # =============================================================================
 
+
 class TestNotificationService:
     """Tests for enforcement notification service."""
 
@@ -748,7 +762,7 @@ class TestNotificationService:
         """Test sending enforcement notification."""
         intervention = InterventionLog(
             tenant_id=1,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             action_type="set_budget",
             entity_type="campaign",
             entity_id="camp_123",
@@ -770,6 +784,7 @@ class TestNotificationService:
 # =============================================================================
 # Test Edge Cases
 # =============================================================================
+
 
 class TestEdgeCases:
     """Tests for edge cases and boundary conditions."""
@@ -808,7 +823,9 @@ class TestEdgeCases:
 
         # Should not crash, no ROAS violation
         assert result is not None
-        roas_violations = [v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value]
+        roas_violations = [
+            v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
+        ]
         assert len(roas_violations) == 0
 
     @pytest.mark.asyncio

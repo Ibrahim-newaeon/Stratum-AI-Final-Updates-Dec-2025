@@ -12,11 +12,11 @@ Features:
 - Budget-aware creative rotation suggestions
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import math
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
+from enum import Enum
+from typing import Any, Optional
 
 import numpy as np
 
@@ -26,9 +26,10 @@ logger = get_logger(__name__)
 
 # Try to import ML libraries
 try:
+    from scipy.optimize import curve_fit
     from sklearn.cluster import KMeans
     from sklearn.preprocessing import StandardScaler
-    from scipy.optimize import curve_fit
+
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
@@ -37,41 +38,44 @@ except ImportError:
 
 class LifecyclePhase(str, Enum):
     """Creative lifecycle phases."""
-    LEARNING = "learning"       # Days 1-3: Algorithm learning
-    GROWTH = "growth"           # Days 4-7: Performance increasing
-    MATURITY = "maturity"       # Days 8-14: Peak performance
-    DECLINE = "decline"         # Days 15+: Performance decreasing
-    FATIGUE = "fatigue"         # Performance dropped significantly
+
+    LEARNING = "learning"  # Days 1-3: Algorithm learning
+    GROWTH = "growth"  # Days 4-7: Performance increasing
+    MATURITY = "maturity"  # Days 8-14: Peak performance
+    DECLINE = "decline"  # Days 15+: Performance decreasing
+    FATIGUE = "fatigue"  # Performance dropped significantly
 
 
 class RefreshUrgency(str, Enum):
     """Urgency level for creative refresh."""
-    IMMEDIATE = "immediate"     # Refresh now
-    SOON = "soon"              # Refresh within 3 days
-    PLANNED = "planned"        # Schedule refresh for next week
-    MONITOR = "monitor"        # Watch but no action needed
-    HEALTHY = "healthy"        # No refresh needed
+
+    IMMEDIATE = "immediate"  # Refresh now
+    SOON = "soon"  # Refresh within 3 days
+    PLANNED = "planned"  # Schedule refresh for next week
+    MONITOR = "monitor"  # Watch but no action needed
+    HEALTHY = "healthy"  # No refresh needed
 
 
 @dataclass
 class CreativePerformanceHistory:
     """Historical performance data for a creative."""
+
     creative_id: str
     creative_name: str
     platform: str
     creative_type: str  # image, video, carousel
 
     # Daily metrics (lists, index 0 = day 1)
-    dates: List[datetime] = field(default_factory=list)
-    impressions: List[int] = field(default_factory=list)
-    clicks: List[int] = field(default_factory=list)
-    conversions: List[int] = field(default_factory=list)
-    spend: List[float] = field(default_factory=list)
-    ctr: List[float] = field(default_factory=list)
-    cvr: List[float] = field(default_factory=list)
-    cpa: List[float] = field(default_factory=list)
-    roas: List[float] = field(default_factory=list)
-    frequency: List[float] = field(default_factory=list)
+    dates: list[datetime] = field(default_factory=list)
+    impressions: list[int] = field(default_factory=list)
+    clicks: list[int] = field(default_factory=list)
+    conversions: list[int] = field(default_factory=list)
+    spend: list[float] = field(default_factory=list)
+    ctr: list[float] = field(default_factory=list)
+    cvr: list[float] = field(default_factory=list)
+    cpa: list[float] = field(default_factory=list)
+    roas: list[float] = field(default_factory=list)
+    frequency: list[float] = field(default_factory=list)
 
     # Metadata
     launch_date: Optional[datetime] = None
@@ -82,6 +86,7 @@ class CreativePerformanceHistory:
 @dataclass
 class FatiguePrediction:
     """Prediction result for creative fatigue."""
+
     creative_id: str
     creative_name: str
 
@@ -102,7 +107,7 @@ class FatiguePrediction:
 
     # Recommendations
     refresh_urgency: RefreshUrgency
-    recommendations: List[str]
+    recommendations: list[str]
     estimated_performance_loss_if_not_refreshed: float  # % loss in next 7 days
 
     # Decay model parameters (if fitted)
@@ -114,14 +119,15 @@ class FatiguePrediction:
 @dataclass
 class CreativeCluster:
     """A cluster of similar creatives."""
+
     cluster_id: int
-    creatives: List[str]  # creative_ids
+    creatives: list[str]  # creative_ids
     avg_days_to_fatigue: float
     avg_peak_day: float
     avg_peak_ctr: float
     decay_rate: float
-    platform_distribution: Dict[str, int]
-    type_distribution: Dict[str, int]
+    platform_distribution: dict[str, int]
+    type_distribution: dict[str, int]
 
 
 class CreativeLifecyclePredictor:
@@ -150,9 +156,9 @@ class CreativeLifecyclePredictor:
     def __init__(self):
         # Platform-specific decay rates (days to half performance)
         self.platform_decay_rates = {
-            "meta": 12,      # Meta creatives fatigue faster
-            "google": 21,    # Search ads last longer
-            "tiktok": 7,     # TikTok needs frequent refresh
+            "meta": 12,  # Meta creatives fatigue faster
+            "google": 21,  # Search ads last longer
+            "tiktok": 7,  # TikTok needs frequent refresh
             "snapchat": 10,
             "linkedin": 28,  # B2B has longer cycles
             "default": 14,
@@ -160,10 +166,10 @@ class CreativeLifecyclePredictor:
 
         # Creative type adjustment factors
         self.type_factors = {
-            "video": 0.85,      # Videos fatigue faster
-            "image": 1.0,       # Baseline
-            "carousel": 1.15,   # Carousels last longer
-            "stories": 0.7,     # Stories fatigue quickly
+            "video": 0.85,  # Videos fatigue faster
+            "image": 1.0,  # Baseline
+            "carousel": 1.15,  # Carousels last longer
+            "stories": 0.7,  # Stories fatigue quickly
             "reels": 0.75,
             "collection": 1.1,
         }
@@ -173,7 +179,7 @@ class CreativeLifecyclePredictor:
         self.watch_threshold = 0.45
 
         # Fitted clusters
-        self._clusters: List[CreativeCluster] = []
+        self._clusters: list[CreativeCluster] = []
         self._scaler: Optional[Any] = None
 
     def predict_fatigue(
@@ -207,9 +213,7 @@ class CreativeLifecyclePredictor:
             decay_params = self._heuristic_decay(history)
 
         # Predict days until fatigue
-        days_to_fatigue = self._predict_days_to_fatigue(
-            history, decay_params, current_fatigue
-        )
+        days_to_fatigue = self._predict_days_to_fatigue(history, decay_params, current_fatigue)
 
         # Project future performance
         projections = self._project_performance(history, decay_params, days=7)
@@ -230,7 +234,7 @@ class CreativeLifecyclePredictor:
             current_fatigue_score=round(current_fatigue, 3),
             days_active=history.days_active,
             days_until_fatigue=days_to_fatigue,
-            predicted_fatigue_date=datetime.now(timezone.utc) + timedelta(days=days_to_fatigue),
+            predicted_fatigue_date=datetime.now(UTC) + timedelta(days=days_to_fatigue),
             confidence=self._calculate_prediction_confidence(history, decay_params),
             projected_ctr_7d=round(projections.get("ctr", 0), 4),
             projected_roas_7d=round(projections.get("roas", 0), 2),
@@ -282,9 +286,11 @@ class CreativeLifecyclePredictor:
             baseline_roas = np.mean(history.roas[3:7]) if history.roas else 0
             baseline_cpa = np.mean(history.cpa[3:7]) if history.cpa else 0
         else:
-            baseline_ctr = np.mean(history.ctr[:min(3, len(history.ctr))])
-            baseline_roas = np.mean(history.roas[:min(3, len(history.roas))]) if history.roas else 0
-            baseline_cpa = np.mean(history.cpa[:min(3, len(history.cpa))]) if history.cpa else 0
+            baseline_ctr = np.mean(history.ctr[: min(3, len(history.ctr))])
+            baseline_roas = (
+                np.mean(history.roas[: min(3, len(history.roas))]) if history.roas else 0
+            )
+            baseline_cpa = np.mean(history.cpa[: min(3, len(history.cpa))]) if history.cpa else 0
 
         # Get recent metrics
         recent_ctr = np.mean(history.ctr[-3:])
@@ -294,21 +300,18 @@ class CreativeLifecyclePredictor:
 
         # Calculate drops
         ctr_drop = max(0, (baseline_ctr - recent_ctr) / baseline_ctr) if baseline_ctr > 0 else 0
-        roas_drop = max(0, (baseline_roas - recent_roas) / baseline_roas) if baseline_roas > 0 else 0
+        roas_drop = (
+            max(0, (baseline_roas - recent_roas) / baseline_roas) if baseline_roas > 0 else 0
+        )
         cpa_rise = max(0, (recent_cpa - baseline_cpa) / baseline_cpa) if baseline_cpa > 0 else 0
         freq_factor = min(1.0, max(0, (recent_freq - 2) / 3))
 
         # Weighted fatigue score
-        fatigue = (
-            0.25 * ctr_drop +
-            0.25 * roas_drop +
-            0.25 * cpa_rise +
-            0.25 * freq_factor
-        )
+        fatigue = 0.25 * ctr_drop + 0.25 * roas_drop + 0.25 * cpa_rise + 0.25 * freq_factor
 
         return min(1.0, fatigue)
 
-    def _fit_decay_model(self, history: CreativePerformanceHistory) -> Dict[str, Any]:
+    def _fit_decay_model(self, history: CreativePerformanceHistory) -> dict[str, Any]:
         """Fit an exponential decay model to CTR data."""
         if not ML_AVAILABLE:
             return self._heuristic_decay(history)
@@ -335,9 +338,12 @@ class CreativeLifecyclePredictor:
                 p0 = [peak_ctr, 0.05, peak_ctr * 0.3]
 
                 popt, _ = curve_fit(
-                    exp_decay, decay_days, decay_values,
-                    p0=p0, maxfev=1000,
-                    bounds=([0, 0, 0], [peak_ctr * 2, 1, peak_ctr])
+                    exp_decay,
+                    decay_days,
+                    decay_values,
+                    p0=p0,
+                    maxfev=1000,
+                    bounds=([0, 0, 0], [peak_ctr * 2, 1, peak_ctr]),
                 )
 
                 decay_rate = float(popt[1])
@@ -359,7 +365,7 @@ class CreativeLifecyclePredictor:
             "method": "ml_fit",
         }
 
-    def _heuristic_decay(self, history: CreativePerformanceHistory) -> Dict[str, Any]:
+    def _heuristic_decay(self, history: CreativePerformanceHistory) -> dict[str, Any]:
         """Heuristic decay estimation when ML is unavailable."""
         ctr_values = history.ctr
 
@@ -377,7 +383,11 @@ class CreativeLifecyclePredictor:
             days_since_peak = len(ctr_values) - peak_idx
             if peak_ctr > 0 and recent_ctr < peak_ctr:
                 observed_decline = (peak_ctr - recent_ctr) / peak_ctr
-                observed_decay = -math.log(1 - observed_decline) / days_since_peak if observed_decline < 1 else 0.1
+                observed_decay = (
+                    -math.log(1 - observed_decline) / days_since_peak
+                    if observed_decline < 1
+                    else 0.1
+                )
                 decay_rate = (base_decay + observed_decay) / 2
             else:
                 decay_rate = base_decay
@@ -396,8 +406,7 @@ class CreativeLifecyclePredictor:
         """Get decay rate based on platform and creative type."""
         # Half-life in days
         half_life = self.platform_decay_rates.get(
-            platform.lower(),
-            self.platform_decay_rates["default"]
+            platform.lower(), self.platform_decay_rates["default"]
         )
 
         # Apply creative type factor
@@ -412,7 +421,7 @@ class CreativeLifecyclePredictor:
     def _predict_days_to_fatigue(
         self,
         history: CreativePerformanceHistory,
-        decay_params: Dict[str, Any],
+        decay_params: dict[str, Any],
         current_fatigue: float,
     ) -> int:
         """Predict days until fatigue threshold is reached."""
@@ -427,7 +436,9 @@ class CreativeLifecyclePredictor:
 
         # Estimate days (simplified - fatigue increases roughly linearly with CTR decline)
         if decay_rate > 0:
-            days_estimate = int(fatigue_needed / (decay_rate * 0.3))  # 0.3 is approximate conversion
+            days_estimate = int(
+                fatigue_needed / (decay_rate * 0.3)
+            )  # 0.3 is approximate conversion
         else:
             days_estimate = 30
 
@@ -437,9 +448,9 @@ class CreativeLifecyclePredictor:
     def _project_performance(
         self,
         history: CreativePerformanceHistory,
-        decay_params: Dict[str, Any],
+        decay_params: dict[str, Any],
         days: int = 7,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Project performance metrics for next N days."""
         if not history.ctr:
             return {"ctr": 0, "roas": 0, "cpa": 0}
@@ -491,19 +502,25 @@ class CreativeLifecyclePredictor:
         phase: LifecyclePhase,
         urgency: RefreshUrgency,
         days_to_fatigue: int,
-        projections: Dict[str, float],
-    ) -> List[str]:
+        projections: dict[str, float],
+    ) -> list[str]:
         """Generate actionable recommendations."""
         recommendations = []
 
         if urgency == RefreshUrgency.IMMEDIATE:
-            recommendations.append("🚨 Refresh creative immediately - performance has degraded significantly")
+            recommendations.append(
+                "🚨 Refresh creative immediately - performance has degraded significantly"
+            )
             recommendations.append("Consider pausing until new creative is ready")
         elif urgency == RefreshUrgency.SOON:
-            recommendations.append(f"⚠️ Prepare new creative - estimated {days_to_fatigue} days until fatigue")
+            recommendations.append(
+                f"⚠️ Prepare new creative - estimated {days_to_fatigue} days until fatigue"
+            )
             recommendations.append("Start testing new variants now")
         elif urgency == RefreshUrgency.PLANNED:
-            recommendations.append(f"📅 Schedule creative refresh for next week (day {days_to_fatigue})")
+            recommendations.append(
+                f"📅 Schedule creative refresh for next week (day {days_to_fatigue})"
+            )
 
         # Platform-specific recommendations
         platform = history.platform.lower()
@@ -516,20 +533,24 @@ class CreativeLifecyclePredictor:
 
         # Phase-specific advice
         if phase == LifecyclePhase.LEARNING:
-            recommendations.append("Creative is still in learning phase - allow 3+ days before evaluating")
+            recommendations.append(
+                "Creative is still in learning phase - allow 3+ days before evaluating"
+            )
         elif phase == LifecyclePhase.GROWTH:
             recommendations.append("Creative is performing well - consider increasing budget")
 
         # Frequency warning
         if history.frequency and history.frequency[-1] > 3:
-            recommendations.append(f"High frequency ({history.frequency[-1]:.1f}) - expand audience targeting")
+            recommendations.append(
+                f"High frequency ({history.frequency[-1]:.1f}) - expand audience targeting"
+            )
 
         return recommendations
 
     def _estimate_performance_loss(
         self,
         history: CreativePerformanceHistory,
-        projections: Dict[str, float],
+        projections: dict[str, float],
     ) -> float:
         """Estimate performance loss if creative is not refreshed."""
         if not history.roas:
@@ -546,7 +567,7 @@ class CreativeLifecyclePredictor:
     def _calculate_prediction_confidence(
         self,
         history: CreativePerformanceHistory,
-        decay_params: Dict[str, Any],
+        decay_params: dict[str, Any],
     ) -> float:
         """Calculate confidence in the prediction."""
         confidence = 0.5
@@ -582,7 +603,7 @@ class CreativeLifecyclePredictor:
             current_fatigue_score=0.0,
             days_active=history.days_active,
             days_until_fatigue=14,  # Default estimate
-            predicted_fatigue_date=datetime.now(timezone.utc) + timedelta(days=14),
+            predicted_fatigue_date=datetime.now(UTC) + timedelta(days=14),
             confidence=0.3,
             projected_ctr_7d=0.0,
             projected_roas_7d=0.0,
@@ -598,10 +619,10 @@ class CreativeLifecyclePredictor:
 
     def get_rotation_plan(
         self,
-        creatives: List[CreativePerformanceHistory],
+        creatives: list[CreativePerformanceHistory],
         weekly_budget: float,
         max_creatives_at_once: int = 5,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a creative rotation plan based on fatigue predictions.
 
@@ -652,26 +673,32 @@ class CreativeLifecyclePredictor:
 
     def _build_refresh_schedule(
         self,
-        predictions: List[FatiguePrediction],
-    ) -> List[Dict[str, Any]]:
+        predictions: list[FatiguePrediction],
+    ) -> list[dict[str, Any]]:
         """Build a weekly refresh schedule."""
         schedule = []
 
         for pred in predictions:
             if pred.refresh_urgency in [RefreshUrgency.IMMEDIATE, RefreshUrgency.SOON]:
-                schedule.append({
-                    "creative_id": pred.creative_id,
-                    "action": "refresh",
-                    "when": "this_week",
-                    "reason": pred.recommendations[0] if pred.recommendations else "Fatigue detected",
-                })
+                schedule.append(
+                    {
+                        "creative_id": pred.creative_id,
+                        "action": "refresh",
+                        "when": "this_week",
+                        "reason": pred.recommendations[0]
+                        if pred.recommendations
+                        else "Fatigue detected",
+                    }
+                )
             elif pred.refresh_urgency == RefreshUrgency.PLANNED:
-                schedule.append({
-                    "creative_id": pred.creative_id,
-                    "action": "prepare_replacement",
-                    "when": "next_week",
-                    "days_remaining": pred.days_until_fatigue,
-                })
+                schedule.append(
+                    {
+                        "creative_id": pred.creative_id,
+                        "action": "prepare_replacement",
+                        "when": "next_week",
+                        "days_remaining": pred.days_until_fatigue,
+                    }
+                )
 
         return schedule
 
@@ -684,13 +711,14 @@ lifecycle_predictor = CreativeLifecyclePredictor()
 # Convenience Functions
 # =============================================================================
 
+
 def predict_creative_fatigue(
     creative_id: str,
     creative_name: str,
     platform: str,
     creative_type: str,
-    daily_metrics: List[Dict[str, Any]],
-) -> Dict[str, Any]:
+    daily_metrics: list[dict[str, Any]],
+) -> dict[str, Any]:
     """
     Predict fatigue for a creative from daily metrics.
 
@@ -711,7 +739,10 @@ def predict_creative_fatigue(
         creative_name=creative_name,
         platform=platform,
         creative_type=creative_type,
-        dates=[datetime.fromisoformat(d["date"]) if isinstance(d["date"], str) else d["date"] for d in daily_metrics],
+        dates=[
+            datetime.fromisoformat(d["date"]) if isinstance(d["date"], str) else d["date"]
+            for d in daily_metrics
+        ],
         impressions=[d.get("impressions", 0) for d in daily_metrics],
         clicks=[d.get("clicks", 0) for d in daily_metrics],
         conversions=[d.get("conversions", 0) for d in daily_metrics],
@@ -750,9 +781,11 @@ def predict_creative_fatigue(
 # Creative Clustering by Decay Pattern
 # =============================================================================
 
+
 @dataclass
 class CreativeDecayPattern:
     """Extracted decay pattern from a creative's history."""
+
     creative_id: str
     peak_day: int
     peak_ctr: float
@@ -778,10 +811,12 @@ class CreativeClusterAnalyzer:
         self.n_clusters = n_clusters
         self._kmeans: Optional[Any] = None
         self._scaler: Optional[Any] = None
-        self._patterns: List[CreativeDecayPattern] = []
-        self._clusters: Dict[int, List[str]] = {}
+        self._patterns: list[CreativeDecayPattern] = []
+        self._clusters: dict[int, list[str]] = {}
 
-    def extract_pattern(self, history: CreativePerformanceHistory) -> Optional[CreativeDecayPattern]:
+    def extract_pattern(
+        self, history: CreativePerformanceHistory
+    ) -> Optional[CreativeDecayPattern]:
         """Extract decay pattern features from creative history."""
         if len(history.ctr) < 7:
             return None
@@ -843,7 +878,7 @@ class CreativeClusterAnalyzer:
             total_lifetime_ctr=round(total_ctr, 4),
         )
 
-    def fit(self, histories: List[CreativePerformanceHistory]) -> "CreativeClusterAnalyzer":
+    def fit(self, histories: list[CreativePerformanceHistory]) -> "CreativeClusterAnalyzer":
         """
         Fit clustering model on creative histories.
 
@@ -865,10 +900,12 @@ class CreativeClusterAnalyzer:
             return self
 
         # Create feature matrix
-        features = np.array([
-            [p.peak_day, p.peak_ctr, p.decay_rate, p.days_to_50_percent, p.days_to_fatigue]
-            for p in self._patterns
-        ])
+        features = np.array(
+            [
+                [p.peak_day, p.peak_ctr, p.decay_rate, p.days_to_50_percent, p.days_to_fatigue]
+                for p in self._patterns
+            ]
+        )
 
         # Scale features
         self._scaler = StandardScaler()
@@ -880,7 +917,7 @@ class CreativeClusterAnalyzer:
 
         # Store clusters
         self._clusters = {}
-        for pattern, label in zip(self._patterns, labels):
+        for pattern, label in zip(self._patterns, labels, strict=False):
             if label not in self._clusters:
                 self._clusters[label] = []
             self._clusters[label].append(pattern.creative_id)
@@ -889,7 +926,7 @@ class CreativeClusterAnalyzer:
 
         return self
 
-    def get_cluster_profiles(self) -> List[Dict[str, Any]]:
+    def get_cluster_profiles(self) -> list[dict[str, Any]]:
         """Get profile of each cluster."""
         profiles = []
 
@@ -918,21 +955,23 @@ class CreativeClusterAnalyzer:
                 cluster_type = "balanced"
                 description = "Moderate peak and decay - versatile performer"
 
-            profiles.append({
-                "cluster_id": int(cluster_id),
-                "cluster_type": cluster_type,
-                "description": description,
-                "creative_count": len(cluster_patterns),
-                "avg_peak_day": round(avg_peak_day, 1),
-                "avg_decay_rate": round(avg_decay_rate, 4),
-                "avg_days_to_fatigue": round(avg_days_to_fatigue, 0),
-                "avg_lifetime_value": round(avg_lifetime_ctr, 4),
-                "creative_ids": creative_ids[:10],  # Sample
-            })
+            profiles.append(
+                {
+                    "cluster_id": int(cluster_id),
+                    "cluster_type": cluster_type,
+                    "description": description,
+                    "creative_count": len(cluster_patterns),
+                    "avg_peak_day": round(avg_peak_day, 1),
+                    "avg_decay_rate": round(avg_decay_rate, 4),
+                    "avg_days_to_fatigue": round(avg_days_to_fatigue, 0),
+                    "avg_lifetime_value": round(avg_lifetime_ctr, 4),
+                    "creative_ids": creative_ids[:10],  # Sample
+                }
+            )
 
         return sorted(profiles, key=lambda x: x["avg_lifetime_value"], reverse=True)
 
-    def predict_cluster(self, history: CreativePerformanceHistory) -> Optional[Dict[str, Any]]:
+    def predict_cluster(self, history: CreativePerformanceHistory) -> Optional[dict[str, Any]]:
         """Predict which cluster a new creative belongs to."""
         if not self._kmeans or not self._scaler:
             return None
@@ -941,10 +980,17 @@ class CreativeClusterAnalyzer:
         if not pattern:
             return None
 
-        features = np.array([[
-            pattern.peak_day, pattern.peak_ctr, pattern.decay_rate,
-            pattern.days_to_50_percent, pattern.days_to_fatigue
-        ]])
+        features = np.array(
+            [
+                [
+                    pattern.peak_day,
+                    pattern.peak_ctr,
+                    pattern.decay_rate,
+                    pattern.days_to_50_percent,
+                    pattern.days_to_fatigue,
+                ]
+            ]
+        )
         features_scaled = self._scaler.transform(features)
         cluster_id = int(self._kmeans.predict(features_scaled)[0])
 
@@ -968,6 +1014,7 @@ class CreativeClusterAnalyzer:
 # Cross-Creative Learning (Transfer Learning)
 # =============================================================================
 
+
 class CrossCreativeLearner:
     """
     Learn from historical creatives to improve predictions for new ones.
@@ -977,24 +1024,24 @@ class CrossCreativeLearner:
     """
 
     def __init__(self):
-        self._historical_data: List[Tuple[CreativePerformanceHistory, FatiguePrediction]] = []
-        self._platform_benchmarks: Dict[str, Dict[str, float]] = {}
-        self._type_benchmarks: Dict[str, Dict[str, float]] = {}
+        self._historical_data: list[tuple[CreativePerformanceHistory, FatiguePrediction]] = []
+        self._platform_benchmarks: dict[str, dict[str, float]] = {}
+        self._type_benchmarks: dict[str, dict[str, float]] = {}
 
     def learn(
         self,
-        histories: List[CreativePerformanceHistory],
-        predictions: List[FatiguePrediction],
+        histories: list[CreativePerformanceHistory],
+        predictions: list[FatiguePrediction],
     ) -> "CrossCreativeLearner":
         """
         Learn from historical creative data.
 
         Builds benchmarks for platforms and creative types.
         """
-        self._historical_data = list(zip(histories, predictions))
+        self._historical_data = list(zip(histories, predictions, strict=False))
 
         # Calculate platform benchmarks
-        platform_data: Dict[str, List[FatiguePrediction]] = {}
+        platform_data: dict[str, list[FatiguePrediction]] = {}
         for h, p in self._historical_data:
             platform = h.platform.lower()
             if platform not in platform_data:
@@ -1010,7 +1057,7 @@ class CrossCreativeLearner:
             }
 
         # Calculate type benchmarks
-        type_data: Dict[str, List[FatiguePrediction]] = {}
+        type_data: dict[str, list[FatiguePrediction]] = {}
         for h, p in self._historical_data:
             ctype = h.creative_type.lower()
             if ctype not in type_data:
@@ -1037,7 +1084,7 @@ class CrossCreativeLearner:
         self,
         platform: str,
         creative_type: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get prediction for a new creative with no history.
 
@@ -1052,7 +1099,9 @@ class CrossCreativeLearner:
 
         # Blend benchmarks (prefer type-specific if available)
         if type_bench and platform_bench:
-            days_to_fatigue = (type_bench["avg_days_to_fatigue"] + platform_bench["avg_days_to_fatigue"]) / 2
+            days_to_fatigue = (
+                type_bench["avg_days_to_fatigue"] + platform_bench["avg_days_to_fatigue"]
+            ) / 2
             decay_rate = (type_bench["avg_decay_rate"] + platform_bench["avg_decay_rate"]) / 2
         elif type_bench:
             days_to_fatigue = type_bench["avg_days_to_fatigue"]
@@ -1084,7 +1133,7 @@ class CrossCreativeLearner:
         self,
         history: CreativePerformanceHistory,
         top_n: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Find historically similar creatives for benchmarking.
 
@@ -1110,18 +1159,22 @@ class CrossCreativeLearner:
                 early_ctr_this = np.mean(history.ctr[:3])
                 early_ctr_that = np.mean(hist.ctr[:3])
                 if early_ctr_that > 0:
-                    ctr_ratio = min(early_ctr_this, early_ctr_that) / max(early_ctr_this, early_ctr_that)
+                    ctr_ratio = min(early_ctr_this, early_ctr_that) / max(
+                        early_ctr_this, early_ctr_that
+                    )
                     similarity += 0.4 * ctr_ratio
 
-            candidates.append({
-                "creative_id": hist.creative_id,
-                "creative_name": hist.creative_name,
-                "platform": hist.platform,
-                "creative_type": hist.creative_type,
-                "similarity_score": round(similarity, 3),
-                "days_to_fatigue": pred.days_until_fatigue,
-                "final_phase": pred.current_phase.value,
-            })
+            candidates.append(
+                {
+                    "creative_id": hist.creative_id,
+                    "creative_name": hist.creative_name,
+                    "platform": hist.platform,
+                    "creative_type": hist.creative_type,
+                    "similarity_score": round(similarity, 3),
+                    "days_to_fatigue": pred.days_until_fatigue,
+                    "final_phase": pred.current_phase.value,
+                }
+            )
 
         # Sort by similarity and return top N
         candidates.sort(key=lambda x: x["similarity_score"], reverse=True)
@@ -1131,6 +1184,7 @@ class CrossCreativeLearner:
 # =============================================================================
 # Creative A/B Test Suggestions
 # =============================================================================
+
 
 class CreativeTestSuggester:
     """
@@ -1178,7 +1232,7 @@ class CreativeTestSuggester:
         prediction: FatiguePrediction,
         history: CreativePerformanceHistory,
         max_suggestions: int = 3,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Suggest A/B test variations based on fatigue prediction.
         """
@@ -1198,14 +1252,18 @@ class CreativeTestSuggester:
         for strategy in strategies[:max_suggestions]:
             strategy_info = self.VARIATION_STRATEGIES.get(strategy, {})
 
-            suggestions.append({
-                "strategy": strategy,
-                "description": strategy_info.get("description", ""),
-                "expected_impact": strategy_info.get("expected_impact", ""),
-                "effort_level": strategy_info.get("effort", "medium"),
-                "priority": "high" if strategy in ["format_switch", "hook_change"] else "medium",
-                "rationale": self._get_rationale(strategy, prediction, history),
-            })
+            suggestions.append(
+                {
+                    "strategy": strategy,
+                    "description": strategy_info.get("description", ""),
+                    "expected_impact": strategy_info.get("expected_impact", ""),
+                    "effort_level": strategy_info.get("effort", "medium"),
+                    "priority": "high"
+                    if strategy in ["format_switch", "hook_change"]
+                    else "medium",
+                    "rationale": self._get_rationale(strategy, prediction, history),
+                }
+            )
 
         return suggestions
 

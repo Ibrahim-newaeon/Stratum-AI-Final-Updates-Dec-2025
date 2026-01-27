@@ -7,21 +7,21 @@ Service for generating reports from templates.
 Collects data from various sources and formats it according to the template.
 """
 
-from datetime import datetime, date, timedelta
-from typing import Any, Dict, Optional, Tuple
-from uuid import UUID
 import json
+from datetime import date, datetime, timedelta
+from typing import Any, Optional
+from uuid import UUID
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.reporting import (
-    ReportTemplate,
-    ReportExecution,
-    ReportType,
-    ReportFormat,
     ExecutionStatus,
+    ReportExecution,
+    ReportFormat,
+    ReportTemplate,
+    ReportType,
 )
 
 logger = get_logger(__name__)
@@ -40,8 +40,8 @@ class ReportDataCollector:
         self,
         start_date: date,
         end_date: date,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Collect campaign performance data."""
         from app.models import Campaign
 
@@ -90,7 +90,8 @@ class ReportDataCollector:
                 "conversions": campaign.total_conversions or 0,
                 "roas": (
                     float(campaign.total_revenue or 0) / float(campaign.total_spend)
-                    if campaign.total_spend and campaign.total_spend > 0 else 0
+                    if campaign.total_spend and campaign.total_spend > 0
+                    else 0
                 ),
             }
             data["campaigns"].append(campaign_data)
@@ -124,8 +125,8 @@ class ReportDataCollector:
         self,
         start_date: date,
         end_date: date,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Collect attribution summary data."""
         from app.models.crm import CRMDeal
 
@@ -180,10 +181,10 @@ class ReportDataCollector:
         self,
         start_date: date,
         end_date: date,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Collect pacing and forecasting data."""
-        from app.models.pacing import Target, PacingAlert
+        from app.models.pacing import PacingAlert, Target
 
         # Get active targets
         target_result = await self.db.execute(
@@ -198,12 +199,15 @@ class ReportDataCollector:
 
         # Get recent alerts
         alert_result = await self.db.execute(
-            select(PacingAlert).where(
+            select(PacingAlert)
+            .where(
                 and_(
                     PacingAlert.tenant_id == self.tenant_id,
                     PacingAlert.created_at >= datetime.combine(start_date, datetime.min.time()),
                 )
-            ).order_by(PacingAlert.created_at.desc()).limit(10)
+            )
+            .order_by(PacingAlert.created_at.desc())
+            .limit(10)
         )
         alerts = alert_result.scalars().all()
 
@@ -230,19 +234,20 @@ class ReportDataCollector:
                 "target_value": target.target_value,
                 "current_value": target.current_value,
                 "progress_pct": (
-                    (target.current_value / target.target_value * 100)
-                    if target.target_value else 0
+                    (target.current_value / target.target_value * 100) if target.target_value else 0
                 ),
             }
             data["targets"].append(target_data)
 
         for alert in alerts:
-            data["recent_alerts"].append({
-                "type": alert.alert_type.value if alert.alert_type else "unknown",
-                "severity": alert.severity.value if alert.severity else "unknown",
-                "message": alert.message,
-                "created_at": alert.created_at.isoformat(),
-            })
+            data["recent_alerts"].append(
+                {
+                    "type": alert.alert_type.value if alert.alert_type else "unknown",
+                    "severity": alert.severity.value if alert.severity else "unknown",
+                    "message": alert.message,
+                    "created_at": alert.created_at.isoformat(),
+                }
+            )
 
         return data
 
@@ -250,20 +255,22 @@ class ReportDataCollector:
         self,
         start_date: date,
         end_date: date,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Collect profit ROAS data."""
         from app.models.profit import DailyProfitMetrics
 
         # Get profit metrics
         result = await self.db.execute(
-            select(DailyProfitMetrics).where(
+            select(DailyProfitMetrics)
+            .where(
                 and_(
                     DailyProfitMetrics.tenant_id == self.tenant_id,
                     DailyProfitMetrics.date >= start_date,
                     DailyProfitMetrics.date <= end_date,
                 )
-            ).order_by(DailyProfitMetrics.date)
+            )
+            .order_by(DailyProfitMetrics.date)
         )
         metrics = result.scalars().all()
 
@@ -289,14 +296,16 @@ class ReportDataCollector:
             spend = (m.spend_cents or 0) / 100
             gross_profit = (m.gross_profit_cents or 0) / 100
 
-            data["daily"].append({
-                "date": m.date.isoformat(),
-                "revenue": revenue,
-                "cogs": cogs,
-                "gross_profit": gross_profit,
-                "spend": spend,
-                "profit_roas": m.profit_roas,
-            })
+            data["daily"].append(
+                {
+                    "date": m.date.isoformat(),
+                    "revenue": revenue,
+                    "cogs": cogs,
+                    "gross_profit": gross_profit,
+                    "spend": spend,
+                    "profit_roas": m.profit_roas,
+                }
+            )
 
             data["summary"]["total_revenue"] += revenue
             data["summary"]["total_cogs"] += cogs
@@ -319,19 +328,21 @@ class ReportDataCollector:
         self,
         start_date: date,
         end_date: date,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Collect CRM pipeline metrics."""
         from app.models.crm import DailyPipelineMetrics
 
         result = await self.db.execute(
-            select(DailyPipelineMetrics).where(
+            select(DailyPipelineMetrics)
+            .where(
                 and_(
                     DailyPipelineMetrics.tenant_id == self.tenant_id,
                     DailyPipelineMetrics.date >= start_date,
                     DailyPipelineMetrics.date <= end_date,
                 )
-            ).order_by(DailyPipelineMetrics.date)
+            )
+            .order_by(DailyPipelineMetrics.date)
         )
         metrics = result.scalars().all()
 
@@ -357,15 +368,17 @@ class ReportDataCollector:
         }
 
         for m in metrics:
-            data["daily"].append({
-                "date": m.date.isoformat(),
-                "leads": m.leads_created,
-                "mqls": m.mqls_created,
-                "sqls": m.sqls_created,
-                "won": m.deals_won,
-                "pipeline_value": (m.pipeline_value_cents or 0) / 100,
-                "won_revenue": (m.won_revenue_cents or 0) / 100,
-            })
+            data["daily"].append(
+                {
+                    "date": m.date.isoformat(),
+                    "leads": m.leads_created,
+                    "mqls": m.mqls_created,
+                    "sqls": m.sqls_created,
+                    "won": m.deals_won,
+                    "pipeline_value": (m.pipeline_value_cents or 0) / 100,
+                    "won_revenue": (m.won_revenue_cents or 0) / 100,
+                }
+            )
 
             data["summary"]["total_leads"] += m.leads_created or 0
             data["summary"]["total_mqls"] += m.mqls_created or 0
@@ -394,8 +407,8 @@ class ReportDataCollector:
         self,
         start_date: date,
         end_date: date,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Collect executive summary combining multiple data sources."""
         campaign_data = await self.collect_campaign_performance(start_date, end_date, config)
         attribution_data = await self.collect_attribution_summary(start_date, end_date, config)
@@ -435,11 +448,11 @@ class ReportGenerator:
         start_date: date,
         end_date: date,
         format: ReportFormat = ReportFormat.PDF,
-        config_override: Optional[Dict[str, Any]] = None,
+        config_override: Optional[dict[str, Any]] = None,
         triggered_by_user_id: Optional[int] = None,
         schedule_id: Optional[UUID] = None,
         execution_type: str = "manual",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate a report from a template.
 
@@ -484,6 +497,7 @@ class ReportGenerator:
             # Generate output
             if format == ReportFormat.PDF:
                 from app.services.reporting.pdf_generator import PDFGenerator
+
                 pdf_gen = PDFGenerator(self.tenant_id)
                 file_path, file_size = await pdf_gen.generate(
                     template=template,
@@ -500,7 +514,9 @@ class ReportGenerator:
             # Update execution
             execution.status = ExecutionStatus.COMPLETED
             execution.completed_at = datetime.utcnow()
-            execution.duration_seconds = (execution.completed_at - execution.started_at).total_seconds()
+            execution.duration_seconds = (
+                execution.completed_at - execution.started_at
+            ).total_seconds()
             execution.file_path = file_path
             execution.file_size_bytes = file_size
             execution.metrics_summary = data.get("summary")
@@ -533,8 +549,8 @@ class ReportGenerator:
         report_type: ReportType,
         start_date: date,
         end_date: date,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Collect data based on report type."""
         if report_type == ReportType.CAMPAIGN_PERFORMANCE:
             return await self.collector.collect_campaign_performance(start_date, end_date, config)
@@ -554,9 +570,9 @@ class ReportGenerator:
     async def _generate_csv(
         self,
         template: ReportTemplate,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         execution_id: UUID,
-    ) -> Tuple[str, int]:
+    ) -> tuple[str, int]:
         """Generate CSV output."""
         import csv
         import io
@@ -569,7 +585,16 @@ class ReportGenerator:
         if "campaigns" in data:
             writer.writerow(["Campaign", "Platform", "Spend", "Revenue", "ROAS", "Conversions"])
             for c in data["campaigns"]:
-                writer.writerow([c["name"], c["platform"], c["spend"], c["revenue"], c["roas"], c["conversions"]])
+                writer.writerow(
+                    [
+                        c["name"],
+                        c["platform"],
+                        c["spend"],
+                        c["revenue"],
+                        c["roas"],
+                        c["conversions"],
+                    ]
+                )
         elif "daily" in data:
             if data["daily"]:
                 writer.writerow(data["daily"][0].keys())
@@ -590,9 +615,9 @@ class ReportGenerator:
     async def _generate_json(
         self,
         template: ReportTemplate,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         execution_id: UUID,
-    ) -> Tuple[str, int]:
+    ) -> tuple[str, int]:
         """Generate JSON output."""
         import os
 
@@ -610,7 +635,7 @@ class ReportGenerator:
     def parse_date_range(
         date_range_type: str,
         reference_date: Optional[date] = None,
-    ) -> Tuple[date, date]:
+    ) -> tuple[date, date]:
         """Parse relative date range into absolute dates."""
         ref = reference_date or date.today()
 

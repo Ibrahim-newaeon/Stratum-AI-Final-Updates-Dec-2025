@@ -7,26 +7,35 @@ Database models for the Trust Layer:
 - FactAttributionVarianceDaily: Daily attribution variance metrics
 """
 
+import enum
 from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (
-    Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
-    Index, Enum as SQLEnum
+    Column,
+    Date,
+    DateTime,
+    Enum as SQLEnum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-import enum
 
 from app.db.base_class import Base
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class SignalHealthStatus(str, enum.Enum):
     """Signal health status levels."""
+
     OK = "ok"
     RISK = "risk"
     DEGRADED = "degraded"
@@ -35,6 +44,7 @@ class SignalHealthStatus(str, enum.Enum):
 
 class AttributionVarianceStatus(str, enum.Enum):
     """Attribution variance status levels."""
+
     HEALTHY = "healthy"
     MINOR_VARIANCE = "minor_variance"
     MODERATE_VARIANCE = "moderate_variance"
@@ -45,11 +55,13 @@ class AttributionVarianceStatus(str, enum.Enum):
 # Models
 # =============================================================================
 
+
 class FactSignalHealthDaily(Base):
     """
     Daily signal health metrics per tenant/platform.
     Tracks EMQ scores, event loss, freshness, and API health.
     """
+
     __tablename__ = "fact_signal_health_daily"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -68,12 +80,12 @@ class FactSignalHealthDaily(Base):
     status = Column(
         SQLEnum(
             SignalHealthStatus,
-            name='signal_health_status',
+            name="signal_health_status",
             create_type=False,
-            values_callable=lambda x: [e.value for e in x]
+            values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
-        default=SignalHealthStatus.OK
+        default=SignalHealthStatus.OK,
     )
 
     # Additional context
@@ -83,10 +95,14 @@ class FactSignalHealthDaily(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships - use foreign_keys to resolve ambiguity
-    tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="signal_health_records")
+    tenant = relationship(
+        "Tenant", foreign_keys=[tenant_id], back_populates="signal_health_records"
+    )
 
     __table_args__ = (
         Index("ix_fact_signal_health_daily_tenant_date", "tenant_id", "date"),
@@ -100,6 +116,7 @@ class FactAttributionVarianceDaily(Base):
     Daily attribution variance metrics (Platform vs GA4).
     Tracks divergence between platform-reported and GA4 data.
     """
+
     __tablename__ = "fact_attribution_variance_daily"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -124,12 +141,12 @@ class FactAttributionVarianceDaily(Base):
     status = Column(
         SQLEnum(
             AttributionVarianceStatus,
-            name='attribution_variance_status',
+            name="attribution_variance_status",
             create_type=False,
-            values_callable=lambda x: [e.value for e in x]
+            values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
-        default=AttributionVarianceStatus.HEALTHY
+        default=AttributionVarianceStatus.HEALTHY,
     )
 
     # Additional context
@@ -137,10 +154,14 @@ class FactAttributionVarianceDaily(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships - use foreign_keys to resolve ambiguity
-    tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="attribution_variance_records")
+    tenant = relationship(
+        "Tenant", foreign_keys=[tenant_id], back_populates="attribution_variance_records"
+    )
 
     __table_args__ = (
         Index("ix_fact_attribution_variance_daily_tenant_date", "tenant_id", "date"),
@@ -153,6 +174,7 @@ class SignalHealthHistory(Base):
     Aggregated signal health history for trend analysis.
     Stores daily rollups of signal health metrics.
     """
+
     __tablename__ = "signal_health_history"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -176,16 +198,18 @@ class SignalHealthHistory(Base):
     status = Column(
         SQLEnum(
             SignalHealthStatus,
-            name='signal_health_status',
+            name="signal_health_status",
             create_type=False,
-            values_callable=lambda x: [e.value for e in x]
+            values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
-        default=SignalHealthStatus.OK
+        default=SignalHealthStatus.OK,
     )
 
     # Automation state
-    automation_blocked = Column(Integer, default=0)  # Boolean stored as int for SQLite compatibility
+    automation_blocked = Column(
+        Integer, default=0
+    )  # Boolean stored as int for SQLite compatibility
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
@@ -200,6 +224,7 @@ class TrustGateAuditLog(Base):
     Audit log for trust gate decisions.
     Tracks every automation decision made by the trust gate.
     """
+
     __tablename__ = "trust_gate_audit_log"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -233,7 +258,9 @@ class TrustGateAuditLog(Base):
     action_result = Column(Text, nullable=True)  # JSON
 
     # User context
-    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    triggered_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     triggered_by_system = Column(Integer, default=0)  # Boolean as int
 
     # Timestamps
@@ -254,6 +281,7 @@ class FactActionsQueue(Base):
     Queue for autopilot actions requiring approval or execution.
     Tracks action lifecycle from creation to application.
     """
+
     __tablename__ = "fact_actions_queue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -261,7 +289,9 @@ class FactActionsQueue(Base):
     date = Column(Date, nullable=False)
 
     # Action details
-    action_type = Column(String(100), nullable=False)  # budget_increase, budget_decrease, pause, etc.
+    action_type = Column(
+        String(100), nullable=False
+    )  # budget_increase, budget_decrease, pause, etc.
     entity_type = Column(String(50), nullable=False)  # campaign, adset, creative
     entity_id = Column(String(255), nullable=False)
     entity_name = Column(String(255), nullable=True)
@@ -275,11 +305,15 @@ class FactActionsQueue(Base):
     after_value = Column(Text, nullable=True)  # JSON
 
     # Workflow status
-    status = Column(String(50), nullable=False, default="queued")  # queued, approved, applied, failed, dismissed
+    status = Column(
+        String(50), nullable=False, default="queued"
+    )  # queued, approved, applied, failed, dismissed
 
     # Actors
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    approved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     applied_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Timestamps

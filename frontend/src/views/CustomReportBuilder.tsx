@@ -2,99 +2,99 @@
 // Stratum AI - Custom Report Builder (Enterprise Feature)
 // =============================================================================
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  DocumentChartBarIcon,
-  PlusIcon,
-  TrashIcon,
-  ChartBarIcon,
-  TableCellsIcon,
-  ChartPieIcon,
+  ArrowDownTrayIcon,
   ArrowsPointingOutIcon,
   CalendarIcon,
-  FunnelIcon,
-  ArrowDownTrayIcon,
-  ClockIcon,
-  PlayIcon,
-  PencilIcon,
-  EyeIcon,
-  DocumentDuplicateIcon,
+  ChartBarIcon,
+  ChartPieIcon,
   CheckIcon,
-  XMarkIcon,
+  ClockIcon,
   Cog6ToothIcon,
+  DocumentChartBarIcon,
+  DocumentDuplicateIcon,
+  EyeIcon,
+  FunnelIcon,
+  PencilIcon,
+  PlayIcon,
+  PlusIcon,
   SparklesIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  TableCellsIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 interface DataSource {
-  id: string
-  name: string
-  type: 'campaigns' | 'cdp' | 'trust_engine' | 'pacing' | 'attribution'
-  description: string
+  id: string;
+  name: string;
+  type: 'campaigns' | 'cdp' | 'trust_engine' | 'pacing' | 'attribution';
+  description: string;
 }
 
 interface Metric {
-  id: string
-  name: string
-  field: string
-  aggregation: 'sum' | 'avg' | 'count' | 'min' | 'max' | 'unique'
-  format: 'number' | 'currency' | 'percentage' | 'decimal'
+  id: string;
+  name: string;
+  field: string;
+  aggregation: 'sum' | 'avg' | 'count' | 'min' | 'max' | 'unique';
+  format: 'number' | 'currency' | 'percentage' | 'decimal';
 }
 
 interface Dimension {
-  id: string
-  name: string
-  field: string
-  type: 'string' | 'date' | 'boolean'
+  id: string;
+  name: string;
+  field: string;
+  type: 'string' | 'date' | 'boolean';
 }
 
 interface Filter {
-  id: string
-  field: string
-  operator: 'equals' | 'not_equals' | 'contains' | 'gt' | 'lt' | 'gte' | 'lte' | 'between' | 'in'
-  value: string | string[]
+  id: string;
+  field: string;
+  operator: 'equals' | 'not_equals' | 'contains' | 'gt' | 'lt' | 'gte' | 'lte' | 'between' | 'in';
+  value: string | string[];
 }
 
 interface Visualization {
-  id: string
-  type: 'bar' | 'line' | 'pie' | 'table' | 'metric' | 'area' | 'scatter'
-  title: string
-  metrics: string[]
-  dimensions: string[]
-  config: Record<string, any>
+  id: string;
+  type: 'bar' | 'line' | 'pie' | 'table' | 'metric' | 'area' | 'scatter';
+  title: string;
+  metrics: string[];
+  dimensions: string[];
+  config: Record<string, any>;
 }
 
 interface ReportSchedule {
-  enabled: boolean
-  frequency: 'daily' | 'weekly' | 'monthly'
-  time: string
-  recipients: string[]
-  format: 'pdf' | 'csv' | 'excel'
+  enabled: boolean;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  time: string;
+  recipients: string[];
+  format: 'pdf' | 'csv' | 'excel';
 }
 
 interface CustomReport {
-  id: string
-  name: string
-  description: string
-  dataSource: string
-  metrics: Metric[]
-  dimensions: Dimension[]
-  filters: Filter[]
-  visualizations: Visualization[]
-  schedule: ReportSchedule
+  id: string;
+  name: string;
+  description: string;
+  dataSource: string;
+  metrics: Metric[];
+  dimensions: Dimension[];
+  filters: Filter[];
+  visualizations: Visualization[];
+  schedule: ReportSchedule;
   dateRange: {
-    type: 'last_7_days' | 'last_30_days' | 'last_90_days' | 'custom'
-    start?: string
-    end?: string
-  }
-  createdAt: string
-  updatedAt: string
-  status: 'draft' | 'published'
+    type: 'last_7_days' | 'last_30_days' | 'last_90_days' | 'custom';
+    start?: string;
+    end?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  status: 'draft' | 'published';
 }
 
 // =============================================================================
@@ -102,52 +102,185 @@ interface CustomReport {
 // =============================================================================
 
 const DATA_SOURCES: DataSource[] = [
-  { id: 'campaigns', name: 'Campaign Performance', type: 'campaigns', description: 'Ad spend, impressions, clicks, conversions across all platforms' },
-  { id: 'cdp', name: 'CDP Profiles & Events', type: 'cdp', description: 'Customer profiles, events, segments, and lifecycle data' },
-  { id: 'trust_engine', name: 'Trust Engine', type: 'trust_engine', description: 'Signal health, gate decisions, automation logs' },
-  { id: 'pacing', name: 'Pacing & Forecasting', type: 'pacing', description: 'Budget pacing, spend forecasts, alerts' },
-  { id: 'attribution', name: 'Attribution', type: 'attribution', description: 'Multi-touch attribution, conversion paths, channel performance' },
-]
+  {
+    id: 'campaigns',
+    name: 'Campaign Performance',
+    type: 'campaigns',
+    description: 'Ad spend, impressions, clicks, conversions across all platforms',
+  },
+  {
+    id: 'cdp',
+    name: 'CDP Profiles & Events',
+    type: 'cdp',
+    description: 'Customer profiles, events, segments, and lifecycle data',
+  },
+  {
+    id: 'trust_engine',
+    name: 'Trust Engine',
+    type: 'trust_engine',
+    description: 'Signal health, gate decisions, automation logs',
+  },
+  {
+    id: 'pacing',
+    name: 'Pacing & Forecasting',
+    type: 'pacing',
+    description: 'Budget pacing, spend forecasts, alerts',
+  },
+  {
+    id: 'attribution',
+    name: 'Attribution',
+    type: 'attribution',
+    description: 'Multi-touch attribution, conversion paths, channel performance',
+  },
+];
 
 const AVAILABLE_METRICS: Record<string, Metric[]> = {
   campaigns: [
     { id: 'spend', name: 'Ad Spend', field: 'spend', aggregation: 'sum', format: 'currency' },
-    { id: 'impressions', name: 'Impressions', field: 'impressions', aggregation: 'sum', format: 'number' },
+    {
+      id: 'impressions',
+      name: 'Impressions',
+      field: 'impressions',
+      aggregation: 'sum',
+      format: 'number',
+    },
     { id: 'clicks', name: 'Clicks', field: 'clicks', aggregation: 'sum', format: 'number' },
-    { id: 'conversions', name: 'Conversions', field: 'conversions', aggregation: 'sum', format: 'number' },
+    {
+      id: 'conversions',
+      name: 'Conversions',
+      field: 'conversions',
+      aggregation: 'sum',
+      format: 'number',
+    },
     { id: 'ctr', name: 'CTR', field: 'ctr', aggregation: 'avg', format: 'percentage' },
     { id: 'cpc', name: 'CPC', field: 'cpc', aggregation: 'avg', format: 'currency' },
     { id: 'roas', name: 'ROAS', field: 'roas', aggregation: 'avg', format: 'decimal' },
     { id: 'cpa', name: 'CPA', field: 'cpa', aggregation: 'avg', format: 'currency' },
   ],
   cdp: [
-    { id: 'total_profiles', name: 'Total Profiles', field: 'total_profiles', aggregation: 'count', format: 'number' },
-    { id: 'new_profiles', name: 'New Profiles', field: 'new_profiles', aggregation: 'sum', format: 'number' },
-    { id: 'total_events', name: 'Total Events', field: 'total_events', aggregation: 'sum', format: 'number' },
-    { id: 'avg_events_per_profile', name: 'Avg Events/Profile', field: 'avg_events', aggregation: 'avg', format: 'decimal' },
-    { id: 'segment_size', name: 'Segment Size', field: 'segment_size', aggregation: 'sum', format: 'number' },
+    {
+      id: 'total_profiles',
+      name: 'Total Profiles',
+      field: 'total_profiles',
+      aggregation: 'count',
+      format: 'number',
+    },
+    {
+      id: 'new_profiles',
+      name: 'New Profiles',
+      field: 'new_profiles',
+      aggregation: 'sum',
+      format: 'number',
+    },
+    {
+      id: 'total_events',
+      name: 'Total Events',
+      field: 'total_events',
+      aggregation: 'sum',
+      format: 'number',
+    },
+    {
+      id: 'avg_events_per_profile',
+      name: 'Avg Events/Profile',
+      field: 'avg_events',
+      aggregation: 'avg',
+      format: 'decimal',
+    },
+    {
+      id: 'segment_size',
+      name: 'Segment Size',
+      field: 'segment_size',
+      aggregation: 'sum',
+      format: 'number',
+    },
     { id: 'ltv', name: 'Customer LTV', field: 'ltv', aggregation: 'avg', format: 'currency' },
   ],
   trust_engine: [
-    { id: 'signal_health', name: 'Signal Health', field: 'signal_health', aggregation: 'avg', format: 'percentage' },
-    { id: 'gate_passes', name: 'Gate Passes', field: 'gate_passes', aggregation: 'sum', format: 'number' },
-    { id: 'gate_holds', name: 'Gate Holds', field: 'gate_holds', aggregation: 'sum', format: 'number' },
-    { id: 'gate_blocks', name: 'Gate Blocks', field: 'gate_blocks', aggregation: 'sum', format: 'number' },
-    { id: 'automation_runs', name: 'Automation Runs', field: 'automation_runs', aggregation: 'sum', format: 'number' },
+    {
+      id: 'signal_health',
+      name: 'Signal Health',
+      field: 'signal_health',
+      aggregation: 'avg',
+      format: 'percentage',
+    },
+    {
+      id: 'gate_passes',
+      name: 'Gate Passes',
+      field: 'gate_passes',
+      aggregation: 'sum',
+      format: 'number',
+    },
+    {
+      id: 'gate_holds',
+      name: 'Gate Holds',
+      field: 'gate_holds',
+      aggregation: 'sum',
+      format: 'number',
+    },
+    {
+      id: 'gate_blocks',
+      name: 'Gate Blocks',
+      field: 'gate_blocks',
+      aggregation: 'sum',
+      format: 'number',
+    },
+    {
+      id: 'automation_runs',
+      name: 'Automation Runs',
+      field: 'automation_runs',
+      aggregation: 'sum',
+      format: 'number',
+    },
   ],
   pacing: [
     { id: 'budget', name: 'Budget', field: 'budget', aggregation: 'sum', format: 'currency' },
     { id: 'spent', name: 'Amount Spent', field: 'spent', aggregation: 'sum', format: 'currency' },
-    { id: 'pacing_rate', name: 'Pacing Rate', field: 'pacing_rate', aggregation: 'avg', format: 'percentage' },
-    { id: 'forecast_spend', name: 'Forecasted Spend', field: 'forecast_spend', aggregation: 'sum', format: 'currency' },
+    {
+      id: 'pacing_rate',
+      name: 'Pacing Rate',
+      field: 'pacing_rate',
+      aggregation: 'avg',
+      format: 'percentage',
+    },
+    {
+      id: 'forecast_spend',
+      name: 'Forecasted Spend',
+      field: 'forecast_spend',
+      aggregation: 'sum',
+      format: 'currency',
+    },
   ],
   attribution: [
-    { id: 'attributed_conversions', name: 'Attributed Conversions', field: 'attributed_conversions', aggregation: 'sum', format: 'number' },
-    { id: 'attributed_revenue', name: 'Attributed Revenue', field: 'attributed_revenue', aggregation: 'sum', format: 'currency' },
-    { id: 'attribution_weight', name: 'Attribution Weight', field: 'attribution_weight', aggregation: 'avg', format: 'percentage' },
-    { id: 'path_length', name: 'Avg Path Length', field: 'path_length', aggregation: 'avg', format: 'decimal' },
+    {
+      id: 'attributed_conversions',
+      name: 'Attributed Conversions',
+      field: 'attributed_conversions',
+      aggregation: 'sum',
+      format: 'number',
+    },
+    {
+      id: 'attributed_revenue',
+      name: 'Attributed Revenue',
+      field: 'attributed_revenue',
+      aggregation: 'sum',
+      format: 'currency',
+    },
+    {
+      id: 'attribution_weight',
+      name: 'Attribution Weight',
+      field: 'attribution_weight',
+      aggregation: 'avg',
+      format: 'percentage',
+    },
+    {
+      id: 'path_length',
+      name: 'Avg Path Length',
+      field: 'path_length',
+      aggregation: 'avg',
+      format: 'decimal',
+    },
   ],
-}
+};
 
 const AVAILABLE_DIMENSIONS: Record<string, Dimension[]> = {
   campaigns: [
@@ -184,7 +317,7 @@ const AVAILABLE_DIMENSIONS: Record<string, Dimension[]> = {
     { id: 'date', name: 'Date', field: 'date', type: 'date' },
     { id: 'model', name: 'Attribution Model', field: 'model', type: 'string' },
   ],
-}
+};
 
 const VISUALIZATION_TYPES = [
   { id: 'bar', name: 'Bar Chart', icon: ChartBarIcon },
@@ -192,7 +325,7 @@ const VISUALIZATION_TYPES = [
   { id: 'pie', name: 'Pie Chart', icon: ChartPieIcon },
   { id: 'table', name: 'Table', icon: TableCellsIcon },
   { id: 'metric', name: 'Metric Card', icon: SparklesIcon },
-]
+];
 
 const MOCK_REPORTS: CustomReport[] = [
   {
@@ -202,7 +335,13 @@ const MOCK_REPORTS: CustomReport[] = [
     dataSource: 'campaigns',
     metrics: [
       { id: 'spend', name: 'Ad Spend', field: 'spend', aggregation: 'sum', format: 'currency' },
-      { id: 'conversions', name: 'Conversions', field: 'conversions', aggregation: 'sum', format: 'number' },
+      {
+        id: 'conversions',
+        name: 'Conversions',
+        field: 'conversions',
+        aggregation: 'sum',
+        format: 'number',
+      },
       { id: 'roas', name: 'ROAS', field: 'roas', aggregation: 'avg', format: 'decimal' },
     ],
     dimensions: [
@@ -211,10 +350,30 @@ const MOCK_REPORTS: CustomReport[] = [
     ],
     filters: [],
     visualizations: [
-      { id: 'v1', type: 'line', title: 'Spend Over Time', metrics: ['spend'], dimensions: ['date'], config: {} },
-      { id: 'v2', type: 'bar', title: 'ROAS by Platform', metrics: ['roas'], dimensions: ['platform'], config: {} },
+      {
+        id: 'v1',
+        type: 'line',
+        title: 'Spend Over Time',
+        metrics: ['spend'],
+        dimensions: ['date'],
+        config: {},
+      },
+      {
+        id: 'v2',
+        type: 'bar',
+        title: 'ROAS by Platform',
+        metrics: ['roas'],
+        dimensions: ['platform'],
+        config: {},
+      },
     ],
-    schedule: { enabled: true, frequency: 'weekly', time: '09:00', recipients: ['team@company.com'], format: 'pdf' },
+    schedule: {
+      enabled: true,
+      frequency: 'weekly',
+      time: '09:00',
+      recipients: ['team@company.com'],
+      format: 'pdf',
+    },
     dateRange: { type: 'last_7_days' },
     createdAt: '2024-01-10T10:00:00Z',
     updatedAt: '2024-01-15T14:30:00Z',
@@ -226,17 +385,42 @@ const MOCK_REPORTS: CustomReport[] = [
     description: 'Customer data platform metrics and segment analysis',
     dataSource: 'cdp',
     metrics: [
-      { id: 'total_profiles', name: 'Total Profiles', field: 'total_profiles', aggregation: 'count', format: 'number' },
-      { id: 'new_profiles', name: 'New Profiles', field: 'new_profiles', aggregation: 'sum', format: 'number' },
+      {
+        id: 'total_profiles',
+        name: 'Total Profiles',
+        field: 'total_profiles',
+        aggregation: 'count',
+        format: 'number',
+      },
+      {
+        id: 'new_profiles',
+        name: 'New Profiles',
+        field: 'new_profiles',
+        aggregation: 'sum',
+        format: 'number',
+      },
     ],
     dimensions: [
       { id: 'lifecycle_stage', name: 'Lifecycle Stage', field: 'lifecycle_stage', type: 'string' },
     ],
     filters: [],
     visualizations: [
-      { id: 'v1', type: 'pie', title: 'Profiles by Stage', metrics: ['total_profiles'], dimensions: ['lifecycle_stage'], config: {} },
+      {
+        id: 'v1',
+        type: 'pie',
+        title: 'Profiles by Stage',
+        metrics: ['total_profiles'],
+        dimensions: ['lifecycle_stage'],
+        config: {},
+      },
     ],
-    schedule: { enabled: false, frequency: 'monthly', time: '08:00', recipients: [], format: 'csv' },
+    schedule: {
+      enabled: false,
+      frequency: 'monthly',
+      time: '08:00',
+      recipients: [],
+      format: 'csv',
+    },
     dateRange: { type: 'last_30_days' },
     createdAt: '2024-01-08T09:00:00Z',
     updatedAt: '2024-01-12T16:00:00Z',
@@ -248,97 +432,140 @@ const MOCK_REPORTS: CustomReport[] = [
     description: 'Signal health and automation decision tracking',
     dataSource: 'trust_engine',
     metrics: [
-      { id: 'signal_health', name: 'Signal Health', field: 'signal_health', aggregation: 'avg', format: 'percentage' },
-      { id: 'gate_passes', name: 'Gate Passes', field: 'gate_passes', aggregation: 'sum', format: 'number' },
+      {
+        id: 'signal_health',
+        name: 'Signal Health',
+        field: 'signal_health',
+        aggregation: 'avg',
+        format: 'percentage',
+      },
+      {
+        id: 'gate_passes',
+        name: 'Gate Passes',
+        field: 'gate_passes',
+        aggregation: 'sum',
+        format: 'number',
+      },
     ],
-    dimensions: [
-      { id: 'signal_type', name: 'Signal Type', field: 'signal_type', type: 'string' },
-    ],
+    dimensions: [{ id: 'signal_type', name: 'Signal Type', field: 'signal_type', type: 'string' }],
     filters: [],
     visualizations: [
-      { id: 'v1', type: 'metric', title: 'Avg Signal Health', metrics: ['signal_health'], dimensions: [], config: {} },
-      { id: 'v2', type: 'bar', title: 'Gate Decisions', metrics: ['gate_passes'], dimensions: ['signal_type'], config: {} },
+      {
+        id: 'v1',
+        type: 'metric',
+        title: 'Avg Signal Health',
+        metrics: ['signal_health'],
+        dimensions: [],
+        config: {},
+      },
+      {
+        id: 'v2',
+        type: 'bar',
+        title: 'Gate Decisions',
+        metrics: ['gate_passes'],
+        dimensions: ['signal_type'],
+        config: {},
+      },
     ],
-    schedule: { enabled: true, frequency: 'daily', time: '07:00', recipients: ['ops@company.com'], format: 'pdf' },
+    schedule: {
+      enabled: true,
+      frequency: 'daily',
+      time: '07:00',
+      recipients: ['ops@company.com'],
+      format: 'pdf',
+    },
     dateRange: { type: 'last_7_days' },
     createdAt: '2024-01-05T11:00:00Z',
     updatedAt: '2024-01-14T10:00:00Z',
     status: 'published',
   },
-]
+];
 
 // =============================================================================
 // Report Builder Modal
 // =============================================================================
 
 interface ReportBuilderModalProps {
-  report: CustomReport | null
-  isOpen: boolean
-  onClose: () => void
-  onSave: (report: CustomReport) => void
+  report: CustomReport | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (report: CustomReport) => void;
 }
 
 function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderModalProps) {
-  const [activeTab, setActiveTab] = useState<'data' | 'visualizations' | 'schedule'>('data')
-  const [formData, setFormData] = useState<CustomReport>(() =>
-    report || {
-      id: Date.now().toString(),
-      name: '',
-      description: '',
-      dataSource: '',
-      metrics: [],
-      dimensions: [],
-      filters: [],
-      visualizations: [],
-      schedule: { enabled: false, frequency: 'weekly', time: '09:00', recipients: [], format: 'pdf' },
-      dateRange: { type: 'last_7_days' },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: 'draft',
-    }
-  )
-  const [newRecipient, setNewRecipient] = useState('')
+  const [activeTab, setActiveTab] = useState<'data' | 'visualizations' | 'schedule'>('data');
+  const [formData, setFormData] = useState<CustomReport>(
+    () =>
+      report || {
+        id: Date.now().toString(),
+        name: '',
+        description: '',
+        dataSource: '',
+        metrics: [],
+        dimensions: [],
+        filters: [],
+        visualizations: [],
+        schedule: {
+          enabled: false,
+          frequency: 'weekly',
+          time: '09:00',
+          recipients: [],
+          format: 'pdf',
+        },
+        dateRange: { type: 'last_7_days' },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'draft',
+      }
+  );
+  const [newRecipient, setNewRecipient] = useState('');
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const availableMetrics = AVAILABLE_METRICS[formData.dataSource] || []
-  const availableDimensions = AVAILABLE_DIMENSIONS[formData.dataSource] || []
+  const availableMetrics = AVAILABLE_METRICS[formData.dataSource] || [];
+  const availableDimensions = AVAILABLE_DIMENSIONS[formData.dataSource] || [];
 
   const handleAddMetric = (metric: Metric) => {
-    if (!formData.metrics.find(m => m.id === metric.id)) {
-      setFormData({ ...formData, metrics: [...formData.metrics, metric] })
+    if (!formData.metrics.find((m) => m.id === metric.id)) {
+      setFormData({ ...formData, metrics: [...formData.metrics, metric] });
     }
-  }
+  };
 
   const handleRemoveMetric = (metricId: string) => {
-    setFormData({ ...formData, metrics: formData.metrics.filter(m => m.id !== metricId) })
-  }
+    setFormData({ ...formData, metrics: formData.metrics.filter((m) => m.id !== metricId) });
+  };
 
   const handleAddDimension = (dimension: Dimension) => {
-    if (!formData.dimensions.find(d => d.id === dimension.id)) {
-      setFormData({ ...formData, dimensions: [...formData.dimensions, dimension] })
+    if (!formData.dimensions.find((d) => d.id === dimension.id)) {
+      setFormData({ ...formData, dimensions: [...formData.dimensions, dimension] });
     }
-  }
+  };
 
   const handleRemoveDimension = (dimensionId: string) => {
-    setFormData({ ...formData, dimensions: formData.dimensions.filter(d => d.id !== dimensionId) })
-  }
+    setFormData({
+      ...formData,
+      dimensions: formData.dimensions.filter((d) => d.id !== dimensionId),
+    });
+  };
 
   const handleAddVisualization = (type: string) => {
     const newViz: Visualization = {
       id: Date.now().toString(),
       type: type as Visualization['type'],
       title: `New ${type} chart`,
-      metrics: formData.metrics.slice(0, 1).map(m => m.id),
-      dimensions: formData.dimensions.slice(0, 1).map(d => d.id),
+      metrics: formData.metrics.slice(0, 1).map((m) => m.id),
+      dimensions: formData.dimensions.slice(0, 1).map((d) => d.id),
       config: {},
-    }
-    setFormData({ ...formData, visualizations: [...formData.visualizations, newViz] })
-  }
+    };
+    setFormData({ ...formData, visualizations: [...formData.visualizations, newViz] });
+  };
 
   const handleRemoveVisualization = (vizId: string) => {
-    setFormData({ ...formData, visualizations: formData.visualizations.filter(v => v.id !== vizId) })
-  }
+    setFormData({
+      ...formData,
+      visualizations: formData.visualizations.filter((v) => v.id !== vizId),
+    });
+  };
 
   const handleAddRecipient = () => {
     if (newRecipient && !formData.schedule.recipients.includes(newRecipient)) {
@@ -348,25 +575,25 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
           ...formData.schedule,
           recipients: [...formData.schedule.recipients, newRecipient],
         },
-      })
-      setNewRecipient('')
+      });
+      setNewRecipient('');
     }
-  }
+  };
 
   const handleRemoveRecipient = (email: string) => {
     setFormData({
       ...formData,
       schedule: {
         ...formData.schedule,
-        recipients: formData.schedule.recipients.filter(r => r !== email),
+        recipients: formData.schedule.recipients.filter((r) => r !== email),
       },
-    })
-  }
+    });
+  };
 
   const handleSave = () => {
-    onSave({ ...formData, updatedAt: new Date().toISOString() })
-    onClose()
-  }
+    onSave({ ...formData, updatedAt: new Date().toISOString() });
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -429,10 +656,12 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                   <label className="block text-sm font-medium mb-2">Date Range</label>
                   <select
                     value={formData.dateRange.type}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      dateRange: { ...formData.dateRange, type: e.target.value as any }
-                    })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        dateRange: { ...formData.dateRange, type: e.target.value as any },
+                      })
+                    }
                     className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary"
                   >
                     <option value="last_7_days">Last 7 Days</option>
@@ -461,12 +690,14 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                   {DATA_SOURCES.map((source) => (
                     <button
                       key={source.id}
-                      onClick={() => setFormData({
-                        ...formData,
-                        dataSource: source.id,
-                        metrics: [],
-                        dimensions: [],
-                      })}
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          dataSource: source.id,
+                          metrics: [],
+                          dimensions: [],
+                        })
+                      }
                       className={cn(
                         'p-4 rounded-lg border text-left transition-all',
                         formData.dataSource === source.id
@@ -589,17 +820,17 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                   <div className="text-center py-8 border rounded-lg border-dashed">
                     <ChartBarIcon className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
                     <p className="text-muted-foreground">No visualizations added yet</p>
-                    <p className="text-sm text-muted-foreground">Click a chart type above to add one</p>
+                    <p className="text-sm text-muted-foreground">
+                      Click a chart type above to add one
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     {formData.visualizations.map((viz, index) => {
-                      const VizIcon = VISUALIZATION_TYPES.find(v => v.id === viz.type)?.icon || ChartBarIcon
+                      const VizIcon =
+                        VISUALIZATION_TYPES.find((v) => v.id === viz.type)?.icon || ChartBarIcon;
                       return (
-                        <div
-                          key={viz.id}
-                          className="p-4 rounded-lg border bg-muted/30"
-                        >
+                        <div key={viz.id} className="p-4 rounded-lg border bg-muted/30">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <VizIcon className="w-5 h-5 text-primary" />
@@ -607,9 +838,9 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                                 type="text"
                                 value={viz.title}
                                 onChange={(e) => {
-                                  const newViz = [...formData.visualizations]
-                                  newViz[index] = { ...viz, title: e.target.value }
-                                  setFormData({ ...formData, visualizations: newViz })
+                                  const newViz = [...formData.visualizations];
+                                  newViz[index] = { ...viz, title: e.target.value };
+                                  setFormData({ ...formData, visualizations: newViz });
                                 }}
                                 className="font-medium bg-transparent border-b border-transparent focus:border-primary outline-none"
                               />
@@ -627,14 +858,16 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                               <select
                                 value={viz.metrics[0] || ''}
                                 onChange={(e) => {
-                                  const newViz = [...formData.visualizations]
-                                  newViz[index] = { ...viz, metrics: [e.target.value] }
-                                  setFormData({ ...formData, visualizations: newViz })
+                                  const newViz = [...formData.visualizations];
+                                  newViz[index] = { ...viz, metrics: [e.target.value] };
+                                  setFormData({ ...formData, visualizations: newViz });
                                 }}
                                 className="px-2 py-1 rounded border bg-background text-xs"
                               >
                                 {formData.metrics.map((m) => (
-                                  <option key={m.id} value={m.id}>{m.name}</option>
+                                  <option key={m.id} value={m.id}>
+                                    {m.name}
+                                  </option>
                                 ))}
                               </select>
                             </div>
@@ -644,22 +877,24 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                                 <select
                                   value={viz.dimensions[0] || ''}
                                   onChange={(e) => {
-                                    const newViz = [...formData.visualizations]
-                                    newViz[index] = { ...viz, dimensions: [e.target.value] }
-                                    setFormData({ ...formData, visualizations: newViz })
+                                    const newViz = [...formData.visualizations];
+                                    newViz[index] = { ...viz, dimensions: [e.target.value] };
+                                    setFormData({ ...formData, visualizations: newViz });
                                   }}
                                   className="px-2 py-1 rounded border bg-background text-xs"
                                 >
                                   <option value="">None</option>
                                   {formData.dimensions.map((d) => (
-                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                    <option key={d.id} value={d.id}>
+                                      {d.name}
+                                    </option>
                                   ))}
                                 </select>
                               </div>
                             )}
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 )}
@@ -678,10 +913,12 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                   </div>
                 </div>
                 <button
-                  onClick={() => setFormData({
-                    ...formData,
-                    schedule: { ...formData.schedule, enabled: !formData.schedule.enabled }
-                  })}
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      schedule: { ...formData.schedule, enabled: !formData.schedule.enabled },
+                    })
+                  }
                   className={cn(
                     'relative w-12 h-6 rounded-full transition-colors',
                     formData.schedule.enabled ? 'bg-primary' : 'bg-muted'
@@ -703,10 +940,12 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                       <label className="block text-sm font-medium mb-2">Frequency</label>
                       <select
                         value={formData.schedule.frequency}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          schedule: { ...formData.schedule, frequency: e.target.value as any }
-                        })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            schedule: { ...formData.schedule, frequency: e.target.value as any },
+                          })
+                        }
                         className="w-full px-3 py-2 rounded-lg border bg-background"
                       >
                         <option value="daily">Daily</option>
@@ -719,10 +958,12 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                       <input
                         type="time"
                         value={formData.schedule.time}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          schedule: { ...formData.schedule, time: e.target.value }
-                        })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            schedule: { ...formData.schedule, time: e.target.value },
+                          })
+                        }
                         className="w-full px-3 py-2 rounded-lg border bg-background"
                       />
                     </div>
@@ -730,10 +971,12 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                       <label className="block text-sm font-medium mb-2">Format</label>
                       <select
                         value={formData.schedule.format}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          schedule: { ...formData.schedule, format: e.target.value as any }
-                        })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            schedule: { ...formData.schedule, format: e.target.value as any },
+                          })
+                        }
                         className="w-full px-3 py-2 rounded-lg border bg-background"
                       >
                         <option value="pdf">PDF</option>
@@ -795,8 +1038,8 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                setFormData({ ...formData, status: 'draft' })
-                handleSave()
+                setFormData({ ...formData, status: 'draft' });
+                handleSave();
               }}
               className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
             >
@@ -804,8 +1047,8 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
             </button>
             <button
               onClick={() => {
-                setFormData({ ...formData, status: 'published' })
-                handleSave()
+                setFormData({ ...formData, status: 'published' });
+                handleSave();
               }}
               disabled={!formData.name || !formData.dataSource || formData.metrics.length === 0}
               className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -816,7 +1059,7 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // =============================================================================
@@ -824,41 +1067,42 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
 // =============================================================================
 
 export default function CustomReportBuilder() {
-  const navigate = useNavigate()
-  const [reports, setReports] = useState<CustomReport[]>(MOCK_REPORTS)
-  const [isBuilderOpen, setIsBuilderOpen] = useState(false)
-  const [editingReport, setEditingReport] = useState<CustomReport | null>(null)
-  const [filterStatus, setFilterStatus] = useState<'all' | 'draft' | 'published'>('all')
-  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate();
+  const [reports, setReports] = useState<CustomReport[]>(MOCK_REPORTS);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState<CustomReport | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'draft' | 'published'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredReports = reports.filter((report) => {
-    const matchesStatus = filterStatus === 'all' || report.status === filterStatus
-    const matchesSearch = report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.description.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesStatus && matchesSearch
-  })
+    const matchesStatus = filterStatus === 'all' || report.status === filterStatus;
+    const matchesSearch =
+      report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      report.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   const handleCreateReport = () => {
-    setEditingReport(null)
-    setIsBuilderOpen(true)
-  }
+    setEditingReport(null);
+    setIsBuilderOpen(true);
+  };
 
   const handleEditReport = (report: CustomReport) => {
-    setEditingReport(report)
-    setIsBuilderOpen(true)
-  }
+    setEditingReport(report);
+    setIsBuilderOpen(true);
+  };
 
   const handleSaveReport = (report: CustomReport) => {
     if (editingReport) {
-      setReports(reports.map((r) => r.id === report.id ? report : r))
+      setReports(reports.map((r) => (r.id === report.id ? report : r)));
     } else {
-      setReports([...reports, report])
+      setReports([...reports, report]);
     }
-  }
+  };
 
   const handleDeleteReport = (reportId: string) => {
-    setReports(reports.filter((r) => r.id !== reportId))
-  }
+    setReports(reports.filter((r) => r.id !== reportId));
+  };
 
   const handleDuplicateReport = (report: CustomReport) => {
     const newReport: CustomReport = {
@@ -868,15 +1112,15 @@ export default function CustomReportBuilder() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'draft',
-    }
-    setReports([...reports, newReport])
-  }
+    };
+    setReports([...reports, newReport]);
+  };
 
   const stats = {
     total: reports.length,
     published: reports.filter((r) => r.status === 'published').length,
     scheduled: reports.filter((r) => r.schedule.enabled).length,
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -952,7 +1196,9 @@ export default function CustomReportBuilder() {
           <DocumentChartBarIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No reports found</h3>
           <p className="text-muted-foreground mb-4">
-            {searchQuery ? 'Try a different search term' : 'Create your first custom report to get started'}
+            {searchQuery
+              ? 'Try a different search term'
+              : 'Create your first custom report to get started'}
           </p>
           {!searchQuery && (
             <button
@@ -967,7 +1213,7 @@ export default function CustomReportBuilder() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredReports.map((report) => {
-            const dataSource = DATA_SOURCES.find((ds) => ds.id === report.dataSource)
+            const dataSource = DATA_SOURCES.find((ds) => ds.id === report.dataSource);
             return (
               <div
                 key={report.id}
@@ -999,12 +1245,16 @@ export default function CustomReportBuilder() {
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <ChartBarIcon className="w-4 h-4" />
-                    <span>{report.metrics.length} metrics, {report.visualizations.length} charts</span>
+                    <span>
+                      {report.metrics.length} metrics, {report.visualizations.length} charts
+                    </span>
                   </div>
                   {report.schedule.enabled && (
                     <div className="flex items-center gap-2 text-blue-500">
                       <ClockIcon className="w-4 h-4" />
-                      <span className="capitalize">{report.schedule.frequency} at {report.schedule.time}</span>
+                      <span className="capitalize">
+                        {report.schedule.frequency} at {report.schedule.time}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1017,9 +1267,7 @@ export default function CustomReportBuilder() {
                     <PencilIcon className="w-4 h-4" />
                     Edit
                   </button>
-                  <button
-                    className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm"
-                  >
+                  <button className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm">
                     <EyeIcon className="w-4 h-4" />
                     View
                   </button>
@@ -1039,7 +1287,7 @@ export default function CustomReportBuilder() {
                   </button>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
@@ -1049,11 +1297,11 @@ export default function CustomReportBuilder() {
         report={editingReport}
         isOpen={isBuilderOpen}
         onClose={() => {
-          setIsBuilderOpen(false)
-          setEditingReport(null)
+          setIsBuilderOpen(false);
+          setEditingReport(null);
         }}
         onSave={handleSaveReport}
       />
     </div>
-  )
+  );
 }

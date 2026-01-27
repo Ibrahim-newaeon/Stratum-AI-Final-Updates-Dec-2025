@@ -5,20 +5,20 @@
  * with categorized layout and visual key representations.
  */
 
-import * as React from 'react'
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Keyboard, Command } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Command, Keyboard, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Shortcut {
-  keys: string[]
-  description: string
+  keys: string[];
+  description: string;
 }
 
 interface ShortcutCategory {
-  name: string
-  shortcuts: Shortcut[]
+  name: string;
+  shortcuts: Shortcut[];
 }
 
 const SHORTCUTS: ShortcutCategory[] = [
@@ -71,22 +71,24 @@ const SHORTCUTS: ShortcutCategory[] = [
       { keys: ['Shift', 'Tab'], description: 'Previous filter' },
     ],
   },
-]
+];
 
 interface KeyProps {
-  children: React.ReactNode
-  large?: boolean
+  children: React.ReactNode;
+  large?: boolean;
 }
 
 function Key({ children, large }: KeyProps) {
-  const isSpecialKey = ['Cmd', 'Ctrl', 'Shift', 'Alt', 'Enter', 'Esc', 'Tab', 'Space'].includes(children as string)
+  const isSpecialKey = ['Cmd', 'Ctrl', 'Shift', 'Alt', 'Enter', 'Esc', 'Tab', 'Space'].includes(
+    children as string
+  );
 
   return (
     <kbd
       className={cn(
-        "inline-flex items-center justify-center rounded-md border bg-muted font-mono text-xs font-medium shadow-sm",
-        large ? "min-w-[2.5rem] h-8 px-2" : "min-w-[1.75rem] h-6 px-1.5",
-        isSpecialKey && "text-muted-foreground"
+        'inline-flex items-center justify-center rounded-md border bg-muted font-mono text-xs font-medium shadow-sm',
+        large ? 'min-w-[2.5rem] h-8 px-2' : 'min-w-[1.75rem] h-6 px-1.5',
+        isSpecialKey && 'text-muted-foreground'
       )}
     >
       {children === 'Cmd' ? (
@@ -105,37 +107,37 @@ function Key({ children, large }: KeyProps) {
         children
       )}
     </kbd>
-  )
+  );
 }
 
 interface KeyboardShortcutsModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsModalProps) {
   // Close on escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+      if (e.key === 'Escape') onClose();
+    };
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown)
-      return () => document.removeEventListener('keydown', handleKeyDown)
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose]);
 
   // Open with Cmd+/
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === '/') {
-        e.preventDefault()
+        e.preventDefault();
         // Toggle if already open, otherwise open
       }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <AnimatePresence>
@@ -226,8 +228,8 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
                   <div>
                     <h4 className="font-medium text-sm">Vim-style Navigation</h4>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Use <Key>J</Key> and <Key>K</Key> to navigate lists, <Key>G</Key> + letter for quick navigation.
-                      Power users can enable full vim mode in settings.
+                      Use <Key>J</Key> and <Key>K</Key> to navigate lists, <Key>G</Key> + letter for
+                      quick navigation. Power users can enable full vim mode in settings.
                     </p>
                   </div>
                 </div>
@@ -250,7 +252,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
-export default KeyboardShortcutsModal
+export default KeyboardShortcutsModal;

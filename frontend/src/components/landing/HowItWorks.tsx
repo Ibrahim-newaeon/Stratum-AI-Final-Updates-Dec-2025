@@ -1,8 +1,8 @@
 import {
-  LinkIcon,
-  CpuChipIcon,
-  RocketLaunchIcon,
   CheckCircleIcon,
+  CpuChipIcon,
+  LinkIcon,
+  RocketLaunchIcon,
 } from '@heroicons/react/24/outline';
 
 export function HowItWorks() {
@@ -10,7 +10,8 @@ export function HowItWorks() {
     {
       number: '01',
       title: 'Connect Your Platforms',
-      description: 'Link Meta, Google, TikTok, Snapchat, and GA4 in minutes. OAuth-secured, no code required.',
+      description:
+        'Link Meta, Google, TikTok, Snapchat, and GA4 in minutes. OAuth-secured, no code required.',
       icon: LinkIcon,
       color: 'text-cyan-400',
       bgColor: 'bg-cyan-500/10',
@@ -18,7 +19,8 @@ export function HowItWorks() {
     {
       number: '02',
       title: 'AI Analyzes Your Data',
-      description: 'Stratum calculates EMQ scores, detects anomalies, identifies scaling opportunities, and monitors signal health.',
+      description:
+        'Stratum calculates EMQ scores, detects anomalies, identifies scaling opportunities, and monitors signal health.',
       icon: CpuChipIcon,
       color: 'text-stratum-400',
       bgColor: 'bg-stratum-500/10',
@@ -26,7 +28,8 @@ export function HowItWorks() {
     {
       number: '03',
       title: 'Take Confident Action',
-      description: 'Review AI recommendations, approve safe automations, and scale what works with full confidence.',
+      description:
+        'Review AI recommendations, approve safe automations, and scale what works with full confidence.',
       icon: RocketLaunchIcon,
       color: 'text-amber-400',
       bgColor: 'bg-amber-500/10',
@@ -38,9 +41,7 @@ export function HowItWorks() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-20">
-          <h2 className="text-h1 text-white mb-4">
-            How it works
-          </h2>
+          <h2 className="text-h1 text-white mb-4">How it works</h2>
           <p className="text-body text-text-secondary max-w-2xl mx-auto">
             From connection to optimization in three simple steps
           </p>
@@ -56,7 +57,9 @@ export function HowItWorks() {
               <div key={step.number} className="relative text-center">
                 {/* Step number circle */}
                 <div className="relative inline-flex items-center justify-center mb-8">
-                  <div className={`w-20 h-20 rounded-2xl ${step.bgColor} flex items-center justify-center`}>
+                  <div
+                    className={`w-20 h-20 rounded-2xl ${step.bgColor} flex items-center justify-center`}
+                  >
                     <step.icon className={`w-10 h-10 ${step.color}`} />
                   </div>
                   {/* Number badge */}
@@ -72,8 +75,18 @@ export function HowItWorks() {
                 {/* Arrow for mobile */}
                 {index < steps.length - 1 && (
                   <div className="md:hidden flex justify-center my-6">
-                    <svg className="w-6 h-6 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    <svg
+                      className="w-6 h-6 text-text-muted"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                      />
                     </svg>
                   </div>
                 )}
@@ -95,8 +108,11 @@ export function HowItWorks() {
               <div>
                 <h4 className="text-h3 text-white mb-2">The Result?</h4>
                 <p className="text-body text-text-secondary mb-4">
-                  Teams using Stratum AI report an average <span className="text-success font-semibold">23% improvement in ROAS</span> within
-                  the first 90 days, with <span className="text-success font-semibold">60% less time</span> spent on manual optimization.
+                  Teams using Stratum AI report an average{' '}
+                  <span className="text-success font-semibold">23% improvement in ROAS</span> within
+                  the first 90 days, with{' '}
+                  <span className="text-success font-semibold">60% less time</span> spent on manual
+                  optimization.
                 </p>
                 <div className="flex flex-wrap gap-4 text-meta text-text-muted">
                   <span className="flex items-center gap-2">

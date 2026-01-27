@@ -13,16 +13,15 @@ API Reference: https://marketingapi.snapchat.com/docs/#snap-audience-match
 """
 
 import time
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import httpx
 
 from .base import (
-    BaseAudienceConnector,
     AudienceConfig,
-    AudienceUser,
     AudienceSyncResult,
+    AudienceUser,
+    BaseAudienceConnector,
     IdentifierType,
 )
 
@@ -45,12 +44,12 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
         access_token: str,
         ad_account_id: str,  # Snapchat Ad Account ID
         organization_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(access_token, ad_account_id, **kwargs)
         self.organization_id = organization_id
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get headers for Snapchat API requests."""
         return {
             "Authorization": f"Bearer {self.access_token}",
@@ -60,7 +59,7 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
     async def create_audience(
         self,
         config: AudienceConfig,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Create a new Snapchat Audience Match segment with initial users.
@@ -69,19 +68,23 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
 
         try:
             # Step 1: Create the SAM segment
-            create_url = f"{self.BASE_URL}/{self.API_VERSION}/adaccounts/{self.ad_account_id}/segments"
+            create_url = (
+                f"{self.BASE_URL}/{self.API_VERSION}/adaccounts/{self.ad_account_id}/segments"
+            )
 
             # Determine source type based on identifiers available
             source_type = "FIRST_PARTY"  # Customer list
 
             create_payload = {
-                "segments": [{
-                    "name": config.name,
-                    "description": config.description or f"CDP Segment: {config.name}",
-                    "source_type": source_type,
-                    "ad_account_id": self.ad_account_id,
-                    "retention_in_days": config.retention_days or 180,
-                }]
+                "segments": [
+                    {
+                        "name": config.name,
+                        "description": config.description or f"CDP Segment: {config.name}",
+                        "source_type": source_type,
+                        "ad_account_id": self.ad_account_id,
+                        "retention_in_days": config.retention_days or 180,
+                    }
+                ]
             }
 
             async with httpx.AsyncClient(timeout=60) as client:
@@ -165,7 +168,7 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
     async def add_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Add users to a Snapchat SAM segment.
@@ -198,10 +201,12 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
 
                     # Build the upload payload
                     upload_payload = {
-                        "users": [{
-                            "schema": ["EMAIL_SHA256", "PHONE_SHA256", "MOBILE_AD_ID_SHA256"],
-                            "data": batch,
-                        }]
+                        "users": [
+                            {
+                                "schema": ["EMAIL_SHA256", "PHONE_SHA256", "MOBILE_AD_ID_SHA256"],
+                                "data": batch,
+                            }
+                        ]
                     }
 
                     response = await client.post(
@@ -271,7 +276,7 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
     async def remove_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Remove users from a Snapchat SAM segment.
@@ -296,10 +301,12 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
                 delete_url = f"{self.BASE_URL}/{self.API_VERSION}/segments/{audience_id}/users"
 
                 delete_payload = {
-                    "users": [{
-                        "schema": ["EMAIL_SHA256", "PHONE_SHA256", "MOBILE_AD_ID_SHA256"],
-                        "data": user_data,
-                    }]
+                    "users": [
+                        {
+                            "schema": ["EMAIL_SHA256", "PHONE_SHA256", "MOBILE_AD_ID_SHA256"],
+                            "data": user_data,
+                        }
+                    ]
                 }
 
                 response = await client.request(
@@ -338,7 +345,7 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
     async def replace_audience(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Replace entire Snapchat audience.
@@ -403,7 +410,7 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
     async def get_audience_info(
         self,
         audience_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get Snapchat SAM segment information.
         """
@@ -443,7 +450,7 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
     # Snapchat-specific helpers
     # =========================================================================
 
-    def _prepare_snapchat_user_data(self, users: List[AudienceUser]) -> List[List[str]]:
+    def _prepare_snapchat_user_data(self, users: list[AudienceUser]) -> list[list[str]]:
         """
         Prepare user data in Snapchat's format.
         Returns list of [email_hash, phone_hash, mobile_id_hash] arrays.

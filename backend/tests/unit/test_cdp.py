@@ -13,37 +13,35 @@ Tests:
 - Consent handling
 """
 
-import pytest
 import hashlib
-from datetime import datetime, timezone, timedelta
-from decimal import Decimal
-from typing import Dict, Any, List
-from unittest.mock import MagicMock, patch, AsyncMock
-from pydantic import ValidationError
+from datetime import UTC, datetime
+from typing import Any
 
+import pytest
+from pydantic import ValidationError
 
 # =============================================================================
 # Import CDP Schemas (Pydantic models don't require DB)
 # =============================================================================
-
 from app.schemas.cdp import (
-    IdentifierInput,
-    EventInput,
-    EventBatchInput,
-    EventContext,
-    EventConsent,
-    SourceCreate,
     ConsentUpdate,
+    EventBatchInput,
+    EventConsent,
+    EventContext,
+    EventInput,
+    IdentifierInput,
+    SourceCreate,
 )
-
 
 # =============================================================================
 # Helper Functions (Extracted from cdp.py for unit testing)
 # =============================================================================
 
+
 def normalize_identifier(identifier_type: str, value: str) -> str:
     """Normalize identifier value before hashing."""
     import re
+
     if identifier_type == "email":
         # Lowercase, strip whitespace
         return value.lower().strip()
@@ -65,10 +63,10 @@ def hash_identifier(value: str) -> str:
 
 
 def calculate_emq_score(
-    identifiers: List[Dict[str, str]],
-    properties: Dict[str, Any],
-    context: Dict[str, Any],
-    latency_seconds: float
+    identifiers: list[dict[str, str]],
+    properties: dict[str, Any],
+    context: dict[str, Any],
+    latency_seconds: float,
 ) -> float:
     """Calculate Event Match Quality score (0-100)."""
     score = 0.0
@@ -107,6 +105,7 @@ def calculate_emq_score(
 # Event Schema Validation Tests
 # =============================================================================
 
+
 class TestEventSchemaValidation:
     """Tests for event schema validation (Pydantic models)."""
 
@@ -114,8 +113,8 @@ class TestEventSchemaValidation:
         """Valid event with only required fields."""
         event = EventInput(
             event_name="PageView",
-            event_time=datetime.now(timezone.utc),
-            identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")]
+            event_time=datetime.now(UTC),
+            identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")],
         )
         assert event.event_name == "PageView"
         assert len(event.identifiers) == 1
@@ -124,7 +123,7 @@ class TestEventSchemaValidation:
         """Valid event with all fields."""
         event = EventInput(
             event_name="Purchase",
-            event_time=datetime.now(timezone.utc),
+            event_time=datetime.now(UTC),
             idempotency_key="order_12345_1705159800",
             identifiers=[
                 IdentifierInput(type="email", value="user@example.com"),
@@ -134,9 +133,9 @@ class TestEventSchemaValidation:
             context=EventContext(
                 user_agent="Mozilla/5.0",
                 ip="185.23.45.67",
-                campaign={"source": "google", "medium": "cpc"}
+                campaign={"source": "google", "medium": "cpc"},
             ),
-            consent=EventConsent(analytics=True, ads=True)
+            consent=EventConsent(analytics=True, ads=True),
         )
         assert event.event_name == "Purchase"
         assert len(event.identifiers) == 2
@@ -147,8 +146,8 @@ class TestEventSchemaValidation:
         with pytest.raises(ValidationError) as exc_info:
             EventInput(
                 event_name="PageView",
-                event_time=datetime.now(timezone.utc),
-                identifiers=[]  # Empty list
+                event_time=datetime.now(UTC),
+                identifiers=[],  # Empty list
             )
         assert "identifiers" in str(exc_info.value)
 
@@ -156,8 +155,8 @@ class TestEventSchemaValidation:
         """Event must have event_name."""
         with pytest.raises(ValidationError):
             EventInput(
-                event_time=datetime.now(timezone.utc),
-                identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")]
+                event_time=datetime.now(UTC),
+                identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")],
             )
 
     def test_invalid_event_name_special_chars(self):
@@ -165,8 +164,8 @@ class TestEventSchemaValidation:
         with pytest.raises(ValidationError) as exc_info:
             EventInput(
                 event_name="Page<script>View",  # Contains <>
-                event_time=datetime.now(timezone.utc),
-                identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")]
+                event_time=datetime.now(UTC),
+                identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")],
             )
         assert "event_name" in str(exc_info.value).lower()
 
@@ -197,8 +196,8 @@ class TestEventSchemaValidation:
         events = [
             EventInput(
                 event_name="PageView",
-                event_time=datetime.now(timezone.utc),
-                identifiers=[IdentifierInput(type="anonymous_id", value=f"anon_{i}")]
+                event_time=datetime.now(UTC),
+                identifiers=[IdentifierInput(type="anonymous_id", value=f"anon_{i}")],
             )
             for i in range(1000)
         ]
@@ -210,8 +209,8 @@ class TestEventSchemaValidation:
         events = [
             EventInput(
                 event_name="PageView",
-                event_time=datetime.now(timezone.utc),
-                identifiers=[IdentifierInput(type="anonymous_id", value=f"anon_{i}")]
+                event_time=datetime.now(UTC),
+                identifiers=[IdentifierInput(type="anonymous_id", value=f"anon_{i}")],
             )
             for i in range(1001)
         ]
@@ -224,9 +223,9 @@ class TestEventSchemaValidation:
         # Valid 128 char key
         event = EventInput(
             event_name="PageView",
-            event_time=datetime.now(timezone.utc),
+            event_time=datetime.now(UTC),
             identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")],
-            idempotency_key="a" * 128
+            idempotency_key="a" * 128,
         )
         assert len(event.idempotency_key) == 128
 
@@ -234,15 +233,16 @@ class TestEventSchemaValidation:
         with pytest.raises(ValidationError):
             EventInput(
                 event_name="PageView",
-                event_time=datetime.now(timezone.utc),
+                event_time=datetime.now(UTC),
                 identifiers=[IdentifierInput(type="anonymous_id", value="anon_123")],
-                idempotency_key="a" * 129
+                idempotency_key="a" * 129,
             )
 
 
 # =============================================================================
 # Identifier Normalization Tests
 # =============================================================================
+
 
 class TestIdentifierNormalization:
     """Tests for identifier normalization."""
@@ -302,6 +302,7 @@ class TestIdentifierNormalization:
 # Identifier Hashing Tests
 # =============================================================================
 
+
 class TestIdentifierHashing:
     """Tests for SHA256 identifier hashing."""
 
@@ -350,6 +351,7 @@ class TestIdentifierHashing:
 # EMQ Score Calculation Tests
 # =============================================================================
 
+
 class TestEMQScoreCalculation:
     """Tests for Event Match Quality score calculation."""
 
@@ -360,7 +362,7 @@ class TestEMQScoreCalculation:
         context = {
             "campaign": {"source": "google"},
             "user_agent": "Mozilla/5.0",
-            "ip": "185.23.45.67"
+            "ip": "185.23.45.67",
         }
         score = calculate_emq_score(identifiers, properties, context, latency_seconds=60)
         assert score == 100.0
@@ -372,7 +374,7 @@ class TestEMQScoreCalculation:
         context = {
             "campaign": {"source": "google"},
             "user_agent": "Mozilla/5.0",
-            "ip": "185.23.45.67"
+            "ip": "185.23.45.67",
         }
         score = calculate_emq_score(identifiers, properties, context, latency_seconds=60)
         assert score == 100.0
@@ -381,15 +383,13 @@ class TestEMQScoreCalculation:
         """Email or phone gives 40 points."""
         # Email only
         score1 = calculate_emq_score(
-            [{"type": "email", "value": "user@example.com"}],
-            {}, {}, latency_seconds=0
+            [{"type": "email", "value": "user@example.com"}], {}, {}, latency_seconds=0
         )
         assert score1 >= 40
 
         # Phone only
         score2 = calculate_emq_score(
-            [{"type": "phone", "value": "+971501234567"}],
-            {}, {}, latency_seconds=0
+            [{"type": "phone", "value": "+971501234567"}], {}, {}, latency_seconds=0
         )
         assert score2 >= 40
 
@@ -397,7 +397,9 @@ class TestEMQScoreCalculation:
         """Anonymous ID only gives 20 points for identifier quality."""
         score = calculate_emq_score(
             [{"type": "anonymous_id", "value": "anon_123"}],
-            {}, {}, latency_seconds=3700  # Over 1 hour, no timeliness points
+            {},
+            {},
+            latency_seconds=3700,  # Over 1 hour, no timeliness points
         )
         assert score == 20  # Only identifier quality score
 
@@ -407,13 +409,10 @@ class TestEMQScoreCalculation:
             [{"type": "anonymous_id", "value": "anon_123"}],
             {"page_url": "/test"},
             {},
-            latency_seconds=400
+            latency_seconds=400,
         )
         score_without = calculate_emq_score(
-            [{"type": "anonymous_id", "value": "anon_123"}],
-            {},
-            {},
-            latency_seconds=400
+            [{"type": "anonymous_id", "value": "anon_123"}], {}, {}, latency_seconds=400
         )
         assert score_with - score_without == 25
 
@@ -421,13 +420,15 @@ class TestEMQScoreCalculation:
         """Event within 5 minutes gets full 20 points."""
         score_fast = calculate_emq_score(
             [{"type": "anonymous_id", "value": "anon_123"}],
-            {}, {},
-            latency_seconds=60  # 1 minute
+            {},
+            {},
+            latency_seconds=60,  # 1 minute
         )
         score_slow = calculate_emq_score(
             [{"type": "anonymous_id", "value": "anon_123"}],
-            {}, {},
-            latency_seconds=3700  # Over 1 hour
+            {},
+            {},
+            latency_seconds=3700,  # Over 1 hour
         )
         # Fast should be 20 + base (20), slow should be 0 + base (20)
         assert score_fast == 40  # 20 (ident) + 20 (timeliness)
@@ -437,8 +438,9 @@ class TestEMQScoreCalculation:
         """Event within 1 hour gets partial 10 points."""
         score = calculate_emq_score(
             [{"type": "anonymous_id", "value": "anon_123"}],
-            {}, {},
-            latency_seconds=600  # 10 minutes
+            {},
+            {},
+            latency_seconds=600,  # 10 minutes
         )
         assert score == 30  # 20 (ident) + 10 (partial timeliness)
 
@@ -451,22 +453,19 @@ class TestEMQScoreCalculation:
         assert score_campaign == 5
 
         # User agent only
-        score_ua = calculate_emq_score(
-            [], {}, {"user_agent": "Mozilla/5.0"}, latency_seconds=3700
-        )
+        score_ua = calculate_emq_score([], {}, {"user_agent": "Mozilla/5.0"}, latency_seconds=3700)
         assert score_ua == 5
 
         # IP only
-        score_ip = calculate_emq_score(
-            [], {}, {"ip": "1.2.3.4"}, latency_seconds=3700
-        )
+        score_ip = calculate_emq_score([], {}, {"ip": "1.2.3.4"}, latency_seconds=3700)
         assert score_ip == 5
 
         # All three
         score_all = calculate_emq_score(
-            [], {},
+            [],
+            {},
             {"campaign": {"source": "google"}, "user_agent": "Mozilla", "ip": "1.2.3.4"},
-            latency_seconds=3700
+            latency_seconds=3700,
         )
         assert score_all == 15
 
@@ -477,7 +476,7 @@ class TestEMQScoreCalculation:
             [{"type": "email", "value": "test@test.com"}, {"type": "phone", "value": "+1234"}],
             {"lots": "of", "properties": "here", "extra": "data"},
             {"campaign": {}, "user_agent": "test", "ip": "1.2.3.4", "extra": "field"},
-            latency_seconds=0
+            latency_seconds=0,
         )
         assert score <= 100
 
@@ -485,6 +484,7 @@ class TestEMQScoreCalculation:
 # =============================================================================
 # Source Schema Validation Tests
 # =============================================================================
+
 
 class TestSourceSchemaValidation:
     """Tests for source schema validation."""
@@ -522,6 +522,7 @@ class TestSourceSchemaValidation:
 # Consent Schema Validation Tests
 # =============================================================================
 
+
 class TestConsentSchemaValidation:
     """Tests for consent schema validation."""
 
@@ -553,6 +554,7 @@ class TestConsentSchemaValidation:
 # Event Context Validation Tests
 # =============================================================================
 
+
 class TestEventContextValidation:
     """Tests for event context validation."""
 
@@ -564,7 +566,7 @@ class TestEventContextValidation:
             locale="ar-AE",
             timezone="Asia/Dubai",
             screen={"width": 390, "height": 844},
-            campaign={"source": "google", "medium": "cpc"}
+            campaign={"source": "google", "medium": "cpc"},
         )
         assert context.locale == "ar-AE"
         assert context.screen["width"] == 390
@@ -589,6 +591,7 @@ class TestEventContextValidation:
 # =============================================================================
 # Event Consent Validation Tests
 # =============================================================================
+
 
 class TestEventConsentValidation:
     """Tests for event consent flags validation."""

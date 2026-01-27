@@ -12,22 +12,22 @@ Features:
 - Writeback history tracking
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from uuid import UUID
 import enum
+from datetime import UTC, datetime
+from typing import Any, Optional
+from uuid import UUID
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.crm import (
     CRMConnection,
+    CRMConnectionStatus,
     CRMContact,
     CRMDeal,
-    Touchpoint,
-    CRMConnectionStatus,
     CRMProvider,
+    Touchpoint,
 )
 from app.services.crm.salesforce_client import SalesforceClient
 
@@ -197,6 +197,7 @@ OPPORTUNITY_CUSTOM_FIELDS = [
 
 class WritebackStatus(str, enum.Enum):
     """Writeback operation status."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -218,9 +219,9 @@ class SalesforceWritebackService:
         self.db = db
         self.tenant_id = tenant_id
         self.client = SalesforceClient(db, tenant_id, is_sandbox)
-        self._existing_fields: Dict[str, List[str]] = {}
+        self._existing_fields: dict[str, list[str]] = {}
 
-    async def setup_custom_fields(self) -> Dict[str, Any]:
+    async def setup_custom_fields(self) -> dict[str, Any]:
         """
         Create Stratum custom fields in Salesforce.
 
@@ -275,14 +276,18 @@ class SalesforceWritebackService:
             ]
 
             if results["contact_fields"]["missing"]:
-                results["instructions"].append(f"Contact fields needed: {', '.join(results['contact_fields']['missing'])}")
+                results["instructions"].append(
+                    f"Contact fields needed: {', '.join(results['contact_fields']['missing'])}"
+                )
 
             if results["opportunity_fields"]["missing"]:
-                results["instructions"].append(f"Opportunity fields needed: {', '.join(results['opportunity_fields']['missing'])}")
+                results["instructions"].append(
+                    f"Opportunity fields needed: {', '.join(results['opportunity_fields']['missing'])}"
+                )
 
         return results
 
-    async def get_required_fields_info(self) -> Dict[str, Any]:
+    async def get_required_fields_info(self) -> dict[str, Any]:
         """Get detailed information about required custom fields."""
         return {
             "contact_fields": CONTACT_CUSTOM_FIELDS,
@@ -302,7 +307,7 @@ class SalesforceWritebackService:
         contact_id: Optional[UUID] = None,
         modified_since: Optional[datetime] = None,
         batch_size: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Sync contact attribution data to Salesforce.
 
@@ -362,7 +367,7 @@ class SalesforceWritebackService:
                         "Stratum_Attribution_Confidence__c": attribution.get("confidence"),
                         "Stratum_Total_Ad_Spend__c": attribution.get("total_spend"),
                         "Stratum_Touchpoints_Count__c": attribution.get("touchpoints_count"),
-                        "Stratum_Last_Sync__c": datetime.now(timezone.utc).isoformat(),
+                        "Stratum_Last_Sync__c": datetime.now(UTC).isoformat(),
                     }
 
                     # Remove None values
@@ -379,20 +384,24 @@ class SalesforceWritebackService:
 
                     if response and response.get("success"):
                         synced += 1
-                        contact.last_synced_at = datetime.now(timezone.utc)
+                        contact.last_synced_at = datetime.now(UTC)
                     else:
                         failed += 1
-                        errors.append({
-                            "contact_id": str(contact.id),
-                            "error": str(response) if response else "Unknown error",
-                        })
+                        errors.append(
+                            {
+                                "contact_id": str(contact.id),
+                                "error": str(response) if response else "Unknown error",
+                            }
+                        )
 
                 except Exception as e:
                     failed += 1
-                    errors.append({
-                        "contact_id": str(contact.id),
-                        "error": str(e),
-                    })
+                    errors.append(
+                        {
+                            "contact_id": str(contact.id),
+                            "error": str(e),
+                        }
+                    )
                     logger.warning(
                         "salesforce_contact_writeback_error",
                         contact_id=str(contact.id),
@@ -420,7 +429,7 @@ class SalesforceWritebackService:
         deal_id: Optional[UUID] = None,
         modified_since: Optional[datetime] = None,
         batch_size: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Sync opportunity attribution data to Salesforce.
 
@@ -479,7 +488,7 @@ class SalesforceWritebackService:
                         "Stratum_Net_Profit__c": attribution.get("net_profit"),
                         "Stratum_Days_to_Close__c": attribution.get("days_to_close"),
                         "Stratum_Touchpoints_Count__c": attribution.get("touchpoints_count"),
-                        "Stratum_Last_Sync__c": datetime.now(timezone.utc).isoformat(),
+                        "Stratum_Last_Sync__c": datetime.now(UTC).isoformat(),
                     }
 
                     # Remove None values
@@ -496,20 +505,24 @@ class SalesforceWritebackService:
 
                     if response and response.get("success"):
                         synced += 1
-                        deal.last_synced_at = datetime.now(timezone.utc)
+                        deal.last_synced_at = datetime.now(UTC)
                     else:
                         failed += 1
-                        errors.append({
-                            "deal_id": str(deal.id),
-                            "error": str(response) if response else "Unknown error",
-                        })
+                        errors.append(
+                            {
+                                "deal_id": str(deal.id),
+                                "error": str(response) if response else "Unknown error",
+                            }
+                        )
 
                 except Exception as e:
                     failed += 1
-                    errors.append({
-                        "deal_id": str(deal.id),
-                        "error": str(e),
-                    })
+                    errors.append(
+                        {
+                            "deal_id": str(deal.id),
+                            "error": str(e),
+                        }
+                    )
                     logger.warning(
                         "salesforce_opportunity_writeback_error",
                         deal_id=str(deal.id),
@@ -537,7 +550,7 @@ class SalesforceWritebackService:
         sync_contacts: bool = True,
         sync_opportunities: bool = True,
         modified_since: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run full writeback sync for all contacts and opportunities.
 
@@ -551,15 +564,13 @@ class SalesforceWritebackService:
         """
         results = {
             "status": "completed",
-            "started_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(UTC).isoformat(),
             "contacts": None,
             "opportunities": None,
         }
 
         if sync_contacts:
-            results["contacts"] = await self.sync_contact_attribution(
-                modified_since=modified_since
-            )
+            results["contacts"] = await self.sync_contact_attribution(modified_since=modified_since)
             if results["contacts"]["status"] == "failed":
                 results["status"] = "partial"
 
@@ -570,7 +581,7 @@ class SalesforceWritebackService:
             if results["opportunities"]["status"] == "failed":
                 results["status"] = "partial"
 
-        results["completed_at"] = datetime.now(timezone.utc).isoformat()
+        results["completed_at"] = datetime.now(UTC).isoformat()
 
         # Update connection last sync time
         conn_result = await self.db.execute(
@@ -584,13 +595,13 @@ class SalesforceWritebackService:
         )
         connection = conn_result.scalar_one_or_none()
         if connection:
-            connection.last_sync_at = datetime.now(timezone.utc)
+            connection.last_sync_at = datetime.now(UTC)
             connection.last_sync_status = results["status"]
             await self.db.commit()
 
         return results
 
-    async def _get_contact_attribution(self, contact_id: UUID) -> Dict[str, Any]:
+    async def _get_contact_attribution(self, contact_id: UUID) -> dict[str, Any]:
         """Get attribution data for a contact from touchpoints."""
         result = await self.db.execute(
             select(Touchpoint)
@@ -605,26 +616,26 @@ class SalesforceWritebackService:
         first_touch = touchpoints[0]
         last_touch = touchpoints[-1]
 
-        total_spend = sum(
-            (tp.attributed_spend_cents or 0) / 100 for tp in touchpoints
-        )
+        total_spend = sum((tp.attributed_spend_cents or 0) / 100 for tp in touchpoints)
 
         return {
             "platform": last_touch.platform,
             "campaign_id": last_touch.campaign_id,
             "campaign_name": last_touch.campaign_name,
-            "first_touch_source": f"{first_touch.platform}:{first_touch.campaign_name}" if first_touch.campaign_name else first_touch.platform,
-            "last_touch_source": f"{last_touch.platform}:{last_touch.campaign_name}" if last_touch.campaign_name else last_touch.platform,
+            "first_touch_source": f"{first_touch.platform}:{first_touch.campaign_name}"
+            if first_touch.campaign_name
+            else first_touch.platform,
+            "last_touch_source": f"{last_touch.platform}:{last_touch.campaign_name}"
+            if last_touch.campaign_name
+            else last_touch.platform,
             "confidence": max((tp.match_confidence or 0) * 100 for tp in touchpoints),
             "total_spend": round(total_spend, 2) if total_spend > 0 else None,
             "touchpoints_count": len(touchpoints),
         }
 
-    async def _get_deal_attribution(self, deal_id: UUID) -> Dict[str, Any]:
+    async def _get_deal_attribution(self, deal_id: UUID) -> dict[str, Any]:
         """Get attribution data for a deal."""
-        result = await self.db.execute(
-            select(CRMDeal).where(CRMDeal.id == deal_id)
-        )
+        result = await self.db.execute(select(CRMDeal).where(CRMDeal.id == deal_id))
         deal = result.scalar_one_or_none()
 
         if not deal:
@@ -639,9 +650,7 @@ class SalesforceWritebackService:
             )
             touchpoints = tp_result.scalars().all()
 
-        total_spend = sum(
-            (tp.attributed_spend_cents or 0) / 100 for tp in touchpoints
-        )
+        total_spend = sum((tp.attributed_spend_cents or 0) / 100 for tp in touchpoints)
 
         deal_amount = (deal.amount_cents or 0) / 100
         revenue_roas = deal_amount / total_spend if total_spend > 0 else None
@@ -666,7 +675,9 @@ class SalesforceWritebackService:
         return {
             "platform": primary_tp.platform if primary_tp else None,
             "campaign_name": primary_tp.campaign_name if primary_tp else None,
-            "attribution_model": deal.attribution_model.value if deal.attribution_model else "last_touch",
+            "attribution_model": deal.attribution_model.value
+            if deal.attribution_model
+            else "last_touch",
             "attributed_spend": round(total_spend, 2) if total_spend > 0 else None,
             "revenue_roas": round(revenue_roas, 2) if revenue_roas else None,
             "profit_roas": round(profit_roas, 2) if profit_roas else None,
@@ -676,7 +687,7 @@ class SalesforceWritebackService:
             "touchpoints_count": len(touchpoints),
         }
 
-    async def get_writeback_status(self) -> Dict[str, Any]:
+    async def get_writeback_status(self) -> dict[str, Any]:
         """Get current writeback configuration and status."""
         result = await self.db.execute(
             select(CRMConnection).where(
@@ -694,14 +705,12 @@ class SalesforceWritebackService:
             }
 
         contacts_count = await self.db.execute(
-            select(func.count()).select_from(CRMContact).where(
-                CRMContact.tenant_id == self.tenant_id
-            )
+            select(func.count())
+            .select_from(CRMContact)
+            .where(CRMContact.tenant_id == self.tenant_id)
         )
         deals_count = await self.db.execute(
-            select(func.count()).select_from(CRMDeal).where(
-                CRMDeal.tenant_id == self.tenant_id
-            )
+            select(func.count()).select_from(CRMDeal).where(CRMDeal.tenant_id == self.tenant_id)
         )
 
         return {
@@ -711,7 +720,9 @@ class SalesforceWritebackService:
             "provider_account_id": connection.provider_account_id,
             "provider_account_name": connection.provider_account_name,
             "is_sandbox": (connection.raw_properties or {}).get("is_sandbox", False),
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection.last_sync_at
+            else None,
             "last_sync_status": connection.last_sync_status,
             "contacts_count": contacts_count.scalar(),
             "deals_count": deals_count.scalar(),

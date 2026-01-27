@@ -15,51 +15,48 @@ Or from the backend folder:
 import asyncio
 import random
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
+from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
 from app.models import (
+    AdPlatform,
+    AuditAction,
+    AuditLog,
+    Campaign,
+    CampaignStatus,
     Tenant,
     User,
     UserRole,
-    Campaign,
-    CampaignStatus,
-    AdPlatform,
-    AuditLog,
-    AuditAction,
 )
 from app.models.campaign_builder import (
-    TenantPlatformConnection,
-    TenantAdAccount,
     ConnectionStatus,
+    TenantAdAccount,
+    TenantPlatformConnection,
 )
 from app.models.onboarding import (
-    TenantOnboarding,
-    OnboardingStatus,
-    OnboardingStep,
+    AutomationMode,
     Industry,
     MonthlyAdSpend,
-    TeamSize,
-    AutomationMode,
+    OnboardingStatus,
+    OnboardingStep,
     PrimaryKPI,
+    TeamSize,
+    TenantOnboarding,
 )
 from app.models.reporting import (
+    ReportFormat,
     ReportTemplate,
     ReportType,
-    ReportFormat,
-    ScheduledReport,
-    ScheduleFrequency,
 )
-from app.core.security import get_password_hash, hash_pii_for_lookup, encrypt_pii
-
 
 # Demo campaigns data - realistic ad campaigns
 DEMO_CAMPAIGNS = [
@@ -244,9 +241,7 @@ async def seed_demo_data():
     async with async_session() as db:
         try:
             # Check if demo data already exists
-            existing = await db.execute(
-                select(User).where(User.email == "demo@stratum.ai")
-            )
+            existing = await db.execute(select(User).where(User.email == "demo@stratum.ai"))
             if existing.scalar_one_or_none():
                 print("\n[!] Demo data already exists. Skipping seed.")
                 print("    To re-seed, delete the demo user first.")
@@ -297,7 +292,7 @@ async def seed_demo_data():
             )
             db.add(onboarding)
             await db.flush()
-            print(f"      Onboarding completed with autopilot mode")
+            print("      Onboarding completed with autopilot mode")
 
             print("\n[4/6] Creating platform connections...")
             platforms_to_connect = [
@@ -314,10 +309,10 @@ async def seed_demo_data():
                     status=ConnectionStatus.CONNECTED.value,
                     access_token_encrypted="demo_token_" + platform.value,
                     refresh_token_encrypted="demo_refresh_" + platform.value,
-                    token_expires_at=datetime.now(timezone.utc) + timedelta(days=60),
+                    token_expires_at=datetime.now(UTC) + timedelta(days=60),
                     scopes=["ads_read", "ads_management"],
-                    connected_at=datetime.now(timezone.utc) - timedelta(days=30),
-                    last_refreshed_at=datetime.now(timezone.utc) - timedelta(minutes=5),
+                    connected_at=datetime.now(UTC) - timedelta(days=30),
+                    last_refreshed_at=datetime.now(UTC) - timedelta(minutes=5),
                 )
                 db.add(connection)
                 await db.flush()
@@ -362,12 +357,16 @@ async def seed_demo_data():
                     impressions=campaign_data["impressions"],
                     clicks=campaign_data["clicks"],
                     is_deleted=False,
-                    created_at=datetime.now(timezone.utc) - timedelta(days=random.randint(7, 60)),
+                    created_at=datetime.now(UTC) - timedelta(days=random.randint(7, 60)),
                 )
                 db.add(campaign)
 
                 # Calculate ROAS for display
-                roas = campaign_data["revenue_cents"] / campaign_data["spend_cents"] if campaign_data["spend_cents"] > 0 else 0
+                roas = (
+                    campaign_data["revenue_cents"] / campaign_data["spend_cents"]
+                    if campaign_data["spend_cents"] > 0
+                    else 0
+                )
                 print(f"      {campaign_data['name'][:40]:<40} ROAS: {roas:.2f}x")
 
             await db.flush()
@@ -400,7 +399,7 @@ async def seed_demo_data():
                     resource_id=activity["resource_id"],
                     ip_address="192.168.1.1",
                     user_agent="Demo Seeder",
-                    created_at=datetime.now(timezone.utc) - timedelta(hours=i * 2),
+                    created_at=datetime.now(UTC) - timedelta(hours=i * 2),
                 )
                 db.add(log)
             print(f"      Created {len(DEMO_ACTIVITIES)} activity entries")
@@ -424,7 +423,9 @@ async def seed_demo_data():
             print(f"  Total Revenue:     ${total_revenue:,.2f}")
             print(f"  Overall ROAS:      {overall_roas:.2f}x")
             print(f"  Total Conversions: {total_conversions:,}")
-            print(f"  Active Campaigns:  {len([c for c in DEMO_CAMPAIGNS if c['status'] == CampaignStatus.ACTIVE])}")
+            print(
+                f"  Active Campaigns:  {len([c for c in DEMO_CAMPAIGNS if c['status'] == CampaignStatus.ACTIVE])}"
+            )
             print("\n" + "=" * 60)
 
         except Exception as e:

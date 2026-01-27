@@ -8,69 +8,69 @@
  * - Actions analytics
  */
 
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from './client'
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from './client';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface PlatformOverview {
-  period_days: number
-  start_date: string
-  active_tenants: number
-  total_actions: number
-  applied_actions: number
-  failed_actions: number
-  success_rate: number
-  signal_health_summary: Record<string, number>
+  period_days: number;
+  start_date: string;
+  active_tenants: number;
+  total_actions: number;
+  applied_actions: number;
+  failed_actions: number;
+  success_rate: number;
+  signal_health_summary: Record<string, number>;
   platform_breakdown: Array<{
-    platform: string
-    record_count: number
-    avg_emq: number | null
-  }>
+    platform: string;
+    record_count: number;
+    avg_emq: number | null;
+  }>;
 }
 
 export interface TenantProfitability {
-  tenant_id: number
-  total_actions: number
-  applied_actions: number
-  active_days: number
-  action_efficiency: number
-  avg_emq_score: number
-  avg_event_loss: number
-  health_score: number
+  tenant_id: number;
+  total_actions: number;
+  applied_actions: number;
+  active_days: number;
+  action_efficiency: number;
+  avg_emq_score: number;
+  avg_event_loss: number;
+  health_score: number;
 }
 
 export interface TenantProfitabilityResponse {
-  period_days: number
-  start_date: string
-  tenants: TenantProfitability[]
-  total_tenants: number
+  period_days: number;
+  start_date: string;
+  tenants: TenantProfitability[];
+  total_tenants: number;
 }
 
 export interface SignalHealthTrend {
-  date: string
-  avg_emq: number | null
-  avg_event_loss: number | null
-  avg_freshness_minutes: number | null
-  avg_api_error_rate: number | null
-  record_count: number
+  date: string;
+  avg_emq: number | null;
+  avg_event_loss: number | null;
+  avg_freshness_minutes: number | null;
+  avg_api_error_rate: number | null;
+  record_count: number;
 }
 
 export interface SignalHealthTrendsResponse {
-  period_days: number
-  trends: SignalHealthTrend[]
-  trend_direction: 'improving' | 'declining' | 'stable' | 'insufficient_data'
+  period_days: number;
+  trends: SignalHealthTrend[];
+  trend_direction: 'improving' | 'declining' | 'stable' | 'insufficient_data';
 }
 
 export interface ActionsAnalytics {
-  period_days: number
-  total_actions: number
-  type_breakdown: Record<string, number>
-  status_breakdown: Record<string, number>
-  platform_breakdown: Record<string, number>
-  daily_counts: Array<{ date: string; count: number }>
+  period_days: number;
+  total_actions: number;
+  type_breakdown: Record<string, number>;
+  status_breakdown: Record<string, number>;
+  platform_breakdown: Record<string, number>;
+  daily_counts: Array<{ date: string; count: number }>;
 }
 
 // =============================================================================
@@ -86,11 +86,11 @@ export function usePlatformOverview(days: number = 7) {
     queryFn: async () => {
       const response = await apiClient.get<{ data: PlatformOverview }>(
         `/superadmin/platform-overview?days=${days}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 }
 
 /**
@@ -102,11 +102,11 @@ export function useTenantProfitability(days: number = 30) {
     queryFn: async () => {
       const response = await apiClient.get<{ data: TenantProfitabilityResponse }>(
         `/superadmin/tenant-profitability?days=${days}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 }
 
 /**
@@ -118,11 +118,11 @@ export function useSignalHealthTrends(days: number = 14) {
     queryFn: async () => {
       const response = await apiClient.get<{ data: SignalHealthTrendsResponse }>(
         `/superadmin/signal-health-trends?days=${days}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 }
 
 /**
@@ -134,11 +134,11 @@ export function useActionsAnalytics(days: number = 7) {
     queryFn: async () => {
       const response = await apiClient.get<{ data: ActionsAnalytics }>(
         `/superadmin/actions-analytics?days=${days}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 }
 
 // =============================================================================
@@ -149,10 +149,10 @@ export function useActionsAnalytics(days: number = 7) {
  * Get health score color.
  */
 export function getHealthScoreColor(score: number): string {
-  if (score >= 80) return 'green'
-  if (score >= 60) return 'yellow'
-  if (score >= 40) return 'orange'
-  return 'red'
+  if (score >= 80) return 'green';
+  if (score >= 60) return 'yellow';
+  if (score >= 40) return 'orange';
+  return 'red';
 }
 
 /**
@@ -164,8 +164,8 @@ export function getTrendIcon(direction: string): string {
     declining: '📉',
     stable: '➡️',
     insufficient_data: '❓',
-  }
-  return icons[direction] || '❓'
+  };
+  return icons[direction] || '❓';
 }
 
 /**
@@ -177,6 +177,6 @@ export function formatPlatformName(platform: string): string {
     google: 'Google Ads',
     tiktok: 'TikTok Ads',
     snapchat: 'Snapchat Ads',
-  }
-  return names[platform] || platform
+  };
+  return names[platform] || platform;
 }

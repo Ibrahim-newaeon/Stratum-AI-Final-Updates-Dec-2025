@@ -5,39 +5,39 @@
  * Outputs both HTML and JSON formats for storage.
  */
 
-import { useEditor, EditorContent } from '@tiptap/react'
-import { BubbleMenu } from '@tiptap/react/menus'
-import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
-import Placeholder from '@tiptap/extension-placeholder'
-import { useCallback, useEffect } from 'react'
+import { EditorContent, useEditor } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
+import Placeholder from '@tiptap/extension-placeholder';
+import { useCallback, useEffect } from 'react';
 import {
   Bold,
-  Italic,
-  Strikethrough,
   Code,
   Heading1,
   Heading2,
   Heading3,
+  Image as ImageIcon,
+  Italic,
+  Link as LinkIcon,
   List,
   ListOrdered,
-  Quote,
   Minus,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  Undo,
+  Quote,
   Redo,
   RemoveFormatting,
-} from 'lucide-react'
+  Strikethrough,
+  Undo,
+} from 'lucide-react';
 
 interface RichTextEditorProps {
-  content?: string
-  contentJson?: Record<string, unknown>
-  onChange?: (html: string, json: Record<string, unknown>) => void
-  placeholder?: string
-  className?: string
-  editable?: boolean
+  content?: string;
+  contentJson?: Record<string, unknown>;
+  onChange?: (html: string, json: Record<string, unknown>) => void;
+  placeholder?: string;
+  className?: string;
+  editable?: boolean;
 }
 
 const MenuButton = ({
@@ -47,11 +47,11 @@ const MenuButton = ({
   children,
   title,
 }: {
-  onClick: () => void
-  isActive?: boolean
-  disabled?: boolean
-  children: React.ReactNode
-  title: string
+  onClick: () => void;
+  isActive?: boolean;
+  disabled?: boolean;
+  children: React.ReactNode;
+  title: string;
 }) => (
   <button
     type="button"
@@ -64,9 +64,9 @@ const MenuButton = ({
   >
     {children}
   </button>
-)
+);
 
-const Divider = () => <div className="w-px h-6 bg-neutral-700 mx-1" />
+const Divider = () => <div className="w-px h-6 bg-neutral-700 mx-1" />;
 
 export function RichTextEditor({
   content = '',
@@ -102,61 +102,64 @@ export function RichTextEditor({
     editable,
     onUpdate: ({ editor }) => {
       if (onChange) {
-        const html = editor.getHTML()
-        const json = editor.getJSON()
-        onChange(html, json as Record<string, unknown>)
+        const html = editor.getHTML();
+        const json = editor.getJSON();
+        onChange(html, json as Record<string, unknown>);
       }
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4',
+        class:
+          'prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4',
       },
     },
-  })
+  });
 
   // Update content when prop changes
   useEffect(() => {
     if (editor && contentJson && JSON.stringify(editor.getJSON()) !== JSON.stringify(contentJson)) {
-      editor.commands.setContent(contentJson)
+      editor.commands.setContent(contentJson);
     }
-  }, [editor, contentJson])
+  }, [editor, contentJson]);
 
   const setLink = useCallback(() => {
-    if (!editor) return
+    if (!editor) return;
 
-    const previousUrl = editor.getAttributes('link').href
-    const url = window.prompt('Enter URL:', previousUrl)
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('Enter URL:', previousUrl);
 
-    if (url === null) return
+    if (url === null) return;
 
     if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run()
-      return
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
     }
 
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-  }, [editor])
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
 
   const addImage = useCallback(() => {
-    if (!editor) return
+    if (!editor) return;
 
-    const url = window.prompt('Enter image URL:')
+    const url = window.prompt('Enter image URL:');
 
     if (url) {
-      editor.chain().focus().setImage({ src: url }).run()
+      editor.chain().focus().setImage({ src: url }).run();
     }
-  }, [editor])
+  }, [editor]);
 
   if (!editor) {
     return (
       <div className={`border border-neutral-800 rounded-lg bg-neutral-900 ${className}`}>
         <div className="p-4 text-neutral-500">Loading editor...</div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className={`border border-neutral-800 rounded-lg bg-neutral-900 overflow-hidden ${className}`}>
+    <div
+      className={`border border-neutral-800 rounded-lg bg-neutral-900 overflow-hidden ${className}`}
+    >
       {/* Toolbar */}
       {editable && (
         <div className="flex flex-wrap items-center gap-1 p-2 border-b border-neutral-800 bg-neutral-900/50">
@@ -271,11 +274,7 @@ export function RichTextEditor({
           <Divider />
 
           {/* Link & Image */}
-          <MenuButton
-            onClick={setLink}
-            isActive={editor.isActive('link')}
-            title="Add Link"
-          >
+          <MenuButton onClick={setLink} isActive={editor.isActive('link')} title="Add Link">
             <LinkIcon className="w-4 h-4" />
           </MenuButton>
           <MenuButton onClick={addImage} title="Add Image">
@@ -315,11 +314,7 @@ export function RichTextEditor({
           >
             <Italic className="w-3 h-3" />
           </MenuButton>
-          <MenuButton
-            onClick={setLink}
-            isActive={editor.isActive('link')}
-            title="Add Link"
-          >
+          <MenuButton onClick={setLink} isActive={editor.isActive('link')} title="Add Link">
             <LinkIcon className="w-3 h-3" />
           </MenuButton>
         </BubbleMenu>
@@ -328,7 +323,7 @@ export function RichTextEditor({
       {/* Editor Content */}
       <EditorContent editor={editor} />
     </div>
-  )
+  );
 }
 
-export default RichTextEditor
+export default RichTextEditor;

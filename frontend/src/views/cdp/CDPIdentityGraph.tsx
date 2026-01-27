@@ -2,41 +2,44 @@
  * CDP Identity Graph - Identity resolution visualization
  */
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
-  MagnifyingGlassIcon,
-  UserCircleIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  DevicePhoneMobileIcon,
-  LinkIcon,
   ArrowPathIcon,
-  InformationCircleIcon,
-  XMarkIcon,
-  ShareIcon,
   CheckBadgeIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  DevicePhoneMobileIcon,
+  EnvelopeIcon,
+  InformationCircleIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  PhoneIcon,
+  ShareIcon,
+  UserCircleIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
-  useIdentityGraph,
-  useCDPProfile,
-  useProfileMergeHistory,
-  useMergeProfiles,
-  type IdentityGraphNode,
-  type IdentityGraphEdge,
   type IdentifierType,
+  type IdentityGraphEdge,
+  type IdentityGraphNode,
   type ProfileMerge,
-} from '@/api/cdp'
+  useCDPProfile,
+  useIdentityGraph,
+  useMergeProfiles,
+  useProfileMergeHistory,
+} from '@/api/cdp';
 
 // Node type configuration
-const nodeConfig: Record<IdentifierType, { icon: React.ElementType; color: string; label: string }> = {
+const nodeConfig: Record<
+  IdentifierType,
+  { icon: React.ElementType; color: string; label: string }
+> = {
   email: { icon: EnvelopeIcon, color: 'bg-blue-500', label: 'Email' },
   phone: { icon: PhoneIcon, color: 'bg-green-500', label: 'Phone' },
   device_id: { icon: DevicePhoneMobileIcon, color: 'bg-purple-500', label: 'Device' },
   anonymous_id: { icon: UserCircleIcon, color: 'bg-gray-500', label: 'Anonymous' },
   external_id: { icon: LinkIcon, color: 'bg-orange-500', label: 'External' },
-}
+};
 
 // Graph Node Component
 function GraphNode({
@@ -46,21 +49,17 @@ function GraphNode({
   isSelected,
   onClick,
 }: {
-  node: IdentityGraphNode
-  x: number
-  y: number
-  isSelected: boolean
-  onClick: () => void
+  node: IdentityGraphNode;
+  x: number;
+  y: number;
+  isSelected: boolean;
+  onClick: () => void;
 }) {
-  const config = nodeConfig[node.type] || nodeConfig.anonymous_id
-  const Icon = config.icon
+  const config = nodeConfig[node.type] || nodeConfig.anonymous_id;
+  const Icon = config.icon;
 
   return (
-    <g
-      transform={`translate(${x}, ${y})`}
-      onClick={onClick}
-      className="cursor-pointer"
-    >
+    <g transform={`translate(${x}, ${y})`} onClick={onClick} className="cursor-pointer">
       {/* Selection ring */}
       {isSelected && (
         <circle
@@ -73,10 +72,7 @@ function GraphNode({
       )}
 
       {/* Node circle */}
-      <circle
-        r={24}
-        className={cn(config.color, 'transition-transform hover:scale-110')}
-      />
+      <circle r={24} className={cn(config.color, 'transition-transform hover:scale-110')} />
 
       {/* Icon */}
       <foreignObject x={-12} y={-12} width={24} height={24}>
@@ -94,15 +90,11 @@ function GraphNode({
       )}
 
       {/* Label */}
-      <text
-        y={40}
-        textAnchor="middle"
-        className="text-xs fill-current text-muted-foreground"
-      >
+      <text y={40} textAnchor="middle" className="text-xs fill-current text-muted-foreground">
         {config.label}
       </text>
     </g>
-  )
+  );
 }
 
 // Graph Edge Component
@@ -113,13 +105,13 @@ function GraphEdge({
   x2,
   y2,
 }: {
-  edge: IdentityGraphEdge
-  x1: number
-  y1: number
-  x2: number
-  y2: number
+  edge: IdentityGraphEdge;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
 }) {
-  const confidence = edge.confidence * 100
+  const confidence = edge.confidence * 100;
 
   return (
     <g>
@@ -143,51 +135,54 @@ function GraphEdge({
         {edge.type.replace('_', ' ')}
       </text>
     </g>
-  )
+  );
 }
 
 // Simple force-directed layout
-function useGraphLayout(nodes: IdentityGraphNode[], edges: IdentityGraphEdge[], width: number, height: number) {
+function useGraphLayout(
+  nodes: IdentityGraphNode[],
+  edges: IdentityGraphEdge[],
+  width: number,
+  height: number
+) {
   return useMemo(() => {
-    if (nodes.length === 0) return { nodePositions: new Map<string, { x: number; y: number }>() }
+    if (nodes.length === 0) return { nodePositions: new Map<string, { x: number; y: number }>() };
 
-    const positions = new Map<string, { x: number; y: number }>()
-    const centerX = width / 2
-    const centerY = height / 2
-    const radius = Math.min(width, height) / 3
+    const positions = new Map<string, { x: number; y: number }>();
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 3;
 
     // Arrange nodes in a circle
     nodes.forEach((node, i) => {
-      const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
-      const x = centerX + radius * Math.cos(angle)
-      const y = centerY + radius * Math.sin(angle)
-      positions.set(node.id, { x, y })
-    })
+      const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      positions.set(node.id, { x, y });
+    });
 
-    return { nodePositions: positions }
-  }, [nodes, edges, width, height])
+    return { nodePositions: positions };
+  }, [nodes, edges, width, height]);
 }
 
 // Node Detail Panel
-function NodeDetailPanel({
-  node,
-  onClose,
-}: {
-  node: IdentityGraphNode
-  onClose: () => void
-}) {
-  const config = nodeConfig[node.type] || nodeConfig.anonymous_id
+function NodeDetailPanel({ node, onClose }: { node: IdentityGraphNode; onClose: () => void }) {
+  const config = nodeConfig[node.type] || nodeConfig.anonymous_id;
 
   return (
     <div className="absolute top-4 right-4 w-72 bg-card rounded-xl border shadow-lg p-4">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', config.color)}>
+          <div
+            className={cn('h-10 w-10 rounded-lg flex items-center justify-center', config.color)}
+          >
             <config.icon className="h-5 w-5 text-white" />
           </div>
           <div>
             <p className="font-semibold">{config.label}</p>
-            <p className="text-xs text-muted-foreground">{node.is_primary ? 'Primary' : 'Secondary'}</p>
+            <p className="text-xs text-muted-foreground">
+              {node.is_primary ? 'Primary' : 'Secondary'}
+            </p>
           </div>
         </div>
         <button onClick={onClose} className="p-1 hover:bg-muted rounded">
@@ -206,16 +201,18 @@ function NodeDetailPanel({
         </div>
         <div>
           <p className="text-muted-foreground">Status</p>
-          <p className="font-medium">{node.is_primary ? 'Primary Identifier' : 'Linked Identifier'}</p>
+          <p className="font-medium">
+            {node.is_primary ? 'Primary Identifier' : 'Linked Identifier'}
+          </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Merge History Component
 function MergeHistory({ profileId }: { profileId: string }) {
-  const { data, isLoading } = useProfileMergeHistory(profileId)
+  const { data, isLoading } = useProfileMergeHistory(profileId);
 
   if (isLoading) {
     return (
@@ -224,7 +221,7 @@ function MergeHistory({ profileId }: { profileId: string }) {
           <div key={i} className="h-16 bg-muted animate-pulse rounded" />
         ))}
       </div>
-    )
+    );
   }
 
   if (!data?.merges || data.merges.length === 0) {
@@ -232,7 +229,7 @@ function MergeHistory({ profileId }: { profileId: string }) {
       <p className="text-sm text-muted-foreground py-4 text-center">
         No merge history for this profile
       </p>
-    )
+    );
   }
 
   return (
@@ -258,51 +255,55 @@ function MergeHistory({ profileId }: { profileId: string }) {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export default function CDPIdentityGraph() {
-  const [searchParams] = useSearchParams()
-  const initialProfileId = searchParams.get('profile') || ''
+  const [searchParams] = useSearchParams();
+  const initialProfileId = searchParams.get('profile') || '';
 
-  const [profileId, setProfileId] = useState(initialProfileId)
-  const [searchInput, setSearchInput] = useState(initialProfileId)
-  const [selectedNode, setSelectedNode] = useState<IdentityGraphNode | null>(null)
-  const [showMergeHistory, setShowMergeHistory] = useState(false)
+  const [profileId, setProfileId] = useState(initialProfileId);
+  const [searchInput, setSearchInput] = useState(initialProfileId);
+  const [selectedNode, setSelectedNode] = useState<IdentityGraphNode | null>(null);
+  const [showMergeHistory, setShowMergeHistory] = useState(false);
 
-  const svgRef = useRef<SVGSVGElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 600, height: 400 })
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 600, height: 400 });
 
-  const { data: graphData, isLoading: graphLoading, refetch } = useIdentityGraph(profileId, {
+  const {
+    data: graphData,
+    isLoading: graphLoading,
+    refetch,
+  } = useIdentityGraph(profileId, {
     enabled: !!profileId,
-  })
-  const { data: profile } = useCDPProfile(profileId, { enabled: !!profileId })
+  });
+  const { data: profile } = useCDPProfile(profileId, { enabled: !!profileId });
 
   // Update dimensions on resize
   useEffect(() => {
     const updateDimensions = () => {
       if (svgRef.current?.parentElement) {
-        const { width, height } = svgRef.current.parentElement.getBoundingClientRect()
-        setDimensions({ width, height: Math.max(400, height) })
+        const { width, height } = svgRef.current.parentElement.getBoundingClientRect();
+        setDimensions({ width, height: Math.max(400, height) });
       }
-    }
+    };
 
-    updateDimensions()
-    window.addEventListener('resize', updateDimensions)
-    return () => window.removeEventListener('resize', updateDimensions)
-  }, [])
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   const { nodePositions } = useGraphLayout(
     graphData?.nodes || [],
     graphData?.edges || [],
     dimensions.width,
     dimensions.height
-  )
+  );
 
   const handleSearch = () => {
-    setProfileId(searchInput.trim())
-    setSelectedNode(null)
-  }
+    setProfileId(searchInput.trim());
+    setSelectedNode(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -357,7 +358,8 @@ export default function CDPIdentityGraph() {
               <div>
                 <p className="font-semibold font-mono">{profile.id.slice(0, 16)}...</p>
                 <p className="text-sm text-muted-foreground capitalize">
-                  {profile.lifecycle_stage} | {profile.total_events} events | ${profile.total_revenue.toLocaleString()} revenue
+                  {profile.lifecycle_stage} | {profile.total_events} events | $
+                  {profile.total_revenue.toLocaleString()} revenue
                 </p>
               </div>
             </div>
@@ -379,7 +381,10 @@ export default function CDPIdentityGraph() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Graph Visualization */}
-        <div className="lg:col-span-2 bg-card rounded-xl border relative" style={{ minHeight: 500 }}>
+        <div
+          className="lg:col-span-2 bg-card rounded-xl border relative"
+          style={{ minHeight: 500 }}
+        >
           {!profileId ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
               <ShareIcon className="h-16 w-16 mb-4 opacity-50" />
@@ -392,17 +397,12 @@ export default function CDPIdentityGraph() {
             </div>
           ) : graphData?.nodes && graphData.nodes.length > 0 ? (
             <>
-              <svg
-                ref={svgRef}
-                width="100%"
-                height="100%"
-                className="min-h-[500px]"
-              >
+              <svg ref={svgRef} width="100%" height="100%" className="min-h-[500px]">
                 {/* Edges */}
                 {graphData.edges.map((edge, i) => {
-                  const sourcePos = nodePositions.get(edge.source)
-                  const targetPos = nodePositions.get(edge.target)
-                  if (!sourcePos || !targetPos) return null
+                  const sourcePos = nodePositions.get(edge.source);
+                  const targetPos = nodePositions.get(edge.target);
+                  if (!sourcePos || !targetPos) return null;
                   return (
                     <GraphEdge
                       key={i}
@@ -412,13 +412,13 @@ export default function CDPIdentityGraph() {
                       x2={targetPos.x}
                       y2={targetPos.y}
                     />
-                  )
+                  );
                 })}
 
                 {/* Nodes */}
                 {graphData.nodes.map((node) => {
-                  const pos = nodePositions.get(node.id)
-                  if (!pos) return null
+                  const pos = nodePositions.get(node.id);
+                  if (!pos) return null;
                   return (
                     <GraphNode
                       key={node.id}
@@ -428,16 +428,13 @@ export default function CDPIdentityGraph() {
                       isSelected={selectedNode?.id === node.id}
                       onClick={() => setSelectedNode(node)}
                     />
-                  )
+                  );
                 })}
               </svg>
 
               {/* Node Detail Panel */}
               {selectedNode && (
-                <NodeDetailPanel
-                  node={selectedNode}
-                  onClose={() => setSelectedNode(null)}
-                />
+                <NodeDetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
               )}
             </>
           ) : (
@@ -474,7 +471,12 @@ export default function CDPIdentityGraph() {
             <div className="space-y-2">
               {Object.entries(nodeConfig).map(([type, config]) => (
                 <div key={type} className="flex items-center gap-3">
-                  <div className={cn('h-6 w-6 rounded-full flex items-center justify-center', config.color)}>
+                  <div
+                    className={cn(
+                      'h-6 w-6 rounded-full flex items-center justify-center',
+                      config.color
+                    )}
+                  >
                     <config.icon className="h-3 w-3 text-white" />
                   </div>
                   <span className="text-sm">{config.label}</span>
@@ -503,5 +505,5 @@ export default function CDPIdentityGraph() {
         </div>
       </div>
     </div>
-  )
+  );
 }

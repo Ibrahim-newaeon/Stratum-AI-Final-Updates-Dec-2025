@@ -14,12 +14,13 @@ Integration:
 - Custom collectors for business-specific metrics
 """
 
-from typing import Callable, Optional
-from prometheus_client import Counter, Histogram, Gauge
+from collections.abc import Callable
+from typing import Optional
+
+from fastapi import FastAPI
+from prometheus_client import Counter, Gauge, Histogram
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 from prometheus_fastapi_instrumentator.metrics import Info as MetricInfo
-from fastapi import FastAPI
-
 
 # =============================================================================
 # Custom Business Metrics
@@ -199,6 +200,7 @@ celery_tasks_total = Counter(
 # =============================================================================
 # Helper Functions for Recording Metrics
 # =============================================================================
+
 
 def record_emq_score(
     tenant_id: int,
@@ -394,11 +396,13 @@ def record_incident(
 # Custom Instrumentator Metrics
 # =============================================================================
 
+
 def request_by_tenant_instrumentation() -> Callable[[MetricInfo], None]:
     """
     Custom instrumentation to track requests by tenant.
     Extracts tenant_id from request state.
     """
+
     def instrumentation(info: MetricInfo) -> None:
         if info.modified_handler:
             # Extract tenant from request state if available
@@ -431,6 +435,7 @@ def request_by_tenant_instrumentation() -> Callable[[MetricInfo], None]:
 # Instrumentator Setup
 # =============================================================================
 
+
 def create_instrumentator() -> Instrumentator:
     """
     Create and configure the Prometheus instrumentator.
@@ -462,7 +467,29 @@ def create_instrumentator() -> Instrumentator:
         metrics.latency(
             metric_namespace="stratum",
             metric_subsystem="http",
-            buckets=(0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 7.5, 10.0, 30.0, 60.0),
+            buckets=(
+                0.01,
+                0.025,
+                0.05,
+                0.075,
+                0.1,
+                0.25,
+                0.5,
+                0.75,
+                1.0,
+                1.5,
+                2.0,
+                2.5,
+                3.0,
+                3.5,
+                4.0,
+                4.5,
+                5.0,
+                7.5,
+                10.0,
+                30.0,
+                60.0,
+            ),
         )
     )
 

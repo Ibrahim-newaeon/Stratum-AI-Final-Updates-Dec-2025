@@ -11,14 +11,14 @@ Implements:
 - Request validation and sanitization
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
 import hashlib
 import hmac
 import json
 import re
+from datetime import datetime, timedelta
+from typing import Any, Optional
 
-from fastapi import Request, Response, HTTPException, status
+from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
 
@@ -34,9 +34,9 @@ class EmbedSecurityService:
 
     def get_csp_headers(
         self,
-        allowed_domains: List[str],
+        allowed_domains: list[str],
         widget_type: str,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Generate Content Security Policy headers for embed.
 
@@ -51,13 +51,13 @@ class EmbedSecurityService:
             "default-src 'self'",
             f"frame-ancestors {frame_ancestors}",
             "script-src 'self' 'unsafe-inline'",  # Needed for inline widget scripts
-            "style-src 'self' 'unsafe-inline'",   # Needed for inline styles
-            "img-src 'self' data: https:",        # Allow images from HTTPS
+            "style-src 'self' 'unsafe-inline'",  # Needed for inline styles
+            "img-src 'self' data: https:",  # Allow images from HTTPS
             "font-src 'self' https://fonts.gstatic.com",
-            "connect-src 'self'",                  # API calls to self only
-            "object-src 'none'",                   # No plugins
+            "connect-src 'self'",  # API calls to self only
+            "object-src 'none'",  # No plugins
             "base-uri 'self'",
-            "form-action 'none'",                  # No form submissions
+            "form-action 'none'",  # No form submissions
         ]
 
         csp = "; ".join(csp_parts)
@@ -70,7 +70,7 @@ class EmbedSecurityService:
             "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
         }
 
-    def _domains_to_csp(self, domains: List[str]) -> str:
+    def _domains_to_csp(self, domains: list[str]) -> str:
         """Convert domain patterns to CSP frame-ancestors format."""
         csp_domains = []
 
@@ -96,8 +96,8 @@ class EmbedSecurityService:
     def get_cors_headers(
         self,
         origin: str,
-        allowed_domains: List[str],
-    ) -> Optional[Dict[str, str]]:
+        allowed_domains: list[str],
+    ) -> Optional[dict[str, str]]:
         """
         Generate CORS headers for embed requests.
 
@@ -115,7 +115,7 @@ class EmbedSecurityService:
             "Access-Control-Allow-Credentials": "false",
         }
 
-    def _is_origin_allowed(self, origin: str, allowed_domains: List[str]) -> bool:
+    def _is_origin_allowed(self, origin: str, allowed_domains: list[str]) -> bool:
         """Check if origin is in allowed domains list."""
         if not origin:
             return False
@@ -155,7 +155,7 @@ class EmbedSecurityService:
     # Request Validation
     # =========================================================================
 
-    def validate_embed_request(self, request: Request) -> Dict[str, Any]:
+    def validate_embed_request(self, request: Request) -> dict[str, Any]:
         """
         Validate an incoming embed request.
 
@@ -222,7 +222,7 @@ class EmbedSecurityService:
 
     def sign_widget_data(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         token_id: str,
         timestamp: datetime,
     ) -> str:
@@ -232,27 +232,29 @@ class EmbedSecurityService:
         The signature ensures data hasn't been tampered with in transit.
         """
         # Create canonical representation
-        canonical = json.dumps({
-            "data": data,
-            "token_id": token_id,
-            "timestamp": timestamp.isoformat(),
-        }, sort_keys=True, separators=(',', ':'))
+        canonical = json.dumps(
+            {
+                "data": data,
+                "token_id": token_id,
+                "timestamp": timestamp.isoformat(),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
 
         # Create HMAC-SHA256 signature
         signature = hmac.new(
-            self._signing_key.encode(),
-            canonical.encode(),
-            hashlib.sha256
+            self._signing_key.encode(), canonical.encode(), hashlib.sha256
         ).hexdigest()
 
         return signature
 
     def create_signed_response(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         token_id: str,
         ttl_seconds: int = 300,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a signed response with expiration.
 
@@ -277,7 +279,7 @@ class EmbedSecurityService:
     # Sanitization
     # =========================================================================
 
-    def sanitize_widget_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def sanitize_widget_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Sanitize widget configuration before rendering.
 
@@ -293,8 +295,7 @@ class EmbedSecurityService:
                 sanitized[key] = self.sanitize_widget_config(value)
             elif isinstance(value, list):
                 sanitized[key] = [
-                    self._sanitize_string(v) if isinstance(v, str) else v
-                    for v in value
+                    self._sanitize_string(v) if isinstance(v, str) else v for v in value
                 ]
             else:
                 sanitized[key] = value
@@ -304,20 +305,20 @@ class EmbedSecurityService:
     def _sanitize_string(self, value: str) -> str:
         """Sanitize a string value."""
         # Remove script tags
-        value = re.sub(r'<script[^>]*>.*?</script>', '', value, flags=re.IGNORECASE | re.DOTALL)
+        value = re.sub(r"<script[^>]*>.*?</script>", "", value, flags=re.IGNORECASE | re.DOTALL)
 
         # Remove event handlers
-        value = re.sub(r'\s*on\w+\s*=\s*["\'][^"\']*["\']', '', value, flags=re.IGNORECASE)
+        value = re.sub(r'\s*on\w+\s*=\s*["\'][^"\']*["\']', "", value, flags=re.IGNORECASE)
 
         # Remove javascript: URLs
-        value = re.sub(r'javascript:', '', value, flags=re.IGNORECASE)
+        value = re.sub(r"javascript:", "", value, flags=re.IGNORECASE)
 
         # Escape HTML entities
-        value = value.replace('&', '&amp;')
-        value = value.replace('<', '&lt;')
-        value = value.replace('>', '&gt;')
-        value = value.replace('"', '&quot;')
-        value = value.replace("'", '&#x27;')
+        value = value.replace("&", "&amp;")
+        value = value.replace("<", "&lt;")
+        value = value.replace(">", "&gt;")
+        value = value.replace('"', "&quot;")
+        value = value.replace("'", "&#x27;")
 
         return value
 
@@ -327,9 +328,9 @@ class EmbedSecurityService:
 
     def create_embed_response(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         token_id: str,
-        allowed_domains: List[str],
+        allowed_domains: list[str],
         widget_type: str,
         origin: str,
     ) -> Response:
@@ -346,10 +347,7 @@ class EmbedSecurityService:
         cors_headers = self.get_cors_headers(origin, allowed_domains)
 
         if cors_headers is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Origin not allowed"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Origin not allowed")
 
         # Combine headers
         headers = {**csp_headers, **cors_headers}

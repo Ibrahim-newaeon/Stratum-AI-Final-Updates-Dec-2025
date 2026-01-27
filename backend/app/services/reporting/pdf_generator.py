@@ -7,10 +7,10 @@ PDF generation service for reports.
 Uses HTML templates rendered to PDF for professional-quality reports.
 """
 
-from datetime import datetime
-from typing import Any, Dict, Tuple
-from uuid import UUID
 import os
+from datetime import datetime
+from typing import Any
+from uuid import UUID
 
 from app.core.logging import get_logger
 from app.models.reporting import ReportTemplate, ReportType
@@ -151,9 +151,9 @@ class PDFGenerator:
     async def generate(
         self,
         template: ReportTemplate,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         execution_id: UUID,
-    ) -> Tuple[str, int]:
+    ) -> tuple[str, int]:
         """
         Generate a PDF report.
 
@@ -174,6 +174,7 @@ class PDFGenerator:
         # Try to use weasyprint for PDF generation
         try:
             from weasyprint import HTML
+
             HTML(string=html_content).write_pdf(file_path)
         except ImportError:
             # Fallback: save as HTML if weasyprint not available
@@ -188,7 +189,7 @@ class PDFGenerator:
     def _generate_html(
         self,
         template: ReportTemplate,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ) -> str:
         """Generate HTML content based on report type."""
         period = data.get("period", {})
@@ -229,7 +230,7 @@ class PDFGenerator:
             content=full_content,
         )
 
-    def _render_campaign_performance(self, data: Dict[str, Any]) -> str:
+    def _render_campaign_performance(self, data: dict[str, Any]) -> str:
         """Render campaign performance report."""
         summary = data.get("summary", {})
         campaigns = data.get("campaigns", [])
@@ -274,7 +275,7 @@ class PDFGenerator:
         """
 
         for platform, metrics in by_platform.items():
-            roas = metrics['revenue'] / metrics['spend'] if metrics['spend'] > 0 else 0
+            roas = metrics["revenue"] / metrics["spend"] if metrics["spend"] > 0 else 0
             html += f"""
                     <tr>
                         <td>{platform.upper()}</td>
@@ -306,9 +307,15 @@ class PDFGenerator:
         """
 
         # Sort by revenue and show top 10
-        sorted_campaigns = sorted(campaigns, key=lambda x: x.get('revenue', 0), reverse=True)[:10]
+        sorted_campaigns = sorted(campaigns, key=lambda x: x.get("revenue", 0), reverse=True)[:10]
         for c in sorted_campaigns:
-            roas_class = "metric-good" if c.get('roas', 0) >= 2 else "metric-neutral" if c.get('roas', 0) >= 1 else "metric-bad"
+            roas_class = (
+                "metric-good"
+                if c.get("roas", 0) >= 2
+                else "metric-neutral"
+                if c.get("roas", 0) >= 1
+                else "metric-bad"
+            )
             html += f"""
                     <tr>
                         <td>{c.get('name', 'N/A')}</td>
@@ -327,7 +334,7 @@ class PDFGenerator:
 
         return html
 
-    def _render_attribution_summary(self, data: Dict[str, Any]) -> str:
+    def _render_attribution_summary(self, data: dict[str, Any]) -> str:
         """Render attribution summary report."""
         summary = data.get("summary", {})
         by_platform = data.get("by_platform", {})
@@ -365,9 +372,11 @@ class PDFGenerator:
                 <tbody>
         """
 
-        total_rev = summary.get('total_revenue', 1)
-        for platform, metrics in sorted(by_platform.items(), key=lambda x: x[1]['revenue'], reverse=True):
-            pct = (metrics['revenue'] / total_rev * 100) if total_rev > 0 else 0
+        total_rev = summary.get("total_revenue", 1)
+        for platform, metrics in sorted(
+            by_platform.items(), key=lambda x: x[1]["revenue"], reverse=True
+        ):
+            pct = (metrics["revenue"] / total_rev * 100) if total_rev > 0 else 0
             html += f"""
                     <tr>
                         <td>{platform.upper()}</td>
@@ -385,7 +394,7 @@ class PDFGenerator:
 
         return html
 
-    def _render_pacing_status(self, data: Dict[str, Any]) -> str:
+    def _render_pacing_status(self, data: dict[str, Any]) -> str:
         """Render pacing status report."""
         summary = data.get("summary", {})
         targets = data.get("targets", [])
@@ -430,8 +439,14 @@ class PDFGenerator:
         """
 
         for t in targets:
-            progress = t.get('progress_pct', 0)
-            progress_class = "metric-good" if progress >= 90 else "metric-neutral" if progress >= 70 else "metric-bad"
+            progress = t.get("progress_pct", 0)
+            progress_class = (
+                "metric-good"
+                if progress >= 90
+                else "metric-neutral"
+                if progress >= 70
+                else "metric-bad"
+            )
             html += f"""
                     <tr>
                         <td>{t.get('name', 'N/A')}</td>
@@ -480,7 +495,7 @@ class PDFGenerator:
 
         return html
 
-    def _render_profit_roas(self, data: Dict[str, Any]) -> str:
+    def _render_profit_roas(self, data: dict[str, Any]) -> str:
         """Render profit ROAS report."""
         summary = data.get("summary", {})
 
@@ -510,7 +525,7 @@ class PDFGenerator:
 
         return html
 
-    def _render_pipeline_metrics(self, data: Dict[str, Any]) -> str:
+    def _render_pipeline_metrics(self, data: dict[str, Any]) -> str:
         """Render pipeline metrics report."""
         summary = data.get("summary", {})
         funnel = data.get("funnel", {})
@@ -573,7 +588,7 @@ class PDFGenerator:
 
         return html
 
-    def _render_executive_summary(self, data: Dict[str, Any]) -> str:
+    def _render_executive_summary(self, data: dict[str, Any]) -> str:
         """Render executive summary report."""
         highlights = data.get("highlights", {})
 
@@ -607,9 +622,10 @@ class PDFGenerator:
 
         return html
 
-    def _render_generic(self, data: Dict[str, Any]) -> str:
+    def _render_generic(self, data: dict[str, Any]) -> str:
         """Render generic JSON data as a table."""
         import json
+
         return f"""
         <div class="section">
             <h2>Report Data</h2>

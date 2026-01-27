@@ -11,26 +11,38 @@ Models:
 - Forecast: Stored forecasts for trend analysis
 """
 
+import enum
 from datetime import datetime
 from uuid import uuid4
-import enum
 
 from sqlalchemy import (
-    Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
-    Index, Enum as SQLEnum, Boolean, BigInteger, UniqueConstraint
+    BigInteger,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    Enum as SQLEnum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class TargetPeriod(str, enum.Enum):
     """Target period types."""
+
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     YEARLY = "yearly"
@@ -39,6 +51,7 @@ class TargetPeriod(str, enum.Enum):
 
 class TargetMetric(str, enum.Enum):
     """Target metric types."""
+
     SPEND = "spend"
     REVENUE = "revenue"
     ROAS = "roas"
@@ -52,6 +65,7 @@ class TargetMetric(str, enum.Enum):
 
 class AlertSeverity(str, enum.Enum):
     """Alert severity levels."""
+
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -62,6 +76,7 @@ class AlertSeverity(str, enum.Enum):
 
 class AlertType(str, enum.Enum):
     """Alert types for pacing."""
+
     UNDERPACING_SPEND = "underpacing_spend"
     OVERPACING_SPEND = "overpacing_spend"
     ROAS_BELOW_TARGET = "roas_below_target"
@@ -74,6 +89,7 @@ class AlertType(str, enum.Enum):
 
 class AlertStatus(str, enum.Enum):
     """Alert status."""
+
     ACTIVE = "active"
     ACKNOWLEDGED = "acknowledged"
     RESOLVED = "resolved"
@@ -84,11 +100,13 @@ class AlertStatus(str, enum.Enum):
 # Target Model
 # =============================================================================
 
+
 class Target(Base):
     """
     Monthly/quarterly targets for spend, revenue, ROAS, etc.
     Supports targets at account, campaign, or platform level.
     """
+
     __tablename__ = "targets"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -132,7 +150,9 @@ class Target(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
@@ -145,8 +165,13 @@ class Target(Base):
         Index("ix_targets_tenant_metric", "tenant_id", "metric_type"),
         Index("ix_targets_tenant_active", "tenant_id", "is_active"),
         UniqueConstraint(
-            "tenant_id", "period_start", "period_end", "metric_type", "platform", "campaign_id",
-            name="uq_target_scope"
+            "tenant_id",
+            "period_start",
+            "period_end",
+            "metric_type",
+            "platform",
+            "campaign_id",
+            name="uq_target_scope",
         ),
     )
 
@@ -155,11 +180,13 @@ class Target(Base):
 # Daily KPI Model (Materialized)
 # =============================================================================
 
+
 class DailyKPI(Base):
     """
     Materialized daily KPIs for fast pacing calculations.
     Pre-aggregated from platform data and CRM metrics.
     """
+
     __tablename__ = "daily_kpis"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -218,7 +245,9 @@ class DailyKPI(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -227,10 +256,7 @@ class DailyKPI(Base):
         Index("ix_daily_kpis_tenant_date", "tenant_id", "date"),
         Index("ix_daily_kpis_tenant_platform_date", "tenant_id", "platform", "date"),
         Index("ix_daily_kpis_tenant_campaign_date", "tenant_id", "campaign_id", "date"),
-        UniqueConstraint(
-            "tenant_id", "date", "platform", "campaign_id",
-            name="uq_daily_kpi_scope"
-        ),
+        UniqueConstraint("tenant_id", "date", "platform", "campaign_id", name="uq_daily_kpi_scope"),
     )
 
 
@@ -238,16 +264,20 @@ class DailyKPI(Base):
 # Pacing Alert Model
 # =============================================================================
 
+
 class PacingAlert(Base):
     """
     Alert records for pacing issues.
     Tracks when targets are at risk of being missed.
     """
+
     __tablename__ = "pacing_alerts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    target_id = Column(UUID(as_uuid=True), ForeignKey("targets.id", ondelete="CASCADE"), nullable=True)
+    target_id = Column(
+        UUID(as_uuid=True), ForeignKey("targets.id", ondelete="CASCADE"), nullable=True
+    )
 
     # Alert details
     alert_type = Column(SQLEnum(AlertType), nullable=False)
@@ -278,7 +308,9 @@ class PacingAlert(Base):
 
     # Resolution
     resolved_at = Column(DateTime(timezone=True), nullable=True)
-    resolved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    resolved_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     resolution_notes = Column(Text, nullable=True)
 
     # Notification tracking
@@ -286,7 +318,9 @@ class PacingAlert(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -305,11 +339,13 @@ class PacingAlert(Base):
 # Forecast Model
 # =============================================================================
 
+
 class Forecast(Base):
     """
     Stored forecasts for trend analysis and auditing.
     Tracks daily, weekly, and EOM projections.
     """
+
     __tablename__ = "forecasts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -360,16 +396,20 @@ class Forecast(Base):
 # Pacing Summary View (Helper)
 # =============================================================================
 
+
 class PacingSummary(Base):
     """
     Pacing summary snapshots (could be a materialized view).
     Stores current pacing status for quick dashboard loading.
     """
+
     __tablename__ = "pacing_summaries"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    target_id = Column(UUID(as_uuid=True), ForeignKey("targets.id", ondelete="CASCADE"), nullable=False)
+    target_id = Column(
+        UUID(as_uuid=True), ForeignKey("targets.id", ondelete="CASCADE"), nullable=False
+    )
 
     # Snapshot date
     snapshot_date = Column(Date, nullable=False)
@@ -410,7 +450,9 @@ class PacingSummary(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

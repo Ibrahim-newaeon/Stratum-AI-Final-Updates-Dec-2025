@@ -9,22 +9,22 @@ In-app notification management:
 - Get unread count
 """
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, and_, func, desc, update
+from sqlalchemy import and_, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models.settings import (
     Notification,
-    NotificationType,
     NotificationCategory,
+    NotificationType,
 )
-from app.schemas.response import APIResponse, PaginatedResponse
+from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 logger = get_logger(__name__)
@@ -34,8 +34,10 @@ logger = get_logger(__name__)
 # Pydantic Schemas
 # =============================================================================
 
+
 class NotificationResponse(BaseModel):
     """Notification response."""
+
     id: int
     title: str
     message: str
@@ -51,12 +53,14 @@ class NotificationResponse(BaseModel):
 
 class NotificationCountResponse(BaseModel):
     """Unread notification count."""
+
     unread_count: int
     total_count: int
 
 
 class NotificationCreateRequest(BaseModel):
     """Request to create a notification (admin/system use)."""
+
     title: str = Field(..., min_length=1, max_length=255)
     message: str = Field(..., min_length=1)
     type: str = Field(default="info")
@@ -69,14 +73,18 @@ class NotificationCreateRequest(BaseModel):
 
 class MarkReadRequest(BaseModel):
     """Request to mark notifications as read."""
-    notification_ids: Optional[List[int]] = Field(default=None, description="Specific IDs, or null for all")
+
+    notification_ids: Optional[list[int]] = Field(
+        default=None, description="Specific IDs, or null for all"
+    )
 
 
 # =============================================================================
 # Endpoints
 # =============================================================================
 
-@router.get("", response_model=APIResponse[List[NotificationResponse]])
+
+@router.get("", response_model=APIResponse[list[NotificationResponse]])
 async def list_notifications(
     request: Request,
     unread_only: bool = False,
@@ -84,7 +92,7 @@ async def list_notifications(
     limit: int = 50,
     offset: int = 0,
     db: AsyncSession = Depends(get_async_session),
-) -> APIResponse[List[NotificationResponse]]:
+) -> APIResponse[list[NotificationResponse]]:
     """
     List notifications for the current user.
     """
@@ -115,7 +123,7 @@ async def list_notifications(
 
     # Filter out expired notifications
     conditions.append(
-        (Notification.expires_at.is_(None)) | (Notification.expires_at > datetime.now(timezone.utc))
+        (Notification.expires_at.is_(None)) | (Notification.expires_at > datetime.now(UTC))
     )
 
     result = await db.execute(
@@ -168,7 +176,7 @@ async def get_notification_count(
     base_conditions = [
         Notification.tenant_id == tenant_id,
         ((Notification.user_id == user_id) | (Notification.user_id.is_(None))),
-        (Notification.expires_at.is_(None)) | (Notification.expires_at > datetime.now(timezone.utc)),
+        (Notification.expires_at.is_(None)) | (Notification.expires_at > datetime.now(UTC)),
     ]
 
     # Total count
@@ -212,7 +220,7 @@ async def mark_notifications_read(
             detail="Not authenticated",
         )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     conditions = [
         Notification.tenant_id == tenant_id,
@@ -278,7 +286,9 @@ async def delete_notification(
     await db.commit()
 
 
-@router.post("", response_model=APIResponse[NotificationResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=APIResponse[NotificationResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_notification(
     request: Request,
     body: NotificationCreateRequest,

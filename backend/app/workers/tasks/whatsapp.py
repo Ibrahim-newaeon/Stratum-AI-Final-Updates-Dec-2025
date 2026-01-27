@@ -5,8 +5,8 @@
 Background tasks for WhatsApp Business API messaging.
 """
 
-from datetime import datetime, timezone
-from typing import Dict, Optional
+from datetime import UTC, datetime
+from typing import Optional
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -14,10 +14,10 @@ from sqlalchemy import select
 
 from app.db.session import SyncSessionLocal
 from app.models import (
-    WhatsAppMessage,
-    WhatsAppTemplate,
     WhatsAppContact,
+    WhatsAppMessage,
     WhatsAppMessageStatus,
+    WhatsAppTemplate,
 )
 
 logger = get_task_logger(__name__)
@@ -34,7 +34,7 @@ def send_whatsapp_message(
     tenant_id: int,
     template_name: str,
     to_number: str,
-    variables: Optional[Dict] = None,
+    variables: Optional[dict] = None,
     media_url: Optional[str] = None,
 ):
     """
@@ -107,7 +107,7 @@ def send_whatsapp_message(
 
             message.external_id = result.get("message_id")
             message.status = WhatsAppMessageStatus.SENT
-            message.sent_at = datetime.now(timezone.utc)
+            message.sent_at = datetime.now(UTC)
 
             db.commit()
 
@@ -134,7 +134,7 @@ def process_scheduled_whatsapp_messages():
     logger.info("Processing scheduled WhatsApp messages")
 
     with SyncSessionLocal() as db:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Get pending scheduled messages
         messages = (
@@ -166,7 +166,7 @@ def process_scheduled_whatsapp_messages():
 
 def _build_template_components(
     template: WhatsAppTemplate,
-    variables: Optional[Dict],
+    variables: Optional[dict],
     media_url: Optional[str],
 ) -> list:
     """Build WhatsApp template components from variables."""
@@ -181,9 +181,7 @@ def _build_template_components(
         )
 
     if variables:
-        body_params = [
-            {"type": "text", "text": str(v)} for v in variables.values()
-        ]
+        body_params = [{"type": "text", "text": str(v)} for v in variables.values()]
         if body_params:
             components.append({"type": "body", "parameters": body_params})
 

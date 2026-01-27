@@ -3,7 +3,7 @@
  * Accessible form inputs with labels, help text, and validation feedback
  */
 
-import { forwardRef, ReactNode, InputHTMLAttributes, useId } from 'react';
+import { forwardRef, InputHTMLAttributes, ReactNode, useId } from 'react';
 import { cn } from '@/lib/utils';
 
 interface FormLabelProps {
@@ -24,7 +24,9 @@ export function FormLabel({ children, htmlFor, required, className }: FormLabelP
     >
       {children}
       {required && (
-        <span className="text-red-500 ms-0.5" aria-hidden="true">*</span>
+        <span className="text-red-500 ms-0.5" aria-hidden="true">
+          *
+        </span>
       )}
       {required && <span className="sr-only">(required)</span>}
     </label>
@@ -49,8 +51,17 @@ export function FormError({ id, children, className }: FormErrorProps) {
       role="alert"
       className={cn('mt-1.5 text-sm text-red-500 flex items-center gap-1', className)}
     >
-      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      <svg
+        className="w-4 h-4 flex-shrink-0"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        aria-hidden="true"
+      >
+        <path
+          fillRule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+          clipRule="evenodd"
+        />
       </svg>
       <span>{children}</span>
     </p>
@@ -70,8 +81,17 @@ export function FormSuccess({ children, className }: FormSuccessProps) {
 
   return (
     <p className={cn('mt-1.5 text-sm text-green-500 flex items-center gap-1', className)}>
-      <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+      <svg
+        className="w-4 h-4 flex-shrink-0"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        aria-hidden="true"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clipRule="evenodd"
+        />
       </svg>
       <span>{children}</span>
     </p>
@@ -163,22 +183,22 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
               hasError
                 ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                 : hasSuccess
-                ? 'border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20'
-                : 'border-border focus:border-primary focus:ring-2 focus:ring-primary/20',
+                  ? 'border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20'
+                  : 'border-border focus:border-primary focus:ring-2 focus:ring-primary/20',
               className
             )}
             {...props}
           />
-          {endIcon && (
-            <div className="absolute end-4 top-1/2 -translate-y-1/2">
-              {endIcon}
-            </div>
-          )}
+          {endIcon && <div className="absolute end-4 top-1/2 -translate-y-1/2">{endIcon}</div>}
           {/* Inline validation indicator */}
           {hasSuccess && !endIcon && (
             <div className="absolute end-4 top-1/2 -translate-y-1/2 text-green-500">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
           )}

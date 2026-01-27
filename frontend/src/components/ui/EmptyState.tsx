@@ -3,42 +3,37 @@
  * Displays helpful messages when there's no data to show
  */
 
-import React from 'react'
-import {
-  SearchX,
-  Filter,
-  BarChart3,
-  FileX,
-  Inbox,
-  RefreshCw,
-  Plus
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React from 'react';
+import { BarChart3, FileX, Filter, Inbox, Plus, RefreshCw, SearchX } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-type EmptyStateVariant = 'no-data' | 'no-results' | 'no-filters' | 'error' | 'empty'
+type EmptyStateVariant = 'no-data' | 'no-results' | 'no-filters' | 'error' | 'empty';
 
 interface EmptyStateProps {
-  variant?: EmptyStateVariant
-  title?: string
-  description?: string
-  icon?: React.ReactNode
+  variant?: EmptyStateVariant;
+  title?: string;
+  description?: string;
+  icon?: React.ReactNode;
   action?: {
-    label: string
-    onClick: () => void
-    variant?: 'primary' | 'secondary'
-  }
+    label: string;
+    onClick: () => void;
+    variant?: 'primary' | 'secondary';
+  };
   secondaryAction?: {
-    label: string
-    onClick: () => void
-  }
-  className?: string
+    label: string;
+    onClick: () => void;
+  };
+  className?: string;
 }
 
-const defaultContent: Record<EmptyStateVariant, { icon: React.ReactNode; title: string; description: string }> = {
+const defaultContent: Record<
+  EmptyStateVariant,
+  { icon: React.ReactNode; title: string; description: string }
+> = {
   'no-data': {
     icon: <BarChart3 className="w-6 h-6" aria-hidden="true" />,
     title: 'No data available',
-    description: 'There\'s no data to display yet. Data will appear here once available.',
+    description: "There's no data to display yet. Data will appear here once available.",
   },
   'no-results': {
     icon: <SearchX className="w-6 h-6" aria-hidden="true" />,
@@ -50,17 +45,17 @@ const defaultContent: Record<EmptyStateVariant, { icon: React.ReactNode; title: 
     title: 'No filters selected',
     description: 'Select at least one filter to view data.',
   },
-  'error': {
+  error: {
     icon: <FileX className="w-6 h-6" aria-hidden="true" />,
     title: 'Unable to load data',
     description: 'Something went wrong while loading the data. Please try again.',
   },
-  'empty': {
+  empty: {
     icon: <Inbox className="w-6 h-6" aria-hidden="true" />,
     title: 'Nothing here yet',
     description: 'This section is empty. Get started by adding your first item.',
   },
-}
+};
 
 export function EmptyState({
   variant = 'no-data',
@@ -71,20 +66,17 @@ export function EmptyState({
   secondaryAction,
   className,
 }: EmptyStateProps) {
-  const defaults = defaultContent[variant]
+  const defaults = defaultContent[variant];
 
   return (
-    <div className={cn(
-      'flex flex-col items-center justify-center py-12 px-6 text-center',
-      className
-    )}>
+    <div
+      className={cn('flex flex-col items-center justify-center py-12 px-6 text-center', className)}
+    >
       <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4 text-muted-foreground">
         {icon || defaults.icon}
       </div>
 
-      <h3 className="text-lg font-semibold text-foreground mb-2">
-        {title || defaults.title}
-      </h3>
+      <h3 className="text-lg font-semibold text-foreground mb-2">{title || defaults.title}</h3>
 
       <p className="text-sm text-muted-foreground max-w-sm mb-6">
         {description || defaults.description}
@@ -119,16 +111,16 @@ export function EmptyState({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Specific empty states for common scenarios
 export function NoFilterResultsState({
   onClearFilters,
-  filterCount
+  filterCount,
 }: {
-  onClearFilters: () => void
-  filterCount?: number
+  onClearFilters: () => void;
+  filterCount?: number;
 }) {
   return (
     <EmptyState
@@ -145,7 +137,7 @@ export function NoFilterResultsState({
         variant: 'secondary',
       }}
     />
-  )
+  );
 }
 
 export function NoCampaignsState({ onCreateCampaign }: { onCreateCampaign?: () => void }) {
@@ -154,12 +146,16 @@ export function NoCampaignsState({ onCreateCampaign }: { onCreateCampaign?: () =
       variant="empty"
       title="No campaigns yet"
       description="Create your first campaign to start tracking performance and optimizing your marketing spend."
-      action={onCreateCampaign ? {
-        label: 'Create campaign',
-        onClick: onCreateCampaign,
-      } : undefined}
+      action={
+        onCreateCampaign
+          ? {
+              label: 'Create campaign',
+              onClick: onCreateCampaign,
+            }
+          : undefined
+      }
     />
-  )
+  );
 }
 
 export function NoChartDataState({ onRefresh }: { onRefresh?: () => void }) {
@@ -169,14 +165,18 @@ export function NoChartDataState({ onRefresh }: { onRefresh?: () => void }) {
       icon={<BarChart3 className="w-6 h-6" />}
       title="No chart data"
       description="There's not enough data to display this chart. Try selecting a different date range."
-      action={onRefresh ? {
-        label: 'Refresh',
-        onClick: onRefresh,
-        variant: 'secondary',
-      } : undefined}
+      action={
+        onRefresh
+          ? {
+              label: 'Refresh',
+              onClick: onRefresh,
+              variant: 'secondary',
+            }
+          : undefined
+      }
       className="min-h-[200px]"
     />
-  )
+  );
 }
 
 export function LoadErrorState({ onRetry }: { onRetry: () => void }) {
@@ -188,7 +188,7 @@ export function LoadErrorState({ onRetry }: { onRetry: () => void }) {
         onClick: onRetry,
       }}
     />
-  )
+  );
 }
 
-export default EmptyState
+export default EmptyState;

@@ -48,14 +48,14 @@ Integration Opportunities
    - Claude suggests new creative angles
 """
 
-from typing import Dict, Any, List
-from datetime import datetime, timedelta
 import json
-
+from datetime import datetime, timedelta
+from typing import Any
 
 # =============================================================================
 # WORKFLOW 1: AUTO-UPDATE GOOGLE SHEETS REPORTS
 # =============================================================================
+
 
 class SheetsReportingIntegration:
     """
@@ -88,9 +88,9 @@ class SheetsReportingIntegration:
 
     async def generate_daily_report(
         self,
-        platforms: List[str] = ["meta", "google", "tiktok", "snapchat"],
-        date_range: str = "yesterday"
-    ) -> Dict[str, Any]:
+        platforms: list[str] = ["meta", "google", "tiktok", "snapchat"],
+        date_range: str = "yesterday",
+    ) -> dict[str, Any]:
         """
         Generate daily report data for Google Sheets.
 
@@ -99,15 +99,12 @@ class SheetsReportingIntegration:
         report_data = {
             "generated_at": datetime.utcnow().isoformat(),
             "date_range": date_range,
-            "platforms": {}
+            "platforms": {},
         }
 
         for platform in platforms:
             # Get accounts
-            accounts = await self.stratum.handle_tool_call(
-                "get_accounts",
-                {"platform": platform}
-            )
+            accounts = await self.stratum.handle_tool_call("get_accounts", {"platform": platform})
 
             for account in accounts.get("accounts", {}).get(platform, []):
                 account_id = account.get("id")
@@ -115,7 +112,7 @@ class SheetsReportingIntegration:
                 # Get campaigns
                 campaigns = await self.stratum.handle_tool_call(
                     "get_campaigns",
-                    {"platform": platform, "account_id": account_id, "status": "active"}
+                    {"platform": platform, "account_id": account_id, "status": "active"},
                 )
 
                 campaign_ids = [c["id"] for c in campaigns.get("campaigns", [])]
@@ -128,19 +125,19 @@ class SheetsReportingIntegration:
                             "platform": platform,
                             "account_id": account_id,
                             "campaign_ids": campaign_ids,
-                            "date_range": date_range
-                        }
+                            "date_range": date_range,
+                        },
                     )
 
                     report_data["platforms"][platform] = {
                         "account_id": account_id,
                         "campaigns": campaigns.get("campaigns", []),
-                        "metrics": metrics.get("metrics", {})
+                        "metrics": metrics.get("metrics", {}),
                     }
 
         return report_data
 
-    def format_for_sheets(self, report_data: Dict[str, Any]) -> List[List[Any]]:
+    def format_for_sheets(self, report_data: dict[str, Any]) -> list[list[Any]]:
         """
         Format report data as rows for Google Sheets.
 
@@ -148,7 +145,18 @@ class SheetsReportingIntegration:
         """
         rows = [
             # Header row
-            ["Platform", "Campaign", "Impressions", "Clicks", "CTR", "Spend", "Conversions", "CPA", "ROAS", "Date"]
+            [
+                "Platform",
+                "Campaign",
+                "Impressions",
+                "Clicks",
+                "CTR",
+                "Spend",
+                "Conversions",
+                "CPA",
+                "ROAS",
+                "Date",
+            ]
         ]
 
         date_str = report_data.get("date_range", "")
@@ -160,26 +168,25 @@ class SheetsReportingIntegration:
                 campaign_id = campaign.get("id")
                 campaign_metrics = metrics.get(campaign_id, {})
 
-                rows.append([
-                    platform.upper(),
-                    campaign.get("name", campaign_id),
-                    campaign_metrics.get("impressions", 0),
-                    campaign_metrics.get("clicks", 0),
-                    f"{campaign_metrics.get('ctr', 0):.2%}",
-                    f"${campaign_metrics.get('spend', 0):.2f}",
-                    campaign_metrics.get("conversions", 0),
-                    f"${campaign_metrics.get('cpa', 0):.2f}",
-                    f"{campaign_metrics.get('roas', 0):.2f}x",
-                    date_str
-                ])
+                rows.append(
+                    [
+                        platform.upper(),
+                        campaign.get("name", campaign_id),
+                        campaign_metrics.get("impressions", 0),
+                        campaign_metrics.get("clicks", 0),
+                        f"{campaign_metrics.get('ctr', 0):.2%}",
+                        f"${campaign_metrics.get('spend', 0):.2f}",
+                        campaign_metrics.get("conversions", 0),
+                        f"${campaign_metrics.get('cpa', 0):.2f}",
+                        f"{campaign_metrics.get('roas', 0):.2f}x",
+                        date_str,
+                    ]
+                )
 
         return rows
 
     async def update_google_sheet(
-        self,
-        sheet_id: str,
-        rows: List[List[Any]],
-        sheet_name: str = "Daily Report"
+        self, sheet_id: str, rows: list[list[Any]], sheet_name: str = "Daily Report"
     ):
         """
         Update Google Sheet with report data.
@@ -202,6 +209,7 @@ class SheetsReportingIntegration:
 # WORKFLOW 2: COMPETITOR RESEARCH + AD OPTIMIZATION
 # =============================================================================
 
+
 class CompetitorResearchIntegration:
     """
     Use Google Search MCP to research competitors, combine with Stratum
@@ -222,10 +230,8 @@ class CompetitorResearchIntegration:
 
     @staticmethod
     def generate_competitor_search_queries(
-        business_type: str,
-        location: str,
-        brand_name: str
-    ) -> List[str]:
+        business_type: str, location: str, brand_name: str
+    ) -> list[str]:
         """Generate search queries for competitor research."""
         return [
             f"{business_type} ads {location} 2024",
@@ -237,9 +243,7 @@ class CompetitorResearchIntegration:
 
     @staticmethod
     def create_optimization_prompt(
-        search_results: List[Dict],
-        ad_performance: Dict,
-        top_ads: List[Dict]
+        search_results: list[dict], ad_performance: dict, top_ads: list[dict]
     ) -> str:
         """
         Create a prompt for Claude to analyze competitors vs your performance.
@@ -273,6 +277,7 @@ class CompetitorResearchIntegration:
 # WORKFLOW 3: AUTOMATED LEAD FOLLOW-UP
 # =============================================================================
 
+
 class LeadFollowUpIntegration:
     """
     When Stratum receives a lead webhook, automatically:
@@ -300,7 +305,7 @@ class LeadFollowUpIntegration:
         self.gmail = gmail_mcp
         self.calendar = calendar_mcp
 
-    async def process_new_lead(self, lead_data: Dict[str, Any]):
+    async def process_new_lead(self, lead_data: dict[str, Any]):
         """
         Full lead follow-up workflow.
 
@@ -332,12 +337,10 @@ class LeadFollowUpIntegration:
                     "content": "lead_welcome",
                     "template_params": {
                         "components": [
-                            {"type": "body", "parameters": [
-                                {"type": "text", "text": name}
-                            ]}
+                            {"type": "body", "parameters": [{"type": "text", "text": name}]}
                         ]
-                    }
-                }
+                    },
+                },
             )
             results["whatsapp"] = wa_result
 
@@ -354,7 +357,7 @@ class LeadFollowUpIntegration:
             results["calendar"] = {
                 "status": "would_create",
                 "time": reminder_time.isoformat(),
-                "title": f"Follow up: {name} - {form_name}"
+                "title": f"Follow up: {name} - {form_name}",
             }
 
         return results
@@ -378,6 +381,7 @@ class LeadFollowUpIntegration:
 # WORKFLOW 4: PERFORMANCE ALERTS VIA EMAIL
 # =============================================================================
 
+
 class PerformanceAlertIntegration:
     """
     Monitor Stratum metrics and send alerts via Gmail when:
@@ -400,9 +404,8 @@ class PerformanceAlertIntegration:
 
     @staticmethod
     def check_alert_conditions(
-        metrics: Dict[str, Any],
-        thresholds: Dict[str, float]
-    ) -> List[Dict[str, Any]]:
+        metrics: dict[str, Any], thresholds: dict[str, float]
+    ) -> list[dict[str, Any]]:
         """
         Check metrics against thresholds and return alerts.
 
@@ -420,41 +423,47 @@ class PerformanceAlertIntegration:
 
         roas = metrics.get("roas", 0)
         if roas < thresholds.get("min_roas", 0):
-            alerts.append({
-                "type": "ROAS_LOW",
-                "severity": "high",
-                "message": f"ROAS dropped to {roas:.2f}x (target: {thresholds['min_roas']}x)",
-                "metric": "roas",
-                "value": roas,
-                "threshold": thresholds["min_roas"]
-            })
+            alerts.append(
+                {
+                    "type": "ROAS_LOW",
+                    "severity": "high",
+                    "message": f"ROAS dropped to {roas:.2f}x (target: {thresholds['min_roas']}x)",
+                    "metric": "roas",
+                    "value": roas,
+                    "threshold": thresholds["min_roas"],
+                }
+            )
 
         cpa = metrics.get("cpa", 0)
-        if cpa > thresholds.get("max_cpa", float('inf')):
-            alerts.append({
-                "type": "CPA_HIGH",
-                "severity": "medium",
-                "message": f"CPA increased to ${cpa:.2f} (target: ${thresholds['max_cpa']})",
-                "metric": "cpa",
-                "value": cpa,
-                "threshold": thresholds["max_cpa"]
-            })
+        if cpa > thresholds.get("max_cpa", float("inf")):
+            alerts.append(
+                {
+                    "type": "CPA_HIGH",
+                    "severity": "medium",
+                    "message": f"CPA increased to ${cpa:.2f} (target: ${thresholds['max_cpa']})",
+                    "metric": "cpa",
+                    "value": cpa,
+                    "threshold": thresholds["max_cpa"],
+                }
+            )
 
         spend = metrics.get("spend", 0)
-        if spend > thresholds.get("max_daily_spend", float('inf')):
-            alerts.append({
-                "type": "OVERSPEND",
-                "severity": "high",
-                "message": f"Daily spend ${spend:.2f} exceeds budget ${thresholds['max_daily_spend']}",
-                "metric": "spend",
-                "value": spend,
-                "threshold": thresholds["max_daily_spend"]
-            })
+        if spend > thresholds.get("max_daily_spend", float("inf")):
+            alerts.append(
+                {
+                    "type": "OVERSPEND",
+                    "severity": "high",
+                    "message": f"Daily spend ${spend:.2f} exceeds budget ${thresholds['max_daily_spend']}",
+                    "metric": "spend",
+                    "value": spend,
+                    "threshold": thresholds["max_daily_spend"],
+                }
+            )
 
         return alerts
 
     @staticmethod
-    def format_alert_email(alerts: List[Dict], campaign_name: str) -> str:
+    def format_alert_email(alerts: list[dict], campaign_name: str) -> str:
         """Format alerts as email body."""
         if not alerts:
             return ""
@@ -466,22 +475,24 @@ class PerformanceAlertIntegration:
             f"Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
             "",
             "Issues Detected:",
-            ""
+            "",
         ]
 
         for alert in alerts:
             emoji = severity_emoji.get(alert["severity"], "WHITE")
             lines.append(f"[{emoji}] {alert['message']}")
 
-        lines.extend([
-            "",
-            "Recommended Actions:",
-            "- Review campaign settings in Stratum dashboard",
-            "- Check for recent changes that may have caused this",
-            "- Consider pausing underperforming ad sets",
-            "",
-            "This is an automated alert from Stratum AI."
-        ])
+        lines.extend(
+            [
+                "",
+                "Recommended Actions:",
+                "- Review campaign settings in Stratum dashboard",
+                "- Check for recent changes that may have caused this",
+                "- Consider pausing underperforming ad sets",
+                "",
+                "This is an automated alert from Stratum AI.",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -570,66 +581,42 @@ MCP_CAPABILITIES = {
             "Trust-gated automation",
             "Server-side event tracking",
             "WhatsApp Business messaging",
-            "Optimization suggestions"
+            "Optimization suggestions",
         ],
         "use_cases": [
             "Check campaign performance",
             "Optimize budgets and bids",
             "Track conversions",
             "Manage WhatsApp conversations",
-            "Monitor signal health"
-        ]
+            "Monitor signal health",
+        ],
     },
     "google-search": {
         "provider": "Anthropic/Google",
-        "capabilities": [
-            "Web search via Google",
-            "Search results with snippets"
-        ],
-        "use_cases": [
-            "Competitor research",
-            "Market trends",
-            "Content ideas",
-            "Industry news"
-        ]
+        "capabilities": ["Web search via Google", "Search results with snippets"],
+        "use_cases": ["Competitor research", "Market trends", "Content ideas", "Industry news"],
     },
     "google-drive": {
         "provider": "Anthropic/Google",
-        "capabilities": [
-            "Read/write Google Docs",
-            "Read/write Google Sheets",
-            "File management"
-        ],
+        "capabilities": ["Read/write Google Docs", "Read/write Google Sheets", "File management"],
         "use_cases": [
             "Export reports to Sheets",
             "Read strategy documents",
-            "Update client deliverables"
-        ]
+            "Update client deliverables",
+        ],
     },
     "gmail": {
         "provider": "Anthropic/Google",
-        "capabilities": [
-            "Send emails",
-            "Read emails",
-            "Search inbox"
-        ],
-        "use_cases": [
-            "Send performance alerts",
-            "Email client reports",
-            "Lead follow-up"
-        ]
+        "capabilities": ["Send emails", "Read emails", "Search inbox"],
+        "use_cases": ["Send performance alerts", "Email client reports", "Lead follow-up"],
     },
     "google-calendar": {
         "provider": "Anthropic/Google",
-        "capabilities": [
-            "Create events",
-            "Read calendar",
-            "Set reminders"
-        ],
+        "capabilities": ["Create events", "Read calendar", "Set reminders"],
         "use_cases": [
             "Schedule review meetings",
             "Set follow-up reminders",
-            "Campaign launch schedules"
-        ]
-    }
+            "Campaign launch schedules",
+        ],
+    },
 }

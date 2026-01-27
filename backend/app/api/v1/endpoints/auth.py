@@ -8,29 +8,34 @@ Handles login, registration, token refresh, password reset, and WhatsApp verific
 
 import random
 import string
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
+import redis.asyncio as redis
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-import redis.asyncio as redis
 
-from app.core.logging import get_logger
+from app.auth.deps import (
+    CurrentUserDep,
+    generate_password_reset_token,
+    generate_verification_token,
+)
 from app.core.config import settings
+from app.core.logging import get_logger
 from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
-    encrypt_pii,
     decrypt_pii,
+    encrypt_pii,
     get_password_hash,
     hash_pii_for_lookup,
     verify_password,
 )
 from app.db.session import get_async_session
-from app.models import AuditAction, AuditLog, User, UserRole, Tenant
+from app.models import AuditAction, AuditLog, Tenant, User, UserRole
 from app.schemas import (
     APIResponse,
     LoginRequest,
@@ -39,14 +44,9 @@ from app.schemas import (
     UserCreate,
     UserResponse,
 )
-from app.services.whatsapp_client import get_whatsapp_client, WhatsAppAPIError
 from app.services.email_service import get_email_service
-from app.services.mfa_service import check_mfa_required, MFAService, is_user_locked
-from app.auth.deps import (
-    generate_verification_token,
-    generate_password_reset_token,
-    CurrentUserDep,
-)
+from app.services.mfa_service import MFAService, check_mfa_required, is_user_locked
+from app.services.whatsapp_client import WhatsAppAPIError, get_whatsapp_client
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -172,6 +172,7 @@ class LoginResponse(BaseModel):
       - mfa_session_token: Temporary token to use with /login/mfa
       - tokens are None
     """
+
     mfa_required: bool = False
     mfa_session_token: Optional[str] = None  # Temporary token for MFA step 2
     access_token: Optional[str] = None
@@ -200,6 +201,7 @@ class LoginResponse(BaseModel):
 
 class MFALoginRequest(BaseModel):
     """Request to complete login with MFA code."""
+
     mfa_session_token: str = Field(..., description="Session token from initial login")
     code: str = Field(..., min_length=6, max_length=10, description="TOTP code or backup code")
 
@@ -207,30 +209,34 @@ class MFALoginRequest(BaseModel):
 # Pydantic schemas for WhatsApp OTP
 class SendOTPRequest(BaseModel):
     """Request to send WhatsApp OTP."""
+
     phone_number: str = Field(..., description="Phone number with country code (e.g., +1234567890)")
 
 
 class SendOTPResponse(BaseModel):
     """Response after sending OTP."""
+
     message: str
     expires_in: int = OTP_EXPIRY_SECONDS
 
 
 class VerifyOTPRequest(BaseModel):
     """Request to verify WhatsApp OTP."""
+
     phone_number: str = Field(..., description="Phone number that received OTP")
     otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
 
 
 class VerifyOTPResponse(BaseModel):
     """Response after verifying OTP."""
+
     verified: bool
     verification_token: Optional[str] = None  # Token to use during registration
 
 
 def generate_otp(length: int = 6) -> str:
     """Generate a random numeric OTP code."""
-    return ''.join(random.choices(string.digits, k=length))
+    return "".join(random.choices(string.digits, k=length))
 
 
 async def get_redis_client() -> redis.Redis:
@@ -251,8 +257,8 @@ async def send_whatsapp_otp(
     phone_number = request.phone_number.strip()
 
     # Normalize phone number (ensure it starts with +)
-    if not phone_number.startswith('+'):
-        phone_number = '+' + phone_number
+    if not phone_number.startswith("+"):
+        phone_number = "+" + phone_number
 
     # Generate OTP
     otp_code = generate_otp()
@@ -277,17 +283,10 @@ async def send_whatsapp_otp(
             # Send template message with OTP
             # Note: You need to create an approved WhatsApp template for OTP
             await whatsapp_client.send_template_message(
-                recipient_phone=phone_number.replace('+', ''),  # Remove + for API
+                recipient_phone=phone_number.replace("+", ""),  # Remove + for API
                 template_name="verification_code",  # Must be pre-approved template
                 language_code="en",
-                components=[
-                    {
-                        "type": "body",
-                        "parameters": [
-                            {"type": "text", "text": otp_code}
-                        ]
-                    }
-                ]
+                components=[{"type": "body", "parameters": [{"type": "text", "text": otp_code}]}],
             )
             logger.info(f"WhatsApp OTP sent to {phone_number[:6]}***")
         except WhatsAppAPIError as e:
@@ -319,8 +318,8 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
     phone_number = request.phone_number.strip()
 
     # Normalize phone number
-    if not phone_number.startswith('+'):
-        phone_number = '+' + phone_number
+    if not phone_number.startswith("+"):
+        phone_number = "+" + phone_number
 
     try:
         redis_client = await get_redis_client()
@@ -345,7 +344,7 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
         await redis_client.delete(otp_key)
 
         # Create a verification token (valid for 30 minutes)
-        verification_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        verification_token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
         verification_key = f"phone_verified:{phone_number}"
         await redis_client.setex(verification_key, 1800, verification_token)  # 30 min expiry
 
@@ -422,14 +421,14 @@ async def login(
         # Check if user is locked out from too many MFA attempts
         is_locked, lockout_until = await is_user_locked(db, user.id)
         if is_locked:
-            remaining = (lockout_until - datetime.now(timezone.utc)).seconds // 60
+            remaining = (lockout_until - datetime.now(UTC)).seconds // 60
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Account locked due to too many failed MFA attempts. Try again in {remaining} minutes.",
             )
 
         # Generate temporary MFA session token
-        mfa_session_token = ''.join(random.choices(string.ascii_letters + string.digits, k=64))
+        mfa_session_token = "".join(random.choices(string.ascii_letters + string.digits, k=64))
 
         # Store session data in Redis (user_id, email, tenant_id, ip, user_agent)
         try:
@@ -458,7 +457,7 @@ async def login(
 
     # No MFA - proceed with normal login
     # Update last login
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
     await db.commit()
 
     # Create tokens
@@ -580,7 +579,7 @@ async def login_with_mfa(
         )
 
     # Update last login
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
     await db.commit()
 
     # Create tokens
@@ -837,9 +836,7 @@ async def signup(
     slug = base_slug
     counter = 1
     while True:
-        result = await db.execute(
-            select(Tenant).where(Tenant.slug == slug)
-        )
+        result = await db.execute(select(Tenant).where(Tenant.slug == slug))
         if not result.scalar_one_or_none():
             break
         slug = f"{base_slug}-{counter}"

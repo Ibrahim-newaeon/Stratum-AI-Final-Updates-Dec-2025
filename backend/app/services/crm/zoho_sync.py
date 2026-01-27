@@ -6,11 +6,11 @@ Synchronizes contacts and deals from Zoho CRM to Stratum AI.
 Supports scheduled syncs and incremental updates.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from datetime import UTC, datetime
+from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -22,8 +22,8 @@ from app.models.crm import (
     CRMProvider,
     DealStage,
 )
-from app.services.crm.zoho_client import ZohoClient, hash_email, hash_phone
 from app.services.crm.identity_matching import IdentityMatcher
+from app.services.crm.zoho_client import ZohoClient, hash_email, hash_phone
 
 logger = get_logger(__name__)
 
@@ -83,7 +83,7 @@ class ZohoSyncService:
         self.client = ZohoClient(db, tenant_id, region)
         self.identity_matcher = IdentityMatcher(db, tenant_id)
 
-    async def sync_all(self, full_sync: bool = False) -> Dict[str, Any]:
+    async def sync_all(self, full_sync: bool = False) -> dict[str, Any]:
         """
         Synchronize all Zoho CRM data.
 
@@ -119,11 +119,13 @@ class ZohoSyncService:
         try:
             # Sync contacts
             contact_results = await self._sync_contacts(connection, modified_since)
-            results.update({
-                "contacts_synced": contact_results["synced"],
-                "contacts_created": contact_results["created"],
-                "contacts_updated": contact_results["updated"],
-            })
+            results.update(
+                {
+                    "contacts_synced": contact_results["synced"],
+                    "contacts_created": contact_results["created"],
+                    "contacts_updated": contact_results["updated"],
+                }
+            )
             if contact_results.get("errors"):
                 results["errors"].extend(contact_results["errors"])
 
@@ -135,11 +137,13 @@ class ZohoSyncService:
 
             # Sync deals
             deal_results = await self._sync_deals(connection, modified_since)
-            results.update({
-                "deals_synced": deal_results["synced"],
-                "deals_created": deal_results["created"],
-                "deals_updated": deal_results["updated"],
-            })
+            results.update(
+                {
+                    "deals_synced": deal_results["synced"],
+                    "deals_created": deal_results["created"],
+                    "deals_updated": deal_results["updated"],
+                }
+            )
             if deal_results.get("errors"):
                 results["errors"].extend(deal_results["errors"])
 
@@ -147,7 +151,7 @@ class ZohoSyncService:
             await self.identity_matcher.match_contacts_to_touchpoints()
 
             # Update connection status
-            connection.last_sync_at = datetime.now(timezone.utc)
+            connection.last_sync_at = datetime.now(UTC)
             connection.last_sync_status = "success" if not results["errors"] else "partial"
             connection.last_sync_contacts_count = results["contacts_synced"]
             connection.last_sync_deals_count = results["deals_synced"]
@@ -175,18 +179,31 @@ class ZohoSyncService:
         self,
         connection: CRMConnection,
         modified_since: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Sync contacts from Zoho CRM."""
         results = {"synced": 0, "created": 0, "updated": 0, "errors": []}
         page = 1
 
         fields = [
-            "Email", "Phone", "Mobile", "First_Name", "Last_Name",
-            "Account_Name", "Lead_Source", "Owner",
-            "Created_Time", "Modified_Time",
+            "Email",
+            "Phone",
+            "Mobile",
+            "First_Name",
+            "Last_Name",
+            "Account_Name",
+            "Lead_Source",
+            "Owner",
+            "Created_Time",
+            "Modified_Time",
             # Custom UTM fields (if configured in Zoho)
-            "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
-            "gclid", "fbclid", "ttclid",
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_content",
+            "utm_term",
+            "gclid",
+            "fbclid",
+            "ttclid",
         ]
 
         async with self.client:
@@ -213,7 +230,7 @@ class ZohoSyncService:
                         elif updated:
                             results["updated"] += 1
                     except Exception as e:
-                        results["errors"].append(f"Contact {contact_data.get('id')}: {str(e)}")
+                        results["errors"].append(f"Contact {contact_data.get('id')}: {e!s}")
 
                 # Check for more pages
                 info = response.get("info", {})
@@ -232,15 +249,23 @@ class ZohoSyncService:
         self,
         connection: CRMConnection,
         modified_since: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Sync leads from Zoho CRM (stored as contacts with lead lifecycle stage)."""
         results = {"synced": 0, "created": 0, "updated": 0, "errors": []}
         page = 1
 
         fields = [
-            "Email", "Phone", "Mobile", "First_Name", "Last_Name",
-            "Company", "Lead_Source", "Lead_Status", "Owner",
-            "Created_Time", "Modified_Time",
+            "Email",
+            "Phone",
+            "Mobile",
+            "First_Name",
+            "Last_Name",
+            "Company",
+            "Lead_Source",
+            "Lead_Status",
+            "Owner",
+            "Created_Time",
+            "Modified_Time",
         ]
 
         async with self.client:
@@ -270,7 +295,7 @@ class ZohoSyncService:
                         elif updated:
                             results["updated"] += 1
                     except Exception as e:
-                        results["errors"].append(f"Lead {lead_data.get('id')}: {str(e)}")
+                        results["errors"].append(f"Lead {lead_data.get('id')}: {e!s}")
 
                 # Check for more pages
                 info = response.get("info", {})
@@ -283,7 +308,7 @@ class ZohoSyncService:
         await self.db.commit()
         return results
 
-    def _convert_lead_to_contact(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _convert_lead_to_contact(self, lead_data: dict[str, Any]) -> dict[str, Any]:
         """Convert Zoho lead data to contact format."""
         return {
             "id": f"lead_{lead_data.get('id')}",  # Prefix to distinguish from contacts
@@ -304,9 +329,9 @@ class ZohoSyncService:
     async def _upsert_contact(
         self,
         connection_id: UUID,
-        contact_data: Dict[str, Any],
+        contact_data: dict[str, Any],
         is_lead: bool = False,
-    ) -> Tuple[bool, bool]:
+    ) -> tuple[bool, bool]:
         """
         Insert or update a contact.
 
@@ -408,7 +433,7 @@ class ZohoSyncService:
             for key, value in contact_fields.items():
                 if value is not None:
                     setattr(existing, key, value)
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
             return False, True
         else:
             # Create new contact
@@ -425,15 +450,22 @@ class ZohoSyncService:
         self,
         connection: CRMConnection,
         modified_since: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Sync deals from Zoho CRM."""
         results = {"synced": 0, "created": 0, "updated": 0, "errors": []}
         page = 1
 
         fields = [
-            "Deal_Name", "Amount", "Stage", "Pipeline",
-            "Closing_Date", "Account_Name", "Contact_Name",
-            "Owner", "Created_Time", "Modified_Time",
+            "Deal_Name",
+            "Amount",
+            "Stage",
+            "Pipeline",
+            "Closing_Date",
+            "Account_Name",
+            "Contact_Name",
+            "Owner",
+            "Created_Time",
+            "Modified_Time",
         ]
 
         async with self.client:
@@ -460,7 +492,7 @@ class ZohoSyncService:
                         elif updated:
                             results["updated"] += 1
                     except Exception as e:
-                        results["errors"].append(f"Deal {deal_data.get('id')}: {str(e)}")
+                        results["errors"].append(f"Deal {deal_data.get('id')}: {e!s}")
 
                 # Check for more pages
                 info = response.get("info", {})
@@ -480,8 +512,8 @@ class ZohoSyncService:
     async def _upsert_deal(
         self,
         connection_id: UUID,
-        deal_data: Dict[str, Any],
-    ) -> Tuple[bool, bool]:
+        deal_data: dict[str, Any],
+    ) -> tuple[bool, bool]:
         """
         Insert or update a deal.
 
@@ -527,15 +559,11 @@ class ZohoSyncService:
         close_date = None
         if deal_data.get("Closing_Date"):
             try:
-                close_date = datetime.fromisoformat(
-                    deal_data["Closing_Date"]
-                ).date()
+                close_date = datetime.fromisoformat(deal_data["Closing_Date"]).date()
             except (ValueError, TypeError):
                 try:
                     # Try parsing YYYY-MM-DD format
-                    close_date = datetime.strptime(
-                        deal_data["Closing_Date"], "%Y-%m-%d"
-                    ).date()
+                    close_date = datetime.strptime(deal_data["Closing_Date"], "%Y-%m-%d").date()
                 except (ValueError, TypeError):
                     pass
 
@@ -594,7 +622,7 @@ class ZohoSyncService:
             deal_fields["won_at"] = datetime.combine(
                 close_date,
                 datetime.min.time(),
-                tzinfo=timezone.utc,
+                tzinfo=UTC,
             )
 
         if existing:
@@ -602,7 +630,7 @@ class ZohoSyncService:
             for key, value in deal_fields.items():
                 if value is not None:
                     setattr(existing, key, value)
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
             return False, True
         else:
             # Create new deal
@@ -694,7 +722,7 @@ class ZohoSyncService:
         )
         return result.scalar_one_or_none()
 
-    async def get_pipeline_summary(self) -> Dict[str, Any]:
+    async def get_pipeline_summary(self) -> dict[str, Any]:
         """
         Get summary of CRM pipeline metrics.
 
@@ -742,10 +770,12 @@ class ZohoSyncService:
             "total_pipeline_value": sum(stage_values.values()),
             "total_won_value": sum(d.amount or 0 for d in won_deals),
             "won_deal_count": len(won_deals),
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection.last_sync_at
+            else None,
         }
 
-    async def sync_single_contact(self, zoho_contact_id: str) -> Dict[str, Any]:
+    async def sync_single_contact(self, zoho_contact_id: str) -> dict[str, Any]:
         """
         Sync a single contact by ID.
 
@@ -775,7 +805,7 @@ class ZohoSyncService:
                 "contact_id": zoho_contact_id,
             }
 
-    async def sync_single_deal(self, zoho_deal_id: str) -> Dict[str, Any]:
+    async def sync_single_deal(self, zoho_deal_id: str) -> dict[str, Any]:
         """
         Sync a single deal by ID.
 

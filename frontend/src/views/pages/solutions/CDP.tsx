@@ -6,12 +6,12 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  UserGroupIcon,
-  ChartBarIcon,
   ArrowPathIcon,
-  ShieldCheckIcon,
+  ChartBarIcon,
   CubeTransparentIcon,
+  ShieldCheckIcon,
   SparklesIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 const features = [
@@ -86,10 +86,7 @@ export default function CDPSolution() {
                 <br />
                 <span style={{ color: '#f97316' }}>Into Revenue</span>
               </h1>
-              <p
-                className="text-lg mb-8"
-                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-              >
+              <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                 Unify customer profiles across every touchpoint. Build powerful segments and sync
                 them to all your ad platforms instantly.
               </p>
@@ -182,9 +179,7 @@ export default function CDPSolution() {
       {/* Comparison */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
-            How We Compare
-          </h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-12">How We Compare</h2>
           <div
             className="rounded-2xl overflow-hidden"
             style={{

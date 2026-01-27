@@ -2,93 +2,93 @@
 // Stratum AI - Predictive Churn Model (Enterprise Feature)
 // =============================================================================
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react';
 import {
-  ExclamationTriangleIcon,
-  UserMinusIcon,
-  ChartBarIcon,
-  CpuChipIcon,
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon,
-  ClockIcon,
-  BoltIcon,
-  FunnelIcon,
-  ArrowPathIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  InformationCircleIcon,
-  SparklesIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  CalendarIcon,
   AdjustmentsHorizontalIcon,
   ArrowDownTrayIcon,
+  ArrowPathIcon,
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
   BellAlertIcon,
-  PlayIcon,
-  PauseIcon,
+  BoltIcon,
+  CalendarIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CpuChipIcon,
+  CurrencyDollarIcon,
   DocumentChartBarIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  ExclamationTriangleIcon,
+  FunnelIcon,
+  InformationCircleIcon,
+  PauseIcon,
+  PlayIcon,
+  SparklesIcon,
+  UserGroupIcon,
+  UserMinusIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 interface ChurnPrediction {
-  profileId: string
-  profileName: string
-  email: string
-  churnProbability: number
-  riskLevel: 'high' | 'medium' | 'low'
-  predictedChurnDate: string
-  topFactors: ChurnFactor[]
-  revenueAtRisk: number
-  lifetimeValue: number
-  lastActivityDate: string
-  segment: string
-  lifecycle: string
-  recommendedActions: string[]
+  profileId: string;
+  profileName: string;
+  email: string;
+  churnProbability: number;
+  riskLevel: 'high' | 'medium' | 'low';
+  predictedChurnDate: string;
+  topFactors: ChurnFactor[];
+  revenueAtRisk: number;
+  lifetimeValue: number;
+  lastActivityDate: string;
+  segment: string;
+  lifecycle: string;
+  recommendedActions: string[];
 }
 
 interface ChurnFactor {
-  name: string
-  impact: number // -100 to 100
-  direction: 'increases' | 'decreases'
-  value: string
+  name: string;
+  impact: number; // -100 to 100
+  direction: 'increases' | 'decreases';
+  value: string;
 }
 
 interface ModelMetrics {
-  accuracy: number
-  precision: number
-  recall: number
-  f1Score: number
-  auc: number
-  lastTrained: string
-  samplesUsed: number
-  featuresUsed: number
-  status: 'trained' | 'training' | 'needs_retrain'
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  auc: number;
+  lastTrained: string;
+  samplesUsed: number;
+  featuresUsed: number;
+  status: 'trained' | 'training' | 'needs_retrain';
 }
 
 interface ChurnStats {
-  totalAtRisk: number
-  highRisk: number
-  mediumRisk: number
-  lowRisk: number
-  revenueAtRisk: number
-  predictedChurnRate: number
-  avgChurnProbability: number
-  interventionsActive: number
+  totalAtRisk: number;
+  highRisk: number;
+  mediumRisk: number;
+  lowRisk: number;
+  revenueAtRisk: number;
+  predictedChurnRate: number;
+  avgChurnProbability: number;
+  interventionsActive: number;
 }
 
 interface InterventionCampaign {
-  id: string
-  name: string
-  status: 'active' | 'paused' | 'completed'
-  targetSegment: 'high' | 'medium' | 'low' | 'all'
-  channel: 'email' | 'sms' | 'push' | 'in_app'
-  profilesTargeted: number
-  conversions: number
-  startDate: string
+  id: string;
+  name: string;
+  status: 'active' | 'paused' | 'completed';
+  targetSegment: 'high' | 'medium' | 'low' | 'all';
+  channel: 'email' | 'sms' | 'push' | 'in_app';
+  profilesTargeted: number;
+  conversions: number;
+  startDate: string;
 }
 
 // =============================================================================
@@ -105,7 +105,7 @@ const MOCK_MODEL_METRICS: ModelMetrics = {
   samplesUsed: 125840,
   featuresUsed: 47,
   status: 'trained',
-}
+};
 
 const MOCK_STATS: ChurnStats = {
   totalAtRisk: 3247,
@@ -116,7 +116,7 @@ const MOCK_STATS: ChurnStats = {
   predictedChurnRate: 12.4,
   avgChurnProbability: 0.38,
   interventionsActive: 4,
-}
+};
 
 const MOCK_PREDICTIONS: ChurnPrediction[] = [
   {
@@ -136,7 +136,11 @@ const MOCK_PREDICTIONS: ChurnPrediction[] = [
     lastActivityDate: '2023-12-15',
     segment: 'Enterprise',
     lifecycle: 'At Risk',
-    recommendedActions: ['Personal outreach call', 'Offer renewal discount', 'Schedule product training'],
+    recommendedActions: [
+      'Personal outreach call',
+      'Offer renewal discount',
+      'Schedule product training',
+    ],
   },
   {
     profileId: '2',
@@ -155,7 +159,11 @@ const MOCK_PREDICTIONS: ChurnPrediction[] = [
     lastActivityDate: '2024-01-08',
     segment: 'Mid-Market',
     lifecycle: 'At Risk',
-    recommendedActions: ['Feature adoption webinar', 'Success manager check-in', 'Early renewal offer'],
+    recommendedActions: [
+      'Feature adoption webinar',
+      'Success manager check-in',
+      'Early renewal offer',
+    ],
   },
   {
     profileId: '3',
@@ -174,7 +182,11 @@ const MOCK_PREDICTIONS: ChurnPrediction[] = [
     lastActivityDate: '2024-01-12',
     segment: 'SMB',
     lifecycle: 'Active',
-    recommendedActions: ['Send NPS follow-up survey', 'Share new feature guide', 'Invite to community'],
+    recommendedActions: [
+      'Send NPS follow-up survey',
+      'Share new feature guide',
+      'Invite to community',
+    ],
   },
   {
     profileId: '4',
@@ -193,7 +205,11 @@ const MOCK_PREDICTIONS: ChurnPrediction[] = [
     lastActivityDate: '2024-01-14',
     segment: 'SMB',
     lifecycle: 'Active',
-    recommendedActions: ['Resolve billing immediately', 'Prioritize feature request', 'Send product roadmap'],
+    recommendedActions: [
+      'Resolve billing immediately',
+      'Prioritize feature request',
+      'Send product roadmap',
+    ],
   },
   {
     profileId: '5',
@@ -214,14 +230,50 @@ const MOCK_PREDICTIONS: ChurnPrediction[] = [
     lifecycle: 'Loyal',
     recommendedActions: ['Monitor industry news', 'Share ROI report', 'Upsell opportunity'],
   },
-]
+];
 
 const MOCK_INTERVENTIONS: InterventionCampaign[] = [
-  { id: '1', name: 'High Risk Win-Back', status: 'active', targetSegment: 'high', channel: 'email', profilesTargeted: 847, conversions: 124, startDate: '2024-01-01' },
-  { id: '2', name: 'Renewal Reminder', status: 'active', targetSegment: 'medium', channel: 'email', profilesTargeted: 1523, conversions: 312, startDate: '2024-01-05' },
-  { id: '3', name: 'Feature Adoption Push', status: 'active', targetSegment: 'all', channel: 'in_app', profilesTargeted: 3247, conversions: 567, startDate: '2024-01-10' },
-  { id: '4', name: 'Personal Outreach', status: 'active', targetSegment: 'high', channel: 'sms', profilesTargeted: 200, conversions: 45, startDate: '2024-01-12' },
-]
+  {
+    id: '1',
+    name: 'High Risk Win-Back',
+    status: 'active',
+    targetSegment: 'high',
+    channel: 'email',
+    profilesTargeted: 847,
+    conversions: 124,
+    startDate: '2024-01-01',
+  },
+  {
+    id: '2',
+    name: 'Renewal Reminder',
+    status: 'active',
+    targetSegment: 'medium',
+    channel: 'email',
+    profilesTargeted: 1523,
+    conversions: 312,
+    startDate: '2024-01-05',
+  },
+  {
+    id: '3',
+    name: 'Feature Adoption Push',
+    status: 'active',
+    targetSegment: 'all',
+    channel: 'in_app',
+    profilesTargeted: 3247,
+    conversions: 567,
+    startDate: '2024-01-10',
+  },
+  {
+    id: '4',
+    name: 'Personal Outreach',
+    status: 'active',
+    targetSegment: 'high',
+    channel: 'sms',
+    profilesTargeted: 200,
+    conversions: 45,
+    startDate: '2024-01-12',
+  },
+];
 
 const CHURN_TREND_DATA = [
   { month: 'Aug', rate: 14.2, predicted: 15.1 },
@@ -230,7 +282,7 @@ const CHURN_TREND_DATA = [
   { month: 'Nov', rate: 12.9, predicted: 13.2 },
   { month: 'Dec', rate: 12.6, predicted: 12.8 },
   { month: 'Jan', rate: 12.4, predicted: 12.4 },
-]
+];
 
 // =============================================================================
 // Sub-Components
@@ -239,21 +291,29 @@ const CHURN_TREND_DATA = [
 function ModelHealthCard({ metrics }: { metrics: ModelMetrics }) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'trained': return 'text-green-500 bg-green-500/10'
-      case 'training': return 'text-blue-500 bg-blue-500/10'
-      case 'needs_retrain': return 'text-yellow-500 bg-yellow-500/10'
-      default: return 'text-muted-foreground bg-muted'
+      case 'trained':
+        return 'text-green-500 bg-green-500/10';
+      case 'training':
+        return 'text-blue-500 bg-blue-500/10';
+      case 'needs_retrain':
+        return 'text-yellow-500 bg-yellow-500/10';
+      default:
+        return 'text-muted-foreground bg-muted';
     }
-  }
+  };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'trained': return 'Model Trained'
-      case 'training': return 'Training...'
-      case 'needs_retrain': return 'Needs Retrain'
-      default: return status
+      case 'trained':
+        return 'Model Trained';
+      case 'training':
+        return 'Training...';
+      case 'needs_retrain':
+        return 'Needs Retrain';
+      default:
+        return status;
     }
-  }
+  };
 
   return (
     <div className="bg-card rounded-xl border p-5">
@@ -267,7 +327,12 @@ function ModelHealthCard({ metrics }: { metrics: ModelMetrics }) {
             <p className="text-sm text-muted-foreground">ML-powered risk scoring</p>
           </div>
         </div>
-        <span className={cn('px-3 py-1 rounded-full text-xs font-medium', getStatusColor(metrics.status))}>
+        <span
+          className={cn(
+            'px-3 py-1 rounded-full text-xs font-medium',
+            getStatusColor(metrics.status)
+          )}
+        >
           {getStatusLabel(metrics.status)}
         </span>
       </div>
@@ -297,23 +362,27 @@ function ModelHealthCard({ metrics }: { metrics: ModelMetrics }) {
 
       <div className="flex items-center justify-between text-sm text-muted-foreground pt-3 border-t">
         <span>Last trained: {new Date(metrics.lastTrained).toLocaleDateString()}</span>
-        <span>{metrics.samplesUsed.toLocaleString()} samples, {metrics.featuresUsed} features</span>
+        <span>
+          {metrics.samplesUsed.toLocaleString()} samples, {metrics.featuresUsed} features
+        </span>
         <button className="flex items-center gap-1 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs hover:bg-primary/90">
           <ArrowPathIcon className="w-3 h-3" />
           Retrain Model
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 function ChurnFactorBar({ factor }: { factor: ChurnFactor }) {
-  const isPositive = factor.direction === 'increases'
-  const barWidth = Math.abs(factor.impact)
+  const isPositive = factor.direction === 'increases';
+  const barWidth = Math.abs(factor.impact);
 
   return (
     <div className="flex items-center gap-3 text-sm">
-      <div className="w-40 truncate" title={factor.name}>{factor.name}</div>
+      <div className="w-40 truncate" title={factor.name}>
+        {factor.name}
+      </div>
       <div className="flex-1 flex items-center gap-2">
         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
           <div
@@ -324,29 +393,39 @@ function ChurnFactorBar({ factor }: { factor: ChurnFactor }) {
             style={{ width: `${barWidth}%` }}
           />
         </div>
-        <div className={cn(
-          'w-16 text-xs font-medium',
-          isPositive ? 'text-red-500' : 'text-green-500'
-        )}>
-          {isPositive ? '+' : '-'}{Math.abs(factor.impact)}%
+        <div
+          className={cn('w-16 text-xs font-medium', isPositive ? 'text-red-500' : 'text-green-500')}
+        >
+          {isPositive ? '+' : '-'}
+          {Math.abs(factor.impact)}%
         </div>
       </div>
       <div className="w-24 text-xs text-muted-foreground truncate" title={factor.value}>
         {factor.value}
       </div>
     </div>
-  )
+  );
 }
 
-function PredictionCard({ prediction, onViewDetails }: { prediction: ChurnPrediction; onViewDetails: () => void }) {
+function PredictionCard({
+  prediction,
+  onViewDetails,
+}: {
+  prediction: ChurnPrediction;
+  onViewDetails: () => void;
+}) {
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-red-500/10 text-red-500 border-red-500/20'
-      case 'medium': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-      case 'low': return 'bg-green-500/10 text-green-500 border-green-500/20'
-      default: return 'bg-muted text-muted-foreground'
+      case 'high':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'medium':
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'low':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      default:
+        return 'bg-muted text-muted-foreground';
     }
-  }
+  };
 
   return (
     <div className="bg-card rounded-xl border p-5 hover:border-primary/50 transition-colors">
@@ -360,7 +439,12 @@ function PredictionCard({ prediction, onViewDetails }: { prediction: ChurnPredic
             <p className="text-sm text-muted-foreground">{prediction.email}</p>
           </div>
         </div>
-        <div className={cn('px-3 py-1 rounded-full text-xs font-medium border', getRiskColor(prediction.riskLevel))}>
+        <div
+          className={cn(
+            'px-3 py-1 rounded-full text-xs font-medium border',
+            getRiskColor(prediction.riskLevel)
+          )}
+        >
           {prediction.riskLevel.toUpperCase()} RISK
         </div>
       </div>
@@ -368,15 +452,21 @@ function PredictionCard({ prediction, onViewDetails }: { prediction: ChurnPredic
       <div className="flex items-center gap-6 mb-4 text-sm">
         <div>
           <span className="text-muted-foreground">Churn Probability</span>
-          <div className="font-semibold text-lg">{(prediction.churnProbability * 100).toFixed(0)}%</div>
+          <div className="font-semibold text-lg">
+            {(prediction.churnProbability * 100).toFixed(0)}%
+          </div>
         </div>
         <div>
           <span className="text-muted-foreground">Revenue at Risk</span>
-          <div className="font-semibold text-lg text-red-500">${prediction.revenueAtRisk.toLocaleString()}</div>
+          <div className="font-semibold text-lg text-red-500">
+            ${prediction.revenueAtRisk.toLocaleString()}
+          </div>
         </div>
         <div>
           <span className="text-muted-foreground">Predicted Churn</span>
-          <div className="font-semibold">{new Date(prediction.predictedChurnDate).toLocaleDateString()}</div>
+          <div className="font-semibold">
+            {new Date(prediction.predictedChurnDate).toLocaleDateString()}
+          </div>
         </div>
       </div>
 
@@ -394,15 +484,12 @@ function PredictionCard({ prediction, onViewDetails }: { prediction: ChurnPredic
           <span className="px-2 py-0.5 rounded bg-muted">{prediction.segment}</span>
           <span className="px-2 py-0.5 rounded bg-muted">{prediction.lifecycle}</span>
         </div>
-        <button
-          onClick={onViewDetails}
-          className="text-sm text-primary hover:text-primary/80"
-        >
+        <button onClick={onViewDetails} className="text-sm text-primary hover:text-primary/80">
           View Details →
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 // =============================================================================
@@ -410,37 +497,40 @@ function PredictionCard({ prediction, onViewDetails }: { prediction: ChurnPredic
 // =============================================================================
 
 export default function CDPPredictiveChurn() {
-  const [riskFilter, setRiskFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
-  const [sortBy, setSortBy] = useState<'probability' | 'revenue' | 'date'>('probability')
-  const [selectedPrediction, setSelectedPrediction] = useState<ChurnPrediction | null>(null)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [riskFilter, setRiskFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [sortBy, setSortBy] = useState<'probability' | 'revenue' | 'date'>('probability');
+  const [selectedPrediction, setSelectedPrediction] = useState<ChurnPrediction | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const filteredPredictions = useMemo(() => {
-    let filtered = [...MOCK_PREDICTIONS]
+    let filtered = [...MOCK_PREDICTIONS];
 
     if (riskFilter !== 'all') {
-      filtered = filtered.filter(p => p.riskLevel === riskFilter)
+      filtered = filtered.filter((p) => p.riskLevel === riskFilter);
     }
 
     switch (sortBy) {
       case 'probability':
-        filtered.sort((a, b) => b.churnProbability - a.churnProbability)
-        break
+        filtered.sort((a, b) => b.churnProbability - a.churnProbability);
+        break;
       case 'revenue':
-        filtered.sort((a, b) => b.revenueAtRisk - a.revenueAtRisk)
-        break
+        filtered.sort((a, b) => b.revenueAtRisk - a.revenueAtRisk);
+        break;
       case 'date':
-        filtered.sort((a, b) => new Date(a.predictedChurnDate).getTime() - new Date(b.predictedChurnDate).getTime())
-        break
+        filtered.sort(
+          (a, b) =>
+            new Date(a.predictedChurnDate).getTime() - new Date(b.predictedChurnDate).getTime()
+        );
+        break;
     }
 
-    return filtered
-  }, [riskFilter, sortBy])
+    return filtered;
+  }, [riskFilter, sortBy]);
 
   const handleViewDetails = (prediction: ChurnPrediction) => {
-    setSelectedPrediction(prediction)
-    setIsDetailModalOpen(true)
-  }
+    setSelectedPrediction(prediction);
+    setIsDetailModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -492,7 +582,9 @@ export default function CDPPredictiveChurn() {
             <span className="text-xs text-muted-foreground">Monthly</span>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold">${(MOCK_STATS.revenueAtRisk / 1000).toFixed(0)}K</div>
+            <div className="text-2xl font-bold">
+              ${(MOCK_STATS.revenueAtRisk / 1000).toFixed(0)}K
+            </div>
             <div className="text-sm text-muted-foreground">Revenue at Risk</div>
           </div>
         </div>
@@ -570,9 +662,7 @@ export default function CDPPredictiveChurn() {
       <div className="bg-card rounded-xl border p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold">Active Retention Campaigns</h3>
-          <button className="text-sm text-primary hover:text-primary/80">
-            + New Campaign
-          </button>
+          <button className="text-sm text-primary hover:text-primary/80">+ New Campaign</button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -592,28 +682,43 @@ export default function CDPPredictiveChurn() {
                 <tr key={campaign.id} className="border-b last:border-0">
                   <td className="py-3 font-medium">{campaign.name}</td>
                   <td className="py-3">
-                    <span className={cn(
-                      'px-2 py-0.5 rounded text-xs capitalize',
-                      campaign.targetSegment === 'high' ? 'bg-red-500/10 text-red-500' :
-                      campaign.targetSegment === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
-                      campaign.targetSegment === 'low' ? 'bg-green-500/10 text-green-500' :
-                      'bg-blue-500/10 text-blue-500'
-                    )}>
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 rounded text-xs capitalize',
+                        campaign.targetSegment === 'high'
+                          ? 'bg-red-500/10 text-red-500'
+                          : campaign.targetSegment === 'medium'
+                            ? 'bg-yellow-500/10 text-yellow-500'
+                            : campaign.targetSegment === 'low'
+                              ? 'bg-green-500/10 text-green-500'
+                              : 'bg-blue-500/10 text-blue-500'
+                      )}
+                    >
                       {campaign.targetSegment} risk
                     </span>
                   </td>
                   <td className="py-3 capitalize">{campaign.channel.replace('_', ' ')}</td>
                   <td className="py-3 text-right">{campaign.profilesTargeted.toLocaleString()}</td>
-                  <td className="py-3 text-right text-green-500">{campaign.conversions.toLocaleString()}</td>
+                  <td className="py-3 text-right text-green-500">
+                    {campaign.conversions.toLocaleString()}
+                  </td>
                   <td className="py-3 text-right font-medium">
                     {((campaign.conversions / campaign.profilesTargeted) * 100).toFixed(1)}%
                   </td>
                   <td className="py-3 text-center">
-                    <button className={cn(
-                      'p-1.5 rounded-lg',
-                      campaign.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'
-                    )}>
-                      {campaign.status === 'active' ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
+                    <button
+                      className={cn(
+                        'p-1.5 rounded-lg',
+                        campaign.status === 'active'
+                          ? 'bg-green-500/10 text-green-500'
+                          : 'bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {campaign.status === 'active' ? (
+                        <PauseIcon className="w-4 h-4" />
+                      ) : (
+                        <PlayIcon className="w-4 h-4" />
+                      )}
                     </button>
                   </td>
                 </tr>
@@ -634,10 +739,13 @@ export default function CDPPredictiveChurn() {
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm capitalize transition-colors',
                 riskFilter === level
-                  ? level === 'high' ? 'bg-red-500 text-white' :
-                    level === 'medium' ? 'bg-yellow-500 text-white' :
-                    level === 'low' ? 'bg-green-500 text-white' :
-                    'bg-primary text-primary-foreground'
+                  ? level === 'high'
+                    ? 'bg-red-500 text-white'
+                    : level === 'medium'
+                      ? 'bg-yellow-500 text-white'
+                      : level === 'low'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-primary text-primary-foreground'
                   : 'bg-muted hover:bg-muted/80'
               )}
             >
@@ -712,15 +820,24 @@ export default function CDPPredictiveChurn() {
                   <div className="text-xs text-muted-foreground">Churn Probability</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-muted">
-                  <div className="text-2xl font-bold">${selectedPrediction.revenueAtRisk.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">
+                    ${selectedPrediction.revenueAtRisk.toLocaleString()}
+                  </div>
                   <div className="text-xs text-muted-foreground">Revenue at Risk</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-muted">
-                  <div className="text-2xl font-bold">${selectedPrediction.lifetimeValue.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">
+                    ${selectedPrediction.lifetimeValue.toLocaleString()}
+                  </div>
                   <div className="text-xs text-muted-foreground">Lifetime Value</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-muted">
-                  <div className="text-2xl font-bold">{new Date(selectedPrediction.predictedChurnDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                  <div className="text-2xl font-bold">
+                    {new Date(selectedPrediction.predictedChurnDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </div>
                   <div className="text-xs text-muted-foreground">Predicted Churn</div>
                 </div>
               </div>
@@ -743,7 +860,10 @@ export default function CDPPredictiveChurn() {
                 </h3>
                 <div className="space-y-2">
                   {selectedPrediction.recommendedActions.map((action, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20"
+                    >
                       <CheckCircleIcon className="w-5 h-5 text-primary" />
                       <span>{action}</span>
                     </div>
@@ -767,5 +887,5 @@ export default function CDPPredictiveChurn() {
         </div>
       )}
     </div>
-  )
+  );
 }

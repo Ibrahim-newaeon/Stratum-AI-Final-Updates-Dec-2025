@@ -4,29 +4,29 @@
  */
 
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
   Cell,
   ReferenceLine,
-} from 'recharts'
-import { chartTheme, chartFormatters } from '@/lib/chartTheme'
-import { PlatformSummary } from '@/types/dashboard'
-import { ChartSkeleton } from '@/components/ui/Skeleton'
-import { NoChartDataState } from '@/components/ui/EmptyState'
-import { ErrorBoundary, ChartErrorFallback } from '@/components/ui/ErrorBoundary'
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { chartFormatters, chartTheme } from '@/lib/chartTheme';
+import { PlatformSummary } from '@/types/dashboard';
+import { ChartSkeleton } from '@/components/ui/Skeleton';
+import { NoChartDataState } from '@/components/ui/EmptyState';
+import { ChartErrorFallback, ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 interface ROASByPlatformChartProps {
-  data: PlatformSummary[]
-  loading?: boolean
-  height?: number
-  title?: string
-  targetROAS?: number
-  onRefresh?: () => void
+  data: PlatformSummary[];
+  loading?: boolean;
+  height?: number;
+  title?: string;
+  targetROAS?: number;
+  onRefresh?: () => void;
 }
 
 function ROASByPlatformChartInner({
@@ -36,11 +36,11 @@ function ROASByPlatformChartInner({
   targetROAS = 3.0,
 }: Omit<ROASByPlatformChartProps, 'loading' | 'onRefresh'>) {
   if (!data || data.length === 0) {
-    return <NoChartDataState />
+    return <NoChartDataState />;
   }
 
   // Sort by ROAS descending for better visualization
-  const sortedData = [...data].sort((a, b) => b.roas - a.roas)
+  const sortedData = [...data].sort((a, b) => b.roas - a.roas);
 
   return (
     <div className="rounded-xl border bg-card p-6">
@@ -70,12 +70,20 @@ function ROASByPlatformChartInner({
                 >
                   <stop
                     offset="0%"
-                    stopColor={entry.roas >= targetROAS ? chartTheme.colors.success : chartTheme.colors.warning}
+                    stopColor={
+                      entry.roas >= targetROAS
+                        ? chartTheme.colors.success
+                        : chartTheme.colors.warning
+                    }
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="100%"
-                    stopColor={entry.roas >= targetROAS ? chartTheme.colors.success : chartTheme.colors.warning}
+                    stopColor={
+                      entry.roas >= targetROAS
+                        ? chartTheme.colors.success
+                        : chartTheme.colors.warning
+                    }
                     stopOpacity={1}
                   />
                 </linearGradient>
@@ -92,7 +100,7 @@ function ROASByPlatformChartInner({
               tick={{ fontSize: 12 }}
               tickLine={false}
               axisLine={false}
-              domain={[0, Math.max(5, Math.ceil(Math.max(...data.map(d => d.roas)) + 0.5))]}
+              domain={[0, Math.max(5, Math.ceil(Math.max(...data.map((d) => d.roas)) + 0.5))]}
               tickFormatter={(value) => `${value}x`}
               className="text-muted-foreground"
             />
@@ -125,7 +133,9 @@ function ROASByPlatformChartInner({
               {sortedData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={entry.roas >= targetROAS ? chartTheme.colors.success : chartTheme.colors.warning}
+                  fill={
+                    entry.roas >= targetROAS ? chartTheme.colors.success : chartTheme.colors.warning
+                  }
                 />
               ))}
             </Bar>
@@ -133,7 +143,7 @@ function ROASByPlatformChartInner({
         </ResponsiveContainer>
       </div>
     </div>
-  )
+  );
 }
 
 export function ROASByPlatformChart({
@@ -143,16 +153,14 @@ export function ROASByPlatformChart({
   ...props
 }: ROASByPlatformChartProps) {
   if (loading) {
-    return <ChartSkeleton height={props.height} />
+    return <ChartSkeleton height={props.height} />;
   }
 
   return (
-    <ErrorBoundary
-      fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}
-    >
+    <ErrorBoundary fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}>
       <ROASByPlatformChartInner data={data} {...props} />
     </ErrorBoundary>
-  )
+  );
 }
 
-export default ROASByPlatformChart
+export default ROASByPlatformChart;

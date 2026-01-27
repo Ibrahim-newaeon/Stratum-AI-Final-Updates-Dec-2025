@@ -7,19 +7,27 @@
  * - BLOCK (red): Signal health < 40, manual required
  */
 
-import { Loader2, ShieldCheck, ShieldAlert, ShieldOff, Zap, AlertTriangle, Hand } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { SignalHealthSummary } from '@/api/dashboard'
+import {
+  AlertTriangle,
+  Hand,
+  Loader2,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldOff,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { SignalHealthSummary } from '@/api/dashboard';
 
 // Trust engine thresholds from CLAUDE.md
-const HEALTHY_THRESHOLD = 70
-const DEGRADED_THRESHOLD = 40
+const HEALTHY_THRESHOLD = 70;
+const DEGRADED_THRESHOLD = 40;
 
-type GateStatus = 'PASS' | 'HOLD' | 'BLOCK'
+type GateStatus = 'PASS' | 'HOLD' | 'BLOCK';
 
 interface TrustGateStatusProps {
-  signalHealth?: SignalHealthSummary
-  loading?: boolean
+  signalHealth?: SignalHealthSummary;
+  loading?: boolean;
 }
 
 export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStatusProps) {
@@ -28,18 +36,18 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
       <div className="glass border border-white/10 rounded-xl p-6 h-full flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   // Determine gate status from signal health score
   const getGateStatus = (): GateStatus => {
-    if (!signalHealth) return 'BLOCK'
-    if (signalHealth.overall_score >= HEALTHY_THRESHOLD) return 'PASS'
-    if (signalHealth.overall_score >= DEGRADED_THRESHOLD) return 'HOLD'
-    return 'BLOCK'
-  }
+    if (!signalHealth) return 'BLOCK';
+    if (signalHealth.overall_score >= HEALTHY_THRESHOLD) return 'PASS';
+    if (signalHealth.overall_score >= DEGRADED_THRESHOLD) return 'HOLD';
+    return 'BLOCK';
+  };
 
-  const gateStatus = getGateStatus()
+  const gateStatus = getGateStatus();
 
   const gateConfigs = {
     PASS: {
@@ -81,14 +89,19 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
       actionIcon: Hand,
       actionLabel: 'Manual Only',
     },
-  }
+  };
 
-  const config = gateConfigs[gateStatus]
-  const GateIcon = config.icon
-  const ActionIcon = config.actionIcon
+  const config = gateConfigs[gateStatus];
+  const GateIcon = config.icon;
+  const ActionIcon = config.actionIcon;
 
   return (
-    <div className={cn('glass border border-white/10 rounded-xl p-6 h-full card-3d', config.borderColor)}>
+    <div
+      className={cn(
+        'glass border border-white/10 rounded-xl p-6 h-full card-3d',
+        config.borderColor
+      )}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold">Trust Gate</h3>
         <div
@@ -140,9 +153,7 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
 
       {/* Status Description */}
       <div className="text-center mb-6">
-        <div className={cn('text-lg font-semibold mb-1', config.color)}>
-          {config.description}
-        </div>
+        <div className={cn('text-lg font-semibold mb-1', config.color)}>{config.description}</div>
         <p className="text-sm text-muted-foreground">{config.detail}</p>
       </div>
 
@@ -160,7 +171,9 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
           <div className="h-full flex">
             <div
               className="bg-red-500 transition-all duration-500"
-              style={{ width: `${Math.min(DEGRADED_THRESHOLD, signalHealth?.overall_score ?? 0)}%` }}
+              style={{
+                width: `${Math.min(DEGRADED_THRESHOLD, signalHealth?.overall_score ?? 0)}%`,
+              }}
             />
             <div
               className="bg-yellow-500 transition-all duration-500"
@@ -181,17 +194,16 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>0</span>
           <span className="text-red-500">Block (&lt;{DEGRADED_THRESHOLD})</span>
-          <span className="text-yellow-500">Hold ({DEGRADED_THRESHOLD}-{HEALTHY_THRESHOLD - 1})</span>
+          <span className="text-yellow-500">
+            Hold ({DEGRADED_THRESHOLD}-{HEALTHY_THRESHOLD - 1})
+          </span>
           <span className="text-green-500">Pass (&gt;={HEALTHY_THRESHOLD})</span>
         </div>
       </div>
 
       {/* Action Mode */}
       <div
-        className={cn(
-          'mt-6 pt-4 border-t flex items-center justify-between',
-          config.borderColor
-        )}
+        className={cn('mt-6 pt-4 border-t flex items-center justify-between', config.borderColor)}
       >
         <div className="flex items-center gap-2">
           <ActionIcon className={cn('w-4 h-4', config.color)} />
@@ -204,5 +216,5 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -10,33 +10,29 @@ Tier Alignment:
 - Enterprise: White-label (no branding), unlimited
 """
 
-from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from uuid import UUID
 
-from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
+from app.core.tiers import (
+    Feature,
+    SubscriptionTier,
+    get_tier_limit,
+    has_feature,
+)
 from app.models.embed_widgets import (
-    EmbedWidget,
-    EmbedToken,
-    EmbedDomainWhitelist,
-    WidgetType,
-    WidgetSize,
     BrandingLevel,
+    EmbedDomainWhitelist,
+    EmbedWidget,
+    WidgetSize,
+    WidgetType,
 )
 from app.schemas.embed_widgets import (
     WidgetCreate,
     WidgetUpdate,
-    WidgetDataScope,
 )
-from app.core.tiers import (
-    SubscriptionTier,
-    Feature,
-    has_feature,
-    get_tier_limit,
-)
-
 
 # Widget size dimensions
 WIDGET_DIMENSIONS = {
@@ -92,15 +88,19 @@ class EmbedWidgetService:
         """
         # Check widget limit
         max_widgets = get_tier_limit(tier, "max_embed_widgets")
-        current_count = self.db.query(EmbedWidget).filter(
-            EmbedWidget.tenant_id == tenant_id,
-            EmbedWidget.is_active == True,
-        ).count()
+        current_count = (
+            self.db.query(EmbedWidget)
+            .filter(
+                EmbedWidget.tenant_id == tenant_id,
+                EmbedWidget.is_active == True,
+            )
+            .count()
+        )
 
         if current_count >= max_widgets:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Maximum {max_widgets} widgets allowed for {tier.value} tier"
+                detail=f"Maximum {max_widgets} widgets allowed for {tier.value} tier",
             )
 
         # Validate custom branding (Enterprise only)
@@ -108,7 +108,7 @@ class EmbedWidgetService:
             if not has_feature(tier, Feature.EMBED_WIDGETS_WHITELABEL):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Custom branding requires Enterprise tier"
+                    detail="Custom branding requires Enterprise tier",
                 )
 
         # Determine branding level
@@ -120,8 +120,7 @@ class EmbedWidgetService:
             height = data.custom_height
         else:
             width, height = WIDGET_DIMENSIONS.get(
-                data.widget_size.value,
-                WIDGET_DIMENSIONS[WidgetSize.STANDARD.value]
+                data.widget_size.value, WIDGET_DIMENSIONS[WidgetSize.STANDARD.value]
             )
 
         # Create widget
@@ -153,17 +152,21 @@ class EmbedWidgetService:
 
     def get_widget(self, tenant_id: int, widget_id: UUID) -> Optional[EmbedWidget]:
         """Get a widget by ID."""
-        return self.db.query(EmbedWidget).filter(
-            EmbedWidget.id == widget_id,
-            EmbedWidget.tenant_id == tenant_id,
-        ).first()
+        return (
+            self.db.query(EmbedWidget)
+            .filter(
+                EmbedWidget.id == widget_id,
+                EmbedWidget.tenant_id == tenant_id,
+            )
+            .first()
+        )
 
     def list_widgets(
         self,
         tenant_id: int,
         widget_type: Optional[WidgetType] = None,
         is_active: Optional[bool] = None,
-    ) -> List[EmbedWidget]:
+    ) -> list[EmbedWidget]:
         """List widgets for a tenant."""
         query = self.db.query(EmbedWidget).filter(
             EmbedWidget.tenant_id == tenant_id,
@@ -188,10 +191,7 @@ class EmbedWidgetService:
         widget = self.get_widget(tenant_id, widget_id)
 
         if not widget:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Widget not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
 
         # Update fields
         if data.name is not None:
@@ -220,7 +220,7 @@ class EmbedWidgetService:
             if not has_feature(tier, Feature.EMBED_WIDGETS_WHITELABEL):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Custom branding requires Enterprise tier"
+                    detail="Custom branding requires Enterprise tier",
                 )
 
             widget.custom_logo_url = data.custom_branding.custom_logo_url
@@ -238,10 +238,7 @@ class EmbedWidgetService:
         widget = self.get_widget(tenant_id, widget_id)
 
         if not widget:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Widget not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
 
         self.db.delete(widget)
         self.db.commit()
@@ -260,28 +257,35 @@ class EmbedWidgetService:
         """Add a domain to the whitelist."""
         # Check domain limit
         max_domains = get_tier_limit(tier, "max_embed_domains")
-        current_count = self.db.query(EmbedDomainWhitelist).filter(
-            EmbedDomainWhitelist.tenant_id == tenant_id,
-            EmbedDomainWhitelist.is_active == True,
-        ).count()
+        current_count = (
+            self.db.query(EmbedDomainWhitelist)
+            .filter(
+                EmbedDomainWhitelist.tenant_id == tenant_id,
+                EmbedDomainWhitelist.is_active == True,
+            )
+            .count()
+        )
 
         if current_count >= max_domains:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Maximum {max_domains} domains allowed for {tier.value} tier"
+                detail=f"Maximum {max_domains} domains allowed for {tier.value} tier",
             )
 
         # Check if already exists
-        existing = self.db.query(EmbedDomainWhitelist).filter(
-            EmbedDomainWhitelist.tenant_id == tenant_id,
-            EmbedDomainWhitelist.domain_pattern == domain_pattern.lower(),
-        ).first()
+        existing = (
+            self.db.query(EmbedDomainWhitelist)
+            .filter(
+                EmbedDomainWhitelist.tenant_id == tenant_id,
+                EmbedDomainWhitelist.domain_pattern == domain_pattern.lower(),
+            )
+            .first()
+        )
 
         if existing:
             if existing.is_active:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Domain already in whitelist"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Domain already in whitelist"
                 )
             else:
                 # Reactivate
@@ -304,12 +308,17 @@ class EmbedWidgetService:
 
         return whitelist
 
-    def list_whitelisted_domains(self, tenant_id: int) -> List[EmbedDomainWhitelist]:
+    def list_whitelisted_domains(self, tenant_id: int) -> list[EmbedDomainWhitelist]:
         """List all whitelisted domains for a tenant."""
-        return self.db.query(EmbedDomainWhitelist).filter(
-            EmbedDomainWhitelist.tenant_id == tenant_id,
-            EmbedDomainWhitelist.is_active == True,
-        ).order_by(EmbedDomainWhitelist.domain_pattern).all()
+        return (
+            self.db.query(EmbedDomainWhitelist)
+            .filter(
+                EmbedDomainWhitelist.tenant_id == tenant_id,
+                EmbedDomainWhitelist.is_active == True,
+            )
+            .order_by(EmbedDomainWhitelist.domain_pattern)
+            .all()
+        )
 
     def remove_domain_from_whitelist(
         self,
@@ -317,16 +326,17 @@ class EmbedWidgetService:
         domain_id: UUID,
     ) -> None:
         """Remove a domain from the whitelist."""
-        domain = self.db.query(EmbedDomainWhitelist).filter(
-            EmbedDomainWhitelist.id == domain_id,
-            EmbedDomainWhitelist.tenant_id == tenant_id,
-        ).first()
+        domain = (
+            self.db.query(EmbedDomainWhitelist)
+            .filter(
+                EmbedDomainWhitelist.id == domain_id,
+                EmbedDomainWhitelist.tenant_id == tenant_id,
+            )
+            .first()
+        )
 
         if not domain:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Domain not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Domain not found")
 
         # Soft delete
         domain.is_active = False
@@ -341,7 +351,7 @@ class EmbedWidgetService:
         widget: EmbedWidget,
         token: str,
         base_url: str,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Generate embed code snippets for a widget.
 
@@ -355,15 +365,14 @@ class EmbedWidgetService:
             height = widget.custom_height
         else:
             width, height = WIDGET_DIMENSIONS.get(
-                widget.widget_size,
-                WIDGET_DIMENSIONS[WidgetSize.STANDARD.value]
+                widget.widget_size, WIDGET_DIMENSIONS[WidgetSize.STANDARD.value]
             )
 
         # Embed URL
         embed_url = f"{base_url}/embed/v1/widget/{widget_id}"
 
         # Iframe embed code
-        iframe_code = f'''<iframe
+        iframe_code = f"""<iframe
   src="{embed_url}?token={token}"
   width="{width}"
   height="{height}"
@@ -371,10 +380,10 @@ class EmbedWidgetService:
   sandbox="allow-scripts allow-same-origin"
   loading="lazy"
   title="{widget.name}"
-></iframe>'''
+></iframe>"""
 
         # Script embed code (more flexible)
-        script_code = f'''<div id="stratum-widget-{widget_id}"></div>
+        script_code = f"""<div id="stratum-widget-{widget_id}"></div>
 <script>
 (function() {{
   var w = document.createElement('script');
@@ -384,7 +393,7 @@ class EmbedWidgetService:
   w.dataset.token = '{token}';
   document.head.appendChild(w);
 }})();
-</script>'''
+</script>"""
 
         # Preview URL (for testing in dashboard)
         preview_url = f"{base_url}/embed/v1/preview/{widget_id}?token={token}"

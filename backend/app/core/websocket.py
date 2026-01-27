@@ -14,14 +14,14 @@ Handles:
 
 import asyncio
 import json
-from datetime import datetime
-from typing import Dict, Set, Optional, Any
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 
+import redis.asyncio as redis
 from fastapi import WebSocket
 from starlette.websockets import WebSocketState
-import redis.asyncio as redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -31,6 +31,7 @@ logger = get_logger(__name__)
 
 class MessageType(str, Enum):
     """WebSocket message types."""
+
     # EMQ updates
     EMQ_UPDATE = "emq_update"
     EMQ_DRIVER_UPDATE = "emq_driver_update"
@@ -57,16 +58,19 @@ class MessageType(str, Enum):
 @dataclass
 class WebSocketMessage:
     """WebSocket message structure."""
+
     type: str
     payload: Any
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
 
     def to_json(self) -> str:
-        return json.dumps({
-            "type": self.type,
-            "payload": self.payload,
-            "timestamp": self.timestamp,
-        })
+        return json.dumps(
+            {
+                "type": self.type,
+                "payload": self.payload,
+                "timestamp": self.timestamp,
+            }
+        )
 
     @classmethod
     def from_json(cls, data: str) -> "WebSocketMessage":
@@ -81,10 +85,11 @@ class WebSocketMessage:
 @dataclass
 class ConnectedClient:
     """Represents a connected WebSocket client."""
+
     websocket: WebSocket
     tenant_id: Optional[int] = None
     user_id: Optional[int] = None
-    subscribed_channels: Set[str] = field(default_factory=set)
+    subscribed_channels: set[str] = field(default_factory=set)
     connected_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -101,9 +106,9 @@ class WebSocketManager:
     """
 
     def __init__(self):
-        self._connections: Dict[str, ConnectedClient] = {}
-        self._tenant_connections: Dict[int, Set[str]] = {}
-        self._channel_subscriptions: Dict[str, Set[str]] = {}
+        self._connections: dict[str, ConnectedClient] = {}
+        self._tenant_connections: dict[int, set[str]] = {}
+        self._channel_subscriptions: dict[str, set[str]] = {}
         self._redis: Optional[redis.Redis] = None
         self._pubsub_task: Optional[asyncio.Task] = None
         self._heartbeat_task: Optional[asyncio.Task] = None
@@ -155,6 +160,7 @@ class WebSocketManager:
     def _generate_client_id(self) -> str:
         """Generate a unique client ID."""
         import uuid
+
         return str(uuid.uuid4())
 
     async def connect(
@@ -344,7 +350,7 @@ class WebSocketManager:
             await pubsub.punsubscribe("ws:*")
             await pubsub.close()
 
-    async def _handle_redis_message(self, message: Dict):
+    async def _handle_redis_message(self, message: dict):
         """Handle a message received from Redis."""
         try:
             channel = message["channel"].decode("utf-8")
@@ -412,15 +418,14 @@ class WebSocketManager:
             )
             await self.send_to_client(client_id, error_msg)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get WebSocket connection statistics."""
         return {
             "total_connections": len(self._connections),
             "tenants_connected": len(self._tenant_connections),
             "channels_active": len(self._channel_subscriptions),
             "connections_by_tenant": {
-                tid: len(clients)
-                for tid, clients in self._tenant_connections.items()
+                tid: len(clients) for tid, clients in self._tenant_connections.items()
             },
         }
 
@@ -432,6 +437,7 @@ ws_manager = WebSocketManager()
 # =============================================================================
 # Helper Functions for Publishing Events
 # =============================================================================
+
 
 async def publish_action_status_update(
     tenant_id: int,

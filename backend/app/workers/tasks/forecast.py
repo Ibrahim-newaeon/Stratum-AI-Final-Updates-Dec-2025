@@ -5,7 +5,7 @@
 Background tasks for ML-based forecasting and predictions.
 """
 
-from typing import List, Optional
+from typing import Optional
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -18,7 +18,7 @@ logger = get_task_logger(__name__)
 
 
 @shared_task
-def generate_forecast(tenant_id: int, campaign_ids: Optional[List[int]] = None):
+def generate_forecast(tenant_id: int, campaign_ids: Optional[list[int]] = None):
     """
     Generate forecast for specified campaigns or all campaigns.
 
@@ -69,11 +69,7 @@ def generate_daily_forecasts():
     logger.info("Starting daily forecast generation")
 
     with SyncSessionLocal() as db:
-        tenants = (
-            db.execute(select(Tenant).where(Tenant.is_deleted == False))
-            .scalars()
-            .all()
-        )
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         task_count = 0
         for tenant in tenants:

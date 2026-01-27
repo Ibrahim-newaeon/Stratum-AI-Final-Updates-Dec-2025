@@ -17,63 +17,60 @@ Admin endpoints (superadmin only):
 """
 
 import re
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, status
-from sqlalchemy import select, and_, or_, desc, func
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models.cms import (
-    CMSCategory,
-    CMSTag,
     CMSAuthor,
-    CMSPost,
-    CMSPage,
+    CMSCategory,
     CMSContactSubmission,
-    CMSPostStatus,
+    CMSPage,
     CMSPageStatus,
+    CMSPost,
+    CMSPostStatus,
+    CMSPostVersion,
+    CMSTag,
     CMSWorkflowAction,
     CMSWorkflowLog,
-    CMSPostVersion,
-    CMSRole,
-    CMS_PERMISSIONS,
-    has_permission,
     cms_post_tags,
 )
 from app.schemas.cms import (
-    CategoryCreate,
-    CategoryUpdate,
-    CategoryResponse,
-    CategoryListResponse,
-    TagCreate,
-    TagUpdate,
-    TagResponse,
-    TagListResponse,
     AuthorCreate,
-    AuthorUpdate,
-    AuthorResponse,
     AuthorListResponse,
-    PostCreate,
-    PostUpdate,
-    PostResponse,
-    PostListResponse,
-    PostPublicResponse,
-    PostPublicListResponse,
-    PageCreate,
-    PageUpdate,
-    PageResponse,
-    PageListResponse,
-    ContactSubmit,
-    ContactResponse,
+    AuthorResponse,
+    AuthorUpdate,
+    CategoryCreate,
+    CategoryListResponse,
+    CategoryResponse,
+    CategoryUpdate,
     ContactListResponse,
     ContactMarkRead,
     ContactMarkResponded,
     ContactMarkSpam,
+    ContactResponse,
+    ContactSubmit,
+    PageCreate,
+    PageListResponse,
+    PageResponse,
+    PageUpdate,
+    PostCreate,
+    PostListResponse,
+    PostPublicListResponse,
+    PostPublicResponse,
+    PostResponse,
+    PostUpdate,
+    TagCreate,
+    TagListResponse,
+    TagResponse,
+    TagUpdate,
 )
 from app.schemas.response import APIResponse
 
@@ -84,6 +81,7 @@ logger = get_logger(__name__)
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def slugify(text: str) -> str:
     """Convert text to URL-friendly slug."""
@@ -117,6 +115,7 @@ async def check_superadmin(request: Request) -> bool:
 # =============================================================================
 # Public Endpoints
 # =============================================================================
+
 
 @router.get("/posts", response_model=APIResponse[PostPublicListResponse])
 async def list_published_posts(
@@ -171,9 +170,7 @@ async def list_published_posts(
 
     # Filter by tag (requires join)
     if tag_slug:
-        tag_result = await db.execute(
-            select(CMSTag.id).where(CMSTag.slug == tag_slug)
-        )
+        tag_result = await db.execute(select(CMSTag.id).where(CMSTag.slug == tag_slug))
         tag_id = tag_result.scalar_one_or_none()
         if tag_id:
             query = query.join(cms_post_tags).where(cms_post_tags.c.tag_id == tag_id)
@@ -185,8 +182,9 @@ async def list_published_posts(
 
     # Fetch with pagination
     query = (
-        query
-        .options(selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags))
+        query.options(
+            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+        )
         .order_by(desc(CMSPost.published_at), desc(CMSPost.created_at))
         .offset((page - 1) * page_size)
         .limit(page_size)
@@ -226,7 +224,9 @@ async def list_published_posts(
                         is_active=p.category.is_active,
                         created_at=p.category.created_at,
                         updated_at=p.category.updated_at,
-                    ) if p.category else None,
+                    )
+                    if p.category
+                    else None,
                     author=AuthorResponse(
                         id=p.author.id,
                         user_id=p.author.user_id,
@@ -244,7 +244,9 @@ async def list_published_posts(
                         is_active=p.author.is_active,
                         created_at=p.author.created_at,
                         updated_at=p.author.updated_at,
-                    ) if p.author else None,
+                    )
+                    if p.author
+                    else None,
                     tags=[
                         TagResponse(
                             id=t.id,
@@ -255,7 +257,8 @@ async def list_published_posts(
                             usage_count=t.usage_count,
                             created_at=t.created_at,
                             updated_at=t.updated_at,
-                        ) for t in p.tags
+                        )
+                        for t in p.tags
                     ],
                 )
                 for p in posts
@@ -278,7 +281,9 @@ async def get_post_by_slug(
     """
     result = await db.execute(
         select(CMSPost)
-        .options(selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags))
+        .options(
+            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+        )
         .where(
             and_(
                 CMSPost.slug == slug,
@@ -328,7 +333,9 @@ async def get_post_by_slug(
                 is_active=post.category.is_active,
                 created_at=post.category.created_at,
                 updated_at=post.category.updated_at,
-            ) if post.category else None,
+            )
+            if post.category
+            else None,
             author=AuthorResponse(
                 id=post.author.id,
                 user_id=post.author.user_id,
@@ -346,7 +353,9 @@ async def get_post_by_slug(
                 is_active=post.author.is_active,
                 created_at=post.author.created_at,
                 updated_at=post.author.updated_at,
-            ) if post.author else None,
+            )
+            if post.author
+            else None,
             tags=[
                 TagResponse(
                     id=t.id,
@@ -357,7 +366,8 @@ async def get_post_by_slug(
                     usage_count=t.usage_count,
                     created_at=t.created_at,
                     updated_at=t.updated_at,
-                ) for t in post.tags
+                )
+                for t in post.tags
             ],
         ),
     )
@@ -409,9 +419,7 @@ async def list_tags(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[TagListResponse]:
     """List all tags (public endpoint)."""
-    result = await db.execute(
-        select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name)
-    )
+    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name))
     tags = result.scalars().all()
 
     return APIResponse(
@@ -476,6 +484,7 @@ async def submit_contact_form(
 # Admin Endpoints - Posts
 # =============================================================================
 
+
 @router.get("/admin/posts", response_model=APIResponse[PostListResponse])
 async def admin_list_posts(
     request: Request,
@@ -488,7 +497,9 @@ async def admin_list_posts(
 ) -> APIResponse[PostListResponse]:
     """List all posts (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     conditions = [CMSPost.is_deleted == False]
 
@@ -515,7 +526,9 @@ async def admin_list_posts(
     # Fetch posts
     query = (
         select(CMSPost)
-        .options(selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags))
+        .options(
+            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+        )
         .where(and_(*conditions))
         .order_by(desc(CMSPost.created_at))
         .offset((page - 1) * page_size)
@@ -562,7 +575,9 @@ async def admin_list_posts(
                         is_active=p.category.is_active,
                         created_at=p.category.created_at,
                         updated_at=p.category.updated_at,
-                    ) if p.category else None,
+                    )
+                    if p.category
+                    else None,
                     author=AuthorResponse(
                         id=p.author.id,
                         user_id=p.author.user_id,
@@ -580,7 +595,9 @@ async def admin_list_posts(
                         is_active=p.author.is_active,
                         created_at=p.author.created_at,
                         updated_at=p.author.updated_at,
-                    ) if p.author else None,
+                    )
+                    if p.author
+                    else None,
                     tags=[
                         TagResponse(
                             id=t.id,
@@ -591,7 +608,8 @@ async def admin_list_posts(
                             usage_count=t.usage_count,
                             created_at=t.created_at,
                             updated_at=t.updated_at,
-                        ) for t in p.tags
+                        )
+                        for t in p.tags
                     ],
                     created_at=p.created_at,
                     updated_at=p.updated_at,
@@ -613,11 +631,15 @@ async def admin_get_post(
 ) -> APIResponse[PostResponse]:
     """Get a single post by ID (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSPost)
-        .options(selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags))
+        .options(
+            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+        )
         .where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
     )
     post = result.scalar_one_or_none()
@@ -660,7 +682,9 @@ async def admin_get_post(
                 is_active=post.category.is_active,
                 created_at=post.category.created_at,
                 updated_at=post.category.updated_at,
-            ) if post.category else None,
+            )
+            if post.category
+            else None,
             author=AuthorResponse(
                 id=post.author.id,
                 user_id=post.author.user_id,
@@ -678,7 +702,9 @@ async def admin_get_post(
                 is_active=post.author.is_active,
                 created_at=post.author.created_at,
                 updated_at=post.author.updated_at,
-            ) if post.author else None,
+            )
+            if post.author
+            else None,
             tags=[
                 TagResponse(
                     id=t.id,
@@ -689,7 +715,8 @@ async def admin_get_post(
                     usage_count=t.usage_count,
                     created_at=t.created_at,
                     updated_at=t.updated_at,
-                ) for t in post.tags
+                )
+                for t in post.tags
             ],
             created_at=post.created_at,
             updated_at=post.updated_at,
@@ -697,7 +724,9 @@ async def admin_get_post(
     )
 
 
-@router.post("/admin/posts", response_model=APIResponse[PostResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/admin/posts", response_model=APIResponse[PostResponse], status_code=status.HTTP_201_CREATED
+)
 async def admin_create_post(
     request: Request,
     body: PostCreate,
@@ -705,7 +734,9 @@ async def admin_create_post(
 ) -> APIResponse[PostResponse]:
     """Create a new post (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     # Generate slug if not provided
     slug = body.slug or slugify(body.title)
@@ -748,9 +779,7 @@ async def admin_create_post(
 
     # Add tags
     if body.tag_ids:
-        tag_result = await db.execute(
-            select(CMSTag).where(CMSTag.id.in_(body.tag_ids))
-        )
+        tag_result = await db.execute(select(CMSTag).where(CMSTag.id.in_(body.tag_ids)))
         tags = tag_result.scalars().all()
         post.tags = list(tags)
 
@@ -764,7 +793,9 @@ async def admin_create_post(
     # Reload with relationships
     result = await db.execute(
         select(CMSPost)
-        .options(selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags))
+        .options(
+            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+        )
         .where(CMSPost.id == post.id)
     )
     post = result.scalar_one()
@@ -806,7 +837,9 @@ async def admin_create_post(
                 is_active=post.category.is_active,
                 created_at=post.category.created_at,
                 updated_at=post.category.updated_at,
-            ) if post.category else None,
+            )
+            if post.category
+            else None,
             author=AuthorResponse(
                 id=post.author.id,
                 user_id=post.author.user_id,
@@ -824,7 +857,9 @@ async def admin_create_post(
                 is_active=post.author.is_active,
                 created_at=post.author.created_at,
                 updated_at=post.author.updated_at,
-            ) if post.author else None,
+            )
+            if post.author
+            else None,
             tags=[
                 TagResponse(
                     id=t.id,
@@ -835,7 +870,8 @@ async def admin_create_post(
                     usage_count=t.usage_count,
                     created_at=t.created_at,
                     updated_at=t.updated_at,
-                ) for t in post.tags
+                )
+                for t in post.tags
             ],
             created_at=post.created_at,
             updated_at=post.updated_at,
@@ -852,7 +888,9 @@ async def admin_update_post(
 ) -> APIResponse[PostResponse]:
     """Update a post (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSPost)
@@ -881,7 +919,7 @@ async def admin_update_post(
         was_published = post.status == CMSPostStatus.PUBLISHED.value
         post.status = body.status
         if body.status == "published" and not was_published:
-            post.published_at = datetime.now(timezone.utc)
+            post.published_at = datetime.now(UTC)
     if body.content_type is not None:
         post.content_type = body.content_type
     if body.category_id is not None:
@@ -918,9 +956,7 @@ async def admin_update_post(
             tag.usage_count = max(0, tag.usage_count - 1)
 
         # Get new tags
-        tag_result = await db.execute(
-            select(CMSTag).where(CMSTag.id.in_(body.tag_ids))
-        )
+        tag_result = await db.execute(select(CMSTag).where(CMSTag.id.in_(body.tag_ids)))
         new_tags = tag_result.scalars().all()
         post.tags = list(new_tags)
 
@@ -933,7 +969,9 @@ async def admin_update_post(
     # Reload with relationships
     result = await db.execute(
         select(CMSPost)
-        .options(selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags))
+        .options(
+            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+        )
         .where(CMSPost.id == post.id)
     )
     post = result.scalar_one()
@@ -973,7 +1011,9 @@ async def admin_update_post(
                 is_active=post.category.is_active,
                 created_at=post.category.created_at,
                 updated_at=post.category.updated_at,
-            ) if post.category else None,
+            )
+            if post.category
+            else None,
             author=AuthorResponse(
                 id=post.author.id,
                 user_id=post.author.user_id,
@@ -991,7 +1031,9 @@ async def admin_update_post(
                 is_active=post.author.is_active,
                 created_at=post.author.created_at,
                 updated_at=post.author.updated_at,
-            ) if post.author else None,
+            )
+            if post.author
+            else None,
             tags=[
                 TagResponse(
                     id=t.id,
@@ -1002,7 +1044,8 @@ async def admin_update_post(
                     usage_count=t.usage_count,
                     created_at=t.created_at,
                     updated_at=t.updated_at,
-                ) for t in post.tags
+                )
+                for t in post.tags
             ],
             created_at=post.created_at,
             updated_at=post.updated_at,
@@ -1018,7 +1061,9 @@ async def admin_delete_post(
 ) -> None:
     """Soft delete a post (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSPost).where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
@@ -1038,6 +1083,7 @@ async def admin_delete_post(
 # Admin Endpoints - Categories
 # =============================================================================
 
+
 @router.get("/admin/categories", response_model=APIResponse[CategoryListResponse])
 async def admin_list_categories(
     request: Request,
@@ -1045,7 +1091,9 @@ async def admin_list_categories(
 ) -> APIResponse[CategoryListResponse]:
     """List all categories (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSCategory).order_by(CMSCategory.display_order, CMSCategory.name)
@@ -1075,7 +1123,11 @@ async def admin_list_categories(
     )
 
 
-@router.post("/admin/categories", response_model=APIResponse[CategoryResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/admin/categories",
+    response_model=APIResponse[CategoryResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def admin_create_category(
     request: Request,
     body: CategoryCreate,
@@ -1083,7 +1135,9 @@ async def admin_create_category(
 ) -> APIResponse[CategoryResponse]:
     """Create a category (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     slug = body.slug or slugify(body.name)
 
@@ -1127,7 +1181,9 @@ async def admin_update_category(
 ) -> APIResponse[CategoryResponse]:
     """Update a category (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(select(CMSCategory).where(CMSCategory.id == category_id))
     category = result.scalar_one_or_none()
@@ -1178,7 +1234,9 @@ async def admin_delete_category(
 ) -> None:
     """Delete a category (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(select(CMSCategory).where(CMSCategory.id == category_id))
     category = result.scalar_one_or_none()
@@ -1194,6 +1252,7 @@ async def admin_delete_category(
 # Admin Endpoints - Tags
 # =============================================================================
 
+
 @router.get("/admin/tags", response_model=APIResponse[TagListResponse])
 async def admin_list_tags(
     request: Request,
@@ -1201,11 +1260,11 @@ async def admin_list_tags(
 ) -> APIResponse[TagListResponse]:
     """List all tags (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
-    result = await db.execute(
-        select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name)
-    )
+    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name))
     tags = result.scalars().all()
 
     return APIResponse(
@@ -1229,7 +1288,9 @@ async def admin_list_tags(
     )
 
 
-@router.post("/admin/tags", response_model=APIResponse[TagResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/admin/tags", response_model=APIResponse[TagResponse], status_code=status.HTTP_201_CREATED
+)
 async def admin_create_tag(
     request: Request,
     body: TagCreate,
@@ -1237,7 +1298,9 @@ async def admin_create_tag(
 ) -> APIResponse[TagResponse]:
     """Create a tag (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     slug = body.slug or slugify(body.name)
 
@@ -1276,7 +1339,9 @@ async def admin_update_tag(
 ) -> APIResponse[TagResponse]:
     """Update a tag (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(select(CMSTag).where(CMSTag.id == tag_id))
     tag = result.scalar_one_or_none()
@@ -1319,7 +1384,9 @@ async def admin_delete_tag(
 ) -> None:
     """Delete a tag (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(select(CMSTag).where(CMSTag.id == tag_id))
     tag = result.scalar_one_or_none()
@@ -1335,6 +1402,7 @@ async def admin_delete_tag(
 # Admin Endpoints - Authors
 # =============================================================================
 
+
 @router.get("/admin/authors", response_model=APIResponse[AuthorListResponse])
 async def admin_list_authors(
     request: Request,
@@ -1342,7 +1410,9 @@ async def admin_list_authors(
 ) -> APIResponse[AuthorListResponse]:
     """List all authors (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(select(CMSAuthor).order_by(CMSAuthor.name))
     authors = result.scalars().all()
@@ -1376,7 +1446,11 @@ async def admin_list_authors(
     )
 
 
-@router.post("/admin/authors", response_model=APIResponse[AuthorResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/admin/authors",
+    response_model=APIResponse[AuthorResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def admin_create_author(
     request: Request,
     body: AuthorCreate,
@@ -1384,7 +1458,9 @@ async def admin_create_author(
 ) -> APIResponse[AuthorResponse]:
     """Create an author (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     slug = body.slug or slugify(body.name)
 
@@ -1453,7 +1529,9 @@ async def admin_update_author(
 ) -> APIResponse[AuthorResponse]:
     """Update an author (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(select(CMSAuthor).where(CMSAuthor.id == author_id))
     author = result.scalar_one_or_none()
@@ -1522,7 +1600,9 @@ async def admin_delete_author(
 ) -> None:
     """Delete an author (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(select(CMSAuthor).where(CMSAuthor.id == author_id))
     author = result.scalar_one_or_none()
@@ -1538,6 +1618,7 @@ async def admin_delete_author(
 # Admin Endpoints - Pages
 # =============================================================================
 
+
 @router.get("/admin/pages", response_model=APIResponse[PageListResponse])
 async def admin_list_pages(
     request: Request,
@@ -1545,7 +1626,9 @@ async def admin_list_pages(
 ) -> APIResponse[PageListResponse]:
     """List all pages (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSPage)
@@ -1582,7 +1665,9 @@ async def admin_list_pages(
     )
 
 
-@router.post("/admin/pages", response_model=APIResponse[PageResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/admin/pages", response_model=APIResponse[PageResponse], status_code=status.HTTP_201_CREATED
+)
 async def admin_create_page(
     request: Request,
     body: PageCreate,
@@ -1590,7 +1675,9 @@ async def admin_create_page(
 ) -> APIResponse[PageResponse]:
     """Create a page (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     slug = body.slug or slugify(body.title)
 
@@ -1600,7 +1687,7 @@ async def admin_create_page(
         content=body.content,
         content_json=body.content_json,
         status=body.status,
-        published_at=datetime.now(timezone.utc) if body.status == "published" else None,
+        published_at=datetime.now(UTC) if body.status == "published" else None,
         meta_title=body.meta_title,
         meta_description=body.meta_description,
         show_in_navigation=body.show_in_navigation,
@@ -1644,7 +1731,9 @@ async def admin_update_page(
 ) -> APIResponse[PageResponse]:
     """Update a page (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSPage).where(and_(CMSPage.id == page_id, CMSPage.is_deleted == False))
@@ -1666,7 +1755,7 @@ async def admin_update_page(
         was_published = page.status == CMSPageStatus.PUBLISHED.value
         page.status = body.status
         if body.status == "published" and not was_published:
-            page.published_at = datetime.now(timezone.utc)
+            page.published_at = datetime.now(UTC)
     if body.meta_title is not None:
         page.meta_title = body.meta_title
     if body.meta_description is not None:
@@ -1713,7 +1802,9 @@ async def admin_delete_page(
 ) -> None:
     """Soft delete a page (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSPage).where(and_(CMSPage.id == page_id, CMSPage.is_deleted == False))
@@ -1731,6 +1822,7 @@ async def admin_delete_page(
 # Admin Endpoints - Contact Submissions
 # =============================================================================
 
+
 @router.get("/admin/contacts", response_model=APIResponse[ContactListResponse])
 async def admin_list_contacts(
     request: Request,
@@ -1742,7 +1834,9 @@ async def admin_list_contacts(
 ) -> APIResponse[ContactListResponse]:
     """List contact submissions (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     conditions = []
 
@@ -1764,8 +1858,7 @@ async def admin_list_contacts(
     if conditions:
         query = query.where(and_(*conditions))
     query = (
-        query
-        .order_by(desc(CMSContactSubmission.created_at))
+        query.order_by(desc(CMSContactSubmission.created_at))
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
@@ -1812,7 +1905,9 @@ async def admin_mark_contact_read(
 ) -> APIResponse[ContactResponse]:
     """Mark contact as read (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -1826,7 +1921,7 @@ async def admin_mark_contact_read(
 
     contact.is_read = body.is_read
     if body.is_read:
-        contact.read_at = datetime.now(timezone.utc)
+        contact.read_at = datetime.now(UTC)
         contact.read_by_user_id = user_id
     else:
         contact.read_at = None
@@ -1866,7 +1961,9 @@ async def admin_mark_contact_responded(
 ) -> APIResponse[ContactResponse]:
     """Mark contact as responded (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSContactSubmission).where(CMSContactSubmission.id == contact_id)
@@ -1878,7 +1975,7 @@ async def admin_mark_contact_responded(
 
     contact.is_responded = body.is_responded
     if body.is_responded:
-        contact.responded_at = datetime.now(timezone.utc)
+        contact.responded_at = datetime.now(UTC)
     else:
         contact.responded_at = None
 
@@ -1919,7 +2016,9 @@ async def admin_mark_contact_spam(
 ) -> APIResponse[ContactResponse]:
     """Mark contact as spam (admin endpoint)."""
     if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+        )
 
     result = await db.execute(
         select(CMSContactSubmission).where(CMSContactSubmission.id == contact_id)
@@ -1960,6 +2059,7 @@ async def admin_mark_contact_spam(
 # 2026 Workflow Endpoints
 # =============================================================================
 
+
 @router.post("/admin/posts/{post_id}/submit-for-review", response_model=APIResponse[dict])
 async def submit_post_for_review(
     request: Request,
@@ -1991,7 +2091,7 @@ async def submit_post_for_review(
     if post.status not in allowed_states:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Post cannot be submitted for review from status: {post.status}"
+            detail=f"Post cannot be submitted for review from status: {post.status}",
         )
 
     # Store previous status for audit
@@ -1999,7 +2099,7 @@ async def submit_post_for_review(
 
     # Update post
     post.status = CMSPostStatus.IN_REVIEW.value
-    post.submitted_at = datetime.now(timezone.utc)
+    post.submitted_at = datetime.now(UTC)
     post.submitted_by_id = user_id
     if reviewer_id:
         post.assigned_reviewer_id = reviewer_id
@@ -2011,7 +2111,8 @@ async def submit_post_for_review(
         from_status=previous_status,
         to_status=CMSPostStatus.IN_REVIEW.value,
         performed_by_id=user_id,
-        comment=f"Submitted for review" + (f" (assigned to reviewer {reviewer_id})" if reviewer_id else ""),
+        comment="Submitted for review"
+        + (f" (assigned to reviewer {reviewer_id})" if reviewer_id else ""),
         version_number=post.version,
     )
     db.add(workflow_log)
@@ -2062,16 +2163,16 @@ async def approve_post(
     if post.status != CMSPostStatus.IN_REVIEW.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Post cannot be approved from status: {post.status}"
+            detail=f"Post cannot be approved from status: {post.status}",
         )
 
     previous_status = post.status
 
     # Update post
     post.status = CMSPostStatus.APPROVED.value
-    post.approved_at = datetime.now(timezone.utc)
+    post.approved_at = datetime.now(UTC)
     post.approved_by_id = user_id
-    post.reviewed_at = datetime.now(timezone.utc)
+    post.reviewed_at = datetime.now(UTC)
     post.reviewed_by_id = user_id
     if notes:
         post.review_notes = notes
@@ -2133,17 +2234,17 @@ async def reject_post(
     if post.status != CMSPostStatus.IN_REVIEW.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Post cannot be rejected from status: {post.status}"
+            detail=f"Post cannot be rejected from status: {post.status}",
         )
 
     previous_status = post.status
 
     # Update post
     post.status = CMSPostStatus.REJECTED.value
-    post.rejected_at = datetime.now(timezone.utc)
+    post.rejected_at = datetime.now(UTC)
     post.rejected_by_id = user_id
     post.rejection_reason = reason
-    post.reviewed_at = datetime.now(timezone.utc)
+    post.reviewed_at = datetime.now(UTC)
     post.reviewed_by_id = user_id
 
     # Create workflow log
@@ -2203,14 +2304,14 @@ async def request_post_changes(
     if post.status != CMSPostStatus.IN_REVIEW.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot request changes from status: {post.status}"
+            detail=f"Cannot request changes from status: {post.status}",
         )
 
     previous_status = post.status
 
     # Update post
     post.status = CMSPostStatus.CHANGES_REQUESTED.value
-    post.reviewed_at = datetime.now(timezone.utc)
+    post.reviewed_at = datetime.now(UTC)
     post.reviewed_by_id = user_id
     post.review_notes = notes
 
@@ -2260,13 +2361,12 @@ async def schedule_post(
     user_id = getattr(request.state, "user_id", None)
 
     # Validate scheduled_at is in the future
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if scheduled_at.tzinfo is None:
-        scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+        scheduled_at = scheduled_at.replace(tzinfo=UTC)
     if scheduled_at <= now:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Scheduled time must be in the future"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Scheduled time must be in the future"
         )
 
     result = await db.execute(
@@ -2282,7 +2382,7 @@ async def schedule_post(
     if post.status not in allowed_states:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Post cannot be scheduled from status: {post.status}"
+            detail=f"Post cannot be scheduled from status: {post.status}",
         )
 
     previous_status = post.status
@@ -2353,11 +2453,11 @@ async def publish_post_immediately(
     if post.status not in allowed_states:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Post cannot be published from status: {post.status}"
+            detail=f"Post cannot be published from status: {post.status}",
         )
 
     previous_status = post.status
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Update post
     post.status = CMSPostStatus.PUBLISHED.value
@@ -2418,7 +2518,7 @@ async def unpublish_post(
     if post.status != CMSPostStatus.PUBLISHED.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Post cannot be unpublished from status: {post.status}"
+            detail=f"Post cannot be unpublished from status: {post.status}",
         )
 
     previous_status = post.status
@@ -2524,9 +2624,7 @@ async def get_post_workflow_history(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     # Verify post exists
-    result = await db.execute(
-        select(CMSPost).where(CMSPost.id == post_id)
-    )
+    result = await db.execute(select(CMSPost).where(CMSPost.id == post_id))
     post = result.scalar_one_or_none()
 
     if not post:
@@ -2589,9 +2687,7 @@ async def get_post_versions(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     # Verify post exists
-    result = await db.execute(
-        select(CMSPost).where(CMSPost.id == post_id)
-    )
+    result = await db.execute(select(CMSPost).where(CMSPost.id == post_id))
     post = result.scalar_one_or_none()
 
     if not post:
@@ -2678,7 +2774,9 @@ async def restore_post_version(
     version_to_restore = result.scalar_one_or_none()
 
     if not version_to_restore:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Version {version} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Version {version} not found"
+        )
 
     # Create a snapshot of current state before restoring
     current_snapshot = CMSPostVersion(

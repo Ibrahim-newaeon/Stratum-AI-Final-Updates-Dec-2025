@@ -11,9 +11,8 @@ and implement platform-specific API calls.
 import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
+from typing import Any, Optional
 
 import structlog
 
@@ -24,8 +23,10 @@ logger = structlog.get_logger()
 # Data Classes
 # =============================================================================
 
+
 class IdentifierType(str, Enum):
     """Supported identifier types for audience matching."""
+
     EMAIL = "email"
     PHONE = "phone"
     MOBILE_ADVERTISER_ID = "mobile_id"  # IDFA/GAID
@@ -38,6 +39,7 @@ class UserIdentifier:
     Represents a user identifier for audience matching.
     Identifiers are hashed before sending to platforms.
     """
+
     identifier_type: IdentifierType
     raw_value: Optional[str] = None
     hashed_value: Optional[str] = None
@@ -49,7 +51,7 @@ class UserIdentifier:
         if self.raw_value:
             # Normalize and hash
             normalized = self._normalize(self.raw_value)
-            return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+            return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
         return None
 
     def _normalize(self, value: str) -> str:
@@ -60,7 +62,7 @@ class UserIdentifier:
             return value
         if self.identifier_type == IdentifierType.PHONE:
             # Remove non-digit characters
-            return ''.join(c for c in value if c.isdigit() or c == '+')
+            return "".join(c for c in value if c.isdigit() or c == "+")
         return value
 
 
@@ -70,8 +72,9 @@ class AudienceUser:
     Represents a user to be added/removed from an audience.
     Contains all available identifiers for matching.
     """
+
     profile_id: str
-    identifiers: List[UserIdentifier] = field(default_factory=list)
+    identifiers: list[UserIdentifier] = field(default_factory=list)
 
     # Optional additional data for enhanced matching
     first_name: Optional[str] = None
@@ -89,6 +92,7 @@ class AudienceSyncResult:
     """
     Result of an audience sync operation.
     """
+
     success: bool
     operation: str  # create, update, delete
 
@@ -110,10 +114,10 @@ class AudienceSyncResult:
     # Error information
     error_message: Optional[str] = None
     error_code: Optional[str] = None
-    error_details: Dict[str, Any] = field(default_factory=dict)
+    error_details: dict[str, Any] = field(default_factory=dict)
 
     # Raw platform response
-    platform_response: Dict[str, Any] = field(default_factory=dict)
+    platform_response: dict[str, Any] = field(default_factory=dict)
 
     # Timing
     duration_ms: int = 0
@@ -124,6 +128,7 @@ class AudienceConfig:
     """
     Configuration for creating/updating an audience on a platform.
     """
+
     name: str
     description: Optional[str] = None
 
@@ -135,12 +140,13 @@ class AudienceConfig:
     retention_days: Optional[int] = None
 
     # Additional platform-specific config
-    extra_config: Dict[str, Any] = field(default_factory=dict)
+    extra_config: dict[str, Any] = field(default_factory=dict)
 
 
 # =============================================================================
 # Base Connector Class
 # =============================================================================
+
 
 class BaseAudienceConnector(ABC):
     """
@@ -157,12 +163,7 @@ class BaseAudienceConnector(ABC):
     PLATFORM_NAME: str = "unknown"
     BATCH_SIZE: int = 10000  # Default batch size for uploads
 
-    def __init__(
-        self,
-        access_token: str,
-        ad_account_id: str,
-        **kwargs
-    ):
+    def __init__(self, access_token: str, ad_account_id: str, **kwargs):
         self.access_token = access_token
         self.ad_account_id = ad_account_id
         self.logger = logger.bind(
@@ -174,7 +175,7 @@ class BaseAudienceConnector(ABC):
     async def create_audience(
         self,
         config: AudienceConfig,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Create a new custom audience with initial users.
@@ -192,7 +193,7 @@ class BaseAudienceConnector(ABC):
     async def add_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Add users to an existing audience.
@@ -210,7 +211,7 @@ class BaseAudienceConnector(ABC):
     async def remove_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Remove users from an audience.
@@ -228,7 +229,7 @@ class BaseAudienceConnector(ABC):
     async def replace_audience(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Replace entire audience with new user list.
@@ -262,7 +263,7 @@ class BaseAudienceConnector(ABC):
     async def get_audience_info(
         self,
         audience_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get audience information including size and status.
 
@@ -281,20 +282,20 @@ class BaseAudienceConnector(ABC):
     def _hash_identifier(self, value: str, identifier_type: IdentifierType) -> str:
         """Hash an identifier value using SHA256."""
         normalized = self._normalize_identifier(value, identifier_type)
-        return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
     def _normalize_identifier(self, value: str, identifier_type: IdentifierType) -> str:
         """Normalize identifier before hashing (platform-specific)."""
         value = value.strip().lower()
         if identifier_type == IdentifierType.PHONE:
             # Remove non-digit characters except +
-            return ''.join(c for c in value if c.isdigit() or c == '+')
+            return "".join(c for c in value if c.isdigit() or c == "+")
         return value
 
     def _prepare_users_for_upload(
         self,
-        users: List[AudienceUser],
-    ) -> List[Dict[str, Any]]:
+        users: list[AudienceUser],
+    ) -> list[dict[str, Any]]:
         """
         Prepare user data for upload (platform-specific format).
         Override in subclasses for platform-specific formatting.
@@ -310,6 +311,6 @@ class BaseAudienceConnector(ABC):
                 prepared.append(user_data)
         return prepared
 
-    def _chunk_list(self, lst: List, chunk_size: int) -> List[List]:
+    def _chunk_list(self, lst: list, chunk_size: int) -> list[list]:
         """Split a list into chunks of specified size."""
-        return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+        return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]

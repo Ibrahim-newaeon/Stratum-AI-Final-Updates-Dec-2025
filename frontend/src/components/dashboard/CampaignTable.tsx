@@ -3,15 +3,15 @@
  * Displays campaign performance data in a sortable, filterable table
  */
 
-import React, { useState, useMemo } from 'react'
-import { ArrowUp, ArrowDown, Filter, Search } from 'lucide-react'
-import { cn, formatCurrency } from '@/lib/utils'
-import { Campaign, TableSortConfig } from '@/types/dashboard'
+import React, { useMemo, useState } from 'react';
+import { ArrowDown, ArrowUp, Filter, Search } from 'lucide-react';
+import { cn, formatCurrency } from '@/lib/utils';
+import { Campaign, TableSortConfig } from '@/types/dashboard';
 
 interface CampaignTableProps {
-  campaigns: Campaign[]
-  onCampaignClick?: (campaignId: string) => void
-  pageSize?: number
+  campaigns: Campaign[];
+  onCampaignClick?: (campaignId: string) => void;
+  pageSize?: number;
 }
 
 export const CampaignTable: React.FC<CampaignTableProps> = ({
@@ -22,29 +22,29 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
   const [sortConfig, setSortConfig] = useState<TableSortConfig>({
     key: 'roas',
     direction: 'desc',
-  })
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchTerm, setSearchTerm] = useState('')
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Sort campaigns
   const sortedCampaigns = useMemo(() => {
     const sorted = [...campaigns].sort((a, b) => {
-      const aValue = a[sortConfig.key as keyof Campaign]
-      const bValue = b[sortConfig.key as keyof Campaign]
+      const aValue = a[sortConfig.key as keyof Campaign];
+      const bValue = b[sortConfig.key as keyof Campaign];
 
       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue
+        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
       }
 
-      const aString = String(aValue).toLowerCase()
-      const bString = String(bValue).toLowerCase()
+      const aString = String(aValue).toLowerCase();
+      const bString = String(bValue).toLowerCase();
 
       if (sortConfig.direction === 'asc') {
-        return aString.localeCompare(bString)
+        return aString.localeCompare(bString);
       } else {
-        return bString.localeCompare(aString)
+        return bString.localeCompare(aString);
       }
-    })
+    });
 
     // Filter by search term
     if (searchTerm) {
@@ -52,44 +52,44 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
         (campaign) =>
           campaign.campaign_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           campaign.platform.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      );
     }
 
-    return sorted
-  }, [campaigns, sortConfig, searchTerm])
+    return sorted;
+  }, [campaigns, sortConfig, searchTerm]);
 
   // Pagination
-  const totalPages = Math.ceil(sortedCampaigns.length / pageSize)
+  const totalPages = Math.ceil(sortedCampaigns.length / pageSize);
   const paginatedCampaigns = sortedCampaigns.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
-  )
+  );
 
   // Handle sort
   const handleSort = (key: string) => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc',
-    }))
-  }
+    }));
+  };
 
   // Get ROAS color - uses semantic status colors from design system
   const getROASColor = (roas: number) => {
-    if (roas >= 3.0) return 'text-emerald-600 dark:text-emerald-400 font-bold'
-    if (roas >= 2.0) return 'text-emerald-500 dark:text-emerald-500'
-    if (roas >= 1.0) return 'text-amber-600 dark:text-amber-400'
-    return 'text-red-500 dark:text-red-400'
-  }
+    if (roas >= 3.0) return 'text-emerald-600 dark:text-emerald-400 font-bold';
+    if (roas >= 2.0) return 'text-emerald-500 dark:text-emerald-500';
+    if (roas >= 1.0) return 'text-amber-600 dark:text-amber-400';
+    return 'text-red-500 dark:text-red-400';
+  };
 
   // Column header component
   const ColumnHeader: React.FC<{
-    label: string
-    sortKey: string
-    align?: 'left' | 'center' | 'right'
+    label: string;
+    sortKey: string;
+    align?: 'left' | 'center' | 'right';
   }> = ({ label, sortKey, align = 'left' }) => {
-    const isSorted = sortConfig.key === sortKey
+    const isSorted = sortConfig.key === sortKey;
     const alignClass =
-      align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left'
+      align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
 
     return (
       <th
@@ -104,10 +104,16 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
           className={cn(
             'flex items-center gap-1 w-full hover:text-foreground transition-colors',
             'focus:outline-none focus-visible:text-foreground focus-visible:underline',
-            align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'
+            align === 'center'
+              ? 'justify-center'
+              : align === 'right'
+                ? 'justify-end'
+                : 'justify-start'
           )}
           aria-label={`Sort by ${label} ${isSorted ? (sortConfig.direction === 'asc' ? 'descending' : 'ascending') : 'ascending'}`}
-          aria-sort={isSorted ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : undefined}
+          aria-sort={
+            isSorted ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : undefined
+          }
         >
           {label}
           {isSorted &&
@@ -118,8 +124,8 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
             ))}
         </button>
       </th>
-    )
-  }
+    );
+  };
 
   return (
     <div className="w-full">
@@ -133,8 +139,8 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
               placeholder="Search campaigns..."
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value)
-                setCurrentPage(1)
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
               }}
               className="w-full pl-10 pr-4 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
               aria-label="Search campaigns by name or platform"
@@ -173,7 +179,9 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
                 className="hover:bg-muted/50 cursor-pointer transition-colors"
               >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-foreground">{campaign.campaign_name}</div>
+                  <div className="text-sm font-medium text-foreground">
+                    {campaign.campaign_name}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {campaign.campaign_type} &bull; {campaign.region}
                   </div>
@@ -239,7 +247,7 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default CampaignTable
+export default CampaignTable;

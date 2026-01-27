@@ -3,31 +3,31 @@
  * Multi-step wizard for creating campaigns across all platforms
  */
 
-import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  X,
+  AlertCircle,
+  Bookmark,
+  Check,
   ChevronLeft,
   ChevronRight,
-  Check,
-  Loader2,
   DollarSign,
-  Users,
-  AlertCircle,
+  Loader2,
   RefreshCw,
-  UserPlus,
-  UsersRound,
-  Bookmark,
   Settings,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useAdAccounts, Platform } from '@/api/campaignBuilder'
-import { useAuth } from '@/contexts/AuthContext'
+  UserPlus,
+  Users,
+  UsersRound,
+  X,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Platform, useAdAccounts } from '@/api/campaignBuilder';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CampaignCreateModalProps {
-  open: boolean
-  onClose: () => void
-  onSuccess?: (campaign: any) => void
+  open: boolean;
+  onClose: () => void;
+  onSuccess?: (campaign: any) => void;
 }
 
 // Platform configurations
@@ -51,7 +51,14 @@ const PLATFORMS = [
     name: 'TikTok',
     description: 'TikTok For Business',
     color: 'bg-black',
-    objectives: ['REACH', 'TRAFFIC', 'VIDEO_VIEWS', 'COMMUNITY_INTERACTION', 'CONVERSIONS', 'APP_PROMOTION'],
+    objectives: [
+      'REACH',
+      'TRAFFIC',
+      'VIDEO_VIEWS',
+      'COMMUNITY_INTERACTION',
+      'CONVERSIONS',
+      'APP_PROMOTION',
+    ],
   },
   {
     id: 'snapchat',
@@ -60,62 +67,62 @@ const PLATFORMS = [
     color: 'bg-yellow-400',
     objectives: ['AWARENESS', 'CONSIDERATION', 'CONVERSIONS', 'CATALOG_SALES'],
   },
-]
+];
 
 // Audience types for when API is available
 interface CustomAudience {
-  id: string
-  name: string
-  size: number
+  id: string;
+  name: string;
+  size: number;
 }
 
 interface LookalikeAudience {
-  id: string
-  name: string
-  size: number
-  source: string
+  id: string;
+  name: string;
+  size: number;
+  source: string;
 }
 
 interface SavedAudience {
-  id: string
-  name: string
-  description: string
+  id: string;
+  name: string;
+  description: string;
 }
 
 interface PlatformAudiences {
-  custom: CustomAudience[]
-  lookalike: LookalikeAudience[]
-  saved: SavedAudience[]
+  custom: CustomAudience[];
+  lookalike: LookalikeAudience[];
+  saved: SavedAudience[];
 }
 
-const STEPS = ['platform', 'basics', 'budget', 'targeting'] as const
-type Step = typeof STEPS[number]
+const STEPS = ['platform', 'basics', 'budget', 'targeting'] as const;
+type Step = (typeof STEPS)[number];
 
 interface FormData {
   // Platform
-  platform: string
+  platform: string;
   // Basics
-  name: string
-  objective: string
-  external_id: string
-  account_id: string
-  status: string
+  name: string;
+  objective: string;
+  external_id: string;
+  account_id: string;
+  status: string;
   // Budget
-  daily_budget: string
-  lifetime_budget: string
-  currency: string
-  start_date: string
-  end_date: string
+  daily_budget: string;
+  lifetime_budget: string;
+  currency: string;
+  start_date: string;
+  end_date: string;
   // Targeting
-  targeting_age_min: string
-  targeting_age_max: string
-  targeting_genders: string[]
-  targeting_locations: string
-  targeting_interests: string
+  targeting_age_min: string;
+  targeting_age_max: string;
+  targeting_genders: string[];
+  targeting_locations: string;
+  targeting_interests: string;
   // Audiences
-  custom_audiences: string[]
-  lookalike_audiences: string[]
-  saved_audiences: string[]
+  custom_audiences: string[];
+  lookalike_audiences: string[];
+  saved_audiences: string[];
 }
 
 const initialFormData: FormData = {
@@ -138,157 +145,161 @@ const initialFormData: FormData = {
   custom_audiences: [],
   lookalike_audiences: [],
   saved_audiences: [],
-}
+};
 
 export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreateModalProps) {
-  const { t } = useTranslation()
-  const { user } = useAuth()
-  const [currentStep, setCurrentStep] = useState<Step>('platform')
-  const [formData, setFormData] = useState<FormData>(initialFormData)
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [audienceTab, setAudienceTab] = useState<'custom' | 'lookalike' | 'saved'>('custom')
-  const [platformAudiences, setPlatformAudiences] = useState<PlatformAudiences | null>(null)
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [currentStep, setCurrentStep] = useState<Step>('platform');
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [audienceTab, setAudienceTab] = useState<'custom' | 'lookalike' | 'saved'>('custom');
+  const [platformAudiences, setPlatformAudiences] = useState<PlatformAudiences | null>(null);
 
-  const tenantId = user?.tenant_id || 0
-  const currentStepIndex = STEPS.indexOf(currentStep)
-  const selectedPlatform = PLATFORMS.find(p => p.id === formData.platform)
+  const tenantId = user?.tenant_id || 0;
+  const currentStepIndex = STEPS.indexOf(currentStep);
+  const selectedPlatform = PLATFORMS.find((p) => p.id === formData.platform);
 
   // Fetch ad accounts from real API
   const {
     data: adAccounts = [],
     isLoading: isLoadingAccounts,
-    refetch: _refetchAccounts
+    refetch: _refetchAccounts,
   } = useAdAccounts(
     tenantId,
     formData.platform as Platform,
     true // enabled only
-  )
+  );
 
   // Auto-select first account when accounts load
   useEffect(() => {
     if (adAccounts.length > 0 && !formData.account_id) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         account_id: adAccounts[0].platform_account_id,
         currency: adAccounts[0].currency,
-      }))
+      }));
     }
-  }, [adAccounts, formData.account_id])
+  }, [adAccounts, formData.account_id]);
 
   // Reset account selection when platform changes
   useEffect(() => {
     if (formData.platform) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         account_id: '',
         currency: 'USD',
-      }))
+      }));
       // Audiences would be fetched from API when endpoint is available
-      setPlatformAudiences(null)
+      setPlatformAudiences(null);
     }
-  }, [formData.platform])
+  }, [formData.platform]);
 
   const updateFormData = (field: keyof FormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
-  }
+  };
 
   const handleAccountChange = (accountId: string) => {
-    const account = adAccounts.find(a => a.platform_account_id === accountId)
+    const account = adAccounts.find((a) => a.platform_account_id === accountId);
     if (account) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         account_id: accountId,
         currency: account.currency,
-      }))
+      }));
     }
-  }
+  };
 
-  const toggleAudience = (type: 'custom_audiences' | 'lookalike_audiences' | 'saved_audiences', audienceId: string) => {
-    setFormData(prev => {
-      const current = prev[type]
+  const toggleAudience = (
+    type: 'custom_audiences' | 'lookalike_audiences' | 'saved_audiences',
+    audienceId: string
+  ) => {
+    setFormData((prev) => {
+      const current = prev[type];
       if (current.includes(audienceId)) {
-        return { ...prev, [type]: current.filter(id => id !== audienceId) }
+        return { ...prev, [type]: current.filter((id) => id !== audienceId) };
       }
-      return { ...prev, [type]: [...current, audienceId] }
-    })
-  }
+      return { ...prev, [type]: [...current, audienceId] };
+    });
+  };
 
   const validateStep = (step: Step): boolean => {
-    const newErrors: Partial<Record<keyof FormData, string>> = {}
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
 
     switch (step) {
       case 'platform':
         if (!formData.platform) {
-          newErrors.platform = t('campaigns.create.errors.platformRequired')
+          newErrors.platform = t('campaigns.create.errors.platformRequired');
         }
-        break
+        break;
       case 'basics':
         if (!formData.name.trim()) {
-          newErrors.name = t('campaigns.create.errors.nameRequired')
+          newErrors.name = t('campaigns.create.errors.nameRequired');
         }
         if (!formData.objective) {
-          newErrors.objective = t('campaigns.create.errors.objectiveRequired')
+          newErrors.objective = t('campaigns.create.errors.objectiveRequired');
         }
         if (!formData.account_id) {
-          newErrors.account_id = t('campaigns.create.errors.accountRequired')
+          newErrors.account_id = t('campaigns.create.errors.accountRequired');
         }
-        break
+        break;
       case 'budget':
         if (!formData.daily_budget && !formData.lifetime_budget) {
-          newErrors.daily_budget = t('campaigns.create.errors.budgetRequired')
+          newErrors.daily_budget = t('campaigns.create.errors.budgetRequired');
         }
         if (formData.start_date && formData.end_date && formData.end_date < formData.start_date) {
-          newErrors.end_date = t('campaigns.create.errors.endDateInvalid')
+          newErrors.end_date = t('campaigns.create.errors.endDateInvalid');
         }
-        break
+        break;
       case 'targeting':
-        const minAge = parseInt(formData.targeting_age_min)
-        const maxAge = parseInt(formData.targeting_age_max)
+        const minAge = parseInt(formData.targeting_age_min);
+        const maxAge = parseInt(formData.targeting_age_max);
         if (minAge < 13 || minAge > 100) {
-          newErrors.targeting_age_min = t('campaigns.create.errors.ageInvalid')
+          newErrors.targeting_age_min = t('campaigns.create.errors.ageInvalid');
         }
         if (maxAge < 13 || maxAge > 100) {
-          newErrors.targeting_age_max = t('campaigns.create.errors.ageInvalid')
+          newErrors.targeting_age_max = t('campaigns.create.errors.ageInvalid');
         }
         if (minAge > maxAge) {
-          newErrors.targeting_age_max = t('campaigns.create.errors.ageRangeInvalid')
+          newErrors.targeting_age_max = t('campaigns.create.errors.ageRangeInvalid');
         }
-        break
+        break;
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      const nextIndex = currentStepIndex + 1
+      const nextIndex = currentStepIndex + 1;
       if (nextIndex < STEPS.length) {
-        setCurrentStep(STEPS[nextIndex])
+        setCurrentStep(STEPS[nextIndex]);
       }
     }
-  }
+  };
 
   const handleBack = () => {
-    const prevIndex = currentStepIndex - 1
+    const prevIndex = currentStepIndex - 1;
     if (prevIndex >= 0) {
-      setCurrentStep(STEPS[prevIndex])
+      setCurrentStep(STEPS[prevIndex]);
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    if (!validateStep('targeting')) return
+    if (!validateStep('targeting')) return;
 
-    setIsSubmitting(true)
-    setSubmitError(null)
+    setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      const external_id = formData.external_id || `stratum_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      const external_id =
+        formData.external_id || `stratum_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       const payload = {
         name: formData.name,
@@ -297,62 +308,68 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
         objective: formData.objective,
         external_id,
         account_id: formData.account_id,
-        daily_budget_cents: formData.daily_budget ? Math.round(parseFloat(formData.daily_budget) * 100) : null,
-        lifetime_budget_cents: formData.lifetime_budget ? Math.round(parseFloat(formData.lifetime_budget) * 100) : null,
+        daily_budget_cents: formData.daily_budget
+          ? Math.round(parseFloat(formData.daily_budget) * 100)
+          : null,
+        lifetime_budget_cents: formData.lifetime_budget
+          ? Math.round(parseFloat(formData.lifetime_budget) * 100)
+          : null,
         currency: formData.currency,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
         targeting_age_min: parseInt(formData.targeting_age_min) || 18,
         targeting_age_max: parseInt(formData.targeting_age_max) || 65,
-        targeting_genders: formData.targeting_genders.length > 0 ? formData.targeting_genders : null,
+        targeting_genders:
+          formData.targeting_genders.length > 0 ? formData.targeting_genders : null,
         targeting_locations: formData.targeting_locations
-          ? formData.targeting_locations.split(',').map(l => ({ name: l.trim() }))
+          ? formData.targeting_locations.split(',').map((l) => ({ name: l.trim() }))
           : null,
         targeting_interests: formData.targeting_interests
-          ? formData.targeting_interests.split(',').map(i => i.trim())
+          ? formData.targeting_interests.split(',').map((i) => i.trim())
           : null,
         custom_audiences: formData.custom_audiences.length > 0 ? formData.custom_audiences : null,
-        lookalike_audiences: formData.lookalike_audiences.length > 0 ? formData.lookalike_audiences : null,
+        lookalike_audiences:
+          formData.lookalike_audiences.length > 0 ? formData.lookalike_audiences : null,
         saved_audiences: formData.saved_audiences.length > 0 ? formData.saved_audiences : null,
-      }
+      };
 
       const response = await fetch('/api/v1/campaigns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        onSuccess?.(data.data)
-        handleClose()
+        onSuccess?.(data.data);
+        handleClose();
       } else {
-        setSubmitError(data.message || t('campaigns.create.errors.submitFailed'))
+        setSubmitError(data.message || t('campaigns.create.errors.submitFailed'));
       }
     } catch (err) {
-      setSubmitError(t('campaigns.create.errors.submitFailed'))
+      setSubmitError(t('campaigns.create.errors.submitFailed'));
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleClose = () => {
-    setFormData(initialFormData)
-    setCurrentStep('platform')
-    setErrors({})
-    setSubmitError(null)
-    setPlatformAudiences(null)
-    onClose()
-  }
+    setFormData(initialFormData);
+    setCurrentStep('platform');
+    setErrors({});
+    setSubmitError(null);
+    setPlatformAudiences(null);
+    onClose();
+  };
 
   const formatAudienceSize = (size: number) => {
-    if (size >= 1000000) return `${(size / 1000000).toFixed(1)}M`
-    if (size >= 1000) return `${(size / 1000).toFixed(0)}K`
-    return size.toString()
-  }
+    if (size >= 1000000) return `${(size / 1000000).toFixed(1)}M`;
+    if (size >= 1000) return `${(size / 1000).toFixed(0)}K`;
+    return size.toString();
+  };
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -367,10 +384,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
             <h2 className="text-xl font-bold text-foreground">{t('campaigns.create.title')}</h2>
             <p className="text-sm text-muted-foreground mt-1">{t('campaigns.create.subtitle')}</p>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-          >
+          <button onClick={handleClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -386,8 +400,8 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     index < currentStepIndex
                       ? 'bg-green-500 text-white'
                       : index === currentStepIndex
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
                   )}
                 >
                   {index < currentStepIndex ? <Check className="w-4 h-4" /> : index + 1}
@@ -418,9 +432,11 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
           {/* Platform Selection Step */}
           {currentStep === 'platform' && (
             <div className="space-y-6">
-              <p className="text-muted-foreground text-lg">{t('campaigns.create.selectPlatform')}</p>
+              <p className="text-muted-foreground text-lg">
+                {t('campaigns.create.selectPlatform')}
+              </p>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {PLATFORMS.map(platform => (
+                {PLATFORMS.map((platform) => (
                   <button
                     key={platform.id}
                     onClick={() => updateFormData('platform', platform.id)}
@@ -469,16 +485,14 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={e => updateFormData('name', e.target.value)}
+                  onChange={(e) => updateFormData('name', e.target.value)}
                   placeholder={t('campaigns.create.campaignNamePlaceholder')}
                   className={cn(
                     'w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
                     errors.name && 'border-red-500'
                   )}
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-500">{errors.name}</p>
-                )}
+                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
 
               {/* Objective */}
@@ -487,7 +501,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   {t('campaigns.create.objective')} *
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {selectedPlatform?.objectives.map(obj => (
+                  {selectedPlatform?.objectives.map((obj) => (
                     <button
                       key={obj}
                       onClick={() => updateFormData('objective', obj)}
@@ -498,7 +512,10 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                           : 'border-transparent bg-muted hover:bg-muted/80 text-foreground'
                       )}
                     >
-                      {t(`campaigns.create.objectives.${obj.toLowerCase()}`, obj.replace(/_/g, ' '))}
+                      {t(
+                        `campaigns.create.objectives.${obj.toLowerCase()}`,
+                        obj.replace(/_/g, ' ')
+                      )}
                     </button>
                   ))}
                 </div>
@@ -522,22 +539,26 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     <div className="flex items-center gap-3">
                       <Settings className="w-5 h-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-foreground">No ad accounts connected</p>
-                        <p className="text-xs text-muted-foreground">Connect your {selectedPlatform?.name} account in Settings → Integrations</p>
+                        <p className="text-sm font-medium text-foreground">
+                          No ad accounts connected
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Connect your {selectedPlatform?.name} account in Settings → Integrations
+                        </p>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <select
                     value={formData.account_id}
-                    onChange={e => handleAccountChange(e.target.value)}
+                    onChange={(e) => handleAccountChange(e.target.value)}
                     className={cn(
                       'w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
                       errors.account_id && 'border-red-500'
                     )}
                   >
                     <option value="">Select an ad account</option>
-                    {adAccounts.map(account => (
+                    {adAccounts.map((account) => (
                       <option key={account.id} value={account.platform_account_id}>
                         {account.name} ({account.platform_account_id}) - {account.currency}
                       </option>
@@ -555,7 +576,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   {t('campaigns.create.initialStatus')}
                 </label>
                 <div className="flex gap-3">
-                  {['draft', 'active', 'paused'].map(status => (
+                  {['draft', 'active', 'paused'].map((status) => (
                     <button
                       key={status}
                       onClick={() => updateFormData('status', status)}
@@ -591,7 +612,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                 </label>
                 <select
                   value={formData.currency}
-                  onChange={e => updateFormData('currency', e.target.value)}
+                  onChange={(e) => updateFormData('currency', e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 >
                   <option value="USD">USD - US Dollar</option>
@@ -609,12 +630,16 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    {formData.currency === 'USD' ? '$' : formData.currency === 'EUR' ? '€' : formData.currency}
+                    {formData.currency === 'USD'
+                      ? '$'
+                      : formData.currency === 'EUR'
+                        ? '€'
+                        : formData.currency}
                   </span>
                   <input
                     type="number"
                     value={formData.daily_budget}
-                    onChange={e => updateFormData('daily_budget', e.target.value)}
+                    onChange={(e) => updateFormData('daily_budget', e.target.value)}
                     placeholder="0.00"
                     min="0"
                     step="0.01"
@@ -636,12 +661,16 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    {formData.currency === 'USD' ? '$' : formData.currency === 'EUR' ? '€' : formData.currency}
+                    {formData.currency === 'USD'
+                      ? '$'
+                      : formData.currency === 'EUR'
+                        ? '€'
+                        : formData.currency}
                   </span>
                   <input
                     type="number"
                     value={formData.lifetime_budget}
-                    onChange={e => updateFormData('lifetime_budget', e.target.value)}
+                    onChange={(e) => updateFormData('lifetime_budget', e.target.value)}
                     placeholder="0.00"
                     min="0"
                     step="0.01"
@@ -659,7 +688,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   <input
                     type="date"
                     value={formData.start_date}
-                    onChange={e => updateFormData('start_date', e.target.value)}
+                    onChange={(e) => updateFormData('start_date', e.target.value)}
                     className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
@@ -670,7 +699,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   <input
                     type="date"
                     value={formData.end_date}
-                    onChange={e => updateFormData('end_date', e.target.value)}
+                    onChange={(e) => updateFormData('end_date', e.target.value)}
                     min={formData.start_date}
                     className={cn(
                       'w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary',
@@ -698,7 +727,8 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
               {/* Audiences Section */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-3">
-                  {t('campaigns.create.audiences', 'Audiences')} <span className="text-muted-foreground font-normal">(Optional)</span>
+                  {t('campaigns.create.audiences', 'Audiences')}{' '}
+                  <span className="text-muted-foreground font-normal">(Optional)</span>
                 </label>
 
                 {platformAudiences ? (
@@ -746,7 +776,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     {/* Custom Audiences */}
                     {audienceTab === 'custom' && (
                       <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {platformAudiences.custom.map(audience => (
+                        {platformAudiences.custom.map((audience) => (
                           <label
                             key={audience.id}
                             className={cn(
@@ -765,7 +795,9 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                               />
                               <span className="font-medium text-sm">{audience.name}</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)} users</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatAudienceSize(audience.size)} users
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -774,7 +806,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     {/* Lookalike Audiences */}
                     {audienceTab === 'lookalike' && (
                       <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {platformAudiences.lookalike.map(audience => (
+                        {platformAudiences.lookalike.map((audience) => (
                           <label
                             key={audience.id}
                             className={cn(
@@ -793,10 +825,14 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                               />
                               <div>
                                 <span className="font-medium text-sm block">{audience.name}</span>
-                                <span className="text-xs text-muted-foreground">Source: {audience.source}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  Source: {audience.source}
+                                </span>
                               </div>
                             </div>
-                            <span className="text-xs text-muted-foreground">{formatAudienceSize(audience.size)}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatAudienceSize(audience.size)}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -805,7 +841,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     {/* Saved Audiences */}
                     {audienceTab === 'saved' && (
                       <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {platformAudiences.saved.map(audience => (
+                        {platformAudiences.saved.map((audience) => (
                           <label
                             key={audience.id}
                             className={cn(
@@ -824,7 +860,9 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                               />
                               <div>
                                 <span className="font-medium text-sm block">{audience.name}</span>
-                                <span className="text-xs text-muted-foreground">{audience.description}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {audience.description}
+                                </span>
                               </div>
                             </div>
                           </label>
@@ -833,9 +871,14 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     )}
 
                     {/* Selected audiences count */}
-                    {(formData.custom_audiences.length > 0 || formData.lookalike_audiences.length > 0 || formData.saved_audiences.length > 0) && (
+                    {(formData.custom_audiences.length > 0 ||
+                      formData.lookalike_audiences.length > 0 ||
+                      formData.saved_audiences.length > 0) && (
                       <p className="text-xs text-primary mt-2">
-                        {formData.custom_audiences.length + formData.lookalike_audiences.length + formData.saved_audiences.length} audience(s) selected
+                        {formData.custom_audiences.length +
+                          formData.lookalike_audiences.length +
+                          formData.saved_audiences.length}{' '}
+                        audience(s) selected
                       </p>
                     )}
                   </>
@@ -846,7 +889,8 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                       <div>
                         <p className="text-sm font-medium text-foreground">No audiences synced</p>
                         <p className="text-xs text-muted-foreground">
-                          Audiences can be synced after connecting your platform. Use demographic targeting below instead.
+                          Audiences can be synced after connecting your platform. Use demographic
+                          targeting below instead.
                         </p>
                       </div>
                     </div>
@@ -863,7 +907,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   <input
                     type="number"
                     value={formData.targeting_age_min}
-                    onChange={e => updateFormData('targeting_age_min', e.target.value)}
+                    onChange={(e) => updateFormData('targeting_age_min', e.target.value)}
                     min="13"
                     max="100"
                     className={cn(
@@ -875,7 +919,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   <input
                     type="number"
                     value={formData.targeting_age_max}
-                    onChange={e => updateFormData('targeting_age_max', e.target.value)}
+                    onChange={(e) => updateFormData('targeting_age_max', e.target.value)}
                     min="13"
                     max="100"
                     className={cn(
@@ -883,7 +927,9 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                       errors.targeting_age_max && 'border-red-500'
                     )}
                   />
-                  <span className="text-sm text-muted-foreground">{t('campaigns.create.yearsOld')}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('campaigns.create.yearsOld')}
+                  </span>
                 </div>
                 {(errors.targeting_age_min || errors.targeting_age_max) && (
                   <p className="mt-1 text-sm text-red-500">
@@ -898,25 +944,28 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                   {t('campaigns.create.gender')}
                 </label>
                 <div className="flex gap-3">
-                  {['all', 'male', 'female'].map(gender => (
+                  {['all', 'male', 'female'].map((gender) => (
                     <button
                       key={gender}
                       onClick={() => {
                         if (gender === 'all') {
-                          updateFormData('targeting_genders', [])
+                          updateFormData('targeting_genders', []);
                         } else {
-                          const current = formData.targeting_genders
+                          const current = formData.targeting_genders;
                           if (current.includes(gender)) {
-                            updateFormData('targeting_genders', current.filter(g => g !== gender))
+                            updateFormData(
+                              'targeting_genders',
+                              current.filter((g) => g !== gender)
+                            );
                           } else {
-                            updateFormData('targeting_genders', [...current, gender])
+                            updateFormData('targeting_genders', [...current, gender]);
                           }
                         }
                       }}
                       className={cn(
                         'px-4 py-2 rounded-lg text-sm font-medium border transition-all',
                         (gender === 'all' && formData.targeting_genders.length === 0) ||
-                        formData.targeting_genders.includes(gender)
+                          formData.targeting_genders.includes(gender)
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-transparent bg-muted hover:bg-muted/80 text-foreground'
                       )}
@@ -935,7 +984,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                 <input
                   type="text"
                   value={formData.targeting_locations}
-                  onChange={e => updateFormData('targeting_locations', e.target.value)}
+                  onChange={(e) => updateFormData('targeting_locations', e.target.value)}
                   placeholder={t('campaigns.create.locationsPlaceholder')}
                   className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
@@ -952,7 +1001,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                 <input
                   type="text"
                   value={formData.targeting_interests}
-                  onChange={e => updateFormData('targeting_interests', e.target.value)}
+                  onChange={(e) => updateFormData('targeting_interests', e.target.value)}
                   placeholder={t('campaigns.create.interestsPlaceholder')}
                   className="w-full px-4 py-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
@@ -1012,7 +1061,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default CampaignCreateModal
+export default CampaignCreateModal;

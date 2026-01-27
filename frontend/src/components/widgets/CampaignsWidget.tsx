@@ -1,8 +1,8 @@
-import { TrendingUp, TrendingDown } from 'lucide-react'
-import { cn, formatCurrency, getPlatformColor } from '@/lib/utils'
+import { TrendingDown, TrendingUp } from 'lucide-react';
+import { cn, formatCurrency, getPlatformColor } from '@/lib/utils';
 
 interface CampaignsWidgetProps {
-  className?: string
+  className?: string;
 }
 
 const mockCampaigns = [
@@ -10,7 +10,7 @@ const mockCampaigns = [
   { id: 2, name: 'Brand Awareness Q4', platform: 'meta', roas: 3.8, spend: 8900, trend: 'up' },
   { id: 3, name: 'Retargeting - Cart', platform: 'meta', roas: 5.2, spend: 3200, trend: 'up' },
   { id: 4, name: 'TikTok Influencer', platform: 'tiktok', roas: 3.0, spend: 7800, trend: 'down' },
-]
+];
 
 export function CampaignsWidget({ className }: CampaignsWidgetProps) {
   return (
@@ -30,25 +30,41 @@ export function CampaignsWidget({ className }: CampaignsWidgetProps) {
               </div>
               <div>
                 <p className="font-medium text-sm">{campaign.name}</p>
-                <p className="text-xs text-muted-foreground">{formatCurrency(campaign.spend)} spent</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatCurrency(campaign.spend)} spent
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className={cn(
-                'font-semibold text-sm',
-                campaign.roas >= 4 && 'text-emerald-500 dark:text-emerald-400',
-                campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
-                campaign.roas < 3 && 'text-amber-500 dark:text-amber-400'
-              )}>
+              <span
+                className={cn(
+                  'font-semibold text-sm',
+                  campaign.roas >= 4 && 'text-emerald-500 dark:text-emerald-400',
+                  campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
+                  campaign.roas < 3 && 'text-amber-500 dark:text-amber-400'
+                )}
+              >
                 {campaign.roas.toFixed(1)}x
               </span>
-              {campaign.trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" aria-label="Trending up" />}
-              {campaign.trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500 dark:text-red-400" aria-label="Trending down" />}
-              {campaign.trend === 'stable' && <div className="w-4 h-0.5 bg-muted-foreground" aria-label="Stable" />}
+              {campaign.trend === 'up' && (
+                <TrendingUp
+                  className="w-4 h-4 text-emerald-500 dark:text-emerald-400"
+                  aria-label="Trending up"
+                />
+              )}
+              {campaign.trend === 'down' && (
+                <TrendingDown
+                  className="w-4 h-4 text-red-500 dark:text-red-400"
+                  aria-label="Trending down"
+                />
+              )}
+              {campaign.trend === 'stable' && (
+                <div className="w-4 h-0.5 bg-muted-foreground" aria-label="Stable" />
+              )}
             </div>
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }

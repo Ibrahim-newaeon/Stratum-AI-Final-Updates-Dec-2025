@@ -7,11 +7,11 @@ import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowPathIcon,
-  CloudArrowUpIcon,
-  ClockIcon,
-  ChartBarIcon,
-  ShieldCheckIcon,
   BoltIcon,
+  ChartBarIcon,
+  ClockIcon,
+  CloudArrowUpIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 
 const platforms = [
@@ -129,7 +129,10 @@ export default function AudienceSyncSolution() {
               >
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl mx-auto mb-3 transition-colors"
-                  style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.8)' }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                  }}
                 >
                   {platform.name[0]}
                 </div>
@@ -223,9 +226,7 @@ export default function AudienceSyncSolution() {
               boxShadow: '0 8px 32px rgba(6, 182, 212, 0.15), 0 8px 32px rgba(168, 85, 247, 0.15)',
             }}
           >
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Start Syncing Audiences Today
-            </h2>
+            <h2 className="text-3xl font-bold text-white mb-4">Start Syncing Audiences Today</h2>
             <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               Free 14-day trial. No credit card required.
             </p>

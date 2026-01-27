@@ -7,7 +7,7 @@ Implements Module F: Security & Governance.
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -18,11 +18,11 @@ from app.core.logging import get_logger
 from app.core.security import anonymize_pii, decrypt_pii
 from app.db.session import get_async_session
 from app.models import (
+    APIKey,
     AuditAction,
     AuditLog,
-    User,
     NotificationPreference,
-    APIKey,
+    User,
 )
 from app.schemas import (
     APIResponse,
@@ -67,9 +67,7 @@ async def export_user_data(
         )
 
     # Only allow users to export their own data, or admins to export any data
-    requesting_result = await db.execute(
-        select(User).where(User.id == requesting_user_id)
-    )
+    requesting_result = await db.execute(select(User).where(User.id == requesting_user_id))
     requesting_user = requesting_result.scalar_one_or_none()
 
     if requesting_user_id != export_request.user_id:
@@ -81,7 +79,7 @@ async def export_user_data(
 
     # Collect user data
     export_data = {
-        "export_date": datetime.now(timezone.utc).isoformat(),
+        "export_date": datetime.now(UTC).isoformat(),
         "user_id": user.id,
         "profile": {
             "email": decrypt_pii(user.email),
@@ -100,9 +98,7 @@ async def export_user_data(
 
     # Get notification preferences
     notif_result = await db.execute(
-        select(NotificationPreference).where(
-            NotificationPreference.user_id == user.id
-        )
+        select(NotificationPreference).where(NotificationPreference.user_id == user.id)
     )
     notif_pref = notif_result.scalar_one_or_none()
     if notif_pref:
@@ -116,9 +112,7 @@ async def export_user_data(
         }
 
     # Get API keys (without the actual key)
-    api_keys_result = await db.execute(
-        select(APIKey).where(APIKey.user_id == user.id)
-    )
+    api_keys_result = await db.execute(select(APIKey).where(APIKey.user_id == user.id))
     api_keys = api_keys_result.scalars().all()
     export_data["api_keys"] = [
         {
@@ -227,9 +221,7 @@ async def anonymize_user_data(
         )
 
     # Verify authorization (self or admin)
-    requesting_result = await db.execute(
-        select(User).where(User.id == requesting_user_id)
-    )
+    requesting_result = await db.execute(select(User).where(User.id == requesting_user_id))
     requesting_user = requesting_result.scalar_one_or_none()
 
     if requesting_user_id != anonymize_request.user_id:
@@ -252,7 +244,7 @@ async def anonymize_user_data(
     user.phone = None
     user.avatar_url = None
     user.is_active = False
-    user.gdpr_anonymized_at = datetime.now(timezone.utc)
+    user.gdpr_anonymized_at = datetime.now(UTC)
     user.preferences = {}
 
     tables_affected.append("users")
@@ -260,25 +252,20 @@ async def anonymize_user_data(
 
     # Delete notification preferences
     await db.execute(
-        select(NotificationPreference).where(
-            NotificationPreference.user_id == user.id
-        )
+        select(NotificationPreference).where(NotificationPreference.user_id == user.id)
     )
     # Actually delete
     from sqlalchemy import delete
+
     result = await db.execute(
-        delete(NotificationPreference).where(
-            NotificationPreference.user_id == user.id
-        )
+        delete(NotificationPreference).where(NotificationPreference.user_id == user.id)
     )
     if result.rowcount > 0:
         tables_affected.append("notification_preferences")
         records_modified += result.rowcount
 
     # Delete API keys
-    result = await db.execute(
-        delete(APIKey).where(APIKey.user_id == user.id)
-    )
+    result = await db.execute(delete(APIKey).where(APIKey.user_id == user.id))
     if result.rowcount > 0:
         tables_affected.append("api_keys")
         records_modified += result.rowcount
@@ -366,6 +353,7 @@ async def get_audit_logs(
 
     # Count
     from sqlalchemy import func
+
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar()

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRightIcon, PlayIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, CheckIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,9 +35,15 @@ export function TierHero({ content }: TierHeroProps) {
     <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-surface-primary">
       {/* Background gradient effects */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className={`absolute -top-1/2 -left-1/4 w-[800px] h-[800px] rounded-full bg-gradient-to-br ${gradientClass} opacity-20 blur-3xl`} />
-        <div className={`absolute -bottom-1/2 -right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-tl ${gradientClass} opacity-15 blur-3xl`} />
-        <div className={`absolute top-1/4 right-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-r ${gradientClass} opacity-5 blur-2xl`} />
+        <div
+          className={`absolute -top-1/2 -left-1/4 w-[800px] h-[800px] rounded-full bg-gradient-to-br ${gradientClass} opacity-20 blur-3xl`}
+        />
+        <div
+          className={`absolute -bottom-1/2 -right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-tl ${gradientClass} opacity-15 blur-3xl`}
+        />
+        <div
+          className={`absolute top-1/4 right-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-r ${gradientClass} opacity-5 blur-2xl`}
+        />
       </div>
 
       {/* Grid pattern overlay */}
@@ -46,7 +52,7 @@ export function TierHero({ content }: TierHeroProps) {
         style={{
           backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
                            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '64px 64px'
+          backgroundSize: '64px 64px',
         }}
       />
 
@@ -57,7 +63,9 @@ export function TierHero({ content }: TierHeroProps) {
             variant="outline"
             className={`px-4 py-2 text-sm bg-gradient-to-r ${gradientClass} bg-opacity-10 border-white/20 ${visuals.accentColor}`}
           >
-            <span className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradientClass} animate-pulse mr-2 inline-block`} />
+            <span
+              className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradientClass} animate-pulse mr-2 inline-block`}
+            />
             {hero.tagline}
           </Badge>
           {visuals.badgeText && (
@@ -76,21 +84,19 @@ export function TierHero({ content }: TierHeroProps) {
         </h1>
 
         {/* Subheadline */}
-        <p className="text-xl md:text-2xl text-gray-400 mb-4">
-          {hero.subheadline}
-        </p>
+        <p className="text-xl md:text-2xl text-gray-400 mb-4">{hero.subheadline}</p>
 
         {/* Description */}
-        <p className="max-w-3xl mx-auto text-base text-gray-500 mb-8">
-          {hero.description}
-        </p>
+        <p className="max-w-3xl mx-auto text-base text-gray-500 mb-8">{hero.description}</p>
 
         {/* Metrics Preview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
           {hero.metrics.map((metric, i) => (
             <Card key={i} className="bg-gray-900/50 border-white/10">
               <CardContent className="p-4 text-center">
-                <div className={`text-3xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+                <div
+                  className={`text-3xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+                >
                   {metric.value}
                 </div>
                 <SmartTooltip
@@ -151,9 +157,10 @@ export function TierHero({ content }: TierHeroProps) {
                 variant={tier === content.id ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => navigate(`/plans/${tier}`)}
-                className={tier === content.id
-                  ? `bg-gradient-to-r ${gradientClass} text-white`
-                  : 'text-gray-400 hover:text-white'
+                className={
+                  tier === content.id
+                    ? `bg-gradient-to-r ${gradientClass} text-white`
+                    : 'text-gray-400 hover:text-white'
                 }
               >
                 {tier.charAt(0).toUpperCase() + tier.slice(1)}

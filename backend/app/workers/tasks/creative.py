@@ -25,11 +25,7 @@ def calculate_all_fatigue_scores():
     logger.info("Starting creative fatigue calculation")
 
     with SyncSessionLocal() as db:
-        tenants = (
-            db.execute(select(Tenant).where(Tenant.is_deleted == False))
-            .scalars()
-            .all()
-        )
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         total_updated = 0
         alerts_sent = 0

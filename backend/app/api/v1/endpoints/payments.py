@@ -16,19 +16,18 @@ Endpoints:
 - POST /payments/webhook - Stripe webhook handler
 """
 
-from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Header
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base_models import Tenant
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.tiers import SubscriptionTier, TIER_PRICING
+from app.core.tiers import TIER_PRICING, SubscriptionTier
 from app.db.session import get_async_session
-from app.base_models import Tenant
 from app.services import stripe_service
 
 logger = get_logger(__name__)
@@ -39,8 +38,10 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 # Request/Response Models
 # =============================================================================
 
+
 class CreateCheckoutRequest(BaseModel):
     """Request to create a checkout session."""
+
     tier: str = Field(..., description="Subscription tier: starter, professional, or enterprise")
     success_url: str = Field(..., description="URL to redirect on successful payment")
     cancel_url: str = Field(..., description="URL to redirect on canceled payment")
@@ -49,6 +50,7 @@ class CreateCheckoutRequest(BaseModel):
 
 class CreateCheckoutResponse(BaseModel):
     """Response with checkout session URL."""
+
     checkout_url: str
     session_id: str
     expires_at: str
@@ -56,16 +58,19 @@ class CreateCheckoutResponse(BaseModel):
 
 class CreatePortalRequest(BaseModel):
     """Request to create a customer portal session."""
+
     return_url: str = Field(..., description="URL to return after portal session")
 
 
 class CreatePortalResponse(BaseModel):
     """Response with portal URL."""
+
     portal_url: str
 
 
 class SubscriptionResponse(BaseModel):
     """Current subscription information."""
+
     has_subscription: bool
     subscription_id: Optional[str]
     status: Optional[str]
@@ -78,12 +83,14 @@ class SubscriptionResponse(BaseModel):
 
 class UpgradeRequest(BaseModel):
     """Request to upgrade subscription."""
+
     new_tier: str = Field(..., description="New tier to upgrade to")
     prorate: bool = Field(default=True, description="Prorate the charge")
 
 
 class InvoiceResponse(BaseModel):
     """Invoice information."""
+
     id: str
     number: str
     status: str
@@ -98,6 +105,7 @@ class InvoiceResponse(BaseModel):
 
 class PaymentMethodResponse(BaseModel):
     """Payment method information."""
+
     id: str
     type: str
     brand: str
@@ -109,22 +117,24 @@ class PaymentMethodResponse(BaseModel):
 
 class BillingOverviewResponse(BaseModel):
     """Complete billing overview."""
+
     stripe_configured: bool
     has_customer: bool
     customer_id: Optional[str]
     subscription: Optional[SubscriptionResponse]
     upcoming_invoice: Optional[InvoiceResponse]
-    payment_methods: List[PaymentMethodResponse]
-    available_tiers: List[dict]
+    payment_methods: list[PaymentMethodResponse]
+    available_tiers: list[dict]
 
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
 
+
 async def get_tenant_from_request(request: Request, db: AsyncSession) -> Tenant:
     """Get the authenticated tenant from request."""
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
 
     if not tenant_id:
         raise HTTPException(
@@ -132,9 +142,7 @@ async def get_tenant_from_request(request: Request, db: AsyncSession) -> Tenant:
             detail="Authentication required",
         )
 
-    result = await db.execute(
-        select(Tenant).where(Tenant.id == tenant_id)
-    )
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = result.scalar_one_or_none()
 
     if not tenant:
@@ -160,6 +168,7 @@ def validate_tier(tier_str: str) -> SubscriptionTier:
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("/overview", response_model=BillingOverviewResponse)
 async def get_billing_overview(
@@ -196,8 +205,7 @@ async def get_billing_overview(
         # Get subscription
         subscriptions = await stripe_service.get_customer_subscriptions(customer_id)
         active_sub = next(
-            (s for s in subscriptions if s.status.value in ["active", "trialing", "past_due"]),
-            None
+            (s for s in subscriptions if s.status.value in ["active", "trialing", "past_due"]), None
         )
 
         if active_sub:
@@ -239,10 +247,7 @@ async def get_billing_overview(
         subscription=subscription or SubscriptionResponse(has_subscription=False),
         upcoming_invoice=upcoming_invoice,
         payment_methods=payment_methods,
-        available_tiers=[
-            {"tier": tier.value, **pricing}
-            for tier, pricing in TIER_PRICING.items()
-        ],
+        available_tiers=[{"tier": tier.value, **pricing} for tier, pricing in TIER_PRICING.items()],
     )
 
 
@@ -272,17 +277,21 @@ async def create_checkout(
     if not customer_id:
         # Get user email for customer creation
         from app.base_models import User
+
         result = await db.execute(
-            select(User).where(
+            select(User)
+            .where(
                 User.tenant_id == tenant.id,
                 User.role.in_(["admin", "owner", "superadmin"]),
                 User.is_deleted == False,
-            ).limit(1)
+            )
+            .limit(1)
         )
         admin_user = result.scalar_one_or_none()
 
         if admin_user:
             from app.core.security import decrypt_pii
+
             email = decrypt_pii(admin_user.email)
             customer = await stripe_service.create_customer(
                 email=email,
@@ -366,8 +375,7 @@ async def get_subscription(
 
     subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
     active_sub = next(
-        (s for s in subscriptions if s.status.value in ["active", "trialing", "past_due"]),
-        None
+        (s for s in subscriptions if s.status.value in ["active", "trialing", "past_due"]), None
     )
 
     if not active_sub:
@@ -413,10 +421,7 @@ async def upgrade_subscription(
 
     # Get current subscription
     subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
-    active_sub = next(
-        (s for s in subscriptions if s.status.value in ["active", "trialing"]),
-        None
-    )
+    active_sub = next((s for s in subscriptions if s.status.value in ["active", "trialing"]), None)
 
     if not active_sub:
         raise HTTPException(
@@ -474,10 +479,7 @@ async def cancel_subscription(
 
     # Get current subscription
     subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
-    active_sub = next(
-        (s for s in subscriptions if s.status.value in ["active", "trialing"]),
-        None
-    )
+    active_sub = next((s for s in subscriptions if s.status.value in ["active", "trialing"]), None)
 
     if not active_sub:
         raise HTTPException(
@@ -531,8 +533,7 @@ async def reactivate_subscription(
     # Get subscription scheduled for cancellation
     subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
     sub_to_reactivate = next(
-        (s for s in subscriptions if s.status.value == "active" and s.cancel_at_period_end),
-        None
+        (s for s in subscriptions if s.status.value == "active" and s.cancel_at_period_end), None
     )
 
     if not sub_to_reactivate:
@@ -559,7 +560,7 @@ async def reactivate_subscription(
     )
 
 
-@router.get("/invoices", response_model=List[InvoiceResponse])
+@router.get("/invoices", response_model=list[InvoiceResponse])
 async def get_invoices(
     request: Request,
     limit: int = 10,
@@ -601,7 +602,7 @@ async def get_invoices(
     ]
 
 
-@router.get("/payment-methods", response_model=List[PaymentMethodResponse])
+@router.get("/payment-methods", response_model=list[PaymentMethodResponse])
 async def get_payment_methods(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -635,8 +636,5 @@ async def get_payment_config():
     return {
         "stripe_configured": stripe_service.STRIPE_CONFIGURED,
         "publishable_key": settings.stripe_publishable_key,
-        "tiers": [
-            {"tier": tier.value, **pricing}
-            for tier, pricing in TIER_PRICING.items()
-        ],
+        "tiers": [{"tier": tier.value, **pricing} for tier, pricing in TIER_PRICING.items()],
     }

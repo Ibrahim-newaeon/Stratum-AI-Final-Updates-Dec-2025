@@ -4,31 +4,31 @@
  * Manage team members and their access to the tenant.
  */
 
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useTenantUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/api/admin'
-import { useToast } from '@/components/ui/use-toast'
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useCreateUser, useDeleteUser, useTenantUsers, useUpdateUser } from '@/api/admin';
+import { useToast } from '@/components/ui/use-toast';
 import {
-  UserPlusIcon,
-  PencilIcon,
-  TrashIcon,
-  MagnifyingGlassIcon,
   ArrowLeftIcon,
-  ShieldCheckIcon,
-  EnvelopeIcon,
   CheckCircleIcon,
+  EnvelopeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  UserPlusIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 interface TeamMember {
-  id: number
-  email: string
-  name: string
-  role: string
-  isActive: boolean
-  lastLoginAt: string | null
-  createdAt: string
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  isActive: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
 }
 
 const ROLES = [
@@ -36,37 +36,37 @@ const ROLES = [
   { value: 'manager', label: 'Manager', description: 'Manage campaigns and team' },
   { value: 'analyst', label: 'Analyst', description: 'View reports and analytics' },
   { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
-]
+];
 
 export default function TeamManagement() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const navigate = useNavigate()
-  const { toast } = useToast()
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
+  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0;
 
-  const { data: usersData, isLoading, refetch } = useTenantUsers(tenantIdNum)
-  const createUserMutation = useCreateUser()
-  const updateUserMutation = useUpdateUser()
-  const deleteUserMutation = useDeleteUser()
+  const { data: usersData, isLoading, refetch } = useTenantUsers(tenantIdNum);
+  const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null);
   const [newUser, setNewUser] = useState({
     email: '',
     name: '',
     role: 'viewer',
-  })
+  });
 
-  const users: TeamMember[] = usersData || []
+  const users: TeamMember[] = usersData || [];
 
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  );
 
   const handleInvite = async () => {
     if (!newUser.email) {
@@ -74,105 +74,105 @@ export default function TeamManagement() {
         title: 'Error',
         description: 'Email is required',
         variant: 'destructive',
-      })
-      return
+      });
+      return;
     }
 
     try {
       // Generate a temporary password for invite flow - user will reset via email
-      const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`
+      const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
       await createUserMutation.mutateAsync({
         tenantId: tenantIdNum,
         email: newUser.email,
         name: newUser.name || newUser.email.split('@')[0],
         password: tempPassword,
         role: newUser.role as 'superadmin' | 'admin' | 'user' | 'viewer',
-      })
+      });
       toast({
         title: 'Success',
         description: 'Team member invited successfully',
-      })
-      setShowInviteModal(false)
-      setNewUser({ email: '', name: '', role: 'viewer' })
-      refetch()
+      });
+      setShowInviteModal(false);
+      setNewUser({ email: '', name: '', role: 'viewer' });
+      refetch();
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to invite team member',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const handleUpdateRole = async (userId: number, newRole: string) => {
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
         data: { role: newRole as 'superadmin' | 'admin' | 'user' | 'viewer' },
-      })
+      });
       toast({
         title: 'Success',
         description: 'Role updated successfully',
-      })
-      refetch()
+      });
+      refetch();
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to update role',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const handleRemoveUser = async (userId: number, userName: string) => {
     if (!confirm(`Are you sure you want to remove ${userName} from the team?`)) {
-      return
+      return;
     }
 
     try {
-      await deleteUserMutation.mutateAsync(userId)
+      await deleteUserMutation.mutateAsync(userId);
       toast({
         title: 'Success',
         description: 'Team member removed successfully',
-      })
-      refetch()
+      });
+      refetch();
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to remove team member',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
       case 'manager':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
       case 'analyst':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
     }
-  }
+  };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never'
+    if (!dateString) return 'Never';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    })
-  }
+    });
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
-    )
+    );
   }
 
   return (
@@ -240,7 +240,9 @@ export default function TeamManagement() {
             {filteredUsers.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                  {searchQuery ? 'No team members found matching your search.' : 'No team members yet. Invite your first team member!'}
+                  {searchQuery
+                    ? 'No team members found matching your search.'
+                    : 'No team members yet. Invite your first team member!'}
                 </td>
               </tr>
             ) : (
@@ -297,8 +299,8 @@ export default function TeamManagement() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => {
-                          setSelectedUser(user)
-                          setShowEditModal(true)
+                          setSelectedUser(user);
+                          setShowEditModal(true);
                         }}
                         className="p-2 rounded-lg hover:bg-accent transition-colors"
                         title="Edit member"
@@ -330,7 +332,12 @@ export default function TeamManagement() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {ROLES.map((role) => (
             <div key={role.value} className="p-4 rounded-lg bg-muted/50">
-              <span className={cn('px-2 py-1 rounded-full text-xs font-medium', getRoleBadgeColor(role.value))}>
+              <span
+                className={cn(
+                  'px-2 py-1 rounded-full text-xs font-medium',
+                  getRoleBadgeColor(role.value)
+                )}
+              >
                 {role.label}
               </span>
               <p className="text-sm text-muted-foreground mt-2">{role.description}</p>
@@ -342,10 +349,7 @@ export default function TeamManagement() {
       {/* Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowInviteModal(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowInviteModal(false)} />
           <div className="relative z-10 w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
             <h2 className="text-lg font-semibold mb-4">Invite Team Member</h2>
             <div className="space-y-4">
@@ -409,10 +413,7 @@ export default function TeamManagement() {
       {/* Edit Modal */}
       {showEditModal && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowEditModal(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowEditModal(false)} />
           <div className="relative z-10 w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
             <h2 className="text-lg font-semibold mb-4">Edit Team Member</h2>
             <div className="space-y-4">
@@ -430,9 +431,7 @@ export default function TeamManagement() {
                 <input
                   type="text"
                   value={selectedUser.name || ''}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, name: e.target.value })
-                  }
+                  onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
@@ -440,9 +439,7 @@ export default function TeamManagement() {
                 <label className="block text-sm font-medium mb-2">Role</label>
                 <select
                   value={selectedUser.role}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, role: e.target.value })
-                  }
+                  onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   {ROLES.map((role) => (
@@ -462,8 +459,8 @@ export default function TeamManagement() {
               </button>
               <button
                 onClick={async () => {
-                  await handleUpdateRole(selectedUser.id, selectedUser.role)
-                  setShowEditModal(false)
+                  await handleUpdateRole(selectedUser.id, selectedUser.role);
+                  setShowEditModal(false);
                 }}
                 disabled={updateUserMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
@@ -475,5 +472,5 @@ export default function TeamManagement() {
         </div>
       )}
     </div>
-  )
+  );
 }

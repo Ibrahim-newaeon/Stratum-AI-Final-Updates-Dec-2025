@@ -2,36 +2,36 @@
  * CDP Segments - Segment builder and manager
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
-  TagIcon,
-  UserGroupIcon,
-  ClockIcon,
-  PlayIcon,
-  PauseIcon,
-  TrashIcon,
-  PencilIcon,
-  XMarkIcon,
-  CheckIcon,
   ArrowPathIcon,
+  CheckIcon,
+  ClockIcon,
   ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  MagnifyingGlassIcon,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+  PlusIcon,
+  TagIcon,
+  TrashIcon,
+  UserGroupIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
-  useSegments,
-  useCreateSegment,
-  useUpdateSegment,
-  useDeleteSegment,
-  useComputeSegment,
-  usePreviewSegment,
   type CDPSegment,
+  type SegmentCondition,
   type SegmentCreate,
   type SegmentRules,
-  type SegmentCondition,
   type SegmentStatus,
-} from '@/api/cdp'
+  useComputeSegment,
+  useCreateSegment,
+  useDeleteSegment,
+  usePreviewSegment,
+  useSegments,
+  useUpdateSegment,
+} from '@/api/cdp';
 
 // Status Badge
 function StatusBadge({ status }: { status: SegmentStatus }) {
@@ -41,13 +41,13 @@ function StatusBadge({ status }: { status: SegmentStatus }) {
     active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     stale: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
     archived: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  }
+  };
 
   return (
     <span className={cn('px-2 py-1 rounded-full text-xs font-medium capitalize', config[status])}>
       {status}
     </span>
-  )
+  );
 }
 
 // Condition Builder Row
@@ -57,10 +57,10 @@ function ConditionRow({
   onRemove,
   isLast,
 }: {
-  condition: SegmentCondition
-  onChange: (condition: SegmentCondition) => void
-  onRemove: () => void
-  isLast: boolean
+  condition: SegmentCondition;
+  onChange: (condition: SegmentCondition) => void;
+  onRemove: () => void;
+  isLast: boolean;
 }) {
   const fieldOptions = [
     { value: 'lifecycle_stage', label: 'Lifecycle Stage' },
@@ -71,7 +71,7 @@ function ConditionRow({
     { value: 'last_seen_at', label: 'Last Seen' },
     { value: 'has_email', label: 'Has Email' },
     { value: 'has_phone', label: 'Has Phone' },
-  ]
+  ];
 
   const operatorOptions: Record<string, Array<{ value: string; label: string }>> = {
     lifecycle_stage: [
@@ -109,9 +109,9 @@ function ConditionRow({
     ],
     has_email: [{ value: 'eq', label: 'is' }],
     has_phone: [{ value: 'eq', label: 'is' }],
-  }
+  };
 
-  const operators = operatorOptions[condition.field] || operatorOptions.total_events
+  const operators = operatorOptions[condition.field] || operatorOptions.total_events;
 
   return (
     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
@@ -162,7 +162,11 @@ function ConditionRow({
         </select>
       ) : (
         <input
-          type={condition.field.includes('_at') && !condition.operator.includes('days') ? 'date' : 'number'}
+          type={
+            condition.field.includes('_at') && !condition.operator.includes('days')
+              ? 'date'
+              : 'number'
+          }
           value={String(condition.value || '')}
           onChange={(e) => onChange({ ...condition, value: e.target.value })}
           placeholder="Enter value..."
@@ -178,7 +182,7 @@ function ConditionRow({
         <TrashIcon className="h-4 w-4" />
       </button>
     </div>
-  )
+  );
 }
 
 // Segment Builder Modal
@@ -187,72 +191,73 @@ function SegmentBuilderModal({
   onClose,
   onSave,
 }: {
-  segment?: CDPSegment
-  onClose: () => void
-  onSave: (data: SegmentCreate) => void
+  segment?: CDPSegment;
+  onClose: () => void;
+  onSave: (data: SegmentCreate) => void;
 }) {
-  const [name, setName] = useState(segment?.name || '')
-  const [description, setDescription] = useState(segment?.description || '')
-  const [logic, setLogic] = useState<'and' | 'or'>('and')
+  const [name, setName] = useState(segment?.name || '');
+  const [description, setDescription] = useState(segment?.description || '');
+  const [logic, setLogic] = useState<'and' | 'or'>('and');
   const [conditions, setConditions] = useState<SegmentCondition[]>(
     (segment?.rules as SegmentRules)?.conditions || [
       { field: 'lifecycle_stage', operator: 'eq', value: '' },
     ]
-  )
-  const [autoRefresh, setAutoRefresh] = useState(segment?.auto_refresh ?? true)
-  const [refreshInterval, setRefreshInterval] = useState(segment?.refresh_interval_hours || 24)
+  );
+  const [autoRefresh, setAutoRefresh] = useState(segment?.auto_refresh ?? true);
+  const [refreshInterval, setRefreshInterval] = useState(segment?.refresh_interval_hours || 24);
 
-  const previewMutation = usePreviewSegment()
+  const previewMutation = usePreviewSegment();
 
   const handlePreview = async () => {
     try {
       await previewMutation.mutateAsync({
         rules: { logic, conditions },
         limit: 10,
-      })
+      });
     } catch (error) {
-      console.error('Preview failed:', error)
+      console.error('Preview failed:', error);
     }
-  }
+  };
 
   const handleSave = () => {
-    if (!name.trim()) return
+    if (!name.trim()) return;
     onSave({
       name: name.trim(),
       description: description.trim() || undefined,
       rules: { logic, conditions },
       auto_refresh: autoRefresh,
       refresh_interval_hours: refreshInterval,
-    })
-  }
+    });
+  };
 
   const addCondition = () => {
-    setConditions([...conditions, { field: 'total_events', operator: 'gt', value: 0 }])
-  }
+    setConditions([...conditions, { field: 'total_events', operator: 'gt', value: 0 }]);
+  };
 
   const updateCondition = (index: number, condition: SegmentCondition) => {
-    const updated = [...conditions]
-    updated[index] = condition
-    setConditions(updated)
-  }
+    const updated = [...conditions];
+    updated[index] = condition;
+    setConditions(updated);
+  };
 
   const removeCondition = (index: number) => {
     if (conditions.length > 1) {
-      setConditions(conditions.filter((_, i) => i !== index))
+      setConditions(conditions.filter((_, i) => i !== index));
     }
-  }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
       <div
         className="bg-card rounded-xl border shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold">
-            {segment ? 'Edit Segment' : 'Create Segment'}
-          </h3>
+          <h3 className="text-lg font-semibold">{segment ? 'Edit Segment' : 'Create Segment'}</h3>
           <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg">
             <XMarkIcon className="h-5 w-5" />
           </button>
@@ -347,9 +352,7 @@ function SegmentBuilderModal({
             </label>
             {autoRefresh && (
               <div className="ml-6">
-                <label className="block text-sm text-muted-foreground mb-1">
-                  Refresh every
-                </label>
+                <label className="block text-sm text-muted-foreground mb-1">Refresh every</label>
                 <select
                   value={refreshInterval}
                   onChange={(e) => setRefreshInterval(Number(e.target.value))}
@@ -382,7 +385,9 @@ function SegmentBuilderModal({
                 </p>
                 {previewMutation.data.sample_profiles.length > 0 && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Sample: {previewMutation.data.sample_profiles.map((p) => p.id.slice(0, 8)).join(', ')}...
+                    Sample:{' '}
+                    {previewMutation.data.sample_profiles.map((p) => p.id.slice(0, 8)).join(', ')}
+                    ...
                   </p>
                 )}
               </div>
@@ -409,7 +414,7 @@ function SegmentBuilderModal({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Segment Card
@@ -419,10 +424,10 @@ function SegmentCard({
   onCompute,
   onDelete,
 }: {
-  segment: CDPSegment
-  onEdit: () => void
-  onCompute: () => void
-  onDelete: () => void
+  segment: CDPSegment;
+  onEdit: () => void;
+  onCompute: () => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow">
@@ -440,9 +445,7 @@ function SegmentCard({
       </div>
 
       {segment.description && (
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-          {segment.description}
-        </p>
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{segment.description}</p>
       )}
 
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -463,10 +466,7 @@ function SegmentCard({
       {segment.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-4">
           {segment.tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-2 py-0.5 bg-muted rounded text-xs"
-            >
+            <span key={tag} className="px-2 py-0.5 bg-muted rounded text-xs">
               {tag}
             </span>
           ))}
@@ -507,68 +507,70 @@ function SegmentCard({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function CDPSegments() {
-  const [search, setSearch] = useState('')
-  const [showBuilder, setShowBuilder] = useState(false)
-  const [editingSegment, setEditingSegment] = useState<CDPSegment | undefined>()
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [search, setSearch] = useState('');
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [editingSegment, setEditingSegment] = useState<CDPSegment | undefined>();
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const { data, isLoading, refetch } = useSegments()
-  const createMutation = useCreateSegment()
-  const updateMutation = useUpdateSegment()
-  const deleteMutation = useDeleteSegment()
-  const computeMutation = useComputeSegment()
+  const { data, isLoading, refetch } = useSegments();
+  const createMutation = useCreateSegment();
+  const updateMutation = useUpdateSegment();
+  const deleteMutation = useDeleteSegment();
+  const computeMutation = useComputeSegment();
 
-  const filteredSegments = data?.segments.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.description?.toLowerCase().includes(search.toLowerCase())
-  ) || []
+  const filteredSegments =
+    data?.segments.filter(
+      (s) =>
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.description?.toLowerCase().includes(search.toLowerCase())
+    ) || [];
 
   const handleCreate = async (segmentData: SegmentCreate) => {
     try {
-      await createMutation.mutateAsync(segmentData)
-      setShowBuilder(false)
-      refetch()
+      await createMutation.mutateAsync(segmentData);
+      setShowBuilder(false);
+      refetch();
     } catch (error) {
-      console.error('Create failed:', error)
+      console.error('Create failed:', error);
     }
-  }
+  };
 
   const handleUpdate = async (segmentData: SegmentCreate) => {
-    if (!editingSegment) return
+    if (!editingSegment) return;
     try {
       await updateMutation.mutateAsync({
         segmentId: editingSegment.id,
         ...segmentData,
-      })
-      setEditingSegment(undefined)
-      refetch()
+      });
+      setEditingSegment(undefined);
+      refetch();
     } catch (error) {
-      console.error('Update failed:', error)
+      console.error('Update failed:', error);
     }
-  }
+  };
 
   const handleDelete = async (segmentId: string) => {
     try {
-      await deleteMutation.mutateAsync(segmentId)
-      setDeleteConfirm(null)
-      refetch()
+      await deleteMutation.mutateAsync(segmentId);
+      setDeleteConfirm(null);
+      refetch();
     } catch (error) {
-      console.error('Delete failed:', error)
+      console.error('Delete failed:', error);
     }
-  }
+  };
 
   const handleCompute = async (segmentId: string) => {
     try {
-      await computeMutation.mutateAsync(segmentId)
-      refetch()
+      await computeMutation.mutateAsync(segmentId);
+      refetch();
     } catch (error) {
-      console.error('Compute failed:', error)
+      console.error('Compute failed:', error);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -576,9 +578,7 @@ export default function CDPSegments() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Segments</h1>
-          <p className="text-muted-foreground mt-1">
-            {data?.total || 0} segments
-          </p>
+          <p className="text-muted-foreground mt-1">{data?.total || 0} segments</p>
         </div>
         <button
           onClick={() => setShowBuilder(true)}
@@ -647,8 +647,8 @@ export default function CDPSegments() {
         <SegmentBuilderModal
           segment={editingSegment}
           onClose={() => {
-            setShowBuilder(false)
-            setEditingSegment(undefined)
+            setShowBuilder(false);
+            setEditingSegment(undefined);
           }}
           onSave={editingSegment ? handleUpdate : handleCreate}
         />
@@ -686,5 +686,5 @@ export default function CDPSegments() {
         </div>
       )}
     </div>
-  )
+  );
 }

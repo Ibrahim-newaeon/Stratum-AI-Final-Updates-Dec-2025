@@ -5,33 +5,33 @@
  * Enable/disable accounts for campaign publishing.
  */
 
-import { useState, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
+  ArrowPathIcon,
   BuildingStorefrontIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  ArrowPathIcon,
   MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
+  type Platform,
   useAdAccounts,
   useSyncAdAccounts,
   useUpdateAdAccount,
-  type Platform,
-} from '@/api/campaignBuilder'
+} from '@/api/campaignBuilder';
 
 interface AdAccount {
-  id: string
-  platformAccountId: string
-  name: string
-  platform: 'meta' | 'google' | 'tiktok' | 'snapchat'
-  currency: string
-  timezone: string
-  enabled: boolean
-  spendCap?: number
-  lastSyncAt: string
+  id: string;
+  platformAccountId: string;
+  name: string;
+  platform: 'meta' | 'google' | 'tiktok' | 'snapchat';
+  currency: string;
+  timezone: string;
+  enabled: boolean;
+  spendCap?: number;
+  lastSyncAt: string;
 }
 
 const mockAccounts: AdAccount[] = [
@@ -66,29 +66,32 @@ const mockAccounts: AdAccount[] = [
     enabled: false,
     lastSyncAt: '2024-01-19T14:00:00Z',
   },
-]
+];
 
 const platformLabels = {
   meta: 'Meta Ads',
   google: 'Google Ads',
   tiktok: 'TikTok Ads',
   snapchat: 'Snapchat Ads',
-}
+};
 
 export default function AdAccounts() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const tid = parseInt(tenantId || '1', 10)
-  const [searchQuery, setSearchQuery] = useState('')
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const tid = parseInt(tenantId || '1', 10);
+  const [searchQuery, setSearchQuery] = useState('');
   // Platform filter state - reserved for filter functionality
-  const [, /* selectedPlatform */ /* setSelectedPlatform */] = useState<Platform>('meta')
+  const [
+    ,/* selectedPlatform */
+    /* setSelectedPlatform */
+  ] = useState<Platform>('meta');
 
   // API hooks for all platforms
-  const { data: metaAccounts } = useAdAccounts(tid, 'meta')
-  const { data: googleAccounts } = useAdAccounts(tid, 'google')
-  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok')
-  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat')
-  const syncAccounts = useSyncAdAccounts(tid)
-  const updateAccount = useUpdateAdAccount(tid)
+  const { data: metaAccounts } = useAdAccounts(tid, 'meta');
+  const { data: googleAccounts } = useAdAccounts(tid, 'google');
+  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok');
+  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat');
+  const syncAccounts = useSyncAdAccounts(tid);
+  const updateAccount = useUpdateAdAccount(tid);
 
   // Combine all accounts with fallback to mock data
   const accounts: AdAccount[] = useMemo(() => {
@@ -107,11 +110,11 @@ export default function AdAccounts() {
       enabled: acc.is_enabled,
       spendCap: acc.daily_budget_cap,
       lastSyncAt: acc.last_synced_at || new Date().toISOString(),
-    }))
+    }));
 
     // Return API data if available, otherwise fall back to mock
-    return apiAccounts.length > 0 ? apiAccounts : mockAccounts
-  }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
+    return apiAccounts.length > 0 ? apiAccounts : mockAccounts;
+  }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts]);
 
   const handleToggleAccount = async (account: AdAccount) => {
     try {
@@ -119,12 +122,12 @@ export default function AdAccounts() {
         platform: account.platform as Platform,
         accountId: account.id,
         data: { is_enabled: !account.enabled },
-      })
+      });
     } catch (error) {
-      console.error('Failed to toggle account:', error)
+      console.error('Failed to toggle account:', error);
       // Fallback: local state update for demo mode
     }
-  }
+  };
 
   const handleSyncAccounts = async () => {
     try {
@@ -134,19 +137,20 @@ export default function AdAccounts() {
         syncAccounts.mutateAsync('google'),
         syncAccounts.mutateAsync('tiktok'),
         syncAccounts.mutateAsync('snapchat'),
-      ])
+      ]);
     } catch (error) {
-      console.error('Failed to sync accounts:', error)
+      console.error('Failed to sync accounts:', error);
     }
-  }
+  };
 
-  const filteredAccounts = accounts.filter(acc =>
-    acc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    acc.platformAccountId.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredAccounts = accounts.filter(
+    (acc) =>
+      acc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      acc.platformAccountId.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const enabledCount = accounts.filter(acc => acc.enabled).length
-  const syncing = syncAccounts.isPending
+  const enabledCount = accounts.filter((acc) => acc.enabled).length;
+  const syncing = syncAccounts.isPending;
 
   return (
     <div className="space-y-6">
@@ -192,14 +196,18 @@ export default function AdAccounts() {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <div className={cn(
-                  'h-12 w-12 rounded-lg flex items-center justify-center',
-                  account.enabled ? 'bg-primary/10' : 'bg-muted'
-                )}>
-                  <BuildingStorefrontIcon className={cn(
-                    'h-6 w-6',
-                    account.enabled ? 'text-primary' : 'text-muted-foreground'
-                  )} />
+                <div
+                  className={cn(
+                    'h-12 w-12 rounded-lg flex items-center justify-center',
+                    account.enabled ? 'bg-primary/10' : 'bg-muted'
+                  )}
+                >
+                  <BuildingStorefrontIcon
+                    className={cn(
+                      'h-6 w-6',
+                      account.enabled ? 'text-primary' : 'text-muted-foreground'
+                    )}
+                  />
                 </div>
                 <div>
                   <h3 className="font-semibold">{account.name}</h3>
@@ -245,14 +253,14 @@ export default function AdAccounts() {
               {account.spendCap && (
                 <div>
                   <p className="text-xs text-muted-foreground">Spend Cap</p>
-                  <p className="font-medium">{account.currency} {account.spendCap.toLocaleString()}</p>
+                  <p className="font-medium">
+                    {account.currency} {account.spendCap.toLocaleString()}
+                  </p>
                 </div>
               )}
               <div>
                 <p className="text-xs text-muted-foreground">Last Synced</p>
-                <p className="font-medium">
-                  {new Date(account.lastSyncAt).toLocaleDateString()}
-                </p>
+                <p className="font-medium">{new Date(account.lastSyncAt).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
@@ -282,5 +290,5 @@ export default function AdAccounts() {
         </ul>
       </div>
     </div>
-  )
+  );
 }

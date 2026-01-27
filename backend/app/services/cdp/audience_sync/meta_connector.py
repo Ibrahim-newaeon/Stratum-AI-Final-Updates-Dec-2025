@@ -13,17 +13,15 @@ API Reference: https://developers.facebook.com/docs/marketing-api/audiences/guid
 """
 
 import time
-import asyncio
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import httpx
 
 from .base import (
-    BaseAudienceConnector,
     AudienceConfig,
-    AudienceUser,
     AudienceSyncResult,
+    AudienceUser,
+    BaseAudienceConnector,
     IdentifierType,
 )
 
@@ -42,11 +40,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
     BASE_URL = "https://graph.facebook.com"
 
     def __init__(
-        self,
-        access_token: str,
-        ad_account_id: str,
-        app_secret: Optional[str] = None,
-        **kwargs
+        self, access_token: str, ad_account_id: str, app_secret: Optional[str] = None, **kwargs
     ):
         super().__init__(access_token, ad_account_id, **kwargs)
         self.app_secret = app_secret
@@ -57,7 +51,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
     async def create_audience(
         self,
         config: AudienceConfig,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Create a new Meta Custom Audience with initial users.
@@ -143,7 +137,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
     async def add_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Add users to a Meta Custom Audience.
@@ -238,7 +232,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
     async def remove_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Remove users from a Meta Custom Audience.
@@ -295,7 +289,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
     async def replace_audience(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Replace entire audience by using session-based replace.
@@ -377,10 +371,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
         try:
             url = f"{self.BASE_URL}/{self.API_VERSION}/{audience_id}"
             async with httpx.AsyncClient(timeout=30) as client:
-                response = await client.delete(
-                    url,
-                    params={"access_token": self.access_token}
-                )
+                response = await client.delete(url, params={"access_token": self.access_token})
                 response.raise_for_status()
                 result = response.json()
 
@@ -406,7 +397,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
     async def get_audience_info(
         self,
         audience_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get Meta Custom Audience information.
         """
@@ -420,7 +411,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                     params={
                         "access_token": self.access_token,
                         "fields": fields,
-                    }
+                    },
                 )
                 response.raise_for_status()
                 return response.json()
@@ -433,7 +424,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
     # Meta-specific helpers
     # =========================================================================
 
-    def _prepare_meta_user_data(self, users: List[AudienceUser]) -> List[List[str]]:
+    def _prepare_meta_user_data(self, users: list[AudienceUser]) -> list[list[str]]:
         """
         Prepare user data in Meta's multi-key format.
         Returns list of [email_hash, phone_hash, madid_hash] arrays.

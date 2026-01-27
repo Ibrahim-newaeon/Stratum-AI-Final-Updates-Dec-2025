@@ -10,7 +10,7 @@ Models for tenant settings features:
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
 
 from sqlalchemy import (
     Boolean,
@@ -25,15 +25,16 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base_class import Base, TimestampMixin, TenantMixin
-
+from app.db.base_class import Base, TenantMixin, TimestampMixin
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class WebhookStatus(str, Enum):
     """Webhook endpoint status."""
+
     ACTIVE = "active"
     PAUSED = "paused"
     FAILED = "failed"  # Too many failures
@@ -41,6 +42,7 @@ class WebhookStatus(str, Enum):
 
 class WebhookEventType(str, Enum):
     """Available webhook event types."""
+
     CAMPAIGN_UPDATED = "campaign.updated"
     CAMPAIGN_PAUSED = "campaign.paused"
     ALERT_TRIGGERED = "alert.triggered"
@@ -54,6 +56,7 @@ class WebhookEventType(str, Enum):
 
 class NotificationType(str, Enum):
     """In-app notification types."""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -63,6 +66,7 @@ class NotificationType(str, Enum):
 
 class NotificationCategory(str, Enum):
     """Notification categories for filtering."""
+
     SYSTEM = "system"
     CAMPAIGN = "campaign"
     TRUST_GATE = "trust_gate"
@@ -73,6 +77,7 @@ class NotificationCategory(str, Enum):
 
 class ChangelogType(str, Enum):
     """Changelog entry types."""
+
     FEATURE = "feature"
     IMPROVEMENT = "improvement"
     FIX = "fix"
@@ -84,10 +89,12 @@ class ChangelogType(str, Enum):
 # Webhook Models
 # =============================================================================
 
+
 class Webhook(Base, TimestampMixin, TenantMixin):
     """
     Webhook endpoint configuration for outbound event notifications.
     """
+
     __tablename__ = "webhooks"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -122,19 +129,18 @@ class Webhook(Base, TimestampMixin, TenantMixin):
     headers: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict, nullable=True)
 
     # Relationships
-    deliveries: Mapped[List["WebhookDelivery"]] = relationship(
+    deliveries: Mapped[list["WebhookDelivery"]] = relationship(
         "WebhookDelivery", back_populates="webhook", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        Index("ix_webhooks_tenant_status", "tenant_id", "status"),
-    )
+    __table_args__ = (Index("ix_webhooks_tenant_status", "tenant_id", "status"),)
 
 
 class WebhookDelivery(Base, TimestampMixin):
     """
     Log of webhook delivery attempts.
     """
+
     __tablename__ = "webhook_deliveries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -158,19 +164,19 @@ class WebhookDelivery(Base, TimestampMixin):
     # Relationships
     webhook: Mapped["Webhook"] = relationship("Webhook", back_populates="deliveries")
 
-    __table_args__ = (
-        Index("ix_webhook_deliveries_webhook_created", "webhook_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_webhook_deliveries_webhook_created", "webhook_id", "created_at"),)
 
 
 # =============================================================================
 # Notification Models
 # =============================================================================
 
+
 class Notification(Base, TimestampMixin, TenantMixin):
     """
     In-app notifications for users.
     """
+
     __tablename__ = "notifications"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -196,9 +202,7 @@ class Notification(Base, TimestampMixin, TenantMixin):
 
     # Status
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    read_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Action link (optional)
     action_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
@@ -208,9 +212,7 @@ class Notification(Base, TimestampMixin, TenantMixin):
     extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict, nullable=True)
 
     # Expiration
-    expires_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         Index("ix_notifications_user_unread", "user_id", "is_read"),
@@ -222,11 +224,13 @@ class Notification(Base, TimestampMixin, TenantMixin):
 # Changelog Models
 # =============================================================================
 
+
 class ChangelogEntry(Base, TimestampMixin):
     """
     Product changelog / What's New entries.
     Global (not tenant-specific).
     """
+
     __tablename__ = "changelog_entries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -247,9 +251,7 @@ class ChangelogEntry(Base, TimestampMixin):
 
     # Publishing
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    published_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Rich content
     image_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
@@ -259,15 +261,14 @@ class ChangelogEntry(Base, TimestampMixin):
     # Tags for filtering
     tags: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
 
-    __table_args__ = (
-        Index("ix_changelog_published", "is_published", "published_at"),
-    )
+    __table_args__ = (Index("ix_changelog_published", "is_published", "published_at"),)
 
 
 class ChangelogReadStatus(Base, TimestampMixin):
     """
     Tracks which changelog entries a user has seen.
     """
+
     __tablename__ = "changelog_read_status"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -282,19 +283,19 @@ class ChangelogReadStatus(Base, TimestampMixin):
         DateTime(timezone=True), default=datetime.utcnow, nullable=False
     )
 
-    __table_args__ = (
-        Index("ix_changelog_read_user", "user_id", "changelog_id", unique=True),
-    )
+    __table_args__ = (Index("ix_changelog_read_user", "user_id", "changelog_id", unique=True),)
 
 
 # =============================================================================
 # Slack Integration Settings
 # =============================================================================
 
+
 class SlackIntegration(Base, TimestampMixin, TenantMixin):
     """
     Slack workspace integration settings per tenant.
     """
+
     __tablename__ = "slack_integrations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -313,11 +314,7 @@ class SlackIntegration(Base, TimestampMixin, TenantMixin):
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    last_test_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_test_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     last_test_success: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
 
-    __table_args__ = (
-        Index("ix_slack_integrations_tenant", "tenant_id", unique=True),
-    )
+    __table_args__ = (Index("ix_slack_integrations_tenant", "tenant_id", unique=True),)

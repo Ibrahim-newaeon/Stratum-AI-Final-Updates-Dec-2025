@@ -3,21 +3,21 @@
  * Clean white + blue accent + professional
  */
 
-import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
-  LockClosedIcon,
   ArrowLeftIcon,
   CheckCircleIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   EyeIcon,
   EyeSlashIcon,
-  ExclamationTriangleIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline'
-import { useResetPassword } from '@/api/auth'
+  LockClosedIcon,
+} from '@heroicons/react/24/outline';
+import { useResetPassword } from '@/api/auth';
 
 // Apple Style Theme
 const theme = {
@@ -33,31 +33,33 @@ const theme = {
   border: 'rgba(0, 0, 0, 0.08)',
   success: '#34C759',
   danger: '#FF3B30',
-}
+};
 
-const resetPasswordSchema = z.object({
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-})
+const resetPasswordSchema = z
+  .object({
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
-type ResetPasswordForm = z.infer<typeof resetPasswordSchema>
+type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPassword() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const token = searchParams.get('token')
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const resetPasswordMutation = useResetPassword()
+  const resetPasswordMutation = useResetPassword();
 
-  const isLoading = resetPasswordMutation.isPending
-  const isSuccess = resetPasswordMutation.isSuccess
-  const apiError = resetPasswordMutation.error?.message
+  const isLoading = resetPasswordMutation.isPending;
+  const isSuccess = resetPasswordMutation.isSuccess;
+  const apiError = resetPasswordMutation.error?.message;
 
   const {
     register,
@@ -65,12 +67,15 @@ export default function ResetPassword() {
     formState: { errors },
   } = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
-  })
+  });
 
   // No token
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
+      <div
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{ background: theme.bgElevated }}
+      >
         <div className="max-w-md w-full text-center">
           <div
             className="p-8 rounded-2xl"
@@ -86,7 +91,9 @@ export default function ResetPassword() {
             >
               <ExclamationTriangleIcon className="w-8 h-8" style={{ color: theme.danger }} />
             </div>
-            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>Invalid reset link</h1>
+            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>
+              Invalid reset link
+            </h1>
             <p className="mb-6" style={{ color: theme.textMuted }}>
               This password reset link is invalid or has expired.
             </p>
@@ -100,16 +107,19 @@ export default function ResetPassword() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   const onSubmit = async (data: ResetPasswordForm) => {
-    resetPasswordMutation.mutate({ token, password: data.password })
-  }
+    resetPasswordMutation.mutate({ token, password: data.password });
+  };
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
+      <div
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{ background: theme.bgElevated }}
+      >
         <div className="max-w-md w-full text-center">
           <div
             className="p-8 rounded-2xl"
@@ -125,7 +135,9 @@ export default function ResetPassword() {
             >
               <CheckCircleIcon className="w-8 h-8" style={{ color: theme.success }} />
             </div>
-            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>Password reset successful</h1>
+            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>
+              Password reset successful
+            </h1>
             <p className="mb-6" style={{ color: theme.textMuted }}>
               You can now sign in with your new password.
             </p>
@@ -133,19 +145,22 @@ export default function ResetPassword() {
               onClick={() => navigate('/login')}
               className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-200"
               style={{ background: theme.blue }}
-              onMouseEnter={(e) => e.currentTarget.style.background = theme.blueHover}
-              onMouseLeave={(e) => e.currentTarget.style.background = theme.blue}
+              onMouseEnter={(e) => (e.currentTarget.style.background = theme.blueHover)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = theme.blue)}
             >
               Sign in
             </button>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ background: theme.bgElevated }}
+    >
       <div className="max-w-md w-full">
         <Link
           to="/login"
@@ -163,7 +178,9 @@ export default function ResetPassword() {
           >
             <span className="text-white font-semibold text-lg">S</span>
           </div>
-          <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>Stratum AI</span>
+          <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>
+            Stratum AI
+          </span>
         </Link>
 
         <div
@@ -174,8 +191,12 @@ export default function ResetPassword() {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
           }}
         >
-          <h1 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>Reset your password</h1>
-          <p className="mb-6" style={{ color: theme.textMuted }}>Enter your new password below.</p>
+          <h1 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>
+            Reset your password
+          </h1>
+          <p className="mb-6" style={{ color: theme.textMuted }}>
+            Enter your new password below.
+          </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {apiError && (
@@ -193,9 +214,14 @@ export default function ResetPassword() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>New password</label>
+              <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                New password
+              </label>
               <div className="relative">
-                <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                <LockClosedIcon
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                  style={{ color: theme.textMuted }}
+                />
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
@@ -207,12 +233,12 @@ export default function ResetPassword() {
                     color: theme.textPrimary,
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = theme.blue
-                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                    e.target.style.borderColor = theme.blue;
+                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = theme.border
-                    e.target.style.boxShadow = 'none'
+                    e.target.style.borderColor = theme.border;
+                    e.target.style.boxShadow = 'none';
                   }}
                 />
                 <button
@@ -221,16 +247,25 @@ export default function ResetPassword() {
                   className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
                   style={{ color: theme.textMuted }}
                 >
-                  {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
                 </button>
               </div>
               {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Confirm password</label>
+              <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                Confirm password
+              </label>
               <div className="relative">
-                <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                <LockClosedIcon
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                  style={{ color: theme.textMuted }}
+                />
                 <input
                   {...register('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -242,12 +277,12 @@ export default function ResetPassword() {
                     color: theme.textPrimary,
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = theme.blue
-                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                    e.target.style.borderColor = theme.blue;
+                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = theme.border
-                    e.target.style.boxShadow = 'none'
+                    e.target.style.borderColor = theme.border;
+                    e.target.style.boxShadow = 'none';
                   }}
                 />
                 <button
@@ -256,10 +291,16 @@ export default function ResetPassword() {
                   className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
                   style={{ color: theme.textMuted }}
                 >
-                  {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  {showConfirmPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
                 </button>
               </div>
-              {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+              )}
             </div>
 
             <button
@@ -268,17 +309,29 @@ export default function ResetPassword() {
               className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
               style={{ background: theme.blue }}
               onMouseEnter={(e) => {
-                if (!isLoading) e.currentTarget.style.background = theme.blueHover
+                if (!isLoading) e.currentTarget.style.background = theme.blueHover;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.blue
+                e.currentTarget.style.background = theme.blue;
               }}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Resetting...
                 </span>
@@ -290,5 +343,5 @@ export default function ResetPassword() {
         </div>
       </div>
     </div>
-  )
+  );
 }

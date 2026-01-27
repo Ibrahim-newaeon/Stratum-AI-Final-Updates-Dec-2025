@@ -1,8 +1,8 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
-import { cn, getPlatformColor } from '@/lib/utils'
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { cn, getPlatformColor } from '@/lib/utils';
 
 interface PlatformBreakdownWidgetProps {
-  className?: string
+  className?: string;
 }
 
 const mockData = [
@@ -10,7 +10,7 @@ const mockData = [
   { name: 'Meta', value: 30, color: getPlatformColor('meta') },
   { name: 'TikTok', value: 20, color: '#000000' },
   { name: 'Snapchat', value: 15, color: '#FFFC00' },
-]
+];
 
 export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetProps) {
   return (
@@ -46,5 +46,5 @@ export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetPr
         </PieChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }

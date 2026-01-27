@@ -11,9 +11,9 @@ Based on ML_PROVIDER environment variable:
 
 import json
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -21,6 +21,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
+
 
 # =============================================================================
 # Exceptions
@@ -53,6 +54,7 @@ class ModelUnavailableError(Exception):
             "retry_after": self.retry_after,
         }
 
+
 # =============================================================================
 # Strategy Interface
 # =============================================================================
@@ -60,7 +62,7 @@ class InferenceStrategy(ABC):
     """Abstract base class for ML inference strategies."""
 
     @abstractmethod
-    async def predict(self, model_name: str, features: Dict[str, Any]) -> Dict[str, Any]:
+    async def predict(self, model_name: str, features: dict[str, Any]) -> dict[str, Any]:
         """
         Run inference with the specified model.
 
@@ -74,7 +76,7 @@ class InferenceStrategy(ABC):
         pass
 
     @abstractmethod
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """Get information about loaded models."""
         pass
 
@@ -97,8 +99,8 @@ class LocalInferenceStrategy(InferenceStrategy):
 
     def __init__(self, models_path: str = None):
         self.models_path = Path(models_path or settings.ml_models_path)
-        self._models: Dict[str, Any] = {}
-        self._model_metadata: Dict[str, Dict] = {}
+        self._models: dict[str, Any] = {}
+        self._model_metadata: dict[str, dict] = {}
 
     def _load_model(self, model_name: str) -> Any:
         """Load a model from disk if not already cached."""
@@ -125,7 +127,7 @@ class LocalInferenceStrategy(InferenceStrategy):
             else:
                 self._model_metadata[model_name] = {
                     "version": "1.0.0",
-                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
                     "features": [],
                 }
 
@@ -136,7 +138,7 @@ class LocalInferenceStrategy(InferenceStrategy):
             logger.error("model_load_failed", model_name=model_name, error=str(e))
             return None
 
-    async def predict(self, model_name: str, features: Dict[str, Any]) -> Dict[str, Any]:
+    async def predict(self, model_name: str, features: dict[str, Any]) -> dict[str, Any]:
         """Run inference with a local scikit-learn model."""
         model = self._load_model(model_name)
 
@@ -165,8 +167,7 @@ class LocalInferenceStrategy(InferenceStrategy):
             if hasattr(model, "feature_importances_"):
                 importances = model.feature_importances_
                 feature_importances = {
-                    name: float(imp)
-                    for name, imp in zip(feature_names, importances)
+                    name: float(imp) for name, imp in zip(feature_names, importances, strict=False)
                 }
 
             return {
@@ -183,14 +184,14 @@ class LocalInferenceStrategy(InferenceStrategy):
             logger.error("local_inference_failed", model_name=model_name, error=str(e))
             raise ModelUnavailableError(
                 model_name=model_name,
-                message=f"Inference failed for model '{model_name}': {str(e)}",
+                message=f"Inference failed for model '{model_name}': {e!s}",
                 retry_after=60,
             )
 
-    def _mock_prediction(self, model_name: str, features: Dict[str, Any]) -> Dict[str, Any]:
+    def _mock_prediction(self, model_name: str, features: dict[str, Any]) -> dict[str, Any]:
         """
         Handle unavailable model - raises error instead of returning fake data.
-        
+
         Mock predictions were removed as they corrupt downstream analytics
         and mask model failures. Callers should handle ModelUnavailableError.
         """
@@ -200,7 +201,7 @@ class LocalInferenceStrategy(InferenceStrategy):
             retry_after=300,  # Suggest retry in 5 minutes
         )
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """Get information about available models."""
         models_info = {}
 
@@ -262,7 +263,7 @@ class VertexAIStrategy(InferenceStrategy):
 
         return self._client
 
-    async def predict(self, model_name: str, features: Dict[str, Any]) -> Dict[str, Any]:
+    async def predict(self, model_name: str, features: dict[str, Any]) -> dict[str, Any]:
         """Run inference with Vertex AI endpoint."""
         client = self._get_client()
 
@@ -318,7 +319,7 @@ class VertexAIStrategy(InferenceStrategy):
             local = LocalInferenceStrategy()
             return await local.predict(model_name, features)
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """Get information about Vertex AI configuration."""
         return {
             "strategy": "vertex",
@@ -381,7 +382,7 @@ class ModelRegistry:
         """Get the current inference strategy."""
         return self._strategy
 
-    async def predict(self, model_name: str, features: Dict[str, Any]) -> Dict[str, Any]:
+    async def predict(self, model_name: str, features: dict[str, Any]) -> dict[str, Any]:
         """
         Run prediction using the configured strategy.
 
@@ -394,23 +395,21 @@ class ModelRegistry:
         """
         return await self._strategy.predict(model_name, features)
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """Get information about the current ML setup."""
         return {
             "provider": settings.ml_provider,
             **self._strategy.get_model_info(),
         }
 
-
-
     # Platform-specific model support
     SUPPORTED_PLATFORMS = ["meta", "google", "tiktok", "snapchat", "linkedin"]
 
     async def predict_roas(
         self,
-        features: Dict[str, Any],
+        features: dict[str, Any],
         platform: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run ROAS prediction with platform-specific model support.
 
@@ -424,7 +423,7 @@ class ModelRegistry:
             Prediction results with model metadata
         """
         platform = (platform or features.get("platform", "")).lower()
-        
+
         # Try platform-specific model first
         if platform in self.SUPPORTED_PLATFORMS:
             platform_model = f"roas_predictor_{platform}"
@@ -438,7 +437,9 @@ class ModelRegistry:
             except ModelUnavailableError:
                 logger.info("platform_model_unavailable_using_ensemble", platform=platform)
             except Exception as e:
-                logger.warning("platform_model_error_using_ensemble", platform=platform, error=str(e))
+                logger.warning(
+                    "platform_model_error_using_ensemble", platform=platform, error=str(e)
+                )
 
         # Fall back to ensemble model
         try:
@@ -452,16 +453,16 @@ class ModelRegistry:
         except Exception as e:
             raise ModelUnavailableError(
                 model_name="roas_predictor",
-                message=f"ROAS prediction failed: {str(e)}",
+                message=f"ROAS prediction failed: {e!s}",
                 retry_after=60,
             )
 
     async def predict_with_platform(
         self,
         base_model: str,
-        features: Dict[str, Any],
+        features: dict[str, Any],
         platform: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generic platform-aware prediction with fallback.
 
@@ -493,7 +494,7 @@ class ModelRegistry:
         result["platform"] = platform or "unknown"
         return result
 
-    def get_available_platform_models(self) -> Dict[str, List[str]]:
+    def get_available_platform_models(self) -> dict[str, list[str]]:
         """
         Get list of available platform-specific models.
 
@@ -502,19 +503,18 @@ class ModelRegistry:
         """
         info = self._strategy.get_model_info()
         models = info.get("models", {})
-        
+
         platform_models = {}
         for model_name in models:
             for platform in self.SUPPORTED_PLATFORMS:
                 suffix = f"_{platform}"
                 if model_name.endswith(suffix):
-                    base = model_name[:-len(suffix)]
+                    base = model_name[: -len(suffix)]
                     if base not in platform_models:
                         platform_models[base] = []
                     platform_models[base].append(platform)
-        
-        return platform_models
 
+        return platform_models
 
     def health_check(self) -> bool:
         """Check if ML inference is healthy."""

@@ -12,14 +12,16 @@ All routes enforce tenant isolation and RBAC permissions.
 
 import hashlib
 import hmac
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, BackgroundTasks, Header
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models.crm import (
     CRMConnection,
@@ -27,27 +29,25 @@ from app.models.crm import (
     CRMContact,
     CRMDeal,
     CRMProvider,
-    DailyPipelineMetrics,
     CRMWritebackConfig,
     CRMWritebackSync,
+    DailyPipelineMetrics,
     WritebackStatus,
 )
+from app.schemas.response import APIResponse
 from app.services.crm.hubspot_client import HubSpotClient
 from app.services.crm.hubspot_sync import HubSpotSyncService
-from app.services.crm.identity_matching import IdentityMatcher
 from app.services.crm.hubspot_writeback import HubSpotWritebackService
-from app.services.crm.zoho_client import ZohoClient
-from app.services.crm.zoho_sync import ZohoSyncService
-from app.services.crm.zoho_writeback import ZohoWritebackService
+from app.services.crm.identity_matching import IdentityMatcher
 from app.services.crm.pipedrive_client import PipedriveClient
 from app.services.crm.pipedrive_sync import PipedriveSyncService
 from app.services.crm.pipedrive_writeback import PipedriveWritebackService
 from app.services.crm.salesforce_client import SalesforceClient
 from app.services.crm.salesforce_sync import SalesforceSyncService
 from app.services.crm.salesforce_writeback import SalesforceWritebackService
-from app.core.config import settings
-from app.core.logging import get_logger
-from app.schemas.response import APIResponse
+from app.services.crm.zoho_client import ZohoClient
+from app.services.crm.zoho_sync import ZohoSyncService
+from app.services.crm.zoho_writeback import ZohoWritebackService
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 logger = get_logger(__name__)
@@ -57,19 +57,23 @@ logger = get_logger(__name__)
 # Pydantic Schemas
 # =============================================================================
 
+
 class HubSpotConnectRequest(BaseModel):
     """Request to initiate HubSpot OAuth."""
+
     redirect_uri: str = Field(..., description="OAuth callback URL")
 
 
 class HubSpotConnectResponse(BaseModel):
     """Response with OAuth authorization URL."""
+
     authorization_url: str
     state: str
 
 
 class HubSpotCallbackRequest(BaseModel):
     """OAuth callback parameters."""
+
     code: str
     state: str
     redirect_uri: str
@@ -77,6 +81,7 @@ class HubSpotCallbackRequest(BaseModel):
 
 class HubSpotStatusResponse(BaseModel):
     """HubSpot connection status."""
+
     connected: bool
     status: str
     provider: str = "hubspot"
@@ -84,16 +89,18 @@ class HubSpotStatusResponse(BaseModel):
     account_name: Optional[str] = None
     last_sync_at: Optional[str] = None
     last_sync_status: Optional[str] = None
-    scopes: List[str] = []
+    scopes: list[str] = []
 
 
 class SyncRequest(BaseModel):
     """Manual sync request."""
+
     full_sync: bool = Field(default=False, description="Perform full sync vs incremental")
 
 
 class SyncResponse(BaseModel):
     """Sync operation response."""
+
     status: str
     contacts_synced: int = 0
     contacts_created: int = 0
@@ -101,14 +108,15 @@ class SyncResponse(BaseModel):
     deals_synced: int = 0
     deals_created: int = 0
     deals_updated: int = 0
-    errors: List[str] = []
+    errors: list[str] = []
 
 
 class PipelineSummaryResponse(BaseModel):
     """Pipeline metrics summary."""
+
     status: str
-    stage_counts: Dict[str, int] = {}
-    stage_values: Dict[str, float] = {}
+    stage_counts: dict[str, int] = {}
+    stage_values: dict[str, float] = {}
     total_pipeline_value: float = 0
     total_won_value: float = 0
     won_deal_count: int = 0
@@ -117,7 +125,8 @@ class PipelineSummaryResponse(BaseModel):
 
 class PipelineROASResponse(BaseModel):
     """Pipeline ROAS metrics."""
-    date_range: Dict[str, str]
+
+    date_range: dict[str, str]
     spend: float
     platform_revenue: float
     pipeline_value: float
@@ -125,18 +134,20 @@ class PipelineROASResponse(BaseModel):
     platform_roas: Optional[float] = None
     pipeline_roas: Optional[float] = None
     won_roas: Optional[float] = None
-    funnel_metrics: Dict[str, Any] = {}
+    funnel_metrics: dict[str, Any] = {}
 
 
 class AttributionReportResponse(BaseModel):
     """Attribution report by dimension."""
+
     dimension: str
-    date_range: Dict[str, str]
-    data: List[Dict[str, Any]]
+    date_range: dict[str, str]
+    data: list[dict[str, Any]]
 
 
 class WebhookPayload(BaseModel):
     """HubSpot webhook payload."""
+
     subscriptionType: str
     objectId: int
     propertyName: Optional[str] = None
@@ -153,6 +164,7 @@ class WebhookPayload(BaseModel):
 # =============================================================================
 # HubSpot OAuth Endpoints
 # =============================================================================
+
 
 @router.post(
     "/hubspot/connect",
@@ -172,6 +184,7 @@ async def hubspot_connect(
 
     # Generate state token for CSRF protection
     import secrets
+
     state = secrets.token_urlsafe(32)
 
     # Store state in session/cache (simplified - in production use Redis)
@@ -228,7 +241,7 @@ async def hubspot_callback(
 
     except Exception as e:
         logger.error("hubspot_oauth_failed", error=str(e), tenant_id=tenant_id)
-        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {e!s}")
 
 
 @router.get(
@@ -252,7 +265,7 @@ async def hubspot_status(
 
 @router.delete(
     "/hubspot/disconnect",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Disconnect HubSpot",
 )
 async def hubspot_disconnect(
@@ -276,6 +289,7 @@ async def hubspot_disconnect(
 # =============================================================================
 # Sync Endpoints
 # =============================================================================
+
 
 @router.post(
     "/hubspot/sync",
@@ -307,6 +321,7 @@ async def hubspot_sync(
 # =============================================================================
 # Webhook Endpoint
 # =============================================================================
+
 
 @router.post(
     "/hubspot/webhook",
@@ -376,6 +391,7 @@ async def hubspot_webhook(
 # Pipeline & Attribution Endpoints
 # =============================================================================
 
+
 @router.get(
     "/pipeline/summary",
     response_model=APIResponse[PipelineSummaryResponse],
@@ -434,9 +450,7 @@ async def pipeline_roas(
     if campaign_id:
         conditions.append(DailyPipelineMetrics.campaign_id == campaign_id)
 
-    result = await db.execute(
-        select(DailyPipelineMetrics).where(and_(*conditions))
-    )
+    result = await db.execute(select(DailyPipelineMetrics).where(and_(*conditions)))
     metrics = result.scalars().all()
 
     # Aggregate
@@ -493,8 +507,8 @@ async def attribution_report(
     """
     from datetime import datetime as dt
 
-    start = dt.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-    end = dt.strptime(end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    start = dt.strptime(start_date, "%Y-%m-%d").replace(tzinfo=UTC)
+    end = dt.strptime(end_date, "%Y-%m-%d").replace(tzinfo=UTC)
 
     identity_matcher = IdentityMatcher(db, tenant_id)
     report_data = await identity_matcher.get_attribution_report(start, end, group_by)
@@ -513,9 +527,10 @@ async def attribution_report(
 # Contact & Deal Endpoints
 # =============================================================================
 
+
 @router.get(
     "/contacts",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="List CRM contacts",
 )
 async def list_contacts(
@@ -548,9 +563,7 @@ async def list_contacts(
     contacts = result.scalars().all()
 
     # Count total
-    count_result = await db.execute(
-        select(CRMContact).where(and_(*conditions))
-    )
+    count_result = await db.execute(select(CRMContact).where(and_(*conditions)))
     total = len(count_result.scalars().all())
 
     return APIResponse(
@@ -580,7 +593,7 @@ async def list_contacts(
 
 @router.get(
     "/deals",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="List CRM deals",
 )
 async def list_deals(
@@ -617,9 +630,7 @@ async def list_deals(
     deals = result.scalars().all()
 
     # Count total
-    count_result = await db.execute(
-        select(CRMDeal).where(and_(*conditions))
-    )
+    count_result = await db.execute(select(CRMDeal).where(and_(*conditions)))
     total = len(count_result.scalars().all())
 
     return APIResponse(
@@ -655,9 +666,10 @@ async def list_deals(
 # Identity Matching Endpoints
 # =============================================================================
 
+
 @router.post(
     "/identity/match",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Run identity matching",
 )
 async def run_identity_matching(
@@ -682,9 +694,10 @@ async def run_identity_matching(
 # HubSpot Writeback Endpoints
 # =============================================================================
 
+
 @router.get(
     "/hubspot/writeback/status",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get writeback status",
 )
 async def get_writeback_status(
@@ -707,7 +720,7 @@ async def get_writeback_status(
 
 @router.post(
     "/hubspot/writeback/setup-properties",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Setup custom properties",
 )
 async def setup_writeback_properties(
@@ -744,9 +757,7 @@ async def setup_writeback_properties(
         if connection:
             # Get or create writeback config
             config_result = await db.execute(
-                select(CRMWritebackConfig).where(
-                    CRMWritebackConfig.connection_id == connection.id
-                )
+                select(CRMWritebackConfig).where(CRMWritebackConfig.connection_id == connection.id)
             )
             config = config_result.scalar_one_or_none()
 
@@ -759,7 +770,7 @@ async def setup_writeback_properties(
                 db.add(config)
 
             config.properties_created = True
-            config.properties_created_at = datetime.now(timezone.utc)
+            config.properties_created_at = datetime.now(UTC)
             await db.commit()
 
         return APIResponse(
@@ -774,7 +785,7 @@ async def setup_writeback_properties(
 
 @router.post(
     "/hubspot/writeback/sync",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Run writeback sync",
 )
 async def run_writeback_sync(
@@ -801,9 +812,7 @@ async def run_writeback_sync(
     modified_since = None
     if not full_sync:
         result = await db.execute(
-            select(CRMWritebackConfig).where(
-                CRMWritebackConfig.tenant_id == tenant_id
-            )
+            select(CRMWritebackConfig).where(CRMWritebackConfig.tenant_id == tenant_id)
         )
         config = result.scalar_one_or_none()
         if config and config.last_sync_at:
@@ -845,8 +854,12 @@ async def run_writeback_sync(
         )
 
         # Update sync record
-        sync_record.status = WritebackStatus.COMPLETED if results["status"] == "completed" else WritebackStatus.PARTIAL
-        sync_record.completed_at = datetime.now(timezone.utc)
+        sync_record.status = (
+            WritebackStatus.COMPLETED
+            if results["status"] == "completed"
+            else WritebackStatus.PARTIAL
+        )
+        sync_record.completed_at = datetime.now(UTC)
         sync_record.duration_seconds = (
             sync_record.completed_at - sync_record.started_at
         ).total_seconds()
@@ -872,7 +885,7 @@ async def run_writeback_sync(
 
     except Exception as e:
         sync_record.status = WritebackStatus.FAILED
-        sync_record.completed_at = datetime.now(timezone.utc)
+        sync_record.completed_at = datetime.now(UTC)
         sync_record.error_message = str(e)
         await db.commit()
 
@@ -882,7 +895,7 @@ async def run_writeback_sync(
 
 @router.get(
     "/hubspot/writeback/history",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get writeback sync history",
 )
 async def get_writeback_history(
@@ -925,7 +938,7 @@ async def get_writeback_history(
 
 @router.patch(
     "/hubspot/writeback/config",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Update writeback config",
 )
 async def update_writeback_config(
@@ -934,7 +947,9 @@ async def update_writeback_config(
     sync_contacts: Optional[bool] = Query(None, description="Sync contacts"),
     sync_deals: Optional[bool] = Query(None, description="Sync deals"),
     auto_sync_enabled: Optional[bool] = Query(None, description="Enable auto-sync"),
-    sync_interval_hours: Optional[int] = Query(None, ge=1, le=168, description="Sync interval in hours"),
+    sync_interval_hours: Optional[int] = Query(
+        None, ge=1, le=168, description="Sync interval in hours"
+    ),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Update writeback configuration settings."""
@@ -954,9 +969,7 @@ async def update_writeback_config(
 
     # Get or create config
     config_result = await db.execute(
-        select(CRMWritebackConfig).where(
-            CRMWritebackConfig.connection_id == connection.id
-        )
+        select(CRMWritebackConfig).where(CRMWritebackConfig.connection_id == connection.id)
     )
     config = config_result.scalar_one_or_none()
 
@@ -979,7 +992,7 @@ async def update_writeback_config(
     if sync_interval_hours is not None:
         config.sync_interval_hours = sync_interval_hours
 
-    config.updated_at = datetime.now(timezone.utc)
+    config.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(config)
 
@@ -1001,20 +1014,24 @@ async def update_writeback_config(
 # Zoho CRM Schemas
 # =============================================================================
 
+
 class ZohoConnectRequest(BaseModel):
     """Request to initiate Zoho OAuth."""
+
     redirect_uri: str = Field(..., description="OAuth callback URL")
     region: str = Field(default="com", description="Zoho region (com, eu, in, com.au, jp, com.cn)")
 
 
 class ZohoConnectResponse(BaseModel):
     """Response with OAuth authorization URL."""
+
     authorization_url: str
     state: str
 
 
 class ZohoStatusResponse(BaseModel):
     """Zoho connection status."""
+
     connected: bool
     status: str
     provider: str = "zoho"
@@ -1022,26 +1039,30 @@ class ZohoStatusResponse(BaseModel):
     account_name: Optional[str] = None
     last_sync_at: Optional[str] = None
     last_sync_status: Optional[str] = None
-    scopes: List[str] = []
+    scopes: list[str] = []
 
 
 # =============================================================================
 # Pipedrive CRM Schemas
 # =============================================================================
 
+
 class PipedriveConnectRequest(BaseModel):
     """Request to initiate Pipedrive OAuth."""
+
     redirect_uri: str = Field(..., description="OAuth callback URL")
 
 
 class PipedriveConnectResponse(BaseModel):
     """Response with OAuth authorization URL."""
+
     authorization_url: str
     state: str
 
 
 class PipedriveStatusResponse(BaseModel):
     """Pipedrive connection status."""
+
     connected: bool
     status: str
     provider: str = "pipedrive"
@@ -1049,38 +1070,43 @@ class PipedriveStatusResponse(BaseModel):
     account_name: Optional[str] = None
     last_sync_at: Optional[str] = None
     last_sync_status: Optional[str] = None
-    scopes: List[str] = []
+    scopes: list[str] = []
 
 
 class PipedriveSyncResponse(BaseModel):
     """Pipedrive sync operation response."""
+
     status: str
     persons_synced: int = 0
     persons_created: int = 0
     persons_updated: int = 0
     deals_synced: int = 0
     deals_created: int = 0
-    errors: List[str] = []
+    errors: list[str] = []
 
 
 # =============================================================================
 # Salesforce CRM Schemas
 # =============================================================================
 
+
 class SalesforceConnectRequest(BaseModel):
     """Request to initiate Salesforce OAuth."""
+
     redirect_uri: str = Field(..., description="OAuth callback URL")
     is_sandbox: bool = Field(default=False, description="Use Salesforce sandbox environment")
 
 
 class SalesforceConnectResponse(BaseModel):
     """Response with OAuth authorization URL."""
+
     authorization_url: str
     state: str
 
 
 class SalesforceStatusResponse(BaseModel):
     """Salesforce connection status."""
+
     connected: bool
     status: str
     provider: str = "salesforce"
@@ -1088,12 +1114,13 @@ class SalesforceStatusResponse(BaseModel):
     account_name: Optional[str] = None
     last_sync_at: Optional[str] = None
     last_sync_status: Optional[str] = None
-    scopes: List[str] = []
+    scopes: list[str] = []
     is_sandbox: bool = False
 
 
 class SalesforceSyncResponse(BaseModel):
     """Salesforce sync operation response."""
+
     status: str
     contacts_synced: int = 0
     contacts_created: int = 0
@@ -1103,12 +1130,13 @@ class SalesforceSyncResponse(BaseModel):
     leads_updated: int = 0
     opportunities_synced: int = 0
     opportunities_created: int = 0
-    errors: List[str] = []
+    errors: list[str] = []
 
 
 # =============================================================================
 # Zoho OAuth Endpoints
 # =============================================================================
+
 
 @router.post(
     "/zoho/connect",
@@ -1128,6 +1156,7 @@ async def zoho_connect(
 
     # Generate state token for CSRF protection
     import secrets
+
     state = secrets.token_urlsafe(32)
 
     # Include tenant_id and region in state
@@ -1184,7 +1213,7 @@ async def zoho_callback(
 
     except Exception as e:
         logger.error("zoho_oauth_failed", error=str(e), tenant_id=tenant_id)
-        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {e!s}")
 
 
 @router.get(
@@ -1208,7 +1237,7 @@ async def zoho_status(
 
 @router.delete(
     "/zoho/disconnect",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Disconnect Zoho",
 )
 async def zoho_disconnect(
@@ -1232,6 +1261,7 @@ async def zoho_disconnect(
 # =============================================================================
 # Zoho Sync Endpoints
 # =============================================================================
+
 
 @router.post(
     "/zoho/sync",
@@ -1290,9 +1320,10 @@ async def zoho_pipeline_summary(
 # Zoho Writeback Endpoints
 # =============================================================================
 
+
 @router.get(
     "/zoho/writeback/status",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get Zoho writeback status",
 )
 async def get_zoho_writeback_status(
@@ -1313,7 +1344,7 @@ async def get_zoho_writeback_status(
 
 @router.get(
     "/zoho/writeback/fields",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get required Zoho custom fields",
 )
 async def get_zoho_writeback_fields(
@@ -1337,7 +1368,7 @@ async def get_zoho_writeback_fields(
 
 @router.post(
     "/zoho/writeback/setup-fields",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Setup Zoho custom fields",
 )
 async def setup_zoho_writeback_fields(
@@ -1367,7 +1398,7 @@ async def setup_zoho_writeback_fields(
 
 @router.post(
     "/zoho/writeback/sync",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Run Zoho writeback sync",
 )
 async def run_zoho_writeback_sync(
@@ -1423,6 +1454,7 @@ async def run_zoho_writeback_sync(
 # Pipedrive OAuth Endpoints
 # =============================================================================
 
+
 @router.post(
     "/pipedrive/connect",
     response_model=APIResponse[PipedriveConnectResponse],
@@ -1441,6 +1473,7 @@ async def pipedrive_connect(
 
     # Generate state token for CSRF protection
     import secrets
+
     state = secrets.token_urlsafe(32)
 
     # Include tenant_id in state
@@ -1496,7 +1529,7 @@ async def pipedrive_callback(
 
     except Exception as e:
         logger.error("pipedrive_oauth_failed", error=str(e), tenant_id=tenant_id)
-        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {e!s}")
 
 
 @router.get(
@@ -1520,7 +1553,7 @@ async def pipedrive_status(
 
 @router.delete(
     "/pipedrive/disconnect",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Disconnect Pipedrive",
 )
 async def pipedrive_disconnect(
@@ -1544,6 +1577,7 @@ async def pipedrive_disconnect(
 # =============================================================================
 # Pipedrive Sync Endpoints
 # =============================================================================
+
 
 @router.post(
     "/pipedrive/sync",
@@ -1599,8 +1633,8 @@ async def pipedrive_pipeline_summary(
     deals = result.scalars().all()
 
     # Build stage summary
-    stage_counts: Dict[str, int] = {}
-    stage_values: Dict[str, float] = {}
+    stage_counts: dict[str, int] = {}
+    stage_values: dict[str, float] = {}
     total_pipeline_value = 0
     total_won_value = 0
     won_deal_count = 0
@@ -1635,9 +1669,10 @@ async def pipedrive_pipeline_summary(
 # Pipedrive Writeback Endpoints
 # =============================================================================
 
+
 @router.get(
     "/pipedrive/writeback/status",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get Pipedrive writeback status",
 )
 async def get_pipedrive_writeback_status(
@@ -1658,7 +1693,7 @@ async def get_pipedrive_writeback_status(
 
 @router.post(
     "/pipedrive/writeback/setup-fields",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Setup Pipedrive custom fields",
 )
 async def setup_pipedrive_writeback_fields(
@@ -1689,7 +1724,7 @@ async def setup_pipedrive_writeback_fields(
 
 @router.post(
     "/pipedrive/writeback/sync",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Run Pipedrive writeback sync",
 )
 async def run_pipedrive_writeback_sync(
@@ -1745,6 +1780,7 @@ async def run_pipedrive_writeback_sync(
 # Salesforce OAuth Endpoints
 # =============================================================================
 
+
 @router.post(
     "/salesforce/connect",
     response_model=APIResponse[SalesforceConnectResponse],
@@ -1763,6 +1799,7 @@ async def salesforce_connect(
 
     # Generate state token for CSRF protection
     import secrets
+
     state = secrets.token_urlsafe(32)
 
     # Include tenant_id and sandbox flag in state
@@ -1819,7 +1856,7 @@ async def salesforce_callback(
 
     except Exception as e:
         logger.error("salesforce_oauth_failed", error=str(e), tenant_id=tenant_id)
-        raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {e!s}")
 
 
 @router.get(
@@ -1843,7 +1880,7 @@ async def salesforce_status(
 
 @router.delete(
     "/salesforce/disconnect",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Disconnect Salesforce",
 )
 async def salesforce_disconnect(
@@ -1867,6 +1904,7 @@ async def salesforce_disconnect(
 # =============================================================================
 # Salesforce Sync Endpoints
 # =============================================================================
+
 
 @router.post(
     "/salesforce/sync",
@@ -1927,9 +1965,10 @@ async def salesforce_pipeline_summary(
 # Salesforce Writeback Endpoints
 # =============================================================================
 
+
 @router.get(
     "/salesforce/writeback/status",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get Salesforce writeback status",
 )
 async def get_salesforce_writeback_status(
@@ -1950,7 +1989,7 @@ async def get_salesforce_writeback_status(
 
 @router.get(
     "/salesforce/writeback/fields",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get required Salesforce custom fields",
 )
 async def get_salesforce_writeback_fields(
@@ -1974,7 +2013,7 @@ async def get_salesforce_writeback_fields(
 
 @router.post(
     "/salesforce/writeback/setup-fields",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Check Salesforce custom fields setup",
 )
 async def setup_salesforce_writeback_fields(
@@ -2005,7 +2044,7 @@ async def setup_salesforce_writeback_fields(
 
 @router.post(
     "/salesforce/writeback/sync",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Run Salesforce writeback sync",
 )
 async def run_salesforce_writeback_sync(
@@ -2061,9 +2100,10 @@ async def run_salesforce_writeback_sync(
 # Multi-CRM Status Endpoint
 # =============================================================================
 
+
 @router.get(
     "/crm/status",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Get all CRM connection statuses",
 )
 async def get_all_crm_status(
@@ -2105,14 +2145,16 @@ async def get_all_crm_status(
 # Slack Integration
 # =============================================================================
 
+
 class SlackTestRequest(BaseModel):
     """Request to test Slack webhook."""
+
     webhook_url: str = Field(..., description="Slack webhook URL to test")
 
 
 @router.post(
     "/slack/test",
-    response_model=APIResponse[Dict[str, Any]],
+    response_model=APIResponse[dict[str, Any]],
     summary="Test Slack webhook",
 )
 async def test_slack_webhook(
@@ -2134,7 +2176,7 @@ async def test_slack_webhook(
                     "type": "plain_text",
                     "text": ":white_check_mark: Stratum AI Connected!",
                     "emoji": True,
-                }
+                },
             },
             {
                 "type": "section",
@@ -2148,7 +2190,7 @@ async def test_slack_webhook(
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"Test sent at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+                        "text": f"Test sent at {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
                     }
                 ],
             },
@@ -2187,11 +2229,11 @@ async def test_slack_webhook(
         logger.error("slack_test_connection_error", error=str(e))
         raise HTTPException(
             status_code=400,
-            detail=f"Failed to connect to Slack: {str(e)}",
+            detail=f"Failed to connect to Slack: {e!s}",
         )
     except Exception as e:
         logger.error("slack_test_unexpected_error", error=str(e))
         raise HTTPException(
             status_code=500,
-            detail=f"Unexpected error: {str(e)}",
+            detail=f"Unexpected error: {e!s}",
         )

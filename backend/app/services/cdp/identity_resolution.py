@@ -12,28 +12,28 @@ This service handles:
 - Canonical identity management
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Optional, List, Dict, Tuple, Set
+from typing import Optional
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select, update, and_, or_
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.cdp import (
+    IDENTITY_PRIORITY,
+    CDPCanonicalIdentity,
+    CDPConsent,
+    CDPEvent,
+    CDPIdentityLink,
     CDPProfile,
     CDPProfileIdentifier,
-    CDPEvent,
-    CDPConsent,
-    CDPIdentityLink,
     CDPProfileMerge,
-    CDPCanonicalIdentity,
     IdentityLinkType,
-    MergeReason,
     LifecycleStage,
-    IDENTITY_PRIORITY,
+    MergeReason,
 )
 
 logger = structlog.get_logger()
@@ -64,8 +64,7 @@ class IdentityResolutionService:
         return IDENTITY_PRIORITY.get(identifier_type.lower(), 0)
 
     def get_strongest_identifier(
-        self,
-        identifiers: List[CDPProfileIdentifier]
+        self, identifiers: list[CDPProfileIdentifier]
     ) -> Optional[CDPProfileIdentifier]:
         """Get the strongest (highest priority) identifier from a list."""
         if not identifiers:
@@ -77,12 +76,12 @@ class IdentityResolutionService:
                 self.get_identifier_priority(i.identifier_type),
                 i.is_primary,
                 i.confidence_score,
-            )
+            ),
         )
 
     async def resolve_profile(
         self,
-        identifiers: List[Dict],
+        identifiers: list[dict],
     ) -> CDPProfile:
         """
         Resolve or create a profile based on provided identifiers.
@@ -96,8 +95,7 @@ class IdentityResolutionService:
         # Try to find existing profile by any identifier hash
         for identifier in identifiers:
             result = await self.db.execute(
-                select(CDPProfileIdentifier)
-                .where(
+                select(CDPProfileIdentifier).where(
                     CDPProfileIdentifier.tenant_id == self.tenant_id,
                     CDPProfileIdentifier.identifier_hash == identifier.get("hash"),
                 )
@@ -110,7 +108,7 @@ class IdentityResolutionService:
                 )
                 profile = profile_result.scalar_one_or_none()
                 if profile:
-                    profile.updated_at = datetime.now(timezone.utc)
+                    profile.updated_at = datetime.now(UTC)
                     return profile
 
         # No existing profile found, create new one
@@ -118,8 +116,8 @@ class IdentityResolutionService:
             tenant_id=self.tenant_id,
             lifecycle_stage=LifecycleStage.ANONYMOUS.value,
             total_events=0,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         self.db.add(profile)
         await self.db.flush()
@@ -143,7 +141,7 @@ class IdentityResolutionService:
         self,
         profile_a: CDPProfile,
         profile_b: CDPProfile,
-    ) -> Tuple[CDPProfile, CDPProfile]:
+    ) -> tuple[CDPProfile, CDPProfile]:
         """
         Determine which profile should survive in a merge.
 
@@ -178,14 +176,10 @@ class IdentityResolutionService:
             return profile_a, profile_b
         return profile_b, profile_a
 
-    async def _get_canonical_identity(
-        self,
-        profile_id: UUID
-    ) -> Optional[CDPCanonicalIdentity]:
+    async def _get_canonical_identity(self, profile_id: UUID) -> Optional[CDPCanonicalIdentity]:
         """Get canonical identity for a profile."""
         result = await self.db.execute(
-            select(CDPCanonicalIdentity)
-            .where(
+            select(CDPCanonicalIdentity).where(
                 CDPCanonicalIdentity.tenant_id == self.tenant_id,
                 CDPCanonicalIdentity.profile_id == profile_id,
             )
@@ -198,10 +192,10 @@ class IdentityResolutionService:
 
     async def link_identifiers(
         self,
-        identifiers: List[CDPProfileIdentifier],
+        identifiers: list[CDPProfileIdentifier],
         link_type: IdentityLinkType = IdentityLinkType.SAME_EVENT,
-        evidence: Optional[Dict] = None,
-    ) -> List[CDPIdentityLink]:
+        evidence: Optional[dict] = None,
+    ) -> list[CDPIdentityLink]:
         """
         Create links between all identifiers (they appeared together).
 
@@ -215,11 +209,10 @@ class IdentityResolutionService:
 
         # Create links between all pairs
         for i, source in enumerate(identifiers):
-            for target in identifiers[i + 1:]:
+            for target in identifiers[i + 1 :]:
                 # Check if link already exists
                 existing = await self.db.execute(
-                    select(CDPIdentityLink)
-                    .where(
+                    select(CDPIdentityLink).where(
                         CDPIdentityLink.tenant_id == self.tenant_id,
                         or_(
                             and_(
@@ -271,7 +264,7 @@ class IdentityResolutionService:
         anonymous_identifier: CDPProfileIdentifier,
         known_identifier: CDPProfileIdentifier,
         link_type: IdentityLinkType = IdentityLinkType.LOGIN,
-        evidence: Optional[Dict] = None,
+        evidence: Optional[dict] = None,
     ) -> Optional[CDPIdentityLink]:
         """
         Link an anonymous identifier to a known identifier (login event).
@@ -305,7 +298,7 @@ class IdentityResolutionService:
         self,
         identifier_type: str,
         identifier_hash: str,
-    ) -> List[CDPProfile]:
+    ) -> list[CDPProfile]:
         """
         Find all profiles that have a specific identifier.
 
@@ -362,9 +355,15 @@ class IdentityResolutionService:
             "total_revenue": float(merged_profile.total_revenue),
             "profile_data": merged_profile.profile_data,
             "computed_traits": merged_profile.computed_traits,
-            "first_seen_at": merged_profile.first_seen_at.isoformat() if merged_profile.first_seen_at else None,
-            "last_seen_at": merged_profile.last_seen_at.isoformat() if merged_profile.last_seen_at else None,
-            "identifier_count": len(merged_profile.identifiers) if merged_profile.identifiers else 0,
+            "first_seen_at": merged_profile.first_seen_at.isoformat()
+            if merged_profile.first_seen_at
+            else None,
+            "last_seen_at": merged_profile.last_seen_at.isoformat()
+            if merged_profile.last_seen_at
+            else None,
+            "identifier_count": len(merged_profile.identifiers)
+            if merged_profile.identifiers
+            else 0,
         }
 
         # 2. Move identifiers to surviving profile
@@ -384,16 +383,14 @@ class IdentityResolutionService:
         # 4. Move consents (or merge them)
         # Get consents from merged profile
         merged_consents_result = await self.db.execute(
-            select(CDPConsent)
-            .where(CDPConsent.profile_id == merged_profile.id)
+            select(CDPConsent).where(CDPConsent.profile_id == merged_profile.id)
         )
         merged_consents = merged_consents_result.scalars().all()
 
         for consent in merged_consents:
             # Check if surviving profile has same consent type
             existing_result = await self.db.execute(
-                select(CDPConsent)
-                .where(
+                select(CDPConsent).where(
                     CDPConsent.profile_id == surviving_profile.id,
                     CDPConsent.consent_type == consent.consent_type,
                 )
@@ -420,15 +417,15 @@ class IdentityResolutionService:
 
         # Update first_seen_at to earliest
         if merged_profile.first_seen_at and (
-            not surviving_profile.first_seen_at or
-            merged_profile.first_seen_at < surviving_profile.first_seen_at
+            not surviving_profile.first_seen_at
+            or merged_profile.first_seen_at < surviving_profile.first_seen_at
         ):
             surviving_profile.first_seen_at = merged_profile.first_seen_at
 
         # Update last_seen_at to latest
         if merged_profile.last_seen_at and (
-            not surviving_profile.last_seen_at or
-            merged_profile.last_seen_at > surviving_profile.last_seen_at
+            not surviving_profile.last_seen_at
+            or merged_profile.last_seen_at > surviving_profile.last_seen_at
         ):
             surviving_profile.last_seen_at = merged_profile.last_seen_at
 
@@ -455,8 +452,12 @@ class IdentityResolutionService:
             merged_profile_id=merged_profile.id,
             merge_reason=merge_reason.value,
             merged_profile_snapshot=snapshot,
-            triggering_identifier_type=triggering_identifier.identifier_type if triggering_identifier else None,
-            triggering_identifier_hash=triggering_identifier.identifier_hash if triggering_identifier else None,
+            triggering_identifier_type=triggering_identifier.identifier_type
+            if triggering_identifier
+            else None,
+            triggering_identifier_hash=triggering_identifier.identifier_hash
+            if triggering_identifier
+            else None,
             merged_event_count=merged_profile.total_events,
             merged_identifier_count=snapshot.get("identifier_count", 0),
             merged_by_user_id=merged_by_user_id,
@@ -506,7 +507,7 @@ class IdentityResolutionService:
                 ),
                 -p.total_events,
                 p.created_at,
-            )
+            ),
         )
 
         merge_records = []
@@ -532,8 +533,7 @@ class IdentityResolutionService:
         """
         # Get all identifiers for the profile
         result = await self.db.execute(
-            select(CDPProfileIdentifier)
-            .where(
+            select(CDPProfileIdentifier).where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
                 CDPProfileIdentifier.profile_id == profile_id,
             )
@@ -558,7 +558,7 @@ class IdentityResolutionService:
             existing.priority_score = priority_score
             existing.is_verified = strongest.verified_at is not None
             existing.verified_at = strongest.verified_at
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
             canonical = existing
         else:
             canonical = CDPCanonicalIdentity(
@@ -593,13 +593,13 @@ class IdentityResolutionService:
         self,
         identifier_id: UUID,
         max_depth: int = 3,
-    ) -> List[CDPProfileIdentifier]:
+    ) -> list[CDPProfileIdentifier]:
         """
         Get all identifiers linked to a given identifier (graph traversal).
 
         Uses BFS to traverse the identity graph up to max_depth.
         """
-        visited: Set[UUID] = {identifier_id}
+        visited: set[UUID] = {identifier_id}
         to_visit = [identifier_id]
         depth = 0
 
@@ -610,8 +610,7 @@ class IdentityResolutionService:
             for current_id in current_batch:
                 # Find all linked identifiers
                 result = await self.db.execute(
-                    select(CDPIdentityLink)
-                    .where(
+                    select(CDPIdentityLink).where(
                         CDPIdentityLink.tenant_id == self.tenant_id,
                         CDPIdentityLink.is_active == True,
                         or_(
@@ -641,15 +640,14 @@ class IdentityResolutionService:
             return []
 
         result = await self.db.execute(
-            select(CDPProfileIdentifier)
-            .where(CDPProfileIdentifier.id.in_(list(visited)))
+            select(CDPProfileIdentifier).where(CDPProfileIdentifier.id.in_(list(visited)))
         )
         return list(result.scalars().all())
 
     async def get_identity_graph(
         self,
         profile_id: UUID,
-    ) -> Dict:
+    ) -> dict:
         """
         Get the full identity graph for a profile.
 
@@ -657,8 +655,7 @@ class IdentityResolutionService:
         """
         # Get all identifiers for the profile
         result = await self.db.execute(
-            select(CDPProfileIdentifier)
-            .where(
+            select(CDPProfileIdentifier).where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
                 CDPProfileIdentifier.profile_id == profile_id,
             )
@@ -672,8 +669,7 @@ class IdentityResolutionService:
 
         # Get all links involving these identifiers
         result = await self.db.execute(
-            select(CDPIdentityLink)
-            .where(
+            select(CDPIdentityLink).where(
                 CDPIdentityLink.tenant_id == self.tenant_id,
                 or_(
                     CDPIdentityLink.source_identifier_id.in_(identifier_ids),
@@ -712,11 +708,12 @@ class IdentityResolutionService:
 # Utility Functions
 # =============================================================================
 
+
 async def resolve_identity_on_event(
     db: AsyncSession,
     tenant_id: int,
     profile: CDPProfile,
-    identifiers: List[CDPProfileIdentifier],
+    identifiers: list[CDPProfileIdentifier],
     event_id: Optional[UUID] = None,
 ) -> Optional[CDPProfileMerge]:
     """

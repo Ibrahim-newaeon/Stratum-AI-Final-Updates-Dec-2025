@@ -51,29 +51,29 @@ Example:
 """
 
 import logging
-from datetime import datetime
-from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 
+from app.stratum.core.trust_gate import GateDecision, TrustGate
 from app.stratum.models import (
-    Platform,
-    UnifiedCampaign,
-    UnifiedAdSet,
-    PerformanceMetrics,
-    SignalHealth,
     AutomationAction,
     EntityStatus,
+    PerformanceMetrics,
+    Platform,
+    SignalHealth,
+    UnifiedAdSet,
+    UnifiedCampaign,
 )
-from app.stratum.core.trust_gate import TrustGate, GateDecision
-
 
 logger = logging.getLogger("stratum.core.autopilot")
 
 
 class RuleType(str, Enum):
     """Categories of automation rules."""
+
     BUDGET_PACING = "budget_pacing"
     PERFORMANCE_SCALING = "performance_scaling"
     BID_OPTIMIZATION = "bid_optimization"
@@ -89,13 +89,14 @@ class RuleContext:
     This contains all the information a rule needs to evaluate
     whether an action should be taken.
     """
+
     platform: Platform
     account_id: str
     campaign: UnifiedCampaign
-    adsets: List[UnifiedAdSet]
+    adsets: list[UnifiedAdSet]
     metrics: PerformanceMetrics
     signal_health: SignalHealth
-    historical_metrics: List[PerformanceMetrics]
+    historical_metrics: list[PerformanceMetrics]
 
     # Targets and thresholds
     target_cpa: Optional[float] = None
@@ -116,10 +117,11 @@ class RuleContext:
 @dataclass
 class RuleResult:
     """Result of evaluating a rule."""
+
     rule_name: str
     rule_type: RuleType
     triggered: bool
-    actions: List[AutomationAction]
+    actions: list[AutomationAction]
     reasoning: str
     confidence: float = 1.0  # 0.0 to 1.0
 
@@ -155,7 +157,7 @@ class AutopilotRule(ABC):
         entity_type: str,
         entity_id: str,
         action_type: str,
-        parameters: Dict[str, Any]
+        parameters: dict[str, Any],
     ) -> AutomationAction:
         """Helper to create a properly formatted action."""
         return AutomationAction(
@@ -166,7 +168,7 @@ class AutopilotRule(ABC):
             action_type=action_type,
             parameters=parameters,
             signal_health_at_creation=context.signal_health.score,
-            created_by=f"autopilot:{self.name}"
+            created_by=f"autopilot:{self.name}",
         )
 
 
@@ -182,8 +184,8 @@ class BudgetPacingRule(AutopilotRule):
     def __init__(
         self,
         underpace_threshold: float = 0.7,  # Trigger if spending <70% of expected
-        overpace_threshold: float = 1.3,   # Trigger if spending >130% of expected
-        adjustment_percent: float = 20.0
+        overpace_threshold: float = 1.3,  # Trigger if spending >130% of expected
+        adjustment_percent: float = 20.0,
     ):
         super().__init__("budget_pacing", RuleType.BUDGET_PACING)
         self.underpace_threshold = underpace_threshold
@@ -207,7 +209,7 @@ class BudgetPacingRule(AutopilotRule):
                 rule_type=self.rule_type,
                 triggered=False,
                 actions=[],
-                reasoning="Insufficient data for pacing analysis"
+                reasoning="Insufficient data for pacing analysis",
             )
 
         actual_pct = context.metrics.spend / campaign.daily_budget
@@ -230,13 +232,15 @@ class BudgetPacingRule(AutopilotRule):
                 new_budget = min(new_budget, context.max_daily_budget)
 
             if new_budget > campaign.daily_budget:
-                actions.append(self._create_action(
-                    context,
-                    entity_type="campaign",
-                    entity_id=campaign.campaign_id,
-                    action_type="update_budget",
-                    parameters={"daily_budget": round(new_budget, 2)}
-                ))
+                actions.append(
+                    self._create_action(
+                        context,
+                        entity_type="campaign",
+                        entity_id=campaign.campaign_id,
+                        action_type="update_budget",
+                        parameters={"daily_budget": round(new_budget, 2)},
+                    )
+                )
                 reasoning_parts.append(
                     f"Under-pacing detected. Suggesting budget increase to ${new_budget:.2f}"
                 )
@@ -257,7 +261,7 @@ class BudgetPacingRule(AutopilotRule):
             triggered=triggered,
             actions=actions,
             reasoning=" | ".join(reasoning_parts),
-            confidence=0.8 if triggered else 1.0
+            confidence=0.8 if triggered else 1.0,
         )
 
 
@@ -271,10 +275,10 @@ class PerformanceScalingRule(AutopilotRule):
 
     def __init__(
         self,
-        scale_up_multiplier: float = 1.2,    # +20% for good performance
+        scale_up_multiplier: float = 1.2,  # +20% for good performance
         scale_down_multiplier: float = 0.8,  # -20% for poor performance
-        min_conversions: int = 5,            # Need at least 5 conversions to act
-        cooldown_days: int = 1               # Wait 1 day between changes
+        min_conversions: int = 5,  # Need at least 5 conversions to act
+        cooldown_days: int = 1,  # Wait 1 day between changes
     ):
         super().__init__("performance_scaling", RuleType.PERFORMANCE_SCALING)
         self.scale_up_multiplier = scale_up_multiplier
@@ -294,7 +298,7 @@ class PerformanceScalingRule(AutopilotRule):
                 rule_type=self.rule_type,
                 triggered=False,
                 actions=[],
-                reasoning=f"In cooldown period ({context.days_since_last_change}/{self.cooldown_days} days)"
+                reasoning=f"In cooldown period ({context.days_since_last_change}/{self.cooldown_days} days)",
             )
 
         # Check minimum conversions
@@ -305,7 +309,7 @@ class PerformanceScalingRule(AutopilotRule):
                 rule_type=self.rule_type,
                 triggered=False,
                 actions=[],
-                reasoning=f"Insufficient conversions ({conversions}/{self.min_conversions})"
+                reasoning=f"Insufficient conversions ({conversions}/{self.min_conversions})",
             )
 
         campaign = context.campaign
@@ -315,7 +319,9 @@ class PerformanceScalingRule(AutopilotRule):
         # ROAS-based scaling
         if context.target_roas and metrics.roas:
             roas_ratio = metrics.roas / context.target_roas
-            reasoning_parts.append(f"ROAS: {metrics.roas:.2f}x (target: {context.target_roas:.2f}x)")
+            reasoning_parts.append(
+                f"ROAS: {metrics.roas:.2f}x (target: {context.target_roas:.2f}x)"
+            )
 
             if roas_ratio >= 1.2 and campaign.daily_budget:
                 # Performing 20%+ above target ROAS - scale up
@@ -330,14 +336,18 @@ class PerformanceScalingRule(AutopilotRule):
                 new_budget = min(new_budget, max_change)
 
                 if new_budget > campaign.daily_budget:
-                    actions.append(self._create_action(
-                        context,
-                        entity_type="campaign",
-                        entity_id=campaign.campaign_id,
-                        action_type="update_budget",
-                        parameters={"daily_budget": round(new_budget, 2)}
-                    ))
-                    reasoning_parts.append(f"Strong performance -> budget increase to ${new_budget:.2f}")
+                    actions.append(
+                        self._create_action(
+                            context,
+                            entity_type="campaign",
+                            entity_id=campaign.campaign_id,
+                            action_type="update_budget",
+                            parameters={"daily_budget": round(new_budget, 2)},
+                        )
+                    )
+                    reasoning_parts.append(
+                        f"Strong performance -> budget increase to ${new_budget:.2f}"
+                    )
 
             elif roas_ratio <= 0.7 and campaign.daily_budget:
                 # Performing 30%+ below target ROAS - scale down
@@ -349,14 +359,18 @@ class PerformanceScalingRule(AutopilotRule):
                     new_budget = max(new_budget, context.min_daily_budget)
 
                 if new_budget < campaign.daily_budget:
-                    actions.append(self._create_action(
-                        context,
-                        entity_type="campaign",
-                        entity_id=campaign.campaign_id,
-                        action_type="update_budget",
-                        parameters={"daily_budget": round(new_budget, 2)}
-                    ))
-                    reasoning_parts.append(f"Poor performance -> budget decrease to ${new_budget:.2f}")
+                    actions.append(
+                        self._create_action(
+                            context,
+                            entity_type="campaign",
+                            entity_id=campaign.campaign_id,
+                            action_type="update_budget",
+                            parameters={"daily_budget": round(new_budget, 2)},
+                        )
+                    )
+                    reasoning_parts.append(
+                        f"Poor performance -> budget decrease to ${new_budget:.2f}"
+                    )
 
         # CPA-based scaling (if no ROAS target)
         elif context.target_cpa and metrics.cpa:
@@ -372,13 +386,15 @@ class PerformanceScalingRule(AutopilotRule):
                     new_budget = min(new_budget, context.max_daily_budget)
 
                 if new_budget > campaign.daily_budget:
-                    actions.append(self._create_action(
-                        context,
-                        entity_type="campaign",
-                        entity_id=campaign.campaign_id,
-                        action_type="update_budget",
-                        parameters={"daily_budget": round(new_budget, 2)}
-                    ))
+                    actions.append(
+                        self._create_action(
+                            context,
+                            entity_type="campaign",
+                            entity_id=campaign.campaign_id,
+                            action_type="update_budget",
+                            parameters={"daily_budget": round(new_budget, 2)},
+                        )
+                    )
                     reasoning_parts.append(f"Efficient CPA -> budget increase to ${new_budget:.2f}")
 
             elif cpa_ratio >= 1.3 and campaign.daily_budget:
@@ -390,13 +406,15 @@ class PerformanceScalingRule(AutopilotRule):
                     new_budget = max(new_budget, context.min_daily_budget)
 
                 if new_budget < campaign.daily_budget:
-                    actions.append(self._create_action(
-                        context,
-                        entity_type="campaign",
-                        entity_id=campaign.campaign_id,
-                        action_type="update_budget",
-                        parameters={"daily_budget": round(new_budget, 2)}
-                    ))
+                    actions.append(
+                        self._create_action(
+                            context,
+                            entity_type="campaign",
+                            entity_id=campaign.campaign_id,
+                            action_type="update_budget",
+                            parameters={"daily_budget": round(new_budget, 2)},
+                        )
+                    )
                     reasoning_parts.append(f"High CPA -> budget decrease to ${new_budget:.2f}")
 
         if not reasoning_parts:
@@ -408,7 +426,7 @@ class PerformanceScalingRule(AutopilotRule):
             triggered=triggered,
             actions=actions,
             reasoning=" | ".join(reasoning_parts),
-            confidence=0.9 if triggered else 1.0
+            confidence=0.9 if triggered else 1.0,
         )
 
 
@@ -422,9 +440,9 @@ class StatusManagementRule(AutopilotRule):
 
     def __init__(
         self,
-        pause_after_days: int = 7,           # Days of poor performance before pause
-        max_cpa_multiplier: float = 2.0,     # Pause if CPA is 2x target
-        min_roas_multiplier: float = 0.5     # Pause if ROAS is 0.5x target
+        pause_after_days: int = 7,  # Days of poor performance before pause
+        max_cpa_multiplier: float = 2.0,  # Pause if CPA is 2x target
+        min_roas_multiplier: float = 0.5,  # Pause if ROAS is 0.5x target
     ):
         super().__init__("status_management", RuleType.STATUS_MANAGEMENT)
         self.pause_after_days = pause_after_days
@@ -443,13 +461,15 @@ class StatusManagementRule(AutopilotRule):
         if context.min_roas and metrics.roas:
             if metrics.roas < context.min_roas * self.min_roas_multiplier:
                 triggered = True
-                actions.append(self._create_action(
-                    context,
-                    entity_type="campaign",
-                    entity_id=context.campaign.campaign_id,
-                    action_type="update_status",
-                    parameters={"status": EntityStatus.PAUSED.value}
-                ))
+                actions.append(
+                    self._create_action(
+                        context,
+                        entity_type="campaign",
+                        entity_id=context.campaign.campaign_id,
+                        action_type="update_status",
+                        parameters={"status": EntityStatus.PAUSED.value},
+                    )
+                )
                 reasoning_parts.append(
                     f"ROAS {metrics.roas:.2f}x is below minimum threshold "
                     f"({context.min_roas * self.min_roas_multiplier:.2f}x). Suggesting pause."
@@ -459,13 +479,15 @@ class StatusManagementRule(AutopilotRule):
         if context.max_cpa and metrics.cpa:
             if metrics.cpa > context.max_cpa * self.max_cpa_multiplier:
                 triggered = True
-                actions.append(self._create_action(
-                    context,
-                    entity_type="campaign",
-                    entity_id=context.campaign.campaign_id,
-                    action_type="update_status",
-                    parameters={"status": EntityStatus.PAUSED.value}
-                ))
+                actions.append(
+                    self._create_action(
+                        context,
+                        entity_type="campaign",
+                        entity_id=context.campaign.campaign_id,
+                        action_type="update_status",
+                        parameters={"status": EntityStatus.PAUSED.value},
+                    )
+                )
                 reasoning_parts.append(
                     f"CPA ${metrics.cpa:.2f} exceeds maximum threshold "
                     f"(${context.max_cpa * self.max_cpa_multiplier:.2f}). Suggesting pause."
@@ -474,7 +496,7 @@ class StatusManagementRule(AutopilotRule):
         # Check for consistent poor performance
         if len(context.historical_metrics) >= self.pause_after_days:
             poor_days = 0
-            for hist_metrics in context.historical_metrics[-self.pause_after_days:]:
+            for hist_metrics in context.historical_metrics[-self.pause_after_days :]:
                 if context.target_roas and hist_metrics.roas:
                     if hist_metrics.roas < context.target_roas * 0.7:
                         poor_days += 1
@@ -484,13 +506,15 @@ class StatusManagementRule(AutopilotRule):
 
             if poor_days >= self.pause_after_days:
                 triggered = True
-                actions.append(self._create_action(
-                    context,
-                    entity_type="campaign",
-                    entity_id=context.campaign.campaign_id,
-                    action_type="update_status",
-                    parameters={"status": EntityStatus.PAUSED.value}
-                ))
+                actions.append(
+                    self._create_action(
+                        context,
+                        entity_type="campaign",
+                        entity_id=context.campaign.campaign_id,
+                        action_type="update_status",
+                        parameters={"status": EntityStatus.PAUSED.value},
+                    )
+                )
                 reasoning_parts.append(
                     f"Consistently poor performance for {poor_days} days. Suggesting pause."
                 )
@@ -504,7 +528,7 @@ class StatusManagementRule(AutopilotRule):
             triggered=triggered,
             actions=actions,
             reasoning=" | ".join(reasoning_parts),
-            confidence=0.95 if triggered else 1.0
+            confidence=0.95 if triggered else 1.0,
         )
 
 
@@ -537,11 +561,7 @@ class AutopilotEngine:
                     await adapter.execute_action(action)
     """
 
-    def __init__(
-        self,
-        trust_gate: Optional[TrustGate] = None,
-        auto_execute: bool = False
-    ):
+    def __init__(self, trust_gate: Optional[TrustGate] = None, auto_execute: bool = False):
         """
         Initialize the autopilot engine.
 
@@ -551,23 +571,25 @@ class AutopilotEngine:
         """
         self.trust_gate = trust_gate or TrustGate()
         self.auto_execute = auto_execute
-        self.rules: List[AutopilotRule] = []
+        self.rules: list[AutopilotRule] = []
 
         # Add default rules
         self._add_default_rules()
 
         # Execution history for cooldown tracking
-        self._execution_history: Dict[str, datetime] = {}
+        self._execution_history: dict[str, datetime] = {}
 
         logger.info("AutopilotEngine initialized with %d rules", len(self.rules))
 
     def _add_default_rules(self) -> None:
         """Add the built-in optimization rules."""
-        self.rules.extend([
-            BudgetPacingRule(),
-            PerformanceScalingRule(),
-            StatusManagementRule(),
-        ])
+        self.rules.extend(
+            [
+                BudgetPacingRule(),
+                PerformanceScalingRule(),
+                StatusManagementRule(),
+            ]
+        )
 
     def add_rule(self, rule: AutopilotRule) -> None:
         """Add a custom rule to the engine."""
@@ -590,14 +612,10 @@ class AutopilotEngine:
                 return rule
         return None
 
-    def list_rules(self) -> List[Dict[str, Any]]:
+    def list_rules(self) -> list[dict[str, Any]]:
         """List all registered rules."""
         return [
-            {
-                "name": rule.name,
-                "type": rule.rule_type.value,
-                "enabled": rule.enabled
-            }
+            {"name": rule.name, "type": rule.rule_type.value, "enabled": rule.enabled}
             for rule in self.rules
         ]
 
@@ -606,12 +624,12 @@ class AutopilotEngine:
         platform: Platform,
         account_id: str,
         campaign: UnifiedCampaign,
-        adsets: List[UnifiedAdSet],
+        adsets: list[UnifiedAdSet],
         metrics: PerformanceMetrics,
         signal_health: SignalHealth,
-        historical_metrics: Optional[List[PerformanceMetrics]] = None,
-        targets: Optional[Dict[str, float]] = None
-    ) -> List[Dict[str, Any]]:
+        historical_metrics: Optional[list[PerformanceMetrics]] = None,
+        targets: Optional[dict[str, float]] = None,
+    ) -> list[dict[str, Any]]:
         """
         Evaluate all rules for a campaign and return results.
 
@@ -650,7 +668,7 @@ class AutopilotEngine:
             max_daily_budget=targets.get("max_daily_budget"),
             min_daily_budget=targets.get("min_daily_budget"),
             max_budget_change_percent=targets.get("max_budget_change_percent", 50.0),
-            days_since_last_change=days_since
+            days_since_last_change=days_since,
         )
 
         results = []
@@ -674,55 +692,55 @@ class AutopilotEngine:
                             # Record execution time for cooldown
                             self._execution_history[entity_key] = datetime.utcnow()
 
-                results.append({
-                    "rule_name": rule_result.rule_name,
-                    "rule_type": rule_result.rule_type.value,
-                    "triggered": rule_result.triggered,
-                    "reasoning": rule_result.reasoning,
-                    "confidence": rule_result.confidence,
-                    "actions": [
-                        {
-                            "action_type": a.action_type,
-                            "entity_id": a.entity_id,
-                            "parameters": a.parameters
-                        }
-                        for a in rule_result.actions
-                    ],
-                    "gate_results": [
-                        {
-                            "decision": gr.decision.value,
-                            "reason": gr.reason
-                        }
-                        for gr in gate_results
-                    ]
-                })
+                results.append(
+                    {
+                        "rule_name": rule_result.rule_name,
+                        "rule_type": rule_result.rule_type.value,
+                        "triggered": rule_result.triggered,
+                        "reasoning": rule_result.reasoning,
+                        "confidence": rule_result.confidence,
+                        "actions": [
+                            {
+                                "action_type": a.action_type,
+                                "entity_id": a.entity_id,
+                                "parameters": a.parameters,
+                            }
+                            for a in rule_result.actions
+                        ],
+                        "gate_results": [
+                            {"decision": gr.decision.value, "reason": gr.reason}
+                            for gr in gate_results
+                        ],
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"Error evaluating rule {rule.name}: {e}")
-                results.append({
-                    "rule_name": rule.name,
-                    "rule_type": rule.rule_type.value,
-                    "triggered": False,
-                    "reasoning": f"Error: {str(e)}",
-                    "confidence": 0.0,
-                    "actions": [],
-                    "gate_results": []
-                })
+                results.append(
+                    {
+                        "rule_name": rule.name,
+                        "rule_type": rule.rule_type.value,
+                        "triggered": False,
+                        "reasoning": f"Error: {e!s}",
+                        "confidence": 0.0,
+                        "actions": [],
+                        "gate_results": [],
+                    }
+                )
 
         return results
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get autopilot statistics."""
         return {
             "total_rules": len(self.rules),
             "enabled_rules": sum(1 for r in self.rules if r.enabled),
             "rules_by_type": {
-                rt.value: sum(1 for r in self.rules if r.rule_type == rt)
-                for rt in RuleType
+                rt.value: sum(1 for r in self.rules if r.rule_type == rt) for rt in RuleType
             },
             "auto_execute": self.auto_execute,
             "execution_history_size": len(self._execution_history),
-            "trust_gate_stats": self.trust_gate.get_stats()
+            "trust_gate_stats": self.trust_gate.get_stats(),
         }
 
 
@@ -742,10 +760,7 @@ class TrustGatedAutopilot:
         self.autopilot = AutopilotEngine(trust_gate=self.trust_gate)
 
     async def can_execute(
-        self,
-        action: AutomationAction,
-        emq_scores: list,
-        recent_metrics: list
+        self, action: AutomationAction, emq_scores: list, recent_metrics: list
     ) -> tuple:
         """
         Check if an action can be executed based on current signal health.
@@ -758,7 +773,7 @@ class TrustGatedAutopilot:
             platform=action.platform,
             account_id=action.account_id,
             emq_scores=emq_scores,
-            recent_metrics=recent_metrics
+            recent_metrics=recent_metrics,
         )
 
         # Evaluate through trust gate

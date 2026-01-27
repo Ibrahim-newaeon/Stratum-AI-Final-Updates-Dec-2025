@@ -8,19 +8,18 @@ API endpoints for Trust Layer features:
 - Trust banners and status
 """
 
-from datetime import date, timedelta
-from typing import Dict, Any, Optional, List
+from datetime import UTC, date, timedelta
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query
-from sqlalchemy import select, and_, desc
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_session
-from app.quality.trust_layer_service import SignalHealthService, AttributionVarianceService
 from app.features.service import can_access_feature
-from app.schemas.response import APIResponse
 from app.models.trust_layer import SignalHealthHistory, TrustGateAuditLog
-
+from app.quality.trust_layer_service import AttributionVarianceService, SignalHealthService
+from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["trust-layer"])
 
@@ -29,7 +28,8 @@ router = APIRouter(prefix="/tenant/{tenant_id}", tags=["trust-layer"])
 # Signal Health Endpoints
 # =============================================================================
 
-@router.get("/signal-health", response_model=APIResponse[Dict[str, Any]])
+
+@router.get("/signal-health", response_model=APIResponse[dict[str, Any]])
 async def get_signal_health(
     request: Request,
     tenant_id: int,
@@ -53,8 +53,7 @@ async def get_signal_health(
     # Check feature flag
     if not await can_access_feature(db, tenant_id, "signal_health"):
         raise HTTPException(
-            status_code=403,
-            detail="Signal health feature is not enabled for this tenant"
+            status_code=403, detail="Signal health feature is not enabled for this tenant"
         )
 
     service = SignalHealthService(db)
@@ -63,7 +62,7 @@ async def get_signal_health(
     return APIResponse(success=True, data=data)
 
 
-@router.get("/signal-health/history", response_model=APIResponse[Dict[str, Any]])
+@router.get("/signal-health/history", response_model=APIResponse[dict[str, Any]])
 async def get_signal_health_history(
     request: Request,
     tenant_id: int,
@@ -104,7 +103,7 @@ async def get_signal_health_history(
         {
             "date": record.date.isoformat(),
             "overall_score": record.overall_score,
-            "status": record.status.value if hasattr(record.status, 'value') else record.status,
+            "status": record.status.value if hasattr(record.status, "value") else record.status,
             "emq_score_avg": record.emq_score_avg,
             "event_loss_pct_avg": record.event_loss_pct_avg,
             "freshness_minutes_avg": record.freshness_minutes_avg,
@@ -135,7 +134,8 @@ async def get_signal_health_history(
 # Attribution Variance Endpoints
 # =============================================================================
 
-@router.get("/attribution-variance", response_model=APIResponse[Dict[str, Any]])
+
+@router.get("/attribution-variance", response_model=APIResponse[dict[str, Any]])
 async def get_attribution_variance(
     request: Request,
     tenant_id: int,
@@ -157,8 +157,7 @@ async def get_attribution_variance(
 
     if not await can_access_feature(db, tenant_id, "attribution_variance"):
         raise HTTPException(
-            status_code=403,
-            detail="Attribution variance feature is not enabled for this tenant"
+            status_code=403, detail="Attribution variance feature is not enabled for this tenant"
         )
 
     service = AttributionVarianceService(db)
@@ -171,7 +170,8 @@ async def get_attribution_variance(
 # Combined Trust Status Endpoint
 # =============================================================================
 
-@router.get("/trust-status", response_model=APIResponse[Dict[str, Any]])
+
+@router.get("/trust-status", response_model=APIResponse[dict[str, Any]])
 async def get_trust_status(
     request: Request,
     tenant_id: int,
@@ -231,13 +231,18 @@ async def get_trust_status(
 # Trust Gate Audit Log Endpoints
 # =============================================================================
 
-@router.get("/trust-gate/audit-logs", response_model=APIResponse[Dict[str, Any]])
+
+@router.get("/trust-gate/audit-logs", response_model=APIResponse[dict[str, Any]])
 async def get_trust_gate_audit_logs(
     request: Request,
     tenant_id: int,
     days: int = Query(default=7, ge=1, le=30),
-    decision_type: Optional[str] = Query(None, description="Filter by decision: execute, hold, block"),
-    entity_type: Optional[str] = Query(None, description="Filter by entity: campaign, adset, creative"),
+    decision_type: Optional[str] = Query(
+        None, description="Filter by decision: execute, hold, block"
+    ),
+    entity_type: Optional[str] = Query(
+        None, description="Filter by entity: campaign, adset, creative"
+    ),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_async_session),
@@ -258,8 +263,9 @@ async def get_trust_gate_audit_logs(
         raise HTTPException(status_code=403, detail="Trust audit logs feature not enabled")
 
     # Build query conditions
-    from datetime import datetime, timezone as tz
-    end_date = datetime.now(tz.utc)
+    from datetime import datetime
+
+    end_date = datetime.now(UTC)
     start_date = end_date - timedelta(days=days)
 
     conditions = [
@@ -275,6 +281,7 @@ async def get_trust_gate_audit_logs(
 
     # Get total count
     from sqlalchemy import func
+
     count_result = await db.execute(
         select(func.count(TrustGateAuditLog.id)).where(and_(*conditions))
     )
@@ -292,26 +299,29 @@ async def get_trust_gate_audit_logs(
 
     # Format logs
     import json
+
     logs = []
     for record in records:
-        logs.append({
-            "id": str(record.id),
-            "created_at": record.created_at.isoformat() if record.created_at else None,
-            "decision_type": record.decision_type,
-            "action_type": record.action_type,
-            "entity_type": record.entity_type,
-            "entity_id": record.entity_id,
-            "entity_name": record.entity_name,
-            "platform": record.platform,
-            "signal_health_score": record.signal_health_score,
-            "signal_health_status": record.signal_health_status,
-            "gate_passed": bool(record.gate_passed),
-            "gate_reason": json.loads(record.gate_reason) if record.gate_reason else None,
-            "is_dry_run": bool(record.is_dry_run),
-            "healthy_threshold": record.healthy_threshold,
-            "degraded_threshold": record.degraded_threshold,
-            "triggered_by_system": bool(record.triggered_by_system),
-        })
+        logs.append(
+            {
+                "id": str(record.id),
+                "created_at": record.created_at.isoformat() if record.created_at else None,
+                "decision_type": record.decision_type,
+                "action_type": record.action_type,
+                "entity_type": record.entity_type,
+                "entity_id": record.entity_id,
+                "entity_name": record.entity_name,
+                "platform": record.platform,
+                "signal_health_score": record.signal_health_score,
+                "signal_health_status": record.signal_health_status,
+                "gate_passed": bool(record.gate_passed),
+                "gate_reason": json.loads(record.gate_reason) if record.gate_reason else None,
+                "is_dry_run": bool(record.is_dry_run),
+                "healthy_threshold": record.healthy_threshold,
+                "degraded_threshold": record.degraded_threshold,
+                "triggered_by_system": bool(record.triggered_by_system),
+            }
+        )
 
     # Compute summary stats
     execute_count = sum(1 for log in logs if log["decision_type"] == "execute")
@@ -343,7 +353,7 @@ async def get_trust_gate_audit_logs(
     )
 
 
-@router.get("/trust-gate/audit-logs/{log_id}", response_model=APIResponse[Dict[str, Any]])
+@router.get("/trust-gate/audit-logs/{log_id}", response_model=APIResponse[dict[str, Any]])
 async def get_trust_gate_audit_log_detail(
     request: Request,
     tenant_id: int,
@@ -360,6 +370,7 @@ async def get_trust_gate_audit_log_detail(
         raise HTTPException(status_code=403, detail="Trust audit logs feature not enabled")
 
     from uuid import UUID
+
     try:
         log_uuid = UUID(log_id)
     except ValueError:
@@ -379,6 +390,7 @@ async def get_trust_gate_audit_log_detail(
         raise HTTPException(status_code=404, detail="Audit log not found")
 
     import json
+
     return APIResponse(
         success=True,
         data={

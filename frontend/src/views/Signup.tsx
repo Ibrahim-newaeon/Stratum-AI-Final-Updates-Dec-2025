@@ -3,22 +3,22 @@
  * Purple/cyan gradient + dark background
  */
 
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
+  BuildingOfficeIcon,
+  EnvelopeIcon,
+  ExclamationCircleIcon,
   EyeIcon,
   EyeSlashIcon,
   LockClosedIcon,
-  EnvelopeIcon,
   UserIcon,
-  BuildingOfficeIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline'
-import { useSignup } from '@/api/auth'
-import { SEO, pageSEO } from '@/components/common/SEO'
+} from '@heroicons/react/24/outline';
+import { useSignup } from '@/api/auth';
+import { pageSEO, SEO } from '@/components/common/SEO';
 
 // Dark Theme
 const theme = {
@@ -34,29 +34,31 @@ const theme = {
   textMuted: '#9CA3AF',
   border: 'rgba(255, 255, 255, 0.1)',
   success: '#22c55e',
-}
+};
 
-const signupSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email'),
-  company: z.string().min(2, 'Company name is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-})
+const signupSchema = z
+  .object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Please enter a valid email'),
+    company: z.string().min(2, 'Company name is required'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
-type SignupForm = z.infer<typeof signupSchema>
+type SignupForm = z.infer<typeof signupSchema>;
 
 export default function Signup() {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const registerMutation = useSignup()
-  const isLoading = registerMutation.isPending
-  const apiError = registerMutation.error?.message
+  const registerMutation = useSignup();
+  const isLoading = registerMutation.isPending;
+  const apiError = registerMutation.error?.message;
 
   const {
     register,
@@ -64,7 +66,7 @@ export default function Signup() {
     formState: { errors },
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
-  })
+  });
 
   const onSubmit = async (data: SignupForm) => {
     registerMutation.mutate(
@@ -76,11 +78,11 @@ export default function Signup() {
       },
       {
         onSuccess: () => {
-          navigate('/login', { state: { registered: true } })
+          navigate('/login', { state: { registered: true } });
         },
       }
-    )
-  }
+    );
+  };
 
   return (
     <div className="min-h-screen flex" style={{ background: theme.bgBase }}>
@@ -88,10 +90,7 @@ export default function Signup() {
 
       {/* LEFT PANEL - BRANDING */}
       <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgElevated }}>
-        <div
-          className="absolute inset-y-0 right-0 w-px"
-          style={{ background: theme.border }}
-        />
+        <div className="absolute inset-y-0 right-0 w-px" style={{ background: theme.border }} />
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <div>
@@ -103,7 +102,10 @@ export default function Signup() {
                 <span className="text-white font-semibold text-lg">S</span>
               </div>
               <div>
-                <span className="text-xl font-semibold tracking-tight" style={{ color: theme.textPrimary }}>
+                <span
+                  className="text-xl font-semibold tracking-tight"
+                  style={{ color: theme.textPrimary }}
+                >
                   Stratum AI
                 </span>
                 <div
@@ -119,19 +121,28 @@ export default function Signup() {
               </div>
             </Link>
 
-            <h1 className="text-4xl font-semibold mb-4 leading-tight" style={{ color: theme.textPrimary, letterSpacing: '-0.02em' }}>
-              Start optimizing<br />
-              your revenue with<br />
+            <h1
+              className="text-4xl font-semibold mb-4 leading-tight"
+              style={{ color: theme.textPrimary, letterSpacing: '-0.02em' }}
+            >
+              Start optimizing
+              <br />
+              your revenue with
+              <br />
               <span
                 style={{
                   background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
-              >AI-powered</span> insights
+              >
+                AI-powered
+              </span>{' '}
+              insights
             </h1>
             <p className="text-lg max-w-md leading-relaxed" style={{ color: theme.textMuted }}>
-              Join 150+ growth teams using Stratum to automate marketing decisions and recover lost revenue.
+              Join 150+ growth teams using Stratum to automate marketing decisions and recover lost
+              revenue.
             </p>
           </div>
 
@@ -142,7 +153,11 @@ export default function Signup() {
                 { icon: '✓', text: 'No credit card required' },
                 { icon: '✓', text: 'Cancel anytime' },
               ].map((item) => (
-                <div key={item.text} className="flex items-center gap-2" style={{ color: theme.textMuted }}>
+                <div
+                  key={item.text}
+                  className="flex items-center gap-2"
+                  style={{ color: theme.textMuted }}
+                >
                   <span style={{ color: theme.success }}>{item.icon}</span>
                   <span className="text-sm">{item.text}</span>
                 </div>
@@ -160,7 +175,9 @@ export default function Signup() {
                 <div className="text-2xl font-semibold" style={{ color: theme.textPrimary }}>
                   {stat.value}
                 </div>
-                <div className="text-sm" style={{ color: theme.textMuted }}>{stat.label}</div>
+                <div className="text-sm" style={{ color: theme.textMuted }}>
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
@@ -178,7 +195,9 @@ export default function Signup() {
             >
               <span className="text-white font-semibold text-lg">S</span>
             </div>
-            <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>Stratum AI</span>
+            <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>
+              Stratum AI
+            </span>
           </div>
 
           {/* Card */}
@@ -191,7 +210,9 @@ export default function Signup() {
             }}
           >
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>Create your account</h2>
+              <h2 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>
+                Create your account
+              </h2>
               <p style={{ color: theme.textMuted }}>Start your 14-day free trial</p>
             </div>
 
@@ -212,9 +233,14 @@ export default function Signup() {
 
               {/* Name */}
               <div className="space-y-2">
-                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Full Name</label>
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                  Full Name
+                </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                  <UserIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
                   <input
                     {...register('name')}
                     type="text"
@@ -226,12 +252,12 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
+                      e.target.style.borderColor = theme.purple;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = theme.border
-                      e.target.style.boxShadow = 'none'
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
                     }}
                   />
                 </div>
@@ -240,9 +266,14 @@ export default function Signup() {
 
               {/* Email */}
               <div className="space-y-2">
-                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Work Email</label>
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                  Work Email
+                </label>
                 <div className="relative">
-                  <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                  <EnvelopeIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
                   <input
                     {...register('email')}
                     type="email"
@@ -254,12 +285,12 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
+                      e.target.style.borderColor = theme.purple;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = theme.border
-                      e.target.style.boxShadow = 'none'
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
                     }}
                   />
                 </div>
@@ -268,9 +299,14 @@ export default function Signup() {
 
               {/* Company */}
               <div className="space-y-2">
-                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Company</label>
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                  Company
+                </label>
                 <div className="relative">
-                  <BuildingOfficeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                  <BuildingOfficeIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
                   <input
                     {...register('company')}
                     type="text"
@@ -282,12 +318,12 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
+                      e.target.style.borderColor = theme.purple;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = theme.border
-                      e.target.style.boxShadow = 'none'
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
                     }}
                   />
                 </div>
@@ -296,9 +332,14 @@ export default function Signup() {
 
               {/* Password */}
               <div className="space-y-2">
-                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Password</label>
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                  Password
+                </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                  <LockClosedIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
                   <input
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
@@ -310,12 +351,12 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
+                      e.target.style.borderColor = theme.purple;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = theme.border
-                      e.target.style.boxShadow = 'none'
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
                     }}
                   />
                   <button
@@ -324,17 +365,28 @@ export default function Signup() {
                     style={{ color: theme.textMuted }}
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                )}
               </div>
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Confirm Password</label>
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                  Confirm Password
+                </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                  <LockClosedIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
                   <input
                     {...register('confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -346,12 +398,12 @@ export default function Signup() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
+                      e.target.style.borderColor = theme.purple;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = theme.border
-                      e.target.style.boxShadow = 'none'
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
                     }}
                   />
                   <button
@@ -360,10 +412,16 @@ export default function Signup() {
                     style={{ color: theme.textMuted }}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                    {showConfirmPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                )}
               </div>
 
               {/* Submit */}
@@ -373,17 +431,29 @@ export default function Signup() {
                 className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 mt-2"
                 style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
                 onMouseEnter={(e) => {
-                  if (!isLoading) e.currentTarget.style.opacity = '0.9'
+                  if (!isLoading) e.currentTarget.style.opacity = '0.9';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1'
+                  e.currentTarget.style.opacity = '1';
                 }}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Creating account...
                   </span>
@@ -408,12 +478,16 @@ export default function Signup() {
 
           <p className="text-center text-xs mt-6" style={{ color: theme.textMuted }}>
             By creating an account, you agree to our{' '}
-            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>Terms</a>
-            {' '}and{' '}
-            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>Privacy Policy</a>
+            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>
+              Terms
+            </a>{' '}
+            and{' '}
+            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

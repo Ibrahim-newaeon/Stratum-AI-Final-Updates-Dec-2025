@@ -10,8 +10,8 @@
  * - Quick actions
  */
 
-import { useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
@@ -23,29 +23,29 @@ import {
   Settings,
   Target,
   TrendingUp,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useDashboardOverview,
-  useDashboardCampaigns,
-  useDashboardRecommendations,
-  useDashboardActivity,
-  useDashboardSignalHealth,
-  useDashboardQuickActions,
-  useApproveRecommendation,
-  useRejectRecommendation,
   TimePeriod,
-} from '@/api/dashboard'
+  useApproveRecommendation,
+  useDashboardActivity,
+  useDashboardCampaigns,
+  useDashboardOverview,
+  useDashboardQuickActions,
+  useDashboardRecommendations,
+  useDashboardSignalHealth,
+  useRejectRecommendation,
+} from '@/api/dashboard';
 
 // Components
-import { SignalHealthCard } from './widgets/SignalHealthCard'
-import { TrustGateStatus } from './widgets/TrustGateStatus'
-import { RecommendationsCard } from './widgets/RecommendationsCard'
-import { ActivityFeed } from './widgets/ActivityFeed'
-import { MetricCard } from './widgets/MetricCard'
-import { PlatformBreakdown } from './widgets/PlatformBreakdown'
-import { CampaignPerformanceTable } from './widgets/CampaignPerformanceTable'
-import { QuickActionsBar } from './widgets/QuickActionsBar'
+import { SignalHealthCard } from './widgets/SignalHealthCard';
+import { TrustGateStatus } from './widgets/TrustGateStatus';
+import { RecommendationsCard } from './widgets/RecommendationsCard';
+import { ActivityFeed } from './widgets/ActivityFeed';
+import { MetricCard } from './widgets/MetricCard';
+import { PlatformBreakdown } from './widgets/PlatformBreakdown';
+import { CampaignPerformanceTable } from './widgets/CampaignPerformanceTable';
+import { QuickActionsBar } from './widgets/QuickActionsBar';
 
 // Period options
 const periodOptions: { value: TimePeriod; label: string }[] = [
@@ -56,68 +56,68 @@ const periodOptions: { value: TimePeriod; label: string }[] = [
   { value: '90d', label: 'Last 90 Days' },
   { value: 'this_month', label: 'This Month' },
   { value: 'last_month', label: 'Last Month' },
-]
+];
 
 export default function UnifiedDashboard() {
-  const navigate = useNavigate()
-  const [period, setPeriod] = useState<TimePeriod>('7d')
-  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false)
+  const navigate = useNavigate();
+  const [period, setPeriod] = useState<TimePeriod>('7d');
+  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
 
   // Fetch all dashboard data
   const {
     data: overview,
     isLoading: overviewLoading,
     refetch: refetchOverview,
-  } = useDashboardOverview(period)
+  } = useDashboardOverview(period);
 
   const { data: campaigns, isLoading: campaignsLoading } = useDashboardCampaigns({
     period,
     page_size: 5,
     sort_by: 'spend',
     sort_order: 'desc',
-  })
+  });
 
-  const { data: recommendations, isLoading: recommendationsLoading } =
-    useDashboardRecommendations({ limit: 5 })
+  const { data: recommendations, isLoading: recommendationsLoading } = useDashboardRecommendations({
+    limit: 5,
+  });
 
   const { data: activity, isLoading: activityLoading } = useDashboardActivity({
     limit: 10,
-  })
+  });
 
-  const { data: signalHealth, isLoading: signalHealthLoading } =
-    useDashboardSignalHealth()
+  const { data: signalHealth, isLoading: signalHealthLoading } = useDashboardSignalHealth();
 
-  const { data: quickActions } = useDashboardQuickActions()
+  const { data: quickActions } = useDashboardQuickActions();
 
   // Mutations
-  const approveRecommendation = useApproveRecommendation()
-  const rejectRecommendation = useRejectRecommendation()
+  const approveRecommendation = useApproveRecommendation();
+  const rejectRecommendation = useRejectRecommendation();
 
   // Handlers
   const handleRefresh = useCallback(() => {
-    refetchOverview()
-  }, [refetchOverview])
+    refetchOverview();
+  }, [refetchOverview]);
 
   const handlePeriodChange = useCallback((newPeriod: TimePeriod) => {
-    setPeriod(newPeriod)
-    setShowPeriodDropdown(false)
-  }, [])
+    setPeriod(newPeriod);
+    setShowPeriodDropdown(false);
+  }, []);
 
   const handleApproveRecommendation = useCallback(
     async (id: string) => {
-      await approveRecommendation.mutateAsync(id)
+      await approveRecommendation.mutateAsync(id);
     },
     [approveRecommendation]
-  )
+  );
 
   const handleRejectRecommendation = useCallback(
     async (id: string) => {
-      await rejectRecommendation.mutateAsync(id)
+      await rejectRecommendation.mutateAsync(id);
     },
     [rejectRecommendation]
-  )
+  );
 
-  const isLoading = overviewLoading || signalHealthLoading
+  const isLoading = overviewLoading || signalHealthLoading;
 
   // Check if user needs to complete onboarding
   if (overview && !overview.onboarding_complete) {
@@ -129,8 +129,8 @@ export default function UnifiedDashboard() {
           </div>
           <h2 className="text-2xl font-bold mb-3">Complete Your Setup</h2>
           <p className="text-muted-foreground mb-6">
-            Let's get your account set up so you can start optimizing your campaigns with
-            Stratum AI.
+            Let's get your account set up so you can start optimizing your campaigns with Stratum
+            AI.
           </p>
           <button
             onClick={() => navigate('/onboarding')}
@@ -141,7 +141,7 @@ export default function UnifiedDashboard() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -168,10 +168,7 @@ export default function UnifiedDashboard() {
 
             {showPeriodDropdown && (
               <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowPeriodDropdown(false)}
-                />
+                <div className="fixed inset-0 z-10" onClick={() => setShowPeriodDropdown(false)} />
                 <div className="absolute right-0 mt-2 w-48 bg-card border rounded-lg shadow-lg z-20 py-1">
                   {periodOptions.map((option) => (
                     <button
@@ -212,16 +209,10 @@ export default function UnifiedDashboard() {
       {/* Trust Gate & Signal Health Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <TrustGateStatus
-            signalHealth={signalHealth}
-            loading={signalHealthLoading}
-          />
+          <TrustGateStatus signalHealth={signalHealth} loading={signalHealthLoading} />
         </div>
         <div>
-          <SignalHealthCard
-            signalHealth={signalHealth}
-            loading={signalHealthLoading}
-          />
+          <SignalHealthCard signalHealth={signalHealth} loading={signalHealthLoading} />
         </div>
       </div>
 
@@ -302,10 +293,7 @@ export default function UnifiedDashboard() {
       </div>
 
       {/* Platform Breakdown */}
-      <PlatformBreakdown
-        platforms={overview?.platforms || []}
-        loading={overviewLoading}
-      />
+      <PlatformBreakdown platforms={overview?.platforms || []} loading={overviewLoading} />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -336,5 +324,5 @@ export default function UnifiedDashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }

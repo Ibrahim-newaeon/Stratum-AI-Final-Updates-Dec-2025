@@ -3,30 +3,25 @@
  * Provides visual placeholders during data loading
  */
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 interface SkeletonProps {
-  className?: string
+  className?: string;
 }
 
 export function Skeleton({ className }: SkeletonProps) {
-  return (
-    <div
-      className={cn(
-        'skeleton rounded-lg',
-        className
-      )}
-    />
-  )
+  return <div className={cn('skeleton rounded-lg', className)} />;
 }
 
 // KPI Card Skeleton
 export function KPICardSkeleton({ size = 'normal' }: { size?: 'small' | 'normal' }) {
   return (
-    <div className={cn(
-      'relative overflow-hidden rounded-xl border bg-card',
-      size === 'small' ? 'p-4' : 'p-6'
-    )}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl border bg-card',
+        size === 'small' ? 'p-4' : 'p-6'
+      )}
+    >
       <div className="absolute left-0 top-0 h-full w-1 bg-muted" />
       <div className="relative space-y-3">
         <div className="flex items-center justify-between">
@@ -42,7 +37,7 @@ export function KPICardSkeleton({ size = 'normal' }: { size?: 'small' | 'normal'
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Chart Skeleton
@@ -50,21 +45,14 @@ export function ChartSkeleton({ height = 300 }: { height?: number }) {
   return (
     <div className="rounded-xl border bg-card p-6">
       <Skeleton className="h-5 w-48 mb-4" />
-      <div
-        className="relative overflow-hidden rounded-lg bg-muted/50"
-        style={{ height }}
-      >
+      <div className="relative overflow-hidden rounded-lg bg-muted/50" style={{ height }}>
         {/* Animated shimmer effect */}
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         {/* Chart bars placeholder */}
         <div className="absolute bottom-4 left-4 right-4 flex items-end justify-around gap-2">
           {[65, 80, 45, 90, 55, 70, 85].map((height, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-t bg-muted"
-              style={{ height: `${height}%` }}
-            />
+            <div key={i} className="flex-1 rounded-t bg-muted" style={{ height: `${height}%` }} />
           ))}
         </div>
 
@@ -73,7 +61,7 @@ export function ChartSkeleton({ height = 300 }: { height?: number }) {
         <div className="absolute top-4 bottom-4 left-4 border-l border-muted-foreground/20" />
       </div>
     </div>
-  )
+  );
 }
 
 // Area Chart Skeleton
@@ -81,10 +69,7 @@ export function AreaChartSkeleton({ height = 300 }: { height?: number }) {
   return (
     <div className="rounded-xl border bg-card p-6">
       <Skeleton className="h-5 w-48 mb-4" />
-      <div
-        className="relative overflow-hidden rounded-lg bg-muted/50"
-        style={{ height }}
-      >
+      <div className="relative overflow-hidden rounded-lg bg-muted/50" style={{ height }}>
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         {/* Area wave placeholder */}
@@ -100,7 +85,7 @@ export function AreaChartSkeleton({ height = 300 }: { height?: number }) {
         </svg>
       </div>
     </div>
-  )
+  );
 }
 
 // Pie Chart Skeleton
@@ -131,7 +116,7 @@ export function PieChartSkeleton({ height = 300 }: { height?: number }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Table Row Skeleton
@@ -144,7 +129,7 @@ export function TableRowSkeleton({ columns = 7 }: { columns?: number }) {
         </td>
       ))}
     </tr>
-  )
+  );
 }
 
 // Table Skeleton
@@ -173,7 +158,7 @@ export function TableSkeleton({ rows = 5, columns = 7 }: { rows?: number; column
         </table>
       </div>
     </div>
-  )
+  );
 }
 
 // Alert Card Skeleton
@@ -189,7 +174,7 @@ export function AlertSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Full Dashboard Skeleton
@@ -231,7 +216,7 @@ export function DashboardSkeleton() {
         <ChartSkeleton />
       </div>
     </div>
-  )
+  );
 }
 
 // EMQ Score Card Skeleton
@@ -260,7 +245,7 @@ export function EmqScoreSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 // Fix Playbook Skeleton
@@ -288,7 +273,7 @@ export function PlaybookSkeleton({ items = 3 }: { items?: number }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 // Timeline Skeleton
@@ -312,7 +297,7 @@ export function TimelineSkeleton({ items = 4 }: { items?: number }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 // Trust Header Skeleton
@@ -334,7 +319,7 @@ export function TrustHeaderSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Tenant Overview Skeleton
@@ -374,7 +359,7 @@ export function TenantOverviewSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Skeleton
+export default Skeleton;

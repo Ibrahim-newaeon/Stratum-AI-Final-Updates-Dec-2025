@@ -187,9 +187,7 @@ export default function DPA() {
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">12. Contact</h2>
-                <p>
-                  For questions about this DPA, please contact our Data Protection Officer at:
-                </p>
+                <p>For questions about this DPA, please contact our Data Protection Officer at:</p>
                 <p className="mt-4">
                   <strong className="text-white">Email:</strong> dpo@stratum.ai
                   <br />

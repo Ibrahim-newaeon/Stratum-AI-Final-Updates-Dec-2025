@@ -8,21 +8,19 @@ These endpoints allow users to check their subscription status,
 view expiry warnings, and access billing information.
 """
 
-from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.core.subscription import (
-    SubscriptionStatus,
-    SubscriptionInfo,
-    get_subscription_info,
-    get_expiry_warning_message,
-    GRACE_PERIOD_DAYS,
     EXPIRY_WARNING_DAYS,
+    GRACE_PERIOD_DAYS,
+    SubscriptionStatus,
+    get_expiry_warning_message,
+    get_subscription_info,
 )
-from app.core.tiers import SubscriptionTier, TIER_PRICING
+from app.core.tiers import TIER_PRICING, SubscriptionTier
 
 router = APIRouter(prefix="/subscription", tags=["subscription"])
 
@@ -31,8 +29,10 @@ router = APIRouter(prefix="/subscription", tags=["subscription"])
 # Response Models
 # =============================================================================
 
+
 class SubscriptionStatusResponse(BaseModel):
     """Response model for subscription status."""
+
     tenant_id: int
     plan: str
     tier: str
@@ -58,13 +58,14 @@ class SubscriptionStatusResponse(BaseModel):
                 "is_access_restricted": False,
                 "restriction_reason": None,
                 "warning_message": "Your subscription expires in 7 days. Renew now to avoid interruption.",
-                "pricing": {"name": "Professional", "price": 999, "currency": "USD"}
+                "pricing": {"name": "Professional", "price": 999, "currency": "USD"},
             }
         }
 
 
 class SubscriptionConfigResponse(BaseModel):
     """Response model for subscription configuration."""
+
     grace_period_days: int
     expiry_warning_days: int
     available_plans: list
@@ -73,6 +74,7 @@ class SubscriptionConfigResponse(BaseModel):
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("/status", response_model=SubscriptionStatusResponse)
 async def get_subscription_status(request: Request):
@@ -89,7 +91,7 @@ async def get_subscription_status(request: Request):
     This endpoint is always accessible (even with expired subscription)
     so users can check their status and renew.
     """
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
 
     if not tenant_id:
         raise HTTPException(
@@ -129,12 +131,18 @@ async def get_subscription_config():
         - Available plans with pricing
     """
     plans = []
-    for tier in [SubscriptionTier.STARTER, SubscriptionTier.PROFESSIONAL, SubscriptionTier.ENTERPRISE]:
+    for tier in [
+        SubscriptionTier.STARTER,
+        SubscriptionTier.PROFESSIONAL,
+        SubscriptionTier.ENTERPRISE,
+    ]:
         pricing = TIER_PRICING.get(tier, {})
-        plans.append({
-            "tier": tier.value,
-            **pricing,
-        })
+        plans.append(
+            {
+                "tier": tier.value,
+                **pricing,
+            }
+        )
 
     return SubscriptionConfigResponse(
         grace_period_days=GRACE_PERIOD_DAYS,
@@ -156,7 +164,7 @@ async def check_subscription_valid(request: Request):
     Use this for quick client-side checks before attempting
     operations that require valid subscription.
     """
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
 
     if not tenant_id:
         raise HTTPException(
@@ -169,7 +177,9 @@ async def check_subscription_valid(request: Request):
     return {
         "valid": not info.is_access_restricted,
         "status": info.status.value,
-        "message": info.restriction_reason if info.is_access_restricted else "Subscription is active",
+        "message": info.restriction_reason
+        if info.is_access_restricted
+        else "Subscription is active",
         "tier": info.tier.value,
     }
 
@@ -182,7 +192,7 @@ async def get_subscription_warnings(request: Request):
     Returns a list of warnings that should be displayed to the user.
     Empty list if no warnings.
     """
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
 
     if not tenant_id:
         raise HTTPException(
@@ -194,41 +204,47 @@ async def get_subscription_warnings(request: Request):
     warnings = []
 
     if info.status == SubscriptionStatus.EXPIRING_SOON:
-        warnings.append({
-            "type": "expiring_soon",
-            "severity": "warning",
-            "title": "Subscription Expiring Soon",
-            "message": f"Your subscription expires in {info.days_until_expiry} days.",
-            "action": {
-                "label": "Renew Now",
-                "url": "/settings/billing",
+        warnings.append(
+            {
+                "type": "expiring_soon",
+                "severity": "warning",
+                "title": "Subscription Expiring Soon",
+                "message": f"Your subscription expires in {info.days_until_expiry} days.",
+                "action": {
+                    "label": "Renew Now",
+                    "url": "/settings/billing",
+                },
             }
-        })
+        )
 
     elif info.status == SubscriptionStatus.GRACE_PERIOD:
         remaining = GRACE_PERIOD_DAYS - (info.days_in_grace or 0)
-        warnings.append({
-            "type": "grace_period",
-            "severity": "error",
-            "title": "Subscription Expired",
-            "message": f"Your subscription has expired. You have {remaining} days to renew before access is restricted.",
-            "action": {
-                "label": "Renew Immediately",
-                "url": "/settings/billing",
+        warnings.append(
+            {
+                "type": "grace_period",
+                "severity": "error",
+                "title": "Subscription Expired",
+                "message": f"Your subscription has expired. You have {remaining} days to renew before access is restricted.",
+                "action": {
+                    "label": "Renew Immediately",
+                    "url": "/settings/billing",
+                },
             }
-        })
+        )
 
     elif info.status == SubscriptionStatus.EXPIRED:
-        warnings.append({
-            "type": "expired",
-            "severity": "critical",
-            "title": "Access Restricted",
-            "message": "Your subscription has expired. Please renew to restore access.",
-            "action": {
-                "label": "Renew Subscription",
-                "url": "/settings/billing",
+        warnings.append(
+            {
+                "type": "expired",
+                "severity": "critical",
+                "title": "Access Restricted",
+                "message": "Your subscription has expired. Please renew to restore access.",
+                "action": {
+                    "label": "Renew Subscription",
+                    "url": "/settings/billing",
+                },
             }
-        })
+        )
 
     return {
         "warnings": warnings,
@@ -243,7 +259,7 @@ async def get_subscription_usage_summary(request: Request):
 
     Combines subscription status with resource usage information.
     """
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
 
     if not tenant_id:
         raise HTTPException(

@@ -5,33 +5,33 @@
  * Supports Meta, Google, TikTok, and Snapchat ad platforms.
  */
 
-import { useState, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
-  LinkIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   ArrowPathIcon,
+  CheckCircleIcon,
   ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  LinkIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
-  useConnectorStatus,
-  useStartConnection,
-  useRefreshToken,
-  useDisconnectPlatform,
-  useAdAccounts,
   type Platform,
-} from '@/api/campaignBuilder'
+  useAdAccounts,
+  useConnectorStatus,
+  useDisconnectPlatform,
+  useRefreshToken,
+  useStartConnection,
+} from '@/api/campaignBuilder';
 
 interface PlatformConnection {
-  id: string
-  name: string
-  logo: string
-  status: 'connected' | 'disconnected' | 'expired' | 'error'
-  connectedAt?: string
-  expiresAt?: string
-  accountCount?: number
+  id: string;
+  name: string;
+  logo: string;
+  status: 'connected' | 'disconnected' | 'expired' | 'error';
+  connectedAt?: string;
+  expiresAt?: string;
+  accountCount?: number;
 }
 
 const platforms: PlatformConnection[] = [
@@ -65,7 +65,7 @@ const platforms: PlatformConnection[] = [
     logo: '/platforms/snapchat.svg',
     status: 'disconnected',
   },
-]
+];
 
 const statusConfig = {
   connected: {
@@ -92,29 +92,29 @@ const statusConfig = {
     bgColor: 'bg-red-50 dark:bg-red-950/30',
     label: 'Connection Error',
   },
-}
+};
 
 export default function ConnectPlatforms() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const tid = parseInt(tenantId || '1', 10)
-  const [connecting, setConnecting] = useState<string | null>(null)
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const tid = parseInt(tenantId || '1', 10);
+  const [connecting, setConnecting] = useState<string | null>(null);
 
   // API hooks for connector status
-  const { data: metaStatus } = useConnectorStatus(tid, 'meta')
-  const { data: googleStatus } = useConnectorStatus(tid, 'google')
-  const { data: tiktokStatus } = useConnectorStatus(tid, 'tiktok')
-  const { data: snapchatStatus } = useConnectorStatus(tid, 'snapchat')
+  const { data: metaStatus } = useConnectorStatus(tid, 'meta');
+  const { data: googleStatus } = useConnectorStatus(tid, 'google');
+  const { data: tiktokStatus } = useConnectorStatus(tid, 'tiktok');
+  const { data: snapchatStatus } = useConnectorStatus(tid, 'snapchat');
 
   // API hooks for ad account counts
-  const { data: metaAccounts } = useAdAccounts(tid, 'meta')
-  const { data: googleAccounts } = useAdAccounts(tid, 'google')
-  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok')
-  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat')
+  const { data: metaAccounts } = useAdAccounts(tid, 'meta');
+  const { data: googleAccounts } = useAdAccounts(tid, 'google');
+  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok');
+  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat');
 
   // Mutation hooks
-  const startConnection = useStartConnection(tid)
-  const refreshToken = useRefreshToken(tid)
-  const disconnectPlatform = useDisconnectPlatform(tid)
+  const startConnection = useStartConnection(tid);
+  const refreshToken = useRefreshToken(tid);
+  const disconnectPlatform = useDisconnectPlatform(tid);
 
   // Build platforms with API data or fallback to mock
   const platformsWithStatus: PlatformConnection[] = useMemo(() => {
@@ -123,17 +123,17 @@ export default function ConnectPlatforms() {
       google: googleStatus,
       tiktok: tiktokStatus,
       snapchat: snapchatStatus,
-    }
+    };
     const accountsMap: Record<string, typeof metaAccounts> = {
       meta: metaAccounts,
       google: googleAccounts,
       tiktok: tiktokAccounts,
       snapchat: snapchatAccounts,
-    }
+    };
 
     return platforms.map((p) => {
-      const apiStatus = statusMap[p.id]
-      const accounts = accountsMap[p.id]
+      const apiStatus = statusMap[p.id];
+      const accounts = accountsMap[p.id];
 
       if (apiStatus) {
         return {
@@ -141,49 +141,58 @@ export default function ConnectPlatforms() {
           status: apiStatus.status as PlatformConnection['status'],
           connectedAt: apiStatus.connected_at?.split('T')[0],
           accountCount: accounts?.length ?? 0,
-        }
+        };
       }
-      return p
-    })
-  }, [metaStatus, googleStatus, tiktokStatus, snapchatStatus, metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
+      return p;
+    });
+  }, [
+    metaStatus,
+    googleStatus,
+    tiktokStatus,
+    snapchatStatus,
+    metaAccounts,
+    googleAccounts,
+    tiktokAccounts,
+    snapchatAccounts,
+  ]);
 
   const handleConnect = async (platformId: string) => {
-    setConnecting(platformId)
+    setConnecting(platformId);
     try {
-      const result = await startConnection.mutateAsync(platformId as Platform)
+      const result = await startConnection.mutateAsync(platformId as Platform);
       // Redirect to OAuth URL
       if (result.oauth_url) {
-        window.location.href = result.oauth_url
+        window.location.href = result.oauth_url;
       }
     } catch (error) {
-      console.error('Failed to start connection:', error)
+      console.error('Failed to start connection:', error);
       // Fallback for demo mode
-      alert(`OAuth flow would start for ${platformId}`)
+      alert(`OAuth flow would start for ${platformId}`);
     } finally {
-      setConnecting(null)
+      setConnecting(null);
     }
-  }
+  };
 
   const handleDisconnect = async (platformId: string) => {
     if (confirm('Are you sure you want to disconnect this platform?')) {
       try {
-        await disconnectPlatform.mutateAsync(platformId as Platform)
+        await disconnectPlatform.mutateAsync(platformId as Platform);
       } catch (error) {
-        console.error('Failed to disconnect:', error)
-        alert(`Disconnected ${platformId} (demo mode)`)
+        console.error('Failed to disconnect:', error);
+        alert(`Disconnected ${platformId} (demo mode)`);
       }
     }
-  }
+  };
 
   const handleRefresh = async (platformId: string) => {
     try {
-      await refreshToken.mutateAsync(platformId as Platform)
-      alert('Token refreshed successfully')
+      await refreshToken.mutateAsync(platformId as Platform);
+      alert('Token refreshed successfully');
     } catch (error) {
-      console.error('Failed to refresh token:', error)
-      alert(`Refreshing token for ${platformId} (demo mode)`)
+      console.error('Failed to refresh token:', error);
+      alert(`Refreshing token for ${platformId} (demo mode)`);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -195,15 +204,21 @@ export default function ConnectPlatforms() {
         </p>
         <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
           <ExclamationTriangleIcon className="w-3 h-3" />
-          <span>This grants access to <strong>ad accounts & campaigns</strong>. For server-side conversion tracking (CAPI), go to <a href="/dashboard/capi-setup" className="text-primary hover:underline">CAPI Setup</a></span>
+          <span>
+            This grants access to <strong>ad accounts & campaigns</strong>. For server-side
+            conversion tracking (CAPI), go to{' '}
+            <a href="/dashboard/capi-setup" className="text-primary hover:underline">
+              CAPI Setup
+            </a>
+          </span>
         </p>
       </div>
 
       {/* Platform Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {platformsWithStatus.map((platform) => {
-          const status = statusConfig[platform.status]
-          const StatusIcon = status.icon
+          const status = statusConfig[platform.status];
+          const StatusIcon = status.icon;
 
           return (
             <div
@@ -283,7 +298,7 @@ export default function ConnectPlatforms() {
                 )}
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -298,5 +313,5 @@ export default function ConnectPlatforms() {
         </ul>
       </div>
     </div>
-  )
+  );
 }

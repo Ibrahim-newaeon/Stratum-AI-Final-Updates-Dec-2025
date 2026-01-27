@@ -6,21 +6,21 @@ import type { TierContent, TierFAQ as TierFAQType } from '@/config/tierLandingCo
 
 // Technical terms with definitions for contextual help
 const termDefinitions: Record<string, { definition: string; example?: string }> = {
-  'EMQ': {
+  EMQ: {
     definition: 'Event Match Quality - a score from 0-100 measuring data reliability.',
     example: 'EMQ of 85 means 85% of events are being tracked accurately.',
   },
-  'ROAS': {
+  ROAS: {
     definition: 'Return on Ad Spend - revenue generated per dollar spent on ads.',
     example: 'ROAS of 4.0 means $4 revenue for every $1 spent.',
   },
-  'CDP': {
+  CDP: {
     definition: 'Customer Data Platform - unified customer database for marketing.',
   },
   'Trust Gate': {
     definition: 'Safety checkpoint that validates data quality before automation.',
   },
-  'Autopilot': {
+  Autopilot: {
     definition: 'Automated actions that execute when signal health passes thresholds.',
   },
 };
@@ -76,7 +76,9 @@ function FAQItem({
         <span className="text-white font-medium group-hover:text-gray-300 transition-colors">
           {faq.question}
         </span>
-        <span className={`flex-shrink-0 p-1 rounded-full ${isOpen ? `bg-gradient-to-r ${gradientClass}` : 'bg-white/10'} transition-all`}>
+        <span
+          className={`flex-shrink-0 p-1 rounded-full ${isOpen ? `bg-gradient-to-r ${gradientClass}` : 'bg-white/10'} transition-all`}
+        >
           <ChevronDownIcon
             className={`w-4 h-4 ${isOpen ? 'text-white rotate-180' : 'text-gray-400'} transition-transform duration-200`}
           />
@@ -87,9 +89,7 @@ function FAQItem({
           isOpen ? 'max-h-96 pb-6' : 'max-h-0'
         }`}
       >
-        <p className="text-gray-400 leading-relaxed pr-12">
-          {renderAnswerWithTerms(faq.answer)}
-        </p>
+        <p className="text-gray-400 leading-relaxed pr-12">{renderAnswerWithTerms(faq.answer)}</p>
       </div>
     </div>
   );
@@ -140,9 +140,7 @@ export function TierFAQ({ content }: TierFAQProps) {
 
         {/* Contact CTA */}
         <div className="mt-12 text-center">
-          <p className="text-gray-500 mb-4">
-            Still have questions? We're here to help.
-          </p>
+          <p className="text-gray-500 mb-4">Still have questions? We're here to help.</p>
           <a
             href="/contact"
             className={`inline-flex items-center gap-2 ${visuals.accentColor} hover:underline`}

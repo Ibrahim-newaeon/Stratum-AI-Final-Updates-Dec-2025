@@ -1,34 +1,34 @@
-import { useState, useMemo, useCallback } from 'react'
-import { Calculator, TrendingUp, DollarSign, Users, BarChart3, Clock } from 'lucide-react'
-import { cn, formatCurrency } from '@/lib/utils'
+import { useCallback, useMemo, useState } from 'react';
+import { BarChart3, Calculator, Clock, DollarSign, TrendingUp, Users } from 'lucide-react';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface CDPROICalculatorProps {
-  className?: string
+  className?: string;
   /** Currency code (e.g., 'USD', 'SAR', 'EUR') */
-  currency?: string
+  currency?: string;
   /** Locale for number formatting (e.g., 'en-US', 'ar-SA') */
-  locale?: string
+  locale?: string;
 }
 
 interface CalculatorInputs {
-  monthlySessions: number
-  conversionRate: number
-  averageOrderValue: number
-  grossMarginPercent: number
-  currentMatchRate: number
-  expectedMatchRateImprovement: number
-  monthlyPlatformFee: number
+  monthlySessions: number;
+  conversionRate: number;
+  averageOrderValue: number;
+  grossMarginPercent: number;
+  currentMatchRate: number;
+  expectedMatchRateImprovement: number;
+  monthlyPlatformFee: number;
 }
 
 interface CalculatorOutputs {
-  currentAttributedConversions: number
-  projectedAttributedConversions: number
-  incrementalConversions: number
-  incrementalRevenue: number
-  incrementalGrossProfit: number
-  monthlyROI: number
-  paybackPeriodMonths: number
-  annualValue: number
+  currentAttributedConversions: number;
+  projectedAttributedConversions: number;
+  incrementalConversions: number;
+  incrementalRevenue: number;
+  incrementalGrossProfit: number;
+  monthlyROI: number;
+  paybackPeriodMonths: number;
+  annualValue: number;
 }
 
 const defaultInputs: CalculatorInputs = {
@@ -39,7 +39,7 @@ const defaultInputs: CalculatorInputs = {
   currentMatchRate: 35,
   expectedMatchRateImprovement: 40,
   monthlyPlatformFee: 2000,
-}
+};
 
 function calculateROI(inputs: CalculatorInputs): CalculatorOutputs {
   const {
@@ -50,26 +50,26 @@ function calculateROI(inputs: CalculatorInputs): CalculatorOutputs {
     currentMatchRate,
     expectedMatchRateImprovement,
     monthlyPlatformFee,
-  } = inputs
+  } = inputs;
 
   // Current state
-  const totalConversions = (monthlySessions * conversionRate) / 100
-  const currentAttributedConversions = totalConversions * (currentMatchRate / 100)
+  const totalConversions = (monthlySessions * conversionRate) / 100;
+  const currentAttributedConversions = totalConversions * (currentMatchRate / 100);
 
   // Projected state with CDP
-  const newMatchRate = Math.min(currentMatchRate + expectedMatchRateImprovement, 100)
-  const projectedAttributedConversions = totalConversions * (newMatchRate / 100)
+  const newMatchRate = Math.min(currentMatchRate + expectedMatchRateImprovement, 100);
+  const projectedAttributedConversions = totalConversions * (newMatchRate / 100);
 
   // Incremental impact
-  const incrementalConversions = projectedAttributedConversions - currentAttributedConversions
-  const incrementalRevenue = incrementalConversions * averageOrderValue
-  const incrementalGrossProfit = incrementalRevenue * (grossMarginPercent / 100)
+  const incrementalConversions = projectedAttributedConversions - currentAttributedConversions;
+  const incrementalRevenue = incrementalConversions * averageOrderValue;
+  const incrementalGrossProfit = incrementalRevenue * (grossMarginPercent / 100);
 
   // ROI calculations
-  const monthlyNetBenefit = incrementalGrossProfit - monthlyPlatformFee
-  const monthlyROI = monthlyPlatformFee > 0 ? (monthlyNetBenefit / monthlyPlatformFee) * 100 : 0
-  const paybackPeriodMonths = monthlyNetBenefit > 0 ? monthlyPlatformFee / monthlyNetBenefit : 999
-  const annualValue = monthlyNetBenefit * 12
+  const monthlyNetBenefit = incrementalGrossProfit - monthlyPlatformFee;
+  const monthlyROI = monthlyPlatformFee > 0 ? (monthlyNetBenefit / monthlyPlatformFee) * 100 : 0;
+  const paybackPeriodMonths = monthlyNetBenefit > 0 ? monthlyPlatformFee / monthlyNetBenefit : 999;
+  const annualValue = monthlyNetBenefit * 12;
 
   return {
     currentAttributedConversions: Math.round(currentAttributedConversions),
@@ -80,7 +80,7 @@ function calculateROI(inputs: CalculatorInputs): CalculatorOutputs {
     monthlyROI,
     paybackPeriodMonths: Math.max(0, paybackPeriodMonths),
     annualValue,
-  }
+  };
 }
 
 export function CDPROICalculator({
@@ -88,19 +88,19 @@ export function CDPROICalculator({
   currency = 'USD',
   locale = 'en-US',
 }: CDPROICalculatorProps) {
-  const [inputs, setInputs] = useState<CalculatorInputs>(defaultInputs)
+  const [inputs, setInputs] = useState<CalculatorInputs>(defaultInputs);
 
-  const outputs = useMemo(() => calculateROI(inputs), [inputs])
+  const outputs = useMemo(() => calculateROI(inputs), [inputs]);
 
   const updateInput = (key: keyof CalculatorInputs, value: number) => {
-    setInputs((prev) => ({ ...prev, [key]: value }))
-  }
+    setInputs((prev) => ({ ...prev, [key]: value }));
+  };
 
   // Memoized currency formatter using locale/currency props
   const format = useCallback(
     (value: number) => formatCurrency(value, currency, locale),
     [currency, locale]
-  )
+  );
 
   return (
     <div className={cn('bg-card border border-border rounded-xl p-6', className)}>
@@ -149,7 +149,10 @@ export function CDPROICalculator({
               aria-valuenow={inputs.monthlySessions}
               aria-valuetext={`${inputs.monthlySessions.toLocaleString()} sessions`}
             />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1" aria-hidden="true">
+            <div
+              className="flex justify-between text-xs text-muted-foreground mt-1"
+              aria-hidden="true"
+            >
               <span>10K</span>
               <span>500K</span>
               <span>1M</span>
@@ -158,7 +161,10 @@ export function CDPROICalculator({
 
           {/* Conversion Rate */}
           <div>
-            <label id="conversion-rate-label" className="flex items-center justify-between text-sm mb-2">
+            <label
+              id="conversion-rate-label"
+              className="flex items-center justify-between text-sm mb-2"
+            >
               <span>Conversion Rate</span>
               <span className="font-mono text-primary">{inputs.conversionRate}%</span>
             </label>
@@ -202,7 +208,10 @@ export function CDPROICalculator({
 
           {/* Gross Margin */}
           <div>
-            <label id="gross-margin-label" className="flex items-center justify-between text-sm mb-2">
+            <label
+              id="gross-margin-label"
+              className="flex items-center justify-between text-sm mb-2"
+            >
               <span>Gross Margin</span>
               <span className="font-mono text-primary">{inputs.grossMarginPercent}%</span>
             </label>
@@ -224,7 +233,10 @@ export function CDPROICalculator({
 
           {/* Current Match Rate */}
           <div>
-            <label id="current-match-rate-label" className="flex items-center justify-between text-sm mb-2">
+            <label
+              id="current-match-rate-label"
+              className="flex items-center justify-between text-sm mb-2"
+            >
               <span>Current Identity Match Rate</span>
               <span className="font-mono text-amber-500">{inputs.currentMatchRate}%</span>
             </label>
@@ -246,9 +258,14 @@ export function CDPROICalculator({
 
           {/* Expected Improvement */}
           <div>
-            <label id="improvement-label" className="flex items-center justify-between text-sm mb-2">
+            <label
+              id="improvement-label"
+              className="flex items-center justify-between text-sm mb-2"
+            >
               <span>Expected Match Rate Improvement</span>
-              <span className="font-mono text-green-500">+{inputs.expectedMatchRateImprovement}%</span>
+              <span className="font-mono text-green-500">
+                +{inputs.expectedMatchRateImprovement}%
+              </span>
             </label>
             <input
               type="range"
@@ -268,9 +285,14 @@ export function CDPROICalculator({
 
           {/* Monthly Fee */}
           <div>
-            <label id="monthly-fee-label" className="flex items-center justify-between text-sm mb-2">
+            <label
+              id="monthly-fee-label"
+              className="flex items-center justify-between text-sm mb-2"
+            >
               <span>Monthly CDP Cost</span>
-              <span className="font-mono text-muted-foreground">{format(inputs.monthlyPlatformFee)}</span>
+              <span className="font-mono text-muted-foreground">
+                {format(inputs.monthlyPlatformFee)}
+              </span>
             </label>
             <input
               type="range"
@@ -348,10 +370,16 @@ export function CDPROICalculator({
                 <BarChart3 className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">Monthly ROI</span>
               </div>
-              <p className={cn(
-                'text-2xl font-bold',
-                outputs.monthlyROI >= 100 ? 'text-green-500' : outputs.monthlyROI >= 0 ? 'text-amber-500' : 'text-red-500'
-              )}>
+              <p
+                className={cn(
+                  'text-2xl font-bold',
+                  outputs.monthlyROI >= 100
+                    ? 'text-green-500'
+                    : outputs.monthlyROI >= 0
+                      ? 'text-amber-500'
+                      : 'text-red-500'
+                )}
+              >
                 {outputs.monthlyROI.toFixed(0)}%
               </p>
             </div>
@@ -360,10 +388,16 @@ export function CDPROICalculator({
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">Payback Period</span>
               </div>
-              <p className={cn(
-                'text-2xl font-bold',
-                outputs.paybackPeriodMonths <= 1 ? 'text-green-500' : outputs.paybackPeriodMonths <= 3 ? 'text-amber-500' : 'text-muted-foreground'
-              )}>
+              <p
+                className={cn(
+                  'text-2xl font-bold',
+                  outputs.paybackPeriodMonths <= 1
+                    ? 'text-green-500'
+                    : outputs.paybackPeriodMonths <= 3
+                      ? 'text-amber-500'
+                      : 'text-muted-foreground'
+                )}
+              >
                 {outputs.paybackPeriodMonths < 1 ? '<1' : outputs.paybackPeriodMonths.toFixed(1)} mo
               </p>
             </div>
@@ -375,10 +409,12 @@ export function CDPROICalculator({
               <DollarSign className="w-5 h-5 text-primary" />
               <span className="text-sm font-medium">12-Month Net Value</span>
             </div>
-            <p className={cn(
-              'text-3xl font-bold',
-              outputs.annualValue >= 0 ? 'text-primary' : 'text-red-500'
-            )}>
+            <p
+              className={cn(
+                'text-3xl font-bold',
+                outputs.annualValue >= 0 ? 'text-primary' : 'text-red-500'
+              )}
+            >
               {format(outputs.annualValue)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -404,5 +440,5 @@ export function CDPROICalculator({
         </div>
       </div>
     </div>
-  )
+  );
 }

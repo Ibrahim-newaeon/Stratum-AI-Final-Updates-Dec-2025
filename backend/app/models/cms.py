@@ -16,52 +16,52 @@ All CMS content is GLOBAL (platform-level, not tenant-scoped).
 Managed by superadmins only.
 """
 
-from datetime import datetime
-from typing import Optional, List
-from uuid import uuid4
 import enum
+from datetime import UTC, datetime
+from typing import Optional
+from uuid import uuid4
 
-from sqlalchemy import (
-    Column, String, Integer, DateTime, Text, ForeignKey,
-    Index, Boolean, Table
-)
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Table, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, TimestampMixin
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class CMSRole(str, enum.Enum):
     """CMS-specific roles for content management (2026 Standard)."""
-    SUPER_ADMIN = "super_admin"           # Full system access
-    ADMIN = "admin"                        # Tenant-wide CMS access
-    EDITOR_IN_CHIEF = "editor_in_chief"   # Approve/reject, publish, manage authors
-    EDITOR = "editor"                      # Edit all content, schedule, review
-    AUTHOR = "author"                      # Create/edit own content, submit for review
-    CONTRIBUTOR = "contributor"            # Create drafts only, no publish
-    REVIEWER = "reviewer"                  # Comment, approve/reject, no edit
-    VIEWER = "viewer"                      # Read-only access
+
+    SUPER_ADMIN = "super_admin"  # Full system access
+    ADMIN = "admin"  # Tenant-wide CMS access
+    EDITOR_IN_CHIEF = "editor_in_chief"  # Approve/reject, publish, manage authors
+    EDITOR = "editor"  # Edit all content, schedule, review
+    AUTHOR = "author"  # Create/edit own content, submit for review
+    CONTRIBUTOR = "contributor"  # Create drafts only, no publish
+    REVIEWER = "reviewer"  # Comment, approve/reject, no edit
+    VIEWER = "viewer"  # Read-only access
 
 
 class CMSPostStatus(str, enum.Enum):
     """Status of a CMS post (2026 Workflow Standard)."""
-    DRAFT = "draft"                        # Initial state, being written
-    IN_REVIEW = "in_review"                # Submitted for review
-    CHANGES_REQUESTED = "changes_requested" # Reviewer requested changes
-    APPROVED = "approved"                  # Approved, ready to publish/schedule
-    SCHEDULED = "scheduled"                # Scheduled for future publish
-    PUBLISHED = "published"                # Live and visible
-    UNPUBLISHED = "unpublished"            # Taken offline temporarily
-    ARCHIVED = "archived"                  # Permanently archived
-    REJECTED = "rejected"                  # Rejected by reviewer
+
+    DRAFT = "draft"  # Initial state, being written
+    IN_REVIEW = "in_review"  # Submitted for review
+    CHANGES_REQUESTED = "changes_requested"  # Reviewer requested changes
+    APPROVED = "approved"  # Approved, ready to publish/schedule
+    SCHEDULED = "scheduled"  # Scheduled for future publish
+    PUBLISHED = "published"  # Live and visible
+    UNPUBLISHED = "unpublished"  # Taken offline temporarily
+    ARCHIVED = "archived"  # Permanently archived
+    REJECTED = "rejected"  # Rejected by reviewer
 
 
 class CMSContentType(str, enum.Enum):
     """Types of CMS content."""
+
     BLOG_POST = "blog_post"
     CASE_STUDY = "case_study"
     GUIDE = "guide"
@@ -73,6 +73,7 @@ class CMSContentType(str, enum.Enum):
 
 class CMSPageStatus(str, enum.Enum):
     """Status of a CMS page."""
+
     DRAFT = "draft"
     IN_REVIEW = "in_review"
     APPROVED = "approved"
@@ -82,6 +83,7 @@ class CMSPageStatus(str, enum.Enum):
 
 class CMSWorkflowAction(str, enum.Enum):
     """Workflow actions for audit trail."""
+
     CREATED = "created"
     UPDATED = "updated"
     SUBMITTED_FOR_REVIEW = "submitted_for_review"
@@ -103,8 +105,18 @@ class CMSWorkflowAction(str, enum.Enum):
 cms_post_tags = Table(
     "cms_post_tags",
     Base.metadata,
-    Column("post_id", UUID(as_uuid=True), ForeignKey("cms_posts.id", ondelete="CASCADE"), primary_key=True),
-    Column("tag_id", UUID(as_uuid=True), ForeignKey("cms_tags.id", ondelete="CASCADE"), primary_key=True),
+    Column(
+        "post_id",
+        UUID(as_uuid=True),
+        ForeignKey("cms_posts.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "tag_id",
+        UUID(as_uuid=True),
+        ForeignKey("cms_tags.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
 )
 
 
@@ -112,11 +124,13 @@ cms_post_tags = Table(
 # CMS Category Model
 # =============================================================================
 
+
 class CMSCategory(Base, TimestampMixin):
     """
     Blog/content categories.
     Examples: Engineering, Product, Marketing, Company News
     """
+
     __tablename__ = "cms_categories"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -150,11 +164,13 @@ class CMSCategory(Base, TimestampMixin):
 # CMS Tag Model
 # =============================================================================
 
+
 class CMSTag(Base, TimestampMixin):
     """
     Content tags for posts.
     Used for filtering and organization.
     """
+
     __tablename__ = "cms_tags"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -191,11 +207,13 @@ class CMSTag(Base, TimestampMixin):
 # CMS Author Model
 # =============================================================================
 
+
 class CMSAuthor(Base, TimestampMixin):
     """
     Content authors.
     Can be linked to a user account or standalone.
     """
+
     __tablename__ = "cms_authors"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -240,11 +258,13 @@ class CMSAuthor(Base, TimestampMixin):
 # CMS Post Model
 # =============================================================================
 
+
 class CMSPost(Base, TimestampMixin):
     """
     Blog posts and resources.
     Main content model for the CMS.
     """
+
     __tablename__ = "cms_posts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -332,7 +352,9 @@ class CMSPost(Base, TimestampMixin):
     current_version_id = Column(UUID(as_uuid=True), nullable=True)  # Points to latest version
 
     # Assigned reviewer (for workflow)
-    assigned_reviewer_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    assigned_reviewer_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     review_due_date = Column(DateTime(timezone=True), nullable=True)
 
     # Lock for editing (prevent conflicts)
@@ -348,8 +370,18 @@ class CMSPost(Base, TimestampMixin):
         back_populates="posts",
         lazy="selectin",
     )
-    versions = relationship("CMSPostVersion", back_populates="post", lazy="dynamic", order_by="desc(CMSPostVersion.version)")
-    workflow_history = relationship("CMSWorkflowLog", back_populates="post", lazy="dynamic", order_by="desc(CMSWorkflowLog.created_at)")
+    versions = relationship(
+        "CMSPostVersion",
+        back_populates="post",
+        lazy="dynamic",
+        order_by="desc(CMSPostVersion.version)",
+    )
+    workflow_history = relationship(
+        "CMSWorkflowLog",
+        back_populates="post",
+        lazy="dynamic",
+        order_by="desc(CMSWorkflowLog.created_at)",
+    )
 
     __table_args__ = (
         Index("ix_cms_posts_slug", "slug"),
@@ -369,51 +401,57 @@ class CMSPost(Base, TimestampMixin):
 
     def soft_delete(self) -> None:
         """Mark the post as deleted."""
-        from datetime import datetime, timezone
-        self.deleted_at = datetime.now(timezone.utc)
+        from datetime import datetime
+
+        self.deleted_at = datetime.now(UTC)
         self.is_deleted = True
 
     def submit_for_review(self, user_id: int) -> None:
         """Submit post for review."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         self.status = CMSPostStatus.IN_REVIEW.value
-        self.submitted_at = datetime.now(timezone.utc)
+        self.submitted_at = datetime.now(UTC)
         self.submitted_by_id = user_id
 
     def approve(self, user_id: int, notes: Optional[str] = None) -> None:
         """Approve the post."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         self.status = CMSPostStatus.APPROVED.value
-        self.approved_at = datetime.now(timezone.utc)
+        self.approved_at = datetime.now(UTC)
         self.approved_by_id = user_id
-        self.reviewed_at = datetime.now(timezone.utc)
+        self.reviewed_at = datetime.now(UTC)
         self.reviewed_by_id = user_id
         if notes:
             self.review_notes = notes
 
     def reject(self, user_id: int, reason: str) -> None:
         """Reject the post."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         self.status = CMSPostStatus.REJECTED.value
-        self.rejected_at = datetime.now(timezone.utc)
+        self.rejected_at = datetime.now(UTC)
         self.rejected_by_id = user_id
         self.rejection_reason = reason
-        self.reviewed_at = datetime.now(timezone.utc)
+        self.reviewed_at = datetime.now(UTC)
         self.reviewed_by_id = user_id
 
     def request_changes(self, user_id: int, notes: str) -> None:
         """Request changes on the post."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         self.status = CMSPostStatus.CHANGES_REQUESTED.value
-        self.reviewed_at = datetime.now(timezone.utc)
+        self.reviewed_at = datetime.now(UTC)
         self.reviewed_by_id = user_id
         self.review_notes = notes
 
     def publish(self) -> None:
         """Publish the post."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         self.status = CMSPostStatus.PUBLISHED.value
-        self.published_at = datetime.now(timezone.utc)
+        self.published_at = datetime.now(UTC)
 
     def schedule(self, publish_at: datetime) -> None:
         """Schedule the post for future publishing."""
@@ -425,11 +463,13 @@ class CMSPost(Base, TimestampMixin):
 # CMS Page Model
 # =============================================================================
 
+
 class CMSPage(Base, TimestampMixin):
     """
     Generic static pages.
     For About, Terms, Privacy, etc.
     """
+
     __tablename__ = "cms_pages"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -474,8 +514,9 @@ class CMSPage(Base, TimestampMixin):
 
     def soft_delete(self) -> None:
         """Mark the page as deleted."""
-        from datetime import datetime, timezone
-        self.deleted_at = datetime.now(timezone.utc)
+        from datetime import datetime
+
+        self.deleted_at = datetime.now(UTC)
         self.is_deleted = True
 
 
@@ -483,11 +524,13 @@ class CMSPage(Base, TimestampMixin):
 # CMS Contact Submission Model
 # =============================================================================
 
+
 class CMSContactSubmission(Base, TimestampMixin):
     """
     Contact form submissions.
     Stores messages from the public contact form.
     """
+
     __tablename__ = "cms_contact_submissions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -536,6 +579,7 @@ class CMSContactSubmission(Base, TimestampMixin):
 # CMS Post Version Model (2026 Content Versioning)
 # =============================================================================
 
+
 class CMSPostVersion(Base, TimestampMixin):
     """
     Content versioning for posts.
@@ -543,6 +587,7 @@ class CMSPostVersion(Base, TimestampMixin):
 
     2026 Standard: Every content change creates a new version.
     """
+
     __tablename__ = "cms_post_versions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -575,7 +620,9 @@ class CMSPostVersion(Base, TimestampMixin):
 
     # Change summary
     change_summary = Column(String(500), nullable=True)  # Brief description of changes
-    change_type = Column(String(50), nullable=True)  # content_update, seo_update, media_update, etc.
+    change_type = Column(
+        String(50), nullable=True
+    )  # content_update, seo_update, media_update, etc.
 
     # Word/reading metrics at this version
     word_count = Column(Integer, nullable=True)
@@ -598,6 +645,7 @@ class CMSPostVersion(Base, TimestampMixin):
 # CMS Workflow Log Model (2026 Audit Trail)
 # =============================================================================
 
+
 class CMSWorkflowLog(Base, TimestampMixin):
     """
     Workflow audit log for posts.
@@ -605,6 +653,7 @@ class CMSWorkflowLog(Base, TimestampMixin):
 
     2026 Standard: Complete audit trail for compliance and transparency.
     """
+
     __tablename__ = "cms_workflow_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -622,7 +671,7 @@ class CMSWorkflowLog(Base, TimestampMixin):
 
     # Status transition
     from_status = Column(String(20), nullable=True)  # Previous status
-    to_status = Column(String(20), nullable=True)    # New status
+    to_status = Column(String(20), nullable=True)  # New status
 
     # Actor
     performed_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -630,7 +679,9 @@ class CMSWorkflowLog(Base, TimestampMixin):
 
     # Context
     comment = Column(Text, nullable=True)  # Review notes, rejection reason, etc.
-    extra_data = Column(JSONB, nullable=True)  # Additional structured data (renamed from metadata - reserved)
+    extra_data = Column(
+        JSONB, nullable=True
+    )  # Additional structured data (renamed from metadata - reserved)
 
     # Version reference (which version was affected)
     version_number = Column(Integer, nullable=True)

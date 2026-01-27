@@ -12,19 +12,19 @@ Provides endpoints for:
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_async_session
-from app.tenancy.deps import get_tenant_id
 from app.auth.deps import get_current_user
+from app.db.session import get_async_session
 from app.models import User
-from app.models.audience_sync import SyncPlatform, SyncOperation, SyncStatus
+from app.models.audience_sync import SyncOperation, SyncPlatform
 from app.services.cdp.audience_sync import AudienceSyncService
+from app.tenancy.deps import get_tenant_id
 
 router = APIRouter(prefix="/cdp/audience-sync", tags=["CDP Audience Sync"])
 
@@ -33,8 +33,10 @@ router = APIRouter(prefix="/cdp/audience-sync", tags=["CDP Audience Sync"])
 # Schemas
 # =============================================================================
 
+
 class PlatformAudienceCreate(BaseModel):
     """Schema for creating a platform audience."""
+
     segment_id: UUID = Field(..., description="CDP segment ID to sync")
     platform: str = Field(..., description="Platform: meta, google, tiktok, snapchat")
     ad_account_id: str = Field(..., description="Platform ad account ID")
@@ -46,6 +48,7 @@ class PlatformAudienceCreate(BaseModel):
 
 class PlatformAudienceResponse(BaseModel):
     """Response schema for platform audience."""
+
     id: UUID
     segment_id: UUID
     platform: str
@@ -70,6 +73,7 @@ class PlatformAudienceResponse(BaseModel):
 
 class SyncJobResponse(BaseModel):
     """Response schema for sync job."""
+
     id: UUID
     platform_audience_id: UUID
     operation: str
@@ -92,40 +96,45 @@ class SyncJobResponse(BaseModel):
 
 class TriggerSyncRequest(BaseModel):
     """Request schema for triggering a sync."""
+
     operation: str = Field("update", description="Operation: update, replace")
 
 
 class ConnectedPlatformResponse(BaseModel):
     """Response schema for connected platform."""
+
     platform: str
-    ad_accounts: List[Dict[str, str]]
+    ad_accounts: list[dict[str, str]]
 
 
 class PlatformAudienceListResponse(BaseModel):
     """Response schema for listing platform audiences."""
-    audiences: List[PlatformAudienceResponse]
+
+    audiences: list[PlatformAudienceResponse]
     total: int
 
 
 class SyncHistoryResponse(BaseModel):
     """Response schema for sync history."""
-    jobs: List[SyncJobResponse]
+
+    jobs: list[SyncJobResponse]
 
 
 # =============================================================================
 # Endpoints
 # =============================================================================
 
+
 @router.get(
     "/platforms",
-    response_model=List[ConnectedPlatformResponse],
+    response_model=list[ConnectedPlatformResponse],
     summary="Get connected platforms",
     description="List all platforms with active credentials for audience sync.",
 )
 async def get_connected_platforms(
     db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
-) -> List[ConnectedPlatformResponse]:
+) -> list[ConnectedPlatformResponse]:
     """Get list of platforms with active credentials."""
     service = AudienceSyncService(db, tenant_id)
     platforms = await service.get_connected_platforms()
@@ -205,7 +214,7 @@ async def create_platform_audience(
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create platform audience: {str(e)}",
+            detail=f"Failed to create platform audience: {e!s}",
         )
 
 
@@ -226,6 +235,7 @@ async def get_platform_audience(
 
     # Query directly
     from sqlalchemy import select
+
     from app.models.audience_sync import PlatformAudience
 
     result = await db.execute(
@@ -268,7 +278,7 @@ async def trigger_sync(
     if not operation:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid operation. Supported: update, replace",
+            detail="Invalid operation. Supported: update, replace",
         )
 
     service = AudienceSyncService(db, tenant_id)
@@ -292,7 +302,7 @@ async def trigger_sync(
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Sync failed: {str(e)}",
+            detail=f"Sync failed: {e!s}",
         )
 
 
@@ -311,9 +321,7 @@ async def get_sync_history(
     """Get sync history."""
     service = AudienceSyncService(db, tenant_id)
     jobs = await service.get_sync_history(audience_id, limit=limit)
-    return SyncHistoryResponse(
-        jobs=[SyncJobResponse.model_validate(j) for j in jobs]
-    )
+    return SyncHistoryResponse(jobs=[SyncJobResponse.model_validate(j) for j in jobs])
 
 
 @router.delete(
@@ -350,6 +358,7 @@ async def delete_platform_audience(
 # Segment Sync Endpoints (Convenience)
 # =============================================================================
 
+
 @router.get(
     "/segments/{segment_id}/audiences",
     response_model=PlatformAudienceListResponse,
@@ -376,7 +385,7 @@ async def get_segment_audiences(
 
 @router.post(
     "/segments/{segment_id}/sync-all",
-    response_model=List[SyncJobResponse],
+    response_model=list[SyncJobResponse],
     summary="Sync segment to all platforms",
     description="Trigger sync for all platform audiences linked to a segment.",
 )
@@ -386,7 +395,7 @@ async def sync_segment_to_all_platforms(
     db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
-) -> List[SyncJobResponse]:
+) -> list[SyncJobResponse]:
     """Sync a segment to all connected platforms."""
     operation_map = {
         "update": SyncOperation.UPDATE,
@@ -427,10 +436,12 @@ async def sync_segment_to_all_platforms(
             )
             jobs.append(job)
         except Exception as e:
-            errors.append({
-                "platform": audience.platform,
-                "error": str(e),
-            })
+            errors.append(
+                {
+                    "platform": audience.platform,
+                    "error": str(e),
+                }
+            )
 
     await db.commit()
 

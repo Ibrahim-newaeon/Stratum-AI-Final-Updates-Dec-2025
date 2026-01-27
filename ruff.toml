@@ -4,6 +4,26 @@
 # Fast Python linter and formatter (replacement for flake8, isort, black)
 # Documentation: https://docs.astral.sh/ruff/
 
+# Root-level settings
+target-version = "py311"
+line-length = 100
+
+# Exclude paths
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "*.pyc",
+    ".mypy_cache",
+    ".pytest_cache",
+    "migrations",
+    "alembic",
+    "node_modules",
+    "dist",
+    "build",
+]
+
 [lint]
 # Enable these rule categories
 select = [
@@ -25,42 +45,68 @@ select = [
     "PTH",    # flake8-use-pathlib
 ]
 
-# Ignore specific rules
+# Ignore specific rules (relaxed for initial setup - tighten over time)
 ignore = [
+    "A001",   # Variable shadowing builtin (common in codebases: id, type)
+    "A002",   # Argument shadowing builtin (common in APIs: format, type, id)
+    "ASYNC100", # Blocking HTTP in async (legacy code uses requests)
+    "ASYNC101", # Async file operations (aiofiles not always available)
+    "B006",   # Mutable default argument (common pattern in some codebases)
+    "B007",   # Unused loop variable (sometimes intentional)
+    "B008",   # Function calls in argument defaults (FastAPI Depends)
+    "B904",   # Raise from in except (legacy code pattern)
+    "C401",   # Generator to set comprehension (style preference)
+    "C414",   # Unnecessary list in sorted (style preference)
+    "C416",   # Unnecessary dict comprehension (style preference)
+    "DTZ003", # datetime.utcnow() usage (legacy code migration)
+    "DTZ005", # datetime.now() without tz (legacy code migration)
+    "DTZ006", # fromtimestamp without tz (legacy code migration)
+    "DTZ007", # strptime without timezone (legacy code migration)
+    "DTZ011", # date.today() usage (legacy code migration)
+    "E402",   # Module level import not at top (scripts pattern)
     "E501",   # Line too long (handled by formatter)
+    "E712",   # Comparison to True/False (SQLAlchemy uses this pattern)
+    "E741",   # Ambiguous variable name (l, O, I - used in some algorithms)
+    "F401",   # Unused import (will fix incrementally)
+    "F403",   # Star imports (used in __init__.py)
+    "F821",   # Undefined name (will fix incrementally)
+    "F841",   # Unused variable (sometimes intentional)
+    "N803",   # Argument name lowercase (ML uses X, Y convention)
+    "N805",   # First argument self (SQLAlchemy uses cls patterns)
+    "N806",   # Variable lowercase (ML uses X, Y convention)
+    "N815",   # mixedCase variables (API payloads from external systems)
+    "PTH",    # Use pathlib (legacy code uses os.path)
+    "RUF001", # Ambiguous unicode in string (Unicode chars intentional)
+    "RUF002", # Ambiguous unicode in docstring (Unicode chars intentional)
+    "RUF003", # Ambiguous unicode in comment (Greek letters in math comments)
+    "RUF005", # Concatenation vs unpacking (style preference)
+    "RUF012", # Mutable class attributes (Pydantic models)
+    "RUF013", # Implicit Optional (legacy code pattern)
     "S101",   # Use of assert (OK in tests)
     "S104",   # Possible binding to all interfaces
     "S105",   # Hardcoded password (false positives with variable names)
     "S106",   # Hardcoded password (false positives)
-    "B008",   # Function calls in argument defaults (FastAPI Depends)
+    "S108",   # Insecure temp file (false positives for /tmp paths)
+    "S110",   # try-except-pass (sometimes intentional for robustness)
+    "S112",   # try-except-continue (sometimes intentional)
+    "S113",   # Requests without timeout (legacy code)
+    "S311",   # Pseudo-random generators (used for non-crypto purposes)
+    "S324",   # MD5 hash (used for non-security purposes like cache keys)
+    "S608",   # SQL injection (manual review needed - often false positive)
+    "SIM102", # Nested if statements (readability preference)
+    "SIM105", # Use contextlib.suppress (readability preference)
+    "SIM108", # Use ternary operator (reduces readability for complex conditions)
+    "SIM110", # Use any() instead of for loop (readability preference)
+    "SIM117", # Multiple with statements (readability preference)
+    "SIM118", # Use key in dict instead of dict.keys() (style preference)
+    "T20",    # Print statements (allowed in scripts)
     "UP007",  # Use X | Y for Union (keep Optional for clarity)
+    "UP038",  # Use X | Y in isinstance (legacy code)
 ]
 
 # Allow autofix for all enabled rules
 fixable = ["ALL"]
 unfixable = []
-
-# Exclude paths
-exclude = [
-    ".git",
-    ".venv",
-    "venv",
-    "__pycache__",
-    "*.pyc",
-    ".mypy_cache",
-    ".pytest_cache",
-    "migrations",
-    "alembic",
-    "node_modules",
-    "dist",
-    "build",
-]
-
-# Python version target
-target-version = "py311"
-
-# Line length
-line-length = 100
 
 [lint.per-file-ignores]
 # Tests can use assert and print

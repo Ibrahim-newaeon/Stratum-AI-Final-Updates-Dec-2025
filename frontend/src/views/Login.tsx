@@ -3,17 +3,17 @@
  * Purple/cyan gradient + dark background
  */
 
-import { useState } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
+  EnvelopeIcon,
+  ExclamationCircleIcon,
   EyeIcon,
   EyeSlashIcon,
   LockClosedIcon,
-  EnvelopeIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline'
-import { useAuth } from '@/contexts/AuthContext'
-import { SEO, pageSEO } from '@/components/common/SEO'
+} from '@heroicons/react/24/outline';
+import { useAuth } from '@/contexts/AuthContext';
+import { pageSEO, SEO } from '@/components/common/SEO';
 
 // Dark Theme
 const theme = {
@@ -29,67 +29,67 @@ const theme = {
   textMuted: '#9CA3AF',
   border: 'rgba(255, 255, 255, 0.1)',
   success: '#22c55e',
-}
+};
 
 export default function Login() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { login } = useAuth()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard/overview'
+  const from = location.state?.from?.pathname || '/dashboard/overview';
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
 
     try {
-      const result = await login(email, password)
+      const result = await login(email, password);
       if (result.success) {
-        navigate(from, { replace: true })
+        navigate(from, { replace: true });
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || 'Login failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'user') => {
     const credentials = {
       superadmin: { email: 'superadmin@stratum.ai', password: 'Admin123!' },
       admin: { email: 'demo@stratum.ai', password: 'demo1234' },
       user: { email: 'demo@stratum.ai', password: 'demo1234' },
-    }
+    };
 
-    const { email, password } = credentials[role]
-    setEmail(email)
-    setPassword(password)
-    setError('')
-    setIsLoading(true)
+    const { email, password } = credentials[role];
+    setEmail(email);
+    setPassword(password);
+    setError('');
+    setIsLoading(true);
 
     try {
-      const result = await login(email, password)
+      const result = await login(email, password);
       if (result.success) {
-        navigate(from, { replace: true })
+        navigate(from, { replace: true });
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || 'Login failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex" style={{ background: theme.bgBase }}>
@@ -97,10 +97,7 @@ export default function Login() {
 
       {/* LEFT PANEL - BRANDING */}
       <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgElevated }}>
-        <div
-          className="absolute inset-y-0 right-0 w-px"
-          style={{ background: theme.border }}
-        />
+        <div className="absolute inset-y-0 right-0 w-px" style={{ background: theme.border }} />
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <div>
@@ -112,7 +109,10 @@ export default function Login() {
                 <span className="text-white font-semibold text-lg">S</span>
               </div>
               <div>
-                <span className="text-xl font-semibold tracking-tight" style={{ color: theme.textPrimary }}>
+                <span
+                  className="text-xl font-semibold tracking-tight"
+                  style={{ color: theme.textPrimary }}
+                >
                   Stratum AI
                 </span>
                 <div
@@ -128,19 +128,28 @@ export default function Login() {
               </div>
             </Link>
 
-            <h1 className="text-4xl font-semibold mb-4 leading-tight" style={{ color: theme.textPrimary, letterSpacing: '-0.02em' }}>
-              Revenue Operating<br />
-              System with<br />
+            <h1
+              className="text-4xl font-semibold mb-4 leading-tight"
+              style={{ color: theme.textPrimary, letterSpacing: '-0.02em' }}
+            >
+              Revenue Operating
+              <br />
+              System with
+              <br />
               <span
                 style={{
                   background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
-              >Trust-Gated</span> Autopilot
+              >
+                Trust-Gated
+              </span>{' '}
+              Autopilot
             </h1>
             <p className="text-lg max-w-md leading-relaxed" style={{ color: theme.textMuted }}>
-              AI-powered marketing intelligence with real-time attribution and automated optimization.
+              AI-powered marketing intelligence with real-time attribution and automated
+              optimization.
             </p>
           </div>
 
@@ -175,7 +184,9 @@ export default function Login() {
                 <div className="text-2xl font-semibold" style={{ color: theme.textPrimary }}>
                   {stat.value}
                 </div>
-                <div className="text-sm" style={{ color: theme.textMuted }}>{stat.label}</div>
+                <div className="text-sm" style={{ color: theme.textMuted }}>
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
@@ -192,7 +203,9 @@ export default function Login() {
             >
               <span className="text-white font-semibold text-lg">S</span>
             </div>
-            <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>Stratum AI</span>
+            <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>
+              Stratum AI
+            </span>
           </div>
 
           <div
@@ -204,7 +217,9 @@ export default function Login() {
             }}
           >
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>Welcome back</h2>
+              <h2 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>
+                Welcome back
+              </h2>
               <p style={{ color: theme.textMuted }}>Sign in to continue to your dashboard</p>
             </div>
 
@@ -224,9 +239,14 @@ export default function Login() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Work Email</label>
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                  Work Email
+                </label>
                 <div className="relative">
-                  <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                  <EnvelopeIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
                   <input
                     type="email"
                     value={email}
@@ -238,12 +258,12 @@ export default function Login() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
+                      e.target.style.borderColor = theme.purple;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = theme.border
-                      e.target.style.boxShadow = 'none'
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
                     }}
                     placeholder="name@company.com"
                     required
@@ -254,7 +274,9 @@ export default function Login() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Password</label>
+                  <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                    Password
+                  </label>
                   <Link
                     to="/forgot-password"
                     className="text-sm transition-colors hover:underline"
@@ -264,7 +286,10 @@ export default function Login() {
                   </Link>
                 </div>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                  <LockClosedIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -276,12 +301,12 @@ export default function Login() {
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`
+                      e.target.style.borderColor = theme.purple;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = theme.border
-                      e.target.style.boxShadow = 'none'
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
                     }}
                     placeholder="Enter your password"
                     required
@@ -293,7 +318,11 @@ export default function Login() {
                     style={{ color: theme.textMuted }}
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -304,17 +333,31 @@ export default function Login() {
                   onClick={() => setRememberMe(!rememberMe)}
                   className="w-5 h-5 rounded flex items-center justify-center transition-all duration-200"
                   style={{
-                    background: rememberMe ? `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` : theme.bgElevated,
+                    background: rememberMe
+                      ? `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})`
+                      : theme.bgElevated,
                     border: rememberMe ? 'none' : `1px solid ${theme.border}`,
                   }}
                 >
                   {rememberMe && (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   )}
                 </button>
-                <span className="text-sm" style={{ color: theme.textMuted }}>Remember me for 30 days</span>
+                <span className="text-sm" style={{ color: theme.textMuted }}>
+                  Remember me for 30 days
+                </span>
               </div>
 
               <button
@@ -323,17 +366,29 @@ export default function Login() {
                 className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
                 style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
                 onMouseEnter={(e) => {
-                  if (!isLoading) e.currentTarget.style.opacity = '0.9'
+                  if (!isLoading) e.currentTarget.style.opacity = '0.9';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1'
+                  e.currentTarget.style.opacity = '1';
                 }}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Signing in...
                   </span>
@@ -344,7 +399,9 @@ export default function Login() {
             </form>
 
             <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${theme.border}` }}>
-              <p className="text-center text-xs mb-3" style={{ color: theme.textMuted }}>Quick Demo Access</p>
+              <p className="text-center text-xs mb-3" style={{ color: theme.textMuted }}>
+                Quick Demo Access
+              </p>
               <div className="grid grid-cols-3 gap-2">
                 {['superadmin', 'admin', 'user'].map((role) => (
                   <button
@@ -358,12 +415,12 @@ export default function Login() {
                       color: theme.textMuted,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = theme.purple
-                      e.currentTarget.style.color = theme.purple
+                      e.currentTarget.style.borderColor = theme.purple;
+                      e.currentTarget.style.color = theme.purple;
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = theme.border
-                      e.currentTarget.style.color = theme.textMuted
+                      e.currentTarget.style.borderColor = theme.border;
+                      e.currentTarget.style.color = theme.textMuted;
                     }}
                   >
                     {role === 'superadmin' ? 'Super' : role}
@@ -386,12 +443,16 @@ export default function Login() {
 
           <p className="text-center text-xs mt-6" style={{ color: theme.textMuted }}>
             By signing in, you agree to our{' '}
-            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>Terms</a>
-            {' '}and{' '}
-            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>Privacy Policy</a>
+            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>
+              Terms
+            </a>{' '}
+            and{' '}
+            <a href="#" className="hover:underline" style={{ color: theme.textSecondary }}>
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

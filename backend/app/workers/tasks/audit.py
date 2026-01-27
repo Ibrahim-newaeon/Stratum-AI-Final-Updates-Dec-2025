@@ -6,7 +6,7 @@ Background tasks for processing audit log queues and compliance.
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -61,7 +61,7 @@ def process_audit_log_queue():
                     user_agent=entry.get("user_agent"),
                     created_at=datetime.fromisoformat(entry.get("timestamp"))
                     if entry.get("timestamp")
-                    else datetime.now(timezone.utc),
+                    else datetime.now(UTC),
                 )
                 db.add(log)
 

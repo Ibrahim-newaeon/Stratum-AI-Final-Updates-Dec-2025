@@ -5,16 +5,16 @@
  * Only active when VITE_SENTRY_DSN environment variable is set.
  */
 
-import * as Sentry from '@sentry/react'
+import * as Sentry from '@sentry/react';
 
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
-const ENVIRONMENT = import.meta.env.MODE || 'development'
-const IS_PRODUCTION = ENVIRONMENT === 'production'
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
+const ENVIRONMENT = import.meta.env.MODE || 'development';
+const IS_PRODUCTION = ENVIRONMENT === 'production';
 
 export function initSentry() {
   if (!SENTRY_DSN) {
-    console.log('[Sentry] DSN not configured, skipping initialization')
-    return
+    console.log('[Sentry] DSN not configured, skipping initialization');
+    return;
   }
 
   Sentry.init({
@@ -42,7 +42,7 @@ export function initSentry() {
 
     // Filter out certain errors
     beforeSend(event, hint) {
-      const error = hint.originalException
+      const error = hint.originalException;
 
       // Ignore network errors and cancelled requests
       if (error instanceof Error) {
@@ -51,24 +51,24 @@ export function initSentry() {
           error.message.includes('cancelled') ||
           error.message.includes('aborted')
         ) {
-          return null
+          return null;
         }
       }
 
       // Don't send errors in development by default
       if (!IS_PRODUCTION && !import.meta.env.VITE_SENTRY_DEBUG) {
-        console.error('[Sentry] Would send error:', error)
-        return null
+        console.error('[Sentry] Would send error:', error);
+        return null;
       }
 
-      return event
+      return event;
     },
 
     // Don't capture PII
     sendDefaultPii: false,
-  })
+  });
 
-  console.log('[Sentry] Initialized', { environment: ENVIRONMENT })
+  console.log('[Sentry] Initialized', { environment: ENVIRONMENT });
 }
 
 /**
@@ -76,15 +76,15 @@ export function initSentry() {
  * Call this after user login
  */
 export function setSentryUser(user: { id: string; email?: string; role?: string }) {
-  if (!SENTRY_DSN) return
+  if (!SENTRY_DSN) return;
 
   Sentry.setUser({
     id: user.id,
     email: user.email,
     // Don't include sensitive info
-  })
+  });
 
-  Sentry.setTag('user_role', user.role || 'unknown')
+  Sentry.setTag('user_role', user.role || 'unknown');
 }
 
 /**
@@ -92,56 +92,50 @@ export function setSentryUser(user: { id: string; email?: string; role?: string 
  * Call this after user logout
  */
 export function clearSentryUser() {
-  if (!SENTRY_DSN) return
-  Sentry.setUser(null)
+  if (!SENTRY_DSN) return;
+  Sentry.setUser(null);
 }
 
 /**
  * Set tenant context for multi-tenant tracking
  */
 export function setSentryTenant(tenantId: number, tenantName?: string) {
-  if (!SENTRY_DSN) return
+  if (!SENTRY_DSN) return;
 
-  Sentry.setTag('tenant_id', tenantId.toString())
+  Sentry.setTag('tenant_id', tenantId.toString());
   if (tenantName) {
-    Sentry.setTag('tenant_name', tenantName)
+    Sentry.setTag('tenant_name', tenantName);
   }
 }
 
 /**
  * Capture a custom error with additional context
  */
-export function captureError(
-  error: Error,
-  context?: Record<string, unknown>
-) {
+export function captureError(error: Error, context?: Record<string, unknown>) {
   if (!SENTRY_DSN) {
-    console.error('[Sentry] Error:', error, context)
-    return
+    console.error('[Sentry] Error:', error, context);
+    return;
   }
 
   Sentry.withScope((scope) => {
     if (context) {
-      scope.setContext('additional', context)
+      scope.setContext('additional', context);
     }
-    Sentry.captureException(error)
-  })
+    Sentry.captureException(error);
+  });
 }
 
 /**
  * Capture a custom message/event
  */
-export function captureMessage(
-  message: string,
-  level: 'info' | 'warning' | 'error' = 'info'
-) {
+export function captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info') {
   if (!SENTRY_DSN) {
-    console.log(`[Sentry] ${level}: ${message}`)
-    return
+    console.log(`[Sentry] ${level}: ${message}`);
+    return;
   }
 
-  Sentry.captureMessage(message, level)
+  Sentry.captureMessage(message, level);
 }
 
 // Re-export Sentry ErrorBoundary for use in React components
-export const ErrorBoundary = Sentry.ErrorBoundary
+export const ErrorBoundary = Sentry.ErrorBoundary;

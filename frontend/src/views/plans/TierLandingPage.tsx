@@ -1,12 +1,12 @@
-import { useParams, Navigate, Link } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { getTierContent, isValidTier } from '@/config/tierLandingContent';
 import {
-  TierHero,
+  TierFAQ,
   TierFeatureGrid,
+  TierHero,
   TierPricingCTA,
   TierTestimonials,
-  TierFAQ,
 } from '@/components/landing/tier';
 import { Footer } from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,9 @@ export default function TierLandingPage() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-stratum flex items-center justify-center">
                   <span className="text-white font-bold">S</span>
                 </div>
-                <span className="text-lg text-white font-semibold hidden sm:inline">Stratum AI</span>
+                <span className="text-lg text-white font-semibold hidden sm:inline">
+                  Stratum AI
+                </span>
               </Link>
               <Link
                 to="/"

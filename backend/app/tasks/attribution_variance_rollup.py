@@ -6,17 +6,16 @@ Celery task for daily attribution variance rollup.
 Compares platform-reported metrics with GA4 data to identify discrepancies.
 """
 
-from datetime import date, datetime, timedelta, timezone
-from typing import Dict, Any, Optional
 import logging
+from datetime import UTC, date, datetime, timedelta
+from typing import Any, Optional
 
 from celery import shared_task
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
-from app.models.trust_layer import FactAttributionVarianceDaily, AttributionVarianceStatus
-
+from app.models.trust_layer import AttributionVarianceStatus, FactAttributionVarianceDaily
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +38,7 @@ PLATFORMS = ["meta", "google", "tiktok", "snapchat"]
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def determine_variance_status(delta_pct: float) -> AttributionVarianceStatus:
     """
@@ -108,7 +108,9 @@ def calculate_confidence(
         trend_confidence = 0.5
 
     # Weighted average
-    confidence = (volume_confidence * 0.4) + (conversion_confidence * 0.3) + (trend_confidence * 0.3)
+    confidence = (
+        (volume_confidence * 0.4) + (conversion_confidence * 0.3) + (trend_confidence * 0.3)
+    )
 
     return round(min(confidence, 1.0), 2)
 
@@ -117,13 +119,16 @@ def calculate_confidence(
 # Main Task
 # =============================================================================
 
+
 @shared_task(
     name="tasks.attribution_variance_rollup",
     bind=True,
     max_retries=3,
     default_retry_delay=300,
 )
-def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_date: Optional[str] = None):
+def attribution_variance_rollup(
+    self, tenant_id: Optional[int] = None, target_date: Optional[str] = None
+):
     """
     Daily attribution variance rollup task.
 
@@ -139,18 +144,23 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
     async def run_rollup():
         async with async_session_factory() as db:
             try:
-                rollup_date = date.fromisoformat(target_date) if target_date else date.today() - timedelta(days=1)
+                rollup_date = (
+                    date.fromisoformat(target_date)
+                    if target_date
+                    else date.today() - timedelta(days=1)
+                )
 
-                logger.info(f"Starting attribution variance rollup for date={rollup_date}, tenant_id={tenant_id}")
+                logger.info(
+                    f"Starting attribution variance rollup for date={rollup_date}, tenant_id={tenant_id}"
+                )
 
                 # Get list of tenants to process
                 if tenant_id:
                     tenant_ids = [tenant_id]
                 else:
                     from app.models.tenant import Tenant
-                    result = await db.execute(
-                        select(Tenant.id).where(Tenant.is_active == True)
-                    )
+
+                    result = await db.execute(select(Tenant.id).where(Tenant.is_active == True))
                     tenant_ids = [row[0] for row in result.all()]
 
                 records_created = 0
@@ -176,14 +186,15 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
 
                         conversion_delta_abs = platform_conversions - ga4_conversions
                         conversion_delta_pct = (
-                            (conversion_delta_abs / ga4_conversions * 100) if ga4_conversions > 0 else 0
+                            (conversion_delta_abs / ga4_conversions * 100)
+                            if ga4_conversions > 0
+                            else 0
                         )
 
                         # Determine status and confidence
                         status = determine_variance_status(revenue_delta_pct)
                         confidence = calculate_confidence(
-                            ga4_revenue, platform_revenue,
-                            ga4_conversions, platform_conversions
+                            ga4_revenue, platform_revenue, ga4_conversions, platform_conversions
                         )
 
                         # Check if record already exists
@@ -210,7 +221,7 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
                             existing_record.conversion_delta_pct = conversion_delta_pct
                             existing_record.confidence = confidence
                             existing_record.status = status
-                            existing_record.updated_at = datetime.now(timezone.utc)
+                            existing_record.updated_at = datetime.now(UTC)
                         else:
                             # Create new record
                             record = FactAttributionVarianceDaily(
@@ -233,7 +244,9 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
 
                 await db.commit()
 
-                logger.info(f"Attribution variance rollup completed: {records_created} records created/updated")
+                logger.info(
+                    f"Attribution variance rollup completed: {records_created} records created/updated"
+                )
 
                 return {
                     "status": "success",
@@ -242,7 +255,7 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
                 }
 
             except Exception as e:
-                logger.error(f"Attribution variance rollup failed: {str(e)}")
+                logger.error(f"Attribution variance rollup failed: {e!s}")
                 await db.rollback()
                 raise self.retry(exc=e)
 
@@ -254,7 +267,7 @@ async def fetch_attribution_metrics(
     tenant_id: int,
     platform: str,
     target_date: date,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[dict[str, Any]]:
     """
     Fetch attribution metrics from both GA4 and platform sources.
 
@@ -287,6 +300,7 @@ async def fetch_attribution_metrics(
     # Platform typically over-reports by 10-30% due to view-through attribution
 
     import random
+
     base_revenue = random.uniform(5000, 50000)
     base_conversions = random.randint(50, 500)
 
@@ -304,6 +318,7 @@ async def fetch_attribution_metrics(
 # =============================================================================
 # Scheduled Task Registration
 # =============================================================================
+
 
 @shared_task(name="tasks.schedule_attribution_variance_rollup")
 def schedule_attribution_variance_rollup():

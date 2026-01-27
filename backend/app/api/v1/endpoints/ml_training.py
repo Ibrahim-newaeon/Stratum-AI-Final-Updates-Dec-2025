@@ -10,7 +10,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
@@ -29,43 +29,48 @@ router = APIRouter()
 # =============================================================================
 class TrainingResponse(BaseModel):
     """Response for training operations."""
+
     success: bool
     message: str
-    models_trained: List[str]
+    models_trained: list[str]
     metrics: dict
     training_time_seconds: float
 
 
 class DataUploadResponse(BaseModel):
     """Response for data upload operations."""
+
     success: bool
     message: str
     rows_processed: int
-    columns_detected: List[str]
+    columns_detected: list[str]
     campaigns_created: int
     metrics_created: int
 
 
 class ModelInfo(BaseModel):
     """Information about a trained model."""
+
     name: str
     version: str
     created_at: str
     metrics: dict
-    features: List[str]
+    features: list[str]
 
 
 class ModelsListResponse(BaseModel):
     """Response listing all available models."""
-    models: List[ModelInfo]
+
+    models: list[ModelInfo]
     models_path: str
 
 
 class GenerateSampleRequest(BaseModel):
     """Request to generate sample training data."""
+
     num_campaigns: int = 50
     days_per_campaign: int = 30
-    platforms: Optional[List[str]] = None
+    platforms: Optional[list[str]] = None
 
 
 # =============================================================================
@@ -74,8 +79,12 @@ class GenerateSampleRequest(BaseModel):
 @router.post("/upload", response_model=DataUploadResponse)
 async def upload_training_data(
     file: UploadFile = File(...),
-    platform: str = Query("meta", description="Ad platform (meta, google, tiktok, snapchat, linkedin)"),
-    dataset_format: str = Query("generic", description="Dataset format hint (generic, facebook_kaggle, google_kaggle)"),
+    platform: str = Query(
+        "meta", description="Ad platform (meta, google, tiktok, snapchat, linkedin)"
+    ),
+    dataset_format: str = Query(
+        "generic", description="Dataset format hint (generic, facebook_kaggle, google_kaggle)"
+    ),
     train_after_upload: bool = Query(False, description="Automatically train models after upload"),
 ):
     """
@@ -133,7 +142,7 @@ async def upload_training_data(
         logger.error("upload_training_data_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process uploaded file: {str(e)}",
+            detail=f"Failed to process uploaded file: {e!s}",
         )
 
     finally:
@@ -144,8 +153,12 @@ async def upload_training_data(
 
 @router.post("/train", response_model=TrainingResponse)
 async def train_models(
-    data_file: Optional[str] = Query(None, description="Path to training data CSV (uses latest if not specified)"),
-    use_sample_data: bool = Query(False, description="Use generated sample data instead of uploaded data"),
+    data_file: Optional[str] = Query(
+        None, description="Path to training data CSV (uses latest if not specified)"
+    ),
+    use_sample_data: bool = Query(
+        False, description="Use generated sample data instead of uploaded data"
+    ),
     num_campaigns: int = Query(100, description="Number of campaigns for sample data"),
     days: int = Query(30, description="Days per campaign for sample data"),
 ):
@@ -158,6 +171,7 @@ async def train_models(
     - budget_impact: Predicts revenue changes from budget changes
     """
     import time
+
     start_time = time.time()
 
     try:
@@ -212,7 +226,7 @@ async def train_models(
         logger.error("train_models_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Training failed: {str(e)}",
+            detail=f"Training failed: {e!s}",
         )
 
 
@@ -231,15 +245,19 @@ async def list_models():
             try:
                 with open(metadata_file) as f:
                     metadata = json.load(f)
-                    models.append(ModelInfo(
-                        name=metadata.get("name", metadata_file.stem.replace("_metadata", "")),
-                        version=metadata.get("version", "unknown"),
-                        created_at=metadata.get("created_at", "unknown"),
-                        metrics=metadata.get("metrics", {}),
-                        features=metadata.get("features", []),
-                    ))
+                    models.append(
+                        ModelInfo(
+                            name=metadata.get("name", metadata_file.stem.replace("_metadata", "")),
+                            version=metadata.get("version", "unknown"),
+                            created_at=metadata.get("created_at", "unknown"),
+                            metrics=metadata.get("metrics", {}),
+                            features=metadata.get("features", []),
+                        )
+                    )
             except Exception as e:
-                logger.warning("failed_to_read_model_metadata", file=str(metadata_file), error=str(e))
+                logger.warning(
+                    "failed_to_read_model_metadata", file=str(metadata_file), error=str(e)
+                )
 
     return ModelsListResponse(
         models=models,
@@ -320,11 +338,13 @@ async def list_training_data():
     files = []
     for csv_file in sorted(data_dir.glob("*.csv"), key=os.path.getmtime, reverse=True):
         stat = csv_file.stat()
-        files.append({
-            "name": csv_file.name,
-            "path": str(csv_file),
-            "size_bytes": stat.st_size,
-            "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-        })
+        files.append(
+            {
+                "name": csv_file.name,
+                "path": str(csv_file),
+                "size_bytes": stat.st_size,
+                "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+            }
+        )
 
     return {"files": files, "directory": str(data_dir)}

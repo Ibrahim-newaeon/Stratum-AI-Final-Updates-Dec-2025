@@ -15,10 +15,10 @@ based on actual customer behavior patterns.
 
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -43,17 +43,17 @@ class MarkovChainModel:
 
     def __init__(self):
         # Transition counts: {from_state: {to_state: count}}
-        self.transition_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.transition_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         # Total transitions from each state
-        self.state_totals: Dict[str, int] = defaultdict(int)
+        self.state_totals: dict[str, int] = defaultdict(int)
         # All observed channels
-        self.channels: Set[str] = set()
+        self.channels: set[str] = set()
         # Number of journeys used for training
         self.journey_count: int = 0
         self.converting_journeys: int = 0
         self.non_converting_journeys: int = 0
 
-    def add_journey(self, channels: List[str], converted: bool) -> None:
+    def add_journey(self, channels: list[str], converted: bool) -> None:
         """
         Add a customer journey to the model.
 
@@ -93,7 +93,7 @@ class MarkovChainModel:
         count = self.transition_counts.get(from_state, {}).get(to_state, 0)
         return count / total
 
-    def get_transition_matrix(self) -> Dict[str, Dict[str, float]]:
+    def get_transition_matrix(self) -> dict[str, dict[str, float]]:
         """Get the full transition probability matrix."""
         matrix = {}
         all_states = list(self.channels) + [STATE_START, STATE_CONVERSION, STATE_NULL]
@@ -147,7 +147,7 @@ class MarkovChainModel:
 
         return conv_prob.get(STATE_START, 0.0)
 
-    def calculate_removal_effects(self) -> Dict[str, float]:
+    def calculate_removal_effects(self) -> dict[str, float]:
         """
         Calculate the removal effect for each channel.
 
@@ -171,7 +171,7 @@ class MarkovChainModel:
 
         return removal_effects
 
-    def calculate_attribution_weights(self) -> Dict[str, float]:
+    def calculate_attribution_weights(self) -> dict[str, float]:
         """
         Calculate attribution weights based on removal effects.
 
@@ -185,31 +185,25 @@ class MarkovChainModel:
             n = len(self.channels)
             return {channel: 1.0 / n for channel in self.channels} if n > 0 else {}
 
-        return {
-            channel: effect / total_effect
-            for channel, effect in removal_effects.items()
-        }
+        return {channel: effect / total_effect for channel, effect in removal_effects.items()}
 
-    def get_model_stats(self) -> Dict[str, Any]:
+    def get_model_stats(self) -> dict[str, Any]:
         """Get model statistics."""
         return {
             "journey_count": self.journey_count,
             "converting_journeys": self.converting_journeys,
             "non_converting_journeys": self.non_converting_journeys,
             "conversion_rate": (
-                self.converting_journeys / self.journey_count
-                if self.journey_count > 0 else 0
+                self.converting_journeys / self.journey_count if self.journey_count > 0 else 0
             ),
             "unique_channels": len(self.channels),
             "channels": list(self.channels),
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize model to dictionary."""
         return {
-            "transition_counts": {
-                k: dict(v) for k, v in self.transition_counts.items()
-            },
+            "transition_counts": {k: dict(v) for k, v in self.transition_counts.items()},
             "state_totals": dict(self.state_totals),
             "channels": list(self.channels),
             "journey_count": self.journey_count,
@@ -218,12 +212,12 @@ class MarkovChainModel:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "MarkovChainModel":
+    def from_dict(cls, data: dict[str, Any]) -> "MarkovChainModel":
         """Deserialize model from dictionary."""
         model = cls()
         model.transition_counts = defaultdict(
             lambda: defaultdict(int),
-            {k: defaultdict(int, v) for k, v in data.get("transition_counts", {}).items()}
+            {k: defaultdict(int, v) for k, v in data.get("transition_counts", {}).items()},
         )
         model.state_totals = defaultdict(int, data.get("state_totals", {}))
         model.channels = set(data.get("channels", []))
@@ -249,7 +243,7 @@ class MarkovAttributionService:
         channel_type: str = "platform",  # platform or campaign
         include_non_converting: bool = True,
         min_journeys: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Train a Markov Chain model on historical journey data.
 
@@ -292,7 +286,9 @@ class MarkovAttributionService:
         if include_non_converting:
             # Get contacts without won deals in the period
             non_converting = await self._get_non_converting_contacts(
-                start_date, end_date, limit=len(deals) * 2  # Sample 2x converting
+                start_date,
+                end_date,
+                limit=len(deals) * 2,  # Sample 2x converting
             )
             for contact_id in non_converting:
                 channels = await self._get_journey_channels(
@@ -333,9 +329,9 @@ class MarkovAttributionService:
 
     async def attribute_with_model(
         self,
-        model_data: Dict[str, Any],
+        model_data: dict[str, Any],
         deal_id: UUID,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Attribute a deal using a trained Markov model.
 
@@ -380,14 +376,16 @@ class MarkovAttributionService:
             channel = tp.source or "unknown"
             weight = weights.get(channel, 0.0)
 
-            breakdown.append({
-                "touchpoint_id": str(tp.id),
-                "channel": channel,
-                "campaign_id": tp.campaign_id,
-                "event_ts": tp.event_ts.isoformat(),
-                "weight": round(weight, 4),
-                "attributed_revenue": round(revenue * weight, 2),
-            })
+            breakdown.append(
+                {
+                    "touchpoint_id": str(tp.id),
+                    "channel": channel,
+                    "campaign_id": tp.campaign_id,
+                    "event_ts": tp.event_ts.isoformat(),
+                    "weight": round(weight, 4),
+                    "attributed_revenue": round(revenue * weight, 2),
+                }
+            )
 
         return {
             "success": True,
@@ -403,7 +401,7 @@ class MarkovAttributionService:
         contact_id: UUID,
         before_time: Optional[datetime],
         channel_type: str = "platform",
-    ) -> List[str]:
+    ) -> list[str]:
         """Get channel sequence for a contact's journey."""
         touchpoints = await self._get_journey_touchpoints(contact_id, before_time)
 
@@ -416,7 +414,7 @@ class MarkovAttributionService:
         self,
         contact_id: UUID,
         before_time: Optional[datetime],
-    ) -> List[Touchpoint]:
+    ) -> list[Touchpoint]:
         """Get touchpoints for a contact."""
         query = select(Touchpoint).where(
             and_(
@@ -438,7 +436,7 @@ class MarkovAttributionService:
         start_date: datetime,
         end_date: datetime,
         limit: int = 1000,
-    ) -> List[UUID]:
+    ) -> list[UUID]:
         """Get contacts with touchpoints but no won deals."""
         from app.models.crm import CRMContact
 

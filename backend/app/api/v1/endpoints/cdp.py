@@ -19,89 +19,89 @@ Security features:
 
 import hashlib
 import secrets
-import time
 import threading
+import time
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, List, Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
-from sqlalchemy import select, func, or_, String, delete
+from sqlalchemy import String, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.auth.deps import get_current_user
 from app.db.session import get_async_session
 from app.models.cdp import (
-    CDPSource,
+    CDPCanonicalIdentity,
+    CDPConsent,
+    CDPEvent,
+    CDPFunnel,
+    CDPIdentityLink,
     CDPProfile,
     CDPProfileIdentifier,
-    CDPEvent,
-    CDPConsent,
-    CDPWebhook,
-    CDPIdentityLink,
     CDPProfileMerge,
-    CDPCanonicalIdentity,
     CDPSegment,
     CDPSegmentMembership,
-    CDPFunnel,
+    CDPSource,
+    CDPWebhook,
     LifecycleStage,
     MergeReason,
 )
 from app.schemas.cdp import (
+    CanonicalIdentityResponse,
+    ComputedTraitCreate,
+    ComputedTraitListResponse,
+    ComputedTraitResponse,
+    ComputeTraitsResponse,
     EventBatchInput,
     EventBatchResponse,
     EventIngestResult,
-    ProfileResponse,
-    SourceCreate,
-    SourceResponse,
-    SourceListResponse,
+    FunnelAnalysisRequest,
+    FunnelAnalysisResponse,
+    FunnelComputeResponse,
+    FunnelCreate,
+    FunnelDropOffResponse,
+    FunnelListResponse,
+    FunnelResponse,
+    FunnelUpdate,
     IdentifierResponse,
-    WebhookCreate,
-    WebhookUpdate,
-    WebhookResponse,
-    WebhookListResponse,
-    WebhookTestResult,
-    IdentityGraphResponse,
-    IdentityGraphNode,
     IdentityGraphEdge,
+    IdentityGraphNode,
+    IdentityGraphResponse,
+    ProfileDeletionResponse,
+    ProfileFunnelJourneysResponse,
+    ProfileMergeHistoryResponse,
     ProfileMergeRequest,
     ProfileMergeResponse,
-    ProfileMergeHistoryResponse,
-    CanonicalIdentityResponse,
+    ProfileResponse,
+    ProfileSegmentsResponse,
+    RFMBatchResponse,
+    RFMConfig,
+    RFMScores,
+    RFMSummaryResponse,
     SegmentCreate,
-    SegmentUpdate,
-    SegmentResponse,
     SegmentListResponse,
     SegmentPreviewRequest,
     SegmentPreviewResponse,
     SegmentProfilesResponse,
-    ProfileSegmentsResponse,
-    ProfileDeletionResponse,
-    ComputedTraitCreate,
-    ComputedTraitResponse,
-    ComputedTraitListResponse,
-    ComputeTraitsResponse,
-    RFMConfig,
-    RFMScores,
-    RFMBatchResponse,
-    RFMSummaryResponse,
-    FunnelCreate,
-    FunnelUpdate,
-    FunnelResponse,
-    FunnelListResponse,
-    FunnelComputeResponse,
-    FunnelAnalysisRequest,
-    FunnelAnalysisResponse,
-    ProfileFunnelJourneysResponse,
-    FunnelDropOffResponse,
+    SegmentResponse,
+    SegmentUpdate,
+    SourceCreate,
+    SourceListResponse,
+    SourceResponse,
+    WebhookCreate,
+    WebhookListResponse,
+    WebhookResponse,
+    WebhookTestResult,
+    WebhookUpdate,
 )
-from app.services.cdp.identity_resolution import IdentityResolutionService
-from app.services.cdp.segment_service import SegmentService
 from app.services.cdp.computed_traits_service import ComputedTraitsService, RFMAnalysisService
 from app.services.cdp.funnel_service import FunnelService
+from app.services.cdp.identity_resolution import IdentityResolutionService
+from app.services.cdp.segment_service import SegmentService
 
 logger = structlog.get_logger()
 
@@ -112,12 +112,13 @@ router = APIRouter(prefix="/cdp", tags=["CDP"])
 # Rate Limiting
 # =============================================================================
 
+
 class RateLimiter:
     """Simple in-memory rate limiter for API protection."""
 
     def __init__(self, requests_per_minute: int = 60):
         self.requests_per_minute = requests_per_minute
-        self.requests: Dict[str, List[float]] = defaultdict(list)
+        self.requests: dict[str, list[float]] = defaultdict(list)
         self._lock = threading.Lock()
 
     def is_allowed(self, key: str) -> bool:
@@ -137,15 +138,16 @@ class RateLimiter:
 
 
 # Rate limiters for different operation types
-_event_limiter = RateLimiter(requests_per_minute=100)   # Events: 100/min (batch allowed)
+_event_limiter = RateLimiter(requests_per_minute=100)  # Events: 100/min (batch allowed)
 _profile_limiter = RateLimiter(requests_per_minute=300)  # Profile reads: 300/min
-_source_limiter = RateLimiter(requests_per_minute=30)    # Source ops: 30/min
-_webhook_limiter = RateLimiter(requests_per_minute=30)   # Webhook ops: 30/min
+_source_limiter = RateLimiter(requests_per_minute=30)  # Source ops: 30/min
+_webhook_limiter = RateLimiter(requests_per_minute=30)  # Webhook ops: 30/min
 
 
 # =============================================================================
 # Profile Caching
 # =============================================================================
+
 
 class ProfileCache:
     """
@@ -160,7 +162,7 @@ class ProfileCache:
 
     def __init__(self, ttl_seconds: int = DEFAULT_TTL):
         self.ttl = ttl_seconds
-        self.cache: Dict[str, tuple[float, Any]] = {}  # key -> (expiry_time, value)
+        self.cache: dict[str, tuple[float, Any]] = {}  # key -> (expiry_time, value)
         self._lock = threading.Lock()
 
     def _make_key(self, tenant_id: int, profile_id: str) -> str:
@@ -226,8 +228,7 @@ class ProfileCache:
         lookup_prefix = f"lookup:{tenant_id}:"
         with self._lock:
             keys_to_delete = [
-                k for k in self.cache
-                if k.startswith(prefix) or k.startswith(lookup_prefix)
+                k for k in self.cache if k.startswith(prefix) or k.startswith(lookup_prefix)
             ]
             for k in keys_to_delete:
                 del self.cache[k]
@@ -245,7 +246,7 @@ _profile_cache = ProfileCache(ttl_seconds=60)
 
 
 async def check_event_rate_limit(
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Rate limit for event ingestion."""
     key = f"{current_user.tenant_id}:events"
@@ -263,7 +264,7 @@ async def check_event_rate_limit(
 
 
 async def check_profile_rate_limit(
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Rate limit for profile lookups."""
     key = f"{current_user.tenant_id}:profiles"
@@ -281,7 +282,7 @@ async def check_profile_rate_limit(
 
 
 async def check_source_rate_limit(
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Rate limit for source operations."""
     key = f"{current_user.tenant_id}:sources"
@@ -299,7 +300,7 @@ async def check_source_rate_limit(
 
 
 async def check_webhook_rate_limit(
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Rate limit for webhook operations."""
     key = f"{current_user.tenant_id}:webhooks"
@@ -320,6 +321,7 @@ async def check_webhook_rate_limit(
 # Helper Functions
 # =============================================================================
 
+
 def normalize_identifier(identifier_type: str, value: str) -> str:
     """Normalize identifier value before hashing."""
     if identifier_type == "email":
@@ -328,6 +330,7 @@ def normalize_identifier(identifier_type: str, value: str) -> str:
     elif identifier_type == "phone":
         # Remove non-digit characters, keep + prefix if present
         import re
+
         cleaned = re.sub(r"[^\d+]", "", value)
         # Ensure E.164 format (starts with +)
         if not cleaned.startswith("+"):
@@ -448,8 +451,7 @@ async def link_identifiers_to_profile(
 
         # Check if identifier already exists
         result = await db.execute(
-            select(CDPProfileIdentifier)
-            .where(
+            select(CDPProfileIdentifier).where(
                 CDPProfileIdentifier.tenant_id == tenant_id,
                 CDPProfileIdentifier.identifier_type == ident.type,
                 CDPProfileIdentifier.identifier_hash == ident_hash,
@@ -459,7 +461,7 @@ async def link_identifiers_to_profile(
 
         if existing:
             # Update last_seen_at
-            existing.last_seen_at = datetime.now(timezone.utc)
+            existing.last_seen_at = datetime.now(UTC)
         else:
             # Create new identifier
             new_ident = CDPProfileIdentifier(
@@ -482,6 +484,7 @@ async def link_identifiers_to_profile(
 # Event Endpoints
 # =============================================================================
 
+
 async def validate_source_key(
     db: AsyncSession,
     tenant_id: int,
@@ -496,8 +499,7 @@ async def validate_source_key(
         return None
 
     result = await db.execute(
-        select(CDPSource)
-        .where(
+        select(CDPSource).where(
             CDPSource.tenant_id == tenant_id,
             CDPSource.source_key == source_key,
             CDPSource.is_active.is_(True),
@@ -531,8 +533,8 @@ async def ingest_events(
     batch: EventBatchInput,
     source_key: Optional[str] = Query(None, description="Source API key for authentication"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_event_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_event_rate_limit),
 ):
     """
     Ingest events into CDP.
@@ -566,10 +568,9 @@ async def ingest_events(
         try:
             # Check for duplicate (idempotency)
             if event.idempotency_key:
-                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                cutoff = datetime.now(UTC) - timedelta(hours=24)
                 result = await db.execute(
-                    select(CDPEvent.id)
-                    .where(
+                    select(CDPEvent.id).where(
                         CDPEvent.tenant_id == tenant_id,
                         CDPEvent.idempotency_key == event.idempotency_key,
                         CDPEvent.received_at >= cutoff,
@@ -577,28 +578,30 @@ async def ingest_events(
                 )
                 if result.scalar_one_or_none():
                     duplicates += 1
-                    results.append(EventIngestResult(
-                        status="duplicate",
-                        error="Event with same idempotency_key already exists",
-                    ))
+                    results.append(
+                        EventIngestResult(
+                            status="duplicate",
+                            error="Event with same idempotency_key already exists",
+                        )
+                    )
                     continue
 
             # Find or create profile
-            profile, is_new = await find_or_create_profile(
-                db, tenant_id, event.identifiers
-            )
+            profile, is_new = await find_or_create_profile(db, tenant_id, event.identifiers)
 
             # Link identifiers to profile
-            await link_identifiers_to_profile(
-                db, tenant_id, profile, event.identifiers
-            )
+            await link_identifiers_to_profile(db, tenant_id, profile, event.identifiers)
 
             # Calculate EMQ score
-            received_at = datetime.now(timezone.utc)
+            received_at = datetime.now(UTC)
             latency = (received_at - event.event_time).total_seconds()
             has_pii = any(i.type in ["email", "phone"] for i in event.identifiers)
             emq_score = calculate_emq_score(
-                {"identifiers": event.identifiers, "properties": event.properties, "context": event.context},
+                {
+                    "identifiers": event.identifiers,
+                    "properties": event.properties,
+                    "context": event.context,
+                },
                 has_pii,
                 latency,
             )
@@ -637,8 +640,7 @@ async def ingest_events(
                     if granted is not None:
                         # Upsert consent
                         result = await db.execute(
-                            select(CDPConsent)
-                            .where(
+                            select(CDPConsent).where(
                                 CDPConsent.tenant_id == tenant_id,
                                 CDPConsent.profile_id == profile.id,
                                 CDPConsent.consent_type == consent_type,
@@ -667,11 +669,13 @@ async def ingest_events(
             await db.flush()
 
             accepted += 1
-            results.append(EventIngestResult(
-                event_id=db_event.id,
-                status="accepted",
-                profile_id=profile.id,
-            ))
+            results.append(
+                EventIngestResult(
+                    event_id=db_event.id,
+                    status="accepted",
+                    profile_id=profile.id,
+                )
+            )
 
         except Exception as e:
             logger.error(
@@ -681,10 +685,12 @@ async def ingest_events(
                 error=str(e),
             )
             rejected += 1
-            results.append(EventIngestResult(
-                status="rejected",
-                error=str(e),
-            ))
+            results.append(
+                EventIngestResult(
+                    status="rejected",
+                    error=str(e),
+                )
+            )
 
     await db.commit()
 
@@ -707,6 +713,7 @@ async def ingest_events(
 # =============================================================================
 # Profile Endpoints
 # =============================================================================
+
 
 def _build_profile_response(profile: CDPProfile) -> ProfileResponse:
     """Build ProfileResponse from a CDPProfile ORM object."""
@@ -751,8 +758,8 @@ def _build_profile_response(profile: CDPProfile) -> ProfileResponse:
 async def get_profile(
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """Get profile by ID with caching."""
     tenant_id = current_user.tenant_id
@@ -799,8 +806,8 @@ async def lookup_profile(
     identifier_type: str = Query(..., description="Identifier type (email, phone, etc.)"),
     identifier_value: str = Query(..., description="Identifier value to look up"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """Lookup profile by identifier with caching."""
     tenant_id = current_user.tenant_id
@@ -826,10 +833,7 @@ async def lookup_profile(
             CDPProfileIdentifier.identifier_type == identifier_type.lower(),
             CDPProfileIdentifier.identifier_hash == ident_hash,
         )
-        .options(
-            selectinload(CDPProfileIdentifier.profile)
-            .selectinload(CDPProfile.identifiers)
-        )
+        .options(selectinload(CDPProfileIdentifier.profile).selectinload(CDPProfile.identifiers))
     )
     ident = result.scalar_one_or_none()
 
@@ -852,6 +856,7 @@ async def lookup_profile(
 # Source Endpoints
 # =============================================================================
 
+
 @router.get(
     "/sources",
     response_model=SourceListResponse,
@@ -860,8 +865,8 @@ async def lookup_profile(
 )
 async def list_sources(
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """List all data sources for tenant."""
     tenant_id = current_user.tenant_id
@@ -903,8 +908,8 @@ async def list_sources(
 async def create_source(
     source: SourceCreate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """Create a new data source."""
     tenant_id = current_user.tenant_id
@@ -948,6 +953,7 @@ async def create_source(
 # Health Check Endpoint
 # =============================================================================
 
+
 @router.get(
     "/health",
     summary="CDP health check",
@@ -966,6 +972,7 @@ async def cdp_health():
 # Data Export Endpoints
 # =============================================================================
 
+
 @router.get(
     "/export/profiles",
     summary="Export profiles",
@@ -976,8 +983,8 @@ async def export_profiles(
     limit: int = Query(1000, ge=1, le=10000, description="Max profiles to export"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Export profiles for data portability.
@@ -985,9 +992,10 @@ async def export_profiles(
     Supports JSON and CSV formats with pagination.
     Maximum 10,000 profiles per request.
     """
-    from fastapi.responses import StreamingResponse
     import csv
     import io
+
+    from fastapi.responses import StreamingResponse
 
     tenant_id = current_user.tenant_id
 
@@ -1005,34 +1013,52 @@ async def export_profiles(
     if format.lower() == "csv":
         # Generate CSV
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=[
-            "id", "external_id", "lifecycle_stage", "first_seen_at", "last_seen_at",
-            "total_events", "total_sessions", "total_purchases", "total_revenue",
-            "identifier_count", "created_at", "updated_at"
-        ])
+        writer = csv.DictWriter(
+            output,
+            fieldnames=[
+                "id",
+                "external_id",
+                "lifecycle_stage",
+                "first_seen_at",
+                "last_seen_at",
+                "total_events",
+                "total_sessions",
+                "total_purchases",
+                "total_revenue",
+                "identifier_count",
+                "created_at",
+                "updated_at",
+            ],
+        )
         writer.writeheader()
 
         for profile in profiles:
-            writer.writerow({
-                "id": str(profile.id),
-                "external_id": profile.external_id or "",
-                "lifecycle_stage": profile.lifecycle_stage,
-                "first_seen_at": profile.first_seen_at.isoformat() if profile.first_seen_at else "",
-                "last_seen_at": profile.last_seen_at.isoformat() if profile.last_seen_at else "",
-                "total_events": profile.total_events,
-                "total_sessions": profile.total_sessions,
-                "total_purchases": profile.total_purchases,
-                "total_revenue": float(profile.total_revenue),
-                "identifier_count": len(profile.identifiers),
-                "created_at": profile.created_at.isoformat(),
-                "updated_at": profile.updated_at.isoformat(),
-            })
+            writer.writerow(
+                {
+                    "id": str(profile.id),
+                    "external_id": profile.external_id or "",
+                    "lifecycle_stage": profile.lifecycle_stage,
+                    "first_seen_at": profile.first_seen_at.isoformat()
+                    if profile.first_seen_at
+                    else "",
+                    "last_seen_at": profile.last_seen_at.isoformat()
+                    if profile.last_seen_at
+                    else "",
+                    "total_events": profile.total_events,
+                    "total_sessions": profile.total_sessions,
+                    "total_purchases": profile.total_purchases,
+                    "total_revenue": float(profile.total_revenue),
+                    "identifier_count": len(profile.identifiers),
+                    "created_at": profile.created_at.isoformat(),
+                    "updated_at": profile.updated_at.isoformat(),
+                }
+            )
 
         output.seek(0)
         return StreamingResponse(
             iter([output.getvalue()]),
             media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=cdp_profiles_{tenant_id}.csv"}
+            headers={"Content-Disposition": f"attachment; filename=cdp_profiles_{tenant_id}.csv"},
         )
 
     else:
@@ -1086,8 +1112,8 @@ async def export_events(
     end_date: Optional[datetime] = Query(None, description="Filter events until this date"),
     event_name: Optional[str] = Query(None, description="Filter by event name"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Export events for data analysis.
@@ -1095,9 +1121,10 @@ async def export_events(
     Supports JSON and CSV formats with filtering and pagination.
     Maximum 10,000 events per request.
     """
-    from fastapi.responses import StreamingResponse
     import csv
     import io
+
+    from fastapi.responses import StreamingResponse
 
     tenant_id = current_user.tenant_id
 
@@ -1119,29 +1146,40 @@ async def export_events(
     if format.lower() == "csv":
         # Generate CSV
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=[
-            "id", "profile_id", "event_name", "event_time", "received_at",
-            "emq_score", "processed", "source_id"
-        ])
+        writer = csv.DictWriter(
+            output,
+            fieldnames=[
+                "id",
+                "profile_id",
+                "event_name",
+                "event_time",
+                "received_at",
+                "emq_score",
+                "processed",
+                "source_id",
+            ],
+        )
         writer.writeheader()
 
         for event in events:
-            writer.writerow({
-                "id": str(event.id),
-                "profile_id": str(event.profile_id),
-                "event_name": event.event_name,
-                "event_time": event.event_time.isoformat(),
-                "received_at": event.received_at.isoformat(),
-                "emq_score": float(event.emq_score) if event.emq_score else "",
-                "processed": event.processed,
-                "source_id": str(event.source_id) if event.source_id else "",
-            })
+            writer.writerow(
+                {
+                    "id": str(event.id),
+                    "profile_id": str(event.profile_id),
+                    "event_name": event.event_name,
+                    "event_time": event.event_time.isoformat(),
+                    "received_at": event.received_at.isoformat(),
+                    "emq_score": float(event.emq_score) if event.emq_score else "",
+                    "processed": event.processed,
+                    "source_id": str(event.source_id) if event.source_id else "",
+                }
+            )
 
         output.seek(0)
         return StreamingResponse(
             iter([output.getvalue()]),
             media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=cdp_events_{tenant_id}.csv"}
+            headers={"Content-Disposition": f"attachment; filename=cdp_events_{tenant_id}.csv"},
         )
 
     else:
@@ -1180,6 +1218,7 @@ async def export_events(
 # Event Statistics and Analytics Endpoints
 # =============================================================================
 
+
 @router.get(
     "/events/statistics",
     summary="Get event statistics",
@@ -1188,8 +1227,8 @@ async def export_events(
 async def get_event_statistics(
     period_days: int = Query(30, ge=1, le=365, description="Analysis period in days"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Get event statistics for the tenant.
@@ -1202,12 +1241,11 @@ async def get_event_statistics(
     - Top event sources
     """
     tenant_id = current_user.tenant_id
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=period_days)
+    cutoff_date = datetime.now(UTC) - timedelta(days=period_days)
 
     # Total events in period
     total_result = await db.execute(
-        select(func.count(CDPEvent.id))
-        .where(
+        select(func.count(CDPEvent.id)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.event_time >= cutoff_date,
         )
@@ -1229,13 +1267,12 @@ async def get_event_statistics(
         .limit(20)
     )
     events_by_name = [
-        {"event_name": row.event_name, "count": row.count}
-        for row in events_by_name_result.all()
+        {"event_name": row.event_name, "count": row.count} for row in events_by_name_result.all()
     ]
 
     # Daily event volume (last 30 days or period, whichever is less)
     daily_period = min(period_days, 30)
-    daily_cutoff = datetime.now(timezone.utc) - timedelta(days=daily_period)
+    daily_cutoff = datetime.now(UTC) - timedelta(days=daily_period)
 
     daily_volume_result = await db.execute(
         select(
@@ -1250,8 +1287,7 @@ async def get_event_statistics(
         .order_by(func.date(CDPEvent.event_time).asc())
     )
     daily_volume = [
-        {"date": str(row.date), "count": row.count}
-        for row in daily_volume_result.all()
+        {"date": str(row.date), "count": row.count} for row in daily_volume_result.all()
     ]
 
     # EMQ score distribution
@@ -1278,8 +1314,7 @@ async def get_event_statistics(
 
     # Average EMQ score
     avg_emq_result = await db.execute(
-        select(func.avg(CDPEvent.emq_score))
-        .where(
+        select(func.avg(CDPEvent.emq_score)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.event_time >= cutoff_date,
             CDPEvent.emq_score.isnot(None),
@@ -1303,14 +1338,12 @@ async def get_event_statistics(
         .limit(10)
     )
     events_by_source = [
-        {"source_name": row.name, "count": row.count}
-        for row in events_by_source_result.all()
+        {"source_name": row.name, "count": row.count} for row in events_by_source_result.all()
     ]
 
     # Unique profiles with events
     unique_profiles_result = await db.execute(
-        select(func.count(func.distinct(CDPEvent.profile_id)))
-        .where(
+        select(func.count(func.distinct(CDPEvent.profile_id))).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.event_time >= cutoff_date,
         )
@@ -1320,7 +1353,7 @@ async def get_event_statistics(
     return {
         "period_days": period_days,
         "analysis_start": cutoff_date.isoformat(),
-        "analysis_end": datetime.now(timezone.utc).isoformat(),
+        "analysis_end": datetime.now(UTC).isoformat(),
         "total_events": total_events,
         "unique_profiles": unique_profiles,
         "avg_emq_score": round(float(avg_emq_score), 2) if avg_emq_score else None,
@@ -1339,14 +1372,14 @@ async def get_event_statistics(
 async def get_event_trends(
     period_days: int = Query(7, ge=1, le=90, description="Current period in days"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Get event trends comparing current period vs previous period.
     """
     tenant_id = current_user.tenant_id
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Current period
     current_start = now - timedelta(days=period_days)
@@ -1357,8 +1390,7 @@ async def get_event_trends(
 
     # Current period events
     current_result = await db.execute(
-        select(func.count(CDPEvent.id))
-        .where(
+        select(func.count(CDPEvent.id)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.event_time >= current_start,
         )
@@ -1367,8 +1399,7 @@ async def get_event_trends(
 
     # Previous period events
     previous_result = await db.execute(
-        select(func.count(CDPEvent.id))
-        .where(
+        select(func.count(CDPEvent.id)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.event_time >= previous_start,
             CDPEvent.event_time < previous_end,
@@ -1421,13 +1452,15 @@ async def get_event_trends(
         else:
             trend_pct = 100.0 if curr > 0 else 0.0
 
-        event_trends.append({
-            "event_name": name,
-            "current_count": curr,
-            "previous_count": prev,
-            "change_pct": round(trend_pct, 2),
-            "trend": "up" if curr > prev else ("down" if curr < prev else "stable"),
-        })
+        event_trends.append(
+            {
+                "event_name": name,
+                "current_count": curr,
+                "previous_count": prev,
+                "change_pct": round(trend_pct, 2),
+                "trend": "up" if curr > prev else ("down" if curr < prev else "stable"),
+            }
+        )
 
     # Sort by absolute change
     event_trends.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
@@ -1445,7 +1478,9 @@ async def get_event_trends(
             "total_events": previous_events,
         },
         "overall_change_pct": round(change_pct, 2),
-        "overall_trend": "up" if current_events > previous_events else ("down" if current_events < previous_events else "stable"),
+        "overall_trend": "up"
+        if current_events > previous_events
+        else ("down" if current_events < previous_events else "stable"),
         "event_trends": event_trends[:20],  # Top 20
     }
 
@@ -1457,19 +1492,18 @@ async def get_event_trends(
 )
 async def get_profile_statistics(
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Get profile statistics for the tenant.
     """
     tenant_id = current_user.tenant_id
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Total profiles
     total_result = await db.execute(
-        select(func.count(CDPProfile.id))
-        .where(CDPProfile.tenant_id == tenant_id)
+        select(func.count(CDPProfile.id)).where(CDPProfile.tenant_id == tenant_id)
     )
     total_profiles = total_result.scalar() or 0
 
@@ -1482,16 +1516,12 @@ async def get_profile_statistics(
         .where(CDPProfile.tenant_id == tenant_id)
         .group_by(CDPProfile.lifecycle_stage)
     )
-    lifecycle_distribution = {
-        row.lifecycle_stage: row.count
-        for row in lifecycle_result.all()
-    }
+    lifecycle_distribution = {row.lifecycle_stage: row.count for row in lifecycle_result.all()}
 
     # New profiles (last 7 days)
     week_ago = now - timedelta(days=7)
     new_profiles_result = await db.execute(
-        select(func.count(CDPProfile.id))
-        .where(
+        select(func.count(CDPProfile.id)).where(
             CDPProfile.tenant_id == tenant_id,
             CDPProfile.created_at >= week_ago,
         )
@@ -1501,8 +1531,7 @@ async def get_profile_statistics(
     # Active profiles (seen in last 30 days)
     month_ago = now - timedelta(days=30)
     active_result = await db.execute(
-        select(func.count(CDPProfile.id))
-        .where(
+        select(func.count(CDPProfile.id)).where(
             CDPProfile.tenant_id == tenant_id,
             CDPProfile.last_seen_at >= month_ago,
         )
@@ -1511,8 +1540,7 @@ async def get_profile_statistics(
 
     # Profiles with email
     email_result = await db.execute(
-        select(func.count(func.distinct(CDPProfileIdentifier.profile_id)))
-        .where(
+        select(func.count(func.distinct(CDPProfileIdentifier.profile_id))).where(
             CDPProfileIdentifier.tenant_id == tenant_id,
             CDPProfileIdentifier.identifier_type == "email",
         )
@@ -1521,8 +1549,7 @@ async def get_profile_statistics(
 
     # Profiles with phone
     phone_result = await db.execute(
-        select(func.count(func.distinct(CDPProfileIdentifier.profile_id)))
-        .where(
+        select(func.count(func.distinct(CDPProfileIdentifier.profile_id))).where(
             CDPProfileIdentifier.tenant_id == tenant_id,
             CDPProfileIdentifier.identifier_type == "phone",
         )
@@ -1531,8 +1558,7 @@ async def get_profile_statistics(
 
     # Customers (has purchases)
     customers_result = await db.execute(
-        select(func.count(CDPProfile.id))
-        .where(
+        select(func.count(CDPProfile.id)).where(
             CDPProfile.tenant_id == tenant_id,
             CDPProfile.total_purchases > 0,
         )
@@ -1545,8 +1571,7 @@ async def get_profile_statistics(
             func.sum(CDPProfile.total_revenue).label("total"),
             func.avg(CDPProfile.total_revenue).label("avg"),
             func.max(CDPProfile.total_revenue).label("max"),
-        )
-        .where(CDPProfile.tenant_id == tenant_id)
+        ).where(CDPProfile.tenant_id == tenant_id)
     )
     revenue_row = revenue_result.first()
 
@@ -1555,8 +1580,7 @@ async def get_profile_statistics(
         select(
             func.sum(CDPProfile.total_events).label("total"),
             func.avg(CDPProfile.total_events).label("avg"),
-        )
-        .where(CDPProfile.tenant_id == tenant_id)
+        ).where(CDPProfile.tenant_id == tenant_id)
     )
     event_stats_row = event_stats_result.first()
 
@@ -1567,10 +1591,16 @@ async def get_profile_statistics(
         "active_profiles_30d": active_profiles_30d,
         "profiles_with_email": profiles_with_email,
         "profiles_with_phone": profiles_with_phone,
-        "email_coverage_pct": round((profiles_with_email / total_profiles * 100) if total_profiles > 0 else 0, 2),
-        "phone_coverage_pct": round((profiles_with_phone / total_profiles * 100) if total_profiles > 0 else 0, 2),
+        "email_coverage_pct": round(
+            (profiles_with_email / total_profiles * 100) if total_profiles > 0 else 0, 2
+        ),
+        "phone_coverage_pct": round(
+            (profiles_with_phone / total_profiles * 100) if total_profiles > 0 else 0, 2
+        ),
         "total_customers": total_customers,
-        "customer_rate_pct": round((total_customers / total_profiles * 100) if total_profiles > 0 else 0, 2),
+        "customer_rate_pct": round(
+            (total_customers / total_profiles * 100) if total_profiles > 0 else 0, 2
+        ),
         "revenue": {
             "total": float(revenue_row.total) if revenue_row.total else 0,
             "average": round(float(revenue_row.avg), 2) if revenue_row.avg else 0,
@@ -1578,7 +1608,9 @@ async def get_profile_statistics(
         },
         "events": {
             "total": int(event_stats_row.total) if event_stats_row.total else 0,
-            "average_per_profile": round(float(event_stats_row.avg), 2) if event_stats_row.avg else 0,
+            "average_per_profile": round(float(event_stats_row.avg), 2)
+            if event_stats_row.avg
+            else 0,
         },
     }
 
@@ -1586,6 +1618,7 @@ async def get_profile_statistics(
 # =============================================================================
 # Profile Search API
 # =============================================================================
+
 
 @router.post(
     "/profiles/search",
@@ -1598,11 +1631,17 @@ async def search_profiles(
     limit: int = Query(50, ge=1, le=500, description="Max profiles to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     # Filter parameters
-    segment_ids: Optional[List[UUID]] = Query(None, description="Filter by segment membership (any)"),
-    exclude_segment_ids: Optional[List[UUID]] = Query(None, description="Exclude profiles in these segments"),
-    lifecycle_stages: Optional[List[str]] = Query(None, description="Filter by lifecycle stages"),
-    rfm_segments: Optional[List[str]] = Query(None, description="Filter by RFM segments"),
-    identifier_types: Optional[List[str]] = Query(None, description="Has any of these identifier types"),
+    segment_ids: Optional[list[UUID]] = Query(
+        None, description="Filter by segment membership (any)"
+    ),
+    exclude_segment_ids: Optional[list[UUID]] = Query(
+        None, description="Exclude profiles in these segments"
+    ),
+    lifecycle_stages: Optional[list[str]] = Query(None, description="Filter by lifecycle stages"),
+    rfm_segments: Optional[list[str]] = Query(None, description="Filter by RFM segments"),
+    identifier_types: Optional[list[str]] = Query(
+        None, description="Has any of these identifier types"
+    ),
     min_events: Optional[int] = Query(None, ge=0),
     max_events: Optional[int] = Query(None, ge=0),
     min_revenue: Optional[float] = Query(None, ge=0),
@@ -1615,14 +1654,17 @@ async def search_profiles(
     has_phone: Optional[bool] = Query(None, description="Has phone identifier"),
     is_customer: Optional[bool] = Query(None, description="Is customer (has purchases)"),
     # Sorting
-    sort_by: str = Query("last_seen_at", description="Sort field: last_seen_at, first_seen_at, total_events, total_revenue"),
+    sort_by: str = Query(
+        "last_seen_at",
+        description="Sort field: last_seen_at, first_seen_at, total_events, total_revenue",
+    ),
     sort_order: str = Query("desc", description="Sort order: asc, desc"),
     # Include options
     include_identifiers: bool = Query(False, description="Include identifiers in response"),
     include_computed_traits: bool = Query(True, description="Include computed traits"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Search profiles with comprehensive filtering.
@@ -1680,10 +1722,9 @@ async def search_profiles(
 
     # RFM segments filter
     if rfm_segments:
-        rfm_filter = or_(*[
-            CDPProfile.computed_traits["rfm_segment"].astext == seg
-            for seg in rfm_segments
-        ])
+        rfm_filter = or_(
+            *[CDPProfile.computed_traits["rfm_segment"].astext == seg for seg in rfm_segments]
+        )
         query_builder = query_builder.where(rfm_filter)
 
     # Identifier types filter
@@ -1722,12 +1763,9 @@ async def search_profiles(
 
     # Email/Phone filter
     if has_email is not None:
-        email_subquery = (
-            select(CDPProfileIdentifier.profile_id)
-            .where(
-                CDPProfileIdentifier.identifier_type == "email",
-                CDPProfileIdentifier.tenant_id == tenant_id,
-            )
+        email_subquery = select(CDPProfileIdentifier.profile_id).where(
+            CDPProfileIdentifier.identifier_type == "email",
+            CDPProfileIdentifier.tenant_id == tenant_id,
         )
         if has_email:
             query_builder = query_builder.where(CDPProfile.id.in_(email_subquery))
@@ -1735,12 +1773,9 @@ async def search_profiles(
             query_builder = query_builder.where(~CDPProfile.id.in_(email_subquery))
 
     if has_phone is not None:
-        phone_subquery = (
-            select(CDPProfileIdentifier.profile_id)
-            .where(
-                CDPProfileIdentifier.identifier_type == "phone",
-                CDPProfileIdentifier.tenant_id == tenant_id,
-            )
+        phone_subquery = select(CDPProfileIdentifier.profile_id).where(
+            CDPProfileIdentifier.identifier_type == "phone",
+            CDPProfileIdentifier.tenant_id == tenant_id,
         )
         if has_phone:
             query_builder = query_builder.where(CDPProfile.id.in_(phone_subquery))
@@ -1803,7 +1838,7 @@ async def search_profiles(
         if include_computed_traits:
             data["computed_traits"] = p.computed_traits or {}
 
-        if include_identifiers and hasattr(p, 'identifiers'):
+        if include_identifiers and hasattr(p, "identifiers"):
             data["identifiers"] = [
                 {
                     "type": i.identifier_type,
@@ -1829,6 +1864,7 @@ async def search_profiles(
 # Audience Export Endpoints (Enhanced)
 # =============================================================================
 
+
 @router.post(
     "/audiences/export",
     summary="Export audience with advanced filters",
@@ -1840,7 +1876,9 @@ async def export_audience(
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     # Filter parameters
     segment_id: Optional[UUID] = Query(None, description="Filter by segment membership"),
-    lifecycle_stage: Optional[str] = Query(None, description="Filter by lifecycle stage: anonymous, known, customer, churned"),
+    lifecycle_stage: Optional[str] = Query(
+        None, description="Filter by lifecycle stage: anonymous, known, customer, churned"
+    ),
     rfm_segment: Optional[str] = Query(None, description="Filter by RFM segment"),
     min_events: Optional[int] = Query(None, ge=0, description="Minimum total events"),
     max_events: Optional[int] = Query(None, ge=0, description="Maximum total events"),
@@ -1850,13 +1888,15 @@ async def export_audience(
     first_seen_before: Optional[datetime] = Query(None, description="First seen before date"),
     last_seen_after: Optional[datetime] = Query(None, description="Last seen after date"),
     last_seen_before: Optional[datetime] = Query(None, description="Last seen before date"),
-    has_identifier_type: Optional[str] = Query(None, description="Has identifier of type: email, phone, device_id, etc."),
+    has_identifier_type: Optional[str] = Query(
+        None, description="Has identifier of type: email, phone, device_id, etc."
+    ),
     include_computed_traits: bool = Query(True, description="Include computed traits in export"),
     include_identifiers: bool = Query(False, description="Include identifiers (hashed) in export"),
     include_rfm: bool = Query(False, description="Include RFM scores in export"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Export audience profiles with advanced filtering.
@@ -1872,9 +1912,10 @@ async def export_audience(
     - Supports JSON and CSV formats
     - Maximum 50,000 profiles per request
     """
-    from fastapi.responses import StreamingResponse
     import csv
     import io
+
+    from fastapi.responses import StreamingResponse
 
     tenant_id = current_user.tenant_id
 
@@ -1919,9 +1960,7 @@ async def export_audience(
 
     # Apply RFM segment filter (from computed_traits)
     if rfm_segment:
-        query = query.where(
-            CDPProfile.computed_traits["rfm_segment"].astext == rfm_segment
-        )
+        query = query.where(CDPProfile.computed_traits["rfm_segment"].astext == rfm_segment)
 
     # Apply identifier type filter
     if has_identifier_type:
@@ -1948,16 +1987,25 @@ async def export_audience(
     profiles = result.scalars().unique().all()
 
     # Build export data
-    export_time = datetime.now(timezone.utc)
+    export_time = datetime.now(UTC)
 
     if format.lower() == "csv":
         # Build CSV headers
         headers = [
-            "id", "external_id", "lifecycle_stage", "first_seen_at", "last_seen_at",
-            "total_events", "total_sessions", "total_purchases", "total_revenue",
+            "id",
+            "external_id",
+            "lifecycle_stage",
+            "first_seen_at",
+            "last_seen_at",
+            "total_events",
+            "total_sessions",
+            "total_purchases",
+            "total_revenue",
         ]
         if include_rfm:
-            headers.extend(["rfm_segment", "rfm_score", "recency_score", "frequency_score", "monetary_score"])
+            headers.extend(
+                ["rfm_segment", "rfm_score", "recency_score", "frequency_score", "monetary_score"]
+            )
         if include_identifiers:
             headers.append("identifier_types")
 
@@ -1985,7 +2033,7 @@ async def export_audience(
                 row["frequency_score"] = profile.computed_traits.get("frequency_score", "")
                 row["monetary_score"] = profile.computed_traits.get("monetary_score", "")
 
-            if include_identifiers and hasattr(profile, 'identifiers'):
+            if include_identifiers and hasattr(profile, "identifiers"):
                 id_types = list(set(i.identifier_type for i in profile.identifiers))
                 row["identifier_types"] = ",".join(id_types)
 
@@ -1996,7 +2044,7 @@ async def export_audience(
         return StreamingResponse(
             iter([output.getvalue()]),
             media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     else:
@@ -2007,7 +2055,9 @@ async def export_audience(
                 "id": str(profile.id),
                 "external_id": profile.external_id,
                 "lifecycle_stage": profile.lifecycle_stage,
-                "first_seen_at": profile.first_seen_at.isoformat() if profile.first_seen_at else None,
+                "first_seen_at": profile.first_seen_at.isoformat()
+                if profile.first_seen_at
+                else None,
                 "last_seen_at": profile.last_seen_at.isoformat() if profile.last_seen_at else None,
                 "total_events": profile.total_events,
                 "total_sessions": profile.total_sessions,
@@ -2027,7 +2077,7 @@ async def export_audience(
                     "monetary_score": profile.computed_traits.get("monetary_score"),
                 }
 
-            if include_identifiers and hasattr(profile, 'identifiers'):
+            if include_identifiers and hasattr(profile, "identifiers"):
                 profile_data["identifiers"] = [
                     {
                         "type": i.identifier_type,
@@ -2068,6 +2118,7 @@ async def export_audience(
 # Webhook Endpoints
 # =============================================================================
 
+
 def _build_webhook_response(webhook: CDPWebhook, include_secret: bool = False) -> WebhookResponse:
     """Build WebhookResponse from a CDPWebhook ORM object."""
     return WebhookResponse(
@@ -2096,8 +2147,8 @@ def _build_webhook_response(webhook: CDPWebhook, include_secret: bool = False) -
 )
 async def list_webhooks(
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_webhook_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_webhook_rate_limit),
 ):
     """List all webhooks for tenant."""
     tenant_id = current_user.tenant_id
@@ -2125,8 +2176,8 @@ async def list_webhooks(
 async def create_webhook(
     webhook: WebhookCreate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_webhook_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_webhook_rate_limit),
 ):
     """Create a new webhook destination."""
     tenant_id = current_user.tenant_id
@@ -2167,15 +2218,14 @@ async def create_webhook(
 async def get_webhook(
     webhook_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_webhook_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_webhook_rate_limit),
 ):
     """Get webhook by ID."""
     tenant_id = current_user.tenant_id
 
     result = await db.execute(
-        select(CDPWebhook)
-        .where(
+        select(CDPWebhook).where(
             CDPWebhook.id == webhook_id,
             CDPWebhook.tenant_id == tenant_id,
         )
@@ -2201,15 +2251,14 @@ async def update_webhook(
     webhook_id: UUID,
     webhook_update: WebhookUpdate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_webhook_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_webhook_rate_limit),
 ):
     """Update webhook configuration."""
     tenant_id = current_user.tenant_id
 
     result = await db.execute(
-        select(CDPWebhook)
-        .where(
+        select(CDPWebhook).where(
             CDPWebhook.id == webhook_id,
             CDPWebhook.tenant_id == tenant_id,
         )
@@ -2253,15 +2302,14 @@ async def update_webhook(
 async def delete_webhook(
     webhook_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_webhook_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_webhook_rate_limit),
 ):
     """Delete a webhook."""
     tenant_id = current_user.tenant_id
 
     result = await db.execute(
-        select(CDPWebhook)
-        .where(
+        select(CDPWebhook).where(
             CDPWebhook.id == webhook_id,
             CDPWebhook.tenant_id == tenant_id,
         )
@@ -2293,19 +2341,19 @@ async def delete_webhook(
 async def test_webhook(
     webhook_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_webhook_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_webhook_rate_limit),
 ):
     """Send a test request to webhook endpoint."""
-    import httpx
     import hmac
     import json
+
+    import httpx
 
     tenant_id = current_user.tenant_id
 
     result = await db.execute(
-        select(CDPWebhook)
-        .where(
+        select(CDPWebhook).where(
             CDPWebhook.id == webhook_id,
             CDPWebhook.tenant_id == tenant_id,
         )
@@ -2323,7 +2371,7 @@ async def test_webhook(
         "event_type": "test",
         "tenant_id": tenant_id,
         "webhook_id": str(webhook_id),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "data": {
             "message": "This is a test webhook request from Stratum CDP",
         },
@@ -2419,15 +2467,14 @@ async def test_webhook(
 async def rotate_webhook_secret(
     webhook_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_webhook_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_webhook_rate_limit),
 ):
     """Rotate the webhook secret key."""
     tenant_id = current_user.tenant_id
 
     result = await db.execute(
-        select(CDPWebhook)
-        .where(
+        select(CDPWebhook).where(
             CDPWebhook.id == webhook_id,
             CDPWebhook.tenant_id == tenant_id,
         )
@@ -2459,7 +2506,8 @@ async def rotate_webhook_secret(
 # Anomaly Detection Endpoints
 # =============================================================================
 
-def calculate_zscore(values: List[float], current: float, window: int = 14) -> float:
+
+def calculate_zscore(values: list[float], current: float, window: int = 14) -> float:
     """Calculate Z-score for anomaly detection."""
     import statistics
 
@@ -2500,10 +2548,12 @@ def get_anomaly_severity(zscore: float) -> str:
 )
 async def detect_event_anomalies(
     window_days: int = Query(14, ge=3, le=30, description="Days for baseline calculation"),
-    zscore_threshold: float = Query(2.5, ge=1.5, le=5.0, description="Z-score threshold for anomaly"),
+    zscore_threshold: float = Query(
+        2.5, ge=1.5, le=5.0, description="Z-score threshold for anomaly"
+    ),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Detect anomalies in event volume per source.
@@ -2512,12 +2562,13 @@ async def detect_event_anomalies(
     significant deviations from the baseline using Z-scores.
     """
     import statistics
-    from sqlalchemy import cast, Date
+
+    from sqlalchemy import Date, cast
 
     tenant_id = current_user.tenant_id
 
     # Get daily event counts per source for the last N+1 days
-    cutoff = datetime.now(timezone.utc) - timedelta(days=window_days + 1)
+    cutoff = datetime.now(UTC) - timedelta(days=window_days + 1)
 
     result = await db.execute(
         select(
@@ -2551,13 +2602,12 @@ async def detect_event_anomalies(
 
     # Get source names for display
     sources_result = await db.execute(
-        select(CDPSource.id, CDPSource.name)
-        .where(CDPSource.tenant_id == tenant_id)
+        select(CDPSource.id, CDPSource.name).where(CDPSource.tenant_id == tenant_id)
     )
     source_names = {row.id: row.name for row in sources_result.all()}
 
     # Group by source and analyze
-    source_data: Dict[str, List[int]] = defaultdict(list)
+    source_data: dict[str, list[int]] = defaultdict(list)
     for row in daily_counts:
         source_key = str(row.source_id) if row.source_id else "unknown"
         source_data[source_key].append(row.event_count)
@@ -2585,22 +2635,30 @@ async def detect_event_anomalies(
                 baseline_mean = 0.0
                 baseline_std = 0.0
 
-            pct_change = ((current - baseline_mean) / baseline_mean * 100) if baseline_mean > 0 else 0
+            pct_change = (
+                ((current - baseline_mean) / baseline_mean * 100) if baseline_mean > 0 else 0
+            )
 
-            source_name = source_names.get(source_id, source_id) if source_id != "unknown" else "Unknown Source"
+            source_name = (
+                source_names.get(source_id, source_id)
+                if source_id != "unknown"
+                else "Unknown Source"
+            )
 
-            anomalies.append({
-                "source_id": source_id if source_id != "unknown" else None,
-                "source_name": source_name,
-                "metric": "event_count",
-                "zscore": round(z, 2),
-                "severity": get_anomaly_severity(z),
-                "current_value": current,
-                "baseline_mean": round(baseline_mean, 2),
-                "baseline_std": round(baseline_std, 2),
-                "direction": "high" if z > 0 else "low",
-                "pct_change": round(pct_change, 1),
-            })
+            anomalies.append(
+                {
+                    "source_id": source_id if source_id != "unknown" else None,
+                    "source_name": source_name,
+                    "metric": "event_count",
+                    "zscore": round(z, 2),
+                    "severity": get_anomaly_severity(z),
+                    "current_value": current,
+                    "baseline_mean": round(baseline_mean, 2),
+                    "baseline_std": round(baseline_std, 2),
+                    "direction": "high" if z > 0 else "low",
+                    "pct_change": round(pct_change, 1),
+                }
+            )
 
     # Check total events anomaly
     if len(total_counts) >= 3:
@@ -2612,25 +2670,33 @@ async def detect_event_anomalies(
         if abs(z_total) >= zscore_threshold:
             try:
                 baseline_mean_total = statistics.mean(historical_total)
-                baseline_std_total = statistics.stdev(historical_total) if len(historical_total) > 1 else 0.0
+                baseline_std_total = (
+                    statistics.stdev(historical_total) if len(historical_total) > 1 else 0.0
+                )
             except statistics.StatisticsError:
                 baseline_mean_total = 0.0
                 baseline_std_total = 0.0
 
-            pct_change_total = ((current_total - baseline_mean_total) / baseline_mean_total * 100) if baseline_mean_total > 0 else 0
+            pct_change_total = (
+                ((current_total - baseline_mean_total) / baseline_mean_total * 100)
+                if baseline_mean_total > 0
+                else 0
+            )
 
-            anomalies.append({
-                "source_id": None,
-                "source_name": "All Sources (Total)",
-                "metric": "total_event_count",
-                "zscore": round(z_total, 2),
-                "severity": get_anomaly_severity(z_total),
-                "current_value": current_total,
-                "baseline_mean": round(baseline_mean_total, 2),
-                "baseline_std": round(baseline_std_total, 2),
-                "direction": "high" if z_total > 0 else "low",
-                "pct_change": round(pct_change_total, 1),
-            })
+            anomalies.append(
+                {
+                    "source_id": None,
+                    "source_name": "All Sources (Total)",
+                    "metric": "total_event_count",
+                    "zscore": round(z_total, 2),
+                    "severity": get_anomaly_severity(z_total),
+                    "current_value": current_total,
+                    "baseline_mean": round(baseline_mean_total, 2),
+                    "baseline_std": round(baseline_std_total, 2),
+                    "direction": "high" if z_total > 0 else "low",
+                    "pct_change": round(pct_change_total, 1),
+                }
+            )
 
     # Sort by absolute Z-score (most significant first)
     anomalies.sort(key=lambda x: abs(x["zscore"]), reverse=True)
@@ -2665,8 +2731,8 @@ async def detect_event_anomalies(
 )
 async def get_anomaly_summary(
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Get a summary of CDP data health including volume trends and anomalies.
@@ -2674,13 +2740,12 @@ async def get_anomaly_summary(
     tenant_id = current_user.tenant_id
 
     # Get event counts for the last 7 days
-    cutoff_7d = datetime.now(timezone.utc) - timedelta(days=7)
-    cutoff_14d = datetime.now(timezone.utc) - timedelta(days=14)
+    cutoff_7d = datetime.now(UTC) - timedelta(days=7)
+    cutoff_14d = datetime.now(UTC) - timedelta(days=14)
 
     # Last 7 days total
     result_7d = await db.execute(
-        select(func.count(CDPEvent.id))
-        .where(
+        select(func.count(CDPEvent.id)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.received_at >= cutoff_7d,
         )
@@ -2689,8 +2754,7 @@ async def get_anomaly_summary(
 
     # Previous 7 days (days 8-14)
     result_prev_7d = await db.execute(
-        select(func.count(CDPEvent.id))
-        .where(
+        select(func.count(CDPEvent.id)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.received_at >= cutoff_14d,
             CDPEvent.received_at < cutoff_7d,
@@ -2699,10 +2763,9 @@ async def get_anomaly_summary(
     events_prev_7d = result_prev_7d.scalar() or 0
 
     # Today's events
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     result_today = await db.execute(
-        select(func.count(CDPEvent.id))
-        .where(
+        select(func.count(CDPEvent.id)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.received_at >= today_start,
         )
@@ -2711,8 +2774,7 @@ async def get_anomaly_summary(
 
     # Average EMQ score (last 7 days)
     result_emq = await db.execute(
-        select(func.avg(CDPEvent.emq_score))
-        .where(
+        select(func.avg(CDPEvent.emq_score)).where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.received_at >= cutoff_7d,
             CDPEvent.emq_score.isnot(None),
@@ -2754,13 +2816,14 @@ async def get_anomaly_summary(
         "wow_change_pct": round(wow_change, 1),
         "volume_trend": volume_trend,
         "avg_emq_score": round(float(avg_emq), 1) if avg_emq else None,
-        "as_of": datetime.now(timezone.utc).isoformat(),
+        "as_of": datetime.now(UTC).isoformat(),
     }
 
 
 # =============================================================================
 # Identity Graph Endpoints
 # =============================================================================
+
 
 @router.get(
     "/profiles/{profile_id}/identity-graph",
@@ -2771,8 +2834,8 @@ async def get_anomaly_summary(
 async def get_profile_identity_graph(
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Get the identity graph for a profile.
@@ -2784,8 +2847,7 @@ async def get_profile_identity_graph(
 
     # Verify profile exists
     result = await db.execute(
-        select(CDPProfile)
-        .where(
+        select(CDPProfile).where(
             CDPProfile.id == profile_id,
             CDPProfile.tenant_id == tenant_id,
         )
@@ -2820,8 +2882,8 @@ async def get_profile_identity_graph(
 async def get_profile_canonical_identity(
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Get the canonical identity for a profile.
@@ -2833,8 +2895,7 @@ async def get_profile_canonical_identity(
 
     # Get canonical identity
     result = await db.execute(
-        select(CDPCanonicalIdentity)
-        .where(
+        select(CDPCanonicalIdentity).where(
             CDPCanonicalIdentity.profile_id == profile_id,
             CDPCanonicalIdentity.tenant_id == tenant_id,
         )
@@ -2869,8 +2930,8 @@ async def get_profile_canonical_identity(
 async def get_profile_merge_history(
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Get the merge history for a profile.
@@ -2918,8 +2979,8 @@ async def get_profile_merge_history(
 async def merge_profiles(
     merge_request: ProfileMergeRequest,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Manually merge two profiles.
@@ -3016,8 +3077,8 @@ async def list_merge_history(
     limit: int = Query(50, ge=1, le=200, description="Max merges to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     List all profile merges for the tenant.
@@ -3028,8 +3089,7 @@ async def list_merge_history(
 
     # Get total count
     count_result = await db.execute(
-        select(func.count(CDPProfileMerge.id))
-        .where(CDPProfileMerge.tenant_id == tenant_id)
+        select(func.count(CDPProfileMerge.id)).where(CDPProfileMerge.tenant_id == tenant_id)
     )
     total = count_result.scalar() or 0
 
@@ -3071,8 +3131,8 @@ async def list_identity_links(
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     link_type: Optional[str] = Query(None, description="Filter by link type"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     List identity links for the tenant.
@@ -3088,7 +3148,9 @@ async def list_identity_links(
         query = query.where(CDPIdentityLink.link_type == link_type)
 
     # Get total count
-    count_query = select(func.count(CDPIdentityLink.id)).where(CDPIdentityLink.tenant_id == tenant_id)
+    count_query = select(func.count(CDPIdentityLink.id)).where(
+        CDPIdentityLink.tenant_id == tenant_id
+    )
     if link_type:
         count_query = count_query.where(CDPIdentityLink.link_type == link_type)
     count_result = await db.execute(count_query)
@@ -3096,9 +3158,7 @@ async def list_identity_links(
 
     # Get links
     result = await db.execute(
-        query.order_by(CDPIdentityLink.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+        query.order_by(CDPIdentityLink.created_at.desc()).offset(offset).limit(limit)
     )
     links = result.scalars().all()
 
@@ -3131,7 +3191,7 @@ segment_rate_limiter = RateLimiter(requests_per_minute=60)
 
 async def check_segment_rate_limit(
     request: Request,
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ) -> bool:
     """Check segment rate limit (60/min)."""
     tenant_id = current_user.tenant_id
@@ -3176,8 +3236,8 @@ def _segment_to_response(segment: CDPSegment) -> SegmentResponse:
 async def create_segment(
     segment_data: SegmentCreate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """
     Create a new customer segment.
@@ -3225,8 +3285,8 @@ async def list_segments(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """List all segments for the tenant."""
     tenant_id = current_user.tenant_id
@@ -3254,8 +3314,8 @@ async def list_segments(
 async def get_segment(
     segment_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """Get a segment by ID."""
     tenant_id = current_user.tenant_id
@@ -3282,8 +3342,8 @@ async def update_segment(
     segment_id: UUID,
     update_data: SegmentUpdate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """Update a segment."""
     tenant_id = current_user.tenant_id
@@ -3327,8 +3387,8 @@ async def update_segment(
 async def delete_segment(
     segment_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """Delete a segment."""
     tenant_id = current_user.tenant_id
@@ -3360,8 +3420,8 @@ async def delete_segment(
 async def compute_segment(
     segment_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """
     Compute segment membership.
@@ -3406,8 +3466,8 @@ async def compute_segment(
 async def preview_segment(
     preview_data: SegmentPreviewRequest,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """
     Preview segment membership.
@@ -3463,8 +3523,8 @@ async def get_segment_profiles(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """Get profiles in a segment."""
     tenant_id = current_user.tenant_id
@@ -3526,8 +3586,8 @@ async def get_segment_profiles(
 async def get_profile_segments(
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """Get all segments a profile belongs to."""
     tenant_id = current_user.tenant_id
@@ -3550,8 +3610,8 @@ async def add_profile_to_segment(
     segment_id: UUID,
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """
     Add a profile to a static segment.
@@ -3588,8 +3648,8 @@ async def remove_profile_from_segment(
     segment_id: UUID,
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_segment_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_segment_rate_limit),
 ):
     """Remove a profile from a segment."""
     tenant_id = current_user.tenant_id
@@ -3613,6 +3673,7 @@ async def remove_profile_from_segment(
 # Profile Deletion (GDPR) Endpoints
 # =============================================================================
 
+
 @router.delete(
     "/profiles/{profile_id}",
     response_model=ProfileDeletionResponse,
@@ -3624,8 +3685,8 @@ async def delete_profile(
     delete_events: bool = Query(True, description="Also delete all events"),
     reason: Optional[str] = Query(None, description="Reason for deletion"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Delete a profile (GDPR right to erasure).
@@ -3643,8 +3704,7 @@ async def delete_profile(
 
     # Verify profile exists
     result = await db.execute(
-        select(CDPProfile)
-        .where(
+        select(CDPProfile).where(
             CDPProfile.id == profile_id,
             CDPProfile.tenant_id == tenant_id,
         )
@@ -3661,34 +3721,32 @@ async def delete_profile(
     events_deleted = 0
     if delete_events:
         events_result = await db.execute(
-            select(func.count(CDPEvent.id))
-            .where(CDPEvent.profile_id == profile_id)
+            select(func.count(CDPEvent.id)).where(CDPEvent.profile_id == profile_id)
         )
         events_deleted = events_result.scalar() or 0
 
     identifiers_result = await db.execute(
-        select(func.count(CDPProfileIdentifier.id))
-        .where(CDPProfileIdentifier.profile_id == profile_id)
+        select(func.count(CDPProfileIdentifier.id)).where(
+            CDPProfileIdentifier.profile_id == profile_id
+        )
     )
     identifiers_deleted = identifiers_result.scalar() or 0
 
     consents_result = await db.execute(
-        select(func.count(CDPConsent.id))
-        .where(CDPConsent.profile_id == profile_id)
+        select(func.count(CDPConsent.id)).where(CDPConsent.profile_id == profile_id)
     )
     consents_deleted = consents_result.scalar() or 0
 
     memberships_result = await db.execute(
-        select(func.count(CDPSegmentMembership.id))
-        .where(CDPSegmentMembership.profile_id == profile_id)
+        select(func.count(CDPSegmentMembership.id)).where(
+            CDPSegmentMembership.profile_id == profile_id
+        )
     )
     memberships_deleted = memberships_result.scalar() or 0
 
     # Delete events if requested
     if delete_events:
-        await db.execute(
-            delete(CDPEvent).where(CDPEvent.profile_id == profile_id)
-        )
+        await db.execute(delete(CDPEvent).where(CDPEvent.profile_id == profile_id))
 
     # Delete segment memberships
     await db.execute(
@@ -3696,9 +3754,7 @@ async def delete_profile(
     )
 
     # Delete consents
-    await db.execute(
-        delete(CDPConsent).where(CDPConsent.profile_id == profile_id)
-    )
+    await db.execute(delete(CDPConsent).where(CDPConsent.profile_id == profile_id))
 
     # Delete identifiers
     await db.execute(
@@ -3717,7 +3773,7 @@ async def delete_profile(
     # Invalidate cache
     _profile_cache.invalidate(tenant_id, str(profile_id))
 
-    deletion_time = datetime.now(timezone.utc)
+    deletion_time = datetime.now(UTC)
 
     logger.info(
         "cdp_profile_deleted_gdpr",
@@ -3743,6 +3799,7 @@ async def delete_profile(
 # =============================================================================
 # Computed Traits Endpoints
 # =============================================================================
+
 
 def _trait_to_response(trait) -> ComputedTraitResponse:
     """Convert trait model to response."""
@@ -3772,8 +3829,8 @@ def _trait_to_response(trait) -> ComputedTraitResponse:
 async def create_computed_trait(
     trait_data: ComputedTraitCreate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Create a new computed trait.
@@ -3819,8 +3876,8 @@ async def list_computed_traits(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """List all computed traits."""
     tenant_id = current_user.tenant_id
@@ -3847,8 +3904,8 @@ async def list_computed_traits(
 async def get_computed_trait(
     trait_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """Get a computed trait by ID."""
     tenant_id = current_user.tenant_id
@@ -3874,8 +3931,8 @@ async def get_computed_trait(
 async def delete_computed_trait(
     trait_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """Delete a computed trait."""
     tenant_id = current_user.tenant_id
@@ -3900,8 +3957,8 @@ async def delete_computed_trait(
 )
 async def compute_all_traits(
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Compute all active traits for all profiles.
@@ -3936,16 +3993,15 @@ async def compute_all_traits(
 async def compute_traits_for_profile(
     profile_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """Compute all traits for a specific profile."""
     tenant_id = current_user.tenant_id
 
     # Get profile
     result = await db.execute(
-        select(CDPProfile)
-        .where(
+        select(CDPProfile).where(
             CDPProfile.id == profile_id,
             CDPProfile.tenant_id == tenant_id,
         )
@@ -3976,6 +4032,7 @@ async def compute_traits_for_profile(
 # RFM Analysis Endpoints
 # =============================================================================
 
+
 @router.get(
     "/profiles/{profile_id}/rfm",
     response_model=RFMScores,
@@ -3988,8 +4045,8 @@ async def get_profile_rfm(
     revenue_property: str = Query("total", description="Property containing revenue"),
     analysis_window_days: int = Query(365, ge=30, le=1095),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Calculate RFM scores for a profile.
@@ -4003,8 +4060,7 @@ async def get_profile_rfm(
 
     # Get profile
     result = await db.execute(
-        select(CDPProfile)
-        .where(
+        select(CDPProfile).where(
             CDPProfile.id == profile_id,
             CDPProfile.tenant_id == tenant_id,
         )
@@ -4037,8 +4093,8 @@ async def get_profile_rfm(
 async def compute_rfm_batch(
     config: Optional[RFMConfig] = None,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_source_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_source_rate_limit),
 ):
     """
     Compute RFM scores for all profiles.
@@ -4077,8 +4133,8 @@ async def compute_rfm_batch(
 )
 async def get_rfm_summary(
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Get RFM summary for the tenant.
@@ -4102,7 +4158,7 @@ funnel_rate_limiter = RateLimiter(requests_per_minute=60)
 
 async def check_funnel_rate_limit(
     request: Request,
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ) -> bool:
     """Check funnel rate limit (60/min)."""
     tenant_id = current_user.tenant_id
@@ -4151,8 +4207,8 @@ def _funnel_to_response(funnel: CDPFunnel) -> FunnelResponse:
 async def create_funnel(
     funnel_data: FunnelCreate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """
     Create a new conversion funnel.
@@ -4199,8 +4255,8 @@ async def list_funnels(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """List all funnels for the tenant."""
     tenant_id = current_user.tenant_id
@@ -4227,8 +4283,8 @@ async def list_funnels(
 async def get_funnel(
     funnel_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """Get a funnel by ID."""
     tenant_id = current_user.tenant_id
@@ -4255,8 +4311,8 @@ async def update_funnel(
     funnel_id: UUID,
     update_data: FunnelUpdate,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """Update a funnel."""
     tenant_id = current_user.tenant_id
@@ -4297,8 +4353,8 @@ async def update_funnel(
 async def delete_funnel(
     funnel_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """Delete a funnel."""
     tenant_id = current_user.tenant_id
@@ -4324,8 +4380,8 @@ async def delete_funnel(
 async def compute_funnel(
     funnel_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """
     Compute funnel metrics.
@@ -4369,8 +4425,8 @@ async def analyze_funnel(
     funnel_id: UUID,
     analysis_request: Optional[FunnelAnalysisRequest] = None,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """
     Get detailed funnel analysis.
@@ -4411,8 +4467,8 @@ async def get_funnel_drop_offs(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_funnel_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_funnel_rate_limit),
 ):
     """
     Get profiles that dropped off at a specific funnel step.
@@ -4481,8 +4537,8 @@ async def get_profile_funnel_journeys(
     profile_id: UUID,
     funnel_id: Optional[UUID] = Query(None, description="Filter by specific funnel"),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
-    _rate_limit = Depends(check_profile_rate_limit),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
 ):
     """
     Get a profile's journey through funnels.
@@ -4493,8 +4549,7 @@ async def get_profile_funnel_journeys(
 
     # Verify profile exists
     result = await db.execute(
-        select(CDPProfile)
-        .where(
+        select(CDPProfile).where(
             CDPProfile.id == profile_id,
             CDPProfile.tenant_id == tenant_id,
         )

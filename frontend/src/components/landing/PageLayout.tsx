@@ -4,9 +4,9 @@
  * Theme: Dark with Purple/Cyan gradients
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, GlobeAltIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
 interface PageLayoutProps {
@@ -166,7 +166,9 @@ export function PageLayout({ children }: PageLayoutProps) {
                       className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/5 flex items-center justify-between ${
                         currentLanguage === 'en' ? 'text-white' : ''
                       }`}
-                      style={{ color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)' }}
+                      style={{
+                        color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                      }}
                     >
                       <span>English</span>
                       {currentLanguage === 'en' && (
@@ -178,7 +180,9 @@ export function PageLayout({ children }: PageLayoutProps) {
                       className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/5 flex items-center justify-between ${
                         currentLanguage === 'ar' ? 'text-white' : ''
                       }`}
-                      style={{ color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)' }}
+                      style={{
+                        color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                      }}
                     >
                       <span>العربية</span>
                       {currentLanguage === 'ar' && (
@@ -244,7 +248,9 @@ export function PageLayout({ children }: PageLayoutProps) {
                     className="py-3 px-4 rounded-lg text-sm font-medium transition-colors"
                     style={{
                       color: isActiveLink(link.href) ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
-                      background: isActiveLink(link.href) ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                      background: isActiveLink(link.href)
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'transparent',
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -255,7 +261,9 @@ export function PageLayout({ children }: PageLayoutProps) {
 
                 {/* Mobile Language Toggle */}
                 <div className="px-4 py-2">
-                  <p className="text-xs mb-2" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Language</p>
+                  <p className="text-xs mb-2" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                    Language
+                  </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => toggleLanguage('en')}
@@ -263,8 +271,14 @@ export function PageLayout({ children }: PageLayoutProps) {
                         currentLanguage === 'en' ? 'text-white' : ''
                       }`}
                       style={{
-                        background: currentLanguage === 'en' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                        border: currentLanguage === 'en' ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        background:
+                          currentLanguage === 'en'
+                            ? 'rgba(168, 85, 247, 0.2)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border:
+                          currentLanguage === 'en'
+                            ? '1px solid rgba(168, 85, 247, 0.4)'
+                            : '1px solid rgba(255, 255, 255, 0.1)',
                         color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                       }}
                     >
@@ -276,8 +290,14 @@ export function PageLayout({ children }: PageLayoutProps) {
                         currentLanguage === 'ar' ? 'text-white' : ''
                       }`}
                       style={{
-                        background: currentLanguage === 'ar' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                        border: currentLanguage === 'ar' ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        background:
+                          currentLanguage === 'ar'
+                            ? 'rgba(168, 85, 247, 0.2)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border:
+                          currentLanguage === 'ar'
+                            ? '1px solid rgba(168, 85, 247, 0.4)'
+                            : '1px solid rgba(255, 255, 255, 0.1)',
                         color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                       }}
                     >

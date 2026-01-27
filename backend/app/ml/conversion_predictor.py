@@ -6,7 +6,7 @@ ML-based conversion prediction for campaign optimization.
 Predicts expected conversions based on campaign features.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 
@@ -39,7 +39,7 @@ class ConversionPredictor:
             "snapchat": 0.012,
         }
 
-    async def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    async def predict(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Predict conversions for given features.
 
@@ -85,7 +85,7 @@ class ConversionPredictor:
             "model_version": prediction.get("model_version", "1.0.0"),
         }
 
-    def _prepare_features(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_features(self, features: dict[str, Any]) -> dict[str, Any]:
         """Prepare and normalize features for the model."""
         # Extract and normalize features
         prepared = {
@@ -107,53 +107,51 @@ class ConversionPredictor:
 
         return prepared
 
-    
     def _calculate_heuristic_confidence(
         self,
-        features: Dict[str, Any],
-        factors: List[Dict[str, Any]],
+        features: dict[str, Any],
+        factors: list[dict[str, Any]],
     ) -> float:
         """
         Calculate confidence for heuristic predictions based on data quality.
-        
+
         Heuristic predictions inherently have lower confidence than ML predictions.
         Confidence is adjusted based on:
         - Data completeness (more features = higher confidence)
         - Data volume (more impressions/clicks = more reliable)
         - Factor signals (clear positive/negative = higher confidence)
-        
+
         Returns:
             Confidence score between 0.3 and 0.75 (capped for heuristics)
         """
         # Base confidence for heuristic predictions
         base_confidence = 0.45
-        
+
         # Data completeness bonus
         has_impressions = features.get("impressions", 0) > 0
         has_clicks = features.get("clicks", 0) > 0
         has_spend = features.get("spend", 0) > 0
         has_ctr = features.get("ctr", 0) > 0
-        
+
         completeness = sum([has_impressions, has_clicks, has_spend, has_ctr]) / 4
         completeness_bonus = completeness * 0.15
-        
+
         # Data volume bonus (more data = more reliable baseline)
         impressions = features.get("impressions", 0)
         clicks = features.get("clicks", 0)
         volume_score = min(0.1, (impressions / 100000) * 0.05 + (clicks / 1000) * 0.05)
-        
+
         # Factor clarity bonus (clear signals = higher confidence)
         positive_factors = sum(1 for f in factors if f.get("impact") == "positive")
         negative_factors = sum(1 for f in factors if f.get("impact") == "negative")
         clarity_bonus = min(0.05, (positive_factors + negative_factors) * 0.02)
-        
+
         confidence = base_confidence + completeness_bonus + volume_score + clarity_bonus
-        
+
         # Cap at 0.75 for heuristic predictions (ML should be higher)
         return round(min(0.75, max(0.3, confidence)), 2)
 
-
-    def _heuristic_prediction(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def _heuristic_prediction(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Fallback heuristic prediction when model unavailable.
 
@@ -197,35 +195,45 @@ class ConversionPredictor:
         # Identify factors
         factors = []
         if ctr_factor > 1.1:
-            factors.append({
-                "factor": "High CTR",
-                "impact": "positive",
-                "description": "Above-average click-through rate indicates good audience targeting",
-            })
+            factors.append(
+                {
+                    "factor": "High CTR",
+                    "impact": "positive",
+                    "description": "Above-average click-through rate indicates good audience targeting",
+                }
+            )
         elif ctr_factor < 0.9:
-            factors.append({
-                "factor": "Low CTR",
-                "impact": "negative",
-                "description": "Below-average CTR may indicate targeting or creative issues",
-            })
+            factors.append(
+                {
+                    "factor": "Low CTR",
+                    "impact": "negative",
+                    "description": "Below-average CTR may indicate targeting or creative issues",
+                }
+            )
 
         if spend_factor > 1.1:
-            factors.append({
-                "factor": "Efficient Spend",
-                "impact": "positive",
-                "description": "Low CPC suggests quality traffic at good rates",
-            })
+            factors.append(
+                {
+                    "factor": "Efficient Spend",
+                    "impact": "positive",
+                    "description": "Low CPC suggests quality traffic at good rates",
+                }
+            )
 
-        factors.append({
-            "factor": f"Platform: {platform.title()}",
-            "impact": "neutral",
-            "description": f"Baseline CVR for {platform} is {base_cvr*100:.1f}%",
-        })
+        factors.append(
+            {
+                "factor": f"Platform: {platform.title()}",
+                "impact": "neutral",
+                "description": f"Baseline CVR for {platform} is {base_cvr*100:.1f}%",
+            }
+        )
 
         return {
             "value": round(predicted_conversions, 1),
             "conversion_rate": round(adjusted_cvr * 100, 2),
-            "click_to_conversion_rate": round((predicted_conversions / impressions * 100) if impressions > 0 else 0, 4),
+            "click_to_conversion_rate": round(
+                (predicted_conversions / impressions * 100) if impressions > 0 else 0, 4
+            ),
             "confidence": self._calculate_heuristic_confidence(features, factors),
             "contributing_factors": factors,
             "model_version": "heuristic-1.0.0",
@@ -233,9 +241,9 @@ class ConversionPredictor:
 
     def _identify_factors(
         self,
-        features: Dict[str, Any],
-        prediction: Dict[str, Any],
-    ) -> List[Dict[str, Any]]:
+        features: dict[str, Any],
+        prediction: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         """
         Identify factors contributing to the prediction.
 
@@ -256,27 +264,31 @@ class ConversionPredictor:
 
             for feature_name, importance in sorted_features[:5]:
                 impact = "positive" if importance > 0 else "negative"
-                factors.append({
-                    "factor": feature_name.replace("_", " ").title(),
-                    "impact": impact,
-                    "importance": round(importance, 3),
-                    "description": self._get_feature_description(feature_name, features),
-                })
+                factors.append(
+                    {
+                        "factor": feature_name.replace("_", " ").title(),
+                        "impact": impact,
+                        "importance": round(importance, 3),
+                        "description": self._get_feature_description(feature_name, features),
+                    }
+                )
 
         # Add platform factor
         platform = features.get("platform", "unknown")
-        factors.append({
-            "factor": f"Platform: {platform.title()}",
-            "impact": "neutral",
-            "description": f"Predictions calibrated for {platform} advertising",
-        })
+        factors.append(
+            {
+                "factor": f"Platform: {platform.title()}",
+                "impact": "neutral",
+                "description": f"Predictions calibrated for {platform} advertising",
+            }
+        )
 
         return factors
 
     def _get_feature_description(
         self,
         feature_name: str,
-        features: Dict[str, Any],
+        features: dict[str, Any],
     ) -> str:
         """Generate human-readable description for a feature."""
         descriptions = {
@@ -305,8 +317,8 @@ class ConversionOptimizer:
 
     async def get_recommendations(
         self,
-        current_features: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        current_features: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Generate recommendations for improving conversions.
 
@@ -324,40 +336,48 @@ class ConversionOptimizer:
         # Check CTR
         ctr = current_features.get("ctr", 0)
         if ctr < 1.0:
-            recommendations.append({
-                "area": "Creative/Targeting",
-                "recommendation": "Improve ad creative or refine audience targeting",
-                "expected_impact": "Could increase conversions by 15-30%",
-                "priority": "high",
-            })
+            recommendations.append(
+                {
+                    "area": "Creative/Targeting",
+                    "recommendation": "Improve ad creative or refine audience targeting",
+                    "expected_impact": "Could increase conversions by 15-30%",
+                    "priority": "high",
+                }
+            )
 
         # Check spend efficiency
         spend = current_features.get("spend", 0)
         clicks = current_features.get("clicks", 0)
         if clicks > 0 and spend / clicks > 2.5:
-            recommendations.append({
-                "area": "Bid Strategy",
-                "recommendation": "Review bidding strategy to reduce CPC",
-                "expected_impact": "Could improve ROI by 10-20%",
-                "priority": "medium",
-            })
+            recommendations.append(
+                {
+                    "area": "Bid Strategy",
+                    "recommendation": "Review bidding strategy to reduce CPC",
+                    "expected_impact": "Could improve ROI by 10-20%",
+                    "priority": "medium",
+                }
+            )
 
         # Platform-specific recommendations
         platform = current_features.get("platform", "").lower()
         if platform == "meta":
-            recommendations.append({
-                "area": "Audience Expansion",
-                "recommendation": "Test Advantage+ audiences for broader reach",
-                "expected_impact": "Typically increases conversions by 10-25%",
-                "priority": "medium",
-            })
+            recommendations.append(
+                {
+                    "area": "Audience Expansion",
+                    "recommendation": "Test Advantage+ audiences for broader reach",
+                    "expected_impact": "Typically increases conversions by 10-25%",
+                    "priority": "medium",
+                }
+            )
         elif platform == "google":
-            recommendations.append({
-                "area": "Search Terms",
-                "recommendation": "Review and optimize search term match types",
-                "expected_impact": "Can improve conversion rate by 5-15%",
-                "priority": "medium",
-            })
+            recommendations.append(
+                {
+                    "area": "Search Terms",
+                    "recommendation": "Review and optimize search term match types",
+                    "expected_impact": "Can improve conversion rate by 5-15%",
+                    "priority": "medium",
+                }
+            )
 
         return {
             "current_prediction": current,
@@ -367,8 +387,8 @@ class ConversionOptimizer:
 
     def _calculate_potential_uplift(
         self,
-        recommendations: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        recommendations: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """Calculate potential conversion uplift from recommendations."""
         # Simplified uplift calculation
         high_priority = sum(1 for r in recommendations if r["priority"] == "high")

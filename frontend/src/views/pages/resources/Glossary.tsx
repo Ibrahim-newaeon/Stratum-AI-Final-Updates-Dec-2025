@@ -6,18 +6,18 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
+  ArrowPathIcon,
+  BeakerIcon,
+  BoltIcon,
   BookOpenIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  CpuChipIcon,
+  CurrencyDollarIcon,
   MagnifyingGlassIcon,
   ShieldCheckIcon,
-  UserGroupIcon,
-  ChartBarIcon,
-  ArrowPathIcon,
-  BoltIcon,
-  CpuChipIcon,
   SignalIcon,
-  CurrencyDollarIcon,
-  BeakerIcon,
-  Cog6ToothIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 interface GlossaryTerm {
@@ -42,20 +42,32 @@ const glossaryData: GlossaryCategory[] = [
     title: 'Trust Engine',
     icon: ShieldCheckIcon,
     color: '#8B5CF6',
-    description: 'Core decision-making component that evaluates signal health before automation execution.',
+    description:
+      'Core decision-making component that evaluates signal health before automation execution.',
     terms: [
       {
         term: 'Signal Health',
-        definition: 'Composite score (0-100) measuring the reliability and quality of incoming data signals.',
+        definition:
+          'Composite score (0-100) measuring the reliability and quality of incoming data signals.',
         values: [
-          { value: 'HEALTHY (70-100)', description: 'Full autopilot enabled, automation executes normally' },
-          { value: 'DEGRADED (40-69)', description: 'Alert only, manual intervention may be needed' },
-          { value: 'CRITICAL (0-39)', description: 'Manual intervention required, automation blocked' },
+          {
+            value: 'HEALTHY (70-100)',
+            description: 'Full autopilot enabled, automation executes normally',
+          },
+          {
+            value: 'DEGRADED (40-69)',
+            description: 'Alert only, manual intervention may be needed',
+          },
+          {
+            value: 'CRITICAL (0-39)',
+            description: 'Manual intervention required, automation blocked',
+          },
         ],
       },
       {
         term: 'Trust Gate',
-        definition: 'Decision checkpoint that evaluates whether automation should execute based on signal health thresholds.',
+        definition:
+          'Decision checkpoint that evaluates whether automation should execute based on signal health thresholds.',
         values: [
           { value: 'PASS', description: 'Signal health meets threshold, automation executes' },
           { value: 'HOLD', description: 'Signal health marginal, requires confirmation' },
@@ -64,7 +76,8 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Autopilot',
-        definition: 'Automated actions that execute when trust gates pass. Includes budget adjustments, campaign pausing, and optimization.',
+        definition:
+          'Automated actions that execute when trust gates pass. Includes budget adjustments, campaign pausing, and optimization.',
         values: [
           { value: 'ADVISORY', description: 'Warn only, no blocking actions' },
           { value: 'SOFT_BLOCK', description: 'Warn and require user confirmation' },
@@ -73,14 +86,19 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'HEALTHY_THRESHOLD',
-        definition: 'Minimum signal health score (70.0) required for autopilot to execute automatically.',
+        definition:
+          'Minimum signal health score (70.0) required for autopilot to execute automatically.',
         example: 'If signal health is 72, autopilot proceeds. If 68, it holds for review.',
       },
       {
         term: 'EMQ (Event Match Quality)',
-        definition: 'Score measuring how well conversion events match platform requirements for attribution.',
+        definition:
+          'Score measuring how well conversion events match platform requirements for attribution.',
         values: [
-          { value: 'emq_healthy: 90+', description: 'Excellent match quality, optimal attribution' },
+          {
+            value: 'emq_healthy: 90+',
+            description: 'Excellent match quality, optimal attribution',
+          },
           { value: 'emq_risk: 80-89', description: 'Good quality, minor optimization needed' },
           { value: 'Below 80', description: 'Poor quality, attribution accuracy impacted' },
         ],
@@ -92,11 +110,13 @@ const glossaryData: GlossaryCategory[] = [
     title: 'CDP (Customer Data Platform)',
     icon: UserGroupIcon,
     color: '#00D4FF',
-    description: 'Unified customer data infrastructure for profiles, segments, and identity resolution.',
+    description:
+      'Unified customer data infrastructure for profiles, segments, and identity resolution.',
     terms: [
       {
         term: 'Profile',
-        definition: 'Unified customer record combining all known identifiers, traits, and event history.',
+        definition:
+          'Unified customer record combining all known identifiers, traits, and event history.',
       },
       {
         term: 'Lifecycle Stage',
@@ -110,9 +130,13 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Identity Resolution',
-        definition: 'Process of merging multiple identifiers into a single customer profile across devices and channels.',
+        definition:
+          'Process of merging multiple identifiers into a single customer profile across devices and channels.',
         values: [
-          { value: 'external_id (100)', description: 'Highest priority - customer ID from your system' },
+          {
+            value: 'external_id (100)',
+            description: 'Highest priority - customer ID from your system',
+          },
           { value: 'email (80)', description: 'High priority - verified email address' },
           { value: 'phone (70)', description: 'High priority - verified phone number' },
           { value: 'device_id (40)', description: 'Medium priority - device fingerprint' },
@@ -121,7 +145,8 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Segment',
-        definition: 'Dynamic or static group of profiles based on traits, behaviors, or computed attributes.',
+        definition:
+          'Dynamic or static group of profiles based on traits, behaviors, or computed attributes.',
         values: [
           { value: 'STATIC', description: 'Manually defined membership list' },
           { value: 'DYNAMIC', description: 'Rule-based, automatically updated' },
@@ -135,8 +160,14 @@ const glossaryData: GlossaryCategory[] = [
           { value: 'count', description: 'Count of events (e.g., total_purchases)' },
           { value: 'sum', description: 'Sum of values (e.g., lifetime_revenue)' },
           { value: 'average', description: 'Average value (e.g., avg_order_value)' },
-          { value: 'first/last', description: 'First or last occurrence (e.g., first_purchase_date)' },
-          { value: 'unique_count', description: 'Count of unique values (e.g., products_purchased)' },
+          {
+            value: 'first/last',
+            description: 'First or last occurrence (e.g., first_purchase_date)',
+          },
+          {
+            value: 'unique_count',
+            description: 'Count of unique values (e.g., products_purchased)',
+          },
         ],
       },
       {
@@ -171,7 +202,8 @@ const glossaryData: GlossaryCategory[] = [
     terms: [
       {
         term: 'Platform Audience',
-        definition: 'Audience created on ad platform (Meta, Google, TikTok, Snapchat) from CDP segment.',
+        definition:
+          'Audience created on ad platform (Meta, Google, TikTok, Snapchat) from CDP segment.',
       },
       {
         term: 'Sync Status',
@@ -186,8 +218,10 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Match Rate',
-        definition: 'Percentage of hashed identifiers that the ad platform successfully matched to users (0-100%).',
-        example: 'A 65% match rate means 65% of emails sent were matched to platform user accounts.',
+        definition:
+          'Percentage of hashed identifiers that the ad platform successfully matched to users (0-100%).',
+        example:
+          'A 65% match rate means 65% of emails sent were matched to platform user accounts.',
       },
       {
         term: 'Sync Operation',
@@ -201,7 +235,8 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Auto-Sync Interval',
-        definition: 'Frequency of automatic audience updates. Range: 1 hour to 1 week. Default: 24 hours.',
+        definition:
+          'Frequency of automatic audience updates. Range: 1 hour to 1 week. Default: 24 hours.',
       },
     ],
   },
@@ -214,11 +249,13 @@ const glossaryData: GlossaryCategory[] = [
     terms: [
       {
         term: 'Conversions API',
-        definition: 'Server-to-server connection sending conversion events directly to ad platforms, bypassing browser limitations.',
+        definition:
+          'Server-to-server connection sending conversion events directly to ad platforms, bypassing browser limitations.',
       },
       {
         term: 'PII Hashing',
-        definition: 'SHA256 one-way hashing of personally identifiable information (email, phone) before sending to platforms.',
+        definition:
+          'SHA256 one-way hashing of personally identifiable information (email, phone) before sending to platforms.',
       },
       {
         term: 'Delivery Status',
@@ -232,7 +269,8 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Dead Letter Queue (DLQ)',
-        definition: 'Storage for failed events awaiting retry. Events are retained for 7 days by default.',
+        definition:
+          'Storage for failed events awaiting retry. Events are retained for 7 days by default.',
         values: [
           { value: 'pending', description: 'Awaiting retry attempt' },
           { value: 'retrying', description: 'Currently being retried' },
@@ -242,16 +280,23 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Event Deduplication',
-        definition: 'Prevention of duplicate event processing using event IDs. Default TTL: 24 hours.',
+        definition:
+          'Prevention of duplicate event processing using event IDs. Default TTL: 24 hours.',
       },
       {
         term: 'EMQ Score Components',
         definition: 'Breakdown of Event Match Quality scoring (total 100 points).',
         values: [
-          { value: 'Identifier Quality (40pts)', description: 'Quality of user identifiers (email, phone, etc.)' },
+          {
+            value: 'Identifier Quality (40pts)',
+            description: 'Quality of user identifiers (email, phone, etc.)',
+          },
           { value: 'Data Completeness (25pts)', description: 'Completeness of event data fields' },
           { value: 'Timeliness (20pts)', description: 'Recency of event delivery' },
-          { value: 'Context Richness (15pts)', description: 'Additional context (geo, device, campaign)' },
+          {
+            value: 'Context Richness (15pts)',
+            description: 'Additional context (geo, device, campaign)',
+          },
         ],
       },
     ],
@@ -265,7 +310,8 @@ const glossaryData: GlossaryCategory[] = [
     terms: [
       {
         term: 'ROAS',
-        definition: 'Return on Ad Spend. Revenue divided by ad spend. A ROAS of 3.0 means $3 revenue per $1 spent.',
+        definition:
+          'Return on Ad Spend. Revenue divided by ad spend. A ROAS of 3.0 means $3 revenue per $1 spent.',
         example: 'ROAS = Revenue / Spend = $30,000 / $10,000 = 3.0x',
       },
       {
@@ -275,11 +321,13 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'CAC',
-        definition: 'Customer Acquisition Cost. Total marketing spend divided by new customers acquired.',
+        definition:
+          'Customer Acquisition Cost. Total marketing spend divided by new customers acquired.',
       },
       {
         term: 'LTV',
-        definition: 'Lifetime Value. Predicted total revenue a customer will generate over their relationship.',
+        definition:
+          'Lifetime Value. Predicted total revenue a customer will generate over their relationship.',
       },
       {
         term: 'CVR',
@@ -293,12 +341,14 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'CPM',
-        definition: 'Cost Per Mille (thousand impressions). Spend divided by impressions, multiplied by 1000.',
+        definition:
+          'Cost Per Mille (thousand impressions). Spend divided by impressions, multiplied by 1000.',
         example: 'CPM = (Spend / Impressions) × 1000 = ($10,000 / 100,000) × 1000 = $100',
       },
       {
         term: 'Frequency',
-        definition: 'Average number of times each user sees your ad. High frequency can indicate ad fatigue.',
+        definition:
+          'Average number of times each user sees your ad. High frequency can indicate ad fatigue.',
       },
       {
         term: 'Creative Fatigue',
@@ -320,8 +370,10 @@ const glossaryData: GlossaryCategory[] = [
     terms: [
       {
         term: 'Pacing',
-        definition: 'Comparison of actual spend/performance vs. target for the period. Expressed as percentage.',
-        example: 'If target is $30k/month and you\'ve spent $20k by day 20, pacing is 100% (on track).',
+        definition:
+          'Comparison of actual spend/performance vs. target for the period. Expressed as percentage.',
+        example:
+          "If target is $30k/month and you've spent $20k by day 20, pacing is 100% (on track).",
       },
       {
         term: 'Target Period',
@@ -372,7 +424,8 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Pipeline ROAS',
-        definition: 'Return on ad spend calculated using CRM pipeline value instead of just revenue.',
+        definition:
+          'Return on ad spend calculated using CRM pipeline value instead of just revenue.',
       },
       {
         term: 'Deal Stages',
@@ -420,11 +473,13 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Statistical Significance',
-        definition: 'Confidence level that results are not due to random chance. Typically 95% threshold.',
+        definition:
+          'Confidence level that results are not due to random chance. Typically 95% threshold.',
       },
       {
         term: 'Control/Variant',
-        definition: 'Control is the baseline (original), Variant is the test version being compared.',
+        definition:
+          'Control is the baseline (original), Variant is the test version being compared.',
       },
     ],
   },
@@ -458,7 +513,8 @@ const glossaryData: GlossaryCategory[] = [
       },
       {
         term: 'Data Freshness',
-        definition: 'How recently data was last updated. Stale data (>48 hours) may impact accuracy.',
+        definition:
+          'How recently data was last updated. Stale data (>48 hours) may impact accuracy.',
       },
       {
         term: 'Webhook',
@@ -525,14 +581,16 @@ export default function GlossaryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const filteredCategories = glossaryData.map((category) => ({
-    ...category,
-    terms: category.terms.filter(
-      (term) =>
-        term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        term.definition.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-  })).filter((category) => category.terms.length > 0);
+  const filteredCategories = glossaryData
+    .map((category) => ({
+      ...category,
+      terms: category.terms.filter(
+        (term) =>
+          term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          term.definition.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    }))
+    .filter((category) => category.terms.length > 0);
 
   const totalTerms = glossaryData.reduce((acc, cat) => acc + cat.terms.length, 0);
 
@@ -594,7 +652,10 @@ export default function GlossaryPage() {
         </section>
 
         {/* Category Navigation */}
-        <section className="py-4 sticky top-16 z-10" style={{ background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(12px)' }}>
+        <section
+          className="py-4 sticky top-16 z-10"
+          style={{ background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(12px)' }}
+        >
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               <button
@@ -630,82 +691,86 @@ export default function GlossaryPage() {
         <section className="py-12">
           <div className="max-w-5xl mx-auto px-6 lg:px-8">
             <div className="space-y-12">
-              {(activeCategory ? filteredCategories.filter((c) => c.id === activeCategory) : filteredCategories).map(
-                (category) => (
-                  <div key={category.id} id={category.id}>
-                    {/* Category Header */}
-                    <div className="flex items-center gap-4 mb-6">
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center"
-                        style={{
-                          background: `${category.color}15`,
-                          border: `1px solid ${category.color}30`,
-                        }}
-                      >
-                        <category.icon className="w-6 h-6" style={{ color: category.color }} />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-white">{category.title}</h2>
-                        <p className="text-sm text-gray-400">{category.description}</p>
-                      </div>
+              {(activeCategory
+                ? filteredCategories.filter((c) => c.id === activeCategory)
+                : filteredCategories
+              ).map((category) => (
+                <div key={category.id} id={category.id}>
+                  {/* Category Header */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: `${category.color}15`,
+                        border: `1px solid ${category.color}30`,
+                      }}
+                    >
+                      <category.icon className="w-6 h-6" style={{ color: category.color }} />
                     </div>
-
-                    {/* Terms */}
-                    <div className="space-y-4">
-                      {category.terms.map((term, index) => (
-                        <div
-                          key={index}
-                          className="p-5 rounded-xl"
-                          style={{
-                            background: 'rgba(10, 10, 15, 0.6)',
-                            border: '1px solid rgba(255, 255, 255, 0.06)',
-                          }}
-                        >
-                          <h3 className="text-lg font-semibold text-white mb-2">{term.term}</h3>
-                          <p className="text-gray-400 mb-3">{term.definition}</p>
-
-                          {term.values && (
-                            <div className="space-y-2 mt-4">
-                              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                Values
-                              </span>
-                              <div className="grid gap-2">
-                                {term.values.map((value, vIndex) => (
-                                  <div
-                                    key={vIndex}
-                                    className="flex items-start gap-3 p-3 rounded-lg"
-                                    style={{ background: 'rgba(255, 255, 255, 0.03)' }}
-                                  >
-                                    <code
-                                      className="px-2 py-1 rounded text-sm font-mono flex-shrink-0"
-                                      style={{
-                                        background: `${category.color}15`,
-                                        color: category.color,
-                                      }}
-                                    >
-                                      {value.value}
-                                    </code>
-                                    <span className="text-sm text-gray-400">{value.description}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {term.example && (
-                            <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)' }}>
-                              <span className="text-xs font-medium text-[#8B5CF6] uppercase tracking-wide">
-                                Example
-                              </span>
-                              <p className="text-sm text-gray-300 mt-1">{term.example}</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                    <div>
+                      <h2 className="text-xl font-bold text-white">{category.title}</h2>
+                      <p className="text-sm text-gray-400">{category.description}</p>
                     </div>
                   </div>
-                )
-              )}
+
+                  {/* Terms */}
+                  <div className="space-y-4">
+                    {category.terms.map((term, index) => (
+                      <div
+                        key={index}
+                        className="p-5 rounded-xl"
+                        style={{
+                          background: 'rgba(10, 10, 15, 0.6)',
+                          border: '1px solid rgba(255, 255, 255, 0.06)',
+                        }}
+                      >
+                        <h3 className="text-lg font-semibold text-white mb-2">{term.term}</h3>
+                        <p className="text-gray-400 mb-3">{term.definition}</p>
+
+                        {term.values && (
+                          <div className="space-y-2 mt-4">
+                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                              Values
+                            </span>
+                            <div className="grid gap-2">
+                              {term.values.map((value, vIndex) => (
+                                <div
+                                  key={vIndex}
+                                  className="flex items-start gap-3 p-3 rounded-lg"
+                                  style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+                                >
+                                  <code
+                                    className="px-2 py-1 rounded text-sm font-mono flex-shrink-0"
+                                    style={{
+                                      background: `${category.color}15`,
+                                      color: category.color,
+                                    }}
+                                  >
+                                    {value.value}
+                                  </code>
+                                  <span className="text-sm text-gray-400">{value.description}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {term.example && (
+                          <div
+                            className="mt-4 p-3 rounded-lg"
+                            style={{ background: 'rgba(139, 92, 246, 0.1)' }}
+                          >
+                            <span className="text-xs font-medium text-[#8B5CF6] uppercase tracking-wide">
+                              Example
+                            </span>
+                            <p className="text-sm text-gray-300 mt-1">{term.example}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
               {filteredCategories.length === 0 && (
                 <div className="text-center py-12">
@@ -722,11 +787,14 @@ export default function GlossaryPage() {
             <div
               className="p-8 rounded-2xl"
               style={{
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
+                background:
+                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
                 border: '1px solid rgba(139, 92, 246, 0.2)',
               }}
             >
-              <h3 className="text-xl font-bold text-white mb-2">Can't find what you're looking for?</h3>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Can't find what you're looking for?
+              </h3>
               <p className="text-gray-400 mb-6">
                 Check our documentation or reach out to our support team.
               </p>

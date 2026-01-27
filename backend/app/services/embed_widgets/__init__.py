@@ -5,9 +5,9 @@
 Services for embeddable widgets with tier-based branding and security.
 """
 
+from .security import EmbedSecurityService
 from .token_service import EmbedTokenService
 from .widget_service import EmbedWidgetService
-from .security import EmbedSecurityService
 
 __all__ = [
     "EmbedTokenService",

@@ -5,11 +5,11 @@
 
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  SparklesIcon,
-  WrenchScrewdriverIcon,
   BugAntIcon,
   RocketLaunchIcon,
   ShieldCheckIcon,
+  SparklesIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 
 const releases = [
@@ -124,22 +124,26 @@ export default function ChangelogPage() {
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">
           <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
               style={{
                 background: 'rgba(0, 255, 136, 0.1)',
                 border: '1px solid rgba(0, 255, 136, 0.2)',
-              }}>
+              }}
+            >
               <SparklesIcon className="w-4 h-4 text-[#00FF88]" />
               <span className="text-sm font-medium text-[#00FF88]">Changelog</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               What's New in{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}>
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
                 Stratum AI
               </span>
             </h1>
@@ -169,9 +173,10 @@ export default function ChangelogPage() {
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: release.type === 'major'
-                          ? 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)'
-                          : 'rgba(139, 92, 246, 0.2)',
+                        background:
+                          release.type === 'major'
+                            ? 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)'
+                            : 'rgba(139, 92, 246, 0.2)',
                         border: '2px solid rgba(139, 92, 246, 0.4)',
                       }}
                     >
@@ -204,7 +209,8 @@ export default function ChangelogPage() {
                     <div
                       className="ml-12 mb-6 p-4 rounded-xl"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%)',
+                        background:
+                          'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%)',
                         border: '1px solid rgba(139, 92, 246, 0.15)',
                       }}
                     >

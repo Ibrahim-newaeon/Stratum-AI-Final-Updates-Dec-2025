@@ -7,14 +7,14 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  CheckIcon,
-  XMarkIcon,
-  MinusIcon,
   ArrowRightIcon,
-  ShieldCheckIcon,
-  CpuChipIcon,
   BoltIcon,
   ChartBarIcon,
+  CheckIcon,
+  CpuChipIcon,
+  MinusIcon,
+  ShieldCheckIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 type ComparisonValue = 'yes' | 'no' | 'partial' | string;
@@ -43,35 +43,141 @@ const competitors: Competitor[] = [
 
 const features: FeatureRow[] = [
   // Trust Engine
-  { feature: 'Trust-Gated Automation', category: 'Trust Engine', stratum: 'yes', competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' }, tooltip: 'Unique to Stratum AI' },
-  { feature: 'Signal Health Monitoring', category: 'Trust Engine', stratum: 'yes', competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' } },
-  { feature: 'Predictive Signal Analysis', category: 'Trust Engine', stratum: 'yes', competitors: { segment: 'no', braze: 'partial', mparticle: 'no', amplitude: 'partial' } },
-  { feature: 'Auto-pause on Degradation', category: 'Trust Engine', stratum: 'yes', competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' } },
+  {
+    feature: 'Trust-Gated Automation',
+    category: 'Trust Engine',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' },
+    tooltip: 'Unique to Stratum AI',
+  },
+  {
+    feature: 'Signal Health Monitoring',
+    category: 'Trust Engine',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' },
+  },
+  {
+    feature: 'Predictive Signal Analysis',
+    category: 'Trust Engine',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'partial', mparticle: 'no', amplitude: 'partial' },
+  },
+  {
+    feature: 'Auto-pause on Degradation',
+    category: 'Trust Engine',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' },
+  },
 
   // CDP
-  { feature: 'Unified Customer Profiles', category: 'CDP', stratum: 'yes', competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'partial' } },
-  { feature: 'Identity Resolution', category: 'CDP', stratum: 'yes', competitors: { segment: 'yes', braze: 'partial', mparticle: 'yes', amplitude: 'no' } },
-  { feature: 'Identity Graph Visualization', category: 'CDP', stratum: 'yes', competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' } },
-  { feature: 'Real-time Event Ingestion', category: 'CDP', stratum: 'yes', competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'yes' } },
-  { feature: 'Computed Traits', category: 'CDP', stratum: 'yes', competitors: { segment: 'yes', braze: 'partial', mparticle: 'yes', amplitude: 'partial' } },
-  { feature: 'RFM Analysis Built-in', category: 'CDP', stratum: 'yes', competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' } },
+  {
+    feature: 'Unified Customer Profiles',
+    category: 'CDP',
+    stratum: 'yes',
+    competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'partial' },
+  },
+  {
+    feature: 'Identity Resolution',
+    category: 'CDP',
+    stratum: 'yes',
+    competitors: { segment: 'yes', braze: 'partial', mparticle: 'yes', amplitude: 'no' },
+  },
+  {
+    feature: 'Identity Graph Visualization',
+    category: 'CDP',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' },
+  },
+  {
+    feature: 'Real-time Event Ingestion',
+    category: 'CDP',
+    stratum: 'yes',
+    competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'yes' },
+  },
+  {
+    feature: 'Computed Traits',
+    category: 'CDP',
+    stratum: 'yes',
+    competitors: { segment: 'yes', braze: 'partial', mparticle: 'yes', amplitude: 'partial' },
+  },
+  {
+    feature: 'RFM Analysis Built-in',
+    category: 'CDP',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' },
+  },
 
   // Audience Sync
-  { feature: 'Meta Custom Audiences', category: 'Audience Sync', stratum: 'yes', competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'partial' } },
-  { feature: 'Google Customer Match', category: 'Audience Sync', stratum: 'yes', competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'partial' } },
-  { feature: 'TikTok Audiences', category: 'Audience Sync', stratum: 'yes', competitors: { segment: 'partial', braze: 'yes', mparticle: 'partial', amplitude: 'no' } },
-  { feature: 'Snapchat Audiences', category: 'Audience Sync', stratum: 'yes', competitors: { segment: 'partial', braze: 'partial', mparticle: 'partial', amplitude: 'no' } },
-  { feature: 'Auto-sync Scheduling', category: 'Audience Sync', stratum: 'yes', competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'no' } },
+  {
+    feature: 'Meta Custom Audiences',
+    category: 'Audience Sync',
+    stratum: 'yes',
+    competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'partial' },
+  },
+  {
+    feature: 'Google Customer Match',
+    category: 'Audience Sync',
+    stratum: 'yes',
+    competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'partial' },
+  },
+  {
+    feature: 'TikTok Audiences',
+    category: 'Audience Sync',
+    stratum: 'yes',
+    competitors: { segment: 'partial', braze: 'yes', mparticle: 'partial', amplitude: 'no' },
+  },
+  {
+    feature: 'Snapchat Audiences',
+    category: 'Audience Sync',
+    stratum: 'yes',
+    competitors: { segment: 'partial', braze: 'partial', mparticle: 'partial', amplitude: 'no' },
+  },
+  {
+    feature: 'Auto-sync Scheduling',
+    category: 'Audience Sync',
+    stratum: 'yes',
+    competitors: { segment: 'yes', braze: 'yes', mparticle: 'yes', amplitude: 'no' },
+  },
 
   // Automation
-  { feature: 'Custom Autopilot Rules', category: 'Automation', stratum: 'yes', competitors: { segment: 'no', braze: 'yes', mparticle: 'no', amplitude: 'no' } },
-  { feature: 'A/B Testing', category: 'Automation', stratum: 'yes', competitors: { segment: 'partial', braze: 'yes', mparticle: 'partial', amplitude: 'yes' } },
-  { feature: 'Predictive Churn Scoring', category: 'Automation', stratum: 'yes', competitors: { segment: 'no', braze: 'yes', mparticle: 'partial', amplitude: 'yes' } },
+  {
+    feature: 'Custom Autopilot Rules',
+    category: 'Automation',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'yes', mparticle: 'no', amplitude: 'no' },
+  },
+  {
+    feature: 'A/B Testing',
+    category: 'Automation',
+    stratum: 'yes',
+    competitors: { segment: 'partial', braze: 'yes', mparticle: 'partial', amplitude: 'yes' },
+  },
+  {
+    feature: 'Predictive Churn Scoring',
+    category: 'Automation',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'yes', mparticle: 'partial', amplitude: 'yes' },
+  },
 
   // Analytics
-  { feature: 'Funnel Analysis', category: 'Analytics', stratum: 'yes', competitors: { segment: 'no', braze: 'partial', mparticle: 'no', amplitude: 'yes' } },
-  { feature: 'Anomaly Detection', category: 'Analytics', stratum: 'yes', competitors: { segment: 'no', braze: 'no', mparticle: 'partial', amplitude: 'yes' } },
-  { feature: 'EMQ Scoring', category: 'Analytics', stratum: 'yes', competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' } },
+  {
+    feature: 'Funnel Analysis',
+    category: 'Analytics',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'partial', mparticle: 'no', amplitude: 'yes' },
+  },
+  {
+    feature: 'Anomaly Detection',
+    category: 'Analytics',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'no', mparticle: 'partial', amplitude: 'yes' },
+  },
+  {
+    feature: 'EMQ Scoring',
+    category: 'Analytics',
+    stratum: 'yes',
+    competitors: { segment: 'no', braze: 'no', mparticle: 'no', amplitude: 'no' },
+  },
 ];
 
 const categories = [...new Set(features.map((f) => f.category))];
@@ -97,7 +203,10 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
       <div className="flex items-center justify-center">
         <div
           className="w-6 h-6 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255, 71, 87, 0.15)', border: '1px solid rgba(255, 71, 87, 0.3)' }}
+          style={{
+            background: 'rgba(255, 71, 87, 0.15)',
+            border: '1px solid rgba(255, 71, 87, 0.3)',
+          }}
         >
           <XMarkIcon className="w-4 h-4 text-[#FF4757]" />
         </div>
@@ -109,7 +218,10 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
       <div className="flex items-center justify-center">
         <div
           className="w-6 h-6 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255, 183, 0, 0.15)', border: '1px solid rgba(255, 183, 0, 0.3)' }}
+          style={{
+            background: 'rgba(255, 183, 0, 0.15)',
+            border: '1px solid rgba(255, 183, 0, 0.3)',
+          }}
         >
           <MinusIcon className="w-4 h-4 text-[#FFB800]" />
         </div>
@@ -122,25 +234,29 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
 const differentiators = [
   {
     title: 'Trust-Gated Automation',
-    description: 'Only execute when signal health passes safety thresholds. No other platform offers this level of automation confidence.',
+    description:
+      'Only execute when signal health passes safety thresholds. No other platform offers this level of automation confidence.',
     icon: ShieldCheckIcon,
     color: '#8B5CF6',
   },
   {
     title: 'Identity Graph Visualization',
-    description: 'See exactly how customer identities are connected across devices and channels with interactive visualizations.',
+    description:
+      'See exactly how customer identities are connected across devices and channels with interactive visualizations.',
     icon: CpuChipIcon,
     color: '#00D4FF',
   },
   {
     title: 'RFM Analysis Built-in',
-    description: 'Native Recency, Frequency, Monetary analysis without additional tools or integrations.',
+    description:
+      'Native Recency, Frequency, Monetary analysis without additional tools or integrations.',
     icon: ChartBarIcon,
     color: '#00FF88',
   },
   {
     title: 'Signal Health Monitoring',
-    description: 'Real-time monitoring of data quality and signal reliability across all your integrations.',
+    description:
+      'Real-time monitoring of data quality and signal reliability across all your integrations.',
     icon: BoltIcon,
     color: '#FF6B6B',
   },
@@ -157,29 +273,33 @@ export default function ComparisonPage() {
         <section className="relative py-20 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
                 style={{
                   background: 'rgba(139, 92, 246, 0.1)',
                   border: '1px solid rgba(139, 92, 246, 0.2)',
-                }}>
+                }}
+              >
                 <ChartBarIcon className="w-4 h-4 text-[#8B5CF6]" />
                 <span className="text-sm font-medium text-[#8B5CF6]">Compare</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 How Stratum AI{' '}
-                <span style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   Compares
                 </span>
               </h1>
 
               <p className="text-lg text-gray-400">
-                See how Stratum AI stacks up against other marketing platforms.
-                Trust-gated automation is our unique differentiator.
+                See how Stratum AI stacks up against other marketing platforms. Trust-gated
+                automation is our unique differentiator.
               </p>
             </div>
           </div>
@@ -188,7 +308,9 @@ export default function ComparisonPage() {
         {/* Key Differentiators */}
         <section className="py-8">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <h2 className="text-xl font-bold text-white mb-6 text-center">What Makes Us Different</h2>
+            <h2 className="text-xl font-bold text-white mb-6 text-center">
+              What Makes Us Different
+            </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {differentiators.map((diff) => (
                 <div
@@ -221,7 +343,10 @@ export default function ComparisonPage() {
                     selectedCompetitor === comp.id ? 'text-white' : 'text-gray-400'
                   }`}
                   style={{
-                    background: selectedCompetitor === comp.id ? `${comp.color}20` : 'rgba(255, 255, 255, 0.04)',
+                    background:
+                      selectedCompetitor === comp.id
+                        ? `${comp.color}20`
+                        : 'rgba(255, 255, 255, 0.04)',
                     border: `1px solid ${selectedCompetitor === comp.id ? `${comp.color}40` : 'rgba(255, 255, 255, 0.08)'}`,
                   }}
                 >
@@ -273,7 +398,9 @@ export default function ComparisonPage() {
                   <button
                     className="w-full flex items-center justify-between p-4 border-b transition-colors hover:bg-white/5"
                     style={{ borderColor: 'rgba(255, 255, 255, 0.06)' }}
-                    onClick={() => setExpandedCategory(expandedCategory === category ? null : category)}
+                    onClick={() =>
+                      setExpandedCategory(expandedCategory === category ? null : category)
+                    }
                   >
                     <span className="text-white font-medium">{category}</span>
                     <span className="text-gray-500 text-xs">
@@ -321,7 +448,8 @@ export default function ComparisonPage() {
             <div
               className="rounded-2xl p-8 md:p-12 text-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
+                background:
+                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
                 border: '1px solid rgba(139, 92, 246, 0.2)',
               }}
             >

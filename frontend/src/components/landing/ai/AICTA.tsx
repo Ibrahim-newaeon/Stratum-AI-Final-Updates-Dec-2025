@@ -7,17 +7,17 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import {
   ArrowRightIcon,
-  SparklesIcon,
-  ShieldCheckIcon,
+  ChartBarIcon,
   CpuChipIcon,
-  ChartBarIcon
+  ShieldCheckIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 const benefits = [
   { icon: SparklesIcon, text: '6 AI models included' },
   { icon: ShieldCheckIcon, text: 'Trust-gated safety' },
   { icon: CpuChipIcon, text: '<50ms predictions' },
-  { icon: ChartBarIcon, text: '14-day free trial' }
+  { icon: ChartBarIcon, text: '14-day free trial' },
 ];
 
 export default function AICTA() {
@@ -35,7 +35,7 @@ export default function AICTA() {
         <motion.div
           animate={{
             y: [0, -20, 0],
-            opacity: [0.3, 0.5, 0.3]
+            opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl"
@@ -43,7 +43,7 @@ export default function AICTA() {
         <motion.div
           animate={{
             y: [0, 20, 0],
-            opacity: [0.2, 0.4, 0.2]
+            opacity: [0.2, 0.4, 0.2],
           }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
           className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-cyan-500/15 blur-3xl"
@@ -51,7 +51,7 @@ export default function AICTA() {
         <motion.div
           animate={{
             y: [0, -15, 0],
-            opacity: [0.2, 0.3, 0.2]
+            opacity: [0.2, 0.3, 0.2],
           }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
           className="absolute top-1/2 right-1/3 w-48 h-48 rounded-full bg-orange-500/10 blur-3xl"
@@ -91,8 +91,8 @@ export default function AICTA() {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-lg text-gray-400 max-w-2xl mx-auto mb-10"
         >
-          Join 500+ revenue teams using Stratum AI to predict outcomes,
-          automate safely, and scale with confidence.
+          Join 500+ revenue teams using Stratum AI to predict outcomes, automate safely, and scale
+          with confidence.
         </motion.p>
 
         {/* CTA Buttons */}

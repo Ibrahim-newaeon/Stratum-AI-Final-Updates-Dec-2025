@@ -5,79 +5,81 @@
  * Shows "what changed", timeline, blocked actions, and fix playbook
  */
 
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { cn } from '@/lib/utils'
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
-  TrustStatusHeader,
+  type AutopilotMode,
+  EmqFixPlaybookPanel,
   EmqScoreCard,
   EmqTimeline,
-  EmqFixPlaybookPanel,
-  KpiStrip,
-  type TimelineEvent,
-  type PlaybookItem,
-  type AutopilotMode,
   type Kpi,
-} from '@/components/shared'
+  KpiStrip,
+  type PlaybookItem,
+  type TimelineEvent,
+  TrustStatusHeader,
+} from '@/components/shared';
 import {
-  useTenant,
-  useEmqScore,
   useAutopilotState,
-  useEmqPlaybook,
   useEmqIncidents,
-} from '@/api/hooks'
+  useEmqPlaybook,
+  useEmqScore,
+  useTenant,
+} from '@/api/hooks';
 import {
   ArrowLeftIcon,
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
+  CalendarIcon,
+  ClockIcon,
   DocumentArrowDownIcon,
   EnvelopeIcon,
   PhoneIcon,
-  CalendarIcon,
   ShieldCheckIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   XCircleIcon,
-  ClockIcon,
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/outline';
 
 interface BlockedAction {
-  id: string
-  type: 'opportunity' | 'risk' | 'fix'
-  title: string
-  reason: string
-  estimatedImpact: string
-  blockedAt: Date
+  id: string;
+  type: 'opportunity' | 'risk' | 'fix';
+  title: string;
+  reason: string;
+  estimatedImpact: string;
+  blockedAt: Date;
 }
 
 interface RecoveryMetric {
-  label: string
-  value: number
-  unit: string
-  trend: number
-  isPositive: boolean
+  label: string;
+  value: number;
+  unit: string;
+  trend: number;
+  isPositive: boolean;
 }
 
 export default function TenantNarrative() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const tid = parseInt(tenantId || '1', 10)
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const tid = parseInt(tenantId || '1', 10);
 
-  const [activeTab, setActiveTab] = useState<'summary' | 'timeline' | 'blocked' | 'playbook'>('summary')
+  const [activeTab, setActiveTab] = useState<'summary' | 'timeline' | 'blocked' | 'playbook'>(
+    'summary'
+  );
 
   // Date range
   const dateRange = {
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
-  }
+  };
 
   // Fetch data
-  const { data: tenantData } = useTenant(Number(tenantId) || 0)
-  const { data: emqData } = useEmqScore(tid)
-  const { data: autopilotData } = useAutopilotState(tid)
-  const { data: playbookData } = useEmqPlaybook(tid)
-  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
+  const { data: tenantData } = useTenant(Number(tenantId) || 0);
+  const { data: emqData } = useEmqScore(tid);
+  const { data: autopilotData } = useAutopilotState(tid);
+  const { data: playbookData } = useEmqPlaybook(tid);
+  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end);
 
-  const emqScore = emqData?.score ?? 65
-  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'cuts_only'
-  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 12000
+  const emqScore = emqData?.score ?? 65;
+  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'cuts_only';
+  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 12000;
 
   // Sample tenant details
   const tenant = {
@@ -92,7 +94,7 @@ export default function TenantNarrative() {
     },
     lastContact: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  }
+  };
 
   const kpis: Kpi[] = [
     {
@@ -128,14 +130,14 @@ export default function TenantNarrative() {
       trendIsPositive: false,
       confidence: emqScore,
     },
-  ]
+  ];
 
   const recoveryMetrics: RecoveryMetric[] = [
     { label: 'EMQ Recovery', value: 8, unit: 'pts', trend: 12, isPositive: true },
     { label: 'ROAS Impact', value: -15, unit: '%', trend: -15, isPositive: false },
     { label: 'MTTR', value: 18, unit: 'hrs', trend: -25, isPositive: true },
     { label: 'Blocked Actions', value: 5, unit: '', trend: 0, isPositive: false },
-  ]
+  ];
 
   const blockedActions: BlockedAction[] = [
     {
@@ -162,7 +164,7 @@ export default function TenantNarrative() {
       estimatedImpact: '+$8,500 revenue',
       blockedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
     },
-  ]
+  ];
 
   const playbook: PlaybookItem[] = playbookData ?? [
     {
@@ -201,7 +203,7 @@ export default function TenantNarrative() {
       status: 'pending',
       actionUrl: null,
     },
-  ]
+  ];
 
   const timeline: TimelineEvent[] = incidentsData?.map((i) => ({
     id: i.id,
@@ -250,22 +252,22 @@ export default function TenantNarrative() {
       timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
       severity: 'low',
     },
-  ]
+  ];
 
   const tabs = [
     { id: 'summary' as const, label: 'Client Summary' },
     { id: 'timeline' as const, label: 'What Changed' },
     { id: 'blocked' as const, label: 'What We Blocked' },
     { id: 'playbook' as const, label: 'Fix Playbook' },
-  ]
+  ];
 
   const handleExportPDF = () => {
-    console.log('Exporting client-safe narrative PDF...')
-  }
+    console.log('Exporting client-safe narrative PDF...');
+  };
 
   const handleScheduleCall = () => {
-    console.log('Opening calendar...')
-  }
+    console.log('Opening calendar...');
+  };
 
   return (
     <div data-tour="tenant-narrative" className="space-y-6">
@@ -312,7 +314,10 @@ export default function TenantNarrative() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-stratum-500/20 flex items-center justify-center">
             <span className="text-stratum-400 font-semibold">
-              {tenant.primaryContact.name.split(' ').map(n => n[0]).join('')}
+              {tenant.primaryContact.name
+                .split(' ')
+                .map((n) => n[0])
+                .join('')}
             </span>
           </div>
           <div>
@@ -332,7 +337,8 @@ export default function TenantNarrative() {
           <div>
             <span className="text-text-muted">Last Contact:</span>
             <span className="text-white ml-2">
-              {Math.floor((Date.now() - tenant.lastContact.getTime()) / (24 * 60 * 60 * 1000))} days ago
+              {Math.floor((Date.now() - tenant.lastContact.getTime()) / (24 * 60 * 60 * 1000))} days
+              ago
             </span>
           </div>
           <div>
@@ -356,20 +362,29 @@ export default function TenantNarrative() {
       {/* Recovery Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {recoveryMetrics.map((metric) => (
-          <div key={metric.label} className="p-4 rounded-xl bg-surface-secondary border border-white/10">
+          <div
+            key={metric.label}
+            className="p-4 rounded-xl bg-surface-secondary border border-white/10"
+          >
             <div className="text-text-muted text-sm mb-1">{metric.label}</div>
             <div className="flex items-center gap-2">
-              <span className={cn(
-                'text-2xl font-bold',
-                metric.isPositive ? 'text-success' : 'text-danger'
-              )}>
-                {metric.value >= 0 ? (metric.value > 0 ? '+' : '') : ''}{metric.value}{metric.unit}
+              <span
+                className={cn(
+                  'text-2xl font-bold',
+                  metric.isPositive ? 'text-success' : 'text-danger'
+                )}
+              >
+                {metric.value >= 0 ? (metric.value > 0 ? '+' : '') : ''}
+                {metric.value}
+                {metric.unit}
               </span>
               {metric.trend !== 0 && (
-                <span className={cn(
-                  'flex items-center text-xs',
-                  metric.isPositive ? 'text-success' : 'text-danger'
-                )}>
+                <span
+                  className={cn(
+                    'flex items-center text-xs',
+                    metric.isPositive ? 'text-success' : 'text-danger'
+                  )}
+                >
                   {metric.isPositive ? (
                     <ArrowTrendingUpIcon className="w-3 h-3" />
                   ) : (
@@ -468,17 +483,21 @@ export default function TenantNarrative() {
                         <span className="text-success">{action.estimatedImpact} missed</span>
                         <span className="flex items-center gap-1 text-text-muted">
                           <ClockIcon className="w-3 h-3" />
-                          Blocked {Math.floor((Date.now() - action.blockedAt.getTime()) / (60 * 60 * 1000))}h ago
+                          Blocked{' '}
+                          {Math.floor((Date.now() - action.blockedAt.getTime()) / (60 * 60 * 1000))}
+                          h ago
                         </span>
                       </div>
                     </div>
                   </div>
-                  <span className={cn(
-                    'px-2 py-1 rounded text-xs',
-                    action.type === 'opportunity' && 'bg-success/10 text-success',
-                    action.type === 'risk' && 'bg-warning/10 text-warning',
-                    action.type === 'fix' && 'bg-stratum-500/10 text-stratum-400'
-                  )}>
+                  <span
+                    className={cn(
+                      'px-2 py-1 rounded text-xs',
+                      action.type === 'opportunity' && 'bg-success/10 text-success',
+                      action.type === 'risk' && 'bg-warning/10 text-warning',
+                      action.type === 'fix' && 'bg-stratum-500/10 text-stratum-400'
+                    )}
+                  >
                     {action.type}
                   </span>
                 </div>
@@ -488,7 +507,8 @@ export default function TenantNarrative() {
 
           <div className="p-4 rounded-xl bg-surface-tertiary border border-white/5 text-center">
             <p className="text-text-muted">
-              These actions will automatically resume once EMQ recovers above 75 and autopilot returns to normal mode.
+              These actions will automatically resume once EMQ recovers above 75 and autopilot
+              returns to normal mode.
             </p>
           </div>
         </div>
@@ -505,5 +525,5 @@ export default function TenantNarrative() {
         </div>
       )}
     </div>
-  )
+  );
 }

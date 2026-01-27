@@ -4,39 +4,42 @@
  * View and manage campaign drafts with approval workflow.
  */
 
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import {
-  DocumentTextIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  PaperAirplaneIcon,
   CheckCircleIcon,
   ClockIcon,
+  DocumentTextIcon,
+  PaperAirplaneIcon,
+  PencilSquareIcon,
+  TrashIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
-import { useToast } from '@/components/ui/use-toast'
-import {
-  useSubmitDraft,
-  usePublishDraft,
-  useDeleteCampaignDraft,
-} from '@/api/campaignBuilder'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
+import { useDeleteCampaignDraft, usePublishDraft, useSubmitDraft } from '@/api/campaignBuilder';
 
-type DraftStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'publishing' | 'published' | 'failed'
+type DraftStatus =
+  | 'draft'
+  | 'submitted'
+  | 'approved'
+  | 'rejected'
+  | 'publishing'
+  | 'published'
+  | 'failed';
 
 interface CampaignDraft {
-  id: string
-  name: string
-  platform: string
-  status: DraftStatus
-  budget: number
-  currency: string
-  objective: string
-  createdAt: string
-  updatedAt: string
-  createdBy: string
-  approvedBy?: string
+  id: string;
+  name: string;
+  platform: string;
+  status: DraftStatus;
+  budget: number;
+  currency: string;
+  objective: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  approvedBy?: string;
 }
 
 const mockDrafts: CampaignDraft[] = [
@@ -89,101 +92,130 @@ const mockDrafts: CampaignDraft[] = [
     updatedAt: '2024-01-17T10:00:00Z',
     createdBy: 'Fatima Al-Ali',
   },
-]
+];
 
 const statusConfig: Record<DraftStatus, { icon: any; label: string; color: string }> = {
-  draft: { icon: DocumentTextIcon, label: 'Draft', color: 'text-gray-600 bg-gray-100 dark:bg-gray-800' },
-  submitted: { icon: ClockIcon, label: 'Pending Approval', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
-  approved: { icon: CheckCircleIcon, label: 'Approved', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },
-  rejected: { icon: XCircleIcon, label: 'Rejected', color: 'text-red-600 bg-red-100 dark:bg-red-900/30' },
-  publishing: { icon: ClockIcon, label: 'Publishing...', color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30' },
-  published: { icon: CheckCircleIcon, label: 'Published', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },
-  failed: { icon: XCircleIcon, label: 'Failed', color: 'text-red-600 bg-red-100 dark:bg-red-900/30' },
-}
+  draft: {
+    icon: DocumentTextIcon,
+    label: 'Draft',
+    color: 'text-gray-600 bg-gray-100 dark:bg-gray-800',
+  },
+  submitted: {
+    icon: ClockIcon,
+    label: 'Pending Approval',
+    color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30',
+  },
+  approved: {
+    icon: CheckCircleIcon,
+    label: 'Approved',
+    color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30',
+  },
+  rejected: {
+    icon: XCircleIcon,
+    label: 'Rejected',
+    color: 'text-red-600 bg-red-100 dark:bg-red-900/30',
+  },
+  publishing: {
+    icon: ClockIcon,
+    label: 'Publishing...',
+    color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
+  },
+  published: {
+    icon: CheckCircleIcon,
+    label: 'Published',
+    color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30',
+  },
+  failed: {
+    icon: XCircleIcon,
+    label: 'Failed',
+    color: 'text-red-600 bg-red-100 dark:bg-red-900/30',
+  },
+};
 
 export default function CampaignDrafts() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const [drafts, setDrafts] = useState(mockDrafts)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const { toast } = useToast()
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const [drafts, setDrafts] = useState(mockDrafts);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { toast } = useToast();
 
   // API hooks
-  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
-  const submitDraft = useSubmitDraft(tenantIdNum)
-  const publishDraft = usePublishDraft(tenantIdNum)
-  const deleteDraft = useDeleteCampaignDraft(tenantIdNum)
+  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0;
+  const submitDraft = useSubmitDraft(tenantIdNum);
+  const publishDraft = usePublishDraft(tenantIdNum);
+  const deleteDraft = useDeleteCampaignDraft(tenantIdNum);
 
   const handleDelete = async (draftId: string) => {
     if (confirm('Are you sure you want to delete this draft?')) {
       try {
-        await deleteDraft.mutateAsync(draftId)
+        await deleteDraft.mutateAsync(draftId);
         // Update local state optimistically
-        setDrafts(drafts.filter(d => d.id !== draftId))
+        setDrafts(drafts.filter((d) => d.id !== draftId));
         toast({
           title: 'Draft deleted',
           description: 'The campaign draft has been deleted successfully.',
-        })
+        });
       } catch (error) {
         toast({
           title: 'Delete failed',
-          description: error instanceof Error ? error.message : 'Failed to delete draft. Please try again.',
+          description:
+            error instanceof Error ? error.message : 'Failed to delete draft. Please try again.',
           variant: 'destructive',
-        })
+        });
       }
     }
-  }
+  };
 
   const handleSubmit = async (draftId: string) => {
     try {
-      await submitDraft.mutateAsync(draftId)
+      await submitDraft.mutateAsync(draftId);
       // Update local state optimistically
-      setDrafts(drafts.map(d =>
-        d.id === draftId ? { ...d, status: 'submitted' as DraftStatus } : d
-      ))
+      setDrafts(
+        drafts.map((d) => (d.id === draftId ? { ...d, status: 'submitted' as DraftStatus } : d))
+      );
       toast({
         title: 'Draft submitted',
         description: 'The campaign draft has been submitted for approval.',
-      })
+      });
     } catch (error) {
       toast({
         title: 'Submit failed',
-        description: error instanceof Error ? error.message : 'Failed to submit draft. Please try again.',
+        description:
+          error instanceof Error ? error.message : 'Failed to submit draft. Please try again.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const handlePublish = async (draftId: string) => {
     // Set publishing status optimistically
-    setDrafts(drafts.map(d =>
-      d.id === draftId ? { ...d, status: 'publishing' as DraftStatus } : d
-    ))
+    setDrafts(
+      drafts.map((d) => (d.id === draftId ? { ...d, status: 'publishing' as DraftStatus } : d))
+    );
     try {
-      await publishDraft.mutateAsync(draftId)
+      await publishDraft.mutateAsync(draftId);
       // Update local state on success
-      setDrafts(drafts.map(d =>
-        d.id === draftId ? { ...d, status: 'published' as DraftStatus } : d
-      ))
+      setDrafts(
+        drafts.map((d) => (d.id === draftId ? { ...d, status: 'published' as DraftStatus } : d))
+      );
       toast({
         title: 'Campaign published',
         description: 'The campaign has been published successfully.',
-      })
+      });
     } catch (error) {
       // Revert to approved status on failure
-      setDrafts(drafts.map(d =>
-        d.id === draftId ? { ...d, status: 'failed' as DraftStatus } : d
-      ))
+      setDrafts(
+        drafts.map((d) => (d.id === draftId ? { ...d, status: 'failed' as DraftStatus } : d))
+      );
       toast({
         title: 'Publish failed',
-        description: error instanceof Error ? error.message : 'Failed to publish campaign. Please try again.',
+        description:
+          error instanceof Error ? error.message : 'Failed to publish campaign. Please try again.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
-  const filteredDrafts = drafts.filter(d =>
-    statusFilter === 'all' || d.status === statusFilter
-  )
+  const filteredDrafts = drafts.filter((d) => statusFilter === 'all' || d.status === statusFilter);
 
   return (
     <div className="space-y-6">
@@ -224,8 +256,8 @@ export default function CampaignDrafts() {
       {/* Drafts List */}
       <div className="space-y-4">
         {filteredDrafts.map((draft) => {
-          const status = statusConfig[draft.status]
-          const StatusIcon = status.icon
+          const status = statusConfig[draft.status];
+          const StatusIcon = status.icon;
 
           return (
             <div
@@ -244,10 +276,17 @@ export default function CampaignDrafts() {
                       <span>-</span>
                       <span className="capitalize">{draft.objective}</span>
                       <span>-</span>
-                      <span>{draft.currency} {draft.budget}/day</span>
+                      <span>
+                        {draft.currency} {draft.budget}/day
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full', status.color)}>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full',
+                          status.color
+                        )}
+                      >
                         <StatusIcon className="h-3 w-3" />
                         {status.label}
                       </span>
@@ -316,7 +355,7 @@ export default function CampaignDrafts() {
                 <span>Updated {new Date(draft.updatedAt).toLocaleDateString()}</span>
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -338,5 +377,5 @@ export default function CampaignDrafts() {
         </div>
       )}
     </div>
-  )
+  );
 }

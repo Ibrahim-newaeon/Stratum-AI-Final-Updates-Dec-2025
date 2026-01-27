@@ -15,26 +15,24 @@ Onboarding Steps:
 5. Trust Gate Configuration - Safety thresholds
 """
 
+import enum
 from datetime import datetime
 from typing import Optional
-import enum
 
-from sqlalchemy import (
-    String, Boolean, Integer, DateTime, ForeignKey,
-    Index
-)
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class OnboardingStatus(str, enum.Enum):
     """Overall onboarding status."""
+
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -43,6 +41,7 @@ class OnboardingStatus(str, enum.Enum):
 
 class OnboardingStep(str, enum.Enum):
     """Onboarding wizard steps."""
+
     BUSINESS_PROFILE = "business_profile"
     PLATFORM_SELECTION = "platform_selection"
     GOALS_SETUP = "goals_setup"
@@ -52,6 +51,7 @@ class OnboardingStep(str, enum.Enum):
 
 class Industry(str, enum.Enum):
     """Business industry categories."""
+
     ECOMMERCE = "ecommerce"
     SAAS = "saas"
     LEAD_GEN = "lead_gen"
@@ -71,6 +71,7 @@ class Industry(str, enum.Enum):
 
 class MonthlyAdSpend(str, enum.Enum):
     """Monthly ad spend ranges."""
+
     UNDER_10K = "under_10k"
     FROM_10K_50K = "10k_50k"
     FROM_50K_100K = "50k_100k"
@@ -81,6 +82,7 @@ class MonthlyAdSpend(str, enum.Enum):
 
 class TeamSize(str, enum.Enum):
     """Marketing team size."""
+
     SOLO = "solo"
     SMALL = "2_5"
     MEDIUM = "6_15"
@@ -90,6 +92,7 @@ class TeamSize(str, enum.Enum):
 
 class AutomationMode(str, enum.Enum):
     """Automation preference modes."""
+
     MANUAL = "manual"  # All changes require approval
     ASSISTED = "assisted"  # Recommendations shown, user approves
     AUTOPILOT = "autopilot"  # Automatic execution when trust gate passes
@@ -97,6 +100,7 @@ class AutomationMode(str, enum.Enum):
 
 class PrimaryKPI(str, enum.Enum):
     """Primary KPI focus."""
+
     ROAS = "roas"
     CPA = "cpa"
     CPL = "cpl"
@@ -111,11 +115,13 @@ class PrimaryKPI(str, enum.Enum):
 # Models
 # =============================================================================
 
+
 class TenantOnboarding(Base):
     """
     Tracks onboarding progress and stores collected preferences.
     One record per tenant.
     """
+
     __tablename__ = "tenant_onboarding"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -124,19 +130,15 @@ class TenantOnboarding(Base):
         ForeignKey("tenants.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
-        index=True
+        index=True,
     )
 
     # Overall status (stored as strings for portability)
     status: Mapped[str] = mapped_column(
-        String(50),
-        default=OnboardingStatus.NOT_STARTED.value,
-        nullable=False
+        String(50), default=OnboardingStatus.NOT_STARTED.value, nullable=False
     )
     current_step: Mapped[str] = mapped_column(
-        String(50),
-        default=OnboardingStep.BUSINESS_PROFILE.value,
-        nullable=False
+        String(50), default=OnboardingStep.BUSINESS_PROFILE.value, nullable=False
     )
 
     # Step completion tracking
@@ -148,10 +150,14 @@ class TenantOnboarding(Base):
     monthly_ad_spend: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     team_size: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     company_website: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    target_markets: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)  # List of country codes
+    target_markets: Mapped[Optional[list]] = mapped_column(
+        JSONB, nullable=True
+    )  # List of country codes
 
     # Step 2: Platform Selection
-    selected_platforms: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)  # ["meta", "google", ...]
+    selected_platforms: Mapped[Optional[list]] = mapped_column(
+        JSONB, nullable=True
+    )  # ["meta", "google", ...]
 
     # Step 3: Goals Setup
     primary_kpi: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -170,10 +176,18 @@ class TenantOnboarding(Base):
     notification_whatsapp: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Step 5: Trust Gate Configuration
-    trust_threshold_autopilot: Mapped[int] = mapped_column(Integer, default=70, nullable=False)  # Score needed for autopilot
-    trust_threshold_alert: Mapped[int] = mapped_column(Integer, default=40, nullable=False)  # Score to trigger alert
-    require_approval_above: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Spend above this needs approval
-    max_daily_actions: Mapped[int] = mapped_column(Integer, default=10, nullable=False)  # Max auto actions per day
+    trust_threshold_autopilot: Mapped[int] = mapped_column(
+        Integer, default=70, nullable=False
+    )  # Score needed for autopilot
+    trust_threshold_alert: Mapped[int] = mapped_column(
+        Integer, default=40, nullable=False
+    )  # Score to trigger alert
+    require_approval_above: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )  # Spend above this needs approval
+    max_daily_actions: Mapped[int] = mapped_column(
+        Integer, default=10, nullable=False
+    )  # Max auto actions per day
 
     # Additional preferences (flexible JSON)
     additional_preferences: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
@@ -182,31 +196,22 @@ class TenantOnboarding(Base):
     started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=datetime.utcnow,
-        nullable=False
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
     # User who completed onboarding
     completed_by_user_id: Mapped[Optional[int]] = mapped_column(
-        Integer,
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
     completed_by = relationship("User", foreign_keys=[completed_by_user_id])
 
-    __table_args__ = (
-        Index("ix_tenant_onboarding_status", "status"),
-    )
+    __table_args__ = (Index("ix_tenant_onboarding_status", "status"),)
 
     def is_step_completed(self, step: OnboardingStep) -> bool:
         """Check if a step is completed."""

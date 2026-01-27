@@ -13,24 +13,23 @@ NOTE: These tests require a running PostgreSQL database.
 Set TEST_DATABASE_URL environment variable or use default test database.
 """
 
-import asyncio
 import os
-from datetime import datetime, date, timezone
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
+from datetime import UTC, date, datetime
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker, Session
-
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 # =============================================================================
 # Database URL Configuration
 # =============================================================================
 # Auto-detect Docker environment and use appropriate database hostname.
 # When running inside Docker, use 'db' (service name). When running locally, use 'localhost'.
+
 
 def _is_running_in_docker() -> bool:
     """Detect if we're running inside a Docker container."""
@@ -39,7 +38,7 @@ def _is_running_in_docker() -> bool:
         return True
     # Check for Docker-specific cgroup
     try:
-        with open("/proc/1/cgroup", "r") as f:
+        with open("/proc/1/cgroup") as f:
             return "docker" in f.read()
     except (FileNotFoundError, PermissionError):
         pass
@@ -63,12 +62,10 @@ _db_name = os.environ.get("POSTGRES_DB", "stratum_ai")
 
 # Set database URLs for tests
 os.environ["DATABASE_URL"] = os.environ.get(
-    "TEST_DATABASE_URL",
-    f"postgresql+asyncpg://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
+    "TEST_DATABASE_URL", f"postgresql+asyncpg://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
 )
 os.environ["DATABASE_URL_SYNC"] = os.environ.get(
-    "TEST_DATABASE_URL_SYNC",
-    f"postgresql://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
+    "TEST_DATABASE_URL_SYNC", f"postgresql://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
 )
 
 
@@ -77,6 +74,7 @@ os.environ["DATABASE_URL_SYNC"] = os.environ.get(
 # =============================================================================
 # Note: Event loop is managed by pytest-asyncio with function scope
 # (configured in pytest.ini via asyncio_default_fixture_loop_scope = function)
+
 
 @pytest.fixture(scope="function")
 def sync_engine():
@@ -149,6 +147,7 @@ def sync_db_session(sync_engine) -> Generator[Session, None, None]:
 # Application and Client Fixtures
 # =============================================================================
 
+
 @pytest_asyncio.fixture(scope="function")
 async def app():
     """Get the FastAPI application instance."""
@@ -196,7 +195,7 @@ async def authenticated_client(client, test_user, test_tenant) -> AsyncClient:
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
-        }
+        },
     )
 
     client.headers["Authorization"] = f"Bearer {token}"
@@ -208,6 +207,7 @@ async def authenticated_client(client, test_user, test_tenant) -> AsyncClient:
 # =============================================================================
 # Test Data Factories
 # =============================================================================
+
 
 @pytest_asyncio.fixture(scope="function")
 async def test_tenant(db_session) -> dict:
@@ -324,8 +324,9 @@ async def test_signal_health(db_session, test_tenant) -> dict:
 @pytest_asyncio.fixture(scope="function")
 async def test_action(db_session, test_tenant, test_user) -> dict:
     """Create a test action queue item."""
-    from app.models.trust_layer import FactActionsQueue
     import json
+
+    from app.models.trust_layer import FactActionsQueue
 
     action = FactActionsQueue(
         tenant_id=test_tenant["id"],
@@ -356,6 +357,7 @@ async def test_action(db_session, test_tenant, test_user) -> dict:
 # Utility Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def auth_headers(test_user, test_tenant):
     """Generate authentication headers for API requests."""
@@ -367,7 +369,7 @@ def auth_headers(test_user, test_tenant):
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
-        }
+        },
     )
 
     return {
@@ -386,7 +388,7 @@ def superadmin_headers():
         additional_claims={
             "email": "admin@stratum.ai",
             "role": "superadmin",
-        }
+        },
     )
 
     return {
@@ -398,6 +400,7 @@ def superadmin_headers():
 # Database Setup/Teardown
 # =============================================================================
 
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
     """
@@ -405,13 +408,12 @@ def setup_test_database():
 
     Creates all tables using a dedicated session-scoped engine.
     """
-    from app.core.config import settings
-    from app.db.base_class import Base
-
     # Import all models to register them with Base.metadata
     # This ensures all tables and enum types are created
-    import app.base_models  # noqa: F401
-    import app.models  # noqa: F401
+    import app.base_models
+    import app.models
+    from app.core.config import settings
+    from app.db.base_class import Base
 
     # Create a dedicated engine for setup (session-scoped)
     setup_engine = create_engine(
@@ -435,6 +437,7 @@ def setup_test_database():
 # Sample Data Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def sample_platform_metrics():
     """Sample platform metrics for EMQ calculation."""
@@ -454,5 +457,5 @@ def sample_platform_metrics():
         ga4_conversions=520,
         platform_revenue=50000.0,
         ga4_revenue=52000.0,
-        last_event_at=datetime.now(timezone.utc),
+        last_event_at=datetime.now(UTC),
     )

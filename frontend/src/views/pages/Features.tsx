@@ -6,18 +6,18 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  ChartBarIcon,
-  CpuChipIcon,
-  ShieldCheckIcon,
-  BoltIcon,
-  UserGroupIcon,
   ArrowPathIcon,
+  BoltIcon,
+  ChartBarIcon,
   ChartPieIcon,
   CloudArrowUpIcon,
-  DocumentChartBarIcon,
+  CpuChipIcon,
   CubeTransparentIcon,
-  SparklesIcon,
+  DocumentChartBarIcon,
+  ShieldCheckIcon,
   SignalIcon,
+  SparklesIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 const features = [
@@ -73,8 +73,7 @@ const features = [
   {
     icon: ChartPieIcon,
     title: 'RFM Analysis',
-    description:
-      'Built-in Recency, Frequency, Monetary analysis for customer value segmentation.',
+    description: 'Built-in Recency, Frequency, Monetary analysis for customer value segmentation.',
     color: '#14b8a6',
   },
   {
@@ -94,8 +93,7 @@ const features = [
   {
     icon: CubeTransparentIcon,
     title: 'Identity Graph',
-    description:
-      'Visual identity resolution showing cross-device connections and merge history.',
+    description: 'Visual identity resolution showing cross-device connections and merge history.',
     color: '#06b6d4',
   },
   {

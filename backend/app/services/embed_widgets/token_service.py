@@ -13,32 +13,25 @@ Security Features:
 - Suspicious activity detection
 """
 
-from datetime import datetime, timedelta
-from typing import Optional, List, Tuple
-from uuid import UUID
-import re
-import fnmatch
 import hashlib
 import hmac
-import secrets
+from datetime import datetime, timedelta
+from uuid import UUID
 
-from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
-from app.models.embed_widgets import (
-    EmbedToken,
-    EmbedWidget,
-    EmbedDomainWhitelist,
-    TokenStatus,
-    BrandingLevel,
-)
+from app.core.config import settings
 from app.core.tiers import (
     SubscriptionTier,
-    Feature,
-    has_feature,
     get_tier_limit,
 )
-from app.core.config import settings
+from app.models.embed_widgets import (
+    EmbedDomainWhitelist,
+    EmbedToken,
+    EmbedWidget,
+    TokenStatus,
+)
 
 
 class EmbedTokenService:
@@ -52,7 +45,7 @@ class EmbedTokenService:
     def __init__(self, db: Session):
         self.db = db
         # Secret key for HMAC signatures (should be in settings)
-        self._signing_key = getattr(settings, 'EMBED_SIGNING_KEY', 'stratum-embed-secret-key')
+        self._signing_key = getattr(settings, "EMBED_SIGNING_KEY", "stratum-embed-secret-key")
 
     # =========================================================================
     # Token Generation
@@ -62,10 +55,10 @@ class EmbedTokenService:
         self,
         tenant_id: int,
         widget_id: UUID,
-        allowed_domains: List[str],
+        allowed_domains: list[str],
         tier: SubscriptionTier,
         expires_in_days: int = DEFAULT_TOKEN_EXPIRY_DAYS,
-    ) -> Tuple[EmbedToken, str, str]:
+    ) -> tuple[EmbedToken, str, str]:
         """
         Create a new embed token for a widget.
 
@@ -84,27 +77,32 @@ class EmbedTokenService:
             HTTPException: If limits exceeded or validation fails
         """
         # Validate widget exists and belongs to tenant
-        widget = self.db.query(EmbedWidget).filter(
-            EmbedWidget.id == widget_id,
-            EmbedWidget.tenant_id == tenant_id,
-        ).first()
+        widget = (
+            self.db.query(EmbedWidget)
+            .filter(
+                EmbedWidget.id == widget_id,
+                EmbedWidget.tenant_id == tenant_id,
+            )
+            .first()
+        )
 
         if not widget:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Widget not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
 
         # Check token limit per widget
-        existing_tokens = self.db.query(EmbedToken).filter(
-            EmbedToken.widget_id == widget_id,
-            EmbedToken.status == TokenStatus.ACTIVE.value,
-        ).count()
+        existing_tokens = (
+            self.db.query(EmbedToken)
+            .filter(
+                EmbedToken.widget_id == widget_id,
+                EmbedToken.status == TokenStatus.ACTIVE.value,
+            )
+            .count()
+        )
 
         if existing_tokens >= self.MAX_TOKENS_PER_WIDGET:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Maximum {self.MAX_TOKENS_PER_WIDGET} active tokens per widget"
+                detail=f"Maximum {self.MAX_TOKENS_PER_WIDGET} active tokens per widget",
             )
 
         # Validate domains against whitelist
@@ -145,7 +143,7 @@ class EmbedTokenService:
         self,
         token_id: UUID,
         refresh_token: str,
-    ) -> Tuple[str, str, datetime]:
+    ) -> tuple[str, str, datetime]:
         """
         Refresh an embed token using the refresh token.
 
@@ -159,15 +157,16 @@ class EmbedTokenService:
         Raises:
             HTTPException: If refresh fails
         """
-        token = self.db.query(EmbedToken).filter(
-            EmbedToken.id == token_id,
-        ).first()
+        token = (
+            self.db.query(EmbedToken)
+            .filter(
+                EmbedToken.id == token_id,
+            )
+            .first()
+        )
 
         if not token:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Token not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
 
         # Verify refresh token
         refresh_hash = EmbedToken.hash_token(refresh_token)
@@ -176,15 +175,13 @@ class EmbedTokenService:
             token.suspicious_activity = True
             self.db.commit()
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
             )
 
         # Check refresh token expiry
         if token.refresh_expires_at and token.refresh_expires_at < datetime.utcnow():
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token expired"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired"
             )
 
         # Generate new tokens
@@ -196,7 +193,9 @@ class EmbedTokenService:
         token.token_hash = new_hash
         token.refresh_token_hash = new_refresh_hash
         token.expires_at = datetime.utcnow() + timedelta(days=self.DEFAULT_TOKEN_EXPIRY_DAYS)
-        token.refresh_expires_at = datetime.utcnow() + timedelta(days=self.DEFAULT_REFRESH_EXPIRY_DAYS)
+        token.refresh_expires_at = datetime.utcnow() + timedelta(
+            days=self.DEFAULT_REFRESH_EXPIRY_DAYS
+        )
 
         self.db.commit()
 
@@ -210,7 +209,7 @@ class EmbedTokenService:
         self,
         token: str,
         origin: str,
-    ) -> Tuple[EmbedToken, EmbedWidget]:
+    ) -> tuple[EmbedToken, EmbedWidget]:
         """
         Validate an embed token for a request.
 
@@ -228,31 +227,28 @@ class EmbedTokenService:
         token_hash = EmbedToken.hash_token(token)
 
         # Look up token by hash
-        db_token = self.db.query(EmbedToken).filter(
-            EmbedToken.token_hash == token_hash,
-        ).first()
+        db_token = (
+            self.db.query(EmbedToken)
+            .filter(
+                EmbedToken.token_hash == token_hash,
+            )
+            .first()
+        )
 
         if not db_token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
         # Check token status
         if db_token.status != TokenStatus.ACTIVE.value:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Token is {db_token.status}"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token is {db_token.status}"
             )
 
         # Check expiration
         if db_token.expires_at < datetime.utcnow():
             db_token.status = TokenStatus.EXPIRED.value
             self.db.commit()
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token expired"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
 
         # Validate origin against allowed domains
         if not self._validate_origin(origin, db_token.allowed_domains):
@@ -260,15 +256,13 @@ class EmbedTokenService:
             db_token.total_errors += 1
             self.db.commit()
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Origin not allowed for this token"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Origin not allowed for this token"
             )
 
         # Check rate limit
         if not self._check_rate_limit(db_token):
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Rate limit exceeded"
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded"
             )
 
         # Update usage stats
@@ -277,15 +271,18 @@ class EmbedTokenService:
         db_token.total_requests += 1
 
         # Get associated widget
-        widget = self.db.query(EmbedWidget).filter(
-            EmbedWidget.id == db_token.widget_id,
-            EmbedWidget.is_active == True,
-        ).first()
+        widget = (
+            self.db.query(EmbedWidget)
+            .filter(
+                EmbedWidget.id == db_token.widget_id,
+                EmbedWidget.is_active == True,
+            )
+            .first()
+        )
 
         if not widget:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Widget not found or inactive"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found or inactive"
             )
 
         # Update widget stats
@@ -298,16 +295,17 @@ class EmbedTokenService:
 
     def revoke_token(self, tenant_id: int, token_id: UUID) -> None:
         """Revoke an embed token."""
-        token = self.db.query(EmbedToken).filter(
-            EmbedToken.id == token_id,
-            EmbedToken.tenant_id == tenant_id,
-        ).first()
+        token = (
+            self.db.query(EmbedToken)
+            .filter(
+                EmbedToken.id == token_id,
+                EmbedToken.tenant_id == tenant_id,
+            )
+            .first()
+        )
 
         if not token:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Token not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
 
         token.status = TokenStatus.REVOKED.value
         self.db.commit()
@@ -319,7 +317,7 @@ class EmbedTokenService:
     def _validate_domains(
         self,
         tenant_id: int,
-        domains: List[str],
+        domains: list[str],
         tier: SubscriptionTier,
     ) -> None:
         """Validate domains against whitelist and tier limits."""
@@ -328,14 +326,18 @@ class EmbedTokenService:
         if len(domains) > max_domains:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Maximum {max_domains} domains allowed for {tier.value} tier"
+                detail=f"Maximum {max_domains} domains allowed for {tier.value} tier",
             )
 
         # Get whitelisted domains for tenant
-        whitelist = self.db.query(EmbedDomainWhitelist).filter(
-            EmbedDomainWhitelist.tenant_id == tenant_id,
-            EmbedDomainWhitelist.is_active == True,
-        ).all()
+        whitelist = (
+            self.db.query(EmbedDomainWhitelist)
+            .filter(
+                EmbedDomainWhitelist.tenant_id == tenant_id,
+                EmbedDomainWhitelist.is_active == True,
+            )
+            .all()
+        )
 
         whitelist_patterns = [w.domain_pattern for w in whitelist]
 
@@ -352,10 +354,10 @@ class EmbedTokenService:
             if not matched:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Domain '{domain}' is not in your whitelist. Add it first."
+                    detail=f"Domain '{domain}' is not in your whitelist. Add it first.",
                 )
 
-    def _validate_origin(self, origin: str, allowed_domains: List[str]) -> bool:
+    def _validate_origin(self, origin: str, allowed_domains: list[str]) -> bool:
         """Check if origin matches any allowed domain pattern."""
         if not origin:
             return False
@@ -415,8 +417,10 @@ class EmbedTokenService:
         now = datetime.utcnow()
 
         # Reset counter if minute has passed
-        if token.current_minute_start is None or \
-           (now - token.current_minute_start).total_seconds() >= 60:
+        if (
+            token.current_minute_start is None
+            or (now - token.current_minute_start).total_seconds() >= 60
+        ):
             token.current_minute_start = now
             token.current_minute_requests = 1
             return True
@@ -455,15 +459,11 @@ class EmbedTokenService:
         import json
 
         # Create canonical representation
-        canonical = json.dumps(data, sort_keys=True, separators=(',', ':'))
+        canonical = json.dumps(data, sort_keys=True, separators=(",", ":"))
         message = f"{token_id}:{canonical}".encode()
 
         # Create HMAC signature
-        signature = hmac.new(
-            self._signing_key.encode(),
-            message,
-            hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(self._signing_key.encode(), message, hashlib.sha256).hexdigest()
 
         return signature
 

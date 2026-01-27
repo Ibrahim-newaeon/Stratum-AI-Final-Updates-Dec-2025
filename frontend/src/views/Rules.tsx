@@ -1,49 +1,55 @@
-import { useState, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  Search,
-  Plus,
-  MoreHorizontal,
-  Play,
-  Pause,
-  Edit,
-  Copy,
-  Zap,
-  Clock,
+  Bell,
   CheckCircle2,
   ChevronRight,
-  Bell,
-  Tag,
+  Clock,
+  Copy,
   DollarSign,
-  Settings,
-  MessageCircle,
+  Edit,
   Loader2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useRules, useToggleRule } from '@/api/hooks'
+  MessageCircle,
+  MoreHorizontal,
+  Pause,
+  Play,
+  Plus,
+  Search,
+  Settings,
+  Tag,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useRules, useToggleRule } from '@/api/hooks';
 
-type RuleStatus = 'active' | 'paused' | 'draft'
-type RuleAction = 'apply_label' | 'send_alert' | 'pause_campaign' | 'adjust_budget' | 'notify_slack' | 'notify_whatsapp'
+type RuleStatus = 'active' | 'paused' | 'draft';
+type RuleAction =
+  | 'apply_label'
+  | 'send_alert'
+  | 'pause_campaign'
+  | 'adjust_budget'
+  | 'notify_slack'
+  | 'notify_whatsapp';
 
 interface Rule {
-  id: number
-  name: string
-  description: string
-  status: RuleStatus
+  id: number;
+  name: string;
+  description: string;
+  status: RuleStatus;
   condition: {
-    field: string
-    operator: string
-    value: string
-  }
+    field: string;
+    operator: string;
+    value: string;
+  };
   action: {
-    type: RuleAction
-    config: Record<string, any>
-  }
-  appliesTo: string[]
-  triggerCount: number
-  lastTriggered: string | null
-  cooldownHours: number
-  createdAt: string
+    type: RuleAction;
+    config: Record<string, any>;
+  };
+  appliesTo: string[];
+  triggerCount: number;
+  lastTriggered: string | null;
+  cooldownHours: number;
+  createdAt: string;
 }
 
 const mockRules: Rule[] = [
@@ -53,7 +59,10 @@ const mockRules: Rule[] = [
     description: 'Send WhatsApp notification when campaign spends over 80% of budget',
     status: 'active',
     condition: { field: 'spend', operator: 'greater_than', value: '800' },
-    action: { type: 'notify_whatsapp', config: { contact_ids: [1, 2], template_name: 'rule_alert' } },
+    action: {
+      type: 'notify_whatsapp',
+      config: { contact_ids: [1, 2], template_name: 'rule_alert' },
+    },
     appliesTo: ['Summer Sale 2024', 'Brand Awareness Q4'],
     triggerCount: 7,
     lastTriggered: '2024-12-06T08:00:00Z',
@@ -125,7 +134,7 @@ const mockRules: Rule[] = [
     cooldownHours: 24,
     createdAt: '2024-11-28',
   },
-]
+];
 
 const operators = [
   { value: 'equals', label: '=' },
@@ -134,19 +143,29 @@ const operators = [
   { value: 'less_than', label: '<' },
   { value: 'greater_than_or_equal', label: '≥' },
   { value: 'less_than_or_equal', label: '≤' },
-]
+];
 
-const fields = ['roas', 'ctr', 'cpc', 'cpa', 'spend', 'impressions', 'clicks', 'conversions', 'fatigue_score']
+const fields = [
+  'roas',
+  'ctr',
+  'cpc',
+  'cpa',
+  'spend',
+  'impressions',
+  'clicks',
+  'conversions',
+  'fatigue_score',
+];
 
 export function Rules() {
-  const { t } = useTranslation()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Fetch rules from API
-  const { data: rulesData, isLoading } = useRules()
-  const toggleRule = useToggleRule()
+  const { data: rulesData, isLoading } = useRules();
+  const toggleRule = useToggleRule();
 
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
@@ -156,64 +175,70 @@ export function Rules() {
         name: r.name || '',
         description: r.description || '',
         status: r.status || r.is_active ? 'active' : 'paused',
-        condition: r.condition || r.conditions?.[0] || { field: 'roas', operator: 'less_than', value: '2.0' },
+        condition: r.condition ||
+          r.conditions?.[0] || { field: 'roas', operator: 'less_than', value: '2.0' },
         action: r.action || r.actions?.[0] || { type: 'send_alert', config: {} },
         appliesTo: r.applies_to || r.campaigns || [],
         triggerCount: r.trigger_count || r.triggerCount || 0,
         lastTriggered: r.last_triggered || r.lastTriggered || null,
         cooldownHours: r.cooldown_hours || r.cooldownHours || 24,
         createdAt: r.created_at || r.createdAt || new Date().toISOString(),
-      }))
+      }));
     }
-    return mockRules
-  }, [rulesData])
+    return mockRules;
+  }, [rulesData]);
 
   // Handle toggle rule status
   const handleToggleRule = async (ruleId: number, _currentStatus: RuleStatus) => {
-    await toggleRule.mutateAsync(ruleId.toString())
-  }
+    await toggleRule.mutateAsync(ruleId.toString());
+  };
 
   const filteredRules = rules.filter((rule) => {
     if (searchQuery && !rule.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false
+      return false;
     }
     if (statusFilter !== 'all' && rule.status !== statusFilter) {
-      return false
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   const getStatusBadge = (status: RuleStatus) => {
     const config = {
       active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
       paused: { color: 'bg-amber-500/10 text-amber-500', icon: Pause, label: 'Paused' },
       draft: { color: 'bg-gray-500/10 text-gray-500', icon: Edit, label: 'Draft' },
-    }
-    const { color, icon: Icon, label } = config[status]
+    };
+    const { color, icon: Icon, label } = config[status];
     return (
-      <span className={cn('px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', color)}>
+      <span
+        className={cn(
+          'px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1',
+          color
+        )}
+      >
         <Icon className="w-3 h-3" />
         {label}
       </span>
-    )
-  }
+    );
+  };
 
   const getActionIcon = (action: RuleAction) => {
     switch (action) {
       case 'apply_label':
-        return <Tag className="w-4 h-4 text-blue-500" />
+        return <Tag className="w-4 h-4 text-blue-500" />;
       case 'send_alert':
-        return <Bell className="w-4 h-4 text-amber-500" />
+        return <Bell className="w-4 h-4 text-amber-500" />;
       case 'pause_campaign':
-        return <Pause className="w-4 h-4 text-red-500" />
+        return <Pause className="w-4 h-4 text-red-500" />;
       case 'adjust_budget':
-        return <DollarSign className="w-4 h-4 text-green-500" />
+        return <DollarSign className="w-4 h-4 text-green-500" />;
       case 'notify_slack':
-        return <Settings className="w-4 h-4 text-purple-500" />
+        return <Settings className="w-4 h-4 text-purple-500" />;
       case 'notify_whatsapp':
-        return <MessageCircle className="w-4 h-4 text-green-600" />
+        return <MessageCircle className="w-4 h-4 text-green-600" />;
     }
-  }
+  };
 
   const getActionLabel = (action: RuleAction) => {
     const labels = {
@@ -223,25 +248,25 @@ export function Rules() {
       adjust_budget: 'Adjust Budget',
       notify_slack: 'Notify Slack',
       notify_whatsapp: 'Notify WhatsApp',
-    }
-    return labels[action]
-  }
+    };
+    return labels[action];
+  };
 
   const getOperatorLabel = (operator: string) => {
-    return operators.find((op) => op.value === operator)?.label || operator
-  }
+    return operators.find((op) => op.value === operator)?.label || operator;
+  };
 
   const formatLastTriggered = (date: string | null) => {
-    if (!date) return 'Never'
-    const d = new Date(date)
-    const now = new Date()
-    const diffHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60))
+    if (!date) return 'Never';
+    const d = new Date(date);
+    const now = new Date();
+    const diffHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60));
 
-    if (diffHours < 1) return 'Just now'
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffHours < 48) return 'Yesterday'
-    return d.toLocaleDateString()
-  }
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 48) return 'Yesterday';
+    return d.toLocaleDateString();
+  };
 
   return (
     <div className="space-y-6">
@@ -342,7 +367,11 @@ export function Rules() {
                     className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                     title="Pause"
                   >
-                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
+                    {toggleRule.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Pause className="w-4 h-4" />
+                    )}
                   </button>
                 ) : (
                   <button
@@ -351,13 +380,20 @@ export function Rules() {
                     className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                     title="Activate"
                   >
-                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                    {toggleRule.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Play className="w-4 h-4" />
+                    )}
                   </button>
                 )}
                 <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Edit">
                   <Edit className="w-4 h-4" />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Duplicate">
+                <button
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  title="Duplicate"
+                >
                   <Copy className="w-4 h-4" />
                 </button>
                 <button className="p-2 rounded-lg hover:bg-muted transition-colors">
@@ -372,9 +408,7 @@ export function Rules() {
               <span className="px-2 py-1 rounded bg-background text-sm font-mono">
                 {rule.condition.field}
               </span>
-              <span className="text-sm font-bold">
-                {getOperatorLabel(rule.condition.operator)}
-              </span>
+              <span className="text-sm font-bold">{getOperatorLabel(rule.condition.operator)}</span>
               <span className="px-2 py-1 rounded bg-background text-sm font-mono">
                 {rule.condition.value}
               </span>
@@ -504,7 +538,7 @@ export function Rules() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default Rules
+export default Rules;

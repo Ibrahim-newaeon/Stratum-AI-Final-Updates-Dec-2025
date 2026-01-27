@@ -2,27 +2,27 @@
  * CDP Dashboard - Main overview page for Customer Data Platform
  */
 
-import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  UserGroupIcon,
-  TagIcon,
-  ClockIcon,
-  ShareIcon,
-  ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
+  ArrowTrendingUpIcon,
   ArrowUpOnSquareIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  ShareIcon,
+  TagIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 import {
-  useCDPHealth,
-  useProfileStatistics,
-  useEventStatistics,
-  useSegments,
   useAnomalySummary,
-} from '@/api/cdp'
+  useCDPHealth,
+  useEventStatistics,
+  useProfileStatistics,
+  useSegments,
+} from '@/api/cdp';
 
 // Stat Card Component
 function StatCard({
@@ -34,13 +34,13 @@ function StatCard({
   href,
   loading,
 }: {
-  title: string
-  value: string | number
-  change?: number
-  changeLabel?: string
-  icon: React.ElementType
-  href?: string
-  loading?: boolean
+  title: string;
+  value: string | number;
+  change?: number;
+  changeLabel?: string;
+  icon: React.ElementType;
+  href?: string;
+  loading?: boolean;
 }) {
   const content = (
     <div className="bg-card rounded-xl border p-6 hover:shadow-lg transition-shadow">
@@ -68,9 +68,7 @@ function StatCard({
                 {change >= 0 ? '+' : ''}
                 {change.toFixed(1)}%
               </span>
-              {changeLabel && (
-                <span className="text-sm text-muted-foreground">{changeLabel}</span>
-              )}
+              {changeLabel && <span className="text-sm text-muted-foreground">{changeLabel}</span>}
             </div>
           )}
         </div>
@@ -79,28 +77,42 @@ function StatCard({
         </div>
       </div>
     </div>
-  )
+  );
 
   if (href) {
-    return <Link to={href}>{content}</Link>
+    return <Link to={href}>{content}</Link>;
   }
-  return content
+  return content;
 }
 
 // Health Status Badge
 function HealthBadge({ status }: { status: string }) {
   const config = {
-    healthy: { color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: CheckCircleIcon },
-    degraded: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: ExclamationTriangleIcon },
-    unhealthy: { color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: ExclamationTriangleIcon },
-  }[status] || { color: 'bg-gray-100 text-gray-800', icon: CheckCircleIcon }
+    healthy: {
+      color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      icon: CheckCircleIcon,
+    },
+    degraded: {
+      color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      icon: ExclamationTriangleIcon,
+    },
+    unhealthy: {
+      color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      icon: ExclamationTriangleIcon,
+    },
+  }[status] || { color: 'bg-gray-100 text-gray-800', icon: CheckCircleIcon };
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium', config.color)}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium',
+        config.color
+      )}
+    >
       <config.icon className="h-4 w-4" />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
-  )
+  );
 }
 
 // Lifecycle Distribution Chart
@@ -110,15 +122,15 @@ function LifecycleChart({ data }: { data: Record<string, number> }) {
     { key: 'known', label: 'Known', color: 'bg-blue-400' },
     { key: 'customer', label: 'Customer', color: 'bg-green-400' },
     { key: 'churned', label: 'Churned', color: 'bg-red-400' },
-  ]
+  ];
 
-  const total = Object.values(data).reduce((a, b) => a + b, 0)
+  const total = Object.values(data).reduce((a, b) => a + b, 0);
 
   return (
     <div className="space-y-3">
       {stages.map((stage) => {
-        const count = data[stage.key] || 0
-        const percentage = total > 0 ? (count / total) * 100 : 0
+        const count = data[stage.key] || 0;
+        const percentage = total > 0 ? (count / total) * 100 : 0;
         return (
           <div key={stage.key}>
             <div className="flex justify-between text-sm mb-1">
@@ -134,15 +146,15 @@ function LifecycleChart({ data }: { data: Record<string, number> }) {
               />
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 // Event Volume Chart (Simple Bar Chart)
 function EventVolumeChart({ data }: { data: Array<{ date: string; count: number }> }) {
-  const maxCount = Math.max(...data.map((d) => d.count), 1)
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
 
   return (
     <div className="flex items-end gap-1 h-32">
@@ -161,19 +173,19 @@ function EventVolumeChart({ data }: { data: Array<{ date: string; count: number 
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export default function CDPDashboard() {
-  const { data: health, isLoading: healthLoading } = useCDPHealth()
-  const { data: profileStats, isLoading: profileLoading } = useProfileStatistics()
-  const { data: eventStats, isLoading: eventLoading } = useEventStatistics(30)
-  const { data: segments, isLoading: segmentsLoading } = useSegments()
-  const { data: anomalySummary } = useAnomalySummary()
+  const { data: health, isLoading: healthLoading } = useCDPHealth();
+  const { data: profileStats, isLoading: profileLoading } = useProfileStatistics();
+  const { data: eventStats, isLoading: eventLoading } = useEventStatistics(30);
+  const { data: segments, isLoading: segmentsLoading } = useSegments();
+  const { data: anomalySummary } = useAnomalySummary();
 
   const activeSegments = useMemo(() => {
-    return segments?.segments.filter((s) => s.status === 'active').length || 0
-  }, [segments])
+    return segments?.segments.filter((s) => s.status === 'active').length || 0;
+  }, [segments]);
 
   return (
     <div className="space-y-6">
@@ -195,7 +207,11 @@ export default function CDPDashboard() {
         <StatCard
           title="Total Profiles"
           value={profileStats?.total_profiles?.toLocaleString() || '0'}
-          change={profileStats?.new_profiles_7d ? (profileStats.new_profiles_7d / (profileStats.total_profiles || 1)) * 100 : undefined}
+          change={
+            profileStats?.new_profiles_7d
+              ? (profileStats.new_profiles_7d / (profileStats.total_profiles || 1)) * 100
+              : undefined
+          }
           changeLabel="new this week"
           icon={UserGroupIcon}
           href="/dashboard/cdp/profiles"
@@ -258,10 +274,7 @@ export default function CDPDashboard() {
         <div className="bg-card rounded-xl border p-6 lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Event Volume (Last 14 Days)</h3>
-            <Link
-              to="/dashboard/cdp/events"
-              className="text-sm text-primary hover:underline"
-            >
+            <Link to="/dashboard/cdp/events" className="text-sm text-primary hover:underline">
               View all events
             </Link>
           </div>
@@ -360,17 +373,15 @@ export default function CDPDashboard() {
           <div className="flex items-start gap-3">
             <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
             <div>
-              <p className="font-medium text-yellow-800 dark:text-yellow-200">
-                Data Quality Alert
-              </p>
+              <p className="font-medium text-yellow-800 dark:text-yellow-200">Data Quality Alert</p>
               <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                Event volume has changed by {anomalySummary.wow_change_pct?.toFixed(1)}% compared to last week.
-                Current trend: {anomalySummary.volume_trend}.
+                Event volume has changed by {anomalySummary.wow_change_pct?.toFixed(1)}% compared to
+                last week. Current trend: {anomalySummary.volume_trend}.
               </p>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

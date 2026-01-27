@@ -42,7 +42,7 @@ export default function AILanding() {
           style={{
             background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
             filter: 'blur(100px)',
-            y: backgroundY
+            y: backgroundY,
           }}
         />
         <motion.div
@@ -68,7 +68,7 @@ export default function AILanding() {
               linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
               linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
             `,
-            backgroundSize: '64px 64px'
+            backgroundSize: '64px 64px',
           }}
         />
 
@@ -89,7 +89,9 @@ export default function AILanding() {
             <a href="/" className="flex items-center gap-3 group">
               <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-cyan-500 to-orange-500 p-[1px]">
                 <div className="absolute inset-[1px] rounded-xl bg-[#030303] flex items-center justify-center">
-                  <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">S</span>
+                  <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                    S
+                  </span>
                 </div>
               </div>
               <span className="text-xl font-semibold tracking-tight">Stratum AI</span>
@@ -97,15 +99,35 @@ export default function AILanding() {
 
             {/* Nav Links */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
-              <a href="#compare" className="text-sm text-gray-400 hover:text-white transition-colors">Compare</a>
-              <a href="#pricing" className="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
-              <a href="/docs" className="text-sm text-gray-400 hover:text-white transition-colors">Docs</a>
+              <a
+                href="#features"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#compare"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Compare
+              </a>
+              <a
+                href="#pricing"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Pricing
+              </a>
+              <a href="/docs" className="text-sm text-gray-400 hover:text-white transition-colors">
+                Docs
+              </a>
             </div>
 
             {/* CTA Buttons */}
             <div className="flex items-center gap-3">
-              <a href="/login" className="hidden sm:block text-sm text-gray-300 hover:text-white px-4 py-2 transition-colors">
+              <a
+                href="/login"
+                className="hidden sm:block text-sm text-gray-300 hover:text-white px-4 py-2 transition-colors"
+              >
                 Sign In
               </a>
               <a

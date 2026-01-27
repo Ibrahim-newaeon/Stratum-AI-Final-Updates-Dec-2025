@@ -6,9 +6,9 @@ Automated ROAS optimization engine.
 Analyzes campaigns and provides actionable recommendations for higher ROAS.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any, Optional
 
 import numpy as np
 
@@ -20,6 +20,7 @@ logger = get_logger(__name__)
 
 class RecommendationType(str, Enum):
     """Types of optimization recommendations."""
+
     INCREASE_BUDGET = "increase_budget"
     DECREASE_BUDGET = "decrease_budget"
     PAUSE_CAMPAIGN = "pause_campaign"
@@ -32,6 +33,7 @@ class RecommendationType(str, Enum):
 
 class Priority(str, Enum):
     """Recommendation priority levels."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -61,7 +63,7 @@ class ROASOptimizer:
             "linkedin": {"min": 1.5, "good": 2.5, "excellent": 4.0},
         }
 
-    async def analyze_campaign(self, campaign_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_campaign(self, campaign_data: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze a single campaign and generate recommendations.
 
@@ -89,7 +91,9 @@ class ROASOptimizer:
         health_score = self._calculate_health_score(campaign_data, thresholds)
 
         # Generate recommendations
-        recommendations = await self._generate_recommendations(campaign_data, thresholds, health_score)
+        recommendations = await self._generate_recommendations(
+            campaign_data, thresholds, health_score
+        )
 
         # Predict optimal budget
         optimal_budget = await self._predict_optimal_budget(campaign_data)
@@ -111,29 +115,28 @@ class ROASOptimizer:
             "recommendations": recommendations,
             "optimal_budget": optimal_budget,
             "budget_scenarios": budget_scenarios,
-            "analyzed_at": datetime.now(timezone.utc).isoformat(),
+            "analyzed_at": datetime.now(UTC).isoformat(),
         }
 
-    
     def _compute_recommendation_confidence(
         self,
-        campaign: Dict[str, Any],
+        campaign: dict[str, Any],
         recommendation_type: str,
         base_confidence: float,
     ) -> float:
         """
         Compute model-derived confidence for a recommendation.
-        
+
         Factors:
         - Data completeness (spend, revenue, conversions present)
         - Data volume (higher spend/conversions = more reliable)
         - Recommendation type (pause is more certain than scale)
-        
+
         Args:
             campaign: Campaign metrics dict
             recommendation_type: Type of recommendation
             base_confidence: Starting confidence for this recommendation type
-            
+
         Returns:
             Adjusted confidence score 0.0-0.95
         """
@@ -142,32 +145,31 @@ class ROASOptimizer:
         has_revenue = campaign.get("revenue", 0) > 0
         has_conversions = campaign.get("conversions", 0) > 0
         has_impressions = campaign.get("impressions", 0) > 0
-        
+
         completeness = sum([has_spend, has_revenue, has_conversions, has_impressions]) / 4
         completeness_adj = completeness * 0.15
-        
+
         # Data volume factor (more data = higher confidence)
         spend = campaign.get("spend", 0)
         conversions = campaign.get("conversions", 0)
         volume_score = min(0.1, (spend / 10000) * 0.05 + (conversions / 100) * 0.05)
-        
+
         # Recommendation type adjustment (some actions are more certain)
         type_adjustments = {
-            "pause": 0.1,      # Pausing underperformers is high confidence
+            "pause": 0.1,  # Pausing underperformers is high confidence
             "decrease": 0.05,  # Decreasing budget is fairly certain
-            "increase": -0.05, # Scaling has more uncertainty
-            "scale": -0.1,     # Aggressive scaling is less certain
+            "increase": -0.05,  # Scaling has more uncertainty
+            "scale": -0.1,  # Aggressive scaling is less certain
         }
         type_adj = type_adjustments.get(recommendation_type, 0)
-        
+
         # Calculate final confidence
         confidence = base_confidence + completeness_adj + volume_score + type_adj
-        
+
         # Clamp to valid range
         return round(max(0.3, min(0.95, confidence)), 2)
 
-
-    async def analyze_portfolio(self, campaigns: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_portfolio(self, campaigns: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Analyze entire campaign portfolio and optimize budget allocation.
 
@@ -211,10 +213,10 @@ class ROASOptimizer:
             "bottom_performers": bottom_performers,
             "budget_reallocation": reallocation,
             "potential_uplift": potential_uplift,
-            "analyzed_at": datetime.now(timezone.utc).isoformat(),
+            "analyzed_at": datetime.now(UTC).isoformat(),
         }
 
-    def _calculate_health_score(self, campaign: Dict, thresholds: Dict) -> float:
+    def _calculate_health_score(self, campaign: dict, thresholds: dict) -> float:
         """Calculate campaign health score (0-100)."""
         roas = campaign.get("roas", 0)
         ctr = campaign.get("ctr", 0)
@@ -224,9 +226,14 @@ class ROASOptimizer:
         if roas >= thresholds["excellent"]:
             roas_score = 50
         elif roas >= thresholds["good"]:
-            roas_score = 35 + (roas - thresholds["good"]) / (thresholds["excellent"] - thresholds["good"]) * 15
+            roas_score = (
+                35
+                + (roas - thresholds["good"]) / (thresholds["excellent"] - thresholds["good"]) * 15
+            )
         elif roas >= thresholds["min"]:
-            roas_score = 20 + (roas - thresholds["min"]) / (thresholds["good"] - thresholds["min"]) * 15
+            roas_score = (
+                20 + (roas - thresholds["min"]) / (thresholds["good"] - thresholds["min"]) * 15
+            )
         else:
             roas_score = max(0, roas / thresholds["min"] * 20)
 
@@ -261,10 +268,10 @@ class ROASOptimizer:
 
     async def _generate_recommendations(
         self,
-        campaign: Dict,
-        thresholds: Dict,
+        campaign: dict,
+        thresholds: dict,
         health_score: float,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Generate actionable recommendations for the campaign."""
         recommendations = []
 
@@ -276,109 +283,133 @@ class ROASOptimizer:
 
         # High ROAS - Scale opportunity
         if roas >= thresholds["excellent"]:
-            recommendations.append({
-                "type": RecommendationType.SCALE_CAMPAIGN,
-                "priority": Priority.HIGH,
-                "title": "Scale this high-performing campaign",
-                "description": f"ROAS of {roas:.2f}x is excellent. Consider increasing budget by 20-50% to capture more conversions.",
-                "action": {
-                    "suggested_budget_increase": 0.3,  # 30% increase
-                    "expected_roas_range": [roas * 0.85, roas * 0.95],
-                },
-                "expected_impact": {
-                    "revenue_increase": spend * 0.3 * roas * 0.9,
-                    "confidence": self._compute_recommendation_confidence(campaign, "scale", 0.65),
-                },
-            })
+            recommendations.append(
+                {
+                    "type": RecommendationType.SCALE_CAMPAIGN,
+                    "priority": Priority.HIGH,
+                    "title": "Scale this high-performing campaign",
+                    "description": f"ROAS of {roas:.2f}x is excellent. Consider increasing budget by 20-50% to capture more conversions.",
+                    "action": {
+                        "suggested_budget_increase": 0.3,  # 30% increase
+                        "expected_roas_range": [roas * 0.85, roas * 0.95],
+                    },
+                    "expected_impact": {
+                        "revenue_increase": spend * 0.3 * roas * 0.9,
+                        "confidence": self._compute_recommendation_confidence(
+                            campaign, "scale", 0.65
+                        ),
+                    },
+                }
+            )
 
         # Good ROAS - Optimize
         elif roas >= thresholds["good"]:
-            recommendations.append({
-                "type": RecommendationType.INCREASE_BUDGET,
-                "priority": Priority.MEDIUM,
-                "title": "Gradually increase budget",
-                "description": f"Campaign is performing well with {roas:.2f}x ROAS. Test 10-20% budget increase.",
-                "action": {
-                    "suggested_budget_increase": 0.15,
-                },
-                "expected_impact": {
-                    "revenue_increase": spend * 0.15 * roas * 0.95,
-                    "confidence": self._compute_recommendation_confidence(campaign, "increase", 0.60),
-                },
-            })
+            recommendations.append(
+                {
+                    "type": RecommendationType.INCREASE_BUDGET,
+                    "priority": Priority.MEDIUM,
+                    "title": "Gradually increase budget",
+                    "description": f"Campaign is performing well with {roas:.2f}x ROAS. Test 10-20% budget increase.",
+                    "action": {
+                        "suggested_budget_increase": 0.15,
+                    },
+                    "expected_impact": {
+                        "revenue_increase": spend * 0.15 * roas * 0.95,
+                        "confidence": self._compute_recommendation_confidence(
+                            campaign, "increase", 0.60
+                        ),
+                    },
+                }
+            )
 
         # Below minimum - Critical action needed
         elif roas < thresholds["min"]:
             if roas < 0.5:
-                recommendations.append({
-                    "type": RecommendationType.PAUSE_CAMPAIGN,
-                    "priority": Priority.CRITICAL,
-                    "title": "Consider pausing this campaign",
-                    "description": f"ROAS of {roas:.2f}x is critically low. Pause and review strategy before continuing.",
-                    "action": {
-                        "pause_campaign": True,
-                        "review_areas": ["targeting", "creative", "landing_page"],
-                    },
-                    "expected_impact": {
-                        "cost_savings": spend * 0.8,
-                        "confidence": self._compute_recommendation_confidence(campaign, "pause", 0.85),
-                    },
-                })
+                recommendations.append(
+                    {
+                        "type": RecommendationType.PAUSE_CAMPAIGN,
+                        "priority": Priority.CRITICAL,
+                        "title": "Consider pausing this campaign",
+                        "description": f"ROAS of {roas:.2f}x is critically low. Pause and review strategy before continuing.",
+                        "action": {
+                            "pause_campaign": True,
+                            "review_areas": ["targeting", "creative", "landing_page"],
+                        },
+                        "expected_impact": {
+                            "cost_savings": spend * 0.8,
+                            "confidence": self._compute_recommendation_confidence(
+                                campaign, "pause", 0.85
+                            ),
+                        },
+                    }
+                )
             else:
-                recommendations.append({
-                    "type": RecommendationType.DECREASE_BUDGET,
-                    "priority": Priority.HIGH,
-                    "title": "Reduce budget while optimizing",
-                    "description": f"ROAS of {roas:.2f}x is below target. Reduce budget by 30-50% and focus on optimization.",
-                    "action": {
-                        "suggested_budget_decrease": 0.4,
-                    },
-                    "expected_impact": {
-                        "cost_savings": spend * 0.4,
-                        "confidence": self._compute_recommendation_confidence(campaign, "decrease", 0.75),
-                    },
-                })
+                recommendations.append(
+                    {
+                        "type": RecommendationType.DECREASE_BUDGET,
+                        "priority": Priority.HIGH,
+                        "title": "Reduce budget while optimizing",
+                        "description": f"ROAS of {roas:.2f}x is below target. Reduce budget by 30-50% and focus on optimization.",
+                        "action": {
+                            "suggested_budget_decrease": 0.4,
+                        },
+                        "expected_impact": {
+                            "cost_savings": spend * 0.4,
+                            "confidence": self._compute_recommendation_confidence(
+                                campaign, "decrease", 0.75
+                            ),
+                        },
+                    }
+                )
 
         # Low CTR - Creative/targeting issue
         if ctr < 0.8:
-            recommendations.append({
-                "type": RecommendationType.IMPROVE_CREATIVE,
-                "priority": Priority.HIGH if ctr < 0.5 else Priority.MEDIUM,
-                "title": "Improve ad creative or targeting",
-                "description": f"CTR of {ctr:.2f}% is below average. Test new creatives or refine audience targeting.",
-                "action": {
-                    "test_new_creatives": True,
-                    "review_targeting": True,
-                    "a_b_test_suggestions": ["headline", "image", "cta"],
-                },
-                "expected_impact": {
-                    "ctr_improvement": 0.5,  # 50% CTR improvement potential
-                    "confidence": self._compute_recommendation_confidence(campaign, "creative", 0.55),
-                },
-            })
+            recommendations.append(
+                {
+                    "type": RecommendationType.IMPROVE_CREATIVE,
+                    "priority": Priority.HIGH if ctr < 0.5 else Priority.MEDIUM,
+                    "title": "Improve ad creative or targeting",
+                    "description": f"CTR of {ctr:.2f}% is below average. Test new creatives or refine audience targeting.",
+                    "action": {
+                        "test_new_creatives": True,
+                        "review_targeting": True,
+                        "a_b_test_suggestions": ["headline", "image", "cta"],
+                    },
+                    "expected_impact": {
+                        "ctr_improvement": 0.5,  # 50% CTR improvement potential
+                        "confidence": self._compute_recommendation_confidence(
+                            campaign, "creative", 0.55
+                        ),
+                    },
+                }
+            )
 
         # High CPA - Bidding adjustment
         if conversions > 0 and spend > 0:
             cpa = spend / conversions
             if cpa > 100:  # High CPA threshold
-                recommendations.append({
-                    "type": RecommendationType.ADJUST_BIDDING,
-                    "priority": Priority.MEDIUM,
-                    "title": "Optimize bidding strategy",
-                    "description": f"CPA of ${cpa:.2f} is high. Consider switching to target CPA bidding or reducing bids.",
-                    "action": {
-                        "suggested_target_cpa": cpa * 0.7,
-                        "bidding_strategy": "target_cpa",
-                    },
-                    "expected_impact": {
-                        "cpa_reduction": 0.25,
-                        "confidence": self._compute_recommendation_confidence(campaign, "bidding", 0.50),
-                    },
-                })
+                recommendations.append(
+                    {
+                        "type": RecommendationType.ADJUST_BIDDING,
+                        "priority": Priority.MEDIUM,
+                        "title": "Optimize bidding strategy",
+                        "description": f"CPA of ${cpa:.2f} is high. Consider switching to target CPA bidding or reducing bids.",
+                        "action": {
+                            "suggested_target_cpa": cpa * 0.7,
+                            "bidding_strategy": "target_cpa",
+                        },
+                        "expected_impact": {
+                            "cpa_reduction": 0.25,
+                            "confidence": self._compute_recommendation_confidence(
+                                campaign, "bidding", 0.50
+                            ),
+                        },
+                    }
+                )
 
         return recommendations
 
-    async def _predict_optimal_budget(self, campaign: Dict) -> Dict[str, Any]:
+    async def _predict_optimal_budget(self, campaign: dict) -> dict[str, Any]:
         """Predict the optimal budget for maximum ROAS."""
         current_spend = campaign.get("spend", 0)
         current_roas = campaign.get("roas", 0)
@@ -424,11 +455,13 @@ class ROASOptimizer:
             "current_daily_budget": current_spend / 30,  # Approximate daily
             "optimal_daily_budget": optimal_budget / 30,
             "change_percent": round((optimal_multiplier - 1) * 100, 1),
-            "expected_roas_at_optimal": round(current_roas * (1 - (optimal_multiplier - 1) * 0.1), 2),
+            "expected_roas_at_optimal": round(
+                current_roas * (1 - (optimal_multiplier - 1) * 0.1), 2
+            ),
             "confidence": self._compute_recommendation_confidence(campaign, "budget_opt", 0.60),
         }
 
-    async def _simulate_budget_scenarios(self, campaign: Dict) -> List[Dict[str, Any]]:
+    async def _simulate_budget_scenarios(self, campaign: dict) -> list[dict[str, Any]]:
         """Simulate different budget scenarios and predict outcomes."""
         current_spend = campaign.get("spend", 0)
         current_roas = campaign.get("roas", 0)
@@ -451,22 +484,24 @@ class ROASOptimizer:
             predicted_roas = current_roas * roas_adjustment
             predicted_revenue = new_spend * predicted_roas
 
-            scenarios.append({
-                "budget_change_percent": round((mult - 1) * 100),
-                "new_spend": round(new_spend, 2),
-                "predicted_roas": round(predicted_roas, 2),
-                "predicted_revenue": round(predicted_revenue, 2),
-                "profit": round(predicted_revenue - new_spend, 2),
-                "is_current": mult == 1.0,
-            })
+            scenarios.append(
+                {
+                    "budget_change_percent": round((mult - 1) * 100),
+                    "new_spend": round(new_spend, 2),
+                    "predicted_roas": round(predicted_roas, 2),
+                    "predicted_revenue": round(predicted_revenue, 2),
+                    "profit": round(predicted_revenue - new_spend, 2),
+                    "is_current": mult == 1.0,
+                }
+            )
 
         return scenarios
 
     def _calculate_budget_reallocation(
         self,
-        analyses: List[Dict],
+        analyses: list[dict],
         total_budget: float,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Calculate optimal budget reallocation across campaigns."""
         if not analyses or total_budget == 0:
             return []
@@ -482,13 +517,15 @@ class ROASOptimizer:
 
             # Allocation score based on ROAS and health
             score = (roas * 0.6 + health / 100 * 0.4) * 100
-            scored.append({
-                "campaign_id": analysis["campaign_id"],
-                "campaign_name": analysis["campaign_name"],
-                "current_spend": current_spend,
-                "score": score,
-                "roas": roas,
-            })
+            scored.append(
+                {
+                    "campaign_id": analysis["campaign_id"],
+                    "campaign_name": analysis["campaign_name"],
+                    "current_spend": current_spend,
+                    "score": score,
+                    "roas": roas,
+                }
+            )
 
         # Normalize scores and calculate new allocations
         total_score = sum(s["score"] for s in scored)
@@ -501,15 +538,17 @@ class ROASOptimizer:
             change = new_budget - s["current_spend"]
             change_pct = (change / s["current_spend"] * 100) if s["current_spend"] > 0 else 0
 
-            reallocations.append({
-                "campaign_id": s["campaign_id"],
-                "campaign_name": s["campaign_name"],
-                "current_budget": round(s["current_spend"], 2),
-                "recommended_budget": round(new_budget, 2),
-                "change_amount": round(change, 2),
-                "change_percent": round(change_pct, 1),
-                "reason": "higher_roas" if change > 0 else "lower_roas",
-            })
+            reallocations.append(
+                {
+                    "campaign_id": s["campaign_id"],
+                    "campaign_name": s["campaign_name"],
+                    "current_budget": round(s["current_spend"], 2),
+                    "recommended_budget": round(new_budget, 2),
+                    "change_amount": round(change, 2),
+                    "change_percent": round(change_pct, 1),
+                    "reason": "higher_roas" if change > 0 else "lower_roas",
+                }
+            )
 
         # Sort by change amount (biggest increases first)
         reallocations.sort(key=lambda x: x["change_amount"], reverse=True)
@@ -518,9 +557,9 @@ class ROASOptimizer:
 
     def _calculate_potential_uplift(
         self,
-        analyses: List[Dict],
-        reallocation: List[Dict],
-    ) -> Dict[str, Any]:
+        analyses: list[dict],
+        reallocation: list[dict],
+    ) -> dict[str, Any]:
         """Calculate potential portfolio uplift from recommendations."""
         current_revenue = sum(a["current_metrics"]["revenue"] for a in analyses)
         current_spend = sum(a["current_metrics"]["spend"] for a in analyses)
@@ -534,7 +573,9 @@ class ROASOptimizer:
             for rec in analysis.get("recommendations", []):
                 impact = rec.get("expected_impact", {})
                 if "revenue_increase" in impact:
-                    recommendation_uplift += impact["revenue_increase"] * impact.get("confidence", 0.5)
+                    recommendation_uplift += impact["revenue_increase"] * impact.get(
+                        "confidence", 0.5
+                    )
 
         total_potential = reallocation_uplift + recommendation_uplift
 
@@ -543,8 +584,12 @@ class ROASOptimizer:
             "current_roas": round(current_revenue / current_spend, 2) if current_spend > 0 else 0,
             "potential_additional_revenue": round(total_potential, 2),
             "potential_new_revenue": round(current_revenue + total_potential, 2),
-            "potential_new_roas": round((current_revenue + total_potential) / current_spend, 2) if current_spend > 0 else 0,
-            "uplift_percent": round(total_potential / current_revenue * 100, 1) if current_revenue > 0 else 0,
+            "potential_new_roas": round((current_revenue + total_potential) / current_spend, 2)
+            if current_spend > 0
+            else 0,
+            "uplift_percent": round(total_potential / current_revenue * 100, 1)
+            if current_revenue > 0
+            else 0,
             "from_reallocation": round(reallocation_uplift, 2),
             "from_recommendations": round(recommendation_uplift, 2),
         }
@@ -566,9 +611,9 @@ class LivePredictionEngine:
 
     async def generate_live_predictions(
         self,
-        campaigns: List[Dict[str, Any]],
-        previous_metrics: Optional[Dict[int, Dict]] = None,
-    ) -> Dict[str, Any]:
+        campaigns: list[dict[str, Any]],
+        previous_metrics: Optional[dict[int, dict]] = None,
+    ) -> dict[str, Any]:
         """
         Generate live predictions for all campaigns.
 
@@ -602,10 +647,10 @@ class LivePredictionEngine:
             "campaign_predictions": predictions,
             "portfolio_prediction": portfolio_prediction,
             "alerts": alerts,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
 
-    async def _predict_campaign_performance(self, campaign: Dict) -> Dict[str, Any]:
+    async def _predict_campaign_performance(self, campaign: dict) -> dict[str, Any]:
         """Predict next 24h performance for a campaign."""
         current_roas = campaign.get("roas", 0)
         current_spend = campaign.get("spend", 0)
@@ -630,12 +675,12 @@ class LivePredictionEngine:
             "confidence": round(confidence, 2),
         }
 
-    async def _predict_portfolio_performance(self, campaigns: List[Dict]) -> Dict[str, Any]:
+    async def _predict_portfolio_performance(self, campaigns: list[dict]) -> dict[str, Any]:
         """Predict portfolio-level performance."""
         total_predicted_spend = sum(c.get("spend", 0) / 30 for c in campaigns)
-        weighted_roas = sum(
-            c.get("roas", 0) * c.get("spend", 0) for c in campaigns
-        ) / max(1, sum(c.get("spend", 0) for c in campaigns))
+        weighted_roas = sum(c.get("roas", 0) * c.get("spend", 0) for c in campaigns) / max(
+            1, sum(c.get("spend", 0) for c in campaigns)
+        )
 
         return {
             "predicted_daily_spend": round(total_predicted_spend, 2),
@@ -644,7 +689,7 @@ class LivePredictionEngine:
             "active_campaigns": len(campaigns),
         }
 
-    def _check_alerts(self, current: Dict, previous: Dict) -> List[Dict[str, Any]]:
+    def _check_alerts(self, current: dict, previous: dict) -> list[dict[str, Any]]:
         """Check for alert conditions."""
         alerts = []
         campaign_id = current.get("id")
@@ -655,13 +700,15 @@ class LivePredictionEngine:
         if previous_roas > 0:
             roas_change = (current_roas - previous_roas) / previous_roas
             if roas_change < -self.alert_thresholds["roas_drop"]:
-                alerts.append({
-                    "campaign_id": campaign_id,
-                    "type": "roas_drop",
-                    "severity": "high" if roas_change < -0.4 else "medium",
-                    "message": f"ROAS dropped {abs(roas_change)*100:.1f}% (from {previous_roas:.2f} to {current_roas:.2f})",
-                    "recommendation": "Review recent changes and consider reducing budget",
-                })
+                alerts.append(
+                    {
+                        "campaign_id": campaign_id,
+                        "type": "roas_drop",
+                        "severity": "high" if roas_change < -0.4 else "medium",
+                        "message": f"ROAS dropped {abs(roas_change)*100:.1f}% (from {previous_roas:.2f} to {current_roas:.2f})",
+                        "recommendation": "Review recent changes and consider reducing budget",
+                    }
+                )
 
         # Conversion drop alert
         current_conv = current.get("conversions", 0)
@@ -669,12 +716,14 @@ class LivePredictionEngine:
         if previous_conv > 0:
             conv_change = (current_conv - previous_conv) / previous_conv
             if conv_change < -self.alert_thresholds["conversion_drop"]:
-                alerts.append({
-                    "campaign_id": campaign_id,
-                    "type": "conversion_drop",
-                    "severity": "high" if conv_change < -0.5 else "medium",
-                    "message": f"Conversions dropped {abs(conv_change)*100:.1f}%",
-                    "recommendation": "Check tracking, landing pages, and audience fatigue",
-                })
+                alerts.append(
+                    {
+                        "campaign_id": campaign_id,
+                        "type": "conversion_drop",
+                        "severity": "high" if conv_change < -0.5 else "medium",
+                        "message": f"Conversions dropped {abs(conv_change)*100:.1f}%",
+                        "recommendation": "Check tracking, landing pages, and audience fatigue",
+                    }
+                )
 
         return alerts

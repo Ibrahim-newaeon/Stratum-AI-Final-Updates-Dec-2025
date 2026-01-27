@@ -12,24 +12,23 @@ Features:
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import select, and_
+import httpx
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import httpx
-
-from app.core.logging import get_logger
 from app.core.config import settings
+from app.core.logging import get_logger
 from app.models.pacing import (
+    AlertSeverity,
+    AlertStatus,
+    AlertType,
     DailyKPI,
     PacingAlert,
     Target,
     TargetMetric,
-    AlertSeverity,
-    AlertType,
-    AlertStatus,
 )
 from app.services.pacing.pacing_service import PacingService
 
@@ -37,10 +36,10 @@ logger = get_logger(__name__)
 
 # Alert severity colors for Slack
 SEVERITY_COLORS = {
-    AlertSeverity.LOW: "#36a64f",     # Green
+    AlertSeverity.LOW: "#36a64f",  # Green
     AlertSeverity.MEDIUM: "#ffcc00",  # Yellow
-    AlertSeverity.HIGH: "#ff9900",    # Orange
-    AlertSeverity.CRITICAL: "#ff0000", # Red
+    AlertSeverity.HIGH: "#ff9900",  # Orange
+    AlertSeverity.CRITICAL: "#ff0000",  # Red
 }
 
 
@@ -64,7 +63,7 @@ class PacingAlertService:
         self,
         target_id: UUID,
         as_of_date: Optional[date] = None,
-    ) -> List[PacingAlert]:
+    ) -> list[PacingAlert]:
         """
         Check a target for alert conditions and create alerts if needed.
 
@@ -101,7 +100,7 @@ class PacingAlertService:
                 severity=AlertSeverity.CRITICAL,
                 title=f"Critical: {pacing['target_name']} severely underpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
+                f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -116,7 +115,7 @@ class PacingAlertService:
                 severity=AlertSeverity.WARNING,
                 title=f"Warning: {pacing['target_name']} underpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
+                f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -131,7 +130,7 @@ class PacingAlertService:
                 severity=AlertSeverity.CRITICAL,
                 title=f"Critical: {pacing['target_name']} severely overpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"Risk of budget exhaustion before period end.",
+                f"Risk of budget exhaustion before period end.",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -146,7 +145,7 @@ class PacingAlertService:
                 severity=AlertSeverity.WARNING,
                 title=f"Warning: {pacing['target_name']} overpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"May exceed budget before period end.",
+                f"May exceed budget before period end.",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -164,7 +163,7 @@ class PacingAlertService:
                     severity=AlertSeverity.CRITICAL,
                     title=f"Critical: {pacing['target_name']} projected to miss target",
                     message=f"Projected EOM: ${pacing['projection']['eom']:,.2f} vs target ${target_value:,.2f}. "
-                            f"Gap: {gap_pct:.1f}%",
+                    f"Gap: {gap_pct:.1f}%",
                     pacing=pacing,
                     as_of_date=as_of_date,
                 )
@@ -179,7 +178,7 @@ class PacingAlertService:
     async def check_all_targets(
         self,
         as_of_date: Optional[date] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Check all active targets for alert conditions.
 
@@ -276,9 +275,7 @@ class PacingAlertService:
             conditions.append(DailyKPI.campaign_id.is_(None))
 
         result = await self.db.execute(
-            select(DailyKPI)
-            .where(and_(*conditions))
-            .order_by(DailyKPI.date)
+            select(DailyKPI).where(and_(*conditions)).order_by(DailyKPI.date)
         )
         records = result.scalars().all()
 
@@ -309,8 +306,12 @@ class PacingAlertService:
                     severity=AlertSeverity.CRITICAL,
                     title=f"Pacing Cliff Detected: {target.name}",
                     message=f"Performance dropped {drop_pct:.1f}% from {lookback_days}-day average. "
-                            f"Today: ${latest_value:,.2f} vs avg ${previous_avg:,.2f}",
-                    pacing={"drop_pct": drop_pct, "latest_value": latest_value, "previous_avg": previous_avg},
+                    f"Today: ${latest_value:,.2f} vs avg ${previous_avg:,.2f}",
+                    pacing={
+                        "drop_pct": drop_pct,
+                        "latest_value": latest_value,
+                        "previous_avg": previous_avg,
+                    },
                     as_of_date=as_of_date,
                 )
 
@@ -321,7 +322,7 @@ class PacingAlertService:
         target_id: Optional[UUID] = None,
         severity: Optional[AlertSeverity] = None,
         alert_type: Optional[AlertType] = None,
-    ) -> List[PacingAlert]:
+    ) -> list[PacingAlert]:
         """
         Get active alerts with optional filters.
 
@@ -348,9 +349,7 @@ class PacingAlertService:
             conditions.append(PacingAlert.alert_type == alert_type)
 
         result = await self.db.execute(
-            select(PacingAlert)
-            .where(and_(*conditions))
-            .order_by(PacingAlert.created_at.desc())
+            select(PacingAlert).where(and_(*conditions)).order_by(PacingAlert.created_at.desc())
         )
         return list(result.scalars().all())
 
@@ -449,7 +448,7 @@ class PacingAlertService:
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get summary of alerts for a time period.
 
@@ -525,7 +524,7 @@ class PacingAlertService:
         severity: AlertSeverity,
         title: str,
         message: str,
-        pacing: Dict[str, Any],
+        pacing: dict[str, Any],
         as_of_date: date,
     ) -> Optional[PacingAlert]:
         """Create alert if no active alert of same type exists for target."""
@@ -594,7 +593,7 @@ class PacingAlertService:
     async def _resolve_outdated_alerts(
         self,
         target_id: UUID,
-        pacing: Dict[str, Any],
+        pacing: dict[str, Any],
         as_of_date: date,
     ) -> None:
         """Auto-resolve alerts that are no longer valid."""
@@ -606,10 +605,12 @@ class PacingAlertService:
                 select(PacingAlert).where(
                     and_(
                         PacingAlert.target_id == target_id,
-                        PacingAlert.alert_type.in_([
-                            AlertType.UNDERPACING_SPEND,
-                            AlertType.OVERPACING_SPEND,
-                        ]),
+                        PacingAlert.alert_type.in_(
+                            [
+                                AlertType.UNDERPACING_SPEND,
+                                AlertType.OVERPACING_SPEND,
+                            ]
+                        ),
                         PacingAlert.status.in_([AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED]),
                     )
                 )
@@ -658,6 +659,7 @@ class PacingAlertService:
 # =============================================================================
 # Notification Service (Placeholder for future implementation)
 # =============================================================================
+
 
 class AlertNotificationService:
     """
@@ -734,18 +736,22 @@ class AlertNotificationService:
             }
 
             if alert.current_value is not None:
-                payload["attachments"][0]["fields"].append({
-                    "title": "Current Pacing",
-                    "value": f"{alert.current_value:.1f}%",
-                    "short": True,
-                })
+                payload["attachments"][0]["fields"].append(
+                    {
+                        "title": "Current Pacing",
+                        "value": f"{alert.current_value:.1f}%",
+                        "short": True,
+                    }
+                )
 
             if alert.projected_eom is not None:
-                payload["attachments"][0]["fields"].append({
-                    "title": "Projected EOM",
-                    "value": f"${alert.projected_eom:,.0f}",
-                    "short": True,
-                })
+                payload["attachments"][0]["fields"].append(
+                    {
+                        "title": "Projected EOM",
+                        "value": f"${alert.projected_eom:,.0f}",
+                        "short": True,
+                    }
+                )
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -765,7 +771,7 @@ class AlertNotificationService:
     async def send_email_notification(
         self,
         alert: PacingAlert,
-        recipients: List[str],
+        recipients: list[str],
     ) -> bool:
         """Send alert notification via email."""
         if not recipients:
@@ -844,7 +850,9 @@ class AlertNotificationService:
                     logger.error(f"Failed to send email to {recipient}: {e}")
                     success = False
 
-            logger.info(f"Email notifications sent for alert {alert.id} to {len(recipients)} recipients")
+            logger.info(
+                f"Email notifications sent for alert {alert.id} to {len(recipients)} recipients"
+            )
             return success
 
         except Exception as e:
@@ -854,7 +862,7 @@ class AlertNotificationService:
     async def send_whatsapp_notification(
         self,
         alert: PacingAlert,
-        phone_numbers: List[str],
+        phone_numbers: list[str],
     ) -> bool:
         """Send alert notification via WhatsApp."""
         if not phone_numbers:
@@ -895,14 +903,16 @@ class AlertNotificationService:
                     logger.error(f"Failed to send WhatsApp to {phone}: {e}")
                     success = False
 
-            logger.info(f"WhatsApp notifications sent for alert {alert.id} to {len(phone_numbers)} recipients")
+            logger.info(
+                f"WhatsApp notifications sent for alert {alert.id} to {len(phone_numbers)} recipients"
+            )
             return success
 
         except Exception as e:
             logger.error(f"Failed to send WhatsApp notification for alert {alert.id}: {e}")
             return False
 
-    async def notify_alert(self, alert: PacingAlert) -> Dict[str, bool]:
+    async def notify_alert(self, alert: PacingAlert) -> dict[str, bool]:
         """
         Send notifications for an alert based on target settings.
 
@@ -911,9 +921,7 @@ class AlertNotificationService:
         from app.base_models import Tenant
 
         # Get target to check notification settings
-        result = await self.db.execute(
-            select(Target).where(Target.id == alert.target_id)
-        )
+        result = await self.db.execute(select(Target).where(Target.id == alert.target_id))
         target = result.scalar_one_or_none()
 
         if not target:
@@ -922,9 +930,7 @@ class AlertNotificationService:
         results = {}
 
         # Get tenant settings for Slack webhook
-        tenant_result = await self.db.execute(
-            select(Tenant).where(Tenant.id == self.tenant_id)
-        )
+        tenant_result = await self.db.execute(select(Tenant).where(Tenant.id == self.tenant_id))
         tenant = tenant_result.scalar_one_or_none()
         tenant_settings = tenant.settings if tenant else {}
 
@@ -933,7 +939,9 @@ class AlertNotificationService:
             if slack_webhook:
                 results["slack"] = await self.send_slack_notification(alert, slack_webhook)
             else:
-                logger.debug(f"Slack notifications enabled but no webhook configured for tenant {self.tenant_id}")
+                logger.debug(
+                    f"Slack notifications enabled but no webhook configured for tenant {self.tenant_id}"
+                )
 
         if target.notify_email:
             recipients = target.notification_recipients or []
@@ -946,7 +954,8 @@ class AlertNotificationService:
             recipients = target.notification_recipients or []
             # Filter to phone numbers (starts with + or is numeric)
             phone_recipients = [
-                r for r in recipients
+                r
+                for r in recipients
                 if r.startswith("+") or r.replace("-", "").replace(" ", "").isdigit()
             ]
             if phone_recipients:

@@ -11,17 +11,17 @@ CRUD operations for API keys:
 
 import hashlib
 import secrets
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models import APIKey, User
+from app.models import APIKey
 from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/api-keys", tags=["API Keys"])
@@ -32,20 +32,25 @@ logger = get_logger(__name__)
 # Pydantic Schemas
 # =============================================================================
 
+
 class APIKeyCreateRequest(BaseModel):
     """Request to create a new API key."""
+
     name: str = Field(..., min_length=1, max_length=255, description="Friendly name for the key")
-    scopes: List[str] = Field(default=["read"], description="Permission scopes")
-    expires_in_days: Optional[int] = Field(default=None, ge=1, le=365, description="Days until expiration")
+    scopes: list[str] = Field(default=["read"], description="Permission scopes")
+    expires_in_days: Optional[int] = Field(
+        default=None, ge=1, le=365, description="Days until expiration"
+    )
 
 
 class APIKeyResponse(BaseModel):
     """API key response (masked key)."""
+
     id: int
     name: str
     key_prefix: str
     masked_key: str
-    scopes: List[str]
+    scopes: list[str]
     is_active: bool
     last_used_at: Optional[datetime]
     expires_at: Optional[datetime]
@@ -54,17 +59,19 @@ class APIKeyResponse(BaseModel):
 
 class APIKeyCreatedResponse(BaseModel):
     """Response when creating a new API key (includes full key)."""
+
     id: int
     name: str
     key: str  # Full key - only shown once!
     key_prefix: str
-    scopes: List[str]
+    scopes: list[str]
     expires_at: Optional[datetime]
     created_at: datetime
 
 
 class APIKeyRegenerateResponse(BaseModel):
     """Response when regenerating an API key."""
+
     id: int
     name: str
     key: str  # New full key - only shown once!
@@ -75,6 +82,7 @@ class APIKeyRegenerateResponse(BaseModel):
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def generate_api_key(key_type: str = "live") -> tuple[str, str, str]:
     """
@@ -101,11 +109,12 @@ def mask_key(prefix: str) -> str:
 # Endpoints
 # =============================================================================
 
-@router.get("", response_model=APIResponse[List[APIKeyResponse]])
+
+@router.get("", response_model=APIResponse[list[APIKeyResponse]])
 async def list_api_keys(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
-) -> APIResponse[List[APIKeyResponse]]:
+) -> APIResponse[list[APIKeyResponse]]:
     """
     List all API keys for the current user (masked).
     """
@@ -119,12 +128,14 @@ async def list_api_keys(
         )
 
     result = await db.execute(
-        select(APIKey).where(
+        select(APIKey)
+        .where(
             and_(
                 APIKey.user_id == user_id,
                 APIKey.tenant_id == tenant_id,
             )
-        ).order_by(APIKey.created_at.desc())
+        )
+        .order_by(APIKey.created_at.desc())
     )
     keys = result.scalars().all()
 
@@ -147,7 +158,9 @@ async def list_api_keys(
     )
 
 
-@router.post("", response_model=APIResponse[APIKeyCreatedResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=APIResponse[APIKeyCreatedResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_api_key(
     request: Request,
     body: APIKeyCreateRequest,
@@ -191,7 +204,8 @@ async def create_api_key(
     expires_at = None
     if body.expires_in_days:
         from datetime import timedelta
-        expires_at = datetime.now(timezone.utc) + timedelta(days=body.expires_in_days)
+
+        expires_at = datetime.now(UTC) + timedelta(days=body.expires_in_days)
 
     # Create database record
     api_key = APIKey(

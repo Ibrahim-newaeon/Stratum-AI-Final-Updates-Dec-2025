@@ -7,21 +7,23 @@ Handles authentication, event formatting, and API calls.
 Production-ready with retry logic, circuit breakers, and rate limiting.
 """
 
-import hashlib
-import time
 import asyncio
-import uuid
+import hashlib
 import threading
+import time
+import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from enum import Enum
+from typing import Any, Optional
+
 import httpx
 
 from app.core.logging import get_logger
-from .pii_hasher import PIIHasher
+
 from .event_mapper import AIEventMapper
+from .pii_hasher import PIIHasher
 
 logger = get_logger(__name__)
 
@@ -30,10 +32,12 @@ logger = get_logger(__name__)
 # Circuit Breaker Implementation
 # =============================================================================
 
+
 class CircuitState(str, Enum):
     """Circuit breaker states."""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Failing, reject requests
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, reject requests
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
@@ -43,6 +47,7 @@ class CircuitBreaker:
     Circuit breaker for API resilience.
     Prevents cascading failures by stopping requests to failing services.
     """
+
     failure_threshold: int = 5
     recovery_timeout: int = 60  # seconds
     half_open_max_calls: int = 3
@@ -59,7 +64,10 @@ class CircuitBreaker:
 
         if self.state == CircuitState.OPEN:
             # Check if recovery timeout has passed
-            if self.last_failure_time and (time.time() - self.last_failure_time) > self.recovery_timeout:
+            if (
+                self.last_failure_time
+                and (time.time() - self.last_failure_time) > self.recovery_timeout
+            ):
                 self.state = CircuitState.HALF_OPEN
                 self.half_open_calls = 0
                 return True
@@ -97,11 +105,13 @@ class CircuitBreaker:
 # Rate Limiter Implementation
 # =============================================================================
 
+
 @dataclass
 class RateLimiter:
     """
     Token bucket rate limiter for API calls.
     """
+
     max_tokens: int = 100
     refill_rate: float = 10.0  # tokens per second
 
@@ -133,9 +143,11 @@ class RateLimiter:
 # Event Delivery Log for EMQ Measurement
 # =============================================================================
 
+
 @dataclass
 class EventDeliveryLog:
     """Log entry for CAPI event delivery (used for real EMQ measurement)."""
+
     event_id: str
     platform: str
     event_name: str
@@ -148,7 +160,7 @@ class EventDeliveryLog:
 
 
 # In-memory event log (in production, this would be stored in database)
-_event_delivery_logs: List[EventDeliveryLog] = []
+_event_delivery_logs: list[EventDeliveryLog] = []
 
 
 def log_event_delivery(log: EventDeliveryLog):
@@ -158,12 +170,15 @@ def log_event_delivery(log: EventDeliveryLog):
     # Keep only last 10000 entries in memory
     if len(_event_delivery_logs) > 10000:
         _event_delivery_logs = _event_delivery_logs[-10000:]
-    logger.info(f"CAPI Event Delivery: platform={log.platform}, event={log.event_name}, "
-                f"success={log.success}, latency={log.latency_ms:.2f}ms")
+    logger.info(
+        f"CAPI Event Delivery: platform={log.platform}, event={log.event_name}, "
+        f"success={log.success}, latency={log.latency_ms:.2f}ms"
+    )
 
 
-def get_event_delivery_logs(platform: Optional[str] = None,
-                            since: Optional[datetime] = None) -> List[EventDeliveryLog]:
+def get_event_delivery_logs(
+    platform: Optional[str] = None, since: Optional[datetime] = None
+) -> list[EventDeliveryLog]:
     """Get event delivery logs for EMQ measurement."""
     logs = _event_delivery_logs
     if platform:
@@ -175,6 +190,7 @@ def get_event_delivery_logs(platform: Optional[str] = None,
 
 class ConnectionStatus(str, Enum):
     """Platform connection status."""
+
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     ERROR = "error"
@@ -184,10 +200,11 @@ class ConnectionStatus(str, Enum):
 @dataclass
 class CAPIResponse:
     """Response from CAPI request."""
+
     success: bool
     events_received: int
     events_processed: int
-    errors: List[Dict[str, Any]]
+    errors: list[dict[str, Any]]
     platform: str
     request_id: Optional[str] = None
 
@@ -195,10 +212,11 @@ class CAPIResponse:
 @dataclass
 class ConnectionResult:
     """Result of connection test."""
+
     status: ConnectionStatus
     platform: str
     message: str
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[dict[str, Any]] = None
 
 
 class BaseCAPIConnector(ABC):
@@ -209,23 +227,23 @@ class BaseCAPIConnector(ABC):
 
     PLATFORM_NAME: str = "base"
     MAX_RETRIES: int = 3
-    RETRY_DELAYS: List[float] = [1.0, 2.0, 4.0]  # Exponential backoff
+    RETRY_DELAYS: list[float] = [1.0, 2.0, 4.0]  # Exponential backoff
 
     def __init__(self):
         self.hasher = PIIHasher()
         self.mapper = AIEventMapper()
-        self._credentials: Dict[str, str] = {}
+        self._credentials: dict[str, str] = {}
         self._connected = False
         self._circuit_breaker = CircuitBreaker()
         self._rate_limiter = RateLimiter()
 
     @abstractmethod
-    async def connect(self, credentials: Dict[str, str]) -> ConnectionResult:
+    async def connect(self, credentials: dict[str, str]) -> ConnectionResult:
         """Establish connection with platform credentials."""
         pass
 
     @abstractmethod
-    async def _send_events_impl(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+    async def _send_events_impl(self, events: list[dict[str, Any]]) -> CAPIResponse:
         """Internal implementation of send_events. Override in subclasses."""
         pass
 
@@ -234,7 +252,7 @@ class BaseCAPIConnector(ABC):
         """Test the current connection."""
         pass
 
-    async def send_events(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+    async def send_events(self, events: list[dict[str, Any]]) -> CAPIResponse:
         """
         Send conversion events with retry logic, circuit breaker, and rate limiting.
         """
@@ -270,17 +288,21 @@ class BaseCAPIConnector(ABC):
                 # Log delivery for EMQ measurement
                 latency_ms = (time.time() - start_time) * 1000
                 for event in events:
-                    log_event_delivery(EventDeliveryLog(
-                        event_id=event.get("event_id", str(uuid.uuid4())),
-                        platform=self.PLATFORM_NAME,
-                        event_name=event.get("event_name", "unknown"),
-                        timestamp=datetime.now(timezone.utc),
-                        success=response.success,
-                        latency_ms=latency_ms,
-                        error_message=response.errors[0].get("message") if response.errors else None,
-                        request_id=response.request_id,
-                        retry_count=retry,
-                    ))
+                    log_event_delivery(
+                        EventDeliveryLog(
+                            event_id=event.get("event_id", str(uuid.uuid4())),
+                            platform=self.PLATFORM_NAME,
+                            event_name=event.get("event_name", "unknown"),
+                            timestamp=datetime.now(UTC),
+                            success=response.success,
+                            latency_ms=latency_ms,
+                            error_message=response.errors[0].get("message")
+                            if response.errors
+                            else None,
+                            request_id=response.request_id,
+                            retry_count=retry,
+                        )
+                    )
 
                 if response.success:
                     self._circuit_breaker.record_success()
@@ -288,14 +310,18 @@ class BaseCAPIConnector(ABC):
                 else:
                     last_error = response.errors
                     # Don't retry on client errors (4xx)
-                    if any("invalid" in str(e).lower() or "missing" in str(e).lower()
-                           for e in response.errors):
+                    if any(
+                        "invalid" in str(e).lower() or "missing" in str(e).lower()
+                        for e in response.errors
+                    ):
                         break
 
             except Exception as e:
                 last_error = [{"message": str(e)}]
                 latency_ms = (time.time() - start_time) * 1000
-                logger.warning(f"{self.PLATFORM_NAME} CAPI retry {retry + 1}/{self.MAX_RETRIES}: {e}")
+                logger.warning(
+                    f"{self.PLATFORM_NAME} CAPI retry {retry + 1}/{self.MAX_RETRIES}: {e}"
+                )
 
             # Wait before retry (exponential backoff)
             if retry < self.MAX_RETRIES - 1:
@@ -311,11 +337,11 @@ class BaseCAPIConnector(ABC):
             platform=self.PLATFORM_NAME,
         )
 
-    def format_user_data(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    def format_user_data(self, user_data: dict[str, Any]) -> dict[str, Any]:
         """Format and hash user data for the platform."""
         return self.hasher.hash_data(user_data)
 
-    def map_event(self, event_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    def map_event(self, event_name: str, params: dict[str, Any]) -> dict[str, Any]:
         """Map custom event to platform event."""
         mapping = self.mapper.map_event(event_name, params)
         return {
@@ -323,7 +349,7 @@ class BaseCAPIConnector(ABC):
             "parameters": mapping.parameters,
         }
 
-    def get_circuit_state(self) -> Dict[str, Any]:
+    def get_circuit_state(self) -> dict[str, Any]:
         """Get current circuit breaker state."""
         return {
             "state": self._circuit_breaker.state.value,
@@ -350,7 +376,7 @@ class MetaCAPIConnector(BaseCAPIConnector):
         self.pixel_id: Optional[str] = None
         self.access_token: Optional[str] = None
 
-    async def connect(self, credentials: Dict[str, str]) -> ConnectionResult:
+    async def connect(self, credentials: dict[str, str]) -> ConnectionResult:
         """Connect to Meta CAPI with credentials."""
         self.pixel_id = credentials.get("pixel_id")
         self.access_token = credentials.get("access_token")
@@ -409,7 +435,7 @@ class MetaCAPIConnector(BaseCAPIConnector):
                 message=str(e),
             )
 
-    async def _send_events_impl(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+    async def _send_events_impl(self, events: list[dict[str, Any]]) -> CAPIResponse:
         """Send conversion events to Meta CAPI."""
         # Format events for Meta CAPI
         formatted_events = []
@@ -457,7 +483,7 @@ class MetaCAPIConnector(BaseCAPIConnector):
                 platform=self.PLATFORM_NAME,
             )
 
-    def _format_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_event(self, event: dict[str, Any]) -> dict[str, Any]:
         """Format event for Meta CAPI."""
         # Map event name
         event_name = event.get("event_name", event.get("name", "CustomEvent"))
@@ -519,7 +545,7 @@ class GoogleCAPIConnector(BaseCAPIConnector):
         self._access_token: Optional[str] = None
         self._token_expires: float = 0
 
-    async def connect(self, credentials: Dict[str, str]) -> ConnectionResult:
+    async def connect(self, credentials: dict[str, str]) -> ConnectionResult:
         """Connect to Google Ads API."""
         self.customer_id = credentials.get("customer_id", "").replace("-", "")
         self.conversion_action_id = credentials.get("conversion_action_id")
@@ -631,7 +657,7 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                 message=str(e),
             )
 
-    async def _send_events_impl(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+    async def _send_events_impl(self, events: list[dict[str, Any]]) -> CAPIResponse:
         """Send conversion events to Google Ads Enhanced Conversions API."""
         # Format events for Google Enhanced Conversions
         conversions = []
@@ -667,7 +693,9 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                             success=True,
                             events_received=len(events),
                             events_processed=len(events) - failed_count,
-                            errors=[{"message": partial_failure_error.get("message", "Partial failure")}],
+                            errors=[
+                                {"message": partial_failure_error.get("message", "Partial failure")}
+                            ],
                             platform=self.PLATFORM_NAME,
                             request_id=result.get("requestId"),
                         )
@@ -686,7 +714,12 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                         success=False,
                         events_received=len(events),
                         events_processed=0,
-                        errors=[{"message": error.get("message", "Unknown error"), "code": error.get("code")}],
+                        errors=[
+                            {
+                                "message": error.get("message", "Unknown error"),
+                                "code": error.get("code"),
+                            }
+                        ],
                         platform=self.PLATFORM_NAME,
                     )
 
@@ -700,7 +733,7 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                 platform=self.PLATFORM_NAME,
             )
 
-    def _format_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_event(self, event: dict[str, Any]) -> dict[str, Any]:
         """Format event for Google Enhanced Conversions."""
         user_data = event.get("user_data", {})
         hashed_user_data = self.format_user_data(user_data)
@@ -714,21 +747,25 @@ class GoogleCAPIConnector(BaseCAPIConnector):
             user_identifiers.append({"hashedPhoneNumber": hashed_user_data["ph"]})
         if user_data.get("address"):
             address = user_data["address"]
-            user_identifiers.append({
-                "addressInfo": {
-                    "hashedFirstName": self.hasher.hash_value(address.get("first_name", "")),
-                    "hashedLastName": self.hasher.hash_value(address.get("last_name", "")),
-                    "countryCode": address.get("country", "US"),
-                    "postalCode": address.get("postal_code", ""),
+            user_identifiers.append(
+                {
+                    "addressInfo": {
+                        "hashedFirstName": self.hasher.hash_value(address.get("first_name", "")),
+                        "hashedLastName": self.hasher.hash_value(address.get("last_name", "")),
+                        "countryCode": address.get("country", "US"),
+                        "postalCode": address.get("postal_code", ""),
+                    }
                 }
-            })
+            )
 
         # Format conversion timestamp
         event_time = event.get("event_time")
         if isinstance(event_time, int):
-            conversion_datetime = datetime.fromtimestamp(event_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")
+            conversion_datetime = datetime.fromtimestamp(event_time, tz=UTC).strftime(
+                "%Y-%m-%d %H:%M:%S%z"
+            )
         else:
-            conversion_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")
+            conversion_datetime = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S%z")
 
         formatted = {
             "conversionAction": f"customers/{self.customer_id}/conversionActions/{self.conversion_action_id}",
@@ -769,7 +806,7 @@ class TikTokCAPIConnector(BaseCAPIConnector):
         self.pixel_code: Optional[str] = None
         self.access_token: Optional[str] = None
 
-    async def connect(self, credentials: Dict[str, str]) -> ConnectionResult:
+    async def connect(self, credentials: dict[str, str]) -> ConnectionResult:
         """Connect to TikTok Events API."""
         self.pixel_code = credentials.get("pixel_code")
         self.access_token = credentials.get("access_token")
@@ -800,7 +837,7 @@ class TikTokCAPIConnector(BaseCAPIConnector):
             message="Not configured",
         )
 
-    async def _send_events_impl(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+    async def _send_events_impl(self, events: list[dict[str, Any]]) -> CAPIResponse:
         """Send conversion events to TikTok Events API."""
         formatted_events = [self._format_event(e) for e in events]
 
@@ -844,7 +881,7 @@ class TikTokCAPIConnector(BaseCAPIConnector):
                 platform=self.PLATFORM_NAME,
             )
 
-    def _format_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_event(self, event: dict[str, Any]) -> dict[str, Any]:
         """Format event for TikTok Events API."""
         event_name = event.get("event_name", event.get("name"))
         mapping = self.mapper.map_event(event_name, event.get("parameters", {}))
@@ -883,7 +920,7 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
         self.pixel_id: Optional[str] = None
         self.access_token: Optional[str] = None
 
-    async def connect(self, credentials: Dict[str, str]) -> ConnectionResult:
+    async def connect(self, credentials: dict[str, str]) -> ConnectionResult:
         """Connect to Snapchat CAPI."""
         self.pixel_id = credentials.get("pixel_id")
         self.access_token = credentials.get("access_token")
@@ -955,7 +992,7 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                 message=str(e),
             )
 
-    async def _send_events_impl(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+    async def _send_events_impl(self, events: list[dict[str, Any]]) -> CAPIResponse:
         """Send events to Snapchat Conversion API."""
         formatted_events = [self._format_event(e) for e in events]
 
@@ -1023,11 +1060,10 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                 platform=self.PLATFORM_NAME,
             )
 
-    def _format_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_event(self, event: dict[str, Any]) -> dict[str, Any]:
         """Format event for Snapchat CAPI."""
         mapping = self.mapper.map_event(
-            event.get("event_name", "CUSTOM_EVENT_1"),
-            event.get("parameters", {})
+            event.get("event_name", "CUSTOM_EVENT_1"), event.get("parameters", {})
         )
         user_data = self.format_user_data(event.get("user_data", {}))
 
@@ -1064,7 +1100,7 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
         self.access_token: Optional[str] = None
         self.webhook_verify_token: Optional[str] = None
 
-    async def connect(self, credentials: Dict[str, str]) -> ConnectionResult:
+    async def connect(self, credentials: dict[str, str]) -> ConnectionResult:
         """Connect to WhatsApp Business Cloud API."""
         self.phone_number_id = credentials.get("phone_number_id")
         self.business_account_id = credentials.get("business_account_id")
@@ -1127,7 +1163,7 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                 message=str(e),
             )
 
-    async def _send_events_impl(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+    async def _send_events_impl(self, events: list[dict[str, Any]]) -> CAPIResponse:
         """
         Send messages/events via WhatsApp Business API.
 
@@ -1155,7 +1191,7 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
             platform=self.PLATFORM_NAME,
         )
 
-    async def _send_message(self, event: Dict[str, Any]) -> bool:
+    async def _send_message(self, event: dict[str, Any]) -> bool:
         """Send a WhatsApp message based on event data."""
         user_data = event.get("user_data", {})
         phone = user_data.get("phone") or user_data.get("ph")
@@ -1205,7 +1241,7 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
             logger.error(f"WhatsApp message send error: {e}")
             return False
 
-    def _format_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_event(self, event: dict[str, Any]) -> dict[str, Any]:
         """Format event for WhatsApp API."""
         return {
             "event_name": event.get("event_name"),
@@ -1219,9 +1255,11 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
 # Advanced Platform Connector Features (P0 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class ConnectorHealthStatus:
     """Health status for a platform connector."""
+
     platform: str
     status: str  # healthy, degraded, unhealthy
     last_check: datetime
@@ -1230,12 +1268,13 @@ class ConnectorHealthStatus:
     circuit_state: str
     error_count_1h: int
     events_processed_1h: int
-    issues: List[str]
+    issues: list[str]
 
 
 @dataclass
 class BatchOptimizationResult:
     """Result of batch optimization."""
+
     original_batch_size: int
     optimized_batch_size: int
     estimated_throughput_improvement: float
@@ -1254,19 +1293,19 @@ class ConnectorHealthMonitor:
     """
 
     def __init__(self):
-        self._health_history: Dict[str, List[Tuple[datetime, ConnectorHealthStatus]]] = {}
-        self._alert_callbacks: List[Any] = []
-        self._last_alerts: Dict[str, datetime] = {}
+        self._health_history: dict[str, list[tuple[datetime, ConnectorHealthStatus]]] = {}
+        self._alert_callbacks: list[Any] = []
+        self._last_alerts: dict[str, datetime] = {}
         self._alert_cooldown = timedelta(minutes=15)
 
     def check_health(
         self,
         connector: BaseCAPIConnector,
-        delivery_logs: Optional[List[EventDeliveryLog]] = None,
+        delivery_logs: Optional[list[EventDeliveryLog]] = None,
     ) -> ConnectorHealthStatus:
         """Check health of a connector."""
         platform = connector.PLATFORM_NAME
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         hour_ago = now - timedelta(hours=1)
 
         # Get recent delivery logs
@@ -1349,8 +1388,8 @@ class ConnectorHealthMonitor:
         """Check if alerts should be triggered."""
         if health.status == "unhealthy":
             last_alert = self._last_alerts.get(health.platform)
-            if last_alert is None or (datetime.now(timezone.utc) - last_alert) > self._alert_cooldown:
-                self._last_alerts[health.platform] = datetime.now(timezone.utc)
+            if last_alert is None or (datetime.now(UTC) - last_alert) > self._alert_cooldown:
+                self._last_alerts[health.platform] = datetime.now(UTC)
                 for callback in self._alert_callbacks:
                     try:
                         callback(health)
@@ -1363,8 +1402,8 @@ class ConnectorHealthMonitor:
 
     def get_health_summary(
         self,
-        connectors: List[BaseCAPIConnector],
-    ) -> Dict[str, Any]:
+        connectors: list[BaseCAPIConnector],
+    ) -> dict[str, Any]:
         """Get health summary for all connectors."""
         statuses = {}
         overall_status = "healthy"
@@ -1385,7 +1424,7 @@ class ConnectorHealthMonitor:
 
         return {
             "overall_status": overall_status,
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "checked_at": datetime.now(UTC).isoformat(),
             "platforms": statuses,
         }
 
@@ -1393,9 +1432,9 @@ class ConnectorHealthMonitor:
         self,
         platform: str,
         hours: int = 24,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get health history for a platform."""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
         history = self._health_history.get(platform, [])
 
         return [
@@ -1406,7 +1445,8 @@ class ConnectorHealthMonitor:
                 "avg_latency_ms": h.avg_latency_ms,
                 "error_count": h.error_count_1h,
             }
-            for t, h in history if t > cutoff
+            for t, h in history
+            if t > cutoff
         ]
 
 
@@ -1437,7 +1477,7 @@ class BatchOptimizer:
     }
 
     def __init__(self):
-        self._performance_history: Dict[str, List[Dict[str, Any]]] = {}
+        self._performance_history: dict[str, list[dict[str, Any]]] = {}
 
     def record_batch_performance(
         self,
@@ -1451,14 +1491,16 @@ class BatchOptimizer:
         if platform not in self._performance_history:
             self._performance_history[platform] = []
 
-        self._performance_history[platform].append({
-            "timestamp": datetime.now(timezone.utc),
-            "batch_size": batch_size,
-            "success": success,
-            "latency_ms": latency_ms,
-            "events_processed": events_processed,
-            "throughput": events_processed / (latency_ms / 1000) if latency_ms > 0 else 0,
-        })
+        self._performance_history[platform].append(
+            {
+                "timestamp": datetime.now(UTC),
+                "batch_size": batch_size,
+                "success": success,
+                "latency_ms": latency_ms,
+                "events_processed": events_processed,
+                "throughput": events_processed / (latency_ms / 1000) if latency_ms > 0 else 0,
+            }
+        )
 
         # Keep last 1000 records
         if len(self._performance_history[platform]) > 1000:
@@ -1483,7 +1525,7 @@ class BatchOptimizer:
             )
 
         # Group by batch size ranges and calculate average throughput
-        size_performance: Dict[int, List[float]] = {}
+        size_performance: dict[int, list[float]] = {}
         for record in history:
             if record["success"]:
                 size_bucket = (record["batch_size"] // 100) * 100
@@ -1522,7 +1564,11 @@ class BatchOptimizer:
         # Calculate improvement
         current_bucket = (current_batch_size // 100) * 100
         current_throughput = avg_throughputs.get(current_bucket, optimal_throughput * 0.8)
-        improvement = ((optimal_throughput - current_throughput) / current_throughput * 100) if current_throughput > 0 else 0
+        improvement = (
+            ((optimal_throughput - current_throughput) / current_throughput * 100)
+            if current_throughput > 0
+            else 0
+        )
 
         # Apply rate limit constraints
         rate_limit = self.RATE_LIMITS.get(platform, 500)
@@ -1559,8 +1605,8 @@ class ConnectionPool:
     def __init__(self, max_connections: int = 10, timeout: float = 30.0):
         self.max_connections = max_connections
         self.timeout = timeout
-        self._clients: Dict[str, List[httpx.AsyncClient]] = {}
-        self._client_index: Dict[str, int] = {}
+        self._clients: dict[str, list[httpx.AsyncClient]] = {}
+        self._client_index: dict[str, int] = {}
         self._lock = asyncio.Lock()
 
     async def get_client(self, platform: str) -> httpx.AsyncClient:
@@ -1598,7 +1644,9 @@ class ConnectionPool:
                     limits=httpx.Limits(max_connections=100),
                 )
                 self._clients[platform].append(client)
-                logger.info(f"Scaled up connection pool for {platform} to {len(self._clients[platform])}")
+                logger.info(
+                    f"Scaled up connection pool for {platform} to {len(self._clients[platform])}"
+                )
 
     async def scale_down(self, platform: str):
         """Remove connections from the pool."""
@@ -1606,7 +1654,9 @@ class ConnectionPool:
             if platform in self._clients and len(self._clients[platform]) > 1:
                 client = self._clients[platform].pop()
                 await client.aclose()
-                logger.info(f"Scaled down connection pool for {platform} to {len(self._clients[platform])}")
+                logger.info(
+                    f"Scaled down connection pool for {platform} to {len(self._clients[platform])}"
+                )
 
     async def close_all(self):
         """Close all connections in the pool."""
@@ -1617,7 +1667,7 @@ class ConnectionPool:
             self._clients.clear()
             self._client_index.clear()
 
-    def get_pool_stats(self) -> Dict[str, Any]:
+    def get_pool_stats(self) -> dict[str, Any]:
         """Get statistics about the connection pool."""
         return {
             platform: {
@@ -1636,12 +1686,12 @@ class EventDeduplicator:
     """
 
     def __init__(self, ttl_hours: int = 24, max_size: int = 100000):
-        self._seen_events: Dict[str, datetime] = {}
+        self._seen_events: dict[str, datetime] = {}
         self._ttl = timedelta(hours=ttl_hours)
         self._max_size = max_size
         self._lock = threading.RLock()
 
-    def is_duplicate(self, event: Dict[str, Any]) -> bool:
+    def is_duplicate(self, event: dict[str, Any]) -> bool:
         """Check if an event is a duplicate."""
         event_key = self._generate_key(event)
 
@@ -1651,10 +1701,10 @@ class EventDeduplicator:
             if event_key in self._seen_events:
                 return True
 
-            self._seen_events[event_key] = datetime.now(timezone.utc)
+            self._seen_events[event_key] = datetime.now(UTC)
             return False
 
-    def _generate_key(self, event: Dict[str, Any]) -> str:
+    def _generate_key(self, event: dict[str, Any]) -> str:
         """Generate a unique key for an event."""
         # Use event_id if available
         event_id = event.get("event_id")
@@ -1676,10 +1726,9 @@ class EventDeduplicator:
 
     def _cleanup_expired(self):
         """Remove expired entries."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expired = [
-            key for key, timestamp in self._seen_events.items()
-            if now - timestamp > self._ttl
+            key for key, timestamp in self._seen_events.items() if now - timestamp > self._ttl
         ]
 
         for key in expired:
@@ -1692,7 +1741,7 @@ class EventDeduplicator:
             for key, _ in sorted_events[:to_remove]:
                 del self._seen_events[key]
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get deduplication statistics."""
         with self._lock:
             return {

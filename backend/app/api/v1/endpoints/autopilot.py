@@ -8,20 +8,19 @@ API endpoints for Autopilot features:
 - Action execution
 """
 
-from datetime import date
-from typing import Dict, Any, List, Optional
+from datetime import UTC, date
+from typing import Any, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_async_session
 from app.autopilot.service import AutopilotService
-from app.features.service import get_tenant_features, can_access_feature
-from app.schemas.response import APIResponse
+from app.db.session import get_async_session
+from app.features.service import can_access_feature, get_tenant_features
 from app.models.trust_layer import TrustGateAuditLog
-
+from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/tenant/{tenant_id}/autopilot", tags=["autopilot"])
 
@@ -30,24 +29,28 @@ router = APIRouter(prefix="/tenant/{tenant_id}/autopilot", tags=["autopilot"])
 # Request/Response Models
 # =============================================================================
 
+
 class QueueActionRequest(BaseModel):
     """Request to queue a new action."""
+
     action_type: str = Field(..., description="Type of action")
     entity_type: str = Field(..., description="Type of entity (campaign, adset, creative)")
     entity_id: str = Field(..., description="Platform entity ID")
     entity_name: str = Field(..., description="Human-readable name")
     platform: str = Field(..., description="Ad platform (meta, google, tiktok, snapchat)")
-    action_json: Dict[str, Any] = Field(..., description="Full action details")
-    before_value: Optional[Dict[str, Any]] = Field(None, description="Current value before change")
+    action_json: dict[str, Any] = Field(..., description="Full action details")
+    before_value: Optional[dict[str, Any]] = Field(None, description="Current value before change")
 
 
 class ApproveActionsRequest(BaseModel):
     """Request to approve multiple actions."""
-    action_ids: List[str] = Field(..., description="List of action UUIDs to approve")
+
+    action_ids: list[str] = Field(..., description="List of action UUIDs to approve")
 
 
 class ActionResponse(BaseModel):
     """Serialized action for API response."""
+
     id: str
     date: str
     action_type: str
@@ -55,9 +58,9 @@ class ActionResponse(BaseModel):
     entity_id: str
     entity_name: Optional[str]
     platform: str
-    action_json: Dict[str, Any]
-    before_value: Optional[Dict[str, Any]]
-    after_value: Optional[Dict[str, Any]]
+    action_json: dict[str, Any]
+    before_value: Optional[dict[str, Any]]
+    after_value: Optional[dict[str, Any]]
     status: str
     created_at: str
     approved_at: Optional[str]
@@ -69,9 +72,11 @@ class ActionResponse(BaseModel):
 # Helper Functions
 # =============================================================================
 
+
 def action_to_response(action) -> ActionResponse:
     """Convert database action to API response."""
     import json
+
     return ActionResponse(
         id=str(action.id),
         date=action.date.isoformat(),
@@ -95,7 +100,8 @@ def action_to_response(action) -> ActionResponse:
 # Endpoints
 # =============================================================================
 
-@router.get("/status", response_model=APIResponse[Dict[str, Any]])
+
+@router.get("/status", response_model=APIResponse[dict[str, Any]])
 async def get_autopilot_status(
     request: Request,
     tenant_id: int,
@@ -119,6 +125,7 @@ async def get_autopilot_status(
     summary = await service.get_action_summary(tenant_id, days=1)
 
     from app.features.flags import get_autopilot_caps
+
     caps = get_autopilot_caps()
 
     return APIResponse(
@@ -137,7 +144,7 @@ async def get_autopilot_status(
     )
 
 
-@router.get("/actions", response_model=APIResponse[Dict[str, Any]])
+@router.get("/actions", response_model=APIResponse[dict[str, Any]])
 async def get_actions(
     request: Request,
     tenant_id: int,
@@ -182,7 +189,7 @@ async def get_actions(
     )
 
 
-@router.get("/actions/summary", response_model=APIResponse[Dict[str, Any]])
+@router.get("/actions/summary", response_model=APIResponse[dict[str, Any]])
 async def get_actions_summary(
     request: Request,
     tenant_id: int,
@@ -199,7 +206,7 @@ async def get_actions_summary(
     return APIResponse(success=True, data=summary)
 
 
-@router.post("/actions", response_model=APIResponse[Dict[str, Any]])
+@router.post("/actions", response_model=APIResponse[dict[str, Any]])
 async def queue_action(
     request: Request,
     tenant_id: int,
@@ -256,7 +263,7 @@ async def queue_action(
     )
 
 
-@router.post("/actions/{action_id}/approve", response_model=APIResponse[Dict[str, Any]])
+@router.post("/actions/{action_id}/approve", response_model=APIResponse[dict[str, Any]])
 async def approve_action(
     request: Request,
     tenant_id: int,
@@ -291,7 +298,7 @@ async def approve_action(
     )
 
 
-@router.post("/actions/approve-all", response_model=APIResponse[Dict[str, Any]])
+@router.post("/actions/approve-all", response_model=APIResponse[dict[str, Any]])
 async def approve_all_actions(
     request: Request,
     tenant_id: int,
@@ -326,7 +333,7 @@ async def approve_all_actions(
     )
 
 
-@router.post("/actions/{action_id}/dismiss", response_model=APIResponse[Dict[str, Any]])
+@router.post("/actions/{action_id}/dismiss", response_model=APIResponse[dict[str, Any]])
 async def dismiss_action(
     request: Request,
     tenant_id: int,
@@ -361,7 +368,7 @@ async def dismiss_action(
     )
 
 
-@router.get("/actions/{action_id}", response_model=APIResponse[Dict[str, Any]])
+@router.get("/actions/{action_id}", response_model=APIResponse[dict[str, Any]])
 async def get_action(
     request: Request,
     tenant_id: int,
@@ -393,31 +400,34 @@ async def get_action(
 # Dry-Run Mode
 # =============================================================================
 
+
 class DryRunRequest(BaseModel):
     """Request to simulate an action in dry-run mode."""
+
     action_type: str = Field(..., description="Type of action")
     entity_type: str = Field(..., description="Type of entity (campaign, adset, creative)")
     entity_id: str = Field(..., description="Platform entity ID")
     entity_name: Optional[str] = Field(None, description="Human-readable name")
     platform: str = Field(..., description="Ad platform (meta, google, tiktok, snapchat)")
-    action_json: Dict[str, Any] = Field(..., description="Full action details")
+    action_json: dict[str, Any] = Field(..., description="Full action details")
 
 
 class DryRunResult(BaseModel):
     """Result of a dry-run simulation."""
+
     would_execute: bool
     decision_type: str  # execute, hold, block
     signal_health_score: Optional[float]
     signal_health_status: Optional[str]
     gate_passed: bool
-    gate_reasons: List[str]
+    gate_reasons: list[str]
     healthy_threshold: float
     degraded_threshold: float
-    action_preview: Dict[str, Any]
-    warnings: List[str]
+    action_preview: dict[str, Any]
+    warnings: list[str]
 
 
-@router.post("/actions/dry-run", response_model=APIResponse[Dict[str, Any]])
+@router.post("/actions/dry-run", response_model=APIResponse[dict[str, Any]])
 async def dry_run_action(
     request: Request,
     tenant_id: int,
@@ -449,6 +459,7 @@ async def dry_run_action(
 
     # Get signal health
     from app.quality.trust_layer_service import SignalHealthService
+
     signal_service = SignalHealthService(db)
     signal_data = await signal_service.get_signal_health(tenant_id)
 
@@ -488,11 +499,15 @@ async def dry_run_action(
         if signal_score < degraded_threshold:
             gate_passed = False
             decision_type = "block"
-            gate_reasons.append(f"EMQ score {signal_score:.1f}% is below degraded threshold ({degraded_threshold}%)")
+            gate_reasons.append(
+                f"EMQ score {signal_score:.1f}% is below degraded threshold ({degraded_threshold}%)"
+            )
         elif signal_score < healthy_threshold:
             if decision_type != "block":
                 decision_type = "hold"
-            gate_reasons.append(f"EMQ score {signal_score:.1f}% is below healthy threshold ({healthy_threshold}%)")
+            gate_reasons.append(
+                f"EMQ score {signal_score:.1f}% is below healthy threshold ({healthy_threshold}%)"
+            )
             warnings.append("Consider improving data quality before executing")
 
     # Check autopilot level
@@ -520,7 +535,8 @@ async def dry_run_action(
 
     # Log to audit trail
     import json
-    from datetime import datetime, timezone
+    from datetime import datetime
+
     audit_log = TrustGateAuditLog(
         tenant_id=tenant_id,
         decision_type=decision_type,
@@ -539,7 +555,7 @@ async def dry_run_action(
         action_payload=json.dumps(body.action_json),
         triggered_by_user_id=user_id,
         triggered_by_system=0,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     db.add(audit_log)
     await db.commit()

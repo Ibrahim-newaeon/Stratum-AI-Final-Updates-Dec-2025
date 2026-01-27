@@ -6,11 +6,11 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
+  BoltIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
   ShieldCheckIcon,
   SignalIcon,
-  BoltIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 
@@ -41,10 +41,7 @@ export default function TrustEngineSolution() {
                 <br />
                 <span style={{ color: '#f97316' }}>Built-In Safety</span>
               </h1>
-              <p
-                className="text-lg mb-8"
-                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-              >
+              <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                 The Trust Engine ensures automations only execute when your data is healthy. No more
                 blind optimization based on bad signals.
               </p>
@@ -187,9 +184,7 @@ export default function TrustEngineSolution() {
       {/* Gate Behaviors */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-16">
-            Gate Behaviors
-          </h2>
+          <h2 className="text-3xl font-bold text-white text-center mb-16">Gate Behaviors</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
@@ -205,7 +200,8 @@ export default function TrustEngineSolution() {
                 status: 'DEGRADED',
                 threshold: '40-69',
                 action: 'HOLD',
-                description: 'Automations paused. Alert sent for review. Manual override available.',
+                description:
+                  'Automations paused. Alert sent for review. Manual override available.',
                 color: '#eab308',
                 bg: 'rgba(234, 179, 8, 0.1)',
                 border: 'rgba(234, 179, 8, 0.3)',
@@ -257,10 +253,26 @@ export default function TrustEngineSolution() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: 'Prevent Bad Decisions', desc: 'Never optimize on corrupted data', color: '#ef4444' },
-              { title: 'Reduce Manual Oversight', desc: 'Automated safety checks 24/7', color: '#22c55e' },
-              { title: 'Audit Trail', desc: 'Full logging of all gate decisions', color: '#a855f7' },
-              { title: 'Customizable Thresholds', desc: 'Set your own risk tolerance', color: '#06b6d4' },
+              {
+                title: 'Prevent Bad Decisions',
+                desc: 'Never optimize on corrupted data',
+                color: '#ef4444',
+              },
+              {
+                title: 'Reduce Manual Oversight',
+                desc: 'Automated safety checks 24/7',
+                color: '#22c55e',
+              },
+              {
+                title: 'Audit Trail',
+                desc: 'Full logging of all gate decisions',
+                color: '#a855f7',
+              },
+              {
+                title: 'Customizable Thresholds',
+                desc: 'Set your own risk tolerance',
+                color: '#06b6d4',
+              },
             ].map((benefit) => (
               <div
                 key={benefit.title}
@@ -293,9 +305,7 @@ export default function TrustEngineSolution() {
               boxShadow: '0 8px 32px rgba(34, 197, 94, 0.15), 0 8px 32px rgba(6, 182, 212, 0.15)',
             }}
           >
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Automate with Confidence
-            </h2>
+            <h2 className="text-3xl font-bold text-white mb-4">Automate with Confidence</h2>
             <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               Let the Trust Engine handle the safety checks while you focus on growth.
             </p>

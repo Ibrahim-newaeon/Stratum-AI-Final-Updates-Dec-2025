@@ -6,8 +6,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
-import { NewspaperIcon, CalendarIcon, UserIcon, ClockIcon } from '@heroicons/react/24/outline';
-import { usePosts, useCategories } from '@/api/cms';
+import { CalendarIcon, ClockIcon, NewspaperIcon, UserIcon } from '@heroicons/react/24/outline';
+import { useCategories, usePosts } from '@/api/cms';
 
 export default function Blog() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
@@ -135,11 +135,7 @@ export default function Blog() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((post) => (
-                <Link
-                  key={post.id}
-                  to={`/blog/${post.slug}`}
-                  className="block"
-                >
+                <Link key={post.id} to={`/blog/${post.slug}`} className="block">
                   <article
                     className="p-6 rounded-2xl transition-all hover:scale-[1.02] cursor-pointer group h-full"
                     style={{

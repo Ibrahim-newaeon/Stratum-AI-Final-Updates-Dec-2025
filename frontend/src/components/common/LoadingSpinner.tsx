@@ -1,9 +1,9 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  className?: string
-  label?: string
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+  label?: string;
 }
 
 const sizeClasses = {
@@ -11,7 +11,7 @@ const sizeClasses = {
   md: 'w-8 h-8 border-2',
   lg: 'w-12 h-12 border-3',
   xl: 'w-16 h-16 border-4',
-}
+};
 
 export function LoadingSpinner({
   size = 'md',
@@ -29,13 +29,9 @@ export function LoadingSpinner({
         role="status"
         aria-label={label}
       />
-      {label && (
-        <span className="text-sm text-muted-foreground animate-pulse">
-          {label}
-        </span>
-      )}
+      {label && <span className="text-sm text-muted-foreground animate-pulse">{label}</span>}
     </div>
-  )
+  );
 }
 
 export function PageLoader() {
@@ -43,7 +39,7 @@ export function PageLoader() {
     <div className="flex items-center justify-center min-h-[400px]">
       <LoadingSpinner size="lg" label="Loading page..." />
     </div>
-  )
+  );
 }
 
 export function InlineLoader({ className }: { className?: string }) {
@@ -52,7 +48,7 @@ export function InlineLoader({ className }: { className?: string }) {
       <LoadingSpinner size="sm" label="" />
       <span className="text-sm text-muted-foreground">Loading...</span>
     </div>
-  )
+  );
 }
 
 export function SkeletonCard() {
@@ -67,7 +63,7 @@ export function SkeletonCard() {
       <div className="h-8 w-32 bg-muted rounded mb-2" aria-hidden="true" />
       <div className="h-3 w-20 bg-muted rounded" aria-hidden="true" />
     </div>
-  )
+  );
 }
 
 export function SkeletonTable({ rows = 5 }: { rows?: number }) {
@@ -95,7 +91,7 @@ export function SkeletonTable({ rows = 5 }: { rows?: number }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default LoadingSpinner
+export default LoadingSpinner;

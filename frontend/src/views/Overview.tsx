@@ -12,53 +12,53 @@
  * - Full accessibility support
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import { motion } from 'framer-motion'
-import { staggerContainer, listItem } from '@/lib/animations'
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { listItem, staggerContainer } from '@/lib/animations';
 import {
-  RefreshCw,
-  Download,
-  Bell,
   AlertTriangle,
-  CheckCircle,
-  Info,
-  TrendingUp,
-  DollarSign,
-  Target,
-  MousePointerClick,
-  Eye,
-  ShoppingCart,
   BarChart3,
+  Bell,
+  CheckCircle,
+  DollarSign,
+  Download,
+  Eye,
+  Info,
   Keyboard,
-} from 'lucide-react'
-import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
-import { KPICard } from '@/components/dashboard/KPICard'
-import { CampaignTable } from '@/components/dashboard/CampaignTable'
-import { FilterBar } from '@/components/dashboard/FilterBar'
-import { SimulateSlider } from '@/components/widgets/SimulateSlider'
-import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget'
-import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget'
-import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget'
+  MousePointerClick,
+  RefreshCw,
+  ShoppingCart,
+  Target,
+  TrendingUp,
+} from 'lucide-react';
+import { cn, formatCompactNumber, formatCurrency } from '@/lib/utils';
+import { KPICard } from '@/components/dashboard/KPICard';
+import { CampaignTable } from '@/components/dashboard/CampaignTable';
+import { FilterBar } from '@/components/dashboard/FilterBar';
+import { SimulateSlider } from '@/components/widgets/SimulateSlider';
+import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget';
+import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget';
+import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget';
 import {
-  PlatformPerformanceChart,
-  ROASByPlatformChart,
   DailyTrendChart,
+  PlatformPerformanceChart,
   RegionalBreakdownChart,
-} from '@/components/charts'
-import { TableSkeleton, AlertSkeleton } from '@/components/ui/Skeleton'
-import { NoFilterResultsState } from '@/components/ui/EmptyState'
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+  ROASByPlatformChart,
+} from '@/components/charts';
+import { AlertSkeleton, TableSkeleton } from '@/components/ui/Skeleton';
+import { NoFilterResultsState } from '@/components/ui/EmptyState';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import {
   Campaign,
+  DailyPerformance,
   DashboardFilters,
   KPIMetrics,
   PlatformSummary,
-  DailyPerformance,
-} from '@/types/dashboard'
-import { useCampaigns, useAnomalies, useTenantOverview } from '@/api/hooks'
-import { useExportDashboard, ExportFormat } from '@/api/dashboard'
-import { useTenantStore } from '@/stores/tenantStore'
+} from '@/types/dashboard';
+import { useAnomalies, useCampaigns, useTenantOverview } from '@/api/hooks';
+import { ExportFormat, useExportDashboard } from '@/api/dashboard';
+import { useTenantStore } from '@/stores/tenantStore';
 
 // Mock data for demonstration
 const mockCampaigns: Campaign[] = [
@@ -152,18 +152,54 @@ const mockCampaigns: Campaign[] = [
     status: 'Active',
     start_date: '2024-11-15',
   },
-]
+];
 
 const mockPlatformSummary: PlatformSummary[] = [
-  { platform: 'Meta Ads', spend: 18100, revenue: 67400, conversions: 770, roas: 3.72, cpa: 23.51, impressions: 1810000, clicks: 36200 },
-  { platform: 'Google Ads', spend: 8200, revenue: 28700, conversions: 287, roas: 3.5, cpa: 28.57, impressions: 980000, clicks: 19600 },
-  { platform: 'TikTok Ads', spend: 15000, revenue: 37500, conversions: 500, roas: 2.5, cpa: 30.0, impressions: 2500000, clicks: 50000 },
-  { platform: 'Snapchat Ads', spend: 4500, revenue: 11250, conversions: 150, roas: 2.5, cpa: 30.0, impressions: 750000, clicks: 15000 },
-]
+  {
+    platform: 'Meta Ads',
+    spend: 18100,
+    revenue: 67400,
+    conversions: 770,
+    roas: 3.72,
+    cpa: 23.51,
+    impressions: 1810000,
+    clicks: 36200,
+  },
+  {
+    platform: 'Google Ads',
+    spend: 8200,
+    revenue: 28700,
+    conversions: 287,
+    roas: 3.5,
+    cpa: 28.57,
+    impressions: 980000,
+    clicks: 19600,
+  },
+  {
+    platform: 'TikTok Ads',
+    spend: 15000,
+    revenue: 37500,
+    conversions: 500,
+    roas: 2.5,
+    cpa: 30.0,
+    impressions: 2500000,
+    clicks: 50000,
+  },
+  {
+    platform: 'Snapchat Ads',
+    spend: 4500,
+    revenue: 11250,
+    conversions: 150,
+    roas: 2.5,
+    cpa: 30.0,
+    impressions: 750000,
+    clicks: 15000,
+  },
+];
 
 const mockDailyPerformance: DailyPerformance[] = Array.from({ length: 30 }, (_, i) => {
-  const date = new Date()
-  date.setDate(date.getDate() - (29 - i))
+  const date = new Date();
+  date.setDate(date.getDate() - (29 - i));
   return {
     date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     spend: 1200 + Math.random() * 800 + i * 20,
@@ -174,8 +210,8 @@ const mockDailyPerformance: DailyPerformance[] = Array.from({ length: 30 }, (_, 
     cpa: 25 + Math.random() * 15,
     impressions: 120000 + Math.random() * 50000 + i * 2000,
     clicks: 2400 + Math.floor(Math.random() * 1000) + i * 40,
-  }
-})
+  };
+});
 
 const mockAlerts = [
   {
@@ -199,7 +235,7 @@ const mockAlerts = [
     message: 'AI detected underperforming keywords in 3 campaigns',
     time: '3 hours ago',
   },
-]
+];
 
 // Regional data for pie chart
 const regionalData = [
@@ -208,25 +244,29 @@ const regionalData = [
   { name: 'Qatar', value: 10 },
   { name: 'Kuwait', value: 8 },
   { name: 'Other', value: 7 },
-]
+];
 
 export function Overview() {
-  const { t } = useTranslation()
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
-  const [showKeyboardHints, setShowKeyboardHints] = useState(false)
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [showKeyboardHints, setShowKeyboardHints] = useState(false);
 
   // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1;
 
   // Fetch data from API with fallback to mock data
-  const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns()
-  const { data: overviewData } = useTenantOverview(tenantId)
-  const { data: _anomaliesData } = useAnomalies(tenantId)
+  const {
+    data: campaignsData,
+    isLoading: campaignsLoading,
+    refetch: refetchCampaigns,
+  } = useCampaigns();
+  const { data: overviewData } = useTenantOverview(tenantId);
+  const { data: _anomaliesData } = useAnomalies(tenantId);
 
   // Export mutation
-  const exportMutation = useExportDashboard()
+  const exportMutation = useExportDashboard();
 
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -237,7 +277,7 @@ export function Overview() {
     platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads'],
     regions: ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq'],
     campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
-  })
+  });
 
   // Use API campaigns or fall back to mock data
   const campaigns = useMemo(() => {
@@ -259,17 +299,17 @@ export function Overview() {
         roas: c.roas || 0,
         status: c.status || 'Active',
         start_date: c.start_date || c.startDate || new Date().toISOString(),
-      })) as Campaign[]
+      })) as Campaign[];
     }
-    return mockCampaigns
-  }, [campaignsData])
+    return mockCampaigns;
+  }, [campaignsData]);
 
   // Memoized: Calculate KPI metrics from campaigns (API or mock)
   const kpis = useMemo((): KPIMetrics => {
     // Use API overview data if available
     if (overviewData?.kpis) {
       // Cast to allow access to both snake_case and camelCase properties
-      const apiKpis = overviewData.kpis as Record<string, number | undefined>
+      const apiKpis = overviewData.kpis as Record<string, number | undefined>;
       return {
         totalSpend: apiKpis.total_spend ?? apiKpis.totalSpend ?? 0,
         totalRevenue: apiKpis.total_revenue ?? apiKpis.totalRevenue ?? 0,
@@ -284,19 +324,21 @@ export function Overview() {
         revenueDelta: apiKpis.revenueDelta ?? 23.4,
         roasDelta: apiKpis.roasDelta ?? 9.7,
         conversionsDelta: apiKpis.conversionsDelta ?? 21.5,
-      }
+      };
     }
 
     // Fall back to calculating from campaigns
-    const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0)
-    const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0)
-    const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0)
-    const overallROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0
-    const overallCPA = totalConversions > 0 ? totalSpend / totalConversions : 0
-    const avgCTR = campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length : 0
-    const avgCPM = campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.cpm, 0) / campaigns.length : 0
-    const totalImpressions = campaigns.reduce((sum, c) => sum + c.impressions, 0)
-    const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0)
+    const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0);
+    const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0);
+    const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0);
+    const overallROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+    const overallCPA = totalConversions > 0 ? totalSpend / totalConversions : 0;
+    const avgCTR =
+      campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length : 0;
+    const avgCPM =
+      campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.cpm, 0) / campaigns.length : 0;
+    const totalImpressions = campaigns.reduce((sum, c) => sum + c.impressions, 0);
+    const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0);
 
     return {
       totalSpend,
@@ -312,41 +354,44 @@ export function Overview() {
       revenueDelta: 23.4,
       roasDelta: 9.7,
       conversionsDelta: 21.5,
-    }
-  }, [campaigns, overviewData])
+    };
+  }, [campaigns, overviewData]);
 
   // Memoized: Filter campaigns based on current filters
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter((campaign) => {
       if (filters.platforms.length > 0 && !filters.platforms.includes(campaign.platform)) {
-        return false
+        return false;
       }
       if (filters.regions.length > 0 && !filters.regions.includes(campaign.region)) {
-        return false
+        return false;
       }
-      if (filters.campaignTypes.length > 0 && !filters.campaignTypes.includes(campaign.campaign_type)) {
-        return false
+      if (
+        filters.campaignTypes.length > 0 &&
+        !filters.campaignTypes.includes(campaign.campaign_type)
+      ) {
+        return false;
       }
-      return true
-    })
-  }, [filters, campaigns])
+      return true;
+    });
+  }, [filters, campaigns]);
 
   // Check if filters resulted in empty data
-  const hasNoFilterResults = filteredCampaigns.length === 0 && campaigns.length > 0
+  const hasNoFilterResults = filteredCampaigns.length === 0 && campaigns.length > 0;
 
   // Refresh data
   const handleRefresh = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     // Refetch API data
-    await refetchCampaigns()
-    setLastUpdated(new Date())
-    setLoading(false)
-  }, [refetchCampaigns])
+    await refetchCampaigns();
+    setLastUpdated(new Date());
+    setLoading(false);
+  }, [refetchCampaigns]);
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: Partial<DashboardFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }))
-  }, [])
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+  }, []);
 
   // Clear all filters
   const handleClearFilters = useCallback(() => {
@@ -358,81 +403,84 @@ export function Overview() {
       platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads'],
       regions: ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq'],
       campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
-    })
-  }, [])
+    });
+  }, []);
 
   // Export handler
-  const handleExport = useCallback((format: ExportFormat = 'csv') => {
-    exportMutation.mutate({
-      format,
-      period: '30d',
-      include_campaigns: true,
-      include_metrics: true,
-      include_recommendations: true,
-    })
-  }, [exportMutation])
+  const handleExport = useCallback(
+    (format: ExportFormat = 'csv') => {
+      exportMutation.mutate({
+        format,
+        period: '30d',
+        include_campaigns: true,
+        include_metrics: true,
+        include_recommendations: true,
+      });
+    },
+    [exportMutation]
+  );
 
   // KPI action handlers
   const handleViewDetails = useCallback((metric: string) => {
-    console.log('View details for:', metric)
-  }, [])
+    console.log('View details for:', metric);
+  }, []);
 
   const handleSetAlert = useCallback((metric: string) => {
-    console.log('Set alert for:', metric)
-  }, [])
+    console.log('Set alert for:', metric);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger shortcuts when typing in inputs
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
+        return;
       }
 
       switch (e.key.toLowerCase()) {
         case 'r':
           if (!e.ctrlKey && !e.metaKey) {
-            e.preventDefault()
-            handleRefresh()
+            e.preventDefault();
+            handleRefresh();
           }
-          break
+          break;
         case 'e':
           if (!e.ctrlKey && !e.metaKey) {
-            e.preventDefault()
-            handleExport('csv')
+            e.preventDefault();
+            handleExport('csv');
           }
-          break
+          break;
         case '?':
-          e.preventDefault()
-          setShowKeyboardHints((prev) => !prev)
-          break
+          e.preventDefault();
+          setShowKeyboardHints((prev) => !prev);
+          break;
         case 'escape':
-          setShowKeyboardHints(false)
-          break
+          setShowKeyboardHints(false);
+          break;
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleRefresh, handleExport])
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleRefresh, handleExport]);
 
   // Set initial loading based on API loading state
   useEffect(() => {
     if (!campaignsLoading) {
-      setInitialLoading(false)
+      setInitialLoading(false);
     }
-  }, [campaignsLoading])
+  }, [campaignsLoading]);
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
-    const interval = setInterval(handleRefresh, 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [handleRefresh])
+    const interval = setInterval(handleRefresh, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [handleRefresh]);
 
   // Calculate active filter count
   const activeFilterCount =
     (filters.platforms.length < 4 ? 4 - filters.platforms.length : 0) +
-    (filters.regions.length < 6 ? 6 - filters.regions.length : 0)
+    (filters.regions.length < 6 ? 6 - filters.regions.length : 0);
 
   return (
     <div className="space-y-6">
@@ -472,9 +520,7 @@ export function Overview() {
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-            {t('overview.title')}
-          </h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{t('overview.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Last updated: {lastUpdated.toLocaleString()} | Stratum AI
           </p>
@@ -557,17 +603,17 @@ export function Overview() {
         >
           <KPICard
             title="Total Spend"
-          value={formatCurrency(kpis.totalSpend)}
-          numericValue={kpis.totalSpend}
-          prefix="$"
-          delta={kpis.spendDelta}
-          deltaText="vs last period"
-          trend={kpis.spendDelta && kpis.spendDelta > 0 ? 'up' : 'down'}
-          icon={<DollarSign className="w-5 h-5" />}
-          loading={initialLoading}
-          onViewDetails={() => handleViewDetails('spend')}
-          onSetAlert={() => handleSetAlert('spend')}
-        />
+            value={formatCurrency(kpis.totalSpend)}
+            numericValue={kpis.totalSpend}
+            prefix="$"
+            delta={kpis.spendDelta}
+            deltaText="vs last period"
+            trend={kpis.spendDelta && kpis.spendDelta > 0 ? 'up' : 'down'}
+            icon={<DollarSign className="w-5 h-5" />}
+            loading={initialLoading}
+            onViewDetails={() => handleViewDetails('spend')}
+            onSetAlert={() => handleSetAlert('spend')}
+          />
         </motion.div>
 
         <motion.div
@@ -581,17 +627,17 @@ export function Overview() {
         >
           <KPICard
             title="Total Revenue"
-          value={formatCurrency(kpis.totalRevenue)}
-          numericValue={kpis.totalRevenue}
-          prefix="$"
-          delta={kpis.revenueDelta}
-          deltaText="vs last period"
-          trend={kpis.revenueDelta && kpis.revenueDelta > 0 ? 'up' : 'down'}
-          trendIsGood={true}
-          icon={<TrendingUp className="w-5 h-5" />}
-          loading={initialLoading}
-          onViewDetails={() => handleViewDetails('revenue')}
-          onSetAlert={() => handleSetAlert('revenue')}
+            value={formatCurrency(kpis.totalRevenue)}
+            numericValue={kpis.totalRevenue}
+            prefix="$"
+            delta={kpis.revenueDelta}
+            deltaText="vs last period"
+            trend={kpis.revenueDelta && kpis.revenueDelta > 0 ? 'up' : 'down'}
+            trendIsGood={true}
+            icon={<TrendingUp className="w-5 h-5" />}
+            loading={initialLoading}
+            onViewDetails={() => handleViewDetails('revenue')}
+            onSetAlert={() => handleSetAlert('revenue')}
           />
         </motion.div>
 
@@ -606,19 +652,19 @@ export function Overview() {
         >
           <KPICard
             title="ROAS"
-          value={`${kpis.overallROAS.toFixed(2)}x`}
-          numericValue={kpis.overallROAS}
-          suffix="x"
-          decimals={2}
-          delta={kpis.roasDelta}
-          deltaText="vs target"
-          trend={kpis.roasDelta && kpis.roasDelta > 0 ? 'up' : 'down'}
-          trendIsGood={true}
-          highlight={kpis.overallROAS >= 3.0}
-          icon={<Target className="w-5 h-5" />}
-          loading={initialLoading}
-          onViewDetails={() => handleViewDetails('roas')}
-          onSetAlert={() => handleSetAlert('roas')}
+            value={`${kpis.overallROAS.toFixed(2)}x`}
+            numericValue={kpis.overallROAS}
+            suffix="x"
+            decimals={2}
+            delta={kpis.roasDelta}
+            deltaText="vs target"
+            trend={kpis.roasDelta && kpis.roasDelta > 0 ? 'up' : 'down'}
+            trendIsGood={true}
+            highlight={kpis.overallROAS >= 3.0}
+            icon={<Target className="w-5 h-5" />}
+            loading={initialLoading}
+            onViewDetails={() => handleViewDetails('roas')}
+            onSetAlert={() => handleSetAlert('roas')}
           />
         </motion.div>
 
@@ -633,16 +679,16 @@ export function Overview() {
         >
           <KPICard
             title="Total Conversions"
-          value={kpis.totalConversions.toLocaleString('en-US')}
-          numericValue={kpis.totalConversions}
-          delta={kpis.conversionsDelta}
-          deltaText="vs last period"
-          trend={kpis.conversionsDelta && kpis.conversionsDelta > 0 ? 'up' : 'down'}
-          trendIsGood={true}
-          icon={<ShoppingCart className="w-5 h-5" />}
-          loading={initialLoading}
-          onViewDetails={() => handleViewDetails('conversions')}
-          onSetAlert={() => handleSetAlert('conversions')}
+            value={kpis.totalConversions.toLocaleString('en-US')}
+            numericValue={kpis.totalConversions}
+            delta={kpis.conversionsDelta}
+            deltaText="vs last period"
+            trend={kpis.conversionsDelta && kpis.conversionsDelta > 0 ? 'up' : 'down'}
+            trendIsGood={true}
+            icon={<ShoppingCart className="w-5 h-5" />}
+            loading={initialLoading}
+            onViewDetails={() => handleViewDetails('conversions')}
+            onSetAlert={() => handleSetAlert('conversions')}
           />
         </motion.div>
       </motion.div>
@@ -828,7 +874,7 @@ export function Overview() {
                 <CampaignTable
                   campaigns={filteredCampaigns}
                   onCampaignClick={(campaignId) => {
-                    console.log('Navigate to campaign:', campaignId)
+                    console.log('Navigate to campaign:', campaignId);
                   }}
                 />
               </ErrorBoundary>
@@ -895,21 +941,41 @@ export function Overview() {
                 whileTap={{ scale: 0.98 }}
                 className={cn(
                   'p-4 rounded-lg border-l-4 transition-colors cursor-pointer',
-                  alert.severity === 'warning' && 'bg-amber-500/10 border-amber-500 hover:bg-amber-500/15',
-                  alert.severity === 'good' && 'bg-green-500/10 border-green-500 hover:bg-green-500/15',
-                  alert.severity === 'critical' && 'bg-red-500/10 border-red-500 hover:bg-red-500/15'
+                  alert.severity === 'warning' &&
+                    'bg-amber-500/10 border-amber-500 hover:bg-amber-500/15',
+                  alert.severity === 'good' &&
+                    'bg-green-500/10 border-green-500 hover:bg-green-500/15',
+                  alert.severity === 'critical' &&
+                    'bg-red-500/10 border-red-500 hover:bg-red-500/15'
                 )}
                 role="button"
                 tabIndex={0}
                 aria-label={`${alert.severity} alert: ${alert.title}`}
               >
                 <div className="flex items-start gap-3">
-                  {alert.severity === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
-                  {alert.severity === 'good' && <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
-                  {alert.severity === 'critical' && <Info className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'warning' && (
+                    <AlertTriangle
+                      className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {alert.severity === 'good' && (
+                    <CheckCircle
+                      className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {alert.severity === 'critical' && (
+                    <Info
+                      className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-foreground">{alert.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{alert.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {alert.message}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-2">{alert.time}</p>
                   </div>
                 </div>
@@ -919,7 +985,7 @@ export function Overview() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default Overview
+export default Overview;

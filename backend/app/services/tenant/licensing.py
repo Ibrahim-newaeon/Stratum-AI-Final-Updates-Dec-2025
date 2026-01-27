@@ -16,7 +16,7 @@ import hmac
 import json
 import os
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Optional
 
@@ -32,6 +32,7 @@ logger = get_logger(__name__)
 
 class LicenseStatus(str, Enum):
     """License validation status."""
+
     VALID = "valid"
     EXPIRED = "expired"
     GRACE_PERIOD = "grace_period"
@@ -43,6 +44,7 @@ class LicenseStatus(str, Enum):
 @dataclass
 class LicenseInfo:
     """Information about a validated license."""
+
     status: LicenseStatus
     tier: SubscriptionTier
     tenant_id: Optional[int]
@@ -64,10 +66,7 @@ class LicenseValidationService:
     """
 
     # License server URL (configure in production)
-    LICENSE_SERVER_URL = os.getenv(
-        "LICENSE_SERVER_URL",
-        "https://license.stratum.ai/api/v1"
-    )
+    LICENSE_SERVER_URL = os.getenv("LICENSE_SERVER_URL", "https://license.stratum.ai/api/v1")
 
     # Public key for offline JWT validation
     LICENSE_PUBLIC_KEY = os.getenv("LICENSE_PUBLIC_KEY", "")
@@ -145,7 +144,9 @@ class LicenseValidationService:
                     "license_key": license_key,
                     "domain": current_domain,
                     "product": "stratum-ai",
-                    "version": settings.app_version if hasattr(settings, 'app_version') else "1.0.0",
+                    "version": settings.app_version
+                    if hasattr(settings, "app_version")
+                    else "1.0.0",
                 },
                 headers={
                     "X-Product-ID": "stratum-ai",
@@ -215,13 +216,13 @@ class LicenseValidationService:
         # Check expiration
         expires_at = None
         if "exp" in payload:
-            expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+            expires_at = datetime.fromtimestamp(payload["exp"], tz=UTC)
 
         grace_period_ends_at = None
         status = LicenseStatus.VALID
 
         if expires_at:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             if now > expires_at:
                 grace_period_ends_at = expires_at + timedelta(days=self.GRACE_PERIOD_DAYS)
                 if now > grace_period_ends_at:
@@ -262,11 +263,8 @@ class LicenseValidationService:
 
         # Verify signature
         import base64
-        expected_sig = hmac.new(
-            secret.encode(),
-            data_b64.encode(),
-            hashlib.sha256
-        ).hexdigest()
+
+        expected_sig = hmac.new(secret.encode(), data_b64.encode(), hashlib.sha256).hexdigest()
 
         if not hmac.compare_digest(signature, expected_sig):
             raise ValueError("Invalid signature")
@@ -340,14 +338,14 @@ class LicenseValidationService:
         """Get license from cache if valid."""
         if license_key in self._cache:
             info, cached_at = self._cache[license_key]
-            if datetime.now(timezone.utc) - cached_at < timedelta(seconds=self.CACHE_DURATION):
+            if datetime.now(UTC) - cached_at < timedelta(seconds=self.CACHE_DURATION):
                 return info
             del self._cache[license_key]
         return None
 
     def _cache_license(self, license_key: str, info: LicenseInfo) -> None:
         """Cache a validated license."""
-        self._cache[license_key] = (info, datetime.now(timezone.utc))
+        self._cache[license_key] = (info, datetime.now(UTC))
 
     async def send_heartbeat(
         self,
@@ -365,7 +363,7 @@ class LicenseValidationService:
                     f"{self.LICENSE_SERVER_URL}/heartbeat",
                     json={
                         "license_key": license_key,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "metrics": metrics or {},
                     },
                 )

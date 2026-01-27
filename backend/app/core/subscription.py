@@ -13,16 +13,13 @@ This module handles:
 
 import enum
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Optional
 
 from fastapi import HTTPException, Request, status
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.tiers import SubscriptionTier
-
 
 # =============================================================================
 # Configuration
@@ -35,26 +32,29 @@ GRACE_PERIOD_DAYS = 7
 EXPIRY_WARNING_DAYS = 14
 
 # Plans that never expire (free tier)
-NON_EXPIRING_PLANS = {'free'}
+NON_EXPIRING_PLANS = {"free"}
 
 
 # =============================================================================
 # Subscription Status
 # =============================================================================
 
+
 class SubscriptionStatus(str, enum.Enum):
     """Subscription status levels."""
-    ACTIVE = "active"              # Subscription is active and valid
+
+    ACTIVE = "active"  # Subscription is active and valid
     EXPIRING_SOON = "expiring_soon"  # Active but expiring within warning period
     GRACE_PERIOD = "grace_period"  # Expired but within grace period
-    EXPIRED = "expired"            # Fully expired, access restricted
-    CANCELLED = "cancelled"        # Manually cancelled
-    FREE = "free"                  # Free tier (never expires)
+    EXPIRED = "expired"  # Fully expired, access restricted
+    CANCELLED = "cancelled"  # Manually cancelled
+    FREE = "free"  # Free tier (never expires)
 
 
 @dataclass
 class SubscriptionInfo:
     """Complete subscription information for a tenant."""
+
     tenant_id: int
     plan: str
     tier: SubscriptionTier
@@ -84,6 +84,7 @@ class SubscriptionInfo:
 # Status Checking Functions
 # =============================================================================
 
+
 def calculate_subscription_status(
     plan: str,
     plan_expires_at: Optional[datetime],
@@ -101,7 +102,7 @@ def calculate_subscription_status(
         Tuple of (status, days_until_expiry, days_in_grace)
     """
     if now is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
     # Free plans never expire
     if plan.lower() in NON_EXPIRING_PLANS:
@@ -113,7 +114,7 @@ def calculate_subscription_status(
 
     # Ensure timezone awareness
     if plan_expires_at.tzinfo is None:
-        plan_expires_at = plan_expires_at.replace(tzinfo=timezone.utc)
+        plan_expires_at = plan_expires_at.replace(tzinfo=UTC)
 
     # Calculate time difference
     time_diff = plan_expires_at - now
@@ -174,6 +175,7 @@ def is_access_allowed(status: SubscriptionStatus, allow_grace: bool = True) -> b
 # Database Functions
 # =============================================================================
 
+
 async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
     """
     Get complete subscription information for a tenant.
@@ -184,15 +186,14 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
     Returns:
         SubscriptionInfo with all subscription details
     """
-    from app.db.session import get_async_session
     from app.base_models import Tenant
     from app.core.feature_gate import get_tenant_tier
+    from app.db.session import get_async_session
 
     async for db in get_async_session():
         result = await db.execute(
             select(Tenant.plan, Tenant.plan_expires_at).where(
-                Tenant.id == tenant_id,
-                Tenant.is_deleted == False
+                Tenant.id == tenant_id, Tenant.is_deleted == False
             )
         )
         row = result.one_or_none()
@@ -226,10 +227,14 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
         restriction_reason = None
 
         if status == SubscriptionStatus.EXPIRED:
-            restriction_reason = f"Subscription expired {days_in_grace} days ago. Please renew to restore access."
+            restriction_reason = (
+                f"Subscription expired {days_in_grace} days ago. Please renew to restore access."
+            )
         elif status == SubscriptionStatus.GRACE_PERIOD:
             remaining_grace = GRACE_PERIOD_DAYS - (days_in_grace or 0)
-            restriction_reason = f"Subscription expired. {remaining_grace} days remaining in grace period."
+            restriction_reason = (
+                f"Subscription expired. {remaining_grace} days remaining in grace period."
+            )
         elif status == SubscriptionStatus.CANCELLED:
             restriction_reason = "Subscription has been cancelled."
 
@@ -246,7 +251,9 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
         )
 
 
-async def check_subscription_valid(tenant_id: int, raise_on_invalid: bool = True) -> SubscriptionInfo:
+async def check_subscription_valid(
+    tenant_id: int, raise_on_invalid: bool = True
+) -> SubscriptionInfo:
     """
     Check if a tenant's subscription is valid for access.
 
@@ -271,7 +278,7 @@ async def check_subscription_valid(tenant_id: int, raise_on_invalid: bool = True
                 "message": info.restriction_reason or "Subscription has expired",
                 "days_in_grace": info.days_in_grace,
                 "renew_url": "/settings/billing",
-            }
+            },
         )
 
     return info
@@ -280,6 +287,7 @@ async def check_subscription_valid(tenant_id: int, raise_on_invalid: bool = True
 # =============================================================================
 # FastAPI Dependencies
 # =============================================================================
+
 
 class SubscriptionRequired:
     """
@@ -301,7 +309,7 @@ class SubscriptionRequired:
         self.allow_grace = allow_grace
 
     async def __call__(self, request: Request) -> SubscriptionInfo:
-        tenant_id = getattr(request.state, 'tenant_id', None)
+        tenant_id = getattr(request.state, "tenant_id", None)
 
         if not tenant_id:
             raise HTTPException(
@@ -321,7 +329,7 @@ class SubscriptionRequired:
                     "message": info.restriction_reason or "Subscription has expired",
                     "days_in_grace": info.days_in_grace,
                     "renew_url": "/settings/billing",
-                }
+                },
             )
 
         # Store in request state for downstream use
@@ -345,7 +353,7 @@ class SubscriptionWarning:
     """
 
     async def __call__(self, request: Request) -> Optional[SubscriptionInfo]:
-        tenant_id = getattr(request.state, 'tenant_id', None)
+        tenant_id = getattr(request.state, "tenant_id", None)
 
         if not tenant_id:
             return None
@@ -369,7 +377,7 @@ async def get_subscription_dependency(request: Request) -> Optional[Subscription
         ):
             ...
     """
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
 
     if not tenant_id:
         return None
@@ -380,6 +388,7 @@ async def get_subscription_dependency(request: Request) -> Optional[Subscription
 # =============================================================================
 # Utility Functions
 # =============================================================================
+
 
 def get_expiry_warning_message(info: SubscriptionInfo) -> Optional[str]:
     """Get a warning message for expiring/expired subscriptions."""
@@ -401,7 +410,7 @@ def calculate_next_billing_date(
     billing_period: str = "monthly",
 ) -> datetime:
     """Calculate the next billing date based on billing period."""
-    base_date = current_expiry or datetime.now(timezone.utc)
+    base_date = current_expiry or datetime.now(UTC)
 
     if billing_period == "yearly":
         return base_date + timedelta(days=365)

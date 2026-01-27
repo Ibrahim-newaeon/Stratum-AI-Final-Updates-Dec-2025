@@ -14,26 +14,38 @@ Database models for audit-recommended services:
 - LTV Predictions
 """
 
+import enum
 from datetime import datetime
 from uuid import uuid4
-import enum
 
 from sqlalchemy import (
-    Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
-    Index, Enum as SQLEnum, Boolean, BigInteger, UniqueConstraint
+    BigInteger,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    Enum as SQLEnum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class EMQStatus(str, enum.Enum):
     """EMQ calculation status."""
+
     PENDING = "pending"
     CALCULATED = "calculated"
     FAILED = "failed"
@@ -41,6 +53,7 @@ class EMQStatus(str, enum.Enum):
 
 class ConversionUploadStatus(str, enum.Enum):
     """Offline conversion upload status."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -50,6 +63,7 @@ class ConversionUploadStatus(str, enum.Enum):
 
 class ExperimentStatus(str, enum.Enum):
     """Model experiment status."""
+
     DRAFT = "draft"
     RUNNING = "running"
     PAUSED = "paused"
@@ -59,6 +73,7 @@ class ExperimentStatus(str, enum.Enum):
 
 class ReallocationStatus(str, enum.Enum):
     """Budget reallocation status."""
+
     PROPOSED = "proposed"
     APPROVED = "approved"
     EXECUTING = "executing"
@@ -69,6 +84,7 @@ class ReallocationStatus(str, enum.Enum):
 
 class CustomerSegment(str, enum.Enum):
     """Customer LTV segment."""
+
     VIP = "vip"
     HIGH_VALUE = "high_value"
     MEDIUM_VALUE = "medium_value"
@@ -80,10 +96,12 @@ class CustomerSegment(str, enum.Enum):
 # EMQ Measurements
 # =============================================================================
 
+
 class EMQMeasurement(Base):
     """
     Stores EMQ (Event Match Quality) measurements from platforms.
     """
+
     __tablename__ = "emq_measurements"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -123,7 +141,9 @@ class EMQMeasurement(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -132,8 +152,12 @@ class EMQMeasurement(Base):
         Index("ix_emq_tenant_date", "tenant_id", "measurement_date"),
         Index("ix_emq_platform", "tenant_id", "platform", "pixel_id"),
         UniqueConstraint(
-            "tenant_id", "platform", "pixel_id", "measurement_date", "event_type",
-            name="uq_emq_measurement"
+            "tenant_id",
+            "platform",
+            "pixel_id",
+            "measurement_date",
+            "event_type",
+            name="uq_emq_measurement",
         ),
     )
 
@@ -142,10 +166,12 @@ class EMQMeasurement(Base):
 # Offline Conversions
 # =============================================================================
 
+
 class OfflineConversionBatch(Base):
     """
     Tracks batches of offline conversions uploaded to platforms.
     """
+
     __tablename__ = "offline_conversion_batches"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -163,7 +189,9 @@ class OfflineConversionBatch(Base):
     duplicate_records = Column(Integer, default=0, nullable=False)
 
     # Status
-    status = Column(SQLEnum(ConversionUploadStatus), default=ConversionUploadStatus.PENDING, nullable=False)
+    status = Column(
+        SQLEnum(ConversionUploadStatus), default=ConversionUploadStatus.PENDING, nullable=False
+    )
     error_message = Column(Text, nullable=True)
     error_details = Column(JSONB, nullable=True)
 
@@ -197,11 +225,16 @@ class OfflineConversion(Base):
     """
     Individual offline conversion records.
     """
+
     __tablename__ = "offline_conversions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    batch_id = Column(UUID(as_uuid=True), ForeignKey("offline_conversion_batches.id", ondelete="CASCADE"), nullable=True)
+    batch_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("offline_conversion_batches.id", ondelete="CASCADE"),
+        nullable=True,
+    )
 
     # Conversion details
     event_name = Column(String(100), nullable=False)
@@ -243,10 +276,12 @@ class OfflineConversion(Base):
 # Model A/B Testing
 # =============================================================================
 
+
 class ModelExperiment(Base):
     """
     ML model A/B testing experiments.
     """
+
     __tablename__ = "model_experiments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -288,7 +323,9 @@ class ModelExperiment(Base):
     started_at = Column(DateTime(timezone=True), nullable=True)
     ended_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Created by
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -308,10 +345,13 @@ class ExperimentPrediction(Base):
     """
     Individual predictions made during an experiment.
     """
+
     __tablename__ = "experiment_predictions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    experiment_id = Column(UUID(as_uuid=True), ForeignKey("model_experiments.id", ondelete="CASCADE"), nullable=False)
+    experiment_id = Column(
+        UUID(as_uuid=True), ForeignKey("model_experiments.id", ondelete="CASCADE"), nullable=False
+    )
 
     # Prediction details
     entity_id = Column(String(255), nullable=False)  # campaign_id, customer_id, etc.
@@ -336,10 +376,12 @@ class ExperimentPrediction(Base):
 # Conversion Latency
 # =============================================================================
 
+
 class ConversionLatency(Base):
     """
     Tracks latency between ad click and conversion.
     """
+
     __tablename__ = "conversion_latencies"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -374,6 +416,7 @@ class ConversionLatencyStats(Base):
     """
     Aggregated conversion latency statistics by period.
     """
+
     __tablename__ = "conversion_latency_stats"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -395,7 +438,9 @@ class ConversionLatencyStats(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -403,8 +448,7 @@ class ConversionLatencyStats(Base):
     __table_args__ = (
         Index("ix_latency_stats_tenant", "tenant_id", "period_date"),
         UniqueConstraint(
-            "tenant_id", "period_date", "platform", "event_type",
-            name="uq_latency_stats"
+            "tenant_id", "period_date", "platform", "event_type", name="uq_latency_stats"
         ),
     )
 
@@ -413,10 +457,12 @@ class ConversionLatencyStats(Base):
 # Creative Performance
 # =============================================================================
 
+
 class Creative(Base):
     """
     Creative assets being tracked.
     """
+
     __tablename__ = "creatives"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -442,7 +488,9 @@ class Creative(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -458,10 +506,13 @@ class CreativePerformance(Base):
     """
     Daily creative performance metrics.
     """
+
     __tablename__ = "creative_performance"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    creative_id = Column(UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False)
+    creative_id = Column(
+        UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False
+    )
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     # Period
@@ -494,7 +545,9 @@ class CreativePerformance(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     creative = relationship("Creative", foreign_keys=[creative_id])
@@ -511,10 +564,13 @@ class CreativeFatigueAlert(Base):
     """
     Alerts when creative fatigue is detected.
     """
+
     __tablename__ = "creative_fatigue_alerts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    creative_id = Column(UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False)
+    creative_id = Column(
+        UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False
+    )
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     # Alert details
@@ -533,7 +589,9 @@ class CreativeFatigueAlert(Base):
 
     # Status
     is_acknowledged = Column(Boolean, default=False, nullable=False)
-    acknowledged_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    acknowledged_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     acknowledged_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
@@ -554,10 +612,12 @@ class CreativeFatigueAlert(Base):
 # Competitor Benchmarking
 # =============================================================================
 
+
 class CompetitorBenchmark(Base):
     """
     Stores competitor benchmark comparisons.
     """
+
     __tablename__ = "competitor_benchmarks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -602,10 +662,12 @@ class CompetitorBenchmark(Base):
 # Budget Reallocation
 # =============================================================================
 
+
 class BudgetReallocationPlan(Base):
     """
     Budget reallocation plans.
     """
+
     __tablename__ = "budget_reallocation_plans"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -629,10 +691,14 @@ class BudgetReallocationPlan(Base):
     projected_revenue_change = Column(Float, nullable=True)
 
     # Status
-    status = Column(SQLEnum(ReallocationStatus), default=ReallocationStatus.PROPOSED, nullable=False)
+    status = Column(
+        SQLEnum(ReallocationStatus), default=ReallocationStatus.PROPOSED, nullable=False
+    )
 
     # Approval
-    approved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     approved_at = Column(DateTime(timezone=True), nullable=True)
     rejection_reason = Column(Text, nullable=True)
 
@@ -643,7 +709,9 @@ class BudgetReallocationPlan(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Created by
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -663,10 +731,15 @@ class BudgetReallocationChange(Base):
     """
     Individual campaign budget changes in a reallocation plan.
     """
+
     __tablename__ = "budget_reallocation_changes"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    plan_id = Column(UUID(as_uuid=True), ForeignKey("budget_reallocation_plans.id", ondelete="CASCADE"), nullable=False)
+    plan_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("budget_reallocation_plans.id", ondelete="CASCADE"),
+        nullable=False,
+    )
 
     # Campaign details
     campaign_id = Column(String(255), nullable=False)
@@ -690,19 +763,19 @@ class BudgetReallocationChange(Base):
     # Relationships
     plan = relationship("BudgetReallocationPlan", foreign_keys=[plan_id])
 
-    __table_args__ = (
-        Index("ix_realloc_change_plan", "plan_id"),
-    )
+    __table_args__ = (Index("ix_realloc_change_plan", "plan_id"),)
 
 
 # =============================================================================
 # Audience Insights
 # =============================================================================
 
+
 class AudienceRecord(Base):
     """
     Audience records for analysis.
     """
+
     __tablename__ = "audience_records"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -735,7 +808,9 @@ class AudienceRecord(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -751,12 +826,17 @@ class AudienceOverlapRecord(Base):
     """
     Records of overlap between audiences.
     """
+
     __tablename__ = "audience_overlaps"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    audience_id_1 = Column(UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False)
-    audience_id_2 = Column(UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False)
+    audience_id_1 = Column(
+        UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False
+    )
+    audience_id_2 = Column(
+        UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False
+    )
 
     # Overlap metrics
     overlap_percent = Column(Float, nullable=False)
@@ -780,10 +860,12 @@ class AudienceOverlapRecord(Base):
 # LTV Predictions
 # =============================================================================
 
+
 class CustomerLTVPrediction(Base):
     """
     Customer lifetime value predictions.
     """
+
     __tablename__ = "customer_ltv_predictions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -842,6 +924,7 @@ class LTVCohortAnalysis(Base):
     """
     Cohort-based LTV analysis.
     """
+
     __tablename__ = "ltv_cohort_analyses"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -880,14 +963,18 @@ class LTVCohortAnalysis(Base):
 # Model Retraining
 # =============================================================================
 
+
 class ModelRetrainingJob(Base):
     """
     Model retraining job records.
     """
+
     __tablename__ = "model_retraining_jobs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)  # Null for global models
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True
+    )  # Null for global models
 
     # Job details
     model_name = Column(String(100), nullable=False)

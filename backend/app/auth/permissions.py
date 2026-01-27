@@ -14,9 +14,9 @@ Roles:
 Permissions are granular and can be checked individually or in combination.
 """
 
+from collections.abc import Callable
 from enum import Enum
 from functools import wraps
-from typing import Callable, List, Set
 
 from fastapi import HTTPException, Request, status
 
@@ -92,7 +92,7 @@ class Permission(str, Enum):
 # Role to Permission Mapping
 # =============================================================================
 
-ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
+ROLE_PERMISSIONS: dict[str, set[Permission]] = {
     # Super Admin: Full platform access
     "superadmin": {
         # All tenant permissions
@@ -145,7 +145,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_DELETE,
         Permission.RULE_EXECUTE,
     },
-
     # Tenant Admin: Full tenant access
     "admin": {
         Permission.TENANT_READ,
@@ -181,7 +180,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_DELETE,
         Permission.RULE_EXECUTE,
     },
-
     # Manager: Campaign and team management
     "manager": {
         Permission.TENANT_READ,
@@ -205,7 +203,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_WRITE,
         Permission.RULE_EXECUTE,
     },
-
     # Media Buyer: Campaign execution focus
     "media_buyer": {
         Permission.TENANT_READ,
@@ -224,7 +221,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_WRITE,
         Permission.RULE_EXECUTE,
     },
-
     # Analyst: Read-only analytics focus
     "analyst": {
         Permission.TENANT_READ,
@@ -237,7 +233,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.ASSET_READ,
         Permission.RULE_READ,
     },
-
     # Account Manager: Client relationship focus
     "account_manager": {
         Permission.TENANT_READ,
@@ -252,7 +247,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.ASSET_READ,
         Permission.RULE_READ,
     },
-
     # Viewer: Minimal read access
     "viewer": {
         Permission.TENANT_READ,
@@ -268,7 +262,8 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
 # Permission Helper Functions
 # =============================================================================
 
-def get_user_permissions(role: str) -> Set[Permission]:
+
+def get_user_permissions(role: str) -> set[Permission]:
     """
     Get all permissions for a given role.
 
@@ -296,7 +291,7 @@ def has_permission(role: str, permission: Permission) -> bool:
     return permission in user_permissions
 
 
-def has_any_permission(role: str, permissions: List[Permission]) -> bool:
+def has_any_permission(role: str, permissions: list[Permission]) -> bool:
     """
     Check if a role has any of the specified permissions.
 
@@ -311,7 +306,7 @@ def has_any_permission(role: str, permissions: List[Permission]) -> bool:
     return any(p in user_permissions for p in permissions)
 
 
-def has_all_permissions(role: str, permissions: List[Permission]) -> bool:
+def has_all_permissions(role: str, permissions: list[Permission]) -> bool:
     """
     Check if a role has all of the specified permissions.
 
@@ -330,8 +325,9 @@ def has_all_permissions(role: str, permissions: List[Permission]) -> bool:
 # FastAPI Dependency Decorators
 # =============================================================================
 
+
 def require_permissions(
-    permissions: List[Permission],
+    permissions: list[Permission],
     require_all: bool = True,
 ) -> Callable:
     """
@@ -352,6 +348,7 @@ def require_permissions(
         ):
             ...
     """
+
     async def permission_checker(request: Request) -> None:
         # Get user role from request state (set by middleware)
         role = getattr(request.state, "role", None)
@@ -379,7 +376,7 @@ def require_permissions(
     return permission_checker
 
 
-def require_role(roles: List[str]) -> Callable:
+def require_role(roles: list[str]) -> Callable:
     """
     FastAPI dependency that requires one of the specified roles.
 
@@ -397,6 +394,7 @@ def require_role(roles: List[str]) -> Callable:
         ):
             ...
     """
+
     async def role_checker(request: Request) -> None:
         role = getattr(request.state, "role", None)
         user_id = getattr(request.state, "user_id", None)
@@ -453,6 +451,7 @@ async def require_super_admin(request: Request) -> None:
 # Permission Decorator for Service Functions
 # =============================================================================
 
+
 def check_permission(permission: Permission):
     """
     Decorator for service functions that need permission checking.
@@ -464,6 +463,7 @@ def check_permission(permission: Permission):
         async def create_campaign(data: dict, role: str, tenant_id: int):
             ...
     """
+
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -478,5 +478,7 @@ def check_permission(permission: Permission):
                 )
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator

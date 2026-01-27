@@ -6,8 +6,8 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  CodeBracketIcon,
   BookOpenIcon,
+  CodeBracketIcon,
   CommandLineIcon,
   CubeIcon,
 } from '@heroicons/react/24/outline';
@@ -194,7 +194,7 @@ export default function ApiDocs() {
               }}
             >
               <pre style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-{`import { StratumClient } from '@stratum-ai/sdk';
+                {`import { StratumClient } from '@stratum-ai/sdk';
 
 const stratum = new StratumClient({
   apiKey: process.env.STRATUM_API_KEY,

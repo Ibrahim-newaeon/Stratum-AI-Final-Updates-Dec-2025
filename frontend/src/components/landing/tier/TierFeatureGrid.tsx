@@ -1,19 +1,19 @@
 import { useNavigate } from 'react-router-dom';
 import {
+  AdjustmentsHorizontalIcon,
+  ArrowsRightLeftIcon,
+  ChartBarIcon,
   CheckIcon,
-  XMarkIcon,
+  CogIcon,
+  CpuChipIcon,
+  DocumentTextIcon,
+  FingerPrintIcon,
+  GlobeAltIcon,
+  LifebuoyIcon,
+  LockClosedIcon,
   ShieldCheckIcon,
   UsersIcon,
-  ChartBarIcon,
-  DocumentTextIcon,
-  ArrowsRightLeftIcon,
-  AdjustmentsHorizontalIcon,
-  GlobeAltIcon,
-  CogIcon,
-  LockClosedIcon,
-  FingerPrintIcon,
-  CpuChipIcon,
-  LifebuoyIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,8 @@ import type { TierContent, TierFeatureCategory } from '@/config/tierLandingConte
 
 // Tooltip content for key Stratum features (kept under 150 chars)
 const featureTooltips: Record<string, string> = {
-  'EMQ Signal Scoring': 'Event Match Quality score (0-100) measuring data reliability across platforms.',
+  'EMQ Signal Scoring':
+    'Event Match Quality score (0-100) measuring data reliability across platforms.',
   'RFM Analysis': 'Recency, Frequency, Monetary - classic customer segmentation framework.',
   'Segment Builder': 'Visual tool to create dynamic customer segments with behavioral rules.',
   'Meta Custom Audiences': 'Push CDP segments directly to Meta Ads for targeting.',
@@ -73,11 +74,15 @@ function CategoryCard({
   return (
     <div className="group relative rounded-2xl bg-gray-900/50 border border-white/5 p-6 hover:border-white/10 transition-all">
       {/* Gradient accent */}
-      <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${gradientClass}`} />
+      <div
+        className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${gradientClass}`}
+      />
 
       {/* Icon and Title */}
       <div className="flex items-center gap-3 mb-4">
-        <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${gradientClass} bg-opacity-20 flex items-center justify-center`}>
+        <div
+          className={`w-10 h-10 rounded-lg bg-gradient-to-r ${gradientClass} bg-opacity-20 flex items-center justify-center`}
+        >
           <IconComponent className="w-5 h-5 text-white" />
         </div>
         <h3 className="text-lg font-semibold text-white">{category.name}</h3>
@@ -108,17 +113,23 @@ function CategoryCard({
                       showIcon
                       iconType="help"
                     >
-                      <span className={`text-sm ${feature.included ? 'text-white' : 'text-gray-500'} cursor-help`}>
+                      <span
+                        className={`text-sm ${feature.included ? 'text-white' : 'text-gray-500'} cursor-help`}
+                      >
                         {feature.name}
                       </span>
                     </SmartTooltip>
                   ) : (
-                    <span className={`text-sm ${feature.included ? 'text-white' : 'text-gray-500'}`}>
+                    <span
+                      className={`text-sm ${feature.included ? 'text-white' : 'text-gray-500'}`}
+                    >
                       {feature.name}
                     </span>
                   )}
                   {feature.highlight && feature.included && (
-                    <Badge className={`text-[10px] px-1.5 py-0 bg-gradient-to-r ${gradientClass} text-white border-0`}>
+                    <Badge
+                      className={`text-[10px] px-1.5 py-0 bg-gradient-to-r ${gradientClass} text-white border-0`}
+                    >
                       Key
                     </Badge>
                   )}

@@ -10,23 +10,19 @@ Service for provisioning new tenants with proper setup:
 - Creates default data sources (CDP)
 """
 
-import secrets
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base_models import Tenant, User, UserRole
-from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import encrypt_pii, hash_pii_for_lookup, get_password_hash
+from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
 from app.core.tiers import (
     SubscriptionTier,
-    TIER_FEATURES,
-    TIER_LIMITS,
-    get_tier_limits,
     get_tier_features,
+    get_tier_limits,
 )
 
 logger = get_logger(__name__)
@@ -89,9 +85,7 @@ class TenantProvisioningService:
         )
 
         # Check if slug already exists
-        existing = await self.db.execute(
-            select(Tenant).where(Tenant.slug == slug)
-        )
+        existing = await self.db.execute(select(Tenant).where(Tenant.slug == slug))
         if existing.scalar_one_or_none():
             raise ValueError(f"Tenant with slug '{slug}' already exists")
 
@@ -232,9 +226,7 @@ class TenantProvisioningService:
 
         Updates limits and feature flags accordingly.
         """
-        result = await self.db.execute(
-            select(Tenant).where(Tenant.id == tenant_id)
-        )
+        result = await self.db.execute(select(Tenant).where(Tenant.id == tenant_id))
         tenant = result.scalar_one_or_none()
         if not tenant:
             raise ValueError(f"Tenant {tenant_id} not found")

@@ -5,7 +5,7 @@
 Background tasks for daily score calculations (scaling, health, etc.).
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -32,11 +32,7 @@ def calculate_daily_scores():
     logger.info("Starting daily score calculations")
 
     with SyncSessionLocal() as db:
-        tenants = (
-            db.execute(select(Tenant).where(Tenant.is_deleted == False))
-            .scalars()
-            .all()
-        )
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         total_scored = 0
         for tenant in tenants:
@@ -95,7 +91,7 @@ def calculate_daily_scores():
                 "scores_updated",
                 {
                     "campaigns_scored": len(campaigns),
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
 

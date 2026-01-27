@@ -12,29 +12,29 @@ Endpoints:
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db
 from app.core.logging import get_logger
 from app.models import User
 from app.models.pacing import (
-    TargetPeriod,
-    TargetMetric,
     AlertSeverity,
-    AlertType,
     AlertStatus,
+    AlertType,
+    TargetMetric,
+    TargetPeriod,
 )
 from app.services.pacing import (
     ForecastingService,
+    PacingAlertService,
     PacingService,
     TargetService,
-    PacingAlertService,
 )
+from app.tenancy.deps import get_current_user, get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -44,8 +44,10 @@ router = APIRouter()
 # Pydantic Schemas
 # =============================================================================
 
+
 class TargetCreate(BaseModel):
     """Schema for creating a new target."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     metric_type: TargetMetric
@@ -62,11 +64,12 @@ class TargetCreate(BaseModel):
     notify_slack: bool = True
     notify_email: bool = True
     notify_whatsapp: bool = False
-    notification_recipients: Optional[List[str]] = None
+    notification_recipients: Optional[list[str]] = None
 
 
 class TargetUpdate(BaseModel):
     """Schema for updating a target."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     target_value: Optional[float] = Field(None, gt=0)
@@ -78,11 +81,12 @@ class TargetUpdate(BaseModel):
     notify_slack: Optional[bool] = None
     notify_email: Optional[bool] = None
     notify_whatsapp: Optional[bool] = None
-    notification_recipients: Optional[List[str]] = None
+    notification_recipients: Optional[list[str]] = None
 
 
 class TargetResponse(BaseModel):
     """Response schema for a target."""
+
     id: UUID
     name: str
     description: Optional[str]
@@ -106,6 +110,7 @@ class TargetResponse(BaseModel):
 
 class ForecastRequest(BaseModel):
     """Request schema for forecasting."""
+
     metric_type: TargetMetric
     forecast_days: int = Field(default=30, ge=1, le=90)
     platform: Optional[str] = None
@@ -115,16 +120,19 @@ class ForecastRequest(BaseModel):
 
 class AlertAcknowledge(BaseModel):
     """Schema for acknowledging an alert."""
+
     pass
 
 
 class AlertResolve(BaseModel):
     """Schema for resolving an alert."""
+
     resolution_notes: Optional[str] = None
 
 
 class AlertDismiss(BaseModel):
     """Schema for dismissing an alert."""
+
     reason: Optional[str] = None
 
 
@@ -132,12 +140,13 @@ class AlertDismiss(BaseModel):
 # Target Endpoints
 # =============================================================================
 
-@router.post("/targets", response_model=Dict[str, Any])
+
+@router.post("/targets", response_model=dict[str, Any])
 async def create_target(
     target_data: TargetCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create a new target.
 
@@ -177,7 +186,7 @@ async def create_target(
     }
 
 
-@router.get("/targets", response_model=Dict[str, Any])
+@router.get("/targets", response_model=dict[str, Any])
 async def list_targets(
     active_only: bool = Query(True, description="Only show active targets"),
     metric_type: Optional[TargetMetric] = Query(None, description="Filter by metric type"),
@@ -185,7 +194,7 @@ async def list_targets(
     period_type: Optional[TargetPeriod] = Query(None, description="Filter by period type"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List all targets with optional filters."""
     service = TargetService(db, current_user.tenant_id)
 
@@ -217,12 +226,12 @@ async def list_targets(
     }
 
 
-@router.get("/targets/{target_id}", response_model=Dict[str, Any])
+@router.get("/targets/{target_id}", response_model=dict[str, Any])
 async def get_target(
     target_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get a specific target by ID."""
     service = TargetService(db, current_user.tenant_id)
     target = await service.get_target(target_id)
@@ -259,13 +268,13 @@ async def get_target(
     }
 
 
-@router.patch("/targets/{target_id}", response_model=Dict[str, Any])
+@router.patch("/targets/{target_id}", response_model=dict[str, Any])
 async def update_target(
     target_id: UUID,
     target_data: TargetUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update a target."""
     service = TargetService(db, current_user.tenant_id)
 
@@ -289,12 +298,12 @@ async def update_target(
     }
 
 
-@router.delete("/targets/{target_id}", response_model=Dict[str, Any])
+@router.delete("/targets/{target_id}", response_model=dict[str, Any])
 async def delete_target(
     target_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Delete (deactivate) a target."""
     service = TargetService(db, current_user.tenant_id)
     success = await service.delete_target(target_id)
@@ -312,13 +321,14 @@ async def delete_target(
 # Pacing Endpoints
 # =============================================================================
 
-@router.get("/pacing/target/{target_id}", response_model=Dict[str, Any])
+
+@router.get("/pacing/target/{target_id}", response_model=dict[str, Any])
 async def get_target_pacing(
     target_id: UUID,
     as_of_date: Optional[date] = Query(None, description="Date to calculate pacing for"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get pacing metrics for a specific target.
 
@@ -334,14 +344,14 @@ async def get_target_pacing(
     return pacing
 
 
-@router.get("/pacing/all", response_model=Dict[str, Any])
+@router.get("/pacing/all", response_model=dict[str, Any])
 async def get_all_pacing(
     as_of_date: Optional[date] = Query(None, description="Date to calculate pacing for"),
     metric_type: Optional[TargetMetric] = Query(None, description="Filter by metric type"),
     platform: Optional[str] = Query(None, description="Filter by platform"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get pacing for all active targets.
 
@@ -356,14 +366,14 @@ async def get_all_pacing(
     )
 
 
-@router.get("/pacing/history/{target_id}", response_model=Dict[str, Any])
+@router.get("/pacing/history/{target_id}", response_model=dict[str, Any])
 async def get_pacing_history(
     target_id: UUID,
     start_date: Optional[date] = Query(None, description="Start of date range"),
     end_date: Optional[date] = Query(None, description="End of date range"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get historical pacing snapshots for a target.
 
@@ -380,12 +390,12 @@ async def get_pacing_history(
     }
 
 
-@router.post("/pacing/snapshot", response_model=Dict[str, Any])
+@router.post("/pacing/snapshot", response_model=dict[str, Any])
 async def create_pacing_snapshots(
     as_of_date: Optional[date] = Query(None, description="Date for snapshots"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create pacing snapshots for all active targets.
 
@@ -399,12 +409,13 @@ async def create_pacing_snapshots(
 # Forecast Endpoints
 # =============================================================================
 
-@router.post("/forecast", response_model=Dict[str, Any])
+
+@router.post("/forecast", response_model=dict[str, Any])
 async def create_forecast(
     request: ForecastRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Generate a forecast for a metric.
 
@@ -425,7 +436,7 @@ async def create_forecast(
     return forecast
 
 
-@router.get("/forecast/eom", response_model=Dict[str, Any])
+@router.get("/forecast/eom", response_model=dict[str, Any])
 async def get_eom_forecast(
     metric_type: TargetMetric = Query(..., description="Metric to forecast"),
     platform: Optional[str] = Query(None, description="Platform filter"),
@@ -433,7 +444,7 @@ async def get_eom_forecast(
     month: Optional[date] = Query(None, description="Month to forecast (default: current)"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get end-of-month forecast for a metric.
 
@@ -454,7 +465,8 @@ async def get_eom_forecast(
 # Alert Endpoints
 # =============================================================================
 
-@router.get("/alerts", response_model=Dict[str, Any])
+
+@router.get("/alerts", response_model=dict[str, Any])
 async def get_alerts(
     status: Optional[AlertStatus] = Query(None, description="Filter by status"),
     severity: Optional[AlertSeverity] = Query(None, description="Filter by severity"),
@@ -462,7 +474,7 @@ async def get_alerts(
     target_id: Optional[UUID] = Query(None, description="Filter by target"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get alerts with optional filters."""
     service = PacingAlertService(db, current_user.tenant_id)
 
@@ -508,24 +520,24 @@ async def get_alerts(
     }
 
 
-@router.get("/alerts/summary", response_model=Dict[str, Any])
+@router.get("/alerts/summary", response_model=dict[str, Any])
 async def get_alert_summary(
     start_date: Optional[date] = Query(None, description="Start of period"),
     end_date: Optional[date] = Query(None, description="End of period"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get alert summary statistics for a time period."""
     service = PacingAlertService(db, current_user.tenant_id)
     return await service.get_alert_summary(start_date, end_date)
 
 
-@router.post("/alerts/check", response_model=Dict[str, Any])
+@router.post("/alerts/check", response_model=dict[str, Any])
 async def check_all_alerts(
     as_of_date: Optional[date] = Query(None, description="Date to check"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Check all targets for alert conditions.
 
@@ -536,12 +548,12 @@ async def check_all_alerts(
     return await service.check_all_targets(as_of_date)
 
 
-@router.post("/alerts/{alert_id}/acknowledge", response_model=Dict[str, Any])
+@router.post("/alerts/{alert_id}/acknowledge", response_model=dict[str, Any])
 async def acknowledge_alert(
     alert_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Acknowledge an alert."""
     service = PacingAlertService(db, current_user.tenant_id)
     alert = await service.acknowledge_alert(alert_id, current_user.id)
@@ -556,13 +568,13 @@ async def acknowledge_alert(
     }
 
 
-@router.post("/alerts/{alert_id}/resolve", response_model=Dict[str, Any])
+@router.post("/alerts/{alert_id}/resolve", response_model=dict[str, Any])
 async def resolve_alert(
     alert_id: UUID,
     request: AlertResolve,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Resolve an alert."""
     service = PacingAlertService(db, current_user.tenant_id)
     alert = await service.resolve_alert(
@@ -581,13 +593,13 @@ async def resolve_alert(
     }
 
 
-@router.post("/alerts/{alert_id}/dismiss", response_model=Dict[str, Any])
+@router.post("/alerts/{alert_id}/dismiss", response_model=dict[str, Any])
 async def dismiss_alert(
     alert_id: UUID,
     request: AlertDismiss,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Dismiss an alert (false positive or not actionable)."""
     service = PacingAlertService(db, current_user.tenant_id)
     alert = await service.dismiss_alert(
@@ -606,14 +618,14 @@ async def dismiss_alert(
     }
 
 
-@router.post("/alerts/check-cliff/{target_id}", response_model=Dict[str, Any])
+@router.post("/alerts/check-cliff/{target_id}", response_model=dict[str, Any])
 async def check_pacing_cliff(
     target_id: UUID,
     lookback_days: int = Query(7, ge=3, le=30, description="Days to look back"),
     drop_threshold_pct: float = Query(30.0, ge=10, le=90, description="Drop threshold %"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Check for sudden performance drops (pacing cliff).
 

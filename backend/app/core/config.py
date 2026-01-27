@@ -11,9 +11,9 @@ SECURITY NOTE:
 - Use strong, randomly generated keys (32+ bytes) for encryption/signing
 """
 
-from functools import lru_cache
-from typing import List, Literal, Optional
 import warnings
+from functools import lru_cache
+from typing import Literal, Optional
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -33,9 +33,7 @@ class Settings(BaseSettings):
     # Application Settings
     # -------------------------------------------------------------------------
     app_name: str = Field(default="Stratum AI", description="Application name")
-    app_env: Literal["development", "staging", "production"] = Field(
-        default="development"
-    )
+    app_env: Literal["development", "staging", "production"] = Field(default="development")
     debug: bool = Field(default=True)
     secret_key: str = Field(
         default="",
@@ -48,8 +46,7 @@ class Settings(BaseSettings):
     # Subscription Tier
     # -------------------------------------------------------------------------
     subscription_tier: Literal["starter", "professional", "enterprise"] = Field(
-        default="enterprise",
-        description="Subscription tier (starter, professional, enterprise)"
+        default="enterprise", description="Subscription tier (starter, professional, enterprise)"
     )
 
     # -------------------------------------------------------------------------
@@ -58,11 +55,11 @@ class Settings(BaseSettings):
     # NOTE: No default passwords - must be set via environment variables
     database_url: str = Field(
         default="postgresql+asyncpg://stratum:changeme@localhost:5432/stratum_ai",
-        description="Database URL (set DATABASE_URL env var with real credentials)"
+        description="Database URL (set DATABASE_URL env var with real credentials)",
     )
     database_url_sync: str = Field(
         default="postgresql://stratum:changeme@localhost:5432/stratum_ai",
-        description="Sync database URL (set DATABASE_URL_SYNC env var with real credentials)"
+        description="Sync database URL (set DATABASE_URL_SYNC env var with real credentials)",
     )
     db_pool_size: int = Field(default=10)
     db_max_overflow: int = Field(default=20)
@@ -96,8 +93,7 @@ class Settings(BaseSettings):
 
     # OAuth callback base URL (for constructing redirect URIs)
     oauth_redirect_base_url: str = Field(
-        default="http://localhost:8000",
-        description="Base URL for OAuth callbacks"
+        default="http://localhost:8000", description="Base URL for OAuth callbacks"
     )
 
     # Meta/Facebook OAuth
@@ -109,7 +105,9 @@ class Settings(BaseSettings):
     # Google Ads OAuth
     google_ads_developer_token: Optional[str] = Field(default=None)
     google_ads_client_id: Optional[str] = Field(default=None, description="Google OAuth Client ID")
-    google_ads_client_secret: Optional[str] = Field(default=None, description="Google OAuth Client Secret")
+    google_ads_client_secret: Optional[str] = Field(
+        default=None, description="Google OAuth Client Secret"
+    )
     google_ads_refresh_token: Optional[str] = Field(default=None)
     google_ads_customer_id: Optional[str] = Field(default=None)
 
@@ -121,7 +119,9 @@ class Settings(BaseSettings):
 
     # Snapchat OAuth
     snapchat_client_id: Optional[str] = Field(default=None, description="Snapchat Client ID")
-    snapchat_client_secret: Optional[str] = Field(default=None, description="Snapchat Client Secret")
+    snapchat_client_secret: Optional[str] = Field(
+        default=None, description="Snapchat Client Secret"
+    )
     snapchat_access_token: Optional[str] = Field(default=None)
 
     # -------------------------------------------------------------------------
@@ -137,8 +137,7 @@ class Settings(BaseSettings):
         default=None, description="WhatsApp Business Account ID"
     )
     whatsapp_verify_token: str = Field(
-        default="stratum-whatsapp-verify-token",
-        description="Token for webhook verification"
+        default="stratum-whatsapp-verify-token", description="Token for webhook verification"
     )
     whatsapp_app_secret: Optional[str] = Field(
         default=None, description="WhatsApp/Meta App Secret for webhook signature verification"
@@ -163,23 +162,18 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Zoho CRM Configuration
     # -------------------------------------------------------------------------
-    zoho_client_id: Optional[str] = Field(
-        default=None, description="Zoho OAuth App Client ID"
-    )
+    zoho_client_id: Optional[str] = Field(default=None, description="Zoho OAuth App Client ID")
     zoho_client_secret: Optional[str] = Field(
         default=None, description="Zoho OAuth App Client Secret"
     )
     zoho_region: str = Field(
-        default="com",
-        description="Zoho data center region (com, eu, in, com.au, jp, com.cn)"
+        default="com", description="Zoho data center region (com, eu, in, com.au, jp, com.cn)"
     )
 
     # -------------------------------------------------------------------------
     # Market Intelligence Configuration
     # -------------------------------------------------------------------------
-    market_intel_provider: Literal["mock", "serpapi", "dataforseo"] = Field(
-        default="mock"
-    )
+    market_intel_provider: Literal["mock", "serpapi", "dataforseo"] = Field(default="mock")
     serpapi_key: Optional[str] = Field(default=None)
     dataforseo_login: Optional[str] = Field(default=None)
     dataforseo_password: Optional[str] = Field(default=None)
@@ -190,14 +184,14 @@ class Settings(BaseSettings):
     # NOTE: All security keys MUST be set via environment variables in production
     jwt_secret_key: str = Field(
         default="",
-        description="JWT signing key (REQUIRED: set via JWT_SECRET_KEY env var, min 32 chars)"
+        description="JWT signing key (REQUIRED: set via JWT_SECRET_KEY env var, min 32 chars)",
     )
     jwt_algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=30)
     refresh_token_expire_days: int = Field(default=7)
     pii_encryption_key: str = Field(
         default="",
-        description="AES encryption key for PII (REQUIRED: set via PII_ENCRYPTION_KEY env var, min 32 chars)"
+        description="AES encryption key for PII (REQUIRED: set via PII_ENCRYPTION_KEY env var, min 32 chars)",
     )
 
     # Email verification and password reset token expiry
@@ -230,22 +224,18 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # CORS Configuration
     # -------------------------------------------------------------------------
-    cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:5173"
-    )
+    cors_origins: str = Field(default="http://localhost:3000,http://localhost:5173")
     cors_allow_credentials: bool = Field(default=True)
 
     @property
-    def cors_origins_list(self) -> List[str]:
+    def cors_origins_list(self) -> list[str]:
         """Get CORS origins as a list."""
         return [origin.strip() for origin in self.cors_origins.split(",")]
 
     # -------------------------------------------------------------------------
     # Observability
     # -------------------------------------------------------------------------
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
-        default="INFO"
-    )
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(default="INFO")
     log_format: Literal["json", "console"] = Field(default="json")
     sentry_dsn: Optional[str] = Field(default=None)
 
@@ -259,28 +249,22 @@ class Settings(BaseSettings):
     # Stripe Payment Configuration
     # -------------------------------------------------------------------------
     stripe_secret_key: Optional[str] = Field(
-        default=None,
-        description="Stripe Secret Key (sk_live_... or sk_test_...)"
+        default=None, description="Stripe Secret Key (sk_live_... or sk_test_...)"
     )
     stripe_publishable_key: Optional[str] = Field(
-        default=None,
-        description="Stripe Publishable Key (pk_live_... or pk_test_...)"
+        default=None, description="Stripe Publishable Key (pk_live_... or pk_test_...)"
     )
     stripe_webhook_secret: Optional[str] = Field(
-        default=None,
-        description="Stripe Webhook Signing Secret (whsec_...)"
+        default=None, description="Stripe Webhook Signing Secret (whsec_...)"
     )
     stripe_starter_price_id: Optional[str] = Field(
-        default=None,
-        description="Stripe Price ID for Starter tier (price_...)"
+        default=None, description="Stripe Price ID for Starter tier (price_...)"
     )
     stripe_professional_price_id: Optional[str] = Field(
-        default=None,
-        description="Stripe Price ID for Professional tier (price_...)"
+        default=None, description="Stripe Price ID for Professional tier (price_...)"
     )
     stripe_enterprise_price_id: Optional[str] = Field(
-        default=None,
-        description="Stripe Price ID for Enterprise tier (price_...)"
+        default=None, description="Stripe Price ID for Enterprise tier (price_...)"
     )
 
     # -------------------------------------------------------------------------
@@ -309,14 +293,16 @@ class Settings(BaseSettings):
     @property
     def stripe_fully_configured(self) -> bool:
         """Check if all Stripe settings are properly configured for payments."""
-        return all([
-            self.stripe_secret_key,
-            self.stripe_publishable_key,
-            self.stripe_webhook_secret,
-            self.stripe_starter_price_id,
-            self.stripe_professional_price_id,
-            self.stripe_enterprise_price_id,
-        ])
+        return all(
+            [
+                self.stripe_secret_key,
+                self.stripe_publishable_key,
+                self.stripe_webhook_secret,
+                self.stripe_starter_price_id,
+                self.stripe_professional_price_id,
+                self.stripe_enterprise_price_id,
+            ]
+        )
 
     @model_validator(mode="after")
     def validate_security_settings(self) -> "Settings":
@@ -353,16 +339,30 @@ class Settings(BaseSettings):
 
         # Check for common weak keys and development fallback patterns
         weak_key_patterns = [
-            "dev-secret", "jwt-secret-dev", "dev-encryption",
-            "changeme", "secret", "password", "test", "demo",
-            "dev-only", "do-not-use", "example", "placeholder",
-            "your-key", "change-me", "default", "insecure",
+            "dev-secret",
+            "jwt-secret-dev",
+            "dev-encryption",
+            "changeme",
+            "secret",
+            "password",
+            "test",
+            "demo",
+            "dev-only",
+            "do-not-use",
+            "example",
+            "placeholder",
+            "your-key",
+            "change-me",
+            "default",
+            "insecure",
         ]
         for key_field in ["secret_key", "jwt_secret_key", "pii_encryption_key"]:
             key_value = getattr(self, key_field, "").lower()
             for weak in weak_key_patterns:
                 if weak in key_value:
-                    issues.append(f"{key_field.upper()} contains weak/default value (matched: '{weak}')")
+                    issues.append(
+                        f"{key_field.upper()} contains weak/default value (matched: '{weak}')"
+                    )
                     break
 
         # Validate Stripe configuration in production
@@ -370,22 +370,36 @@ class Settings(BaseSettings):
         if self.stripe_secret_key:
             stripe_issues = []
             if not self.stripe_publishable_key:
-                stripe_issues.append("STRIPE_PUBLISHABLE_KEY is required when STRIPE_SECRET_KEY is set")
+                stripe_issues.append(
+                    "STRIPE_PUBLISHABLE_KEY is required when STRIPE_SECRET_KEY is set"
+                )
             if not self.stripe_webhook_secret:
                 stripe_issues.append("STRIPE_WEBHOOK_SECRET is required for payment webhooks")
             if not self.stripe_starter_price_id:
-                stripe_issues.append("STRIPE_STARTER_PRICE_ID is required for subscription checkout")
+                stripe_issues.append(
+                    "STRIPE_STARTER_PRICE_ID is required for subscription checkout"
+                )
             if not self.stripe_professional_price_id:
-                stripe_issues.append("STRIPE_PROFESSIONAL_PRICE_ID is required for subscription checkout")
+                stripe_issues.append(
+                    "STRIPE_PROFESSIONAL_PRICE_ID is required for subscription checkout"
+                )
             if not self.stripe_enterprise_price_id:
-                stripe_issues.append("STRIPE_ENTERPRISE_PRICE_ID is required for subscription checkout")
+                stripe_issues.append(
+                    "STRIPE_ENTERPRISE_PRICE_ID is required for subscription checkout"
+                )
 
             # Check for test keys in production
             if self.is_production:
                 if self.stripe_secret_key.startswith("sk_test_"):
-                    stripe_issues.append("STRIPE_SECRET_KEY is using test key in production (should be sk_live_...)")
-                if self.stripe_publishable_key and self.stripe_publishable_key.startswith("pk_test_"):
-                    stripe_issues.append("STRIPE_PUBLISHABLE_KEY is using test key in production (should be pk_live_...)")
+                    stripe_issues.append(
+                        "STRIPE_SECRET_KEY is using test key in production (should be sk_live_...)"
+                    )
+                if self.stripe_publishable_key and self.stripe_publishable_key.startswith(
+                    "pk_test_"
+                ):
+                    stripe_issues.append(
+                        "STRIPE_PUBLISHABLE_KEY is using test key in production (should be pk_live_...)"
+                    )
 
             if stripe_issues:
                 issues.extend(stripe_issues)
@@ -401,7 +415,7 @@ class Settings(BaseSettings):
                     "  - SECRET_KEY (min 32 random characters)\n"
                     "  - JWT_SECRET_KEY (min 32 random characters)\n"
                     "  - PII_ENCRYPTION_KEY (min 32 random characters)\n\n"
-                    "Generate secure keys with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+                    'Generate secure keys with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
                 )
             else:
                 # In development, warn but allow startup

@@ -9,12 +9,12 @@ Product changelog and release notes:
 - Admin: Create/update entries
 """
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, and_, desc
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -34,8 +34,10 @@ logger = get_logger(__name__)
 # Pydantic Schemas
 # =============================================================================
 
+
 class ChangelogEntryResponse(BaseModel):
     """Changelog entry response."""
+
     id: int
     version: str
     title: str
@@ -46,13 +48,14 @@ class ChangelogEntryResponse(BaseModel):
     image_url: Optional[str]
     video_url: Optional[str]
     docs_url: Optional[str]
-    tags: List[str]
+    tags: list[str]
     is_read: bool = False  # User-specific
     created_at: datetime
 
 
 class ChangelogCreateRequest(BaseModel):
     """Request to create a changelog entry (admin only)."""
+
     version: str = Field(..., min_length=1, max_length=50)
     title: str = Field(..., min_length=1, max_length=255)
     description: str = Field(..., min_length=1)
@@ -60,12 +63,13 @@ class ChangelogCreateRequest(BaseModel):
     image_url: Optional[str] = None
     video_url: Optional[str] = None
     docs_url: Optional[str] = None
-    tags: List[str] = Field(default=[])
+    tags: list[str] = Field(default=[])
     is_published: bool = Field(default=False)
 
 
 class ChangelogUpdateRequest(BaseModel):
     """Request to update a changelog entry."""
+
     version: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
@@ -73,12 +77,13 @@ class ChangelogUpdateRequest(BaseModel):
     image_url: Optional[str] = None
     video_url: Optional[str] = None
     docs_url: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
     is_published: Optional[bool] = None
 
 
 class ChangelogSummaryResponse(BaseModel):
     """Summary of unread changelog entries."""
+
     unread_count: int
     latest_version: Optional[str]
     has_new_features: bool
@@ -88,7 +93,8 @@ class ChangelogSummaryResponse(BaseModel):
 # Endpoints
 # =============================================================================
 
-@router.get("", response_model=APIResponse[List[ChangelogEntryResponse]])
+
+@router.get("", response_model=APIResponse[list[ChangelogEntryResponse]])
 async def list_changelog_entries(
     request: Request,
     include_unpublished: bool = False,
@@ -96,7 +102,7 @@ async def list_changelog_entries(
     limit: int = 20,
     offset: int = 0,
     db: AsyncSession = Depends(get_async_session),
-) -> APIResponse[List[ChangelogEntryResponse]]:
+) -> APIResponse[list[ChangelogEntryResponse]]:
     """
     List changelog entries (public entries only, unless admin).
     """
@@ -129,9 +135,7 @@ async def list_changelog_entries(
     read_ids = set()
     if user_id:
         read_result = await db.execute(
-            select(ChangelogReadStatus.changelog_id).where(
-                ChangelogReadStatus.user_id == user_id
-            )
+            select(ChangelogReadStatus.changelog_id).where(ChangelogReadStatus.user_id == user_id)
         )
         read_ids = set(read_result.scalars().all())
 
@@ -190,9 +194,7 @@ async def get_changelog_summary(
     read_ids = set()
     if user_id:
         read_result = await db.execute(
-            select(ChangelogReadStatus.changelog_id).where(
-                ChangelogReadStatus.user_id == user_id
-            )
+            select(ChangelogReadStatus.changelog_id).where(ChangelogReadStatus.user_id == user_id)
         )
         read_ids = set(read_result.scalars().all())
 
@@ -220,9 +222,7 @@ async def get_changelog_entry(
     """
     user_id = getattr(request.state, "user_id", None)
 
-    result = await db.execute(
-        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
-    )
+    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
     entry = result.scalar_one_or_none()
 
     if not entry:
@@ -282,9 +282,7 @@ async def mark_changelog_read(
         )
 
     # Verify entry exists
-    result = await db.execute(
-        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
-    )
+    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
     if not result.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -307,7 +305,7 @@ async def mark_changelog_read(
     read_status = ChangelogReadStatus(
         user_id=user_id,
         changelog_id=entry_id,
-        read_at=datetime.now(timezone.utc),
+        read_at=datetime.now(UTC),
     )
     db.add(read_status)
     await db.commit()
@@ -332,22 +330,18 @@ async def mark_all_changelog_read(
         )
 
     # Get all published entries
-    result = await db.execute(
-        select(ChangelogEntry.id).where(ChangelogEntry.is_published == True)
-    )
+    result = await db.execute(select(ChangelogEntry.id).where(ChangelogEntry.is_published == True))
     all_entry_ids = set(result.scalars().all())
 
     # Get already read entries
     read_result = await db.execute(
-        select(ChangelogReadStatus.changelog_id).where(
-            ChangelogReadStatus.user_id == user_id
-        )
+        select(ChangelogReadStatus.changelog_id).where(ChangelogReadStatus.user_id == user_id)
     )
     already_read_ids = set(read_result.scalars().all())
 
     # Mark unread entries as read
     unread_ids = all_entry_ids - already_read_ids
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for entry_id in unread_ids:
         read_status = ChangelogReadStatus(
@@ -370,7 +364,10 @@ async def mark_all_changelog_read(
 # Admin Endpoints
 # =============================================================================
 
-@router.post("", response_model=APIResponse[ChangelogEntryResponse], status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "", response_model=APIResponse[ChangelogEntryResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_changelog_entry(
     request: Request,
     body: ChangelogCreateRequest,
@@ -402,7 +399,7 @@ async def create_changelog_entry(
         docs_url=body.docs_url,
         tags=body.tags,
         is_published=body.is_published,
-        published_at=datetime.now(timezone.utc) if body.is_published else None,
+        published_at=datetime.now(UTC) if body.is_published else None,
     )
 
     db.add(entry)
@@ -449,9 +446,7 @@ async def update_changelog_entry(
             detail="Not authenticated",
         )
 
-    result = await db.execute(
-        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
-    )
+    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
     entry = result.scalar_one_or_none()
 
     if not entry:
@@ -485,7 +480,7 @@ async def update_changelog_entry(
         entry.is_published = body.is_published
         # Set published_at when first publishing
         if body.is_published and not was_published:
-            entry.published_at = datetime.now(timezone.utc)
+            entry.published_at = datetime.now(UTC)
 
     await db.commit()
     await db.refresh(entry)
@@ -527,9 +522,7 @@ async def delete_changelog_entry(
             detail="Not authenticated",
         )
 
-    result = await db.execute(
-        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
-    )
+    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
     entry = result.scalar_one_or_none()
 
     if not entry:

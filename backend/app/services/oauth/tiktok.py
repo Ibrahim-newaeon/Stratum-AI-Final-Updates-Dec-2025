@@ -22,18 +22,18 @@ Required Scopes:
 Docs: https://business-api.tiktok.com/portal/docs?id=1738373164380162
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Optional
 
 import aiohttp
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.oauth.base import (
+    AdAccountInfo,
     OAuthService,
     OAuthState,
     OAuthTokens,
-    AdAccountInfo,
 )
 
 logger = get_logger(__name__)
@@ -69,7 +69,7 @@ class TikTokOAuthService(OAuthService):
     def get_authorization_url(
         self,
         state: OAuthState,
-        scopes: Optional[List[str]] = None,
+        scopes: Optional[list[str]] = None,
     ) -> str:
         """
         Generate TikTok OAuth authorization URL.
@@ -196,7 +196,7 @@ class TikTokOAuthService(OAuthService):
     async def fetch_ad_accounts(
         self,
         access_token: str,
-    ) -> List[AdAccountInfo]:
+    ) -> list[AdAccountInfo]:
         """
         Fetch TikTok advertiser accounts.
 
@@ -267,30 +267,36 @@ class TikTokOAuthService(OAuthService):
                                     "STATUS_CONFIRM_FAIL": "rejected",
                                 }
 
-                                accounts.append(AdAccountInfo(
-                                    account_id=str(info.get("advertiser_id", adv_id)),
-                                    name=info.get("name", f"Advertiser {adv_id}"),
-                                    business_name=info.get("company"),
-                                    currency=info.get("currency", "USD"),
-                                    timezone=info.get("timezone", "UTC"),
-                                    status=status_map.get(info.get("status"), "unknown"),
-                                    raw_data=info,
-                                ))
+                                accounts.append(
+                                    AdAccountInfo(
+                                        account_id=str(info.get("advertiser_id", adv_id)),
+                                        name=info.get("name", f"Advertiser {adv_id}"),
+                                        business_name=info.get("company"),
+                                        currency=info.get("currency", "USD"),
+                                        timezone=info.get("timezone", "UTC"),
+                                        status=status_map.get(info.get("status"), "unknown"),
+                                        raw_data=info,
+                                    )
+                                )
                         else:
                             # Add basic info if details fetch fails
-                            accounts.append(AdAccountInfo(
-                                account_id=str(adv_id),
-                                name=adv.get("advertiser_name", f"Advertiser {adv_id}"),
-                                status="active",
-                            ))
+                            accounts.append(
+                                AdAccountInfo(
+                                    account_id=str(adv_id),
+                                    name=adv.get("advertiser_name", f"Advertiser {adv_id}"),
+                                    status="active",
+                                )
+                            )
 
                 except Exception as e:
                     self.logger.warning(f"Failed to get advertiser info for {adv_id}", error=str(e))
-                    accounts.append(AdAccountInfo(
-                        account_id=str(adv_id),
-                        name=adv.get("advertiser_name", f"Advertiser {adv_id}"),
-                        status="unknown",
-                    ))
+                    accounts.append(
+                        AdAccountInfo(
+                            account_id=str(adv_id),
+                            name=adv.get("advertiser_name", f"Advertiser {adv_id}"),
+                            status="unknown",
+                        )
+                    )
 
         return accounts
 
@@ -319,9 +325,9 @@ class TikTokOAuthService(OAuthService):
         """Calculate expiration datetime from expires_in seconds."""
         if expires_in is None:
             return None
-        return datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        return datetime.now(UTC) + timedelta(seconds=expires_in)
 
-    def _get_mock_accounts(self) -> List[AdAccountInfo]:
+    def _get_mock_accounts(self) -> list[AdAccountInfo]:
         """Return mock accounts for development/testing."""
         return [
             AdAccountInfo(

@@ -171,7 +171,10 @@ export const WIDGET_DIMENSIONS: Record<WidgetSize, { width: number; height: numb
 };
 
 // Widget type labels and descriptions
-export const WIDGET_TYPE_INFO: Record<WidgetType, { label: string; description: string; icon: string }> = {
+export const WIDGET_TYPE_INFO: Record<
+  WidgetType,
+  { label: string; description: string; icon: string }
+> = {
   signal_health: {
     label: 'Signal Health',
     description: 'Display overall signal health score and platform breakdown',

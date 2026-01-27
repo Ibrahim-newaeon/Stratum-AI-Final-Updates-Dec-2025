@@ -15,18 +15,18 @@ Key properties of Shapley Values:
 4. Additivity: Combined games preserve values
 """
 
+import math
 from collections import defaultdict
 from datetime import datetime
 from itertools import combinations
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 from uuid import UUID
-import math
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.models.crm import CRMDeal, Touchpoint, CRMContact
+from app.models.crm import CRMContact, CRMDeal, Touchpoint
 
 logger = get_logger(__name__)
 
@@ -41,15 +41,15 @@ class ShapleyValueModel:
 
     def __init__(self):
         # Coalition conversion rates: {frozenset(channels): conversion_rate}
-        self.coalition_conversions: Dict[frozenset, int] = defaultdict(int)
-        self.coalition_totals: Dict[frozenset, int] = defaultdict(int)
+        self.coalition_conversions: dict[frozenset, int] = defaultdict(int)
+        self.coalition_totals: dict[frozenset, int] = defaultdict(int)
         # All observed channels
-        self.channels: Set[str] = set()
+        self.channels: set[str] = set()
         # Journey statistics
         self.journey_count: int = 0
         self.converting_journeys: int = 0
 
-    def add_journey(self, channels: List[str], converted: bool) -> None:
+    def add_journey(self, channels: list[str], converted: bool) -> None:
         """
         Add a customer journey to the model.
 
@@ -109,7 +109,7 @@ class ShapleyValueModel:
 
         return 0.0
 
-    def calculate_shapley_values(self, max_channels: int = 10) -> Dict[str, float]:
+    def calculate_shapley_values(self, max_channels: int = 10) -> dict[str, float]:
         """
         Calculate Shapley Values for each channel.
 
@@ -161,9 +161,9 @@ class ShapleyValueModel:
 
     def _calculate_shapley_monte_carlo(
         self,
-        channels: List[str],
+        channels: list[str],
         samples: int = 10000,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Monte Carlo approximation of Shapley values for large channel sets.
 
@@ -196,7 +196,7 @@ class ShapleyValueModel:
             for channel in channels
         }
 
-    def calculate_attribution_weights(self) -> Dict[str, float]:
+    def calculate_attribution_weights(self) -> dict[str, float]:
         """
         Calculate normalized attribution weights from Shapley values.
 
@@ -217,38 +217,33 @@ class ShapleyValueModel:
 
         return {k: v / total for k, v in shapley_values.items()}
 
-    def get_model_stats(self) -> Dict[str, Any]:
+    def get_model_stats(self) -> dict[str, Any]:
         """Get model statistics."""
         return {
             "journey_count": self.journey_count,
             "converting_journeys": self.converting_journeys,
             "conversion_rate": (
-                self.converting_journeys / self.journey_count
-                if self.journey_count > 0 else 0
+                self.converting_journeys / self.journey_count if self.journey_count > 0 else 0
             ),
             "unique_channels": len(self.channels),
             "channels": list(self.channels),
             "unique_coalitions": len(self.coalition_totals),
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize model to dictionary."""
         return {
             "coalition_conversions": {
-                ",".join(sorted(k)): v
-                for k, v in self.coalition_conversions.items()
+                ",".join(sorted(k)): v for k, v in self.coalition_conversions.items()
             },
-            "coalition_totals": {
-                ",".join(sorted(k)): v
-                for k, v in self.coalition_totals.items()
-            },
+            "coalition_totals": {",".join(sorted(k)): v for k, v in self.coalition_totals.items()},
             "channels": list(self.channels),
             "journey_count": self.journey_count,
             "converting_journeys": self.converting_journeys,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ShapleyValueModel":
+    def from_dict(cls, data: dict[str, Any]) -> "ShapleyValueModel":
         """Deserialize model from dictionary."""
         model = cls()
 
@@ -282,7 +277,7 @@ class ShapleyAttributionService:
         channel_type: str = "platform",
         include_non_converting: bool = True,
         min_journeys: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Train a Shapley Value model on historical journey data.
         """
@@ -353,9 +348,9 @@ class ShapleyAttributionService:
 
     async def attribute_with_model(
         self,
-        model_data: Dict[str, Any],
+        model_data: dict[str, Any],
         deal_id: UUID,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Attribute a deal using a trained Shapley model.
         """
@@ -401,14 +396,16 @@ class ShapleyAttributionService:
             channel = tp.source or "unknown"
             weight = journey_weights.get(channel, 0.0)
 
-            breakdown.append({
-                "touchpoint_id": str(tp.id),
-                "channel": channel,
-                "campaign_id": tp.campaign_id,
-                "event_ts": tp.event_ts.isoformat(),
-                "weight": round(weight, 4),
-                "attributed_revenue": round(revenue * weight, 2),
-            })
+            breakdown.append(
+                {
+                    "touchpoint_id": str(tp.id),
+                    "channel": channel,
+                    "campaign_id": tp.campaign_id,
+                    "event_ts": tp.event_ts.isoformat(),
+                    "weight": round(weight, 4),
+                    "attributed_revenue": round(revenue * weight, 2),
+                }
+            )
 
         return {
             "success": True,
@@ -424,7 +421,7 @@ class ShapleyAttributionService:
         contact_id: UUID,
         before_time: Optional[datetime],
         channel_type: str = "platform",
-    ) -> List[str]:
+    ) -> list[str]:
         """Get channel sequence for a contact's journey."""
         touchpoints = await self._get_journey_touchpoints(contact_id, before_time)
 
@@ -437,7 +434,7 @@ class ShapleyAttributionService:
         self,
         contact_id: UUID,
         before_time: Optional[datetime],
-    ) -> List[Touchpoint]:
+    ) -> list[Touchpoint]:
         """Get touchpoints for a contact."""
         query = select(Touchpoint).where(
             and_(
@@ -459,7 +456,7 @@ class ShapleyAttributionService:
         start_date: datetime,
         end_date: datetime,
         limit: int = 1000,
-    ) -> List[UUID]:
+    ) -> list[UUID]:
         """Get contacts with touchpoints but no won deals."""
         won_contacts = (
             select(CRMDeal.contact_id)

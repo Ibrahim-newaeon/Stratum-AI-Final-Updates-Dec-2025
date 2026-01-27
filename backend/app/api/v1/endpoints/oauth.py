@@ -14,16 +14,17 @@ Handles the complete OAuth flow for Meta, Google, TikTok, and Snapchat:
 All endpoints are tenant-scoped and require authentication.
 """
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.deps import CurrentUserDep, VerifiedUserDep
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
@@ -33,7 +34,6 @@ from app.models.campaign_builder import (
     TenantAdAccount,
     TenantPlatformConnection,
 )
-from app.auth.deps import CurrentUserDep, VerifiedUserDep
 from app.schemas import APIResponse
 from app.services.oauth import (
     get_oauth_service,
@@ -47,16 +47,15 @@ router = APIRouter(prefix="/oauth", tags=["oauth"])
 # Pydantic Schemas
 # =============================================================================
 
+
 class OAuthStartRequest(BaseModel):
     """Request to start OAuth flow."""
 
-    scopes: Optional[List[str]] = Field(
-        None,
-        description="Optional list of scopes to request (uses defaults if not provided)"
+    scopes: Optional[list[str]] = Field(
+        None, description="Optional list of scopes to request (uses defaults if not provided)"
     )
     frontend_callback_url: Optional[str] = Field(
-        None,
-        description="Frontend URL to redirect to after OAuth completes"
+        None, description="Frontend URL to redirect to after OAuth completes"
     )
 
 
@@ -85,7 +84,7 @@ class ConnectionStatusResponse(BaseModel):
     connected_at: Optional[datetime] = None
     token_expires_at: Optional[datetime] = None
     last_refreshed_at: Optional[datetime] = None
-    scopes: List[str] = []
+    scopes: list[str] = []
     last_error: Optional[str] = None
     ad_accounts_count: int = 0
 
@@ -108,10 +107,8 @@ class AdAccountResponse(BaseModel):
 class ConnectAccountsRequest(BaseModel):
     """Request to connect ad accounts."""
 
-    account_ids: List[str] = Field(
-        ...,
-        min_length=1,
-        description="List of platform account IDs to connect"
+    account_ids: list[str] = Field(
+        ..., min_length=1, description="List of platform account IDs to connect"
     )
 
 
@@ -119,7 +116,7 @@ class ConnectAccountsResponse(BaseModel):
     """Response after connecting accounts."""
 
     connected_count: int
-    accounts: List[AdAccountResponse]
+    accounts: list[AdAccountResponse]
 
 
 class RefreshTokenResponse(BaseModel):
@@ -133,6 +130,7 @@ class RefreshTokenResponse(BaseModel):
 # =============================================================================
 # OAuth Initiation Endpoints
 # =============================================================================
+
 
 @router.post("/{platform}/authorize", response_model=APIResponse[OAuthStartResponse])
 async def start_oauth(
@@ -158,10 +156,7 @@ async def start_oauth(
     try:
         oauth_service = get_oauth_service(platform.value)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     # Create OAuth state for CSRF protection
     try:
@@ -174,7 +169,7 @@ async def start_oauth(
         logger.error("Failed to create OAuth state", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to initialize OAuth flow"
+            detail="Failed to initialize OAuth flow",
         )
 
     # Generate authorization URL
@@ -184,10 +179,7 @@ async def start_oauth(
             scopes=request_data.scopes,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     logger.info(
         "oauth_started",
@@ -210,6 +202,7 @@ async def start_oauth(
 # =============================================================================
 # OAuth Callback Endpoints
 # =============================================================================
+
 
 @router.get("/{platform}/callback")
 async def oauth_callback(
@@ -290,14 +283,16 @@ async def oauth_callback(
         )
         connection = result.scalar_one_or_none()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if connection:
             # Update existing connection
             connection.status = ConnectionStatus.CONNECTED
             connection.access_token_encrypted = oauth_service.encrypt_token(tokens.access_token)
             if tokens.refresh_token:
-                connection.refresh_token_encrypted = oauth_service.encrypt_token(tokens.refresh_token)
+                connection.refresh_token_encrypted = oauth_service.encrypt_token(
+                    tokens.refresh_token
+                )
             connection.token_expires_at = tokens.expires_at
             connection.scopes = tokens.scopes
             connection.connected_at = now
@@ -312,7 +307,9 @@ async def oauth_callback(
                 platform=platform,
                 status=ConnectionStatus.CONNECTED,
                 access_token_encrypted=oauth_service.encrypt_token(tokens.access_token),
-                refresh_token_encrypted=oauth_service.encrypt_token(tokens.refresh_token) if tokens.refresh_token else None,
+                refresh_token_encrypted=oauth_service.encrypt_token(tokens.refresh_token)
+                if tokens.refresh_token
+                else None,
                 token_expires_at=tokens.expires_at,
                 scopes=tokens.scopes,
                 connected_at=now,
@@ -342,14 +339,13 @@ async def oauth_callback(
 
     # Redirect to frontend with success
     redirect_url = oauth_state.redirect_uri or frontend_url
-    return RedirectResponse(
-        f"{redirect_url}/connect?platform={platform.value}&status=success"
-    )
+    return RedirectResponse(f"{redirect_url}/connect?platform={platform.value}&status=success")
 
 
 # =============================================================================
 # Connection Status Endpoints
 # =============================================================================
+
 
 @router.get("/{platform}/status", response_model=APIResponse[ConnectionStatusResponse])
 async def get_connection_status(
@@ -407,7 +403,7 @@ async def get_connection_status(
     )
 
 
-@router.get("/status", response_model=APIResponse[List[ConnectionStatusResponse]])
+@router.get("/status", response_model=APIResponse[list[ConnectionStatusResponse]])
 async def get_all_connection_statuses(
     current_user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -435,25 +431,29 @@ async def get_all_connection_statuses(
         )
         accounts_count = len(accounts_result.scalars().all())
 
-        statuses.append(ConnectionStatusResponse(
-            platform=connection.platform.value,
-            status=connection.status.value,
-            connected_at=connection.connected_at,
-            token_expires_at=connection.token_expires_at,
-            last_refreshed_at=connection.last_refreshed_at,
-            scopes=connection.scopes or [],
-            last_error=connection.last_error,
-            ad_accounts_count=accounts_count,
-        ))
+        statuses.append(
+            ConnectionStatusResponse(
+                platform=connection.platform.value,
+                status=connection.status.value,
+                connected_at=connection.connected_at,
+                token_expires_at=connection.token_expires_at,
+                last_refreshed_at=connection.last_refreshed_at,
+                scopes=connection.scopes or [],
+                last_error=connection.last_error,
+                ad_accounts_count=accounts_count,
+            )
+        )
 
     # Add disconnected status for platforms without connections
     connected_platforms = {s.platform for s in statuses}
     for platform in AdPlatform:
         if platform.value not in connected_platforms:
-            statuses.append(ConnectionStatusResponse(
-                platform=platform.value,
-                status=ConnectionStatus.DISCONNECTED.value,
-            ))
+            statuses.append(
+                ConnectionStatusResponse(
+                    platform=platform.value,
+                    status=ConnectionStatus.DISCONNECTED.value,
+                )
+            )
 
     return APIResponse(
         success=True,
@@ -465,7 +465,8 @@ async def get_all_connection_statuses(
 # Ad Account Endpoints
 # =============================================================================
 
-@router.get("/{platform}/accounts", response_model=APIResponse[List[AdAccountResponse]])
+
+@router.get("/{platform}/accounts", response_model=APIResponse[list[AdAccountResponse]])
 async def list_ad_accounts(
     platform: AdPlatform,
     current_user: VerifiedUserDep,
@@ -491,7 +492,7 @@ async def list_ad_accounts(
     if not connection or connection.status != ConnectionStatus.CONNECTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Platform {platform.value} is not connected"
+            detail=f"Platform {platform.value} is not connected",
         )
 
     # Decrypt access token
@@ -502,22 +503,26 @@ async def list_ad_accounts(
         logger.error("Failed to decrypt token", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve access token"
+            detail="Failed to retrieve access token",
         )
 
     # Check if token needs refresh
-    if connection.token_expires_at and connection.token_expires_at <= datetime.now(timezone.utc):
+    if connection.token_expires_at and connection.token_expires_at <= datetime.now(UTC):
         if connection.refresh_token_encrypted:
             try:
                 refresh_token = oauth_service.decrypt_token(connection.refresh_token_encrypted)
                 new_tokens = await oauth_service.refresh_access_token(refresh_token)
 
                 # Update stored tokens
-                connection.access_token_encrypted = oauth_service.encrypt_token(new_tokens.access_token)
+                connection.access_token_encrypted = oauth_service.encrypt_token(
+                    new_tokens.access_token
+                )
                 if new_tokens.refresh_token:
-                    connection.refresh_token_encrypted = oauth_service.encrypt_token(new_tokens.refresh_token)
+                    connection.refresh_token_encrypted = oauth_service.encrypt_token(
+                        new_tokens.refresh_token
+                    )
                 connection.token_expires_at = new_tokens.expires_at
-                connection.last_refreshed_at = datetime.now(timezone.utc)
+                connection.last_refreshed_at = datetime.now(UTC)
                 await db.commit()
 
                 access_token = new_tokens.access_token
@@ -528,14 +533,13 @@ async def list_ad_accounts(
                 await db.commit()
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token expired. Please reconnect."
+                    detail="Token expired. Please reconnect.",
                 )
         else:
             connection.status = ConnectionStatus.EXPIRED
             await db.commit()
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token expired. Please reconnect."
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired. Please reconnect."
             )
 
     # Fetch accounts from platform
@@ -545,14 +549,12 @@ async def list_ad_accounts(
         logger.error("Failed to fetch ad accounts", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Failed to fetch accounts from {platform.value}"
+            detail=f"Failed to fetch accounts from {platform.value}",
         )
 
     # Get locally stored accounts
     local_result = await db.execute(
-        select(TenantAdAccount).where(
-            TenantAdAccount.connection_id == connection.id
-        )
+        select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id)
     )
     local_accounts = {a.platform_account_id: a for a in local_result.scalars().all()}
 
@@ -560,18 +562,20 @@ async def list_ad_accounts(
     accounts = []
     for acc in platform_accounts:
         local_acc = local_accounts.get(acc.account_id)
-        accounts.append(AdAccountResponse(
-            id=local_acc.id if local_acc else None,
-            platform_account_id=acc.account_id,
-            name=acc.name,
-            business_name=acc.business_name,
-            currency=acc.currency,
-            timezone=acc.timezone,
-            status=acc.status,
-            is_connected=local_acc is not None,
-            is_enabled=local_acc.is_enabled if local_acc else False,
-            spend_cap=acc.spend_cap,
-        ))
+        accounts.append(
+            AdAccountResponse(
+                id=local_acc.id if local_acc else None,
+                platform_account_id=acc.account_id,
+                name=acc.name,
+                business_name=acc.business_name,
+                currency=acc.currency,
+                timezone=acc.timezone,
+                status=acc.status,
+                is_connected=local_acc is not None,
+                is_enabled=local_acc.is_enabled if local_acc else False,
+                spend_cap=acc.spend_cap,
+            )
+        )
 
     return APIResponse(
         success=True,
@@ -605,7 +609,7 @@ async def connect_ad_accounts(
     if not connection or connection.status != ConnectionStatus.CONNECTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Platform {platform.value} is not connected"
+            detail=f"Platform {platform.value} is not connected",
         )
 
     # Fetch accounts from platform to validate
@@ -616,8 +620,7 @@ async def connect_ad_accounts(
     except Exception as e:
         logger.error("Failed to fetch ad accounts for validation", error=str(e))
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to validate accounts"
+            status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to validate accounts"
         )
 
     platform_accounts_map = {a.account_id: a for a in platform_accounts}
@@ -627,7 +630,7 @@ async def connect_ad_accounts(
         if account_id not in platform_accounts_map:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Account {account_id} not found or not accessible"
+                detail=f"Account {account_id} not found or not accessible",
             )
 
     # Connect accounts
@@ -655,7 +658,7 @@ async def connect_ad_accounts(
             existing.timezone = platform_acc.timezone
             existing.account_status = platform_acc.status
             existing.is_enabled = True
-            existing.last_synced_at = datetime.now(timezone.utc)
+            existing.last_synced_at = datetime.now(UTC)
             account = existing
         else:
             # Create new
@@ -670,23 +673,25 @@ async def connect_ad_accounts(
                 timezone=platform_acc.timezone,
                 account_status=platform_acc.status,
                 is_enabled=True,
-                last_synced_at=datetime.now(timezone.utc),
+                last_synced_at=datetime.now(UTC),
             )
             db.add(account)
 
         await db.flush()
 
-        connected_accounts.append(AdAccountResponse(
-            id=account.id,
-            platform_account_id=account.platform_account_id,
-            name=account.name,
-            business_name=account.business_name,
-            currency=account.currency,
-            timezone=account.timezone,
-            status=account.account_status or "active",
-            is_connected=True,
-            is_enabled=True,
-        ))
+        connected_accounts.append(
+            AdAccountResponse(
+                id=account.id,
+                platform_account_id=account.platform_account_id,
+                name=account.name,
+                business_name=account.business_name,
+                currency=account.currency,
+                timezone=account.timezone,
+                status=account.account_status or "active",
+                is_connected=True,
+                is_enabled=True,
+            )
+        )
 
     await db.commit()
 
@@ -711,6 +716,7 @@ async def connect_ad_accounts(
 # Token Management Endpoints
 # =============================================================================
 
+
 @router.post("/{platform}/refresh", response_model=APIResponse[RefreshTokenResponse])
 async def refresh_token(
     platform: AdPlatform,
@@ -733,13 +739,13 @@ async def refresh_token(
     if not connection:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Platform {platform.value} is not connected"
+            detail=f"Platform {platform.value} is not connected",
         )
 
     if not connection.refresh_token_encrypted:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No refresh token available. Please reconnect."
+            detail="No refresh token available. Please reconnect.",
         )
 
     try:
@@ -750,9 +756,11 @@ async def refresh_token(
         # Update stored tokens
         connection.access_token_encrypted = oauth_service.encrypt_token(new_tokens.access_token)
         if new_tokens.refresh_token:
-            connection.refresh_token_encrypted = oauth_service.encrypt_token(new_tokens.refresh_token)
+            connection.refresh_token_encrypted = oauth_service.encrypt_token(
+                new_tokens.refresh_token
+            )
         connection.token_expires_at = new_tokens.expires_at
-        connection.last_refreshed_at = datetime.now(timezone.utc)
+        connection.last_refreshed_at = datetime.now(UTC)
         connection.status = ConnectionStatus.CONNECTED
         connection.last_error = None
         connection.error_count = 0
@@ -782,8 +790,7 @@ async def refresh_token(
         await db.commit()
 
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Token refresh failed: {str(e)}"
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Token refresh failed: {e!s}"
         )
 
 
@@ -815,7 +822,7 @@ async def disconnect_platform(
     if not connection:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Platform {platform.value} is not connected"
+            detail=f"Platform {platform.value} is not connected",
         )
 
     # Try to revoke access with platform
@@ -829,16 +836,10 @@ async def disconnect_platform(
             # Continue with local disconnect anyway
 
     # Disable all ad accounts
-    await db.execute(
-        select(TenantAdAccount).where(
-            TenantAdAccount.connection_id == connection.id
-        )
-    )
+    await db.execute(select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id))
     # Update all related ad accounts
     accounts_result = await db.execute(
-        select(TenantAdAccount).where(
-            TenantAdAccount.connection_id == connection.id
-        )
+        select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id)
     )
     for account in accounts_result.scalars().all():
         account.is_enabled = False

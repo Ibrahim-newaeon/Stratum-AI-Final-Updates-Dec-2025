@@ -18,19 +18,19 @@ from making costly mistakes based on unreliable signals.
 """
 
 import logging
-from datetime import datetime
-from typing import Optional, List, Dict, Any, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 
-from app.stratum.models import SignalHealth, AutomationAction
-
+from app.stratum.models import AutomationAction, SignalHealth
 
 logger = logging.getLogger("stratum.trust_gate")
 
 
 class GateDecision(str, Enum):
     """Trust gate decision outcomes."""
+
     PASS = "pass"
     HOLD = "hold"
     BLOCK = "block"
@@ -39,9 +39,10 @@ class GateDecision(str, Enum):
 @dataclass
 class TrustGateConfig:
     """Configuration for trust gate thresholds."""
+
     # Score thresholds
-    pass_threshold: float = 70.0      # Signal health >= 70 allows execution
-    hold_threshold: float = 40.0      # Signal health 40-69 holds for review
+    pass_threshold: float = 70.0  # Signal health >= 70 allows execution
+    hold_threshold: float = 40.0  # Signal health 40-69 holds for review
     # Below 40 = BLOCK
 
     # Action-specific overrides
@@ -49,40 +50,47 @@ class TrustGateConfig:
     conservative_threshold: float = 60.0  # Lower threshold for conservative actions
 
     # High-risk actions require higher signal health
-    high_risk_actions: List[str] = field(default_factory=lambda: [
-        "increase_budget",
-        "launch_new_campaigns",
-        "expand_targeting",
-        "increase_bid",
-    ])
+    high_risk_actions: list[str] = field(
+        default_factory=lambda: [
+            "increase_budget",
+            "launch_new_campaigns",
+            "expand_targeting",
+            "increase_bid",
+        ]
+    )
 
     # Conservative actions can proceed with lower signal health
-    conservative_actions: List[str] = field(default_factory=lambda: [
-        "pause_underperforming",
-        "reduce_budget",
-        "reduce_bid",
-    ])
+    conservative_actions: list[str] = field(
+        default_factory=lambda: [
+            "pause_underperforming",
+            "reduce_budget",
+            "reduce_bid",
+        ]
+    )
 
     # Actions that are always allowed (safety measures)
-    always_allowed_actions: List[str] = field(default_factory=lambda: [
-        "pause_all",
-        "emergency_stop",
-    ])
+    always_allowed_actions: list[str] = field(
+        default_factory=lambda: [
+            "pause_all",
+            "emergency_stop",
+        ]
+    )
 
 
 @dataclass
 class TrustGateResult:
     """Result of a trust gate evaluation."""
+
     decision: GateDecision
     signal_health: SignalHealth
     action: AutomationAction
     reason: str
-    allowed_actions: List[str]
-    restricted_actions: List[str]
-    recommendations: List[str]
+    allowed_actions: list[str]
+    restricted_actions: list[str]
+    recommendations: list[str]
     evaluated_at: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         components = {
             "emq": self.signal_health.emq_score,
@@ -197,15 +205,15 @@ class TrustGate:
     def evaluate_batch(
         self,
         signal_health: SignalHealth,
-        actions: List[AutomationAction],
-    ) -> List[TrustGateResult]:
+        actions: list[AutomationAction],
+    ) -> list[TrustGateResult]:
         """Evaluate multiple actions at once."""
         return [self.evaluate(signal_health, action) for action in actions]
 
     def get_allowed_actions(
         self,
         signal_health: SignalHealth,
-    ) -> Tuple[List[str], List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """
         Get lists of allowed and restricted actions based on signal health.
 
@@ -237,10 +245,10 @@ class TrustGate:
 
         # Calculate restricted
         all_actions = (
-            self.config.always_allowed_actions +
-            self.config.conservative_actions +
-            self.config.high_risk_actions +
-            ["update_budget", "update_bid", "update_status", "update_targeting"]
+            self.config.always_allowed_actions
+            + self.config.conservative_actions
+            + self.config.high_risk_actions
+            + ["update_budget", "update_bid", "update_status", "update_targeting"]
         )
         restricted = [a for a in all_actions if a not in allowed]
 
@@ -260,22 +268,22 @@ class TrustGate:
         score: float,
         threshold: float,
         action: AutomationAction,
-    ) -> Tuple[GateDecision, str]:
+    ) -> tuple[GateDecision, str]:
         """Make the gate decision based on score and threshold."""
         if score >= threshold:
             return (
                 GateDecision.PASS,
-                f"Signal health {score:.1f} meets threshold {threshold:.1f} for {action.action_type}"
+                f"Signal health {score:.1f} meets threshold {threshold:.1f} for {action.action_type}",
             )
         elif score >= self.config.hold_threshold:
             return (
                 GateDecision.HOLD,
-                f"Signal health {score:.1f} below threshold {threshold:.1f} - action queued for review"
+                f"Signal health {score:.1f} below threshold {threshold:.1f} - action queued for review",
             )
         else:
             return (
                 GateDecision.BLOCK,
-                f"Signal health {score:.1f} critically low - manual intervention required"
+                f"Signal health {score:.1f} critically low - manual intervention required",
             )
 
     def _create_result(
@@ -305,7 +313,7 @@ class TrustGate:
         decision: GateDecision,
         signal_health: SignalHealth,
         action: AutomationAction,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate recommendations based on the gate decision."""
         recommendations = []
 
@@ -378,7 +386,7 @@ def evaluate_automation(
     return gate.evaluate(signal_health, action)
 
 
-def get_autopilot_mode(signal_health: SignalHealth) -> Tuple[str, str]:
+def get_autopilot_mode(signal_health: SignalHealth) -> tuple[str, str]:
     """
     Determine autopilot mode based on signal health.
 

@@ -9,25 +9,24 @@ By defining a consistent interface, Stratum's core automation logic can work wit
 any advertising platform without knowing the specific API details.
 """
 
-from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import List, Optional, Dict, Any
 import asyncio
 import logging
+from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any, Optional
 
 from app.stratum.models import (
+    AutomationAction,
+    EMQScore,
+    EntityStatus,
+    PerformanceMetrics,
     Platform,
     UnifiedAccount,
-    UnifiedCampaign,
-    UnifiedAdSet,
     UnifiedAd,
-    PerformanceMetrics,
-    EMQScore,
-    AutomationAction,
-    EntityStatus,
+    UnifiedAdSet,
+    UnifiedCampaign,
     WebhookEvent,
 )
-
 
 logger = logging.getLogger("stratum.adapters")
 
@@ -43,11 +42,7 @@ class RateLimiter:
     - Snapchat: 1000 requests per 5 minutes
     """
 
-    def __init__(
-        self,
-        calls_per_minute: int = 60,
-        burst_size: int = 10
-    ):
+    def __init__(self, calls_per_minute: int = 60, burst_size: int = 10):
         """
         Initialize the rate limiter.
 
@@ -69,8 +64,7 @@ class RateLimiter:
 
             # Regenerate tokens
             self.tokens = min(
-                self.burst_size,
-                self.tokens + (time_passed * self.calls_per_minute / 60)
+                self.burst_size, self.tokens + (time_passed * self.calls_per_minute / 60)
             )
             self.last_update = now
 
@@ -113,7 +107,7 @@ class BaseAdapter(ABC):
         await adapter.cleanup()
     """
 
-    def __init__(self, credentials: Dict[str, str]):
+    def __init__(self, credentials: dict[str, str]):
         """
         Initialize the adapter with platform credentials.
 
@@ -166,34 +160,26 @@ class BaseAdapter(ABC):
     # ========================================================================
 
     @abstractmethod
-    async def get_accounts(self) -> List[UnifiedAccount]:
+    async def get_accounts(self) -> list[UnifiedAccount]:
         """Get all accessible advertising accounts."""
         pass
 
     @abstractmethod
     async def get_campaigns(
-        self,
-        account_id: str,
-        status_filter: Optional[List[EntityStatus]] = None
-    ) -> List[UnifiedCampaign]:
+        self, account_id: str, status_filter: Optional[list[EntityStatus]] = None
+    ) -> list[UnifiedCampaign]:
         """Get campaigns, optionally filtered by status."""
         pass
 
     @abstractmethod
     async def get_adsets(
-        self,
-        account_id: str,
-        campaign_id: Optional[str] = None
-    ) -> List[UnifiedAdSet]:
+        self, account_id: str, campaign_id: Optional[str] = None
+    ) -> list[UnifiedAdSet]:
         """Get ad sets, optionally filtered to a campaign."""
         pass
 
     @abstractmethod
-    async def get_ads(
-        self,
-        account_id: str,
-        adset_id: Optional[str] = None
-    ) -> List[UnifiedAd]:
+    async def get_ads(self, account_id: str, adset_id: Optional[str] = None) -> list[UnifiedAd]:
         """Get ads, optionally filtered to an ad set."""
         pass
 
@@ -202,19 +188,16 @@ class BaseAdapter(ABC):
         self,
         account_id: str,
         entity_type: str,
-        entity_ids: List[str],
+        entity_ids: list[str],
         date_start: datetime,
         date_end: datetime,
-        breakdown: Optional[str] = None
-    ) -> Dict[str, PerformanceMetrics]:
+        breakdown: Optional[str] = None,
+    ) -> dict[str, PerformanceMetrics]:
         """Get performance metrics for entities."""
         pass
 
     @abstractmethod
-    async def get_emq_scores(
-        self,
-        account_id: str
-    ) -> List[EMQScore]:
+    async def get_emq_scores(self, account_id: str) -> list[EMQScore]:
         """Get Event Match Quality scores."""
         pass
 
@@ -223,17 +206,13 @@ class BaseAdapter(ABC):
     # ========================================================================
 
     @abstractmethod
-    async def execute_action(
-        self,
-        action: AutomationAction
-    ) -> AutomationAction:
+    async def execute_action(self, action: AutomationAction) -> AutomationAction:
         """Execute an automation action on the platform."""
         pass
 
     async def execute_actions_batch(
-        self,
-        actions: List[AutomationAction]
-    ) -> List[AutomationAction]:
+        self, actions: list[AutomationAction]
+    ) -> list[AutomationAction]:
         """Execute multiple actions efficiently."""
         results = []
         for action in actions:
@@ -246,22 +225,12 @@ class BaseAdapter(ABC):
     # ========================================================================
 
     @abstractmethod
-    async def upload_image(
-        self,
-        account_id: str,
-        image_data: bytes,
-        filename: str
-    ) -> str:
+    async def upload_image(self, account_id: str, image_data: bytes, filename: str) -> str:
         """Upload an image and return the platform image ID."""
         pass
 
     @abstractmethod
-    async def upload_video(
-        self,
-        account_id: str,
-        video_data: bytes,
-        filename: str
-    ) -> str:
+    async def upload_video(self, account_id: str, video_data: bytes, filename: str) -> str:
         """Upload a video and return the platform video ID."""
         pass
 
@@ -269,25 +238,14 @@ class BaseAdapter(ABC):
     # WEBHOOK OPERATIONS
     # ========================================================================
 
-    async def setup_webhooks(
-        self,
-        callback_url: str,
-        event_types: List[str]
-    ) -> bool:
+    async def setup_webhooks(self, callback_url: str, event_types: list[str]) -> bool:
         """Register webhook subscriptions (if supported)."""
         logger.info(f"{self.platform.value} webhooks not implemented")
         return False
 
-    async def process_webhook(
-        self,
-        payload: Dict[str, Any]
-    ) -> WebhookEvent:
+    async def process_webhook(self, payload: dict[str, Any]) -> WebhookEvent:
         """Process an incoming webhook payload."""
-        return WebhookEvent(
-            platform=self.platform,
-            event_type="unknown",
-            payload=payload
-        )
+        return WebhookEvent(platform=self.platform, event_type="unknown", payload=payload)
 
     # ========================================================================
     # UTILITY METHODS
@@ -306,23 +264,28 @@ class BaseAdapter(ABC):
 # Exceptions
 # =============================================================================
 
+
 class AdapterError(Exception):
     """Base exception for adapter errors."""
+
     pass
 
 
 class AuthenticationError(AdapterError):
     """Raised when API authentication fails."""
+
     pass
 
 
 class RateLimitError(AdapterError):
     """Raised when API rate limit is exceeded."""
+
     pass
 
 
 class ValidationError(AdapterError):
     """Raised when input validation fails."""
+
     pass
 
 

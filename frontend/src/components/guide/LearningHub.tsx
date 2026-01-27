@@ -1,46 +1,46 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  X,
   BookOpen,
-  PlayCircle,
-  FileText,
+  CheckCircle2,
   ChevronRight,
-  Search,
+  FileText,
   GraduationCap,
   Lightbulb,
+  PlayCircle,
+  Search,
+  X,
   Zap,
-  CheckCircle2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useJoyride } from './JoyrideWrapper'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useJoyride } from './JoyrideWrapper';
 
 interface LearningHubProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 interface LearningResource {
-  id: string
-  type: 'video' | 'article' | 'tip'
-  title: string
-  description: string
-  duration?: string
-  completed?: boolean
+  id: string;
+  type: 'video' | 'article' | 'tip';
+  title: string;
+  description: string;
+  duration?: string;
+  completed?: boolean;
 }
 
 interface LearningCategory {
-  id: string
-  title: string
-  icon: React.ReactNode
-  resources: LearningResource[]
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  resources: LearningResource[];
 }
 
 export function LearningHub({ isOpen, onClose }: LearningHubProps) {
-  const { t } = useTranslation()
-  const { startTour } = useJoyride()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const { t } = useTranslation();
+  const { startTour } = useJoyride();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories: LearningCategory[] = [
     {
@@ -112,18 +112,18 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
         },
       ],
     },
-  ]
+  ];
 
   const getResourceIcon = (type: LearningResource['type']) => {
     switch (type) {
       case 'video':
-        return <PlayCircle className="w-4 h-4 text-primary" />
+        return <PlayCircle className="w-4 h-4 text-primary" />;
       case 'article':
-        return <FileText className="w-4 h-4 text-primary" />
+        return <FileText className="w-4 h-4 text-primary" />;
       case 'tip':
-        return <Lightbulb className="w-4 h-4 text-amber-500" />
+        return <Lightbulb className="w-4 h-4 text-amber-500" />;
     }
-  }
+  };
 
   const filteredCategories = categories
     .map((category) => ({
@@ -134,9 +134,9 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
           resource.description.toLowerCase().includes(searchQuery.toLowerCase())
       ),
     }))
-    .filter((category) => category.resources.length > 0)
+    .filter((category) => category.resources.length > 0);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-y-0 right-0 w-96 bg-background border-l shadow-xl z-50 flex flex-col">
@@ -146,10 +146,7 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
           <BookOpen className="w-5 h-5 text-primary" />
           <h2 className="font-semibold">{t('learningHub.title')}</h2>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-        >
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -172,8 +169,8 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
       <div className="p-4 border-b bg-muted/30">
         <button
           onClick={() => {
-            startTour()
-            onClose()
+            startTour();
+            onClose();
           }}
           className="w-full flex items-center gap-3 p-3 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-left"
         >
@@ -182,9 +179,7 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
           </div>
           <div>
             <p className="font-medium text-sm">{t('learningHub.restartTour')}</p>
-            <p className="text-xs text-muted-foreground">
-              {t('learningHub.restartTourDesc')}
-            </p>
+            <p className="text-xs text-muted-foreground">{t('learningHub.restartTourDesc')}</p>
           </div>
           <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
         </button>
@@ -203,9 +198,7 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
             </button>
             {categories
               .find((c) => c.id === selectedCategory)
-              ?.resources.map((resource) => (
-                <ResourceCard key={resource.id} resource={resource} />
-              ))}
+              ?.resources.map((resource) => <ResourceCard key={resource.id} resource={resource} />)}
           </div>
         ) : (
           // Show categories
@@ -254,20 +247,20 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 function ResourceCard({ resource }: { resource: LearningResource }) {
   const getIcon = () => {
     switch (resource.type) {
       case 'video':
-        return <PlayCircle className="w-5 h-5" />
+        return <PlayCircle className="w-5 h-5" />;
       case 'article':
-        return <FileText className="w-5 h-5" />
+        return <FileText className="w-5 h-5" />;
       case 'tip':
-        return <Lightbulb className="w-5 h-5" />
+        return <Lightbulb className="w-5 h-5" />;
     }
-  }
+  };
 
   return (
     <div
@@ -294,9 +287,7 @@ function ResourceCard({ resource }: { resource: LearningResource }) {
               <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-            {resource.description}
-          </p>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{resource.description}</p>
           {resource.duration && (
             <span className="text-xs text-muted-foreground mt-2 inline-block">
               {resource.duration}
@@ -305,7 +296,7 @@ function ResourceCard({ resource }: { resource: LearningResource }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default LearningHub
+export default LearningHub;

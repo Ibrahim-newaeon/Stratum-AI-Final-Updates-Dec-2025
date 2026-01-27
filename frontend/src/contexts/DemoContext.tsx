@@ -5,8 +5,8 @@
  * prospects to explore the platform's capabilities.
  */
 
-import * as React from 'react'
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import * as React from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 // Demo tenant data
 export const DEMO_TENANT = {
@@ -15,7 +15,7 @@ export const DEMO_TENANT = {
   industry: 'E-commerce',
   tier: 'growth',
   createdAt: '2024-01-15',
-}
+};
 
 // Demo user data
 export const DEMO_USER = {
@@ -24,7 +24,7 @@ export const DEMO_USER = {
   email: 'demo@stratum.ai',
   role: 'admin',
   avatar: null,
-}
+};
 
 // Demo metrics data
 export const DEMO_METRICS = {
@@ -71,7 +71,7 @@ export const DEMO_METRICS = {
     ctr: 2.8,
     cvr: 3.4,
     cpc: 1.42,
-    cpm: 12.50,
+    cpm: 12.5,
     impressions: 7000000,
     clicks: 196000,
     conversions: 6664,
@@ -101,7 +101,7 @@ export const DEMO_METRICS = {
       confidence: 0.89,
     },
   },
-}
+};
 
 // Demo campaigns
 export const DEMO_CAMPAIGNS = [
@@ -157,7 +157,7 @@ export const DEMO_CAMPAIGNS = [
     conversions: 1280,
     signalHealth: 62,
   },
-]
+];
 
 // Demo segments
 export const DEMO_SEGMENTS = [
@@ -167,7 +167,7 @@ export const DEMO_SEGMENTS = [
   { id: 'seg-004', name: 'New Customers', count: 12300, rfmScore: '511', status: 'active' },
   { id: 'seg-005', name: 'High Value Prospects', count: 5600, rfmScore: '144', status: 'active' },
   { id: 'seg-006', name: 'Cart Abandoners', count: 8900, rfmScore: '311', status: 'active' },
-]
+];
 
 // Demo events
 export const DEMO_EVENTS = [
@@ -176,7 +176,7 @@ export const DEMO_EVENTS = [
   { type: 'page_view', count: 245000, trend: -2.1 },
   { type: 'sign_up', count: 1250, trend: 15.8 },
   { type: 'product_view', count: 89000, trend: 5.4 },
-]
+];
 
 // Demo trust gate history
 export const DEMO_TRUST_GATE_HISTORY = [
@@ -188,57 +188,57 @@ export const DEMO_TRUST_GATE_HISTORY = [
   { time: '14:00', passed: 55, held: 4, blocked: 1 },
   { time: '15:00', passed: 61, held: 3, blocked: 0 },
   { time: '16:00', passed: 58, held: 5, blocked: 2 },
-]
+];
 
 interface DemoContextType {
-  isDemoMode: boolean
-  enterDemoMode: () => void
-  exitDemoMode: () => void
-  demoTenant: typeof DEMO_TENANT
-  demoUser: typeof DEMO_USER
-  demoMetrics: typeof DEMO_METRICS
-  demoCampaigns: typeof DEMO_CAMPAIGNS
-  demoSegments: typeof DEMO_SEGMENTS
-  demoEvents: typeof DEMO_EVENTS
-  demoTrustGateHistory: typeof DEMO_TRUST_GATE_HISTORY
+  isDemoMode: boolean;
+  enterDemoMode: () => void;
+  exitDemoMode: () => void;
+  demoTenant: typeof DEMO_TENANT;
+  demoUser: typeof DEMO_USER;
+  demoMetrics: typeof DEMO_METRICS;
+  demoCampaigns: typeof DEMO_CAMPAIGNS;
+  demoSegments: typeof DEMO_SEGMENTS;
+  demoEvents: typeof DEMO_EVENTS;
+  demoTrustGateHistory: typeof DEMO_TRUST_GATE_HISTORY;
 }
 
-const DemoContext = createContext<DemoContextType | undefined>(undefined)
+const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Check URL for demo mode on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(window.location.search);
     if (params.get('demo') === 'true') {
-      setIsDemoMode(true)
+      setIsDemoMode(true);
     }
 
     // Also check localStorage for returning demo users
-    const storedDemo = localStorage.getItem('stratum_demo_mode')
+    const storedDemo = localStorage.getItem('stratum_demo_mode');
     if (storedDemo === 'true') {
-      setIsDemoMode(true)
+      setIsDemoMode(true);
     }
-  }, [])
+  }, []);
 
   const enterDemoMode = () => {
-    setIsDemoMode(true)
-    localStorage.setItem('stratum_demo_mode', 'true')
+    setIsDemoMode(true);
+    localStorage.setItem('stratum_demo_mode', 'true');
     // Update URL without page reload
-    const url = new URL(window.location.href)
-    url.searchParams.set('demo', 'true')
-    window.history.replaceState({}, '', url.toString())
-  }
+    const url = new URL(window.location.href);
+    url.searchParams.set('demo', 'true');
+    window.history.replaceState({}, '', url.toString());
+  };
 
   const exitDemoMode = () => {
-    setIsDemoMode(false)
-    localStorage.removeItem('stratum_demo_mode')
+    setIsDemoMode(false);
+    localStorage.removeItem('stratum_demo_mode');
     // Remove demo param from URL
-    const url = new URL(window.location.href)
-    url.searchParams.delete('demo')
-    window.history.replaceState({}, '', url.toString())
-  }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('demo');
+    window.history.replaceState({}, '', url.toString());
+  };
 
   const value: DemoContextType = {
     isDemoMode,
@@ -251,21 +251,17 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     demoSegments: DEMO_SEGMENTS,
     demoEvents: DEMO_EVENTS,
     demoTrustGateHistory: DEMO_TRUST_GATE_HISTORY,
-  }
+  };
 
-  return (
-    <DemoContext.Provider value={value}>
-      {children}
-    </DemoContext.Provider>
-  )
+  return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
 
 export function useDemo() {
-  const context = useContext(DemoContext)
+  const context = useContext(DemoContext);
   if (context === undefined) {
-    throw new Error('useDemo must be used within a DemoProvider')
+    throw new Error('useDemo must be used within a DemoProvider');
   }
-  return context
+  return context;
 }
 
-export default DemoContext
+export default DemoContext;

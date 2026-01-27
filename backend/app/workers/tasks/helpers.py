@@ -6,7 +6,7 @@ Shared helper functions for Celery tasks.
 """
 
 import json
-from typing import Any, Dict
+from typing import Any
 
 from celery.utils.log import get_task_logger
 
@@ -15,9 +15,7 @@ from app.core.config import settings
 logger = get_task_logger(__name__)
 
 
-def calculate_task_confidence(
-    campaign_data: list, analysis_type: str = "portfolio"
-) -> float:
+def calculate_task_confidence(campaign_data: list, analysis_type: str = "portfolio") -> float:
     """
     Calculate model-derived confidence for background task predictions.
 
@@ -37,20 +35,16 @@ def calculate_task_confidence(
     sample_conf = min(0.5, 0.25 + (n / 40))
 
     # Data completeness
-    complete = sum(
-        1 for c in campaign_data if c.get("roas", 0) > 0 and c.get("spend", 0) > 0
-    )
+    complete = sum(1 for c in campaign_data if c.get("roas", 0) > 0 and c.get("spend", 0) > 0)
     completeness_conf = (complete / n) * 0.25 if n > 0 else 0
 
     # Analysis type adjustments
-    type_bonus = {"portfolio": 0.1, "campaign": 0.15, "alerts": 0.2}.get(
-        analysis_type, 0.1
-    )
+    type_bonus = {"portfolio": 0.1, "campaign": 0.15, "alerts": 0.2}.get(analysis_type, 0.1)
 
     return round(min(0.95, sample_conf + completeness_conf + type_bonus), 2)
 
 
-def publish_event(tenant_id: int, event_type: str, payload: Dict[str, Any]) -> None:
+def publish_event(tenant_id: int, event_type: str, payload: dict[str, Any]) -> None:
     """
     Publish real-time event to Redis pub/sub for WebSocket distribution.
 

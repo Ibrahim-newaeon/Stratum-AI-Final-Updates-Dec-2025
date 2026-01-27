@@ -5,8 +5,8 @@
 Background tasks for automation rules evaluation and execution.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -15,13 +15,10 @@ from sqlalchemy.orm import Session
 
 from app.db.session import SyncSessionLocal
 from app.models import (
-    AuditAction,
-    AuditLog,
     Campaign,
     Rule,
     RuleExecution,
     RuleStatus,
-    Tenant,
 )
 from app.workers.tasks.helpers import publish_event
 
@@ -82,7 +79,7 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
                     tenant_id=tenant_id,
                     rule_id=rule.id,
                     campaign_id=campaign.id,
-                    triggered_at=datetime.now(timezone.utc),
+                    triggered_at=datetime.now(UTC),
                     condition_values=result["values"],
                     action_taken=action_result["action"],
                     action_result=action_result,
@@ -139,7 +136,7 @@ def evaluate_all_rules():
     return {"tasks_queued": task_count}
 
 
-def _evaluate_condition(rule: Rule, campaign: Campaign) -> Dict[str, Any]:
+def _evaluate_condition(rule: Rule, campaign: Campaign) -> dict[str, Any]:
     """
     Evaluate rule conditions against a campaign.
 
@@ -173,7 +170,7 @@ def _evaluate_condition(rule: Rule, campaign: Campaign) -> Dict[str, Any]:
             if not (actual < target):
                 all_match = False
         elif operator == "equals":
-            if not (actual == target):
+            if actual != target:
                 all_match = False
         elif operator == "gte":
             if not (actual >= target):
@@ -196,7 +193,7 @@ def _parse_condition_value(value: str, target_type: type) -> Any:
     return value
 
 
-def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> Dict[str, Any]:
+def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> dict[str, Any]:
     """
     Execute rule action on a campaign.
 
@@ -209,7 +206,7 @@ def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> Dict[str, An
     result = {
         "action": action_type,
         "success": True,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
     try:
@@ -244,9 +241,7 @@ def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> Dict[str, An
             adjustment = action_config.get("adjustment_percent", 0)
             if campaign.daily_budget_cents:
                 old_budget = campaign.daily_budget_cents
-                campaign.daily_budget_cents = int(
-                    old_budget * (1 + adjustment / 100)
-                )
+                campaign.daily_budget_cents = int(old_budget * (1 + adjustment / 100))
                 result["budget_change"] = {
                     "old": old_budget,
                     "new": campaign.daily_budget_cents,

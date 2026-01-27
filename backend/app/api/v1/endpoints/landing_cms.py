@@ -14,23 +14,23 @@ Features:
 - Admin endpoints for subscriber management
 """
 
-import hashlib
-import json
 import csv
+import hashlib
 import io
+import json
 import logging
 import os
-from datetime import datetime, timezone, timedelta
-from typing import Optional, Dict, Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 
-from fastapi import APIRouter, Request, HTTPException, Depends, Query, Response, BackgroundTasks
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.db.session import get_async_session
 from app.base_models import LandingPageSubscriber, SubscriberStatus
+from app.db.session import get_async_session
 
 logger = logging.getLogger("stratum.landing_cms")
 
@@ -49,7 +49,7 @@ security = HTTPBearer(auto_error=False)
 
 
 async def verify_admin_token(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> bool:
     """Verify admin API token for protected endpoints."""
     if not credentials:
@@ -76,13 +76,21 @@ class SubscriberCreate(BaseModel):
     language: str = Field("en", max_length=10, description="Language code")
 
     # UTM tracking (works for all platforms)
-    utm_source: Optional[str] = Field(None, max_length=100, description="UTM source (facebook, google, tiktok, snapchat)")
-    utm_medium: Optional[str] = Field(None, max_length=100, description="UTM medium (cpc, cpm, social)")
+    utm_source: Optional[str] = Field(
+        None, max_length=100, description="UTM source (facebook, google, tiktok, snapchat)"
+    )
+    utm_medium: Optional[str] = Field(
+        None, max_length=100, description="UTM medium (cpc, cpm, social)"
+    )
     utm_campaign: Optional[str] = Field(None, max_length=100, description="UTM campaign name")
     utm_term: Optional[str] = Field(None, max_length=100, description="UTM term (keyword)")
-    utm_content: Optional[str] = Field(None, max_length=100, description="UTM content (ad variation)")
+    utm_content: Optional[str] = Field(
+        None, max_length=100, description="UTM content (ad variation)"
+    )
     referrer_url: Optional[str] = Field(None, max_length=500)
-    landing_url: Optional[str] = Field(None, max_length=1000, description="Landing page URL with params")
+    landing_url: Optional[str] = Field(
+        None, max_length=1000, description="Landing page URL with params"
+    )
 
     # Platform-specific click IDs (CRITICAL for conversion attribution)
     fbclid: Optional[str] = Field(None, max_length=255, description="Meta/Facebook click ID")
@@ -131,10 +139,10 @@ class SubscriberStats(BaseModel):
     subscribers_today: int
     subscribers_this_week: int
     subscribers_this_month: int
-    by_status: Dict[str, int]
-    by_platform: Dict[str, int]
-    by_utm_source: Dict[str, int]
-    by_language: Dict[str, int]
+    by_status: dict[str, int]
+    by_platform: dict[str, int]
+    by_utm_source: dict[str, int]
+    by_language: dict[str, int]
     average_lead_score: float
     capi_sent_count: int
 
@@ -212,7 +220,7 @@ def calculate_lead_score(
     return min(score, 100)
 
 
-async def send_conversion_to_platforms(subscriber_id: int, platform: str) -> Dict[str, Any]:
+async def send_conversion_to_platforms(subscriber_id: int, platform: str) -> dict[str, Any]:
     """
     Send 'Lead' conversion event to ad platforms via CAPI.
 
@@ -234,8 +242,8 @@ async def send_conversion_to_platforms(subscriber_id: int, platform: str) -> Dic
             try:
                 from app.services.capi.platform_connectors import (
                     MetaCAPIConnector,
-                    TikTokCAPIConnector,
                     SnapchatCAPIConnector,
+                    TikTokCAPIConnector,
                 )
 
                 # Build user data
@@ -262,7 +270,7 @@ async def send_conversion_to_platforms(subscriber_id: int, platform: str) -> Dic
                                 "lead_type": "landing_page_signup",
                                 "utm_source": subscriber.utm_source,
                                 "utm_campaign": subscriber.utm_campaign,
-                            }
+                            },
                         )
                         results["meta"] = result
 
@@ -291,7 +299,7 @@ async def send_conversion_to_platforms(subscriber_id: int, platform: str) -> Dic
                 # Update subscriber with CAPI results
                 subscriber.capi_sent = True
                 subscriber.capi_results = json.dumps(results)
-                subscriber.updated_at = datetime.now(timezone.utc)
+                subscriber.updated_at = datetime.now(UTC)
                 await session.commit()
 
                 logger.info(f"CAPI sent for lead {subscriber_id}: {results}")
@@ -367,12 +375,14 @@ async def create_subscriber(
         )
 
         # Calculate lead score
-        has_click_id = any([
-            subscriber_data.fbclid,
-            subscriber_data.gclid,
-            subscriber_data.ttclid,
-            subscriber_data.sccid,
-        ])
+        has_click_id = any(
+            [
+                subscriber_data.fbclid,
+                subscriber_data.gclid,
+                subscriber_data.ttclid,
+                subscriber_data.sccid,
+            ]
+        )
         has_utm = bool(subscriber_data.utm_source and subscriber_data.utm_campaign)
         lead_score = calculate_lead_score(
             full_name=subscriber_data.full_name,
@@ -414,8 +424,8 @@ async def create_subscriber(
             ip_address=client_ip,
             user_agent=user_agent,
             capi_sent=False,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         try:
@@ -433,9 +443,7 @@ async def create_subscriber(
             # Send CAPI conversion in background (if not organic)
             if attributed_platform != "organic":
                 background_tasks.add_task(
-                    send_conversion_to_platforms,
-                    subscriber.id,
-                    attributed_platform
+                    send_conversion_to_platforms, subscriber.id, attributed_platform
                 )
 
             return SubscriberResponse(
@@ -457,7 +465,7 @@ async def create_subscriber(
             logger.error(f"Error creating subscriber: {e}")
             raise HTTPException(
                 status_code=500,
-                detail="An error occurred while processing your request. Please try again."
+                detail="An error occurred while processing your request. Please try again.",
             )
 
 
@@ -540,7 +548,7 @@ async def get_stats(_: bool = Depends(verify_admin_token)):
         result = await session.execute(select(LandingPageSubscriber))
         subscribers = result.scalars().all()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = today_start - timedelta(days=now.weekday())
         month_start = today_start.replace(day=1)
@@ -549,10 +557,10 @@ async def get_stats(_: bool = Depends(verify_admin_token)):
         today_count = 0
         week_count = 0
         month_count = 0
-        by_status: Dict[str, int] = {}
-        by_platform: Dict[str, int] = {}
-        by_utm_source: Dict[str, int] = {}
-        by_language: Dict[str, int] = {}
+        by_status: dict[str, int] = {}
+        by_platform: dict[str, int] = {}
+        by_utm_source: dict[str, int] = {}
+        by_language: dict[str, int] = {}
         total_lead_score = 0
         capi_sent_count = 0
 
@@ -646,7 +654,7 @@ async def export_subscribers(
                     }
                     for s in subscribers
                 ],
-                "exported_at": datetime.now(timezone.utc).isoformat(),
+                "exported_at": datetime.now(UTC).isoformat(),
                 "total": len(subscribers),
             }
 
@@ -655,25 +663,61 @@ async def export_subscribers(
         writer = csv.writer(output)
 
         # Header
-        writer.writerow([
-            "id", "email", "full_name", "company_name", "phone",
-            "status", "lead_score", "attributed_platform",
-            "source_page", "language",
-            "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
-            "fbclid", "gclid", "ttclid", "sccid",
-            "capi_sent", "referrer_url", "created_at"
-        ])
+        writer.writerow(
+            [
+                "id",
+                "email",
+                "full_name",
+                "company_name",
+                "phone",
+                "status",
+                "lead_score",
+                "attributed_platform",
+                "source_page",
+                "language",
+                "utm_source",
+                "utm_medium",
+                "utm_campaign",
+                "utm_term",
+                "utm_content",
+                "fbclid",
+                "gclid",
+                "ttclid",
+                "sccid",
+                "capi_sent",
+                "referrer_url",
+                "created_at",
+            ]
+        )
 
         # Data rows
         for s in subscribers:
-            writer.writerow([
-                s.id, s.email, s.full_name, s.company_name, s.phone,
-                s.status, s.lead_score, s.attributed_platform,
-                s.source_page, s.language,
-                s.utm_source, s.utm_medium, s.utm_campaign, s.utm_term, s.utm_content,
-                s.fbclid, s.gclid, s.ttclid, s.sccid,
-                s.capi_sent, s.referrer_url, s.created_at.isoformat()
-            ])
+            writer.writerow(
+                [
+                    s.id,
+                    s.email,
+                    s.full_name,
+                    s.company_name,
+                    s.phone,
+                    s.status,
+                    s.lead_score,
+                    s.attributed_platform,
+                    s.source_page,
+                    s.language,
+                    s.utm_source,
+                    s.utm_medium,
+                    s.utm_campaign,
+                    s.utm_term,
+                    s.utm_content,
+                    s.fbclid,
+                    s.gclid,
+                    s.ttclid,
+                    s.sccid,
+                    s.capi_sent,
+                    s.referrer_url,
+                    s.created_at.isoformat(),
+                ]
+            )
 
         csv_content = output.getvalue()
 
@@ -681,8 +725,8 @@ async def export_subscribers(
             content=csv_content,
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=subscribers_{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"
-            }
+                "Content-Disposition": f"attachment; filename=subscribers_{datetime.now(UTC).strftime('%Y%m%d')}.csv"
+            },
         )
 
 
@@ -700,8 +744,7 @@ async def update_subscriber_status(
     valid_statuses = ["pending", "verified", "active", "rejected", "converted"]
     if status not in valid_statuses:
         raise HTTPException(
-            status_code=400,
-            detail=f"Invalid status. Must be one of: {valid_statuses}"
+            status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}"
         )
 
     async with get_async_session() as session:
@@ -714,12 +757,12 @@ async def update_subscriber_status(
             raise HTTPException(status_code=404, detail="Subscriber not found")
 
         subscriber.status = status
-        subscriber.updated_at = datetime.now(timezone.utc)
+        subscriber.updated_at = datetime.now(UTC)
 
         if status == "verified":
-            subscriber.verified_at = datetime.now(timezone.utc)
+            subscriber.verified_at = datetime.now(UTC)
         elif status == "converted":
-            subscriber.converted_at = datetime.now(timezone.utc)
+            subscriber.converted_at = datetime.now(UTC)
 
         await session.commit()
 

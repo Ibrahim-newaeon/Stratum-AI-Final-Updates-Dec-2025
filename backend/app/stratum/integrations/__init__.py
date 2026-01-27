@@ -37,13 +37,13 @@ Usage:
 """
 
 from app.stratum.integrations.google_complete import (
-    GoogleAdsIntegration,
-    GoogleAdsChangeHistory,
-    GoogleOfflineConversions,
-    GA4MeasurementProtocol,
-    GoogleAdsRecommendations,
     ChangeEvent,
     ChangeEventType,
+    GA4MeasurementProtocol,
+    GoogleAdsChangeHistory,
+    GoogleAdsIntegration,
+    GoogleAdsRecommendations,
+    GoogleOfflineConversions,
     OfflineConversion,
 )
 

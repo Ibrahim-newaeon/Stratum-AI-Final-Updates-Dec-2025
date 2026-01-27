@@ -4,32 +4,32 @@
  * Audit log of all campaign publish attempts with status and details.
  */
 
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
   ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
   EyeIcon,
   FunnelIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
-import { useRetryPublish } from '@/api/campaignBuilder'
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import { useRetryPublish } from '@/api/campaignBuilder';
 
-type PublishStatus = 'success' | 'failed' | 'pending' | 'retrying'
+type PublishStatus = 'success' | 'failed' | 'pending' | 'retrying';
 
 interface PublishLog {
-  id: string
-  draftId: string
-  draftName: string
-  platform: string
-  status: PublishStatus
-  platformCampaignId?: string
-  errorMessage?: string
-  publishedAt: string
-  publishedBy: string
-  retryCount: number
+  id: string;
+  draftId: string;
+  draftName: string;
+  platform: string;
+  status: PublishStatus;
+  platformCampaignId?: string;
+  errorMessage?: string;
+  publishedAt: string;
+  publishedBy: string;
+  retryCount: number;
 }
 
 const mockLogs: PublishLog[] = [
@@ -76,45 +76,57 @@ const mockLogs: PublishLog[] = [
     publishedBy: 'Fatima Al-Ali',
     retryCount: 0,
   },
-]
+];
 
 const statusConfig: Record<PublishStatus, { icon: any; label: string; color: string }> = {
-  success: { icon: CheckCircleIcon, label: 'Published', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },
-  failed: { icon: XCircleIcon, label: 'Failed', color: 'text-red-600 bg-red-100 dark:bg-red-900/30' },
-  pending: { icon: ClockIcon, label: 'Pending', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
-  retrying: { icon: ArrowPathIcon, label: 'Retrying', color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30' },
-}
+  success: {
+    icon: CheckCircleIcon,
+    label: 'Published',
+    color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30',
+  },
+  failed: {
+    icon: XCircleIcon,
+    label: 'Failed',
+    color: 'text-red-600 bg-red-100 dark:bg-red-900/30',
+  },
+  pending: {
+    icon: ClockIcon,
+    label: 'Pending',
+    color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30',
+  },
+  retrying: {
+    icon: ArrowPathIcon,
+    label: 'Retrying',
+    color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
+  },
+};
 
 export default function PublishLogs() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const [logs] = useState(mockLogs)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [selectedLog, setSelectedLog] = useState<PublishLog | null>(null)
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const [logs] = useState(mockLogs);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedLog, setSelectedLog] = useState<PublishLog | null>(null);
 
-  const retryPublish = useRetryPublish(Number(tenantId))
+  const retryPublish = useRetryPublish(Number(tenantId));
 
-  const filteredLogs = logs.filter(log =>
-    statusFilter === 'all' || log.status === statusFilter
-  )
+  const filteredLogs = logs.filter((log) => statusFilter === 'all' || log.status === statusFilter);
 
   const handleRetry = async (logId: string) => {
     try {
-      await retryPublish.mutateAsync(logId)
-      alert('Retry initiated successfully')
+      await retryPublish.mutateAsync(logId);
+      alert('Retry initiated successfully');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
-      alert(`Failed to retry publish: ${errorMessage}`)
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      alert(`Failed to retry publish: ${errorMessage}`);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Publish Logs</h1>
-        <p className="text-muted-foreground">
-          History of all campaign publish attempts
-        </p>
+        <p className="text-muted-foreground">History of all campaign publish attempts</p>
       </div>
 
       {/* Filters */}
@@ -169,19 +181,22 @@ export default function PublishLogs() {
             </thead>
             <tbody className="divide-y divide-border">
               {filteredLogs.map((log) => {
-                const status = statusConfig[log.status]
-                const StatusIcon = status.icon
+                const status = statusConfig[log.status];
+                const StatusIcon = status.icon;
 
                 return (
                   <tr key={log.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-6 py-4">
                       <span className="font-medium">{log.draftName}</span>
                     </td>
-                    <td className="px-6 py-4 text-sm capitalize">
-                      {log.platform}
-                    </td>
+                    <td className="px-6 py-4 text-sm capitalize">{log.platform}</td>
                     <td className="px-6 py-4">
-                      <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full', status.color)}>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full',
+                          status.color
+                        )}
+                      >
                         <StatusIcon className="h-3 w-3" />
                         {status.label}
                       </span>
@@ -194,9 +209,7 @@ export default function PublishLogs() {
                     <td className="px-6 py-4 text-sm text-muted-foreground">
                       {log.platformCampaignId || '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      {log.publishedBy}
-                    </td>
+                    <td className="px-6 py-4 text-sm">{log.publishedBy}</td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">
                       {new Date(log.publishedAt).toLocaleString()}
                     </td>
@@ -216,13 +229,15 @@ export default function PublishLogs() {
                             className="p-1.5 rounded-lg hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Retry"
                           >
-                            <ArrowPathIcon className={cn('h-4 w-4', retryPublish.isPending && 'animate-spin')} />
+                            <ArrowPathIcon
+                              className={cn('h-4 w-4', retryPublish.isPending && 'animate-spin')}
+                            />
                           </button>
                         )}
                       </div>
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
@@ -254,7 +269,12 @@ export default function PublishLogs() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full', statusConfig[selectedLog.status].color)}>
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full',
+                    statusConfig[selectedLog.status].color
+                  )}
+                >
                   {statusConfig[selectedLog.status].label}
                 </span>
               </div>
@@ -293,5 +313,5 @@ export default function PublishLogs() {
         </div>
       )}
     </div>
-  )
+  );
 }

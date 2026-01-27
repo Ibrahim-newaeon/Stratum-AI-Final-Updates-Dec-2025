@@ -12,14 +12,14 @@ CRUD operations for webhooks:
 """
 
 import secrets
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, Field, HttpUrl
-from sqlalchemy import select, and_, desc
-from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, Field
+from sqlalchemy import and_, desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
@@ -27,9 +27,8 @@ from app.models.settings import (
     Webhook,
     WebhookDelivery,
     WebhookStatus,
-    WebhookEventType,
 )
-from app.schemas.response import APIResponse, PaginatedResponse
+from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 logger = get_logger(__name__)
@@ -39,29 +38,33 @@ logger = get_logger(__name__)
 # Pydantic Schemas
 # =============================================================================
 
+
 class WebhookCreateRequest(BaseModel):
     """Request to create a new webhook."""
+
     name: str = Field(..., min_length=1, max_length=255)
     url: str = Field(..., description="Webhook endpoint URL")
-    events: List[str] = Field(..., min_length=1, description="Events to subscribe to")
+    events: list[str] = Field(..., min_length=1, description="Events to subscribe to")
     headers: Optional[dict] = Field(default=None, description="Custom headers to include")
 
 
 class WebhookUpdateRequest(BaseModel):
     """Request to update a webhook."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     url: Optional[str] = None
-    events: Optional[List[str]] = None
+    events: Optional[list[str]] = None
     headers: Optional[dict] = None
     status: Optional[str] = None
 
 
 class WebhookResponse(BaseModel):
     """Webhook response."""
+
     id: int
     name: str
     url: str
-    events: List[str]
+    events: list[str]
     status: str
     headers: Optional[dict]
     failure_count: int
@@ -75,6 +78,7 @@ class WebhookResponse(BaseModel):
 
 class WebhookDeliveryResponse(BaseModel):
     """Webhook delivery log entry."""
+
     id: int
     event_type: str
     payload: dict
@@ -88,6 +92,7 @@ class WebhookDeliveryResponse(BaseModel):
 
 class WebhookTestResponse(BaseModel):
     """Response from testing a webhook."""
+
     success: bool
     status_code: Optional[int]
     response_body: Optional[str]
@@ -97,12 +102,14 @@ class WebhookTestResponse(BaseModel):
 
 class WebhookEventTypesResponse(BaseModel):
     """Available webhook event types."""
-    event_types: List[dict]
+
+    event_types: list[dict]
 
 
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("/event-types", response_model=APIResponse[WebhookEventTypesResponse])
 async def get_event_types() -> APIResponse[WebhookEventTypesResponse]:
@@ -110,24 +117,60 @@ async def get_event_types() -> APIResponse[WebhookEventTypesResponse]:
     Get available webhook event types.
     """
     event_types = [
-        {"id": "campaign.updated", "label": "Campaign Updated", "description": "When campaign settings change"},
-        {"id": "campaign.paused", "label": "Campaign Paused", "description": "When a campaign is paused"},
-        {"id": "alert.triggered", "label": "Alert Triggered", "description": "When performance alerts fire"},
-        {"id": "budget.depleted", "label": "Budget Depleted", "description": "When daily budget runs out"},
-        {"id": "sync.completed", "label": "Sync Completed", "description": "When data sync finishes"},
-        {"id": "anomaly.detected", "label": "Anomaly Detected", "description": "When unusual patterns found"},
-        {"id": "trust_gate.pass", "label": "Trust Gate Pass", "description": "When automation passes trust gate"},
-        {"id": "trust_gate.hold", "label": "Trust Gate Hold", "description": "When automation is on hold"},
-        {"id": "trust_gate.block", "label": "Trust Gate Block", "description": "When automation is blocked"},
+        {
+            "id": "campaign.updated",
+            "label": "Campaign Updated",
+            "description": "When campaign settings change",
+        },
+        {
+            "id": "campaign.paused",
+            "label": "Campaign Paused",
+            "description": "When a campaign is paused",
+        },
+        {
+            "id": "alert.triggered",
+            "label": "Alert Triggered",
+            "description": "When performance alerts fire",
+        },
+        {
+            "id": "budget.depleted",
+            "label": "Budget Depleted",
+            "description": "When daily budget runs out",
+        },
+        {
+            "id": "sync.completed",
+            "label": "Sync Completed",
+            "description": "When data sync finishes",
+        },
+        {
+            "id": "anomaly.detected",
+            "label": "Anomaly Detected",
+            "description": "When unusual patterns found",
+        },
+        {
+            "id": "trust_gate.pass",
+            "label": "Trust Gate Pass",
+            "description": "When automation passes trust gate",
+        },
+        {
+            "id": "trust_gate.hold",
+            "label": "Trust Gate Hold",
+            "description": "When automation is on hold",
+        },
+        {
+            "id": "trust_gate.block",
+            "label": "Trust Gate Block",
+            "description": "When automation is blocked",
+        },
     ]
     return APIResponse(success=True, data=WebhookEventTypesResponse(event_types=event_types))
 
 
-@router.get("", response_model=APIResponse[List[WebhookResponse]])
+@router.get("", response_model=APIResponse[list[WebhookResponse]])
 async def list_webhooks(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
-) -> APIResponse[List[WebhookResponse]]:
+) -> APIResponse[list[WebhookResponse]]:
     """
     List all webhooks for the current tenant.
     """
@@ -185,9 +228,7 @@ async def get_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(
-            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
-        )
+        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
     )
     webhook = result.scalar_one_or_none()
 
@@ -235,9 +276,7 @@ async def create_webhook(
         )
 
     # Check webhook limit (max 20 per tenant)
-    result = await db.execute(
-        select(Webhook).where(Webhook.tenant_id == tenant_id)
-    )
+    result = await db.execute(select(Webhook).where(Webhook.tenant_id == tenant_id))
     if len(result.scalars().all()) >= 20:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -303,9 +342,7 @@ async def update_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(
-            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
-        )
+        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
     )
     webhook = result.scalar_one_or_none()
 
@@ -371,9 +408,7 @@ async def delete_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(
-            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
-        )
+        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
     )
     webhook = result.scalar_one_or_none()
 
@@ -407,9 +442,7 @@ async def test_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(
-            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
-        )
+        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
     )
     webhook = result.scalar_one_or_none()
 
@@ -422,14 +455,14 @@ async def test_webhook(
     # Send test payload
     test_payload = {
         "event": "test",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "data": {
             "message": "This is a test webhook from Stratum AI",
             "webhook_id": webhook_id,
         },
     }
 
-    start_time = datetime.now(timezone.utc)
+    start_time = datetime.now(UTC)
     success = False
     status_code = None
     response_body = None
@@ -450,16 +483,16 @@ async def test_webhook(
     except httpx.RequestError as e:
         error_message = str(e)
     except Exception as e:
-        error_message = f"Unexpected error: {str(e)}"
+        error_message = f"Unexpected error: {e!s}"
 
-    duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+    duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
     # Update webhook test status
-    webhook.last_triggered_at = datetime.now(timezone.utc)
+    webhook.last_triggered_at = datetime.now(UTC)
     if success:
-        webhook.last_success_at = datetime.now(timezone.utc)
+        webhook.last_success_at = datetime.now(UTC)
     else:
-        webhook.last_failure_at = datetime.now(timezone.utc)
+        webhook.last_failure_at = datetime.now(UTC)
         webhook.last_failure_reason = error_message
 
     await db.commit()
@@ -476,14 +509,14 @@ async def test_webhook(
     )
 
 
-@router.get("/{webhook_id}/deliveries", response_model=APIResponse[List[WebhookDeliveryResponse]])
+@router.get("/{webhook_id}/deliveries", response_model=APIResponse[list[WebhookDeliveryResponse]])
 async def get_webhook_deliveries(
     request: Request,
     webhook_id: int,
     limit: int = 50,
     offset: int = 0,
     db: AsyncSession = Depends(get_async_session),
-) -> APIResponse[List[WebhookDeliveryResponse]]:
+) -> APIResponse[list[WebhookDeliveryResponse]]:
     """
     Get delivery history for a webhook.
     """
@@ -497,9 +530,7 @@ async def get_webhook_deliveries(
 
     # Verify webhook belongs to tenant
     result = await db.execute(
-        select(Webhook).where(
-            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
-        )
+        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
     )
     if not result.scalar_one_or_none():
         raise HTTPException(

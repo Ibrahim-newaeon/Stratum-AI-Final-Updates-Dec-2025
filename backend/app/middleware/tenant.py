@@ -6,7 +6,8 @@ Middleware that extracts and validates tenant context from requests.
 Implements Row-Level Security at the application level.
 """
 
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
@@ -87,9 +88,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # Bind to structured logging context
         import structlog
 
-        structlog.contextvars.bind_contextvars(
-            tenant_id=tenant_id, user_id=user_id, role=role
-        )
+        structlog.contextvars.bind_contextvars(tenant_id=tenant_id, user_id=user_id, role=role)
 
         return await call_next(request)
 

@@ -9,7 +9,7 @@ Slack integration management:
 - Send manual notifications
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -20,12 +20,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models.settings import SlackIntegration
+from app.schemas.response import APIResponse
 from app.services.notifications.slack_service import (
     SlackNotificationService,
-    TrustGateStatus,
-    AlertSeverity,
 )
-from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/slack", tags=["Slack Integration"])
 logger = get_logger(__name__)
@@ -35,8 +33,10 @@ logger = get_logger(__name__)
 # Pydantic Schemas
 # =============================================================================
 
+
 class SlackConfigRequest(BaseModel):
     """Request to configure Slack integration."""
+
     webhook_url: str = Field(..., description="Slack webhook URL")
     channel_name: Optional[str] = Field(None, max_length=100)
     notify_trust_gate: bool = Field(default=True)
@@ -47,6 +47,7 @@ class SlackConfigRequest(BaseModel):
 
 class SlackConfigResponse(BaseModel):
     """Slack integration configuration response."""
+
     id: int
     webhook_url_masked: str
     channel_name: Optional[str]
@@ -63,12 +64,14 @@ class SlackConfigResponse(BaseModel):
 
 class SlackTestResponse(BaseModel):
     """Response from testing Slack connection."""
+
     success: bool
     message: str
 
 
 class SlackNotifyRequest(BaseModel):
     """Request to send a manual Slack notification."""
+
     message: str = Field(..., min_length=1, max_length=3000)
     type: str = Field(default="info", description="info, warning, success, or error")
 
@@ -76,6 +79,7 @@ class SlackNotifyRequest(BaseModel):
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def mask_webhook_url(url: str) -> str:
     """Mask the webhook URL for display."""
@@ -91,6 +95,7 @@ def mask_webhook_url(url: str) -> str:
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("", response_model=APIResponse[Optional[SlackConfigResponse]])
 async def get_slack_config(
@@ -247,7 +252,7 @@ async def test_slack_connection(
         await slack_service.close()
 
         # Update test status
-        integration.last_test_at = datetime.now(timezone.utc)
+        integration.last_test_at = datetime.now(UTC)
         integration.last_test_success = success
         await db.commit()
 
@@ -269,7 +274,7 @@ async def test_slack_connection(
             )
     except Exception as e:
         logger.error(f"Slack test failed: {e}")
-        integration.last_test_at = datetime.now(timezone.utc)
+        integration.last_test_at = datetime.now(UTC)
         integration.last_test_success = False
         await db.commit()
 
@@ -277,7 +282,7 @@ async def test_slack_connection(
             success=True,
             data=SlackTestResponse(
                 success=False,
-                message=f"Connection test failed: {str(e)}",
+                message=f"Connection test failed: {e!s}",
             ),
         )
 
@@ -330,17 +335,17 @@ async def send_slack_notification(
                 "text": {
                     "type": "mrkdwn",
                     "text": f":{emoji}: {body.message}",
-                }
+                },
             },
             {
                 "type": "context",
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"Sent from Stratum AI at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+                        "text": f"Sent from Stratum AI at {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
                     }
-                ]
-            }
+                ],
+            },
         ]
 
         success = await slack_service.send_message(
@@ -371,7 +376,7 @@ async def send_slack_notification(
             success=True,
             data=SlackTestResponse(
                 success=False,
-                message=f"Failed to send notification: {str(e)}",
+                message=f"Failed to send notification: {e!s}",
             ),
         )
 

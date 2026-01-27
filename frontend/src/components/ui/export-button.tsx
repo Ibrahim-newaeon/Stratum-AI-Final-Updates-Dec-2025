@@ -2,32 +2,32 @@
  * Export Button Component - One-click PDF/CSV export for dashboards
  */
 
-import * as React from 'react'
-import { Download, FileText, FileSpreadsheet, Loader2, Check, AlertCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { usePdfExport, PdfExportOptions } from '@/hooks/usePdfExport'
+import * as React from 'react';
+import { AlertCircle, Check, Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { PdfExportOptions, usePdfExport } from '@/hooks/usePdfExport';
 
 interface ExportButtonProps {
   /** Reference to the element to export */
-  targetRef: React.RefObject<HTMLElement>
+  targetRef: React.RefObject<HTMLElement>;
   /** PDF export options */
-  pdfOptions?: PdfExportOptions
+  pdfOptions?: PdfExportOptions;
   /** CSV data for spreadsheet export */
-  csvData?: Record<string, any>[]
+  csvData?: Record<string, any>[];
   /** CSV filename */
-  csvFilename?: string
+  csvFilename?: string;
   /** Show dropdown with format options */
-  showFormatSelector?: boolean
+  showFormatSelector?: boolean;
   /** Button variant */
-  variant?: 'default' | 'outline' | 'ghost'
+  variant?: 'default' | 'outline' | 'ghost';
   /** Button size */
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg';
   /** Additional class names */
-  className?: string
+  className?: string;
   /** Callback after successful export */
-  onExportComplete?: (result: { type: 'pdf' | 'csv', filename: string }) => void
+  onExportComplete?: (result: { type: 'pdf' | 'csv'; filename: string }) => void;
   /** Callback on export error */
-  onExportError?: (error: string) => void
+  onExportError?: (error: string) => void;
 }
 
 export function ExportButton({
@@ -42,99 +42,101 @@ export function ExportButton({
   onExportComplete,
   onExportError,
 }: ExportButtonProps) {
-  const { exportToPdf, isExporting, progress } = usePdfExport()
-  const [showDropdown, setShowDropdown] = React.useState(false)
-  const [exportStatus, setExportStatus] = React.useState<'idle' | 'success' | 'error'>('idle')
-  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const { exportToPdf, isExporting, progress } = usePdfExport();
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  const [exportStatus, setExportStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false)
+        setShowDropdown(false);
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Reset status after showing success/error
   React.useEffect(() => {
     if (exportStatus !== 'idle') {
-      const timer = setTimeout(() => setExportStatus('idle'), 3000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setExportStatus('idle'), 3000);
+      return () => clearTimeout(timer);
     }
-  }, [exportStatus])
+  }, [exportStatus]);
 
   const handlePdfExport = async () => {
-    setShowDropdown(false)
-    const result = await exportToPdf(targetRef.current, pdfOptions)
+    setShowDropdown(false);
+    const result = await exportToPdf(targetRef.current, pdfOptions);
     if (result.success) {
-      setExportStatus('success')
-      onExportComplete?.({ type: 'pdf', filename: result.filename! })
+      setExportStatus('success');
+      onExportComplete?.({ type: 'pdf', filename: result.filename! });
     } else {
-      setExportStatus('error')
-      onExportError?.(result.error || 'Export failed')
+      setExportStatus('error');
+      onExportError?.(result.error || 'Export failed');
     }
-  }
+  };
 
   const handleCsvExport = () => {
     if (!csvData || csvData.length === 0) {
-      onExportError?.('No data to export')
-      return
+      onExportError?.('No data to export');
+      return;
     }
 
-    setShowDropdown(false)
+    setShowDropdown(false);
 
     try {
       // Get headers from first object
-      const headers = Object.keys(csvData[0])
+      const headers = Object.keys(csvData[0]);
 
       // Build CSV content
       const csvContent = [
         headers.join(','),
-        ...csvData.map(row =>
-          headers.map(header => {
-            const value = row[header]
-            // Handle values with commas or quotes
-            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-              return `"${value.replace(/"/g, '""')}"`
-            }
-            return value ?? ''
-          }).join(',')
-        )
-      ].join('\n')
+        ...csvData.map((row) =>
+          headers
+            .map((header) => {
+              const value = row[header];
+              // Handle values with commas or quotes
+              if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                return `"${value.replace(/"/g, '""')}"`;
+              }
+              return value ?? '';
+            })
+            .join(',')
+        ),
+      ].join('\n');
 
       // Create and download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const dateStr = new Date().toISOString().slice(0, 10)
-      const filename = `${csvFilename}-${dateStr}.csv`
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = `${csvFilename}-${dateStr}.csv`;
 
-      link.href = URL.createObjectURL(blob)
-      link.download = filename
-      link.click()
-      URL.revokeObjectURL(link.href)
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(link.href);
 
-      setExportStatus('success')
-      onExportComplete?.({ type: 'csv', filename })
+      setExportStatus('success');
+      onExportComplete?.({ type: 'csv', filename });
     } catch (error) {
-      setExportStatus('error')
-      onExportError?.(error instanceof Error ? error.message : 'CSV export failed')
+      setExportStatus('error');
+      onExportError?.(error instanceof Error ? error.message : 'CSV export failed');
     }
-  }
+  };
 
   const sizeClasses = {
     sm: 'h-8 px-3 text-xs',
     md: 'h-9 px-4 text-sm',
     lg: 'h-10 px-5 text-base',
-  }
+  };
 
   const variantClasses = {
     default: 'bg-primary text-primary-foreground hover:bg-primary/90',
     outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
     ghost: 'hover:bg-accent hover:text-accent-foreground',
-  }
+  };
 
   const buttonContent = () => {
     if (isExporting) {
@@ -143,7 +145,7 @@ export function ExportButton({
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
           <span>Exporting {progress}%</span>
         </>
-      )
+      );
     }
 
     if (exportStatus === 'success') {
@@ -152,7 +154,7 @@ export function ExportButton({
           <Check className="h-4 w-4 mr-2 text-green-500" />
           <span>Exported!</span>
         </>
-      )
+      );
     }
 
     if (exportStatus === 'error') {
@@ -161,7 +163,7 @@ export function ExportButton({
           <AlertCircle className="h-4 w-4 mr-2 text-red-500" />
           <span>Failed</span>
         </>
-      )
+      );
     }
 
     return (
@@ -169,8 +171,8 @@ export function ExportButton({
         <Download className="h-4 w-4 mr-2" />
         <span>Export</span>
       </>
-    )
-  }
+    );
+  };
 
   // Simple button without dropdown
   if (!showFormatSelector || !csvData) {
@@ -189,7 +191,7 @@ export function ExportButton({
       >
         {buttonContent()}
       </button>
-    )
+    );
   }
 
   // Button with dropdown for format selection
@@ -235,7 +237,7 @@ export function ExportButton({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default ExportButton
+export default ExportButton;

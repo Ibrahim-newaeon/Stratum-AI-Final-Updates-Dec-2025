@@ -9,7 +9,7 @@
  *   if (hasFeature('predictive_churn')) { ... }
  */
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/api/axios';
 
@@ -169,7 +169,7 @@ export function TierProvider({ children }: TierProviderProps) {
     features,
     limits,
     loading,
-    error: error as Error | null,
+    error: error,
     hasFeature,
     checkLimit,
     getRemainingLimit,
@@ -244,13 +244,11 @@ interface UpgradePromptProps {
 
 export function UpgradePrompt({ feature, requiredTier, className = '' }: UpgradePromptProps) {
   return (
-    <div className={`p-6 bg-gray-800/50 border border-orange-500/30 rounded-lg text-center ${className}`}>
-      <div className="text-orange-400 text-lg font-semibold mb-2">
-        Upgrade Required
-      </div>
-      <p className="text-gray-400 mb-4">
-        This feature requires {requiredTier || 'a higher'} tier.
-      </p>
+    <div
+      className={`p-6 bg-gray-800/50 border border-orange-500/30 rounded-lg text-center ${className}`}
+    >
+      <div className="text-orange-400 text-lg font-semibold mb-2">Upgrade Required</div>
+      <p className="text-gray-400 mb-4">This feature requires {requiredTier || 'a higher'} tier.</p>
       <a
         href="/settings/billing"
         className="inline-block px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"

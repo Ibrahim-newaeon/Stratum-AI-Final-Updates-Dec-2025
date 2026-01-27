@@ -4,18 +4,18 @@
  */
 
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  PencilSquareIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
   EyeIcon,
   EyeSlashIcon,
-  ExclamationTriangleIcon,
-  DocumentTextIcon,
+  PencilSquareIcon,
   PhotoIcon,
   TagIcon,
 } from '@heroicons/react/24/outline';
@@ -99,7 +99,8 @@ export default function CMSLogin() {
             </span>
           </h1>
           <p className="text-lg text-white/60 max-w-md">
-            Manage your website content, blog posts, FAQs, and pricing pages from one centralized dashboard.
+            Manage your website content, blog posts, FAQs, and pricing pages from one centralized
+            dashboard.
           </p>
 
           {/* Feature cards */}

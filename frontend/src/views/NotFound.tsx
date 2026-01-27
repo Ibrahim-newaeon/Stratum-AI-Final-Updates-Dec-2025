@@ -4,14 +4,17 @@
  */
 
 import { Link, useNavigate } from 'react-router-dom';
-import { HomeIcon, ArrowLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, HomeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { SEO } from '@/components/common/SEO';
 
 export default function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#030303' }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ background: '#030303' }}
+    >
       <SEO
         title="Page Not Found"
         description="The page you're looking for doesn't exist or has been moved."
@@ -47,8 +50,7 @@ export default function NotFound() {
         <h1 className="text-3xl font-bold text-white mb-4">Page Not Found</h1>
 
         <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-          The page you're looking for doesn't exist or has been moved.
-          Let's get you back on track.
+          The page you're looking for doesn't exist or has been moved. Let's get you back on track.
         </p>
 
         {/* Action buttons */}

@@ -3,24 +3,27 @@
  * Displays confidence level: Reliable (90+), Directional (60-89), Unsafe (<60)
  */
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-export type ConfidenceBand = 'reliable' | 'directional' | 'unsafe'
+export type ConfidenceBand = 'reliable' | 'directional' | 'unsafe';
 
 interface ConfidenceBandBadgeProps {
-  score: number // EMQ score 0-100
-  size?: 'sm' | 'md' | 'lg'
-  showLabel?: boolean
-  className?: string
+  score: number; // EMQ score 0-100
+  size?: 'sm' | 'md' | 'lg';
+  showLabel?: boolean;
+  className?: string;
 }
 
 export function getConfidenceBand(score: number): ConfidenceBand {
-  if (score >= 90) return 'reliable'
-  if (score >= 60) return 'directional'
-  return 'unsafe'
+  if (score >= 90) return 'reliable';
+  if (score >= 60) return 'directional';
+  return 'unsafe';
 }
 
-const bandConfig: Record<ConfidenceBand, { label: string; color: string; bgColor: string; description: string }> = {
+const bandConfig: Record<
+  ConfidenceBand,
+  { label: string; color: string; bgColor: string; description: string }
+> = {
   reliable: {
     label: 'Reliable',
     color: 'text-success',
@@ -39,13 +42,13 @@ const bandConfig: Record<ConfidenceBand, { label: string; color: string; bgColor
     bgColor: 'bg-danger/10',
     description: 'Data quality too low for reliable decisions',
   },
-}
+};
 
 const sizeClasses = {
   sm: 'text-xs px-2 py-0.5',
   md: 'text-sm px-3 py-1',
   lg: 'text-base px-4 py-1.5',
-}
+};
 
 export function ConfidenceBandBadge({
   score,
@@ -53,8 +56,8 @@ export function ConfidenceBandBadge({
   showLabel = true,
   className,
 }: ConfidenceBandBadgeProps) {
-  const band = getConfidenceBand(score)
-  const config = bandConfig[band]
+  const band = getConfidenceBand(score);
+  const config = bandConfig[band];
 
   return (
     <span
@@ -77,7 +80,7 @@ export function ConfidenceBandBadge({
       />
       {showLabel && config.label}
     </span>
-  )
+  );
 }
 
-export default ConfidenceBandBadge
+export default ConfidenceBandBadge;

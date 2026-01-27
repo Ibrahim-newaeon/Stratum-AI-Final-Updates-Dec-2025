@@ -12,11 +12,12 @@ Features:
 - Detailed experiment tracking
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import hashlib
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import Enum
+from typing import Any, Optional
+
 import numpy as np
 from scipy import stats
 
@@ -27,6 +28,7 @@ logger = get_logger(__name__)
 
 class ExperimentStatus(str, Enum):
     """Status of an A/B test experiment."""
+
     DRAFT = "draft"
     RUNNING = "running"
     PAUSED = "paused"
@@ -37,6 +39,7 @@ class ExperimentStatus(str, Enum):
 
 class ModelVariant(str, Enum):
     """Model variant in an experiment."""
+
     CHAMPION = "champion"
     CHALLENGER = "challenger"
 
@@ -44,6 +47,7 @@ class ModelVariant(str, Enum):
 @dataclass
 class ExperimentMetrics:
     """Metrics collected during an experiment."""
+
     variant: ModelVariant
     predictions_count: int = 0
     total_error: float = 0.0
@@ -57,9 +61,9 @@ class ExperimentMetrics:
     mape: float = 0.0
 
     # Raw data for statistical tests
-    errors: List[float] = field(default_factory=list)
-    predictions: List[float] = field(default_factory=list)
-    actuals: List[float] = field(default_factory=list)
+    errors: list[float] = field(default_factory=list)
+    predictions: list[float] = field(default_factory=list)
+    actuals: list[float] = field(default_factory=list)
 
     def add_prediction(self, predicted: float, actual: Optional[float] = None):
         """Record a prediction and optionally its actual value."""
@@ -75,7 +79,7 @@ class ExperimentMetrics:
 
             self.errors.append(error)
             self.total_error += error
-            self.total_squared_error += error ** 2
+            self.total_squared_error += error**2
             self.total_absolute_error += abs_error
 
             # Update computed metrics
@@ -89,15 +93,17 @@ class ExperimentMetrics:
 
             # MAPE with safeguard
             mape_sum = sum(
-                abs(e / a) if a != 0 else 0
-                for e, a in zip(self.errors, self.actuals)
+                abs(e / a) if a != 0 else 0 for e, a in zip(self.errors, self.actuals, strict=False)
             )
-            self.mape = (mape_sum / self.actuals_collected) * 100 if self.actuals_collected > 0 else 0
+            self.mape = (
+                (mape_sum / self.actuals_collected) * 100 if self.actuals_collected > 0 else 0
+            )
 
 
 @dataclass
 class ModelExperiment:
     """Represents an A/B test experiment between two models."""
+
     experiment_id: str
     name: str
     model_name: str  # e.g., "roas_predictor"
@@ -113,7 +119,7 @@ class ModelExperiment:
 
     # Metadata
     status: ExperimentStatus = ExperimentStatus.DRAFT
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
@@ -166,8 +172,8 @@ class ModelABTestingService:
     """
 
     def __init__(self):
-        self._experiments: Dict[str, ModelExperiment] = {}
-        self._active_experiments: Dict[str, str] = {}  # model_name -> experiment_id
+        self._experiments: dict[str, ModelExperiment] = {}
+        self._active_experiments: dict[str, str] = {}  # model_name -> experiment_id
 
     def create_experiment(
         self,
@@ -196,7 +202,7 @@ class ModelABTestingService:
         Returns:
             Created experiment
         """
-        experiment_id = f"exp_{model_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        experiment_id = f"exp_{model_name}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
 
         experiment = ModelExperiment(
             experiment_id=experiment_id,
@@ -229,24 +235,28 @@ class ModelABTestingService:
         # Check for existing active experiment on same model
         if experiment.model_name in self._active_experiments:
             existing_id = self._active_experiments[experiment.model_name]
-            logger.warning(f"Stopping existing experiment {existing_id} for {experiment.model_name}")
+            logger.warning(
+                f"Stopping existing experiment {existing_id} for {experiment.model_name}"
+            )
             self.stop_experiment(existing_id)
 
         experiment.status = ExperimentStatus.RUNNING
-        experiment.started_at = datetime.now(timezone.utc)
+        experiment.started_at = datetime.now(UTC)
         self._active_experiments[experiment.model_name] = experiment_id
 
         logger.info(f"Started experiment: {experiment_id}")
         return True
 
-    def stop_experiment(self, experiment_id: str, status: ExperimentStatus = ExperimentStatus.PAUSED) -> bool:
+    def stop_experiment(
+        self, experiment_id: str, status: ExperimentStatus = ExperimentStatus.PAUSED
+    ) -> bool:
         """Stop an experiment."""
         experiment = self._experiments.get(experiment_id)
         if not experiment:
             return False
 
         experiment.status = status
-        experiment.completed_at = datetime.now(timezone.utc)
+        experiment.completed_at = datetime.now(UTC)
 
         if experiment.model_name in self._active_experiments:
             if self._active_experiments[experiment.model_name] == experiment_id:
@@ -281,7 +291,9 @@ class ModelABTestingService:
             return ModelVariant.CHALLENGER
         return ModelVariant.CHAMPION
 
-    def get_active_variant(self, model_name: str, entity_id: str) -> Tuple[ModelVariant, Optional[str]]:
+    def get_active_variant(
+        self, model_name: str, entity_id: str
+    ) -> tuple[ModelVariant, Optional[str]]:
         """
         Get the active variant for a model if there's a running experiment.
 
@@ -340,8 +352,11 @@ class ModelABTestingService:
         if not experiment:
             return
 
-        metrics = (experiment.champion_metrics if variant == ModelVariant.CHAMPION
-                   else experiment.challenger_metrics)
+        metrics = (
+            experiment.champion_metrics
+            if variant == ModelVariant.CHAMPION
+            else experiment.challenger_metrics
+        )
 
         if prediction_index < len(metrics.predictions):
             predicted = metrics.predictions[prediction_index]
@@ -353,11 +368,11 @@ class ModelABTestingService:
             error = predicted - actual
             metrics.errors.append(error)
             metrics.total_error += error
-            metrics.total_squared_error += error ** 2
+            metrics.total_squared_error += error**2
             metrics.total_absolute_error += abs(error)
             metrics._update_metrics()
 
-    def evaluate_experiment(self, experiment_id: str) -> Dict[str, Any]:
+    def evaluate_experiment(self, experiment_id: str) -> dict[str, Any]:
         """
         Evaluate an experiment for statistical significance.
 
@@ -405,7 +420,7 @@ class ModelABTestingService:
 
         # Check duration
         if experiment.started_at:
-            duration = datetime.now(timezone.utc) - experiment.started_at
+            duration = datetime.now(UTC) - experiment.started_at
             result["duration_days"] = duration.days
             result["max_duration_days"] = experiment.max_duration_days
             result["exceeded_duration"] = duration.days >= experiment.max_duration_days
@@ -462,7 +477,7 @@ class ModelABTestingService:
             return False
 
         experiment.status = ExperimentStatus.PROMOTED
-        experiment.completed_at = datetime.now(timezone.utc)
+        experiment.completed_at = datetime.now(UTC)
 
         # Remove from active experiments
         if experiment.model_name in self._active_experiments:
@@ -482,7 +497,7 @@ class ModelABTestingService:
             return False
 
         experiment.status = ExperimentStatus.REJECTED
-        experiment.completed_at = datetime.now(timezone.utc)
+        experiment.completed_at = datetime.now(UTC)
 
         if experiment.model_name in self._active_experiments:
             del self._active_experiments[experiment.model_name]
@@ -498,7 +513,7 @@ class ModelABTestingService:
         self,
         model_name: Optional[str] = None,
         status: Optional[ExperimentStatus] = None,
-    ) -> List[ModelExperiment]:
+    ) -> list[ModelExperiment]:
         """List experiments with optional filtering."""
         experiments = list(self._experiments.values())
 
@@ -510,7 +525,7 @@ class ModelABTestingService:
 
         return sorted(experiments, key=lambda e: e.created_at, reverse=True)
 
-    def get_experiment_summary(self) -> Dict[str, Any]:
+    def get_experiment_summary(self) -> dict[str, Any]:
         """Get summary of all experiments."""
         experiments = list(self._experiments.values())
 
@@ -526,7 +541,8 @@ class ModelABTestingService:
                 "champion": e.champion_version,
                 "challenger": e.challenger_version,
                 "traffic_split": e.traffic_split,
-                "samples": e.champion_metrics.actuals_collected + e.challenger_metrics.actuals_collected,
+                "samples": e.champion_metrics.actuals_collected
+                + e.challenger_metrics.actuals_collected,
             }
             for e in experiments
             if e.status == ExperimentStatus.RUNNING
@@ -547,7 +563,8 @@ ab_testing_service = ModelABTestingService()
 # Convenience Functions
 # =============================================================================
 
-def get_model_variant(model_name: str, entity_id: str) -> Tuple[str, Optional[str]]:
+
+def get_model_variant(model_name: str, entity_id: str) -> tuple[str, Optional[str]]:
     """
     Get which model version to use for a prediction.
 

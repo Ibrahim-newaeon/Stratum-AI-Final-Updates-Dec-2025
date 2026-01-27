@@ -13,14 +13,13 @@ The CDP EMQ score represents the quality of first-party data collection:
 """
 
 import logging
-from datetime import datetime, date, timedelta, timezone
-from typing import Optional, List, Dict, Any, Tuple
+from datetime import UTC, date, datetime, timedelta
+from typing import Any, Optional
 
-from sqlalchemy import select, func, and_, Integer
+from sqlalchemy import Integer, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.cdp import CDPEvent, CDPProfile, CDPConsent
-
+from app.models.cdp import CDPConsent, CDPEvent, CDPProfile
 
 logger = logging.getLogger("stratum.cdp_emq")
 
@@ -50,7 +49,7 @@ class CDPEMQAggregator:
         tenant_id: int,
         target_date: Optional[date] = None,
         lookback_days: int = 7,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get aggregated CDP EMQ score for a tenant.
 
@@ -80,8 +79,7 @@ class CDPEMQAggregator:
                 func.min(CDPEvent.emq_score).label("min_emq"),
                 func.max(CDPEvent.emq_score).label("max_emq"),
                 func.stddev(CDPEvent.emq_score).label("std_emq"),
-            )
-            .where(
+            ).where(
                 and_(
                     CDPEvent.tenant_id == tenant_id,
                     func.date(CDPEvent.received_at) >= start_date,
@@ -94,18 +92,16 @@ class CDPEMQAggregator:
 
         # Get profile count
         profile_result = await self.db.execute(
-            select(func.count(CDPProfile.id))
-            .where(CDPProfile.tenant_id == tenant_id)
+            select(func.count(CDPProfile.id)).where(CDPProfile.tenant_id == tenant_id)
         )
         profile_count = profile_result.scalar() or 0
 
         # Get recent event count (last 24h)
         recent_result = await self.db.execute(
-            select(func.count(CDPEvent.id))
-            .where(
+            select(func.count(CDPEvent.id)).where(
                 and_(
                     CDPEvent.tenant_id == tenant_id,
-                    CDPEvent.received_at >= datetime.now(timezone.utc) - timedelta(hours=24),
+                    CDPEvent.received_at >= datetime.now(UTC) - timedelta(hours=24),
                 )
             )
         )
@@ -128,7 +124,9 @@ class CDPEMQAggregator:
 
             # Check for issues
             if avg_emq < self.HEALTHY_THRESHOLD:
-                issues.append(f"CDP EMQ below target: {avg_emq:.1f} (target: {self.HEALTHY_THRESHOLD}+)")
+                issues.append(
+                    f"CDP EMQ below target: {avg_emq:.1f} (target: {self.HEALTHY_THRESHOLD}+)"
+                )
 
             if min_emq < self.DEGRADED_THRESHOLD:
                 issues.append(f"Low-quality events detected: min EMQ {min_emq:.1f}")
@@ -150,14 +148,14 @@ class CDPEMQAggregator:
             "std_score": round(std_emq, 1),
             "lookback_days": lookback_days,
             "issues": issues,
-            "calculated_at": datetime.now(timezone.utc).isoformat(),
+            "calculated_at": datetime.now(UTC).isoformat(),
         }
 
     async def get_emq_trend(
         self,
         tenant_id: int,
         days: int = 30,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get daily EMQ trend for a tenant.
 
@@ -201,7 +199,7 @@ class CDPEMQAggregator:
     async def get_profile_quality_breakdown(
         self,
         tenant_id: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get profile quality breakdown by lifecycle stage.
 
@@ -247,7 +245,7 @@ class CDPEMQAggregator:
     async def get_consent_metrics(
         self,
         tenant_id: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get consent compliance metrics.
 
@@ -257,8 +255,7 @@ class CDPEMQAggregator:
         """
         # Get total profiles
         total_result = await self.db.execute(
-            select(func.count(CDPProfile.id))
-            .where(CDPProfile.tenant_id == tenant_id)
+            select(func.count(CDPProfile.id)).where(CDPProfile.tenant_id == tenant_id)
         )
         total_profiles = total_result.scalar() or 0
 
@@ -272,8 +269,7 @@ class CDPEMQAggregator:
 
         # Get profiles with at least one consent granted
         profiles_with_consent_result = await self.db.execute(
-            select(func.count(func.distinct(CDPConsent.profile_id)))
-            .where(
+            select(func.count(func.distinct(CDPConsent.profile_id))).where(
                 and_(
                     CDPConsent.tenant_id == tenant_id,
                     CDPConsent.granted == True,
@@ -298,7 +294,9 @@ class CDPEMQAggregator:
             consent_by_type[row.consent_type] = {
                 "total": row.count,
                 "granted": row.granted_count or 0,
-                "rate": round((row.granted_count or 0) / row.count * 100, 1) if row.count > 0 else 0,
+                "rate": round((row.granted_count or 0) / row.count * 100, 1)
+                if row.count > 0
+                else 0,
             }
 
         consent_rate = (profiles_with_consent / total_profiles * 100) if total_profiles > 0 else 0
@@ -316,7 +314,7 @@ class CDPEMQAggregator:
         identity_resolution_rate: float,
         recent_event_count: int,
         consent_rate: float = 0.0,
-    ) -> Tuple[float, List[str]]:
+    ) -> tuple[float, list[str]]:
         """
         Calculate CDP's contribution to overall signal health.
 
@@ -387,7 +385,7 @@ async def get_cdp_emq_for_signal_health(
     db: AsyncSession,
     tenant_id: int,
     target_date: Optional[date] = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Convenience function to get CDP EMQ data for Signal Health Calculator.
 

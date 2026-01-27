@@ -5,8 +5,8 @@
 Background tasks for CDP segment computation, RFM analysis, and funnels.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any, Optional
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -35,7 +35,7 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
     logger.info(f"Computing segment {segment_id} for tenant {tenant_id}")
 
     # Import CDP models here to avoid circular imports
-    from app.models.cdp import CDPSegment, CDPProfile
+    from app.models.cdp import CDPProfile, CDPSegment
 
     with SyncSessionLocal() as db:
         segment = db.execute(
@@ -71,7 +71,7 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
         # Update segment membership
         segment.profile_ids = matched_profiles
         segment.profile_count = len(matched_profiles)
-        segment.last_computed_at = datetime.now(timezone.utc)
+        segment.last_computed_at = datetime.now(UTC)
 
         db.commit()
 
@@ -89,7 +89,7 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
     return {"profile_count": len(matched_profiles)}
 
 
-def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
+def _evaluate_segment_rules(profile, rules: dict[str, Any]) -> dict[str, Any]:
     """Evaluate segment rules against a profile."""
     if not rules:
         return {"matched": True, "reason": "no_rules"}
@@ -108,7 +108,7 @@ def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
         return {"matched": any(results), "results": results}
 
 
-def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
+def _evaluate_condition_single(profile, condition: dict[str, Any]) -> bool:
     """Evaluate a single condition against a profile."""
     field = condition.get("field")
     op = condition.get("operator")
@@ -163,16 +163,10 @@ def compute_all_cdp_segments(tenant_id: Optional[int] = None):
     with SyncSessionLocal() as db:
         if tenant_id:
             tenants = [
-                db.execute(
-                    select(Tenant).where(Tenant.id == tenant_id)
-                ).scalar_one_or_none()
+                db.execute(select(Tenant).where(Tenant.id == tenant_id)).scalar_one_or_none()
             ]
         else:
-            tenants = (
-                db.execute(select(Tenant).where(Tenant.is_deleted == False))
-                .scalars()
-                .all()
-            )
+            tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         task_count = 0
         for tenant in tenants:
@@ -204,7 +198,7 @@ def compute_all_cdp_segments(tenant_id: Optional[int] = None):
     retry_backoff=True,
     max_retries=2,
 )
-def compute_cdp_rfm(self, tenant_id: int, config: Optional[Dict] = None):
+def compute_cdp_rfm(self, tenant_id: int, config: Optional[dict] = None):
     """
     Compute RFM (Recency, Frequency, Monetary) scores for all profiles.
 
@@ -214,8 +208,8 @@ def compute_cdp_rfm(self, tenant_id: int, config: Optional[Dict] = None):
     """
     logger.info(f"Computing RFM scores for tenant {tenant_id}")
 
-    from app.models.cdp import CDPProfile
     from app.ml.rfm_segmenter import RFMSegmenter
+    from app.models.cdp import CDPProfile
 
     with SyncSessionLocal() as db:
         profiles = (
@@ -276,7 +270,7 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
     """
     logger.info(f"Computing CDP traits for tenant {tenant_id}")
 
-    from app.models.cdp import CDPProfile, CDPComputedTrait
+    from app.models.cdp import CDPComputedTrait, CDPProfile
 
     with SyncSessionLocal() as db:
         # Get trait definitions
@@ -312,9 +306,7 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
                     profile.computed_traits[trait.name] = value
                     computed_count += 1
                 except Exception as e:
-                    logger.error(
-                        f"Trait {trait.name} failed for profile {profile.id}: {e}"
-                    )
+                    logger.error(f"Trait {trait.name} failed for profile {profile.id}: {e}")
 
         db.commit()
 
@@ -406,7 +398,7 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
             previous_count = count
 
         # Update funnel with results
-        funnel.last_computed_at = datetime.now(timezone.utc)
+        funnel.last_computed_at = datetime.now(UTC)
         funnel.metrics = results
 
         db.commit()
@@ -437,16 +429,10 @@ def compute_all_cdp_funnels(tenant_id: Optional[int] = None):
     with SyncSessionLocal() as db:
         if tenant_id:
             tenants = [
-                db.execute(
-                    select(Tenant).where(Tenant.id == tenant_id)
-                ).scalar_one_or_none()
+                db.execute(select(Tenant).where(Tenant.id == tenant_id)).scalar_one_or_none()
             ]
         else:
-            tenants = (
-                db.execute(select(Tenant).where(Tenant.is_deleted == False))
-                .scalars()
-                .all()
-            )
+            tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         task_count = 0
         for tenant in tenants:

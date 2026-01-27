@@ -3,59 +3,59 @@
  * AI-powered data gap analysis for Conversion APIs
  */
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
-  CheckCircle,
-  TrendingUp,
-  TrendingDown,
-  RefreshCw,
-  ChevronRight,
-  Target,
   ArrowUpRight,
+  CheckCircle,
+  ChevronRight,
   Lightbulb,
+  RefreshCw,
+  Target,
+  TrendingDown,
+  TrendingUp,
   XCircle,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface DataGap {
-  field: string
-  severity: string
-  impact_percent: number
-  recommendation: string
-  how_to_fix: string
+  field: string;
+  severity: string;
+  impact_percent: number;
+  recommendation: string;
+  how_to_fix: string;
 }
 
 interface PlatformScore {
-  score: number
-  quality_level: string
-  potential_roas_lift: number
-  fields_present: string[]
-  fields_missing: string[]
-  data_gaps: DataGap[]
+  score: number;
+  quality_level: string;
+  potential_roas_lift: number;
+  fields_present: string[];
+  fields_missing: string[];
+  data_gaps: DataGap[];
 }
 
 interface QualityReport {
-  overall_score: number
-  estimated_roas_improvement: number
+  overall_score: number;
+  estimated_roas_improvement: number;
   data_gaps_summary: {
-    critical: number
-    high: number
-    medium: number
-    low: number
-  }
-  trend: string
-  platform_scores: Record<string, PlatformScore>
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  trend: string;
+  platform_scores: Record<string, PlatformScore>;
   top_recommendations: Array<{
-    priority: number
-    field: string
-    action: string
-    how_to_fix: string
-    impact: string
-    severity: string
-    affected_platforms: string[]
-  }>
+    priority: number;
+    field: string;
+    action: string;
+    how_to_fix: string;
+    impact: string;
+    severity: string;
+    affected_platforms: string[];
+  }>;
 }
 
 const PLATFORM_NAMES: Record<string, string> = {
@@ -63,28 +63,28 @@ const PLATFORM_NAMES: Record<string, string> = {
   google: 'Google Ads',
   tiktok: 'TikTok',
   snapchat: 'Snapchat',
-}
+};
 
 const PLATFORM_COLORS: Record<string, string> = {
   meta: 'bg-blue-500',
   google: 'bg-red-500',
   tiktok: 'bg-black',
   snapchat: 'bg-yellow-400',
-}
+};
 
 const getScoreColor = (score: number) => {
-  if (score >= 80) return 'text-green-500'
-  if (score >= 60) return 'text-blue-500'
-  if (score >= 40) return 'text-amber-500'
-  return 'text-red-500'
-}
+  if (score >= 80) return 'text-green-500';
+  if (score >= 60) return 'text-blue-500';
+  if (score >= 40) return 'text-amber-500';
+  return 'text-red-500';
+};
 
 const getScoreBg = (score: number) => {
-  if (score >= 80) return 'bg-green-500/10'
-  if (score >= 60) return 'bg-blue-500/10'
-  if (score >= 40) return 'bg-amber-500/10'
-  return 'bg-red-500/10'
-}
+  if (score >= 80) return 'bg-green-500/10';
+  if (score >= 60) return 'bg-blue-500/10';
+  if (score >= 40) return 'bg-amber-500/10';
+  return 'bg-red-500/10';
+};
 
 const getQualityLabel = (level: string) => {
   const labels: Record<string, { label: string; color: string }> = {
@@ -92,9 +92,9 @@ const getQualityLabel = (level: string) => {
     Good: { label: 'Good', color: 'text-blue-500 bg-blue-500/10' },
     Fair: { label: 'Fair', color: 'text-amber-500 bg-amber-500/10' },
     Poor: { label: 'Needs Work', color: 'text-red-500 bg-red-500/10' },
-  }
-  return labels[level] || labels.Poor
-}
+  };
+  return labels[level] || labels.Poor;
+};
 
 const getSeverityStyle = (severity: string) => {
   const styles: Record<string, string> = {
@@ -102,48 +102,48 @@ const getSeverityStyle = (severity: string) => {
     high: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
     medium: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
     low: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  }
-  return styles[severity] || styles.medium
-}
+  };
+  return styles[severity] || styles.medium;
+};
 
 export function DataQuality() {
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [report, setReport] = useState<QualityReport | null>(null)
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
-  const [_error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [report, setReport] = useState<QualityReport | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   const fetchReport = async () => {
     try {
-      setRefreshing(true)
-      const response = await fetch('/api/v1/capi/quality/report')
-      const data = await response.json()
+      setRefreshing(true);
+      const response = await fetch('/api/v1/capi/quality/report');
+      const data = await response.json();
 
       if (data.success && data.data) {
-        setReport(data.data)
+        setReport(data.data);
         if (!selectedPlatform && Object.keys(data.data.platform_scores || {}).length > 0) {
-          setSelectedPlatform(Object.keys(data.data.platform_scores)[0])
+          setSelectedPlatform(Object.keys(data.data.platform_scores)[0]);
         }
       } else {
-        setReport(null)
+        setReport(null);
       }
     } catch (err) {
-      console.error('Failed to fetch report:', err)
-      setError('Failed to load data quality report')
+      console.error('Failed to fetch report:', err);
+      setError('Failed to load data quality report');
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchReport()
+    fetchReport();
     // Refresh every 2 minutes
-    const interval = setInterval(fetchReport, 2 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+    const interval = setInterval(fetchReport, 2 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const selectedScore = selectedPlatform ? report?.platform_scores[selectedPlatform] : null
+  const selectedScore = selectedPlatform ? report?.platform_scores[selectedPlatform] : null;
 
   if (loading) {
     return (
@@ -157,7 +157,7 @@ export function DataQuality() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!report || report.overall_score === 0) {
@@ -183,7 +183,7 @@ export function DataQuality() {
           </a>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -243,9 +243,7 @@ export function DataQuality() {
           <div className="text-3xl font-bold text-green-500">
             +{report.estimated_roas_improvement}%
           </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Fix data gaps to unlock
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Fix data gaps to unlock</p>
         </div>
 
         {/* Critical Gaps */}
@@ -276,9 +274,7 @@ export function DataQuality() {
           <div className="text-3xl font-bold text-foreground">
             {Object.keys(report.platform_scores).length}
           </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Active connections
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Active connections</p>
         </div>
       </div>
 
@@ -305,11 +301,13 @@ export function DataQuality() {
               >
                 <div className={cn('w-3 h-3 rounded-full', PLATFORM_COLORS[platform])} />
                 {PLATFORM_NAMES[platform] || platform}
-                <span className={cn(
-                  'px-1.5 py-0.5 text-xs rounded',
-                  getScoreBg(score.score),
-                  getScoreColor(score.score)
-                )}>
+                <span
+                  className={cn(
+                    'px-1.5 py-0.5 text-xs rounded',
+                    getScoreBg(score.score),
+                    getScoreColor(score.score)
+                  )}
+                >
                   {score.score}%
                 </span>
               </button>
@@ -326,16 +324,16 @@ export function DataQuality() {
                     <span className={cn('text-4xl font-bold', getScoreColor(selectedScore.score))}>
                       {selectedScore.score}%
                     </span>
-                    <span className={cn(
-                      'px-3 py-1 rounded-full text-sm font-medium',
-                      getQualityLabel(selectedScore.quality_level).color
-                    )}>
+                    <span
+                      className={cn(
+                        'px-3 py-1 rounded-full text-sm font-medium',
+                        getQualityLabel(selectedScore.quality_level).color
+                      )}
+                    >
                       {getQualityLabel(selectedScore.quality_level).label}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Event Match Quality Score
-                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">Event Match Quality Score</p>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-green-500">
@@ -353,7 +351,7 @@ export function DataQuality() {
                     Fields Present ({selectedScore.fields_present.length})
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedScore.fields_present.map(field => (
+                    {selectedScore.fields_present.map((field) => (
                       <span
                         key={field}
                         className="px-2 py-1 text-xs bg-green-500/10 text-green-600 rounded-full"
@@ -369,7 +367,7 @@ export function DataQuality() {
                     Fields Missing ({selectedScore.fields_missing.length})
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedScore.fields_missing.map(field => (
+                    {selectedScore.fields_missing.map((field) => (
                       <span
                         key={field}
                         className="px-2 py-1 text-xs bg-red-500/10 text-red-600 rounded-full"
@@ -388,21 +386,22 @@ export function DataQuality() {
                   {selectedScore.data_gaps.map((gap, idx) => (
                     <div
                       key={idx}
-                      className={cn(
-                        'p-4 rounded-lg border',
-                        getSeverityStyle(gap.severity)
-                      )}
+                      className={cn('p-4 rounded-lg border', getSeverityStyle(gap.severity))}
                     >
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium">{gap.field}</span>
-                            <span className={cn(
-                              'px-2 py-0.5 text-xs rounded-full uppercase font-semibold',
-                              gap.severity === 'critical' ? 'bg-red-500 text-white' :
-                              gap.severity === 'high' ? 'bg-orange-500 text-white' :
-                              'bg-amber-500 text-white'
-                            )}>
+                            <span
+                              className={cn(
+                                'px-2 py-0.5 text-xs rounded-full uppercase font-semibold',
+                                gap.severity === 'critical'
+                                  ? 'bg-red-500 text-white'
+                                  : gap.severity === 'high'
+                                    ? 'bg-orange-500 text-white'
+                                    : 'bg-amber-500 text-white'
+                              )}
+                            >
                               {gap.severity}
                             </span>
                           </div>
@@ -437,26 +436,26 @@ export function DataQuality() {
                 className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
               >
                 <div className="flex items-start gap-3">
-                  <div className={cn(
-                    'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white',
-                    rec.priority === 1 ? 'bg-red-500' :
-                    rec.priority === 2 ? 'bg-orange-500' :
-                    'bg-amber-500'
-                  )}>
+                  <div
+                    className={cn(
+                      'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white',
+                      rec.priority === 1
+                        ? 'bg-red-500'
+                        : rec.priority === 2
+                          ? 'bg-orange-500'
+                          : 'bg-amber-500'
+                    )}
+                  >
                     {rec.priority}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-foreground">{rec.field}</span>
-                      <span className="text-xs text-green-500 font-semibold">
-                        {rec.impact}
-                      </span>
+                      <span className="text-xs text-green-500 font-semibold">{rec.impact}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {rec.action}
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-2">{rec.action}</p>
                     <div className="flex flex-wrap gap-1">
-                      {rec.affected_platforms.map(p => (
+                      {rec.affected_platforms.map((p) => (
                         <span
                           key={p}
                           className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded"
@@ -483,7 +482,7 @@ export function DataQuality() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default DataQuality
+export default DataQuality;

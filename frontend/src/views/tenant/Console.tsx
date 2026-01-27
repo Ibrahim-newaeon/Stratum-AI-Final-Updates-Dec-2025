@@ -5,48 +5,45 @@
  * Always-visible header with EMQ, Confidence, Autopilot mode & allowed actions
  */
 
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { cn } from '@/lib/utils'
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
-  ConfidenceBandBadge,
-  AutopilotModeBanner,
-  ActionCard,
-  BudgetAtRiskChip,
   type Action,
+  ActionCard,
   type AutopilotMode,
-} from '@/components/shared'
+  AutopilotModeBanner,
+  BudgetAtRiskChip,
+  ConfidenceBandBadge,
+} from '@/components/shared';
+import { useAutopilotState, useEmqScore } from '@/api/hooks';
+import { useTenantRecommendations } from '@/api/hooks';
 import {
-  useEmqScore,
-  useAutopilotState,
-} from '@/api/hooks'
-import { useTenantRecommendations } from '@/api/hooks'
-import {
-  ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
-  WrenchScrewdriverIcon,
   CheckCircleIcon,
+  ExclamationTriangleIcon,
+  WrenchScrewdriverIcon,
   XMarkIcon,
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/outline';
 
-type ActionTab = 'all' | 'opportunities' | 'risks' | 'fixes'
+type ActionTab = 'all' | 'opportunities' | 'risks' | 'fixes';
 
 export default function Console() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const tid = parseInt(tenantId || '1', 10)
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const tid = parseInt(tenantId || '1', 10);
 
-  const [activeTab, setActiveTab] = useState<ActionTab>('all')
-  const [appliedActions, setAppliedActions] = useState<Set<string>>(new Set())
-  const [dismissedActions, setDismissedActions] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<ActionTab>('all');
+  const [appliedActions, setAppliedActions] = useState<Set<string>>(new Set());
+  const [dismissedActions, setDismissedActions] = useState<Set<string>>(new Set());
 
   // Fetch data
-  const { data: emqData } = useEmqScore(tid)
-  const { data: autopilotData } = useAutopilotState(tid)
-  const { data: _recommendationsData } = useTenantRecommendations(tid)
+  const { data: emqData } = useEmqScore(tid);
+  const { data: autopilotData } = useAutopilotState(tid);
+  const { data: _recommendationsData } = useTenantRecommendations(tid);
 
-  const emqScore = emqData?.score ?? 85
-  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'normal'
-  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 0
+  const emqScore = emqData?.score ?? 85;
+  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'normal';
+  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 0;
 
   // Sample actions data
   const allActions: Action[] = [
@@ -54,7 +51,8 @@ export default function Console() {
       id: '1',
       type: 'opportunity',
       title: 'Scale "Summer Sale" campaign by 20%',
-      description: 'Campaign has maintained 5.2x ROAS over the past 14 days with consistent performance.',
+      description:
+        'Campaign has maintained 5.2x ROAS over the past 14 days with consistent performance.',
       platform: 'Meta',
       campaign: 'Summer Sale 2024',
       confidence: 94,
@@ -114,43 +112,58 @@ export default function Console() {
       priority: 1,
       createdAt: new Date(),
     },
-  ]
+  ];
 
   // Filter actions
   const filteredActions = allActions
-    .filter(a => !appliedActions.has(a.id) && !dismissedActions.has(a.id))
-    .filter(a => {
-      if (activeTab === 'all') return true
-      if (activeTab === 'opportunities') return a.type === 'opportunity'
-      if (activeTab === 'risks') return a.type === 'risk'
-      if (activeTab === 'fixes') return a.type === 'fix'
-      return true
-    })
+    .filter((a) => !appliedActions.has(a.id) && !dismissedActions.has(a.id))
+    .filter((a) => {
+      if (activeTab === 'all') return true;
+      if (activeTab === 'opportunities') return a.type === 'opportunity';
+      if (activeTab === 'risks') return a.type === 'risk';
+      if (activeTab === 'fixes') return a.type === 'fix';
+      return true;
+    });
 
   // Mode restrictions
-  const isFrozen = autopilotMode === 'frozen'
-  const isCutsOnly = autopilotMode === 'cuts_only'
+  const isFrozen = autopilotMode === 'frozen';
+  const isCutsOnly = autopilotMode === 'cuts_only';
 
   const canApplyAction = (action: Action): boolean => {
-    if (isFrozen) return false
-    if (isCutsOnly && action.type === 'opportunity') return false
-    return true
-  }
+    if (isFrozen) return false;
+    if (isCutsOnly && action.type === 'opportunity') return false;
+    return true;
+  };
 
   const handleApply = (action: Action) => {
-    setAppliedActions(new Set([...appliedActions, action.id]))
-  }
+    setAppliedActions(new Set([...appliedActions, action.id]));
+  };
 
   const handleDismiss = (action: Action) => {
-    setDismissedActions(new Set([...dismissedActions, action.id]))
-  }
+    setDismissedActions(new Set([...dismissedActions, action.id]));
+  };
 
   const tabs = [
     { id: 'all' as const, label: 'All Actions', count: allActions.length },
-    { id: 'opportunities' as const, label: 'Opportunities', icon: ArrowTrendingUpIcon, count: allActions.filter(a => a.type === 'opportunity').length },
-    { id: 'risks' as const, label: 'Risks', icon: ExclamationTriangleIcon, count: allActions.filter(a => a.type === 'risk').length },
-    { id: 'fixes' as const, label: 'Fixes', icon: WrenchScrewdriverIcon, count: allActions.filter(a => a.type === 'fix').length },
-  ]
+    {
+      id: 'opportunities' as const,
+      label: 'Opportunities',
+      icon: ArrowTrendingUpIcon,
+      count: allActions.filter((a) => a.type === 'opportunity').length,
+    },
+    {
+      id: 'risks' as const,
+      label: 'Risks',
+      icon: ExclamationTriangleIcon,
+      count: allActions.filter((a) => a.type === 'risk').length,
+    },
+    {
+      id: 'fixes' as const,
+      label: 'Fixes',
+      icon: WrenchScrewdriverIcon,
+      count: allActions.filter((a) => a.type === 'fix').length,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -175,18 +188,19 @@ export default function Console() {
             <AutopilotModeBanner mode={autopilotMode} compact />
 
             {/* Budget at Risk */}
-            {budgetAtRisk > 0 && (
-              <BudgetAtRiskChip amount={budgetAtRisk} />
-            )}
+            {budgetAtRisk > 0 && <BudgetAtRiskChip amount={budgetAtRisk} />}
           </div>
         </div>
 
         {/* Mode Warning Banner */}
         {(isFrozen || isCutsOnly) && (
-          <div data-tour="allowed-actions" className={cn(
-            'flex items-center gap-3 p-3 rounded-xl',
-            isFrozen ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'
-          )}>
+          <div
+            data-tour="allowed-actions"
+            className={cn(
+              'flex items-center gap-3 p-3 rounded-xl',
+              isFrozen ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'
+            )}
+          >
             <ExclamationTriangleIcon className="w-5 h-5" />
             <div>
               <span className="font-medium">
@@ -205,7 +219,7 @@ export default function Console() {
       {/* Tab Navigation */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-4">
         {tabs.map((tab) => {
-          const Icon = tab.icon
+          const Icon = tab.icon;
           return (
             <button
               key={tab.id}
@@ -219,14 +233,16 @@ export default function Console() {
             >
               {Icon && <Icon className="w-4 h-4" />}
               {tab.label}
-              <span className={cn(
-                'text-xs px-2 py-0.5 rounded-full',
-                activeTab === tab.id ? 'bg-stratum-500/20' : 'bg-surface-tertiary'
-              )}>
+              <span
+                className={cn(
+                  'text-xs px-2 py-0.5 rounded-full',
+                  activeTab === tab.id ? 'bg-stratum-500/20' : 'bg-surface-tertiary'
+                )}
+              >
                 {tab.count}
               </span>
             </button>
-          )
+          );
         })}
       </div>
 
@@ -275,5 +291,5 @@ export default function Console() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -6,18 +6,19 @@ WhatsApp Business API service layer for contact management,
 template handling, and message operations.
 """
 
-from typing import List, Optional, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from datetime import datetime
+from typing import Any, Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
     WhatsAppContact,
-    WhatsAppTemplate,
-    WhatsAppMessage,
     WhatsAppConversation,
-    WhatsAppOptInStatus,
+    WhatsAppMessage,
     WhatsAppMessageStatus,
+    WhatsAppOptInStatus,
+    WhatsAppTemplate,
 )
 
 
@@ -35,11 +36,9 @@ class WhatsAppService:
         skip: int = 0,
         limit: int = 100,
         opt_in_status: Optional[str] = None,
-    ) -> List[WhatsAppContact]:
+    ) -> list[WhatsAppContact]:
         """Get tenant's WhatsApp contacts with optional filtering."""
-        query = select(WhatsAppContact).where(
-            WhatsAppContact.tenant_id == tenant_id
-        )
+        query = select(WhatsAppContact).where(WhatsAppContact.tenant_id == tenant_id)
         if opt_in_status:
             query = query.where(WhatsAppContact.opt_in_status == opt_in_status)
         query = query.offset(skip).limit(limit)
@@ -73,9 +72,7 @@ class WhatsAppService:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def add_contact(
-        db: AsyncSession, contact_data: Dict[str, Any]
-    ) -> WhatsAppContact:
+    async def add_contact(db: AsyncSession, contact_data: dict[str, Any]) -> WhatsAppContact:
         """Add a new WhatsApp contact."""
         contact = WhatsAppContact(**contact_data)
         db.add(contact)
@@ -84,9 +81,7 @@ class WhatsAppService:
         return contact
 
     @staticmethod
-    async def verify_contact(
-        db: AsyncSession, contact_id: int, tenant_id: int
-    ) -> bool:
+    async def verify_contact(db: AsyncSession, contact_id: int, tenant_id: int) -> bool:
         """Mark contact as verified (phone number confirmed)."""
         contact = await WhatsAppService.get_contact_by_id(db, contact_id, tenant_id)
         if contact:
@@ -114,9 +109,7 @@ class WhatsAppService:
         return False
 
     @staticmethod
-    async def opt_out_contact(
-        db: AsyncSession, contact_id: int, tenant_id: int
-    ) -> bool:
+    async def opt_out_contact(db: AsyncSession, contact_id: int, tenant_id: int) -> bool:
         """Opt-out a contact from WhatsApp messages."""
         contact = await WhatsAppService.get_contact_by_id(db, contact_id, tenant_id)
         if contact:
@@ -136,11 +129,9 @@ class WhatsAppService:
         tenant_id: int,
         status: Optional[str] = None,
         category: Optional[str] = None,
-    ) -> List[WhatsAppTemplate]:
+    ) -> list[WhatsAppTemplate]:
         """Get WhatsApp message templates with optional filtering."""
-        query = select(WhatsAppTemplate).where(
-            WhatsAppTemplate.tenant_id == tenant_id
-        )
+        query = select(WhatsAppTemplate).where(WhatsAppTemplate.tenant_id == tenant_id)
         if status:
             query = query.where(WhatsAppTemplate.status == status)
         if category:
@@ -175,9 +166,7 @@ class WhatsAppService:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def create_template(
-        db: AsyncSession, template_data: Dict[str, Any]
-    ) -> WhatsAppTemplate:
+    async def create_template(db: AsyncSession, template_data: dict[str, Any]) -> WhatsAppTemplate:
         """Create a new message template."""
         template = WhatsAppTemplate(**template_data)
         db.add(template)
@@ -194,9 +183,7 @@ class WhatsAppService:
         meta_template_id: Optional[str] = None,
     ) -> bool:
         """Update template status (after Meta approval/rejection)."""
-        template = await WhatsAppService.get_template_by_id(
-            db, template_id, tenant_id
-        )
+        template = await WhatsAppService.get_template_by_id(db, template_id, tenant_id)
         if template:
             template.status = status
             if meta_template_id:
@@ -210,13 +197,9 @@ class WhatsAppService:
     # -------------------------------------------------------------------------
 
     @staticmethod
-    async def send_message(
-        db: AsyncSession, message_data: Dict[str, Any]
-    ) -> WhatsAppMessage:
+    async def send_message(db: AsyncSession, message_data: dict[str, Any]) -> WhatsAppMessage:
         """Queue a WhatsApp message for sending."""
-        message = WhatsAppMessage(
-            **message_data, status=WhatsAppMessageStatus.PENDING
-        )
+        message = WhatsAppMessage(**message_data, status=WhatsAppMessageStatus.PENDING)
         db.add(message)
         await db.commit()
         await db.refresh(message)
@@ -231,17 +214,13 @@ class WhatsAppService:
         conversation_id: Optional[int] = None,
         skip: int = 0,
         limit: int = 100,
-    ) -> List[WhatsAppMessage]:
+    ) -> list[WhatsAppMessage]:
         """Get messages with optional filtering."""
-        query = select(WhatsAppMessage).where(
-            WhatsAppMessage.tenant_id == tenant_id
-        )
+        query = select(WhatsAppMessage).where(WhatsAppMessage.tenant_id == tenant_id)
         if contact_id:
             query = query.where(WhatsAppMessage.contact_id == contact_id)
         if conversation_id:
-            query = query.where(
-                WhatsAppMessage.conversation_id == conversation_id
-            )
+            query = query.where(WhatsAppMessage.conversation_id == conversation_id)
         query = query.order_by(WhatsAppMessage.created_at.desc())
         query = query.offset(skip).limit(limit)
         result = await db.execute(query)
@@ -261,13 +240,9 @@ class WhatsAppService:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def get_message_by_wamid(
-        db: AsyncSession, wamid: str
-    ) -> Optional[WhatsAppMessage]:
+    async def get_message_by_wamid(db: AsyncSession, wamid: str) -> Optional[WhatsAppMessage]:
         """Get a message by WhatsApp Message ID."""
-        result = await db.execute(
-            select(WhatsAppMessage).where(WhatsAppMessage.wamid == wamid)
-        )
+        result = await db.execute(select(WhatsAppMessage).where(WhatsAppMessage.wamid == wamid))
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -297,12 +272,14 @@ class WhatsAppService:
 
             # Append to status history
             status_history = message.status_history or []
-            status_history.append({
-                "status": status,
-                "timestamp": timestamp.isoformat(),
-                "error_code": error_code,
-                "error_message": error_message,
-            })
+            status_history.append(
+                {
+                    "status": status,
+                    "timestamp": timestamp.isoformat(),
+                    "error_code": error_code,
+                    "error_message": error_message,
+                }
+            )
             message.status_history = status_history
 
             await db.commit()
@@ -352,11 +329,9 @@ class WhatsAppService:
         is_active: Optional[bool] = None,
         skip: int = 0,
         limit: int = 100,
-    ) -> List[WhatsAppConversation]:
+    ) -> list[WhatsAppConversation]:
         """Get conversations with optional filtering."""
-        query = select(WhatsAppConversation).where(
-            WhatsAppConversation.tenant_id == tenant_id
-        )
+        query = select(WhatsAppConversation).where(WhatsAppConversation.tenant_id == tenant_id)
         if contact_id:
             query = query.where(WhatsAppConversation.contact_id == contact_id)
         if is_active is not None:
@@ -367,9 +342,7 @@ class WhatsAppService:
         return result.scalars().all()
 
     @staticmethod
-    async def close_conversation(
-        db: AsyncSession, conversation_id: int, tenant_id: int
-    ) -> bool:
+    async def close_conversation(db: AsyncSession, conversation_id: int, tenant_id: int) -> bool:
         """Close an active conversation."""
         result = await db.execute(
             select(WhatsAppConversation).where(

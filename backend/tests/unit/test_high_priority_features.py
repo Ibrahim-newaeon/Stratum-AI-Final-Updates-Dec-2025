@@ -8,21 +8,21 @@ Tests for high priority features:
 3. Creative Performance Tracking
 """
 
-import pytest
-from datetime import datetime, timedelta, timezone
-import statistics
+from datetime import UTC, timedelta
 
+import pytest
 
 # =============================================================================
 # Model A/B Testing Tests
 # =============================================================================
+
 
 class TestModelABTesting:
     """Tests for the Model A/B Testing framework."""
 
     def test_create_experiment(self):
         """Test creating an A/B test experiment."""
-        from app.ml.ab_testing import ModelABTestingService, ExperimentStatus
+        from app.ml.ab_testing import ExperimentStatus, ModelABTestingService
 
         service = ModelABTestingService()
 
@@ -41,7 +41,7 @@ class TestModelABTesting:
 
     def test_start_experiment(self):
         """Test starting an experiment."""
-        from app.ml.ab_testing import ModelABTestingService, ExperimentStatus
+        from app.ml.ab_testing import ExperimentStatus, ModelABTestingService
 
         service = ModelABTestingService()
 
@@ -57,7 +57,7 @@ class TestModelABTesting:
 
     def test_get_variant_deterministic(self):
         """Test that variant assignment is deterministic."""
-        from app.ml.ab_testing import ModelABTestingService, ModelVariant
+        from app.ml.ab_testing import ModelABTestingService
 
         service = ModelABTestingService()
 
@@ -94,7 +94,8 @@ class TestModelABTesting:
 
         # Test with 1000 entities
         challenger_count = sum(
-            1 for i in range(1000)
+            1
+            for i in range(1000)
             if service.get_variant(exp.experiment_id, f"entity_{i}") == ModelVariant.CHALLENGER
         )
 
@@ -127,8 +128,9 @@ class TestModelABTesting:
 
     def test_experiment_evaluation(self):
         """Test experiment evaluation with statistical testing."""
-        from app.ml.ab_testing import ModelABTestingService, ModelVariant
         import random
+
+        from app.ml.ab_testing import ModelABTestingService, ModelVariant
 
         service = ModelABTestingService()
 
@@ -162,7 +164,7 @@ class TestModelABTesting:
 
     def test_stop_experiment(self):
         """Test stopping an experiment."""
-        from app.ml.ab_testing import ModelABTestingService, ExperimentStatus
+        from app.ml.ab_testing import ExperimentStatus, ModelABTestingService
 
         service = ModelABTestingService()
 
@@ -179,8 +181,9 @@ class TestModelABTesting:
 
     def test_list_experiments(self):
         """Test listing experiments."""
-        from app.ml.ab_testing import ModelABTestingService, ExperimentStatus
         import time
+
+        from app.ml.ab_testing import ExperimentStatus, ModelABTestingService
 
         service = ModelABTestingService()
 
@@ -212,6 +215,7 @@ class TestModelABTesting:
 # =============================================================================
 # Conversion Latency Tracking Tests
 # =============================================================================
+
 
 class TestConversionLatencyTracking:
     """Tests for the Conversion Latency Tracking service."""
@@ -311,8 +315,8 @@ class TestConversionLatencyTracking:
 
     def test_latency_timeline(self):
         """Test getting latency timeline for charting."""
+
         from app.services.conversion_latency_service import ConversionLatencyTracker
-        from datetime import datetime, timezone
 
         tracker = ConversionLatencyTracker()
 
@@ -366,7 +370,9 @@ class TestConversionLatencyTracking:
     def test_convenience_functions(self):
         """Test convenience functions."""
         from app.services.conversion_latency_service import (
-            track_click, track_conversion, get_conversion_latency_stats
+            get_conversion_latency_stats,
+            track_click,
+            track_conversion,
         )
 
         # Track a click
@@ -386,13 +392,16 @@ class TestConversionLatencyTracking:
 # Creative Performance Tracking Tests
 # =============================================================================
 
+
 class TestCreativePerformanceTracking:
     """Tests for the Creative Performance Tracking service."""
 
     def test_register_creative(self):
         """Test registering a creative."""
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeType, CreativeStatus
+            CreativePerformanceService,
+            CreativeStatus,
+            CreativeType,
         )
 
         service = CreativePerformanceService()
@@ -413,7 +422,8 @@ class TestCreativePerformanceTracking:
     def test_record_metrics(self):
         """Test recording creative metrics."""
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics
+            CreativeMetrics,
+            CreativePerformanceService,
         )
 
         service = CreativePerformanceService()
@@ -463,10 +473,12 @@ class TestCreativePerformanceTracking:
 
     def test_fatigue_detection(self):
         """Test creative fatigue detection."""
+
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics, FatigueLevel
+            CreativeMetrics,
+            CreativePerformanceService,
+            FatigueLevel,
         )
-        from datetime import datetime, timedelta, timezone
 
         service = CreativePerformanceService()
 
@@ -474,7 +486,7 @@ class TestCreativePerformanceTracking:
 
         # Simulate 14 days of data with declining performance
         for day in range(14):
-            date = datetime.now(timezone.utc) - timedelta(days=14-day)
+            date = datetime.now(UTC) - timedelta(days=14 - day)
 
             # First week: good performance
             if day < 7:
@@ -514,10 +526,12 @@ class TestCreativePerformanceTracking:
 
     def test_analyze_fatigue(self):
         """Test fatigue analysis."""
+        from datetime import timedelta
+
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics
+            CreativeMetrics,
+            CreativePerformanceService,
         )
-        from datetime import datetime, timedelta, timezone
 
         service = CreativePerformanceService()
 
@@ -525,7 +539,7 @@ class TestCreativePerformanceTracking:
 
         # Add some daily data
         for day in range(10):
-            date = datetime.now(timezone.utc) - timedelta(days=10-day)
+            date = datetime.now(UTC) - timedelta(days=10 - day)
             service.record_metrics(
                 creative_id=creative_id,
                 tenant_id="tenant_1",
@@ -550,16 +564,17 @@ class TestCreativePerformanceTracking:
 
     def test_compare_creatives(self):
         """Test comparing creatives."""
+
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics
+            CreativeMetrics,
+            CreativePerformanceService,
         )
-        from datetime import datetime, timezone
 
         service = CreativePerformanceService()
 
         # Create two creatives with different performance
         for day in range(7):
-            date = datetime.now(timezone.utc)
+            date = datetime.now(UTC)
 
             # Creative 1: Better ROAS
             service.record_metrics(
@@ -594,19 +609,21 @@ class TestCreativePerformanceTracking:
             )
 
         comparison = service.compare_creatives(
-            ["compare_creative_1", "compare_creative_2"],
-            metric="roas"
+            ["compare_creative_1", "compare_creative_2"], metric="roas"
         )
 
         assert comparison is not None
         assert comparison.winner_id == "compare_creative_1"
-        assert comparison.metrics_comparison["compare_creative_1"]["roas"] > \
-               comparison.metrics_comparison["compare_creative_2"]["roas"]
+        assert (
+            comparison.metrics_comparison["compare_creative_1"]["roas"]
+            > comparison.metrics_comparison["compare_creative_2"]["roas"]
+        )
 
     def test_get_top_creatives(self):
         """Test getting top performing creatives."""
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics
+            CreativeMetrics,
+            CreativePerformanceService,
         )
 
         service = CreativePerformanceService()
@@ -635,10 +652,13 @@ class TestCreativePerformanceTracking:
 
     def test_get_fatigued_creatives(self):
         """Test getting fatigued creatives."""
+        from datetime import datetime
+
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics, FatigueLevel
+            CreativeMetrics,
+            CreativePerformanceService,
+            FatigueLevel,
         )
-        from datetime import datetime, timedelta, timezone
 
         service = CreativePerformanceService()
 
@@ -646,7 +666,7 @@ class TestCreativePerformanceTracking:
         creative_id = "fatigued_creative"
 
         for day in range(14):
-            date = datetime.now(timezone.utc) - timedelta(days=14-day)
+            date = datetime.now(UTC) - timedelta(days=14 - day)
             ctr = 5.0 if day < 7 else 2.0  # Significant drop
 
             impressions = 10000
@@ -668,8 +688,7 @@ class TestCreativePerformanceTracking:
             )
 
         fatigued = service.get_fatigued_creatives(
-            tenant_id="fatigue_tenant",
-            min_fatigue_level=FatigueLevel.LOW
+            tenant_id="fatigue_tenant", min_fatigue_level=FatigueLevel.LOW
         )
 
         # Should have at least our fatigued creative
@@ -678,7 +697,9 @@ class TestCreativePerformanceTracking:
     def test_creative_type_performance(self):
         """Test getting performance by creative type."""
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics, CreativeType
+            CreativeMetrics,
+            CreativePerformanceService,
+            CreativeType,
         )
 
         service = CreativePerformanceService()
@@ -723,7 +744,8 @@ class TestCreativePerformanceTracking:
     def test_get_summary(self):
         """Test getting creative summary."""
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics
+            CreativeMetrics,
+            CreativePerformanceService,
         )
 
         service = CreativePerformanceService()
@@ -753,9 +775,8 @@ class TestCreativePerformanceTracking:
     def test_convenience_functions(self):
         """Test convenience functions."""
         from app.services.creative_performance_service import (
-            record_creative_metrics,
-            get_top_performing_creatives,
             creative_service,
+            record_creative_metrics,
         )
 
         record_creative_metrics(
@@ -779,13 +800,15 @@ class TestCreativePerformanceTracking:
 # Integration Tests
 # =============================================================================
 
+
 class TestHighPriorityIntegration:
     """Integration tests for high priority features."""
 
     def test_ab_test_with_metrics_tracking(self):
         """Test A/B testing integrated with metrics tracking."""
-        from app.ml.ab_testing import ModelABTestingService, ModelVariant
         import random
+
+        from app.ml.ab_testing import ModelABTestingService, ModelVariant
 
         service = ModelABTestingService()
 
@@ -824,7 +847,8 @@ class TestHighPriorityIntegration:
         """Test latency tracking alongside creative metrics."""
         from app.services.conversion_latency_service import ConversionLatencyTracker
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics
+            CreativeMetrics,
+            CreativePerformanceService,
         )
 
         latency_tracker = ConversionLatencyTracker()
@@ -865,10 +889,12 @@ class TestHighPriorityIntegration:
 
     def test_end_to_end_creative_optimization(self):
         """Test end-to-end creative optimization workflow."""
+
         from app.services.creative_performance_service import (
-            CreativePerformanceService, CreativeMetrics, CreativeType, FatigueLevel
+            CreativeMetrics,
+            CreativePerformanceService,
+            CreativeType,
         )
-        from datetime import datetime, timedelta, timezone
 
         service = CreativePerformanceService()
 
@@ -876,7 +902,7 @@ class TestHighPriorityIntegration:
         creative_ids = ["creative_a", "creative_b", "creative_c"]
 
         for day in range(30):
-            date = datetime.now(timezone.utc) - timedelta(days=30-day)
+            date = datetime.now(UTC) - timedelta(days=30 - day)
 
             for idx, creative_id in enumerate(creative_ids):
                 # Different performance trajectories

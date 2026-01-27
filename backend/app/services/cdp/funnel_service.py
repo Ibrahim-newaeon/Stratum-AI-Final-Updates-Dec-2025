@@ -11,23 +11,23 @@ Provides functionality for:
 - Conversion rate analytics
 """
 
-import time
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Optional, List, Dict, Any, Tuple
-from uuid import UUID
 import re
+import time
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Optional
+from uuid import UUID
 
 import structlog
-from sqlalchemy import select, func, delete
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.cdp import (
+    CDPEvent,
     CDPFunnel,
     CDPFunnelEntry,
     CDPProfile,
-    CDPEvent,
     FunnelStatus,
 )
 
@@ -42,11 +42,11 @@ class FunnelStepEvaluator:
     async def check_step_completion(
         self,
         profile_id: UUID,
-        step: Dict[str, Any],
-        events: List[CDPEvent],
+        step: dict[str, Any],
+        events: list[CDPEvent],
         after_time: Optional[datetime] = None,
         before_time: Optional[datetime] = None,
-    ) -> Tuple[bool, Optional[datetime]]:
+    ) -> tuple[bool, Optional[datetime]]:
         """
         Check if a profile completed a funnel step.
 
@@ -73,7 +73,7 @@ class FunnelStepEvaluator:
 
         return False, None
 
-    def _check_conditions(self, event: CDPEvent, conditions: List[Dict]) -> bool:
+    def _check_conditions(self, event: CDPEvent, conditions: list[dict]) -> bool:
         """Check if event matches all conditions."""
         if not conditions:
             return True
@@ -147,13 +147,13 @@ class FunnelService:
     async def create_funnel(
         self,
         name: str,
-        steps: List[Dict[str, Any]],
+        steps: list[dict[str, Any]],
         description: Optional[str] = None,
         conversion_window_days: int = 30,
         step_timeout_hours: Optional[int] = None,
         auto_refresh: bool = True,
         refresh_interval_hours: int = 24,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         created_by_user_id: Optional[int] = None,
     ) -> CDPFunnel:
         """Create a new funnel definition."""
@@ -213,7 +213,7 @@ class FunnelService:
         status: Optional[str] = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> Tuple[List[CDPFunnel], int]:
+    ) -> tuple[list[CDPFunnel], int]:
         """List all funnels for tenant."""
         query = select(CDPFunnel).where(CDPFunnel.tenant_id == self.tenant_id)
 
@@ -243,8 +243,14 @@ class FunnelService:
             return None
 
         allowed_fields = {
-            "name", "description", "steps", "conversion_window_days",
-            "step_timeout_hours", "auto_refresh", "refresh_interval_hours", "tags"
+            "name",
+            "description",
+            "steps",
+            "conversion_window_days",
+            "step_timeout_hours",
+            "auto_refresh",
+            "refresh_interval_hours",
+            "tags",
         }
 
         for field, value in updates.items():
@@ -292,7 +298,7 @@ class FunnelService:
         self,
         funnel_id: UUID,
         batch_size: int = 500,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Compute funnel metrics by analyzing all profiles.
 
@@ -345,9 +351,7 @@ class FunnelService:
                 break
 
             for profile in profiles:
-                entry = await self._process_profile_funnel(
-                    profile, funnel, steps
-                )
+                entry = await self._process_profile_funnel(profile, funnel, steps)
 
                 if entry:
                     total_entered += 1
@@ -370,15 +374,17 @@ class FunnelService:
             conversion_rate = (count / total_entered * 100) if total_entered > 0 else 0
             drop_off_rate = ((prev_count - count) / prev_count * 100) if prev_count > 0 else 0
 
-            step_metrics.append({
-                "step": i,
-                "name": step.get("step_name", step.get("event_name", f"Step {i}")),
-                "event_name": step.get("event_name"),
-                "count": count,
-                "conversion_rate": round(conversion_rate, 2),
-                "drop_off_rate": round(drop_off_rate, 2),
-                "drop_off_count": prev_count - count if i > 1 else 0,
-            })
+            step_metrics.append(
+                {
+                    "step": i,
+                    "name": step.get("step_name", step.get("event_name", f"Step {i}")),
+                    "event_name": step.get("event_name"),
+                    "count": count,
+                    "conversion_rate": round(conversion_rate, 2),
+                    "drop_off_rate": round(drop_off_rate, 2),
+                    "drop_off_count": prev_count - count if i > 1 else 0,
+                }
+            )
 
         # Update funnel metrics
         overall_rate = (total_converted / total_entered * 100) if total_entered > 0 else 0
@@ -388,11 +394,11 @@ class FunnelService:
         funnel.overall_conversion_rate = Decimal(str(round(overall_rate, 2)))
         funnel.step_metrics = step_metrics
         funnel.status = FunnelStatus.ACTIVE.value
-        funnel.last_computed_at = datetime.now(timezone.utc)
+        funnel.last_computed_at = datetime.now(UTC)
         funnel.computation_duration_ms = int((time.time() - start_time) * 1000)
 
         if funnel.auto_refresh:
-            funnel.next_refresh_at = datetime.now(timezone.utc) + timedelta(
+            funnel.next_refresh_at = datetime.now(UTC) + timedelta(
                 hours=funnel.refresh_interval_hours
             )
 
@@ -421,7 +427,7 @@ class FunnelService:
         self,
         profile: CDPProfile,
         funnel: CDPFunnel,
-        steps: List[Dict],
+        steps: list[dict],
     ) -> Optional[CDPFunnelEntry]:
         """
         Process a single profile through the funnel.
@@ -429,10 +435,7 @@ class FunnelService:
         Returns a funnel entry if the profile completed at least step 1.
         """
         # Get all events for this profile (ordered by time)
-        events = sorted(
-            list(profile.events),
-            key=lambda e: e.event_time
-        )
+        events = sorted(list(profile.events), key=lambda e: e.event_time)
 
         if not events:
             return None
@@ -471,7 +474,9 @@ class FunnelService:
                 max_time = min(max_time, step_deadline)
 
             completed, step_time = await self.evaluator.check_step_completion(
-                profile.id, step, events,
+                profile.id,
+                step,
+                events,
                 after_time=min_time,
                 before_time=max_time,
             )
@@ -488,9 +493,7 @@ class FunnelService:
         if entry.completed_steps == len(steps):
             entry.is_converted = True
             entry.converted_at = last_step_time
-            entry.total_duration_seconds = int(
-                (last_step_time - step1_time).total_seconds()
-            )
+            entry.total_duration_seconds = int((last_step_time - step1_time).total_seconds())
 
         self.db.add(entry)
         return entry
@@ -504,7 +507,7 @@ class FunnelService:
         funnel_id: UUID,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get detailed funnel analysis with time-based filtering.
         """
@@ -542,24 +545,28 @@ class FunnelService:
             count = step_counts[i]
             prev_count = step_counts.get(i - 1, total_entered) if i > 1 else total_entered
 
-            step_analysis.append({
-                "step": i,
-                "name": step.get("step_name", step.get("event_name", f"Step {i}")),
-                "event_name": step.get("event_name"),
-                "count": count,
-                "conversion_rate_from_start": round(
-                    (count / total_entered * 100) if total_entered > 0 else 0, 2
-                ),
-                "conversion_rate_from_prev": round(
-                    (count / prev_count * 100) if prev_count > 0 else 0, 2
-                ),
-                "drop_off_count": prev_count - count if i > 1 else 0,
-            })
+            step_analysis.append(
+                {
+                    "step": i,
+                    "name": step.get("step_name", step.get("event_name", f"Step {i}")),
+                    "event_name": step.get("event_name"),
+                    "count": count,
+                    "conversion_rate_from_start": round(
+                        (count / total_entered * 100) if total_entered > 0 else 0, 2
+                    ),
+                    "conversion_rate_from_prev": round(
+                        (count / prev_count * 100) if prev_count > 0 else 0, 2
+                    ),
+                    "drop_off_count": prev_count - count if i > 1 else 0,
+                }
+            )
 
         # Time analysis for converted users
         avg_duration = None
         if converted_entries:
-            durations = [e.total_duration_seconds for e in converted_entries if e.total_duration_seconds]
+            durations = [
+                e.total_duration_seconds for e in converted_entries if e.total_duration_seconds
+            ]
             if durations:
                 avg_duration = sum(durations) / len(durations)
 
@@ -583,7 +590,7 @@ class FunnelService:
         self,
         profile_id: UUID,
         funnel_id: Optional[UUID] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get a profile's journey through funnels.
         """
@@ -595,25 +602,25 @@ class FunnelService:
         if funnel_id:
             query = query.where(CDPFunnelEntry.funnel_id == funnel_id)
 
-        result = await self.db.execute(
-            query.options(selectinload(CDPFunnelEntry.funnel))
-        )
+        result = await self.db.execute(query.options(selectinload(CDPFunnelEntry.funnel)))
         entries = list(result.scalars().all())
 
         journeys = []
         for entry in entries:
-            journeys.append({
-                "funnel_id": str(entry.funnel_id),
-                "funnel_name": entry.funnel.name if entry.funnel else None,
-                "entered_at": entry.entered_at.isoformat(),
-                "converted_at": entry.converted_at.isoformat() if entry.converted_at else None,
-                "is_converted": entry.is_converted,
-                "current_step": entry.current_step,
-                "completed_steps": entry.completed_steps,
-                "total_steps": len(entry.funnel.steps) if entry.funnel else None,
-                "step_timestamps": entry.step_timestamps,
-                "total_duration_seconds": entry.total_duration_seconds,
-            })
+            journeys.append(
+                {
+                    "funnel_id": str(entry.funnel_id),
+                    "funnel_name": entry.funnel.name if entry.funnel else None,
+                    "entered_at": entry.entered_at.isoformat(),
+                    "converted_at": entry.converted_at.isoformat() if entry.converted_at else None,
+                    "is_converted": entry.is_converted,
+                    "current_step": entry.current_step,
+                    "completed_steps": entry.completed_steps,
+                    "total_steps": len(entry.funnel.steps) if entry.funnel else None,
+                    "step_timestamps": entry.step_timestamps,
+                    "total_duration_seconds": entry.total_duration_seconds,
+                }
+            )
 
         return journeys
 
@@ -623,7 +630,7 @@ class FunnelService:
         at_step: int,
         limit: int = 100,
         offset: int = 0,
-    ) -> Tuple[List[CDPProfile], int]:
+    ) -> tuple[list[CDPProfile], int]:
         """
         Get profiles that dropped off at a specific step.
         """
@@ -648,10 +655,7 @@ class FunnelService:
 
         # Get paginated entries with profiles
         result = await self.db.execute(
-            query
-            .options(selectinload(CDPFunnelEntry.profile))
-            .limit(limit)
-            .offset(offset)
+            query.options(selectinload(CDPFunnelEntry.profile)).limit(limit).offset(offset)
         )
         entries = list(result.scalars().all())
 

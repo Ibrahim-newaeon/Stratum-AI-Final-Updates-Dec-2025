@@ -5,37 +5,37 @@
  * to keep users informed about platform changes.
  */
 
-import * as React from 'react'
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  X,
-  Sparkles,
-  Zap,
-  Bug,
-  Wrench,
   ArrowRight,
+  Bug,
   ExternalLink,
   Gift,
-  Star,
   Rocket,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Sparkles,
+  Star,
+  Wrench,
+  X,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-type ChangeType = 'feature' | 'improvement' | 'fix' | 'breaking'
+type ChangeType = 'feature' | 'improvement' | 'fix' | 'breaking';
 
 interface Change {
-  type: ChangeType
-  title: string
-  description?: string
+  type: ChangeType;
+  title: string;
+  description?: string;
 }
 
 interface Release {
-  version: string
-  date: string
-  title: string
-  highlights?: string[]
-  changes: Change[]
+  version: string;
+  date: string;
+  title: string;
+  highlights?: string[];
+  changes: Change[];
 }
 
 const RELEASES: Release[] = [
@@ -49,12 +49,36 @@ const RELEASES: Release[] = [
       'Slack Integration for Trust Gate alerts',
     ],
     changes: [
-      { type: 'feature', title: 'Command Palette', description: 'Search and navigate anywhere with Cmd+K' },
-      { type: 'feature', title: 'Interactive Demo Mode', description: 'Experience Stratum AI with sample data' },
-      { type: 'feature', title: 'Slack Integration', description: 'Receive Trust Gate alerts in Slack' },
-      { type: 'feature', title: 'PDF Report Export', description: 'One-click professional dashboard exports' },
-      { type: 'feature', title: 'Notification Center', description: 'Real-time alerts and activity hub' },
-      { type: 'improvement', title: 'Enhanced Glossary', description: 'Industry benchmarks for all metrics' },
+      {
+        type: 'feature',
+        title: 'Command Palette',
+        description: 'Search and navigate anywhere with Cmd+K',
+      },
+      {
+        type: 'feature',
+        title: 'Interactive Demo Mode',
+        description: 'Experience Stratum AI with sample data',
+      },
+      {
+        type: 'feature',
+        title: 'Slack Integration',
+        description: 'Receive Trust Gate alerts in Slack',
+      },
+      {
+        type: 'feature',
+        title: 'PDF Report Export',
+        description: 'One-click professional dashboard exports',
+      },
+      {
+        type: 'feature',
+        title: 'Notification Center',
+        description: 'Real-time alerts and activity hub',
+      },
+      {
+        type: 'improvement',
+        title: 'Enhanced Glossary',
+        description: 'Industry benchmarks for all metrics',
+      },
     ],
   },
   {
@@ -62,10 +86,26 @@ const RELEASES: Release[] = [
     date: 'January 2026',
     title: 'Security & Payments',
     changes: [
-      { type: 'feature', title: 'Stripe Integration', description: 'Subscription payments and billing portal' },
-      { type: 'feature', title: 'MFA Authentication', description: 'Two-factor authentication with TOTP' },
-      { type: 'feature', title: 'Subscription Enforcement', description: 'Tier-based feature gating' },
-      { type: 'improvement', title: 'RLS Security', description: 'Row-level security for tenant isolation' },
+      {
+        type: 'feature',
+        title: 'Stripe Integration',
+        description: 'Subscription payments and billing portal',
+      },
+      {
+        type: 'feature',
+        title: 'MFA Authentication',
+        description: 'Two-factor authentication with TOTP',
+      },
+      {
+        type: 'feature',
+        title: 'Subscription Enforcement',
+        description: 'Tier-based feature gating',
+      },
+      {
+        type: 'improvement',
+        title: 'RLS Security',
+        description: 'Row-level security for tenant isolation',
+      },
       { type: 'fix', title: 'OAuth Token Refresh', description: 'Fixed token expiration handling' },
     ],
   },
@@ -74,10 +114,26 @@ const RELEASES: Release[] = [
     date: 'December 2025',
     title: 'AI Landing & Marketing Kit',
     changes: [
-      { type: 'feature', title: 'AI Landing Page', description: 'Modern landing with trust engine showcase' },
-      { type: 'feature', title: 'SaaS Glossary', description: '120+ terms with industry benchmarks' },
-      { type: 'feature', title: 'Tier Landing Pages', description: 'Dedicated pages for each pricing tier' },
-      { type: 'improvement', title: 'Battle Cards', description: 'Competitive comparison components' },
+      {
+        type: 'feature',
+        title: 'AI Landing Page',
+        description: 'Modern landing with trust engine showcase',
+      },
+      {
+        type: 'feature',
+        title: 'SaaS Glossary',
+        description: '120+ terms with industry benchmarks',
+      },
+      {
+        type: 'feature',
+        title: 'Tier Landing Pages',
+        description: 'Dedicated pages for each pricing tier',
+      },
+      {
+        type: 'improvement',
+        title: 'Battle Cards',
+        description: 'Competitive comparison components',
+      },
     ],
   },
   {
@@ -85,10 +141,26 @@ const RELEASES: Release[] = [
     date: 'December 2025',
     title: 'CDP Audience Sync',
     changes: [
-      { type: 'feature', title: 'Multi-Platform Sync', description: 'Push segments to Meta, Google, TikTok, Snapchat' },
-      { type: 'feature', title: 'Auto-Sync Scheduling', description: 'Configurable sync intervals' },
-      { type: 'feature', title: 'Match Rate Tracking', description: 'Monitor audience match performance' },
-      { type: 'improvement', title: 'Identity Resolution', description: 'Enhanced cross-device tracking' },
+      {
+        type: 'feature',
+        title: 'Multi-Platform Sync',
+        description: 'Push segments to Meta, Google, TikTok, Snapchat',
+      },
+      {
+        type: 'feature',
+        title: 'Auto-Sync Scheduling',
+        description: 'Configurable sync intervals',
+      },
+      {
+        type: 'feature',
+        title: 'Match Rate Tracking',
+        description: 'Monitor audience match performance',
+      },
+      {
+        type: 'improvement',
+        title: 'Identity Resolution',
+        description: 'Enhanced cross-device tracking',
+      },
     ],
   },
   {
@@ -96,65 +168,86 @@ const RELEASES: Release[] = [
     date: 'November 2025',
     title: 'AI & ML Features',
     changes: [
-      { type: 'feature', title: 'LTV Prediction', description: 'ML-powered customer lifetime value forecasting' },
-      { type: 'feature', title: 'SHAP Explainability', description: 'Understand why predictions were made' },
-      { type: 'feature', title: 'Bayesian A/B Testing', description: 'Probabilistic experiment analysis' },
-      { type: 'feature', title: 'Churn Prediction', description: 'Identify at-risk customers early' },
+      {
+        type: 'feature',
+        title: 'LTV Prediction',
+        description: 'ML-powered customer lifetime value forecasting',
+      },
+      {
+        type: 'feature',
+        title: 'SHAP Explainability',
+        description: 'Understand why predictions were made',
+      },
+      {
+        type: 'feature',
+        title: 'Bayesian A/B Testing',
+        description: 'Probabilistic experiment analysis',
+      },
+      {
+        type: 'feature',
+        title: 'Churn Prediction',
+        description: 'Identify at-risk customers early',
+      },
     ],
   },
-]
+];
 
 const getChangeIcon = (type: ChangeType) => {
   switch (type) {
     case 'feature':
-      return { icon: Sparkles, color: 'text-purple-500', bg: 'bg-purple-500/10' }
+      return { icon: Sparkles, color: 'text-purple-500', bg: 'bg-purple-500/10' };
     case 'improvement':
-      return { icon: Zap, color: 'text-cyan-500', bg: 'bg-cyan-500/10' }
+      return { icon: Zap, color: 'text-cyan-500', bg: 'bg-cyan-500/10' };
     case 'fix':
-      return { icon: Bug, color: 'text-green-500', bg: 'bg-green-500/10' }
+      return { icon: Bug, color: 'text-green-500', bg: 'bg-green-500/10' };
     case 'breaking':
-      return { icon: Wrench, color: 'text-orange-500', bg: 'bg-orange-500/10' }
+      return { icon: Wrench, color: 'text-orange-500', bg: 'bg-orange-500/10' };
     default:
-      return { icon: Star, color: 'text-gray-500', bg: 'bg-gray-500/10' }
+      return { icon: Star, color: 'text-gray-500', bg: 'bg-gray-500/10' };
   }
-}
+};
 
 const getChangeLabel = (type: ChangeType) => {
   switch (type) {
-    case 'feature': return 'New'
-    case 'improvement': return 'Improved'
-    case 'fix': return 'Fixed'
-    case 'breaking': return 'Breaking'
-    default: return 'Update'
+    case 'feature':
+      return 'New';
+    case 'improvement':
+      return 'Improved';
+    case 'fix':
+      return 'Fixed';
+    case 'breaking':
+      return 'Breaking';
+    default:
+      return 'Update';
   }
-}
+};
 
 interface WhatsNewModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
-  const [selectedRelease, setSelectedRelease] = useState(0)
-  const currentRelease = RELEASES[selectedRelease]
+  const [selectedRelease, setSelectedRelease] = useState(0);
+  const currentRelease = RELEASES[selectedRelease];
 
   // Mark as seen in localStorage
   useEffect(() => {
     if (isOpen) {
-      localStorage.setItem('stratum_last_seen_version', RELEASES[0].version)
+      localStorage.setItem('stratum_last_seen_version', RELEASES[0].version);
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   // Close on escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+      if (e.key === 'Escape') onClose();
+    };
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -209,10 +302,10 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                       key={release.version}
                       onClick={() => setSelectedRelease(index)}
                       className={cn(
-                        "w-full text-left px-3 py-2.5 rounded-lg transition-colors",
+                        'w-full text-left px-3 py-2.5 rounded-lg transition-colors',
                         selectedRelease === index
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-accent"
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-accent'
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -221,10 +314,14 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                         )}
                         <span className="font-semibold text-sm">v{release.version}</span>
                       </div>
-                      <span className={cn(
-                        "text-xs",
-                        selectedRelease === index ? "text-primary-foreground/70" : "text-muted-foreground"
-                      )}>
+                      <span
+                        className={cn(
+                          'text-xs',
+                          selectedRelease === index
+                            ? 'text-primary-foreground/70'
+                            : 'text-muted-foreground'
+                        )}
+                      >
                         {release.date}
                       </span>
                     </button>
@@ -278,25 +375,32 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                     {/* Changes List */}
                     <div className="space-y-3">
                       {currentRelease.changes.map((change, index) => {
-                        const { icon: Icon, color, bg } = getChangeIcon(change.type)
+                        const { icon: Icon, color, bg } = getChangeIcon(change.type);
                         return (
                           <div
                             key={index}
                             className="flex items-start gap-3 p-3 rounded-xl hover:bg-accent/50 transition-colors"
                           >
-                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", bg)}>
-                              <Icon className={cn("h-4 w-4", color)} />
+                            <div
+                              className={cn(
+                                'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                                bg
+                              )}
+                            >
+                              <Icon className={cn('h-4 w-4', color)} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-sm">{change.title}</span>
-                                <span className={cn(
-                                  "px-1.5 py-0.5 rounded text-[10px] font-medium uppercase",
-                                  change.type === 'feature' && "bg-purple-500/10 text-purple-500",
-                                  change.type === 'improvement' && "bg-cyan-500/10 text-cyan-500",
-                                  change.type === 'fix' && "bg-green-500/10 text-green-500",
-                                  change.type === 'breaking' && "bg-orange-500/10 text-orange-500",
-                                )}>
+                                <span
+                                  className={cn(
+                                    'px-1.5 py-0.5 rounded text-[10px] font-medium uppercase',
+                                    change.type === 'feature' && 'bg-purple-500/10 text-purple-500',
+                                    change.type === 'improvement' && 'bg-cyan-500/10 text-cyan-500',
+                                    change.type === 'fix' && 'bg-green-500/10 text-green-500',
+                                    change.type === 'breaking' && 'bg-orange-500/10 text-orange-500'
+                                  )}
+                                >
                                   {getChangeLabel(change.type)}
                                 </span>
                               </div>
@@ -307,7 +411,7 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                               )}
                             </div>
                           </div>
-                        )
+                        );
                       })}
                     </div>
                   </motion.div>
@@ -335,22 +439,22 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
 /**
  * Hook to check if user has new updates
  */
 export function useWhatsNew() {
-  const [hasNewUpdates, setHasNewUpdates] = useState(false)
+  const [hasNewUpdates, setHasNewUpdates] = useState(false);
 
   useEffect(() => {
-    const lastSeen = localStorage.getItem('stratum_last_seen_version')
-    const latestVersion = RELEASES[0].version
-    setHasNewUpdates(lastSeen !== latestVersion)
-  }, [])
+    const lastSeen = localStorage.getItem('stratum_last_seen_version');
+    const latestVersion = RELEASES[0].version;
+    setHasNewUpdates(lastSeen !== latestVersion);
+  }, []);
 
-  return { hasNewUpdates, latestVersion: RELEASES[0].version }
+  return { hasNewUpdates, latestVersion: RELEASES[0].version };
 }
 
-export default WhatsNewModal
+export default WhatsNewModal;

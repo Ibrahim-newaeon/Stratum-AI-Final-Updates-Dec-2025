@@ -48,24 +48,26 @@ Running the Server
     gunicorn app.stratum.webhooks:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
 """
 
+import asyncio
 import hashlib
 import hmac
 import json
 import logging
 import os
+from collections.abc import Callable
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Callable
+from typing import Any, Optional
 
-from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, Query, Header
+from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-import asyncio
 
 logger = logging.getLogger("app.stratum.webhooks")
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
+
 
 class WebhookConfig:
     """
@@ -118,11 +120,11 @@ config = WebhookConfig()
 app = FastAPI(
     title="Stratum AI Webhook Server",
     description="Receives real-time updates from advertising platforms",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Event handlers registry
-_event_handlers: Dict[str, List[Callable]] = {
+_event_handlers: dict[str, list[Callable]] = {
     "meta_lead": [],
     "meta_ad_change": [],
     "whatsapp_message": [],
@@ -134,13 +136,15 @@ _event_handlers: Dict[str, List[Callable]] = {
 
 def register_handler(event_type: str):
     """Decorator to register webhook event handlers."""
+
     def decorator(func: Callable):
         _event_handlers.setdefault(event_type, []).append(func)
         return func
+
     return decorator
 
 
-async def dispatch_event(event_type: str, data: Dict[str, Any]):
+async def dispatch_event(event_type: str, data: dict[str, Any]):
     """Dispatch event to all registered handlers."""
     handlers = _event_handlers.get(event_type, [])
     for handler in handlers:
@@ -157,6 +161,7 @@ async def dispatch_event(event_type: str, data: Dict[str, Any]):
 # SIGNATURE VERIFICATION
 # =============================================================================
 
+
 def verify_meta_signature(payload: bytes, signature: str, secret: str) -> bool:
     """
     Verify Meta/WhatsApp webhook signature.
@@ -167,11 +172,7 @@ def verify_meta_signature(payload: bytes, signature: str, secret: str) -> bool:
         logger.warning("No app secret configured, skipping signature verification")
         return True
 
-    expected = hmac.new(
-        secret.encode('utf-8'),
-        payload,
-        hashlib.sha256
-    ).hexdigest()
+    expected = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
 
     expected_signature = f"sha256={expected}"
     return hmac.compare_digest(expected_signature, signature)
@@ -182,11 +183,7 @@ def verify_tiktok_signature(payload: bytes, signature: str, secret: str) -> bool
     if not secret:
         return True
 
-    expected = hmac.new(
-        secret.encode('utf-8'),
-        payload,
-        hashlib.sha256
-    ).hexdigest()
+    expected = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
 
     return hmac.compare_digest(expected, signature)
 
@@ -196,11 +193,7 @@ def verify_internal_signature(payload: bytes, signature: str) -> bool:
     if not config.WEBHOOK_SECRET:
         return True
 
-    expected = hmac.new(
-        config.WEBHOOK_SECRET.encode('utf-8'),
-        payload,
-        hashlib.sha256
-    ).hexdigest()
+    expected = hmac.new(config.WEBHOOK_SECRET.encode("utf-8"), payload, hashlib.sha256).hexdigest()
 
     return hmac.compare_digest(expected, signature)
 
@@ -209,11 +202,12 @@ def verify_internal_signature(payload: bytes, signature: str) -> bool:
 # META WEBHOOKS (Facebook/Instagram Ads)
 # =============================================================================
 
+
 @app.get("/webhooks/meta")
 async def meta_webhook_verify(
     hub_mode: str = Query(None, alias="hub.mode"),
     hub_verify_token: str = Query(None, alias="hub.verify_token"),
-    hub_challenge: str = Query(None, alias="hub.challenge")
+    hub_challenge: str = Query(None, alias="hub.challenge"),
 ):
     """
     Meta webhook verification endpoint.
@@ -239,7 +233,7 @@ async def meta_webhook_verify(
 async def meta_webhook_receive(
     request: Request,
     background_tasks: BackgroundTasks,
-    x_hub_signature_256: str = Header(None, alias="X-Hub-Signature-256")
+    x_hub_signature_256: str = Header(None, alias="X-Hub-Signature-256"),
 ):
     """
     Receive Meta webhook events.
@@ -289,7 +283,7 @@ async def meta_webhook_receive(
     return {"status": "received"}
 
 
-async def process_meta_webhook(payload: Dict[str, Any]):
+async def process_meta_webhook(payload: dict[str, Any]):
     """Process Meta webhook payload."""
     object_type = payload.get("object")
 
@@ -308,11 +302,10 @@ async def process_meta_webhook(payload: Dict[str, Any]):
 
             elif field == "ads":
                 # Ad account change
-                await dispatch_event("meta_ad_change", {
-                    "account_id": entry_id,
-                    "change": value,
-                    "timestamp": entry_time
-                })
+                await dispatch_event(
+                    "meta_ad_change",
+                    {"account_id": entry_id, "change": value, "timestamp": entry_time},
+                )
 
             elif field == "feed":
                 # Page feed update
@@ -327,7 +320,7 @@ async def process_meta_webhook(payload: Dict[str, Any]):
             # Could integrate with WhatsApp adapter logic
 
 
-async def process_meta_lead(page_id: str, lead_data: Dict[str, Any]):
+async def process_meta_lead(page_id: str, lead_data: dict[str, Any]):
     """
     Process Meta Lead Gen form submission.
 
@@ -354,25 +347,29 @@ async def process_meta_lead(page_id: str, lead_data: Dict[str, Any]):
     # GET /{lead_id}?access_token=...
 
     # Dispatch to handlers
-    await dispatch_event("meta_lead", {
-        "lead_id": lead_id,
-        "page_id": page_id,
-        "form_id": form_id,
-        "ad_id": ad_id,
-        "raw_data": lead_data,
-        "received_at": datetime.utcnow().isoformat()
-    })
+    await dispatch_event(
+        "meta_lead",
+        {
+            "lead_id": lead_id,
+            "page_id": page_id,
+            "form_id": form_id,
+            "ad_id": ad_id,
+            "raw_data": lead_data,
+            "received_at": datetime.utcnow().isoformat(),
+        },
+    )
 
 
 # =============================================================================
 # WHATSAPP WEBHOOKS
 # =============================================================================
 
+
 @app.get("/webhooks/whatsapp")
 async def whatsapp_webhook_verify(
     hub_mode: str = Query(None, alias="hub.mode"),
     hub_verify_token: str = Query(None, alias="hub.verify_token"),
-    hub_challenge: str = Query(None, alias="hub.challenge")
+    hub_challenge: str = Query(None, alias="hub.challenge"),
 ):
     """
     WhatsApp webhook verification.
@@ -397,7 +394,7 @@ async def whatsapp_webhook_verify(
 async def whatsapp_webhook_receive(
     request: Request,
     background_tasks: BackgroundTasks,
-    x_hub_signature_256: str = Header(None, alias="X-Hub-Signature-256")
+    x_hub_signature_256: str = Header(None, alias="X-Hub-Signature-256"),
 ):
     """
     Receive WhatsApp webhook events.
@@ -451,7 +448,7 @@ async def whatsapp_webhook_receive(
     return {"status": "received"}
 
 
-async def process_whatsapp_webhook(payload: Dict[str, Any]):
+async def process_whatsapp_webhook(payload: dict[str, Any]):
     """Process WhatsApp webhook payload."""
     for entry in payload.get("entry", []):
         for change in entry.get("changes", []):
@@ -471,9 +468,7 @@ async def process_whatsapp_webhook(payload: Dict[str, Any]):
 
 
 async def process_whatsapp_message(
-    phone_number_id: str,
-    message: Dict[str, Any],
-    value: Dict[str, Any]
+    phone_number_id: str, message: dict[str, Any], value: dict[str, Any]
 ):
     """
     Process incoming WhatsApp message.
@@ -512,20 +507,23 @@ async def process_whatsapp_message(
         content = message.get("button", {}).get("text")
 
     # Dispatch event
-    await dispatch_event("whatsapp_message", {
-        "phone_number_id": phone_number_id,
-        "message_id": message_id,
-        "from": from_number,
-        "contact_name": contact_name,
-        "type": message_type,
-        "content": content,
-        "raw_message": message,
-        "timestamp": timestamp,
-        "received_at": datetime.utcnow().isoformat()
-    })
+    await dispatch_event(
+        "whatsapp_message",
+        {
+            "phone_number_id": phone_number_id,
+            "message_id": message_id,
+            "from": from_number,
+            "contact_name": contact_name,
+            "type": message_type,
+            "content": content,
+            "raw_message": message,
+            "timestamp": timestamp,
+            "received_at": datetime.utcnow().isoformat(),
+        },
+    )
 
 
-async def process_whatsapp_status(status: Dict[str, Any]):
+async def process_whatsapp_status(status: dict[str, Any]):
     """
     Process WhatsApp message status update.
 
@@ -549,28 +547,32 @@ async def process_whatsapp_status(status: Dict[str, Any]):
         error_info = {
             "code": errors[0].get("code"),
             "title": errors[0].get("title"),
-            "message": errors[0].get("message")
+            "message": errors[0].get("message"),
         }
         logger.warning(f"WhatsApp message failed: {error_info}")
 
-    await dispatch_event("whatsapp_status", {
-        "message_id": message_id,
-        "status": status_type,
-        "recipient": recipient,
-        "timestamp": timestamp,
-        "error": error_info
-    })
+    await dispatch_event(
+        "whatsapp_status",
+        {
+            "message_id": message_id,
+            "status": status_type,
+            "recipient": recipient,
+            "timestamp": timestamp,
+            "error": error_info,
+        },
+    )
 
 
 # =============================================================================
 # TIKTOK WEBHOOKS
 # =============================================================================
 
+
 @app.post("/webhooks/tiktok")
 async def tiktok_webhook_receive(
     request: Request,
     background_tasks: BackgroundTasks,
-    x_tiktok_signature: str = Header(None, alias="X-TikTok-Signature")
+    x_tiktok_signature: str = Header(None, alias="X-TikTok-Signature"),
 ):
     """
     Receive TikTok webhook events.
@@ -603,7 +605,7 @@ async def tiktok_webhook_receive(
     return {"status": "received"}
 
 
-async def process_tiktok_webhook(payload: Dict[str, Any]):
+async def process_tiktok_webhook(payload: dict[str, Any]):
     """Process TikTok webhook payload."""
     event_type = payload.get("event_type")
 
@@ -614,27 +616,29 @@ async def process_tiktok_webhook(payload: Dict[str, Any]):
 
         logger.info(f"TikTok report ready: {report_id}")
 
-        await dispatch_event("tiktok_report", {
-            "event_type": event_type,
-            "report_id": report_id,
-            "advertiser_id": advertiser_id,
-            "payload": payload
-        })
+        await dispatch_event(
+            "tiktok_report",
+            {
+                "event_type": event_type,
+                "report_id": report_id,
+                "advertiser_id": advertiser_id,
+                "payload": payload,
+            },
+        )
 
     else:
         logger.info(f"TikTok event: {event_type}")
-        await dispatch_event("tiktok_report", {
-            "event_type": event_type,
-            "payload": payload
-        })
+        await dispatch_event("tiktok_report", {"event_type": event_type, "payload": payload})
 
 
 # =============================================================================
 # E-COMMERCE / CUSTOM WEBHOOKS
 # =============================================================================
 
+
 class EcommerceEvent(BaseModel):
     """Schema for e-commerce webhook events."""
+
     event_type: str  # page_view, view_content, add_to_cart, purchase, etc.
     event_id: Optional[str] = None
     timestamp: Optional[str] = None
@@ -660,7 +664,7 @@ class EcommerceEvent(BaseModel):
     ttclid: Optional[str] = None
 
     # Additional data
-    extra: Optional[Dict[str, Any]] = None
+    extra: Optional[dict[str, Any]] = None
 
 
 @app.post("/webhooks/ecommerce")
@@ -668,7 +672,7 @@ async def ecommerce_webhook_receive(
     event: EcommerceEvent,
     request: Request,
     background_tasks: BackgroundTasks,
-    x_webhook_signature: str = Header(None, alias="X-Webhook-Signature")
+    x_webhook_signature: str = Header(None, alias="X-Webhook-Signature"),
 ):
     """
     Receive e-commerce events from your website/app.
@@ -726,7 +730,7 @@ async def ecommerce_webhook_receive(
     return {"status": "received", "event_id": event.event_id}
 
 
-async def process_ecommerce_event(event_data: Dict[str, Any]):
+async def process_ecommerce_event(event_data: dict[str, Any]):
     """
     Process e-commerce event and forward to all platforms.
 
@@ -734,8 +738,12 @@ async def process_ecommerce_event(event_data: Dict[str, Any]):
     to Meta, Google, TikTok, Snapchat via server-side tracking.
     """
     from app.stratum.events import (
-        ServerEvent, StandardEvent, UserData, ContentItem,
-        UnifiedEventsAPI, MetaEventsSender
+        ContentItem,
+        MetaEventsSender,
+        ServerEvent,
+        StandardEvent,
+        UnifiedEventsAPI,
+        UserData,
     )
 
     # Map event type
@@ -774,19 +782,23 @@ async def process_ecommerce_event(event_data: Dict[str, Any]):
 
     if products:
         for p in products:
-            contents.append(ContentItem(
-                id=p.get("id", ""),
-                name=p.get("name"),
-                price=p.get("price"),
-                quantity=p.get("quantity", 1)
-            ))
+            contents.append(
+                ContentItem(
+                    id=p.get("id", ""),
+                    name=p.get("name"),
+                    price=p.get("price"),
+                    quantity=p.get("quantity", 1),
+                )
+            )
     elif event_data.get("product_id"):
-        contents.append(ContentItem(
-            id=event_data["product_id"],
-            name=event_data.get("product_name"),
-            price=event_data.get("product_price"),
-            quantity=event_data.get("quantity", 1)
-        ))
+        contents.append(
+            ContentItem(
+                id=event_data["product_id"],
+                name=event_data.get("product_name"),
+                price=event_data.get("product_price"),
+                quantity=event_data.get("quantity", 1),
+            )
+        )
 
     # Build server event
     server_event = ServerEvent(
@@ -797,7 +809,7 @@ async def process_ecommerce_event(event_data: Dict[str, Any]):
         currency=event_data.get("currency", "USD"),
         order_id=event_data.get("order_id"),
         event_source_url=event_data.get("page_url"),
-        event_id=event_data.get("event_id")
+        event_id=event_data.get("event_id"),
     )
 
     # Initialize API and send to all platforms
@@ -805,10 +817,7 @@ async def process_ecommerce_event(event_data: Dict[str, Any]):
     api = UnifiedEventsAPI()
 
     if config.META_PIXEL_ID and config.META_ACCESS_TOKEN:
-        api.add_sender("meta", MetaEventsSender(
-            config.META_PIXEL_ID,
-            config.META_ACCESS_TOKEN
-        ))
+        api.add_sender("meta", MetaEventsSender(config.META_PIXEL_ID, config.META_ACCESS_TOKEN))
 
     # Add other platforms as configured...
 
@@ -818,10 +827,7 @@ async def process_ecommerce_event(event_data: Dict[str, Any]):
         logger.info(f"Event forwarded to platforms: {results}")
 
         # Dispatch for additional processing
-        await dispatch_event("ecommerce_event", {
-            "event": event_data,
-            "results": results
-        })
+        await dispatch_event("ecommerce_event", {"event": event_data, "results": results})
     except Exception as e:
         logger.error(f"Error forwarding event: {e}")
 
@@ -829,6 +835,7 @@ async def process_ecommerce_event(event_data: Dict[str, Any]):
 # =============================================================================
 # HEALTH & STATUS ENDPOINTS
 # =============================================================================
+
 
 @app.get("/health")
 async def health_check():
@@ -843,22 +850,17 @@ async def webhook_status():
         "meta": {
             "configured": bool(config.META_APP_SECRET),
             "verify_token_set": bool(config.META_VERIFY_TOKEN),
-            "pixel_configured": bool(config.META_PIXEL_ID)
+            "pixel_configured": bool(config.META_PIXEL_ID),
         },
         "whatsapp": {
             "configured": bool(config.WHATSAPP_APP_SECRET),
-            "phone_number_id_set": bool(config.WHATSAPP_PHONE_NUMBER_ID)
+            "phone_number_id_set": bool(config.WHATSAPP_PHONE_NUMBER_ID),
         },
-        "tiktok": {
-            "configured": bool(config.TIKTOK_APP_SECRET)
-        },
-        "ecommerce": {
-            "signature_verification": bool(config.WEBHOOK_SECRET)
-        },
+        "tiktok": {"configured": bool(config.TIKTOK_APP_SECRET)},
+        "ecommerce": {"signature_verification": bool(config.WEBHOOK_SECRET)},
         "handlers_registered": {
-            event_type: len(handlers)
-            for event_type, handlers in _event_handlers.items()
-        }
+            event_type: len(handlers) for event_type, handlers in _event_handlers.items()
+        },
     }
 
 
@@ -866,8 +868,9 @@ async def webhook_status():
 # EXAMPLE HANDLERS (Register your own)
 # =============================================================================
 
+
 @register_handler("meta_lead")
-async def example_lead_handler(data: Dict[str, Any]):
+async def example_lead_handler(data: dict[str, Any]):
     """
     Example handler for Meta lead submissions.
 
@@ -883,7 +886,7 @@ async def example_lead_handler(data: Dict[str, Any]):
 
 
 @register_handler("whatsapp_message")
-async def example_whatsapp_handler(data: Dict[str, Any]):
+async def example_whatsapp_handler(data: dict[str, Any]):
     """
     Example handler for WhatsApp messages.
 
@@ -896,7 +899,7 @@ async def example_whatsapp_handler(data: Dict[str, Any]):
 
 
 @register_handler("ecommerce_event")
-async def example_ecommerce_handler(data: Dict[str, Any]):
+async def example_ecommerce_handler(data: dict[str, Any]):
     """
     Example handler for e-commerce events.
 
@@ -914,6 +917,7 @@ async def example_ecommerce_handler(data: Dict[str, Any]):
 # =============================================================================
 # STARTUP / SHUTDOWN
 # =============================================================================
+
 
 @app.on_event("startup")
 async def startup_event():

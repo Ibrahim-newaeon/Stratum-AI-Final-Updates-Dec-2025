@@ -59,45 +59,44 @@ Or combined:
     celery -A app.stratum.workers.data_sync worker --beat --loglevel=info
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
-import asyncio
 from functools import wraps
+from typing import Any
 
 # Celery imports (with fallback for when Celery isn't installed)
 try:
     from celery import Celery, shared_task
     from celery.schedules import crontab
+
     CELERY_AVAILABLE = True
 except ImportError:
     CELERY_AVAILABLE = False
+
     # Mock decorator for when Celery isn't available
     def shared_task(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
 
-from app.stratum.models import Platform, EMQScore, PerformanceMetrics
-from app.stratum.core.signal_health import SignalHealthCalculator
 
+from app.stratum.core.signal_health import SignalHealthCalculator
+from app.stratum.models import EMQScore, PerformanceMetrics, Platform
 
 logger = logging.getLogger("stratum.workers.data_sync")
 
 
 # Celery app configuration
 if CELERY_AVAILABLE:
-    app = Celery(
-        'stratum',
-        broker='redis://localhost:6379/0',
-        backend='redis://localhost:6379/1'
-    )
+    app = Celery("stratum", broker="redis://localhost:6379/0", backend="redis://localhost:6379/1")
 
     app.conf.update(
-        task_serializer='json',
-        accept_content=['json'],
-        result_serializer='json',
-        timezone='UTC',
+        task_serializer="json",
+        accept_content=["json"],
+        result_serializer="json",
+        timezone="UTC",
         enable_utc=True,
         task_track_started=True,
         task_time_limit=300,  # 5 minute timeout
@@ -106,25 +105,25 @@ if CELERY_AVAILABLE:
 
     # Beat schedule for periodic tasks
     app.conf.beat_schedule = {
-        'sync-all-platforms-every-15-min': {
-            'task': 'app.stratum.workers.data_sync.sync_all_platforms',
-            'schedule': timedelta(minutes=15),
+        "sync-all-platforms-every-15-min": {
+            "task": "app.stratum.workers.data_sync.sync_all_platforms",
+            "schedule": timedelta(minutes=15),
         },
-        'update-metrics-every-5-min': {
-            'task': 'app.stratum.workers.data_sync.update_metrics_all',
-            'schedule': timedelta(minutes=5),
+        "update-metrics-every-5-min": {
+            "task": "app.stratum.workers.data_sync.update_metrics_all",
+            "schedule": timedelta(minutes=5),
         },
-        'refresh-emq-every-6-hours': {
-            'task': 'app.stratum.workers.data_sync.refresh_emq_all',
-            'schedule': timedelta(hours=6),
+        "refresh-emq-every-6-hours": {
+            "task": "app.stratum.workers.data_sync.refresh_emq_all",
+            "schedule": timedelta(hours=6),
         },
-        'calculate-signal-health-every-15-min': {
-            'task': 'app.stratum.workers.data_sync.calculate_all_signal_health',
-            'schedule': timedelta(minutes=15),
+        "calculate-signal-health-every-15-min": {
+            "task": "app.stratum.workers.data_sync.calculate_all_signal_health",
+            "schedule": timedelta(minutes=15),
         },
-        'send-weekly-digest-monday-9am': {
-            'task': 'app.stratum.workers.data_sync.send_weekly_digest',
-            'schedule': crontab(hour=9, minute=0, day_of_week=1),
+        "send-weekly-digest-monday-9am": {
+            "task": "app.stratum.workers.data_sync.send_weekly_digest",
+            "schedule": crontab(hour=9, minute=0, day_of_week=1),
         },
     }
 else:
@@ -138,6 +137,7 @@ def async_task(func):
     Celery doesn't natively support async, so we need to
     run the async code in an event loop.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         loop = asyncio.new_event_loop()
@@ -146,6 +146,7 @@ def async_task(func):
             return loop.run_until_complete(func(*args, **kwargs))
         finally:
             loop.close()
+
     return wrapper
 
 
@@ -153,14 +154,12 @@ def async_task(func):
 # DATA SYNC TASKS
 # ============================================================================
 
+
 @shared_task(bind=True, max_retries=3)
 @async_task
 async def sync_platform_data(
-    self,
-    platform: str,
-    account_ids: List[str],
-    credentials: Dict[str, Any]
-) -> Dict[str, Any]:
+    self, platform: str, account_ids: list[str], credentials: dict[str, Any]
+) -> dict[str, Any]:
     """
     Sync all data from a single platform.
 
@@ -184,7 +183,7 @@ async def sync_platform_data(
         "campaigns_synced": 0,
         "adsets_synced": 0,
         "ads_synced": 0,
-        "errors": []
+        "errors": [],
     }
 
     try:
@@ -198,25 +197,19 @@ async def sync_platform_data(
 
                 # Sync ad sets for each campaign
                 for campaign in campaigns:
-                    adsets = await adapter.get_adsets(
-                        account_id,
-                        campaign_id=campaign.campaign_id
-                    )
+                    adsets = await adapter.get_adsets(account_id, campaign_id=campaign.campaign_id)
                     results["adsets_synced"] += len(adsets)
 
                     # Sync ads for each ad set
                     for adset in adsets:
-                        ads = await adapter.get_ads(
-                            account_id,
-                            adset_id=adset.adset_id
-                        )
+                        ads = await adapter.get_ads(account_id, adset_id=adset.adset_id)
                         results["ads_synced"] += len(ads)
 
                 results["accounts_synced"] += 1
                 logger.info(f"Synced {platform} account {account_id}")
 
             except Exception as e:
-                error_msg = f"Error syncing account {account_id}: {str(e)}"
+                error_msg = f"Error syncing account {account_id}: {e!s}"
                 logger.error(error_msg)
                 results["errors"].append(error_msg)
 
@@ -232,7 +225,7 @@ async def sync_platform_data(
 
 @shared_task(bind=True)
 @async_task
-async def sync_all_platforms(self) -> Dict[str, Any]:
+async def sync_all_platforms(self) -> dict[str, Any]:
     """
     Sync data from all configured platforms.
 
@@ -241,14 +234,11 @@ async def sync_all_platforms(self) -> Dict[str, Any]:
     """
     import yaml
 
-    results = {
-        "started_at": datetime.utcnow().isoformat(),
-        "platforms": {}
-    }
+    results = {"started_at": datetime.utcnow().isoformat(), "platforms": {}}
 
     try:
         # Load configuration
-        with open("config.yaml", "r") as f:
+        with open("config.yaml") as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
         logger.error("config.yaml not found")
@@ -270,11 +260,7 @@ async def sync_all_platforms(self) -> Dict[str, Any]:
 
         # Dispatch sync task
         try:
-            task_result = await sync_platform_data(
-                platform,
-                account_ids,
-                platform_config
-            )
+            task_result = await sync_platform_data(platform, account_ids, platform_config)
             results["platforms"][platform] = task_result
         except Exception as e:
             results["platforms"][platform] = {"status": "error", "error": str(e)}
@@ -287,6 +273,7 @@ async def sync_all_platforms(self) -> Dict[str, Any]:
 # METRICS UPDATE TASKS
 # ============================================================================
 
+
 @shared_task(bind=True)
 @async_task
 async def update_metrics(
@@ -294,10 +281,10 @@ async def update_metrics(
     platform: str,
     account_id: str,
     entity_type: str,
-    entity_ids: List[str],
-    credentials: Dict[str, Any],
-    lookback_days: int = 1
-) -> Dict[str, Any]:
+    entity_ids: list[str],
+    credentials: dict[str, Any],
+    lookback_days: int = 1,
+) -> dict[str, Any]:
     """
     Update performance metrics for specific entities.
 
@@ -312,7 +299,7 @@ async def update_metrics(
         "account_id": account_id,
         "entity_type": entity_type,
         "entities_updated": 0,
-        "metrics": {}
+        "metrics": {},
     }
 
     try:
@@ -326,7 +313,7 @@ async def update_metrics(
             entity_type=entity_type,
             entity_ids=entity_ids,
             date_start=date_start,
-            date_end=date_end
+            date_end=date_end,
         )
 
         results["entities_updated"] = len(metrics)
@@ -337,7 +324,7 @@ async def update_metrics(
                 "spend": m.spend,
                 "conversions": m.conversions,
                 "cpa": m.cpa,
-                "roas": m.roas
+                "roas": m.roas,
             }
             for entity_id, m in metrics.items()
         }
@@ -353,7 +340,7 @@ async def update_metrics(
 
 @shared_task
 @async_task
-async def update_metrics_all() -> Dict[str, Any]:
+async def update_metrics_all() -> dict[str, Any]:
     """
     Update metrics for all active campaigns across platforms.
 
@@ -369,7 +356,7 @@ async def update_metrics_all() -> Dict[str, Any]:
     results = {
         "started_at": datetime.utcnow().isoformat(),
         "status": "completed",
-        "note": "Implement database query for active campaigns"
+        "note": "Implement database query for active campaigns",
     }
 
     return results
@@ -379,14 +366,12 @@ async def update_metrics_all() -> Dict[str, Any]:
 # EMQ REFRESH TASKS
 # ============================================================================
 
+
 @shared_task(bind=True)
 @async_task
 async def refresh_emq(
-    self,
-    platform: str,
-    account_id: str,
-    credentials: Dict[str, Any]
-) -> Dict[str, Any]:
+    self, platform: str, account_id: str, credentials: dict[str, Any]
+) -> dict[str, Any]:
     """
     Refresh EMQ scores for an account.
 
@@ -396,11 +381,7 @@ async def refresh_emq(
     from app.stratum.adapters.registry import get_adapter
 
     platform_enum = Platform(platform)
-    results = {
-        "platform": platform,
-        "account_id": account_id,
-        "emq_scores": []
-    }
+    results = {"platform": platform, "account_id": account_id, "emq_scores": []}
 
     try:
         adapter = await get_adapter(platform_enum, credentials)
@@ -411,7 +392,7 @@ async def refresh_emq(
             {
                 "event_name": emq.event_name,
                 "score": emq.score,
-                "last_updated": emq.last_updated.isoformat() if emq.last_updated else None
+                "last_updated": emq.last_updated.isoformat() if emq.last_updated else None,
             }
             for emq in emq_scores
         ]
@@ -429,7 +410,7 @@ async def refresh_emq(
 
 @shared_task
 @async_task
-async def refresh_emq_all() -> Dict[str, Any]:
+async def refresh_emq_all() -> dict[str, Any]:
     """
     Refresh EMQ scores for all accounts across platforms.
 
@@ -437,10 +418,7 @@ async def refresh_emq_all() -> Dict[str, Any]:
     """
     logger.info("Starting EMQ refresh for all platforms")
 
-    results = {
-        "started_at": datetime.utcnow().isoformat(),
-        "status": "completed"
-    }
+    results = {"started_at": datetime.utcnow().isoformat(), "status": "completed"}
 
     return results
 
@@ -449,13 +427,14 @@ async def refresh_emq_all() -> Dict[str, Any]:
 # SIGNAL HEALTH TASKS
 # ============================================================================
 
+
 @shared_task
 def calculate_signal_health(
     platform: str,
     account_id: str,
-    emq_scores: List[Dict[str, Any]],
-    recent_metrics: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+    emq_scores: list[dict[str, Any]],
+    recent_metrics: list[dict[str, Any]],
+) -> dict[str, Any]:
     """
     Calculate signal health for a single account.
 
@@ -466,11 +445,7 @@ def calculate_signal_health(
 
     # Convert dicts back to models
     emq_list = [
-        EMQScore(
-            platform=Platform(platform),
-            event_name=e["event_name"],
-            score=e["score"]
-        )
+        EMQScore(platform=Platform(platform), event_name=e["event_name"], score=e["score"])
         for e in emq_scores
     ]
 
@@ -482,7 +457,7 @@ def calculate_signal_health(
             conversions=m.get("conversions"),
             cpa=m.get("cpa"),
             date_start=datetime.fromisoformat(m["date_start"]) if m.get("date_start") else None,
-            date_end=datetime.fromisoformat(m["date_end"]) if m.get("date_end") else None
+            date_end=datetime.fromisoformat(m["date_end"]) if m.get("date_end") else None,
         )
         for m in recent_metrics
     ]
@@ -491,7 +466,7 @@ def calculate_signal_health(
         platform=Platform(platform),
         account_id=account_id,
         emq_scores=emq_list,
-        recent_metrics=metrics_list
+        recent_metrics=metrics_list,
     )
 
     return {
@@ -508,13 +483,13 @@ def calculate_signal_health(
         "autopilot_allowed": health.autopilot_allowed,
         "issues": health.issues,
         "recommendations": health.recommendations,
-        "calculated_at": datetime.utcnow().isoformat()
+        "calculated_at": datetime.utcnow().isoformat(),
     }
 
 
 @shared_task
 @async_task
-async def calculate_all_signal_health() -> Dict[str, Any]:
+async def calculate_all_signal_health() -> dict[str, Any]:
     """
     Calculate signal health for all accounts.
 
@@ -527,7 +502,7 @@ async def calculate_all_signal_health() -> Dict[str, Any]:
         "accounts_processed": 0,
         "healthy": 0,
         "degraded": 0,
-        "critical": 0
+        "critical": 0,
     }
 
     # This would normally:
@@ -543,13 +518,14 @@ async def calculate_all_signal_health() -> Dict[str, Any]:
 # ALERT TASKS
 # ============================================================================
 
+
 @shared_task
 def send_signal_health_alert(
     account_id: str,
     platform: str,
-    health_data: Dict[str, Any],
-    alert_type: str  # "degraded" or "critical"
-) -> Dict[str, Any]:
+    health_data: dict[str, Any],
+    alert_type: str,  # "degraded" or "critical"
+) -> dict[str, Any]:
     """
     Send an alert for degraded or critical signal health.
 
@@ -573,12 +549,12 @@ def send_signal_health_alert(
         "alert_type": alert_type,
         "account_id": account_id,
         "platform": platform,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 
 @shared_task
-def send_weekly_digest() -> Dict[str, Any]:
+def send_weekly_digest() -> dict[str, Any]:
     """
     Send weekly performance and signal health digest.
 
@@ -588,18 +564,16 @@ def send_weekly_digest() -> Dict[str, Any]:
 
     # This would compile weekly stats and send to stakeholders
 
-    return {
-        "status": "sent",
-        "sent_at": datetime.utcnow().isoformat()
-    }
+    return {"status": "sent", "sent_at": datetime.utcnow().isoformat()}
 
 
 # ============================================================================
 # CLEANUP TASKS
 # ============================================================================
 
+
 @shared_task
-def cleanup_old_data(days_to_keep: int = 90) -> Dict[str, Any]:
+def cleanup_old_data(days_to_keep: int = 90) -> dict[str, Any]:
     """
     Remove old sync data to manage storage.
 
@@ -611,17 +585,15 @@ def cleanup_old_data(days_to_keep: int = 90) -> Dict[str, Any]:
 
     # This would delete old records from the database
 
-    return {
-        "cutoff_date": cutoff_date.isoformat(),
-        "status": "completed"
-    }
+    return {"cutoff_date": cutoff_date.isoformat(), "status": "completed"}
 
 
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
 
-def get_task_status(task_id: str) -> Dict[str, Any]:
+
+def get_task_status(task_id: str) -> dict[str, Any]:
     """Get the status of a Celery task by ID."""
     if not CELERY_AVAILABLE or not app:
         return {"error": "Celery not available"}
@@ -630,7 +602,7 @@ def get_task_status(task_id: str) -> Dict[str, Any]:
     return {
         "task_id": task_id,
         "status": result.status,
-        "result": result.result if result.ready() else None
+        "result": result.result if result.ready() else None,
     }
 
 

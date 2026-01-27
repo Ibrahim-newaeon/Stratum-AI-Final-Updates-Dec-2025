@@ -14,28 +14,28 @@ The onboarding flow has 5 steps:
 Each step can be saved independently, and progress is tracked.
 """
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.deps import CurrentUserDep, VerifiedUserDep
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.auth.deps import CurrentUserDep, VerifiedUserDep
-from app.schemas import APIResponse
 from app.models.onboarding import (
-    TenantOnboarding,
-    OnboardingStatus,
-    OnboardingStep,
+    AutomationMode,
     Industry,
     MonthlyAdSpend,
-    TeamSize,
-    AutomationMode,
+    OnboardingStatus,
+    OnboardingStep,
     PrimaryKPI,
+    TeamSize,
+    TenantOnboarding,
 )
+from app.schemas import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
@@ -44,6 +44,7 @@ router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 # =============================================================================
 # Pydantic Schemas
 # =============================================================================
+
 
 # --- Step 1: Business Profile ---
 class BusinessProfileRequest(BaseModel):
@@ -54,9 +55,8 @@ class BusinessProfileRequest(BaseModel):
     monthly_ad_spend: MonthlyAdSpend
     team_size: TeamSize
     company_website: Optional[str] = Field(None, max_length=500)
-    target_markets: List[str] = Field(
-        default=["US"],
-        description="List of country codes (ISO 3166-1 alpha-2)"
+    target_markets: list[str] = Field(
+        default=["US"], description="List of country codes (ISO 3166-1 alpha-2)"
     )
 
     @field_validator("industry_other")
@@ -84,17 +84,15 @@ class BusinessProfileResponse(BaseModel):
     monthly_ad_spend: Optional[str] = None
     team_size: Optional[str] = None
     company_website: Optional[str] = None
-    target_markets: List[str] = []
+    target_markets: list[str] = []
 
 
 # --- Step 2: Platform Selection ---
 class PlatformSelectionRequest(BaseModel):
     """Step 2: Ad platforms to use."""
 
-    platforms: List[str] = Field(
-        ...,
-        min_length=1,
-        description="List of platforms: meta, google, tiktok, snapchat"
+    platforms: list[str] = Field(
+        ..., min_length=1, description="List of platforms: meta, google, tiktok, snapchat"
     )
 
     @field_validator("platforms")
@@ -111,7 +109,7 @@ class PlatformSelectionRequest(BaseModel):
 class PlatformSelectionResponse(BaseModel):
     """Platform selection data."""
 
-    platforms: List[str] = []
+    platforms: list[str] = []
 
 
 # --- Step 3: Goals Setup ---
@@ -119,7 +117,9 @@ class GoalsSetupRequest(BaseModel):
     """Step 3: Goals and targets."""
 
     primary_kpi: PrimaryKPI
-    target_roas: Optional[float] = Field(None, ge=0.1, le=100, description="Target ROAS (e.g., 3.0 for 3x)")
+    target_roas: Optional[float] = Field(
+        None, ge=0.1, le=100, description="Target ROAS (e.g., 3.0 for 3x)"
+    )
     target_cpa: Optional[float] = Field(None, ge=0, description="Target CPA in dollars")
     monthly_budget: Optional[float] = Field(None, ge=0, description="Monthly budget in dollars")
     currency: str = Field(default="USD", max_length=3)
@@ -154,12 +154,10 @@ class AutomationPreferencesRequest(BaseModel):
 
     automation_mode: AutomationMode
     auto_pause_enabled: bool = Field(
-        default=True,
-        description="Automatically pause underperforming campaigns"
+        default=True, description="Automatically pause underperforming campaigns"
     )
     auto_scale_enabled: bool = Field(
-        default=False,
-        description="Automatically scale well-performing campaigns"
+        default=False, description="Automatically scale well-performing campaigns"
     )
     notification_email: bool = True
     notification_slack: bool = False
@@ -187,24 +185,16 @@ class TrustGateConfigRequest(BaseModel):
         default=70,
         ge=50,
         le=100,
-        description="Signal health score required for autopilot execution"
+        description="Signal health score required for autopilot execution",
     )
     trust_threshold_alert: int = Field(
-        default=40,
-        ge=20,
-        le=70,
-        description="Signal health score that triggers alerts"
+        default=40, ge=20, le=70, description="Signal health score that triggers alerts"
     )
     require_approval_above: Optional[float] = Field(
-        None,
-        ge=0,
-        description="Spend changes above this amount require approval (in dollars)"
+        None, ge=0, description="Spend changes above this amount require approval (in dollars)"
     )
     max_daily_actions: int = Field(
-        default=10,
-        ge=1,
-        le=100,
-        description="Maximum automatic actions per day"
+        default=10, ge=1, le=100, description="Maximum automatic actions per day"
     )
 
     @field_validator("trust_threshold_alert")
@@ -232,7 +222,7 @@ class OnboardingStatusResponse(BaseModel):
 
     status: str
     current_step: str
-    completed_steps: List[str]
+    completed_steps: list[str]
     progress_percentage: int
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -259,15 +249,14 @@ class StepCompletionResponse(BaseModel):
 # Helper Functions
 # =============================================================================
 
+
 async def get_or_create_onboarding(
     tenant_id: int,
     db: AsyncSession,
 ) -> TenantOnboarding:
     """Get or create onboarding record for tenant."""
     result = await db.execute(
-        select(TenantOnboarding).where(
-            TenantOnboarding.tenant_id == tenant_id
-        )
+        select(TenantOnboarding).where(TenantOnboarding.tenant_id == tenant_id)
     )
     onboarding = result.scalar_one_or_none()
 
@@ -297,7 +286,7 @@ def mark_step_completed(
     # Update status
     if onboarding.status == OnboardingStatus.NOT_STARTED:
         onboarding.status = OnboardingStatus.IN_PROGRESS
-        onboarding.started_at = datetime.now(timezone.utc)
+        onboarding.started_at = datetime.now(UTC)
 
     # Set next step
     next_step = onboarding.get_next_step()
@@ -306,12 +295,13 @@ def mark_step_completed(
     else:
         # All steps completed
         onboarding.status = OnboardingStatus.COMPLETED
-        onboarding.completed_at = datetime.now(timezone.utc)
+        onboarding.completed_at = datetime.now(UTC)
 
 
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("/status", response_model=APIResponse[OnboardingStatusResponse])
 async def get_onboarding_status(
@@ -350,7 +340,9 @@ async def get_onboarding_status(
             primary_kpi=onboarding.primary_kpi,
             target_roas=onboarding.target_roas,
             target_cpa=onboarding.target_cpa_cents / 100 if onboarding.target_cpa_cents else None,
-            monthly_budget=onboarding.monthly_budget_cents / 100 if onboarding.monthly_budget_cents else None,
+            monthly_budget=onboarding.monthly_budget_cents / 100
+            if onboarding.monthly_budget_cents
+            else None,
             currency=onboarding.currency,
             timezone=onboarding.timezone,
         )
@@ -369,7 +361,9 @@ async def get_onboarding_status(
     trust_gate_config = TrustGateConfigResponse(
         trust_threshold_autopilot=onboarding.trust_threshold_autopilot,
         trust_threshold_alert=onboarding.trust_threshold_alert,
-        require_approval_above=onboarding.require_approval_above / 100 if onboarding.require_approval_above else None,
+        require_approval_above=onboarding.require_approval_above / 100
+        if onboarding.require_approval_above
+        else None,
         max_daily_actions=onboarding.max_daily_actions,
     )
 
@@ -495,7 +489,9 @@ async def save_goals_setup(
     onboarding.primary_kpi = data.primary_kpi.value
     onboarding.target_roas = data.target_roas
     onboarding.target_cpa_cents = int(data.target_cpa * 100) if data.target_cpa else None
-    onboarding.monthly_budget_cents = int(data.monthly_budget * 100) if data.monthly_budget else None
+    onboarding.monthly_budget_cents = (
+        int(data.monthly_budget * 100) if data.monthly_budget else None
+    )
     onboarding.currency = data.currency
     onboarding.timezone = data.timezone
 
@@ -595,7 +591,9 @@ async def save_trust_gate_config(
     # Save data (convert dollars to cents for storage)
     onboarding.trust_threshold_autopilot = data.trust_threshold_autopilot
     onboarding.trust_threshold_alert = data.trust_threshold_alert
-    onboarding.require_approval_above = int(data.require_approval_above * 100) if data.require_approval_above else None
+    onboarding.require_approval_above = (
+        int(data.require_approval_above * 100) if data.require_approval_above else None
+    )
     onboarding.max_daily_actions = data.max_daily_actions
 
     # Mark step completed
@@ -604,9 +602,8 @@ async def save_trust_gate_config(
 
     # Update tenant settings with trust thresholds
     from app.models import Tenant
-    result = await db.execute(
-        select(Tenant).where(Tenant.id == current_user.tenant_id)
-    )
+
+    result = await db.execute(select(Tenant).where(Tenant.id == current_user.tenant_id))
     tenant = result.scalar_one_or_none()
     if tenant:
         settings = tenant.settings or {}
@@ -652,13 +649,12 @@ async def skip_onboarding(
 
     # Mark as skipped
     onboarding.status = OnboardingStatus.SKIPPED
-    onboarding.completed_at = datetime.now(timezone.utc)
+    onboarding.completed_at = datetime.now(UTC)
 
     # Update tenant settings
     from app.models import Tenant
-    result = await db.execute(
-        select(Tenant).where(Tenant.id == current_user.tenant_id)
-    )
+
+    result = await db.execute(select(Tenant).where(Tenant.id == current_user.tenant_id))
     tenant = result.scalar_one_or_none()
     if tenant:
         settings = tenant.settings or {}
@@ -690,9 +686,7 @@ async def reset_onboarding(
     Clears all saved preferences and resets to step 1.
     """
     result = await db.execute(
-        select(TenantOnboarding).where(
-            TenantOnboarding.tenant_id == current_user.tenant_id
-        )
+        select(TenantOnboarding).where(TenantOnboarding.tenant_id == current_user.tenant_id)
     )
     onboarding = result.scalar_one_or_none()
 

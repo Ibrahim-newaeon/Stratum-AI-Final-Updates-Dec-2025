@@ -4,7 +4,7 @@
  * Reusable animation variants and utilities for consistent motion design.
  */
 
-import { Variants, Transition } from 'framer-motion';
+import { Transition, Variants } from 'framer-motion';
 
 // =============================================================================
 // Transition Presets
@@ -616,10 +616,7 @@ export const getStaggerDelay = (index: number, baseDelay = 0.05): number => {
 /**
  * Create custom stagger container with configurable timing
  */
-export const createStaggerContainer = (
-  staggerChildren = 0.06,
-  delayChildren = 0.1
-): Variants => ({
+export const createStaggerContainer = (staggerChildren = 0.06, delayChildren = 0.1): Variants => ({
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,

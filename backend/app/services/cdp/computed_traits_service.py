@@ -11,18 +11,18 @@ This service handles:
 - RFM (Recency, Frequency, Monetary) analysis
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict, Any, Tuple
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.cdp import (
-    CDPProfile,
-    CDPEvent,
     CDPComputedTrait,
+    CDPEvent,
+    CDPProfile,
     ComputedTraitType,
 )
 
@@ -47,7 +47,7 @@ class ComputedTraitsService:
         name: str,
         display_name: str,
         trait_type: str,
-        source_config: Dict[str, Any],
+        source_config: dict[str, Any],
         description: Optional[str] = None,
         output_type: str = "number",
         default_value: Optional[str] = None,
@@ -78,8 +78,7 @@ class ComputedTraitsService:
     async def get_trait(self, trait_id: UUID) -> Optional[CDPComputedTrait]:
         """Get a trait by ID."""
         result = await self.db.execute(
-            select(CDPComputedTrait)
-            .where(
+            select(CDPComputedTrait).where(
                 CDPComputedTrait.id == trait_id,
                 CDPComputedTrait.tenant_id == self.tenant_id,
             )
@@ -89,8 +88,7 @@ class ComputedTraitsService:
     async def get_trait_by_name(self, name: str) -> Optional[CDPComputedTrait]:
         """Get a trait by name."""
         result = await self.db.execute(
-            select(CDPComputedTrait)
-            .where(
+            select(CDPComputedTrait).where(
                 CDPComputedTrait.name == name,
                 CDPComputedTrait.tenant_id == self.tenant_id,
             )
@@ -102,27 +100,24 @@ class ComputedTraitsService:
         active_only: bool = True,
         limit: int = 100,
         offset: int = 0,
-    ) -> Tuple[List[CDPComputedTrait], int]:
+    ) -> tuple[list[CDPComputedTrait], int]:
         """List computed traits."""
-        query = select(CDPComputedTrait).where(
-            CDPComputedTrait.tenant_id == self.tenant_id
-        )
+        query = select(CDPComputedTrait).where(CDPComputedTrait.tenant_id == self.tenant_id)
 
         if active_only:
             query = query.where(CDPComputedTrait.is_active == True)
 
         # Get count
         count_result = await self.db.execute(
-            select(func.count(CDPComputedTrait.id))
-            .where(CDPComputedTrait.tenant_id == self.tenant_id)
+            select(func.count(CDPComputedTrait.id)).where(
+                CDPComputedTrait.tenant_id == self.tenant_id
+            )
         )
         total = count_result.scalar() or 0
 
         # Get traits
         result = await self.db.execute(
-            query.order_by(CDPComputedTrait.name)
-            .offset(offset)
-            .limit(limit)
+            query.order_by(CDPComputedTrait.name).offset(offset).limit(limit)
         )
         traits = list(result.scalars().all())
 
@@ -174,7 +169,7 @@ class ComputedTraitsService:
             query = query.where(CDPEvent.event_name == event_name)
 
         if time_window_days:
-            cutoff = datetime.now(timezone.utc) - timedelta(days=time_window_days)
+            cutoff = datetime.now(UTC) - timedelta(days=time_window_days)
             query = query.where(CDPEvent.event_time >= cutoff)
 
         result = await self.db.execute(query.order_by(CDPEvent.event_time.desc()))
@@ -260,7 +255,7 @@ class ComputedTraitsService:
     async def compute_all_traits_for_profile(
         self,
         profile: CDPProfile,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Compute all active traits for a profile and update computed_traits.
 
@@ -291,7 +286,7 @@ class ComputedTraitsService:
     async def compute_traits_batch(
         self,
         batch_size: int = 500,
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """
         Compute all traits for all profiles in batches.
 
@@ -334,7 +329,7 @@ class ComputedTraitsService:
 
         # Update last_computed_at for all traits
         for trait in traits:
-            trait.last_computed_at = datetime.now(timezone.utc)
+            trait.last_computed_at = datetime.now(UTC)
 
         await self.db.flush()
 
@@ -368,7 +363,7 @@ class RFMAnalysisService:
         purchase_event_name: str = "Purchase",
         revenue_property: str = "total",
         analysis_window_days: int = 365,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate RFM scores for a single profile.
 
@@ -384,7 +379,7 @@ class RFMAnalysisService:
             "rfm_segment": str
         }
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=analysis_window_days)
+        cutoff = datetime.now(UTC) - timedelta(days=analysis_window_days)
 
         # Get purchase events
         result = await self.db.execute(
@@ -402,7 +397,7 @@ class RFMAnalysisService:
         # Calculate raw RFM values
         if purchases:
             last_purchase = purchases[0]
-            recency_days = (datetime.now(timezone.utc) - last_purchase.event_time).days
+            recency_days = (datetime.now(UTC) - last_purchase.event_time).days
             frequency = len(purchases)
             monetary = sum(
                 float(p.properties.get(revenue_property, 0))
@@ -436,7 +431,7 @@ class RFMAnalysisService:
             "rfm_score": rfm_score,
             "rfm_segment": rfm_segment,
             "analysis_window_days": analysis_window_days,
-            "calculated_at": datetime.now(timezone.utc).isoformat(),
+            "calculated_at": datetime.now(UTC).isoformat(),
         }
 
     def _score_recency(self, days: int) -> int:
@@ -536,14 +531,14 @@ class RFMAnalysisService:
         revenue_property: str = "total",
         analysis_window_days: int = 365,
         batch_size: int = 500,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculate RFM for all profiles and store in computed_traits.
 
         Returns summary statistics.
         """
         processed = 0
-        segment_counts: Dict[str, int] = {}
+        segment_counts: dict[str, int] = {}
         offset = 0
 
         while True:
@@ -603,20 +598,19 @@ class RFMAnalysisService:
             "profiles_processed": processed,
             "segment_distribution": segment_counts,
             "analysis_window_days": analysis_window_days,
-            "calculated_at": datetime.now(timezone.utc).isoformat(),
+            "calculated_at": datetime.now(UTC).isoformat(),
         }
 
-    async def get_rfm_summary(self) -> Dict[str, Any]:
+    async def get_rfm_summary(self) -> dict[str, Any]:
         """
         Get RFM distribution summary for the tenant.
         """
         result = await self.db.execute(
-            select(CDPProfile)
-            .where(CDPProfile.tenant_id == self.tenant_id)
+            select(CDPProfile).where(CDPProfile.tenant_id == self.tenant_id)
         )
         profiles = result.scalars().all()
 
-        segment_counts: Dict[str, int] = {}
+        segment_counts: dict[str, int] = {}
         total_profiles = 0
         profiles_with_rfm = 0
 
@@ -632,5 +626,7 @@ class RFMAnalysisService:
             "total_profiles": total_profiles,
             "profiles_with_rfm": profiles_with_rfm,
             "segment_distribution": segment_counts,
-            "coverage_pct": round(profiles_with_rfm / total_profiles * 100, 1) if total_profiles > 0 else 0,
+            "coverage_pct": round(profiles_with_rfm / total_profiles * 100, 1)
+            if total_profiles > 0
+            else 0,
         }

@@ -2,9 +2,16 @@ import { useNavigate } from 'react-router-dom';
 import { CheckIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { usePricingTiers, useTrustBadges, type PricingTier, type TrustBadge } from '@/api/cms';
+import { type PricingTier, type TrustBadge, usePricingTiers, useTrustBadges } from '@/api/cms';
 
 // Fallback pricing data when CMS content is not available
 const fallbackPlans: PricingTier[] = [
@@ -92,8 +99,8 @@ export function Pricing() {
   const { data: cmsBadges, isLoading: badgesLoading } = useTrustBadges();
 
   // Use CMS data if available and has content, otherwise use fallback
-  const plans = (cmsPlans && cmsPlans.length > 0) ? cmsPlans : fallbackPlans;
-  const trustBadges = (cmsBadges && cmsBadges.length > 0) ? cmsBadges : fallbackTrustBadges;
+  const plans = cmsPlans && cmsPlans.length > 0 ? cmsPlans : fallbackPlans;
+  const trustBadges = cmsBadges && cmsBadges.length > 0 ? cmsBadges : fallbackTrustBadges;
 
   const isLoading = plansLoading || badgesLoading;
 
@@ -102,7 +109,10 @@ export function Pricing() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4 px-4 py-1 text-orange-400 border-orange-500/30 bg-orange-500/10">
+          <Badge
+            variant="outline"
+            className="mb-4 px-4 py-1 text-orange-400 border-orange-500/30 bg-orange-500/10"
+          >
             Pricing
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -115,7 +125,9 @@ export function Pricing() {
         </div>
 
         {/* Pricing cards */}
-        <div className={`grid md:grid-cols-3 gap-8 max-w-6xl mx-auto ${isLoading ? 'opacity-50' : ''}`}>
+        <div
+          className={`grid md:grid-cols-3 gap-8 max-w-6xl mx-auto ${isLoading ? 'opacity-50' : ''}`}
+        >
           {plans.map((plan) => (
             <Card
               key={plan.id}
@@ -165,7 +177,9 @@ export function Pricing() {
 
               <CardFooter className="pt-6">
                 <Button
-                  onClick={() => navigate(plan.ctaLink || (plan.name === 'Enterprise' ? '/contact' : '/signup'))}
+                  onClick={() =>
+                    navigate(plan.ctaLink || (plan.name === 'Enterprise' ? '/contact' : '/signup'))
+                  }
                   className={`w-full py-6 text-base font-semibold ${
                     plan.highlighted
                       ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/30'
@@ -200,7 +214,9 @@ export function Pricing() {
             <div className="flex items-center gap-4">
               <div className="text-left">
                 <p className="text-white font-medium">Not sure which plan is right for you?</p>
-                <p className="text-sm text-gray-500">Talk to our team for a personalized recommendation.</p>
+                <p className="text-sm text-gray-500">
+                  Talk to our team for a personalized recommendation.
+                </p>
               </div>
               <Button
                 variant="outline"

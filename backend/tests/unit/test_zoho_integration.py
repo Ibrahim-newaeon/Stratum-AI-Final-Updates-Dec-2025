@@ -9,17 +9,17 @@ Unit tests for Zoho CRM integration:
 4. CRM Sync Tasks - Celery background tasks
 """
 
-import pytest
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List
+import hashlib
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
-import hashlib
 
+import pytest
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_zoho_contact():
@@ -83,7 +83,7 @@ def sample_connection_data():
         "status": "connected",
         "access_token_enc": "encrypted_token_data",
         "refresh_token_enc": "encrypted_refresh_data",
-        "token_expires_at": datetime.now(timezone.utc) + timedelta(hours=1),
+        "token_expires_at": datetime.now(UTC) + timedelta(hours=1),
     }
 
 
@@ -102,6 +102,7 @@ def mock_db_session():
 # =============================================================================
 # 1. ZohoClient Tests
 # =============================================================================
+
 
 class TestZohoClient:
     """Tests for ZohoClient OAuth and API functionality."""
@@ -124,14 +125,13 @@ class TestZohoClient:
         """Should generate correct OAuth authorization URL."""
         from app.services.crm.zoho_client import ZohoClient
 
-        with patch('app.services.crm.zoho_client.settings') as mock_settings:
+        with patch("app.services.crm.zoho_client.settings") as mock_settings:
             mock_settings.zoho_client_id = "test_client_id"
             mock_settings.zoho_client_secret = "test_secret"
 
             client = ZohoClient(mock_db_session, tenant_id=1, region="com")
             auth_url = client.get_authorization_url(
-                redirect_uri="https://app.stratum.ai/callback",
-                state="test_state_123"
+                redirect_uri="https://app.stratum.ai/callback", state="test_state_123"
             )
 
             assert "accounts.zoho.com/oauth/v2/auth" in auth_url
@@ -165,13 +165,13 @@ class TestZohoClient:
 
         # Mock connection with token expiring in 4 minutes
         mock_connection = MagicMock()
-        mock_connection.token_expires_at = datetime.now(timezone.utc) + timedelta(minutes=4)
+        mock_connection.token_expires_at = datetime.now(UTC) + timedelta(minutes=4)
         client._connection = mock_connection
 
         # The client checks expiry in get_access_token, which refreshes if within 5 min buffer
         # We test the concept by checking token_expires_at is near
         buffer = timedelta(minutes=5)
-        needs_refresh = datetime.now(timezone.utc) >= mock_connection.token_expires_at - buffer
+        needs_refresh = datetime.now(UTC) >= mock_connection.token_expires_at - buffer
         assert needs_refresh == True
 
     def test_token_valid_no_refresh_needed(self, mock_db_session):
@@ -182,17 +182,18 @@ class TestZohoClient:
 
         # Mock connection with token expiring in 30 minutes
         mock_connection = MagicMock()
-        mock_connection.token_expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+        mock_connection.token_expires_at = datetime.now(UTC) + timedelta(minutes=30)
         client._connection = mock_connection
 
         buffer = timedelta(minutes=5)
-        needs_refresh = datetime.now(timezone.utc) >= mock_connection.token_expires_at - buffer
+        needs_refresh = datetime.now(UTC) >= mock_connection.token_expires_at - buffer
         assert needs_refresh == False
 
 
 # =============================================================================
 # 2. ZohoSyncService Tests
 # =============================================================================
+
 
 class TestZohoSyncService:
     """Tests for Zoho contact, lead, and deal synchronization."""
@@ -222,7 +223,7 @@ class TestZohoSyncService:
         from app.services.crm.zoho_client import hash_email
 
         email = "Test@Example.com"
-        expected_hash = hashlib.sha256("test@example.com".encode()).hexdigest()
+        expected_hash = hashlib.sha256(b"test@example.com").hexdigest()
 
         computed_hash = hash_email(email)
         assert computed_hash == expected_hash
@@ -276,6 +277,7 @@ class TestZohoSyncService:
 # =============================================================================
 # 3. ZohoWritebackService Tests
 # =============================================================================
+
 
 class TestZohoWritebackService:
     """Tests for Zoho attribution writeback functionality."""
@@ -332,10 +334,10 @@ class TestZohoWritebackService:
         """Should calculate ROAS correctly."""
         # Test ROAS calculation logic
         test_cases = [
-            (1000, 200, 5.0),      # 5x ROAS
-            (500, 500, 1.0),       # 1x ROAS
-            (0, 100, 0.0),         # Zero revenue
-            (2500, 1000, 2.5),     # 2.5x ROAS
+            (1000, 200, 5.0),  # 5x ROAS
+            (500, 500, 1.0),  # 1x ROAS
+            (0, 100, 0.0),  # Zero revenue
+            (2500, 1000, 2.5),  # 2.5x ROAS
         ]
 
         for revenue, spend, expected in test_cases:
@@ -344,8 +346,8 @@ class TestZohoWritebackService:
 
     def test_days_to_close_calculation(self):
         """Should calculate days to close correctly."""
-        first_touch = datetime(2024, 1, 1, tzinfo=timezone.utc)
-        close_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
+        first_touch = datetime(2024, 1, 1, tzinfo=UTC)
+        close_date = datetime(2024, 1, 31, tzinfo=UTC)
 
         days = (close_date - first_touch).days
         assert days == 30
@@ -368,6 +370,7 @@ class TestZohoWritebackService:
 # =============================================================================
 # 4. CRM Sync Tasks Tests
 # =============================================================================
+
 
 class TestCRMSyncTasks:
     """Tests for Celery background sync tasks."""
@@ -392,8 +395,8 @@ class TestCRMSyncTasks:
 
     def test_async_task_decorator(self):
         """Async task decorator should exist."""
+
         from app.workers.crm_sync_tasks import async_task
-        import asyncio
 
         @async_task
         async def sample_async():
@@ -406,6 +409,7 @@ class TestCRMSyncTasks:
 # =============================================================================
 # 5. Integration Flow Tests
 # =============================================================================
+
 
 class TestZohoIntegrationFlow:
     """Tests for end-to-end integration flows."""
@@ -454,6 +458,7 @@ class TestZohoIntegrationFlow:
 # 6. Error Handling Tests
 # =============================================================================
 
+
 class TestZohoErrorHandling:
     """Tests for error handling in Zoho integration."""
 
@@ -468,8 +473,8 @@ class TestZohoErrorHandling:
 
         # Check for rate limit indicators
         is_rate_limited = (
-            "rate" in rate_limit_response.get("message", "").lower() or
-            rate_limit_response.get("code") == "RATE_LIMIT_EXCEEDED"
+            "rate" in rate_limit_response.get("message", "").lower()
+            or rate_limit_response.get("code") == "RATE_LIMIT_EXCEEDED"
         )
 
         assert is_rate_limited or "exceeded" in rate_limit_response.get("message", "").lower()
@@ -511,6 +516,7 @@ class TestZohoErrorHandling:
 # 7. Data Validation Tests
 # =============================================================================
 
+
 class TestZohoDataValidation:
     """Tests for data validation in Zoho integration."""
 
@@ -518,7 +524,7 @@ class TestZohoDataValidation:
         """Should validate email format."""
         import re
 
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
         valid_emails = ["test@example.com", "user.name@domain.co.uk"]
         invalid_emails = ["invalid", "@domain.com", "user@"]

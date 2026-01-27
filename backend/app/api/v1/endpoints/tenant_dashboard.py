@@ -14,8 +14,8 @@ Routes:
 - PUT /api/tenant/{tenant_id}/settings - Update settings
 """
 
-from datetime import date, datetime, timedelta, timezone
-from typing import List, Optional
+from datetime import UTC, date, datetime, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
@@ -27,7 +27,7 @@ from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, Tenant
 from app.schemas import APIResponse
-from app.tenancy import require_tenant, TenantContext, tenant_query
+from app.tenancy import TenantContext, require_tenant, tenant_query
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -38,6 +38,7 @@ router = APIRouter()
 # =============================================================================
 class DashboardOverviewResponse(BaseModel):
     """Dashboard overview response with all KPIs."""
+
     # Spend & Revenue
     total_spend: float = 0
     total_revenue: float = 0
@@ -78,6 +79,7 @@ class DashboardOverviewResponse(BaseModel):
 
 class RecommendationItem(BaseModel):
     """Single recommendation item."""
+
     id: str
     type: str  # scale, watch, fix, pause, creative_refresh, budget_shift
     priority: int  # 1-5 (1 = highest)
@@ -89,12 +91,13 @@ class RecommendationItem(BaseModel):
     impact_estimate: Optional[str] = None
     roas_impact: Optional[float] = None
     confidence: float = 0.0
-    actions: List[dict] = []
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    actions: list[dict] = []
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class AlertItem(BaseModel):
     """Single alert item."""
+
     id: int
     type: str  # anomaly, fatigue, budget, signal, system
     severity: str  # low, medium, high, critical
@@ -117,6 +120,7 @@ class AlertItem(BaseModel):
 
 class TenantSettingsResponse(BaseModel):
     """Tenant settings response."""
+
     # General settings
     currency: str = "USD"
     timezone: str = "UTC"
@@ -136,7 +140,7 @@ class TenantSettingsResponse(BaseModel):
     notification_frequency: str = "realtime"  # realtime, hourly, daily
 
     # Connected platforms
-    connected_platforms: List[str] = []
+    connected_platforms: list[str] = []
 
     # Feature flags
     feature_flags: dict = {}
@@ -144,6 +148,7 @@ class TenantSettingsResponse(BaseModel):
 
 class TenantSettingsUpdate(BaseModel):
     """Tenant settings update request."""
+
     currency: Optional[str] = None
     timezone: Optional[str] = None
     date_format: Optional[str] = None
@@ -221,7 +226,9 @@ async def get_dashboard_overview(
         if platform not in platform_breakdown:
             platform_breakdown[platform] = {"campaigns": 0, "spend": 0, "revenue": 0}
         platform_breakdown[platform]["campaigns"] += 1
-        platform_breakdown[platform]["spend"] += c.total_spend_cents / 100 if c.total_spend_cents else 0
+        platform_breakdown[platform]["spend"] += (
+            c.total_spend_cents / 100 if c.total_spend_cents else 0
+        )
         platform_breakdown[platform]["revenue"] += c.revenue_cents / 100 if c.revenue_cents else 0
 
     # Calculate deltas (placeholder - would normally compare to previous period)
@@ -271,7 +278,7 @@ async def get_dashboard_overview(
 # =============================================================================
 @router.get(
     "/{tenant_id}/recommendations",
-    response_model=APIResponse[List[RecommendationItem]],
+    response_model=APIResponse[list[RecommendationItem]],
 )
 async def get_tenant_recommendations(
     request: Request,
@@ -286,8 +293,8 @@ async def get_tenant_recommendations(
 
     Returns prioritized list of actions: scale, watch, fix, pause, creative_refresh.
     """
-    from app.analytics.logic.types import EntityMetrics, BaselineMetrics, EntityLevel, Platform
     from app.analytics.logic.recommend import RecommendationsEngine
+    from app.analytics.logic.types import BaselineMetrics, EntityLevel, EntityMetrics, Platform
 
     # Get campaigns
     campaigns_query = tenant_query(db, Campaign, tenant_id)
@@ -318,7 +325,7 @@ async def get_tenant_recommendations(
             entity_name=c.name,
             entity_level=EntityLevel.CAMPAIGN,
             platform=Platform(c.platform.value if c.platform else "meta"),
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
             spend=spend,
             impressions=impressions,
             clicks=clicks,
@@ -385,7 +392,7 @@ async def get_tenant_recommendations(
 # =============================================================================
 @router.get(
     "/{tenant_id}/alerts",
-    response_model=APIResponse[List[AlertItem]],
+    response_model=APIResponse[list[AlertItem]],
 )
 async def get_tenant_alerts(
     request: Request,
@@ -434,7 +441,7 @@ async def get_tenant_alerts(
                     expected_value=1.5,
                     is_acknowledged=False,
                     is_resolved=False,
-                    created_at=datetime.now(timezone.utc) - timedelta(hours=2),
+                    created_at=datetime.now(UTC) - timedelta(hours=2),
                 )
             )
             alert_id += 1
@@ -455,7 +462,7 @@ async def get_tenant_alerts(
                     expected_value=1.5,
                     is_acknowledged=False,
                     is_resolved=False,
-                    created_at=datetime.now(timezone.utc) - timedelta(hours=5),
+                    created_at=datetime.now(UTC) - timedelta(hours=5),
                 )
             )
             alert_id += 1
@@ -474,7 +481,7 @@ async def get_tenant_alerts(
 
     return APIResponse(
         success=True,
-        data=alerts[skip:skip + limit],
+        data=alerts[skip : skip + limit],
         meta={"total": len(alerts), "skip": skip, "limit": limit},
     )
 
@@ -506,7 +513,7 @@ async def acknowledge_alert(
         data={
             "alert_id": alert_id,
             "acknowledged_by": ctx.user_id,
-            "acknowledged_at": datetime.now(timezone.utc).isoformat(),
+            "acknowledged_at": datetime.now(UTC).isoformat(),
         },
     )
 
@@ -537,7 +544,7 @@ async def resolve_alert(
         data={
             "alert_id": alert_id,
             "resolved_by": ctx.user_id,
-            "resolved_at": datetime.now(timezone.utc).isoformat(),
+            "resolved_at": datetime.now(UTC).isoformat(),
             "resolution_notes": resolution_notes,
         },
     )
@@ -680,8 +687,13 @@ async def get_command_center(
 
     Returns campaigns grouped by recommended action (scale, watch, fix, pause).
     """
-    from app.analytics.logic.types import EntityMetrics, BaselineMetrics, EntityLevel, Platform as PlatformEnum
     from app.analytics.logic.scoring import scaling_score
+    from app.analytics.logic.types import (
+        BaselineMetrics,
+        EntityLevel,
+        EntityMetrics,
+        Platform as PlatformEnum,
+    )
 
     # Get campaigns
     campaigns_query = tenant_query(db, Campaign, tenant_id)
@@ -706,7 +718,7 @@ async def get_command_center(
             entity_name=c.name,
             entity_level=EntityLevel.CAMPAIGN,
             platform=PlatformEnum(c.platform.value if c.platform else "meta"),
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
             spend=spend,
             impressions=impressions,
             clicks=clicks,
@@ -744,26 +756,28 @@ async def get_command_center(
         if action_filter and action != action_filter:
             continue
 
-        command_center_data.append({
-            "campaign_id": c.id,
-            "campaign_name": c.name,
-            "platform": c.platform.value if c.platform else "unknown",
-            "status": c.status.value if c.status else "unknown",
-            "spend": round(spend, 2),
-            "revenue": round(revenue, 2),
-            "roas": round(c.roas or 0, 2),
-            "cpa": round((spend / max(conversions, 1)) if conversions > 0 else 0, 2),
-            "ctr": round(c.ctr or 0, 2),
-            "conversions": conversions,
-            "scaling_score": round(score_result.final_score, 2),
-            "action": action,
-            "signals": {
-                "roas_momentum": score_result.signals.get("roas_momentum", 0),
-                "spend_efficiency": score_result.signals.get("spend_efficiency", 0),
-                "conversion_trend": score_result.signals.get("conversion_trend", 0),
-            },
-            "recommendation": score_result.recommendation,
-        })
+        command_center_data.append(
+            {
+                "campaign_id": c.id,
+                "campaign_name": c.name,
+                "platform": c.platform.value if c.platform else "unknown",
+                "status": c.status.value if c.status else "unknown",
+                "spend": round(spend, 2),
+                "revenue": round(revenue, 2),
+                "roas": round(c.roas or 0, 2),
+                "cpa": round((spend / max(conversions, 1)) if conversions > 0 else 0, 2),
+                "ctr": round(c.ctr or 0, 2),
+                "conversions": conversions,
+                "scaling_score": round(score_result.final_score, 2),
+                "action": action,
+                "signals": {
+                    "roas_momentum": score_result.signals.get("roas_momentum", 0),
+                    "spend_efficiency": score_result.signals.get("spend_efficiency", 0),
+                    "conversion_trend": score_result.signals.get("conversion_trend", 0),
+                },
+                "recommendation": score_result.recommendation,
+            }
+        )
 
     # Sort by scaling_score (descending for scale, ascending for fix)
     command_center_data.sort(key=lambda x: abs(x["scaling_score"]), reverse=True)

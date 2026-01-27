@@ -118,9 +118,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Check if response might contain sensitive data
             sensitive_paths = ["/api/v1/auth/", "/api/v1/users/", "/api/v1/settings/"]
             if any(request.url.path.startswith(path) for path in sensitive_paths):
-                response.headers["Cache-Control"] = (
-                    "no-store, no-cache, must-revalidate, private"
-                )
+                response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
                 response.headers["Pragma"] = "no-cache"
                 response.headers["Expires"] = "0"
 

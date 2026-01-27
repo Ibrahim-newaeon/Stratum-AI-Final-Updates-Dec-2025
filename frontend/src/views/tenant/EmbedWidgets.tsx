@@ -7,20 +7,20 @@
 
 import { useState } from 'react';
 import {
-  PlusIcon,
-  CodeBracketIcon,
-  TrashIcon,
-  ClipboardIcon,
-  GlobeAltIcon,
-  KeyIcon,
-  ShieldCheckIcon,
   ChartBarIcon,
+  CheckIcon,
+  ClipboardIcon,
+  CodeBracketIcon,
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
-  TableCellsIcon,
-  LockClosedIcon,
-  CheckIcon,
   EyeIcon,
+  GlobeAltIcon,
+  KeyIcon,
+  LockClosedIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TableCellsIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,14 +44,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import {
-  WidgetType,
-  WidgetSize,
   BrandingLevel,
-  EmbedWidget,
-  EmbedToken,
   DomainWhitelist,
-  WIDGET_TYPE_INFO,
+  EmbedToken,
+  EmbedWidget,
   WIDGET_DIMENSIONS,
+  WIDGET_TYPE_INFO,
+  WidgetSize,
+  WidgetType,
 } from '@/types/embedWidgets';
 
 // Mock data for demonstration
@@ -165,7 +165,12 @@ export default function EmbedWidgets() {
     };
     setWidgets([widget, ...widgets]);
     setShowCreateDialog(false);
-    setNewWidget({ name: '', description: '', widget_type: 'signal_health', widget_size: 'standard' });
+    setNewWidget({
+      name: '',
+      description: '',
+      widget_type: 'signal_health',
+      widget_size: 'standard',
+    });
   };
 
   const handleAddDomain = () => {
@@ -189,9 +194,10 @@ export default function EmbedWidgets() {
   };
 
   const generateIframeCode = (widget: EmbedWidget) => {
-    const { width, height } = widget.widget_size === 'custom'
-      ? { width: widget.custom_width, height: widget.custom_height }
-      : WIDGET_DIMENSIONS[widget.widget_size];
+    const { width, height } =
+      widget.widget_size === 'custom'
+        ? { width: widget.custom_width, height: widget.custom_height }
+        : WIDGET_DIMENSIONS[widget.widget_size];
 
     return `<iframe
   src="https://app.stratum.ai/embed/v1/widget/${widget.id}?token={YOUR_TOKEN}"
@@ -268,7 +274,10 @@ export default function EmbedWidgets() {
               </div>
             </div>
             {!tierInfo.features.white_label && (
-              <Button variant="outline" className="text-purple-400 border-purple-500/30 hover:bg-purple-500/10">
+              <Button
+                variant="outline"
+                className="text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
+              >
                 Upgrade for White Label
               </Button>
             )}
@@ -300,7 +309,10 @@ export default function EmbedWidgets() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {widgets.map((widget) => (
-                <Card key={widget.id} className="bg-gray-900/30 border-white/5 hover:border-white/10 transition-all">
+                <Card
+                  key={widget.id}
+                  className="bg-gray-900/30 border-white/5 hover:border-white/10 transition-all"
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
@@ -316,7 +328,11 @@ export default function EmbedWidgets() {
                       </div>
                       <Badge
                         variant="outline"
-                        className={widget.is_active ? 'text-green-400 border-green-500/30' : 'text-gray-500 border-gray-600'}
+                        className={
+                          widget.is_active
+                            ? 'text-green-400 border-green-500/30'
+                            : 'text-gray-500 border-gray-600'
+                        }
                       >
                         {widget.is_active ? 'Active' : 'Inactive'}
                       </Badge>
@@ -329,7 +345,10 @@ export default function EmbedWidgets() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500">Branding</span>
-                      <Badge variant="outline" className={brandingBadgeColors[widget.branding_level]}>
+                      <Badge
+                        variant="outline"
+                        className={brandingBadgeColors[widget.branding_level]}
+                      >
                         {widget.branding_level === 'none' ? 'None' : widget.branding_level}
                       </Badge>
                     </div>
@@ -354,7 +373,11 @@ export default function EmbedWidgets() {
                       <Button variant="ghost" size="sm">
                         <EyeIcon className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      >
                         <TrashIcon className="w-4 h-4" />
                       </Button>
                     </div>
@@ -382,7 +405,9 @@ export default function EmbedWidgets() {
               <CardContent className="p-12 text-center">
                 <GlobeAltIcon className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-white mb-2">No domains whitelisted</h3>
-                <p className="text-gray-500 mb-4">Add domains where your widgets will be embedded</p>
+                <p className="text-gray-500 mb-4">
+                  Add domains where your widgets will be embedded
+                </p>
                 <Button onClick={() => setShowDomainDialog(true)}>
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Add Domain
@@ -415,7 +440,11 @@ export default function EmbedWidgets() {
                             Pending
                           </Badge>
                         )}
-                        <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        >
                           <TrashIcon className="w-4 h-4" />
                         </Button>
                       </div>
@@ -434,7 +463,8 @@ export default function EmbedWidgets() {
           <DialogHeader>
             <DialogTitle className="text-white">Create Embed Widget</DialogTitle>
             <DialogDescription>
-              Create a new embeddable widget. Your branding level ({tierInfo.branding_level}) will be applied automatically.
+              Create a new embeddable widget. Your branding level ({tierInfo.branding_level}) will
+              be applied automatically.
             </DialogDescription>
           </DialogHeader>
 
@@ -463,7 +493,9 @@ export default function EmbedWidgets() {
               <label className="text-sm text-gray-400">Widget Type</label>
               <Select
                 value={newWidget.widget_type}
-                onValueChange={(value: WidgetType) => setNewWidget({ ...newWidget, widget_type: value })}
+                onValueChange={(value: WidgetType) =>
+                  setNewWidget({ ...newWidget, widget_type: value })
+                }
               >
                 <SelectTrigger className="bg-gray-800 border-white/10">
                   <SelectValue />
@@ -488,7 +520,9 @@ export default function EmbedWidgets() {
               <label className="text-sm text-gray-400">Widget Size</label>
               <Select
                 value={newWidget.widget_size}
-                onValueChange={(value: WidgetSize) => setNewWidget({ ...newWidget, widget_size: value })}
+                onValueChange={(value: WidgetSize) =>
+                  setNewWidget({ ...newWidget, widget_size: value })
+                }
               >
                 <SelectTrigger className="bg-gray-800 border-white/10">
                   <SelectValue />
@@ -520,7 +554,8 @@ export default function EmbedWidgets() {
           <DialogHeader>
             <DialogTitle className="text-white">Add Domain to Whitelist</DialogTitle>
             <DialogDescription>
-              Add a domain where your widgets will be embedded. Supports wildcards like *.example.com
+              Add a domain where your widgets will be embedded. Supports wildcards like
+              *.example.com
             </DialogDescription>
           </DialogHeader>
 
@@ -533,9 +568,7 @@ export default function EmbedWidgets() {
                 onChange={(e) => setNewDomain({ ...newDomain, domain_pattern: e.target.value })}
                 className="bg-gray-800 border-white/10 font-mono"
               />
-              <p className="text-xs text-gray-500">
-                Use *.domain.com to allow all subdomains
-              </p>
+              <p className="text-xs text-gray-500">Use *.domain.com to allow all subdomains</p>
             </div>
 
             <div className="space-y-2">
@@ -566,7 +599,8 @@ export default function EmbedWidgets() {
           <DialogHeader>
             <DialogTitle className="text-white">Embed Code</DialogTitle>
             <DialogDescription>
-              Copy the embed code to add this widget to your site. Replace {'{YOUR_TOKEN}'} with your actual token.
+              Copy the embed code to add this widget to your site. Replace {'{YOUR_TOKEN}'} with
+              your actual token.
             </DialogDescription>
           </DialogHeader>
 
@@ -631,8 +665,8 @@ export default function EmbedWidgets() {
               <div>
                 <div className="text-sm font-medium text-yellow-400">Token Required</div>
                 <div className="text-xs text-yellow-400/70 mt-1">
-                  Create an embed token in the Tokens section and replace {'{YOUR_TOKEN}'} with the actual token value.
-                  Tokens are domain-bound for security.
+                  Create an embed token in the Tokens section and replace {'{YOUR_TOKEN}'} with the
+                  actual token value. Tokens are domain-bound for security.
                 </div>
               </div>
             </div>

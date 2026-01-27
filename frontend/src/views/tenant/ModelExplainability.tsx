@@ -4,140 +4,149 @@
  * SHAP/LIME-based model explanations for ML predictions.
  */
 
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { apiClient, ApiResponse } from '@/api/client'
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { apiClient, ApiResponse } from '@/api/client';
 import {
-  SparklesIcon,
-  LightBulbIcon,
-  ChartBarIcon,
-  ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  InformationCircleIcon,
-  CpuChipIcon,
+  ArrowTrendingUpIcon,
   BeakerIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  ChartBarIcon,
+  CpuChipIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 // Types
-type ModelType = 'roas_optimizer' | 'conversion_predictor' | 'ltv_predictor' | 'attribution'
-type ExplanationType = 'shap' | 'lime' | 'feature_importance'
+type ModelType = 'roas_optimizer' | 'conversion_predictor' | 'ltv_predictor' | 'attribution';
+type ExplanationType = 'shap' | 'lime' | 'feature_importance';
 
 interface FeatureImportance {
-  feature: string
-  importance: number
-  direction: 'positive' | 'negative' | 'neutral'
-  description: string
+  feature: string;
+  importance: number;
+  direction: 'positive' | 'negative' | 'neutral';
+  description: string;
 }
 
 interface SHAPExplanation {
-  baseValue: number
-  predictedValue: number
+  baseValue: number;
+  predictedValue: number;
   features: {
-    name: string
-    value: number
-    shapValue: number
-    contribution: 'positive' | 'negative'
-  }[]
-  plot: string // Base64 encoded image or chart data
+    name: string;
+    value: number;
+    shapValue: number;
+    contribution: 'positive' | 'negative';
+  }[];
+  plot: string; // Base64 encoded image or chart data
 }
 
 interface LIMEExplanation {
-  prediction: number
-  intercept: number
+  prediction: number;
+  intercept: number;
   features: {
-    name: string
-    weight: number
-    value: number
-    contribution: number
-  }[]
-  localFidelity: number
+    name: string;
+    weight: number;
+    value: number;
+    contribution: number;
+  }[];
+  localFidelity: number;
 }
 
 interface ModelInfo {
-  id: string
-  name: string
-  type: ModelType
-  version: string
-  trainedAt: string
+  id: string;
+  name: string;
+  type: ModelType;
+  version: string;
+  trainedAt: string;
   metrics: {
-    accuracy?: number
-    precision?: number
-    recall?: number
-    f1?: number
-    auc?: number
-    mae?: number
-    rmse?: number
-  }
-  featureCount: number
-  sampleCount: number
+    accuracy?: number;
+    precision?: number;
+    recall?: number;
+    f1?: number;
+    auc?: number;
+    mae?: number;
+    rmse?: number;
+  };
+  featureCount: number;
+  sampleCount: number;
 }
 
 interface PredictionExplanation {
-  predictionId: string
-  modelType: ModelType
-  inputFeatures: Record<string, number | string>
-  prediction: number
-  confidence: number
-  shap?: SHAPExplanation
-  lime?: LIMEExplanation
-  featureImportance: FeatureImportance[]
-  insights: string[]
+  predictionId: string;
+  modelType: ModelType;
+  inputFeatures: Record<string, number | string>;
+  prediction: number;
+  confidence: number;
+  shap?: SHAPExplanation;
+  lime?: LIMEExplanation;
+  featureImportance: FeatureImportance[];
+  insights: string[];
 }
 
 // API Functions
 const explainabilityApi = {
   getModels: async () => {
-    const response = await apiClient.get<ApiResponse<ModelInfo[]>>('/ml/models')
-    return response.data.data
+    const response = await apiClient.get<ApiResponse<ModelInfo[]>>('/ml/models');
+    return response.data.data;
   },
 
   getModelInfo: async (modelType: ModelType) => {
-    const response = await apiClient.get<ApiResponse<ModelInfo>>(`/ml/models/${modelType}`)
-    return response.data.data
+    const response = await apiClient.get<ApiResponse<ModelInfo>>(`/ml/models/${modelType}`);
+    return response.data.data;
   },
 
   getFeatureImportance: async (modelType: ModelType) => {
-    const response = await apiClient.get<ApiResponse<FeatureImportance[]>>(`/ml/models/${modelType}/feature-importance`)
-    return response.data.data
+    const response = await apiClient.get<ApiResponse<FeatureImportance[]>>(
+      `/ml/models/${modelType}/feature-importance`
+    );
+    return response.data.data;
   },
 
   explainPrediction: async (params: {
-    modelType: ModelType
-    inputData: Record<string, number | string>
-    explanationType: ExplanationType
+    modelType: ModelType;
+    inputData: Record<string, number | string>;
+    explanationType: ExplanationType;
   }) => {
-    const response = await apiClient.post<ApiResponse<PredictionExplanation>>('/ml/explain', params)
-    return response.data.data
+    const response = await apiClient.post<ApiResponse<PredictionExplanation>>(
+      '/ml/explain',
+      params
+    );
+    return response.data.data;
   },
 
   getSHAPSummary: async (modelType: ModelType) => {
-    const response = await apiClient.get<ApiResponse<{
-      summaryPlot: string
-      features: Array<{ name: string; meanAbsShap: number; stdShap: number }>
-    }>>(`/ml/models/${modelType}/shap-summary`)
-    return response.data.data
+    const response = await apiClient.get<
+      ApiResponse<{
+        summaryPlot: string;
+        features: Array<{ name: string; meanAbsShap: number; stdShap: number }>;
+      }>
+    >(`/ml/models/${modelType}/shap-summary`);
+    return response.data.data;
   },
 
   getLTVPrediction: async (params: { customerId?: string; segment?: string }) => {
-    const response = await apiClient.post<ApiResponse<{
-      predictedLTV: number
-      confidence: number
-      timeHorizon: string
-      breakdown: Array<{ period: string; value: number }>
-      factors: FeatureImportance[]
-    }>>('/ml/predictions/ltv', params)
-    return response.data.data
+    const response = await apiClient.post<
+      ApiResponse<{
+        predictedLTV: number;
+        confidence: number;
+        timeHorizon: string;
+        breakdown: Array<{ period: string; value: number }>;
+        factors: FeatureImportance[];
+      }>
+    >('/ml/predictions/ltv', params);
+    return response.data.data;
   },
-}
+};
 
 // Hooks
 function useModels() {
   return useQuery({
     queryKey: ['ml', 'models'],
     queryFn: explainabilityApi.getModels,
-  })
+  });
 }
 
 function useModelInfo(modelType: ModelType) {
@@ -145,7 +154,7 @@ function useModelInfo(modelType: ModelType) {
     queryKey: ['ml', 'models', modelType],
     queryFn: () => explainabilityApi.getModelInfo(modelType),
     enabled: !!modelType,
-  })
+  });
 }
 
 function useFeatureImportance(modelType: ModelType) {
@@ -153,7 +162,7 @@ function useFeatureImportance(modelType: ModelType) {
     queryKey: ['ml', 'models', modelType, 'feature-importance'],
     queryFn: () => explainabilityApi.getFeatureImportance(modelType),
     enabled: !!modelType,
-  })
+  });
 }
 
 function useSHAPSummary(modelType: ModelType) {
@@ -161,20 +170,20 @@ function useSHAPSummary(modelType: ModelType) {
     queryKey: ['ml', 'models', modelType, 'shap-summary'],
     queryFn: () => explainabilityApi.getSHAPSummary(modelType),
     enabled: !!modelType,
-  })
+  });
 }
 
 // Exported for future use in prediction explanation features
 export function useExplainPrediction() {
   return useMutation({
     mutationFn: explainabilityApi.explainPrediction,
-  })
+  });
 }
 
 function useLTVPrediction() {
   return useMutation({
     mutationFn: explainabilityApi.getLTVPrediction,
-  })
+  });
 }
 
 const modelTypeLabels: Record<ModelType, string> = {
@@ -182,29 +191,29 @@ const modelTypeLabels: Record<ModelType, string> = {
   conversion_predictor: 'Conversion Predictor',
   ltv_predictor: 'LTV Predictor',
   attribution: 'Attribution Model',
-}
+};
 
 export default function ModelExplainability() {
-  useParams<{ tenantId: string }>()
-  const [selectedModel, setSelectedModel] = useState<ModelType>('roas_optimizer')
-  const [activeTab, setActiveTab] = useState<'overview' | 'shap' | 'lime' | 'ltv'>('overview')
+  useParams<{ tenantId: string }>();
+  const [selectedModel, setSelectedModel] = useState<ModelType>('roas_optimizer');
+  const [activeTab, setActiveTab] = useState<'overview' | 'shap' | 'lime' | 'ltv'>('overview');
 
-  useModels() // Prefetch models list
-  const { data: modelInfo } = useModelInfo(selectedModel)
-  const { data: featureImportance } = useFeatureImportance(selectedModel)
-  const { data: shapSummary } = useSHAPSummary(selectedModel)
-  const ltvPrediction = useLTVPrediction()
+  useModels(); // Prefetch models list
+  const { data: modelInfo } = useModelInfo(selectedModel);
+  const { data: featureImportance } = useFeatureImportance(selectedModel);
+  const { data: shapSummary } = useSHAPSummary(selectedModel);
+  const ltvPrediction = useLTVPrediction();
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview' },
     { id: 'shap' as const, label: 'SHAP Analysis' },
     { id: 'lime' as const, label: 'LIME Explanations' },
     { id: 'ltv' as const, label: 'LTV Predictions' },
-  ]
+  ];
 
   const maxImportance = featureImportance
     ? Math.max(...featureImportance.map((f) => Math.abs(f.importance)))
-    : 1
+    : 1;
 
   return (
     <div className="space-y-6">
@@ -330,11 +339,13 @@ export default function ModelExplainability() {
             <div className="flex items-start gap-3">
               <InformationCircleIcon className="h-6 w-6 text-blue-600 mt-0.5" />
               <div>
-                <h3 className="font-medium text-blue-900 dark:text-blue-100">About Model Explainability</h3>
+                <h3 className="font-medium text-blue-900 dark:text-blue-100">
+                  About Model Explainability
+                </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
-                  <strong>SHAP (SHapley Additive exPlanations)</strong> uses game theory to calculate
-                  feature contributions. Each feature's SHAP value represents its contribution to pushing
-                  the prediction away from the baseline.
+                  <strong>SHAP (SHapley Additive exPlanations)</strong> uses game theory to
+                  calculate feature contributions. Each feature's SHAP value represents its
+                  contribution to pushing the prediction away from the baseline.
                 </p>
                 <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
                   <strong>LIME (Local Interpretable Model-agnostic Explanations)</strong> creates
@@ -382,10 +393,10 @@ export default function ModelExplainability() {
 
             <div className="mt-6 p-4 rounded-lg bg-muted/50">
               <p className="text-sm">
-                <span className="font-medium">How to read:</span> Features are ranked by their
-                mean absolute SHAP value across all samples. Higher values indicate features that
-                have more impact on predictions. The color gradient shows the distribution of
-                SHAP values (blue = negative impact, red = positive impact).
+                <span className="font-medium">How to read:</span> Features are ranked by their mean
+                absolute SHAP value across all samples. Higher values indicate features that have
+                more impact on predictions. The color gradient shows the distribution of SHAP values
+                (blue = negative impact, red = positive impact).
               </p>
             </div>
           </div>
@@ -394,8 +405,8 @@ export default function ModelExplainability() {
           <div className="rounded-xl border bg-card p-6 shadow-card">
             <h3 className="font-semibold mb-4">Feature Interactions</h3>
             <p className="text-muted-foreground">
-              SHAP interaction values help identify which feature pairs have the strongest
-              combined effects on predictions.
+              SHAP interaction values help identify which feature pairs have the strongest combined
+              effects on predictions.
             </p>
             <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
@@ -426,8 +437,8 @@ export default function ModelExplainability() {
             </div>
 
             <p className="text-muted-foreground mb-6">
-              LIME explains individual predictions by learning a simple, interpretable model
-              around the prediction point. Select a prediction to see its local explanation.
+              LIME explains individual predictions by learning a simple, interpretable model around
+              the prediction point. Select a prediction to see its local explanation.
             </p>
 
             {/* Sample LIME explanation */}
@@ -469,7 +480,8 @@ export default function ModelExplainability() {
                       )}
                     </div>
                     <div className="w-16 text-right text-sm">
-                      {feature.direction === 'positive' ? '+' : ''}{(feature.weight * 100).toFixed(0)}%
+                      {feature.direction === 'positive' ? '+' : ''}
+                      {(feature.weight * 100).toFixed(0)}%
                     </div>
                   </div>
                 ))}
@@ -489,8 +501,8 @@ export default function ModelExplainability() {
             </div>
 
             <p className="text-muted-foreground mb-6">
-              ML-powered LTV predictions help you understand customer value and optimize
-              acquisition strategies.
+              ML-powered LTV predictions help you understand customer value and optimize acquisition
+              strategies.
             </p>
 
             {/* LTV Calculator */}
@@ -522,19 +534,26 @@ export default function ModelExplainability() {
                       ${ltvPrediction.data.predictedLTV.toFixed(2)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {ltvPrediction.data.timeHorizon} | {(ltvPrediction.data.confidence * 100).toFixed(0)}% confidence
+                      {ltvPrediction.data.timeHorizon} |{' '}
+                      {(ltvPrediction.data.confidence * 100).toFixed(0)}% confidence
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Key Factors</p>
                     {ltvPrediction.data.factors.slice(0, 5).map((factor) => (
-                      <div key={factor.feature} className="flex items-center justify-between text-sm">
+                      <div
+                        key={factor.feature}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <span>{factor.feature}</span>
-                        <span className={cn(
-                          factor.direction === 'positive' ? 'text-emerald-600' : 'text-red-600'
-                        )}>
-                          {factor.direction === 'positive' ? '+' : '-'}{(factor.importance * 100).toFixed(0)}%
+                        <span
+                          className={cn(
+                            factor.direction === 'positive' ? 'text-emerald-600' : 'text-red-600'
+                          )}
+                        >
+                          {factor.direction === 'positive' ? '+' : '-'}
+                          {(factor.importance * 100).toFixed(0)}%
                         </span>
                       </div>
                     ))}
@@ -550,7 +569,9 @@ export default function ModelExplainability() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
                 <LightBulbIcon className="h-5 w-5 text-emerald-600 mb-2" />
-                <h4 className="font-medium text-emerald-900 dark:text-emerald-100">High-Value Segment</h4>
+                <h4 className="font-medium text-emerald-900 dark:text-emerald-100">
+                  High-Value Segment
+                </h4>
                 <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
                   Increase bid by 20% for audiences with predicted LTV &gt; $500
                 </p>
@@ -564,7 +585,9 @@ export default function ModelExplainability() {
               </div>
               <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800">
                 <LightBulbIcon className="h-5 w-5 text-purple-600 mb-2" />
-                <h4 className="font-medium text-purple-900 dark:text-purple-100">CAC Optimization</h4>
+                <h4 className="font-medium text-purple-900 dark:text-purple-100">
+                  CAC Optimization
+                </h4>
                 <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
                   Target CAC:LTV ratio of 1:3 for sustainable growth
                 </p>
@@ -574,5 +597,5 @@ export default function ModelExplainability() {
         </div>
       )}
     </div>
-  )
+  );
 }

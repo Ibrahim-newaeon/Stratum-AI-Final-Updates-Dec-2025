@@ -11,27 +11,35 @@ Tracks sync jobs, platform audiences, and sync history for:
 - Snapchat Audience Match
 """
 
-from datetime import datetime
-from typing import Optional
-from uuid import uuid4
 import enum
+from uuid import uuid4
 
 from sqlalchemy import (
-    Column, String, Integer, DateTime, Text, ForeignKey,
-    Index, Boolean, BigInteger, Numeric, UniqueConstraint
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, TimestampMixin
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class SyncPlatform(str, enum.Enum):
     """Supported ad platforms for audience sync."""
+
     META = "meta"
     GOOGLE = "google"
     TIKTOK = "tiktok"
@@ -40,6 +48,7 @@ class SyncPlatform(str, enum.Enum):
 
 class SyncStatus(str, enum.Enum):
     """Status of audience sync job."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -49,14 +58,16 @@ class SyncStatus(str, enum.Enum):
 
 class SyncOperation(str, enum.Enum):
     """Type of sync operation."""
-    CREATE = "create"      # Create new audience
-    UPDATE = "update"      # Update existing audience (add/remove users)
-    REPLACE = "replace"    # Replace entire audience
-    DELETE = "delete"      # Delete audience from platform
+
+    CREATE = "create"  # Create new audience
+    UPDATE = "update"  # Update existing audience (add/remove users)
+    REPLACE = "replace"  # Replace entire audience
+    DELETE = "delete"  # Delete audience from platform
 
 
 class AudienceType(str, enum.Enum):
     """Type of audience on platform."""
+
     CUSTOMER_LIST = "customer_list"
     LOOKALIKE = "lookalike"
     WEBSITE = "website"
@@ -67,11 +78,13 @@ class AudienceType(str, enum.Enum):
 # Platform Audience Model
 # =============================================================================
 
+
 class PlatformAudience(Base, TimestampMixin):
     """
     Tracks audiences created on ad platforms from CDP segments.
     Links CDP segments to their corresponding platform audiences.
     """
+
     __tablename__ = "platform_audiences"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -136,8 +149,11 @@ class PlatformAudience(Base, TimestampMixin):
         Index("ix_platform_audiences_platform", "tenant_id", "platform"),
         Index("ix_platform_audiences_account", "tenant_id", "ad_account_id"),
         UniqueConstraint(
-            "tenant_id", "segment_id", "platform", "ad_account_id",
-            name="uq_platform_audiences_segment_platform_account"
+            "tenant_id",
+            "segment_id",
+            "platform",
+            "ad_account_id",
+            name="uq_platform_audiences_segment_platform_account",
         ),
     )
 
@@ -149,11 +165,13 @@ class PlatformAudience(Base, TimestampMixin):
 # Audience Sync Job Model
 # =============================================================================
 
+
 class AudienceSyncJob(Base, TimestampMixin):
     """
     Individual sync job execution record.
     Tracks each sync operation with detailed status and metrics.
     """
+
     __tablename__ = "audience_sync_jobs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -217,11 +235,13 @@ class AudienceSyncJob(Base, TimestampMixin):
 # Platform Credentials Model (for storing OAuth tokens)
 # =============================================================================
 
+
 class AudienceSyncCredential(Base, TimestampMixin):
     """
     Stores platform-specific credentials for audience sync.
     Links to ad accounts for each platform.
     """
+
     __tablename__ = "audience_sync_credentials"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -258,8 +278,10 @@ class AudienceSyncCredential(Base, TimestampMixin):
         Index("ix_audience_sync_creds_tenant", "tenant_id"),
         Index("ix_audience_sync_creds_platform", "tenant_id", "platform"),
         UniqueConstraint(
-            "tenant_id", "platform", "ad_account_id",
-            name="uq_audience_sync_creds_tenant_platform_account"
+            "tenant_id",
+            "platform",
+            "ad_account_id",
+            name="uq_audience_sync_creds_tenant_platform_account",
         ),
     )
 

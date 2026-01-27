@@ -10,14 +10,14 @@ import {
   Loader2,
   Minus,
   TrendingUp,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { CampaignSummaryItem, TrendDirection } from '@/api/dashboard'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { CampaignSummaryItem, TrendDirection } from '@/api/dashboard';
 
 interface CampaignPerformanceTableProps {
-  campaigns: CampaignSummaryItem[]
-  loading?: boolean
-  onViewAll?: () => void
+  campaigns: CampaignSummaryItem[];
+  loading?: boolean;
+  onViewAll?: () => void;
 }
 
 export function CampaignPerformanceTable({
@@ -31,63 +31,63 @@ export function CampaignPerformanceTable({
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value)
-  }
+    }).format(value);
+  };
 
   const formatRoas = (roas: number | null) => {
-    if (roas === null) return '-'
-    return `${roas.toFixed(2)}x`
-  }
+    if (roas === null) return '-';
+    return `${roas.toFixed(2)}x`;
+  };
 
   const getTrendIcon = (trend: TrendDirection) => {
     switch (trend) {
       case 'up':
-        return <ArrowUp className="w-3 h-3 text-green-500" />
+        return <ArrowUp className="w-3 h-3 text-green-500" />;
       case 'down':
-        return <ArrowDown className="w-3 h-3 text-red-500" />
+        return <ArrowDown className="w-3 h-3 text-red-500" />;
       case 'stable':
-        return <Minus className="w-3 h-3 text-muted-foreground" />
+        return <Minus className="w-3 h-3 text-muted-foreground" />;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const getScalingScoreColor = (score: number | null) => {
-    if (score === null) return 'text-muted-foreground'
-    if (score >= 80) return 'text-green-500'
-    if (score >= 60) return 'text-yellow-500'
-    return 'text-red-500'
-  }
+    if (score === null) return 'text-muted-foreground';
+    if (score >= 80) return 'text-green-500';
+    if (score >= 60) return 'text-yellow-500';
+    return 'text-red-500';
+  };
 
   const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase()
+    const statusLower = status.toLowerCase();
     if (statusLower === 'active' || statusLower === 'enabled') {
       return (
         <span className="text-xs px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full font-medium">
           Active
         </span>
-      )
+      );
     }
     if (statusLower === 'paused') {
       return (
         <span className="text-xs px-2 py-0.5 bg-yellow-500/10 text-yellow-500 rounded-full font-medium">
           Paused
         </span>
-      )
+      );
     }
     return (
       <span className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full font-medium">
         {status}
       </span>
-    )
-  }
+    );
+  };
 
   if (loading) {
     return (
       <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[300px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -190,5 +190,5 @@ export function CampaignPerformanceTable({
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -143,8 +143,8 @@ export function OTPInput({
             borderColor: error
               ? '#ef4444'
               : digit
-              ? 'rgba(252, 100, 35, 0.5)'
-              : 'rgba(255, 255, 255, 0.12)'
+                ? 'rgba(252, 100, 35, 0.5)'
+                : 'rgba(255, 255, 255, 0.12)',
           }}
           onFocus={(e) => {
             e.target.select();
@@ -157,8 +157,8 @@ export function OTPInput({
             e.target.style.borderColor = error
               ? '#ef4444'
               : digit
-              ? 'rgba(252, 100, 35, 0.5)'
-              : 'rgba(255, 255, 255, 0.12)';
+                ? 'rgba(252, 100, 35, 0.5)'
+                : 'rgba(255, 255, 255, 0.12)';
             e.target.style.boxShadow = 'none';
           }}
         />

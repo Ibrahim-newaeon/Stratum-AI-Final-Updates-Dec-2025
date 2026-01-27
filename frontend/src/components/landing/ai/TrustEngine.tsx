@@ -6,14 +6,14 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
 import {
-  SignalIcon,
-  ShieldCheckIcon,
-  BoltIcon,
-  ExclamationTriangleIcon,
-  XCircleIcon,
-  CheckCircleIcon,
   ArrowRightIcon,
-  InformationCircleIcon
+  BoltIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  ShieldCheckIcon,
+  SignalIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 
 type SignalStatus = 'healthy' | 'degraded' | 'unhealthy';
@@ -34,7 +34,7 @@ const signalStates: Record<SignalStatus, SignalState> = {
     decision: 'PASS',
     action: 'AUTOPILOT EXECUTE',
     color: 'green',
-    icon: CheckCircleIcon
+    icon: CheckCircleIcon,
   },
   degraded: {
     status: 'degraded',
@@ -42,7 +42,7 @@ const signalStates: Record<SignalStatus, SignalState> = {
     decision: 'HOLD',
     action: 'ALERT ONLY',
     color: 'yellow',
-    icon: ExclamationTriangleIcon
+    icon: ExclamationTriangleIcon,
   },
   unhealthy: {
     status: 'unhealthy',
@@ -50,15 +50,15 @@ const signalStates: Record<SignalStatus, SignalState> = {
     decision: 'BLOCK',
     action: 'MANUAL REQUIRED',
     color: 'red',
-    icon: XCircleIcon
-  }
+    icon: XCircleIcon,
+  },
 };
 
 const healthComponents = [
   { name: 'EMQ Score', weight: '40%', description: 'Event Match Quality from ad platforms' },
   { name: 'Freshness', weight: '25%', description: 'Data recency and completeness' },
   { name: 'Variance', weight: '20%', description: 'Metric consistency over time' },
-  { name: 'Anomalies', weight: '15%', description: 'Unusual pattern detection' }
+  { name: 'Anomalies', weight: '15%', description: 'Unusual pattern detection' },
 ];
 
 export default function TrustEngine() {
@@ -69,10 +69,30 @@ export default function TrustEngine() {
 
   const getColorClasses = (color: string) => ({
     bg: color === 'green' ? 'bg-green-500' : color === 'yellow' ? 'bg-yellow-500' : 'bg-red-500',
-    bgLight: color === 'green' ? 'bg-green-500/10' : color === 'yellow' ? 'bg-yellow-500/10' : 'bg-red-500/10',
-    border: color === 'green' ? 'border-green-500/30' : color === 'yellow' ? 'border-yellow-500/30' : 'border-red-500/30',
-    text: color === 'green' ? 'text-green-400' : color === 'yellow' ? 'text-yellow-400' : 'text-red-400',
-    gradient: color === 'green' ? 'from-green-500 to-emerald-500' : color === 'yellow' ? 'from-yellow-500 to-amber-500' : 'from-red-500 to-rose-500'
+    bgLight:
+      color === 'green'
+        ? 'bg-green-500/10'
+        : color === 'yellow'
+          ? 'bg-yellow-500/10'
+          : 'bg-red-500/10',
+    border:
+      color === 'green'
+        ? 'border-green-500/30'
+        : color === 'yellow'
+          ? 'border-yellow-500/30'
+          : 'border-red-500/30',
+    text:
+      color === 'green'
+        ? 'text-green-400'
+        : color === 'yellow'
+          ? 'text-yellow-400'
+          : 'text-red-400',
+    gradient:
+      color === 'green'
+        ? 'from-green-500 to-emerald-500'
+        : color === 'yellow'
+          ? 'from-yellow-500 to-amber-500'
+          : 'from-red-500 to-rose-500',
   });
 
   const colors = getColorClasses(current.color);
@@ -83,7 +103,13 @@ export default function TrustEngine() {
       <div className="absolute inset-0 opacity-[0.02]">
         <svg className="w-full h-full">
           <pattern id="trust-pattern" width="60" height="60" patternUnits="userSpaceOnUse">
-            <path d="M30 0v60M0 30h60" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-white" />
+            <path
+              d="M30 0v60M0 30h60"
+              stroke="currentColor"
+              strokeWidth="0.5"
+              fill="none"
+              className="text-white"
+            />
           </pattern>
           <rect width="100%" height="100%" fill="url(#trust-pattern)" />
         </svg>
@@ -106,7 +132,8 @@ export default function TrustEngine() {
           </h2>
 
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            The only platform that <span className="text-white font-medium">refuses to execute bad recommendations</span>.
+            The only platform that{' '}
+            <span className="text-white font-medium">refuses to execute bad recommendations</span>.
             Signal health is verified before every automated action.
           </p>
         </motion.div>
@@ -136,7 +163,9 @@ export default function TrustEngine() {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${isActive ? stateColors.bg : 'bg-gray-600'}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${isActive ? stateColors.bg : 'bg-gray-600'}`}
+                    />
                     <span className="capitalize">{state}</span>
                     <span className="text-xs opacity-60">({stateData.score})</span>
                   </div>
@@ -238,7 +267,9 @@ export default function TrustEngine() {
               </div>
 
               <div className="text-center">
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${colors.bgLight} ${colors.border} border mb-3`}>
+                <div
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${colors.bgLight} ${colors.border} border mb-3`}
+                >
                   <current.icon className={`w-4 h-4 ${colors.text}`} />
                   <span className={`font-bold ${colors.text}`}>{current.decision}</span>
                 </div>
@@ -279,8 +310,11 @@ export default function TrustEngine() {
               <InformationCircleIcon className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm text-gray-300">
-                  <span className="font-medium text-white">Never auto-execute when signal_health &lt; 70.</span>
-                  {' '}This is the safety guarantee that no other platform provides. Your automation only runs when data quality is verified.
+                  <span className="font-medium text-white">
+                    Never auto-execute when signal_health &lt; 70.
+                  </span>{' '}
+                  This is the safety guarantee that no other platform provides. Your automation only
+                  runs when data quality is verified.
                 </p>
               </div>
             </div>

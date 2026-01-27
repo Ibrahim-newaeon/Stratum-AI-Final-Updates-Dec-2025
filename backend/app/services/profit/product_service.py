@@ -11,13 +11,13 @@ Features:
 - External ID mapping
 """
 
-from datetime import date, datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
 import csv
 import io
+from datetime import date, datetime
+from typing import Any, Optional
+from uuid import UUID
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -50,8 +50,8 @@ class ProductCatalogService:
         product_type: Optional[str] = None,
         base_price_cents: Optional[int] = None,
         currency: str = "USD",
-        external_ids: Optional[Dict[str, str]] = None,
-        attributes: Optional[Dict[str, Any]] = None,
+        external_ids: Optional[dict[str, str]] = None,
+        attributes: Optional[dict[str, Any]] = None,
     ) -> ProductCatalog:
         """Create a new product."""
         product = ProductCatalog(
@@ -109,7 +109,7 @@ class ProductCatalogService:
         search: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """List products with filters."""
         conditions = [ProductCatalog.tenant_id == self.tenant_id]
 
@@ -167,9 +167,17 @@ class ProductCatalogService:
             return None
 
         allowed_fields = [
-            "name", "description", "category", "subcategory", "brand",
-            "product_type", "base_price_cents", "currency", "status",
-            "external_ids", "attributes",
+            "name",
+            "description",
+            "category",
+            "subcategory",
+            "brand",
+            "product_type",
+            "base_price_cents",
+            "currency",
+            "status",
+            "external_ids",
+            "attributes",
         ]
 
         for field, value in kwargs.items():
@@ -194,7 +202,7 @@ class ProductCatalogService:
 
         return True
 
-    async def get_categories(self) -> List[Dict[str, Any]]:
+    async def get_categories(self) -> list[dict[str, Any]]:
         """Get all product categories with counts."""
         result = await self.db.execute(
             select(
@@ -215,7 +223,7 @@ class ProductCatalogService:
 
         return [{"category": r.category, "count": r.count} for r in rows]
 
-    async def get_brands(self) -> List[Dict[str, Any]]:
+    async def get_brands(self) -> list[dict[str, Any]]:
         """Get all brands with counts."""
         result = await self.db.execute(
             select(
@@ -240,7 +248,7 @@ class ProductCatalogService:
         self,
         file_content: bytes,
         update_existing: bool = True,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """
         Import products from CSV.
 
@@ -291,7 +299,9 @@ class ProductCatalogService:
                             subcategory=row.get("subcategory"),
                             brand=row.get("brand"),
                             product_type=row.get("product_type"),
-                            base_price_cents=int(float(row["price"]) * 100) if row.get("price") else None,
+                            base_price_cents=int(float(row["price"]) * 100)
+                            if row.get("price")
+                            else None,
                         )
                         updated += 1
                     else:
@@ -305,7 +315,9 @@ class ProductCatalogService:
                         subcategory=row.get("subcategory"),
                         brand=row.get("brand"),
                         product_type=row.get("product_type"),
-                        base_price_cents=int(float(row["price"]) * 100) if row.get("price") else None,
+                        base_price_cents=int(float(row["price"]) * 100)
+                        if row.get("price")
+                        else None,
                     )
                     created += 1
 
@@ -326,7 +338,7 @@ class ProductCatalogService:
         self,
         product_id: UUID,
         as_of_date: Optional[date] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get product with current COGS data."""
         if as_of_date is None:
             as_of_date = date.today()
@@ -372,13 +384,15 @@ class ProductCatalogService:
                 "margin_type": margin.margin_type.value if margin else None,
                 "effective_date": margin.effective_date.isoformat() if margin else None,
                 "source": margin.source.value if margin else None,
-            } if margin else None,
+            }
+            if margin
+            else None,
         }
 
     async def get_products_missing_cogs(
         self,
         limit: int = 100,
-    ) -> List[ProductCatalog]:
+    ) -> list[ProductCatalog]:
         """Get products that don't have COGS data."""
         # Get products with margins
         products_with_margins = select(ProductMargin.product_id).distinct()
@@ -397,7 +411,7 @@ class ProductCatalogService:
         )
         return list(result.scalars().all())
 
-    async def get_cogs_coverage(self) -> Dict[str, Any]:
+    async def get_cogs_coverage(self) -> dict[str, Any]:
         """Get COGS data coverage statistics."""
         # Total active products
         total_result = await self.db.execute(
@@ -415,8 +429,7 @@ class ProductCatalogService:
         # Products with COGS
         today = date.today()
         with_cogs_result = await self.db.execute(
-            select(func.count(func.distinct(ProductMargin.product_id)))
-            .where(
+            select(func.count(func.distinct(ProductMargin.product_id))).where(
                 and_(
                     ProductMargin.tenant_id == self.tenant_id,
                     ProductMargin.effective_date <= today,

@@ -42,15 +42,17 @@ export default function Privacy() {
                 <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
                 <p>
                   Stratum AI, Inc. (&quot;Stratum AI,&quot; &quot;we,&quot; &quot;us,&quot; or
-                  &quot;our&quot;) respects your privacy and is committed to protecting your personal
-                  data. This privacy policy explains how we collect, use, disclose, and safeguard
-                  your information when you use our services.
+                  &quot;our&quot;) respects your privacy and is committed to protecting your
+                  personal data. This privacy policy explains how we collect, use, disclose, and
+                  safeguard your information when you use our services.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">2. Information We Collect</h2>
-                <h3 className="text-lg font-semibold text-white mb-2">2.1 Information You Provide</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  2.1 Information You Provide
+                </h3>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Account registration information (name, email, company)</li>
                   <li>Payment and billing information</li>
@@ -69,7 +71,9 @@ export default function Privacy() {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">3. How We Use Your Information</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">
+                  3. How We Use Your Information
+                </h2>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Provide and maintain our services</li>
                   <li>Process transactions and send billing information</li>

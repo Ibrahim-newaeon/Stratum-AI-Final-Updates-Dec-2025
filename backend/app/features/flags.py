@@ -15,20 +15,23 @@ Feature Flags:
 - superadmin_profitability: Platform owner profitability views
 """
 
-from typing import Dict, Any, Optional
 from enum import Enum
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 
 class AutopilotLevel(int, Enum):
     """Autopilot automation levels."""
-    SUGGEST_ONLY = 0      # No automatic writes, only suggestions
-    GUARDED_AUTO = 1      # Safe actions within caps, requires signal health OK
+
+    SUGGEST_ONLY = 0  # No automatic writes, only suggestions
+    GUARDED_AUTO = 1  # Safe actions within caps, requires signal health OK
     APPROVAL_REQUIRED = 2  # All actions require approval before execution
 
 
 class PlanTier(str, Enum):
     """Subscription plan tiers."""
+
     FREE = "free"
     STARTER = "starter"
     PROFESSIONAL = "professional"
@@ -40,7 +43,7 @@ class PlanTier(str, Enum):
 # Default Feature Flags by Plan
 # =============================================================================
 
-DEFAULT_FEATURES_BY_PLAN: Dict[str, Dict[str, Any]] = {
+DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
     PlanTier.FREE: {
         "signal_health": False,
         "attribution_variance": False,
@@ -198,6 +201,7 @@ DEFAULT_FEATURES_BY_PLAN: Dict[str, Dict[str, Any]] = {
 # Feature Flag Models
 # =============================================================================
 
+
 class FeatureFlags(BaseModel):
     """Complete feature flags configuration for a tenant."""
 
@@ -215,7 +219,9 @@ class FeatureFlags(BaseModel):
     autopilot_level: int = Field(default=0, ge=0, le=2, description="Autopilot automation level")
 
     # Platform
-    superadmin_profitability: bool = Field(default=False, description="Superadmin profitability views")
+    superadmin_profitability: bool = Field(
+        default=False, description="Superadmin profitability views"
+    )
 
     # Limits
     max_campaigns: int = Field(default=20, description="Maximum number of campaigns")
@@ -253,6 +259,7 @@ class FeatureFlags(BaseModel):
 
 class FeatureFlagsUpdate(BaseModel):
     """Request model for updating feature flags."""
+
     signal_health: Optional[bool] = None
     attribution_variance: Optional[bool] = None
     ai_recommendations: Optional[bool] = None
@@ -291,7 +298,8 @@ class FeatureFlagsUpdate(BaseModel):
 # Feature Flag Helpers
 # =============================================================================
 
-def get_default_features(plan: str) -> Dict[str, Any]:
+
+def get_default_features(plan: str) -> dict[str, Any]:
     """
     Get default feature flags for a plan tier.
 
@@ -308,7 +316,7 @@ def get_default_features(plan: str) -> Dict[str, Any]:
     return DEFAULT_FEATURES_BY_PLAN[PlanTier.STARTER].copy()
 
 
-def merge_features(defaults: Dict[str, Any], overrides: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+def merge_features(defaults: dict[str, Any], overrides: Optional[dict[str, Any]]) -> dict[str, Any]:
     """
     Merge default features with tenant-specific overrides.
 
@@ -329,7 +337,7 @@ def merge_features(defaults: Dict[str, Any], overrides: Optional[Dict[str, Any]]
     return merged
 
 
-def can(features: Dict[str, Any], feature_name: str) -> bool:
+def can(features: dict[str, Any], feature_name: str) -> bool:
     """
     Check if a feature is enabled.
 
@@ -350,7 +358,7 @@ def can(features: Dict[str, Any], feature_name: str) -> bool:
     return bool(value)
 
 
-def get_autopilot_caps() -> Dict[str, Any]:
+def get_autopilot_caps() -> dict[str, Any]:
     """
     Get default caps for autopilot actions.
 
@@ -362,12 +370,12 @@ def get_autopilot_caps() -> Dict[str, Any]:
     """
     return {
         "max_daily_budget_change": 500.0,  # Max $500 per day
-        "max_budget_pct_change": 30.0,     # Max 30% change per action
-        "max_actions_per_day": 10,         # Max 10 automated actions per day
+        "max_budget_pct_change": 30.0,  # Max 30% change per action
+        "max_actions_per_day": 10,  # Max 10 automated actions per day
     }
 
 
-def get_autopilot_level(features: Dict[str, Any]) -> AutopilotLevel:
+def get_autopilot_level(features: dict[str, Any]) -> AutopilotLevel:
     """
     Get the autopilot level from features.
 
@@ -384,7 +392,7 @@ def get_autopilot_level(features: Dict[str, Any]) -> AutopilotLevel:
         return AutopilotLevel.SUGGEST_ONLY
 
 
-def is_autopilot_blocked(features: Dict[str, Any], signal_health_status: str) -> bool:
+def is_autopilot_blocked(features: dict[str, Any], signal_health_status: str) -> bool:
     """
     Check if autopilot should be blocked due to signal health.
 
@@ -409,7 +417,7 @@ def is_autopilot_blocked(features: Dict[str, Any], signal_health_status: str) ->
 
 
 def validate_action_within_caps(
-    features: Dict[str, Any],
+    features: dict[str, Any],
     action_type: str,
     change_pct: float,
 ) -> tuple[bool, Optional[str]]:
@@ -448,12 +456,23 @@ FEATURE_CATEGORIES = {
     "trust_layer": {
         "name": "Trust Layer",
         "description": "Data quality and transparency features",
-        "features": ["signal_health", "attribution_variance", "signal_health_history", "trust_audit_logs", "action_dry_run"],
+        "features": [
+            "signal_health",
+            "attribution_variance",
+            "signal_health_history",
+            "trust_audit_logs",
+            "action_dry_run",
+        ],
     },
     "intelligence_layer": {
         "name": "Intelligence Layer",
         "description": "AI-powered insights and recommendations",
-        "features": ["ai_recommendations", "anomaly_alerts", "creative_fatigue", "predictive_churn"],
+        "features": [
+            "ai_recommendations",
+            "anomaly_alerts",
+            "creative_fatigue",
+            "predictive_churn",
+        ],
     },
     "execution_layer": {
         "name": "Execution Layer",
@@ -463,7 +482,13 @@ FEATURE_CATEGORIES = {
     "cdp": {
         "name": "Customer Data Platform",
         "description": "CDP features for customer analytics",
-        "features": ["rfm_analysis", "funnel_builder", "computed_traits", "consent_management", "realtime_streaming"],
+        "features": [
+            "rfm_analysis",
+            "funnel_builder",
+            "computed_traits",
+            "consent_management",
+            "realtime_streaming",
+        ],
     },
     "integrations": {
         "name": "Integrations",

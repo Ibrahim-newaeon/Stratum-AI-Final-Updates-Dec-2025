@@ -2,20 +2,20 @@
  * MetricCard - Dashboard metric display card
  */
 
-import { ArrowDown, ArrowUp, Minus, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { TrendDirection } from '@/api/dashboard'
+import { ArrowDown, ArrowUp, Loader2, Minus } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { TrendDirection } from '@/api/dashboard';
 
 interface MetricCardProps {
-  title: string
-  value: string
-  change?: number | null
-  trend?: TrendDirection
-  icon?: React.ReactNode
-  loading?: boolean
-  size?: 'default' | 'small'
-  highlight?: boolean
-  positive?: boolean
+  title: string;
+  value: string;
+  change?: number | null;
+  trend?: TrendDirection;
+  icon?: React.ReactNode;
+  loading?: boolean;
+  size?: 'default' | 'small';
+  highlight?: boolean;
+  positive?: boolean;
 }
 
 export function MetricCard({
@@ -29,30 +29,32 @@ export function MetricCard({
   highlight = false,
   positive = false,
 }: MetricCardProps) {
-  const isSmall = size === 'small'
+  const isSmall = size === 'small';
 
   const getTrendIcon = () => {
-    if (!trend) return null
+    if (!trend) return null;
     switch (trend) {
       case 'up':
-        return <ArrowUp className={cn('w-3 h-3', positive ? 'text-green-500' : 'text-red-500')} />
+        return <ArrowUp className={cn('w-3 h-3', positive ? 'text-green-500' : 'text-red-500')} />;
       case 'down':
-        return <ArrowDown className={cn('w-3 h-3', positive ? 'text-red-500' : 'text-green-500')} />
+        return (
+          <ArrowDown className={cn('w-3 h-3', positive ? 'text-red-500' : 'text-green-500')} />
+        );
       case 'stable':
-        return <Minus className="w-3 h-3 text-muted-foreground" />
+        return <Minus className="w-3 h-3 text-muted-foreground" />;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const getChangeColor = () => {
-    if (change === null || change === undefined) return 'text-muted-foreground'
-    if (change === 0) return 'text-muted-foreground'
+    if (change === null || change === undefined) return 'text-muted-foreground';
+    if (change === 0) return 'text-muted-foreground';
     if (positive) {
-      return change > 0 ? 'text-green-500' : 'text-red-500'
+      return change > 0 ? 'text-green-500' : 'text-red-500';
     }
-    return change > 0 ? 'text-red-500' : 'text-green-500'
-  }
+    return change > 0 ? 'text-red-500' : 'text-green-500';
+  };
 
   if (loading) {
     return (
@@ -64,7 +66,7 @@ export function MetricCard({
       >
         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -117,5 +119,5 @@ export function MetricCard({
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,15 +1,15 @@
 import {
-  ShieldCheckIcon,
-  SparklesIcon,
+  ArrowTrendingUpIcon,
   BoltIcon,
   ChartBarIcon,
-  ExclamationTriangleIcon,
-  CpuChipIcon,
-  ArrowTrendingUpIcon,
-  ClockIcon,
   CheckBadgeIcon,
+  ClockIcon,
+  CpuChipIcon,
+  ExclamationTriangleIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
-import { useFeatureLayers, type FeatureLayer } from '@/api/cms';
+import { type FeatureLayer, useFeatureLayers } from '@/api/cms';
 
 // Icon mapping for CMS content
 const iconMap: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
@@ -36,9 +36,27 @@ const fallbackLayers: FeatureLayer[] = [
     iconName: 'ShieldCheckIcon',
     displayOrder: 0,
     features: [
-      { id: '1', iconName: 'ChartBarIcon', title: 'Signal Health (EMQ)', description: 'Real-time data quality scoring across all platforms', displayOrder: 0 },
-      { id: '2', iconName: 'ExclamationTriangleIcon', title: 'Attribution Variance', description: 'Platform vs GA4 reconciliation with alerts', displayOrder: 1 },
-      { id: '3', iconName: 'ClockIcon', title: 'Freshness Monitoring', description: 'Know when your data is stale or delayed', displayOrder: 2 },
+      {
+        id: '1',
+        iconName: 'ChartBarIcon',
+        title: 'Signal Health (EMQ)',
+        description: 'Real-time data quality scoring across all platforms',
+        displayOrder: 0,
+      },
+      {
+        id: '2',
+        iconName: 'ExclamationTriangleIcon',
+        title: 'Attribution Variance',
+        description: 'Platform vs GA4 reconciliation with alerts',
+        displayOrder: 1,
+      },
+      {
+        id: '3',
+        iconName: 'ClockIcon',
+        title: 'Freshness Monitoring',
+        description: 'Know when your data is stale or delayed',
+        displayOrder: 2,
+      },
     ],
   },
   {
@@ -51,9 +69,27 @@ const fallbackLayers: FeatureLayer[] = [
     iconName: 'SparklesIcon',
     displayOrder: 1,
     features: [
-      { id: '4', iconName: 'CpuChipIcon', title: 'Scaling Score', description: 'Know exactly which campaigns to scale, watch, or fix', displayOrder: 0 },
-      { id: '5', iconName: 'ArrowTrendingUpIcon', title: 'Creative Fatigue', description: 'Detect declining performance before it impacts ROAS', displayOrder: 1 },
-      { id: '6', iconName: 'CheckBadgeIcon', title: 'Anomaly Detection', description: 'Catch unusual spend or performance shifts instantly', displayOrder: 2 },
+      {
+        id: '4',
+        iconName: 'CpuChipIcon',
+        title: 'Scaling Score',
+        description: 'Know exactly which campaigns to scale, watch, or fix',
+        displayOrder: 0,
+      },
+      {
+        id: '5',
+        iconName: 'ArrowTrendingUpIcon',
+        title: 'Creative Fatigue',
+        description: 'Detect declining performance before it impacts ROAS',
+        displayOrder: 1,
+      },
+      {
+        id: '6',
+        iconName: 'CheckBadgeIcon',
+        title: 'Anomaly Detection',
+        description: 'Catch unusual spend or performance shifts instantly',
+        displayOrder: 2,
+      },
     ],
   },
   {
@@ -66,9 +102,27 @@ const fallbackLayers: FeatureLayer[] = [
     iconName: 'BoltIcon',
     displayOrder: 2,
     features: [
-      { id: '7', iconName: 'BoltIcon', title: 'Autopilot Modes', description: 'Normal, Limited, Cuts-Only, or Frozen based on signal quality', displayOrder: 0 },
-      { id: '8', iconName: 'ShieldCheckIcon', title: 'Action Queue', description: 'Review, approve, or dismiss recommended actions', displayOrder: 1 },
-      { id: '9', iconName: 'ChartBarIcon', title: 'Campaign Builder', description: 'Draft, approve, and publish campaigns with version control', displayOrder: 2 },
+      {
+        id: '7',
+        iconName: 'BoltIcon',
+        title: 'Autopilot Modes',
+        description: 'Normal, Limited, Cuts-Only, or Frozen based on signal quality',
+        displayOrder: 0,
+      },
+      {
+        id: '8',
+        iconName: 'ShieldCheckIcon',
+        title: 'Action Queue',
+        description: 'Review, approve, or dismiss recommended actions',
+        displayOrder: 1,
+      },
+      {
+        id: '9',
+        iconName: 'ChartBarIcon',
+        title: 'Campaign Builder',
+        description: 'Draft, approve, and publish campaigns with version control',
+        displayOrder: 2,
+      },
     ],
   },
 ];
@@ -82,7 +136,7 @@ export function Features() {
   const { data: cmsLayers, isLoading } = useFeatureLayers();
 
   // Use CMS data if available and has content, otherwise use fallback
-  const layers = (cmsLayers && cmsLayers.length > 0) ? cmsLayers : fallbackLayers;
+  const layers = cmsLayers && cmsLayers.length > 0 ? cmsLayers : fallbackLayers;
 
   return (
     <section className="py-32 bg-surface-primary">
@@ -100,8 +154,8 @@ export function Features() {
             </span>
           </h2>
           <p className="text-body text-text-secondary max-w-2xl mx-auto">
-            Trust your data before you act on it. Get AI recommendations you can explain.
-            Automate only when it's safe.
+            Trust your data before you act on it. Get AI recommendations you can explain. Automate
+            only when it's safe.
           </p>
         </div>
 
@@ -116,10 +170,14 @@ export function Features() {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {/* Gradient accent */}
-                <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${layer.color}`} />
+                <div
+                  className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${layer.color}`}
+                />
 
                 {/* Icon */}
-                <div className={`w-14 h-14 rounded-xl ${layer.bgColor} ${layer.borderColor} border flex items-center justify-center mb-6`}>
+                <div
+                  className={`w-14 h-14 rounded-xl ${layer.bgColor} ${layer.borderColor} border flex items-center justify-center mb-6`}
+                >
                   <LayerIcon className="w-7 h-7 text-white" />
                 </div>
 
@@ -154,7 +212,10 @@ export function Features() {
           <div className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-surface-secondary border border-white/5">
             <div className="flex -space-x-2">
               {['bg-meta', 'bg-google', 'bg-tiktok', 'bg-snapchat'].map((bg, i) => (
-                <div key={i} className={`w-8 h-8 rounded-full ${bg} border-2 border-surface-secondary`} />
+                <div
+                  key={i}
+                  className={`w-8 h-8 rounded-full ${bg} border-2 border-surface-secondary`}
+                />
               ))}
             </div>
             <div className="text-left">

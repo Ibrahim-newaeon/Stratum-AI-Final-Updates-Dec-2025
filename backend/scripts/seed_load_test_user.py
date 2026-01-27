@@ -15,35 +15,34 @@ Credentials created:
 
 import asyncio
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
-from app.models import Tenant, User, UserRole, AdPlatform
+from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
+from app.models import AdPlatform, Tenant, User, UserRole
 from app.models.campaign_builder import (
-    TenantPlatformConnection,
-    TenantAdAccount,
     ConnectionStatus,
+    TenantAdAccount,
+    TenantPlatformConnection,
 )
 from app.models.onboarding import (
-    TenantOnboarding,
-    OnboardingStatus,
-    OnboardingStep,
+    AutomationMode,
     Industry,
     MonthlyAdSpend,
-    TeamSize,
-    AutomationMode,
+    OnboardingStatus,
+    OnboardingStep,
     PrimaryKPI,
+    TeamSize,
+    TenantOnboarding,
 )
-from app.core.security import get_password_hash, hash_pii_for_lookup, encrypt_pii
-
 
 # Load test user credentials (matches k6 test defaults)
 TEST_EMAIL = "admin@test-tenant.com"
@@ -58,9 +57,7 @@ async def seed_load_test_user():
     # Create async engine
     engine = create_async_engine(settings.database_url, echo=False)
 
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     print("=" * 60)
     print("  Stratum AI - Load Test User Setup")
@@ -70,9 +67,7 @@ async def seed_load_test_user():
         try:
             # Check if test user already exists
             email_hash = hash_pii_for_lookup(TEST_EMAIL.lower())
-            result = await db.execute(
-                select(User).where(User.email_hash == email_hash)
-            )
+            result = await db.execute(select(User).where(User.email_hash == email_hash))
             existing_user = result.scalar_one_or_none()
 
             if existing_user:
@@ -88,9 +83,7 @@ async def seed_load_test_user():
 
             if not tenant:
                 # Check for tenant by slug
-                result = await db.execute(
-                    select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG)
-                )
+                result = await db.execute(select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG))
                 tenant = result.scalar_one_or_none()
 
             if not tenant:
@@ -148,7 +141,7 @@ async def seed_load_test_user():
                 )
                 db.add(onboarding)
                 await db.flush()
-                print(f"      Onboarding completed")
+                print("      Onboarding completed")
             else:
                 print("\n[3/4] Onboarding already exists for tenant")
 
@@ -174,10 +167,10 @@ async def seed_load_test_user():
                         status=ConnectionStatus.CONNECTED.value,
                         access_token_encrypted="test_token_" + platform.value,
                         refresh_token_encrypted="test_refresh_" + platform.value,
-                        token_expires_at=datetime.now(timezone.utc) + timedelta(days=60),
+                        token_expires_at=datetime.now(UTC) + timedelta(days=60),
                         scopes=["ads_read", "ads_management"],
-                        connected_at=datetime.now(timezone.utc),
-                        last_refreshed_at=datetime.now(timezone.utc),
+                        connected_at=datetime.now(UTC),
+                        last_refreshed_at=datetime.now(UTC),
                     )
                     db.add(connection)
                     await db.flush()

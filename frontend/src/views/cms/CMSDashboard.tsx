@@ -3,20 +3,20 @@
  * Main overview page for the Content Management System
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  ArrowTrendingUpIcon,
   DocumentTextIcon,
+  EnvelopeIcon,
+  EyeIcon,
+  PencilSquareIcon,
+  PlusIcon,
   RectangleStackIcon,
   TagIcon,
   UserCircleIcon,
-  EnvelopeIcon,
-  PlusIcon,
-  ArrowTrendingUpIcon,
-  EyeIcon,
-  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
-import { usePosts, useCategories, useAdminAuthors, useAdminContacts } from '@/api/cms';
+import { useAdminAuthors, useAdminContacts, useCategories, usePosts } from '@/api/cms';
 
 interface StatCard {
   name: string;
@@ -94,7 +94,9 @@ export default function CMSDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ${isLoading ? 'opacity-50' : ''}`}>
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ${isLoading ? 'opacity-50' : ''}`}
+      >
         {stats.map((stat) => (
           <Link
             key={stat.name}

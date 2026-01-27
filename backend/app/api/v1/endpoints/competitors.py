@@ -6,8 +6,8 @@ Competitor benchmarking and market intelligence.
 Implements Module D: Competitor Intelligence.
 """
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
-@router.get("", response_model=APIResponse[List[CompetitorResponse]])
+@router.get("", response_model=APIResponse[list[CompetitorResponse]])
 async def list_competitors(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -93,7 +93,7 @@ async def get_share_of_voice(
             total_market=total_traffic,
             date_range={
                 "start": "calculated_dynamically",
-                "end": datetime.now(timezone.utc).date().isoformat(),
+                "end": datetime.now(UTC).date().isoformat(),
             },
         ),
     )
@@ -128,7 +128,9 @@ async def get_competitor(
     )
 
 
-@router.post("", response_model=APIResponse[CompetitorResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=APIResponse[CompetitorResponse], status_code=status.HTTP_201_CREATED
+)
 async def add_competitor(
     request: Request,
     competitor_data: CompetitorCreate,

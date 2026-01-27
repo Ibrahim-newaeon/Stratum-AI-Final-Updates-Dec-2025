@@ -17,19 +17,19 @@ The composite score determines whether automation can proceed:
 """
 
 import logging
-from datetime import datetime
-from typing import Optional, List, Dict
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from app.stratum.models import SignalHealth
-
 
 logger = logging.getLogger("stratum.signal_health")
 
 
 class HealthStatus(str, Enum):
     """Signal health status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     CRITICAL = "critical"
@@ -38,6 +38,7 @@ class HealthStatus(str, Enum):
 @dataclass
 class SignalHealthConfig:
     """Configuration for signal health thresholds."""
+
     healthy_threshold: float = 70.0
     degraded_threshold: float = 40.0
 
@@ -63,7 +64,7 @@ class SignalHealthConfig:
     # Anomaly thresholds
     anomaly_zscore_threshold: float = 3.0
 
-    def get_weights(self, include_cdp: bool = False) -> Dict[str, float]:
+    def get_weights(self, include_cdp: bool = False) -> dict[str, float]:
         """
         Get component weights, optionally including CDP.
 
@@ -119,13 +120,13 @@ class SignalHealthCalculator:
 
     def calculate(
         self,
-        emq_scores: Optional[List[float]] = None,
+        emq_scores: Optional[list[float]] = None,
         last_data_received: Optional[datetime] = None,
         platform_revenue: Optional[float] = None,
         ga4_revenue: Optional[float] = None,
-        historical_variance: Optional[List[float]] = None,
-        current_metrics: Optional[Dict[str, float]] = None,
-        historical_metrics: Optional[List[Dict[str, float]]] = None,
+        historical_variance: Optional[list[float]] = None,
+        current_metrics: Optional[dict[str, float]] = None,
+        historical_metrics: Optional[list[dict[str, float]]] = None,
         cdp_emq_score: Optional[float] = None,
     ) -> SignalHealth:
         """
@@ -165,10 +166,10 @@ class SignalHealthCalculator:
 
         # Calculate weighted composite score
         overall_score = (
-            emq_score * weights["emq"] +
-            freshness_score * weights["freshness"] +
-            variance_score * weights["variance"] +
-            anomaly_score * weights["anomaly"]
+            emq_score * weights["emq"]
+            + freshness_score * weights["freshness"]
+            + variance_score * weights["variance"]
+            + anomaly_score * weights["anomaly"]
         )
 
         # Add CDP component if available
@@ -207,7 +208,7 @@ class SignalHealthCalculator:
     def _calculate_cdp_component(
         self,
         cdp_emq_score: Optional[float],
-        issues: List[str],
+        issues: list[str],
     ) -> Optional[float]:
         """
         Calculate CDP EMQ component score (0-100).
@@ -227,8 +228,8 @@ class SignalHealthCalculator:
 
     def _calculate_emq_component(
         self,
-        emq_scores: Optional[List[float]],
-        issues: List[str],
+        emq_scores: Optional[list[float]],
+        issues: list[str],
     ) -> float:
         """
         Calculate EMQ component score (0-100).
@@ -251,7 +252,7 @@ class SignalHealthCalculator:
     def _calculate_freshness_component(
         self,
         last_data_received: Optional[datetime],
-        issues: List[str],
+        issues: list[str],
     ) -> float:
         """
         Calculate data freshness score (0-100).
@@ -285,8 +286,8 @@ class SignalHealthCalculator:
         self,
         platform_revenue: Optional[float],
         ga4_revenue: Optional[float],
-        historical_variance: Optional[List[float]],
-        issues: List[str],
+        historical_variance: Optional[list[float]],
+        issues: list[str],
     ) -> float:
         """
         Calculate variance score (0-100).
@@ -315,7 +316,7 @@ class SignalHealthCalculator:
     def _variance_to_score(
         self,
         variance: float,
-        issues: List[str],
+        issues: list[str],
     ) -> float:
         """Convert variance percentage to 0-100 score."""
         if variance <= self.config.warning_variance:
@@ -338,9 +339,9 @@ class SignalHealthCalculator:
 
     def _calculate_anomaly_component(
         self,
-        current_metrics: Optional[Dict[str, float]],
-        historical_metrics: Optional[List[Dict[str, float]]],
-        issues: List[str],
+        current_metrics: Optional[dict[str, float]],
+        historical_metrics: Optional[list[dict[str, float]]],
+        issues: list[str],
     ) -> float:
         """
         Calculate anomaly detection score (0-100).
@@ -359,8 +360,7 @@ class SignalHealthCalculator:
 
             # Get historical values
             historical_values = [
-                m.get(metric_name) for m in historical_metrics
-                if m.get(metric_name) is not None
+                m.get(metric_name) for m in historical_metrics if m.get(metric_name) is not None
             ]
 
             if len(historical_values) < 7:
@@ -372,7 +372,7 @@ class SignalHealthCalculator:
             # Calculate z-score
             mean = sum(historical_values) / len(historical_values)
             variance = sum((x - mean) ** 2 for x in historical_values) / len(historical_values)
-            std_dev = variance ** 0.5
+            std_dev = variance**0.5
 
             if std_dev > 0:
                 z_score = abs(current_value - mean) / std_dev
@@ -424,9 +424,9 @@ class SignalHealthCalculator:
         # EMQ Score = weighted average of match rate, pixel coverage, latency
         emq_weights = {"event_match_rate": 0.4, "pixel_coverage": 0.35, "conversion_latency": 0.25}
         emq_component = (
-            event_match_rate * emq_weights["event_match_rate"] +
-            pixel_coverage * emq_weights["pixel_coverage"] +
-            conversion_latency * emq_weights["conversion_latency"]
+            event_match_rate * emq_weights["event_match_rate"]
+            + pixel_coverage * emq_weights["pixel_coverage"]
+            + conversion_latency * emq_weights["conversion_latency"]
         )
 
         # Freshness component from data freshness driver
@@ -452,10 +452,10 @@ class SignalHealthCalculator:
 
         # Calculate overall
         overall_score = (
-            emq_component * self.config.emq_weight +
-            freshness_component * self.config.freshness_weight +
-            variance_component * self.config.variance_weight +
-            anomaly_component * self.config.anomaly_weight
+            emq_component * self.config.emq_weight
+            + freshness_component * self.config.freshness_weight
+            + variance_component * self.config.variance_weight
+            + anomaly_component * self.config.anomaly_weight
         )
 
         # Determine status

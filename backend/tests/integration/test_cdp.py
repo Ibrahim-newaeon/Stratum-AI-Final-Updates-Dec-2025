@@ -12,13 +12,12 @@ Tests:
 - Duplicate event handling (idempotency)
 """
 
+from datetime import UTC, datetime, timedelta
+from uuid import uuid4
+
 import pytest
 import pytest_asyncio
-from datetime import datetime, timezone, timedelta
-from httpx import AsyncClient, ASGITransport
-from uuid import uuid4
-from unittest.mock import MagicMock
-
+from httpx import ASGITransport, AsyncClient
 
 pytestmark = pytest.mark.integration
 
@@ -27,8 +26,10 @@ pytestmark = pytest.mark.integration
 # CDP-Specific Fixtures with Auth Mocking
 # =============================================================================
 
+
 class MockCurrentUser:
     """Mock user for CDP tests."""
+
     def __init__(self, user_id: int = 1, tenant_id: int = 1):
         self.id = user_id
         self.tenant_id = tenant_id
@@ -43,8 +44,8 @@ async def cdp_client(app, db_session, test_tenant) -> AsyncClient:
     """
     Create an async HTTP client for CDP API testing with mocked auth.
     """
-    from app.db.session import get_async_session
     from app.auth.deps import get_current_user
+    from app.db.session import get_async_session
 
     # Override the database dependency
     async def get_test_session():
@@ -71,6 +72,7 @@ async def cdp_client(app, db_session, test_tenant) -> AsyncClient:
 # CDP Test Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def sample_event_data():
     """Sample event data for testing."""
@@ -78,14 +80,9 @@ def sample_event_data():
         "events": [
             {
                 "event_name": "PageView",
-                "event_time": datetime.now(timezone.utc).isoformat(),
-                "identifiers": [
-                    {"type": "anonymous_id", "value": "anon_test_123"}
-                ],
-                "properties": {
-                    "page_url": "/products/sofa",
-                    "page_title": "Milano Sofa"
-                }
+                "event_time": datetime.now(UTC).isoformat(),
+                "identifiers": [{"type": "anonymous_id", "value": "anon_test_123"}],
+                "properties": {"page_url": "/products/sofa", "page_title": "Milano Sofa"},
             }
         ]
     }
@@ -98,29 +95,19 @@ def sample_purchase_event_data():
         "events": [
             {
                 "event_name": "Purchase",
-                "event_time": datetime.now(timezone.utc).isoformat(),
+                "event_time": datetime.now(UTC).isoformat(),
                 "idempotency_key": f"order_{uuid4().hex[:8]}_{int(datetime.now().timestamp())}",
                 "identifiers": [
                     {"type": "email", "value": "customer@example.com"},
-                    {"type": "anonymous_id", "value": "anon_purchase_456"}
+                    {"type": "anonymous_id", "value": "anon_purchase_456"},
                 ],
-                "properties": {
-                    "order_id": "ORD-12345",
-                    "total": 2499.00,
-                    "currency": "AED"
-                },
+                "properties": {"order_id": "ORD-12345", "total": 2499.00, "currency": "AED"},
                 "context": {
                     "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
                     "ip": "185.23.45.67",
-                    "campaign": {
-                        "source": "google",
-                        "medium": "cpc"
-                    }
+                    "campaign": {"source": "google", "medium": "cpc"},
                 },
-                "consent": {
-                    "analytics": True,
-                    "ads": True
-                }
+                "consent": {"analytics": True, "ads": True},
             }
         ]
     }
@@ -129,25 +116,24 @@ def sample_purchase_event_data():
 @pytest.fixture
 def sample_batch_events():
     """Sample batch of events for testing."""
-    base_time = datetime.now(timezone.utc)
+    base_time = datetime.now(UTC)
     events = []
     for i in range(10):
-        events.append({
-            "event_name": "PageView",
-            "event_time": (base_time + timedelta(seconds=i)).isoformat(),
-            "identifiers": [
-                {"type": "anonymous_id", "value": f"anon_batch_{i}"}
-            ],
-            "properties": {
-                "page_url": f"/page/{i}"
+        events.append(
+            {
+                "event_name": "PageView",
+                "event_time": (base_time + timedelta(seconds=i)).isoformat(),
+                "identifiers": [{"type": "anonymous_id", "value": f"anon_batch_{i}"}],
+                "properties": {"page_url": f"/page/{i}"},
             }
-        })
+        )
     return {"events": events}
 
 
 # =============================================================================
 # Event Ingestion Tests
 # =============================================================================
+
 
 class TestEventIngestion:
     """Tests for event ingestion endpoint."""
@@ -159,10 +145,7 @@ class TestEventIngestion:
         sample_event_data: dict,
     ):
         """Test ingesting a single event."""
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=sample_event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=sample_event_data)
 
         assert response.status_code == 201
         data = response.json()
@@ -182,10 +165,7 @@ class TestEventIngestion:
         sample_purchase_event_data: dict,
     ):
         """Test ingesting event with email identifier (PII)."""
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=sample_purchase_event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=sample_purchase_event_data)
 
         assert response.status_code == 201
         data = response.json()
@@ -200,10 +180,7 @@ class TestEventIngestion:
         sample_batch_events: dict,
     ):
         """Test ingesting batch of events."""
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=sample_batch_events
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=sample_batch_events)
 
         assert response.status_code == 201
         data = response.json()
@@ -223,28 +200,20 @@ class TestEventIngestion:
             "events": [
                 {
                     "event_name": "PageView",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "idempotency_key": idempotency_key,
-                    "identifiers": [
-                        {"type": "anonymous_id", "value": "anon_dup_test"}
-                    ],
+                    "identifiers": [{"type": "anonymous_id", "value": "anon_dup_test"}],
                 }
             ]
         }
 
         # First request should succeed
-        response1 = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response1 = await cdp_client.post("/api/v1/cdp/events", json=event_data)
         assert response1.status_code == 201
         assert response1.json()["accepted"] == 1
 
         # Second request with same idempotency_key should be duplicate
-        response2 = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response2 = await cdp_client.post("/api/v1/cdp/events", json=event_data)
         assert response2.status_code == 201
         data2 = response2.json()
         assert data2["duplicates"] == 1
@@ -260,18 +229,13 @@ class TestEventIngestion:
             "events": [
                 {
                     "event_name": "PageView",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
-                    "identifiers": [
-                        {"type": "invalid_type", "value": "test123"}
-                    ],
+                    "event_time": datetime.now(UTC).isoformat(),
+                    "identifiers": [{"type": "invalid_type", "value": "test123"}],
                 }
             ]
         }
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=event_data)
 
         # Should return 422 validation error
         assert response.status_code == 422
@@ -286,16 +250,13 @@ class TestEventIngestion:
             "events": [
                 {
                     "event_name": "PageView",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [],
                 }
             ]
         }
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=event_data)
 
         assert response.status_code == 422
 
@@ -310,33 +271,27 @@ class TestEventIngestion:
             "events": [
                 {
                     "event_name": "SignUp",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
-                    "identifiers": [
-                        {"type": "email", "value": f"newuser_{unique_id}@example.com"}
-                    ],
+                    "event_time": datetime.now(UTC).isoformat(),
+                    "identifiers": [{"type": "email", "value": f"newuser_{unique_id}@example.com"}],
                 }
             ]
         }
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=event_data)
 
         assert response.status_code == 201
         data = response.json()
         profile_id = data["results"][0]["profile_id"]
 
         # Verify profile exists
-        profile_response = await cdp_client.get(
-            f"/api/v1/cdp/profiles/{profile_id}"
-        )
+        profile_response = await cdp_client.get(f"/api/v1/cdp/profiles/{profile_id}")
         assert profile_response.status_code == 200
 
 
 # =============================================================================
 # Profile Lookup Tests
 # =============================================================================
+
 
 class TestProfileLookup:
     """Tests for profile lookup endpoints."""
@@ -352,7 +307,7 @@ class TestProfileLookup:
             "events": [
                 {
                     "event_name": "PageView",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
                         {"type": "anonymous_id", "value": f"anon_lookup_{uuid4().hex[:8]}"}
                     ],
@@ -360,17 +315,12 @@ class TestProfileLookup:
             ]
         }
 
-        ingest_response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        ingest_response = await cdp_client.post("/api/v1/cdp/events", json=event_data)
         assert ingest_response.status_code == 201
         profile_id = ingest_response.json()["results"][0]["profile_id"]
 
         # Look up by ID
-        response = await cdp_client.get(
-            f"/api/v1/cdp/profiles/{profile_id}"
-        )
+        response = await cdp_client.get(f"/api/v1/cdp/profiles/{profile_id}")
 
         assert response.status_code == 200
         data = response.json()
@@ -389,10 +339,8 @@ class TestProfileLookup:
             "events": [
                 {
                     "event_name": "SignUp",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
-                    "identifiers": [
-                        {"type": "email", "value": email}
-                    ],
+                    "event_time": datetime.now(UTC).isoformat(),
+                    "identifiers": [{"type": "email", "value": email}],
                 }
             ]
         }
@@ -401,8 +349,7 @@ class TestProfileLookup:
 
         # Look up by email
         response = await cdp_client.get(
-            "/api/v1/cdp/profiles",
-            params={"identifier_type": "email", "identifier_value": email}
+            "/api/v1/cdp/profiles", params={"identifier_type": "email", "identifier_value": email}
         )
 
         assert response.status_code == 200
@@ -417,9 +364,7 @@ class TestProfileLookup:
         """Test looking up non-existent profile."""
         fake_id = str(uuid4())
 
-        response = await cdp_client.get(
-            f"/api/v1/cdp/profiles/{fake_id}"
-        )
+        response = await cdp_client.get(f"/api/v1/cdp/profiles/{fake_id}")
 
         assert response.status_code == 404
 
@@ -431,10 +376,7 @@ class TestProfileLookup:
         """Test looking up profile with unknown identifier value."""
         response = await cdp_client.get(
             "/api/v1/cdp/profiles",
-            params={
-                "identifier_type": "email",
-                "identifier_value": "nonexistent@nowhere.com"
-            }
+            params={"identifier_type": "email", "identifier_value": "nonexistent@nowhere.com"},
         )
 
         assert response.status_code == 404
@@ -443,6 +385,7 @@ class TestProfileLookup:
 # =============================================================================
 # Profile Tenant Isolation Tests
 # =============================================================================
+
 
 class TestProfileTenantIsolation:
     """Tests for profile tenant isolation."""
@@ -476,9 +419,7 @@ class TestProfileTenantIsolation:
         await db_session.flush()
 
         # Try to access the other tenant's profile
-        response = await cdp_client.get(
-            f"/api/v1/cdp/profiles/{other_profile.id}"
-        )
+        response = await cdp_client.get(f"/api/v1/cdp/profiles/{other_profile.id}")
 
         # Should be not found (tenant scoping hides it)
         assert response.status_code == 404
@@ -487,6 +428,7 @@ class TestProfileTenantIsolation:
 # =============================================================================
 # Source Management Tests
 # =============================================================================
+
 
 class TestSourceManagement:
     """Tests for data source management endpoints."""
@@ -500,13 +442,10 @@ class TestSourceManagement:
         source_data = {
             "name": "Website Pixel",
             "source_type": "website",
-            "config": {"domain": "example.com"}
+            "config": {"domain": "example.com"},
         }
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/sources",
-            json=source_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/sources", json=source_data)
 
         assert response.status_code == 201
         data = response.json()
@@ -525,8 +464,7 @@ class TestSourceManagement:
         """Test listing data sources."""
         # Create a source first
         await cdp_client.post(
-            "/api/v1/cdp/sources",
-            json={"name": "Test Source", "source_type": "server"}
+            "/api/v1/cdp/sources", json={"name": "Test Source", "source_type": "server"}
         )
 
         response = await cdp_client.get("/api/v1/cdp/sources")
@@ -544,15 +482,9 @@ class TestSourceManagement:
         cdp_client: AsyncClient,
     ):
         """Test creating source with invalid type."""
-        source_data = {
-            "name": "Invalid Source",
-            "source_type": "invalid_type"
-        }
+        source_data = {"name": "Invalid Source", "source_type": "invalid_type"}
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/sources",
-            json=source_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/sources", json=source_data)
 
         assert response.status_code == 422
 
@@ -563,12 +495,10 @@ class TestSourceManagement:
     ):
         """Test that each source gets a unique key."""
         source1 = await cdp_client.post(
-            "/api/v1/cdp/sources",
-            json={"name": "Source 1", "source_type": "website"}
+            "/api/v1/cdp/sources", json={"name": "Source 1", "source_type": "website"}
         )
         source2 = await cdp_client.post(
-            "/api/v1/cdp/sources",
-            json={"name": "Source 2", "source_type": "website"}
+            "/api/v1/cdp/sources", json={"name": "Source 2", "source_type": "website"}
         )
 
         assert source1.status_code == 201
@@ -583,6 +513,7 @@ class TestSourceManagement:
 # =============================================================================
 # CDP Health Check Tests
 # =============================================================================
+
 
 class TestCDPHealth:
     """Tests for CDP health check endpoint."""
@@ -607,6 +538,7 @@ class TestCDPHealth:
 # EMQ Score Integration Tests
 # =============================================================================
 
+
 class TestEMQScoreIntegration:
     """Tests for EMQ score calculation in event ingestion."""
 
@@ -617,14 +549,15 @@ class TestEMQScoreIntegration:
         db_session,
     ):
         """Test that event with email identifier gets high EMQ score."""
-        from app.models.cdp import CDPEvent
         from sqlalchemy import select
+
+        from app.models.cdp import CDPEvent
 
         event_data = {
             "events": [
                 {
                     "event_name": "Purchase",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
                         {"type": "email", "value": f"emq_test_{uuid4().hex[:8]}@example.com"}
                     ],
@@ -632,24 +565,19 @@ class TestEMQScoreIntegration:
                     "context": {
                         "user_agent": "Mozilla/5.0",
                         "ip": "1.2.3.4",
-                        "campaign": {"source": "google"}
-                    }
+                        "campaign": {"source": "google"},
+                    },
                 }
             ]
         }
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=event_data)
 
         assert response.status_code == 201
         event_id = response.json()["results"][0]["event_id"]
 
         # Query the event to check EMQ score
-        result = await db_session.execute(
-            select(CDPEvent).where(CDPEvent.id == event_id)
-        )
+        result = await db_session.execute(select(CDPEvent).where(CDPEvent.id == event_id))
         event = result.scalar_one_or_none()
 
         # With email + properties + context, EMQ should be high (>= 80)
@@ -663,14 +591,15 @@ class TestEMQScoreIntegration:
         db_session,
     ):
         """Test that event with only anonymous identifier gets lower EMQ score."""
-        from app.models.cdp import CDPEvent
         from sqlalchemy import select
+
+        from app.models.cdp import CDPEvent
 
         event_data = {
             "events": [
                 {
                     "event_name": "PageView",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
                         {"type": "anonymous_id", "value": f"anon_emq_{uuid4().hex[:8]}"}
                     ],
@@ -678,18 +607,13 @@ class TestEMQScoreIntegration:
             ]
         }
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=event_data)
 
         assert response.status_code == 201
         event_id = response.json()["results"][0]["event_id"]
 
         # Query the event to check EMQ score
-        result = await db_session.execute(
-            select(CDPEvent).where(CDPEvent.id == event_id)
-        )
+        result = await db_session.execute(select(CDPEvent).where(CDPEvent.id == event_id))
         event = result.scalar_one_or_none()
 
         # With only anonymous_id and no properties/context, EMQ should be lower
@@ -700,6 +624,7 @@ class TestEMQScoreIntegration:
 # =============================================================================
 # Profile Lifecycle Tests
 # =============================================================================
+
 
 class TestProfileLifecycle:
     """Tests for profile lifecycle stage management."""
@@ -714,7 +639,7 @@ class TestProfileLifecycle:
             "events": [
                 {
                     "event_name": "PageView",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
                         {"type": "anonymous_id", "value": f"anon_lifecycle_{uuid4().hex[:8]}"}
                     ],
@@ -722,16 +647,11 @@ class TestProfileLifecycle:
             ]
         }
 
-        response = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=event_data
-        )
+        response = await cdp_client.post("/api/v1/cdp/events", json=event_data)
 
         profile_id = response.json()["results"][0]["profile_id"]
 
-        profile_response = await cdp_client.get(
-            f"/api/v1/cdp/profiles/{profile_id}"
-        )
+        profile_response = await cdp_client.get(f"/api/v1/cdp/profiles/{profile_id}")
 
         assert profile_response.status_code == 200
         assert profile_response.json()["lifecycle_stage"] == "anonymous"
@@ -749,7 +669,7 @@ class TestProfileLifecycle:
             "events": [
                 {
                     "event_name": "PageView",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
                         {"type": "anonymous_id", "value": f"anon_to_known_{unique_id}"}
                     ],
@@ -757,10 +677,7 @@ class TestProfileLifecycle:
             ]
         }
 
-        response1 = await cdp_client.post(
-            "/api/v1/cdp/events",
-            json=anon_event
-        )
+        response1 = await cdp_client.post("/api/v1/cdp/events", json=anon_event)
         profile_id = response1.json()["results"][0]["profile_id"]
 
         # Now send event with email AND the same anonymous_id
@@ -768,10 +685,10 @@ class TestProfileLifecycle:
             "events": [
                 {
                     "event_name": "SignUp",
-                    "event_time": datetime.now(timezone.utc).isoformat(),
+                    "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
                         {"type": "email", "value": f"known_{unique_id}@example.com"},
-                        {"type": "anonymous_id", "value": f"anon_to_known_{unique_id}"}
+                        {"type": "anonymous_id", "value": f"anon_to_known_{unique_id}"},
                     ],
                 }
             ]
@@ -780,9 +697,7 @@ class TestProfileLifecycle:
         await cdp_client.post("/api/v1/cdp/events", json=email_event)
 
         # Check profile lifecycle
-        profile_response = await cdp_client.get(
-            f"/api/v1/cdp/profiles/{profile_id}"
-        )
+        profile_response = await cdp_client.get(f"/api/v1/cdp/profiles/{profile_id}")
 
         assert profile_response.status_code == 200
         assert profile_response.json()["lifecycle_stage"] == "known"

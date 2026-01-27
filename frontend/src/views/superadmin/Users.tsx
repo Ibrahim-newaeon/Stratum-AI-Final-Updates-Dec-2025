@@ -3,41 +3,41 @@
  * Manage all users across tenants with role assignment
  */
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  UserIcon,
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  MagnifyingGlassIcon,
-  ShieldCheckIcon,
   CheckCircleIcon,
-  XCircleIcon,
   EnvelopeIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 // Helper to get auth headers
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('access_token')
+  const token = localStorage.getItem('access_token');
   return {
     'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-  }
-}
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
 
 interface User {
-  id: number
-  tenant_id: number
-  email: string
-  full_name: string | null
-  role: string
-  is_active: boolean
-  is_verified: boolean
-  last_login_at: string | null
-  created_at: string
-  updated_at: string
+  id: number;
+  tenant_id: number;
+  email: string;
+  full_name: string | null;
+  role: string;
+  is_active: boolean;
+  is_verified: boolean;
+  last_login_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const roleColors: Record<string, string> = {
@@ -46,7 +46,7 @@ const roleColors: Record<string, string> = {
   manager: 'bg-green-600 text-green-100',
   analyst: 'bg-yellow-600 text-yellow-100',
   viewer: 'bg-neutral-600 text-neutral-100',
-}
+};
 
 const roleLabels: Record<string, string> = {
   superadmin: 'Super Admin',
@@ -54,22 +54,22 @@ const roleLabels: Record<string, string> = {
   manager: 'Manager',
   analyst: 'Analyst',
   viewer: 'Viewer',
-}
+};
 
 export default function SuperAdminUsers() {
-  const queryClient = useQueryClient()
-  const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<string>('')
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Form state
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('analyst')
-  const [inviteName, setInviteName] = useState('')
-  const [editRole, setEditRole] = useState('')
-  const [editActive, setEditActive] = useState(true)
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('analyst');
+  const [inviteName, setInviteName] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editActive, setEditActive] = useState(true);
 
   // Fetch users
   const { data: usersData, isLoading } = useQuery({
@@ -77,11 +77,11 @@ export default function SuperAdminUsers() {
     queryFn: async () => {
       const response = await fetch('/api/v1/users', {
         headers: getAuthHeaders(),
-      })
-      if (!response.ok) throw new Error('Failed to fetch users')
-      return response.json()
+      });
+      if (!response.ok) throw new Error('Failed to fetch users');
+      return response.json();
     },
-  })
+  });
 
   // Invite user mutation
   const inviteUser = useMutation({
@@ -90,36 +90,42 @@ export default function SuperAdminUsers() {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
-      })
-      if (!response.ok) throw new Error('Failed to invite user')
-      return response.json()
+      });
+      if (!response.ok) throw new Error('Failed to invite user');
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin-users'] })
-      setShowInviteModal(false)
-      setInviteEmail('')
-      setInviteRole('analyst')
-      setInviteName('')
+      queryClient.invalidateQueries({ queryKey: ['superadmin-users'] });
+      setShowInviteModal(false);
+      setInviteEmail('');
+      setInviteRole('analyst');
+      setInviteName('');
     },
-  })
+  });
 
   // Update user mutation
   const updateUser = useMutation({
-    mutationFn: async ({ userId, data }: { userId: number; data: { role?: string; is_active?: boolean } }) => {
+    mutationFn: async ({
+      userId,
+      data,
+    }: {
+      userId: number;
+      data: { role?: string; is_active?: boolean };
+    }) => {
       const response = await fetch(`/api/v1/users/${userId}`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
-      })
-      if (!response.ok) throw new Error('Failed to update user')
-      return response.json()
+      });
+      if (!response.ok) throw new Error('Failed to update user');
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin-users'] })
-      setShowEditModal(false)
-      setSelectedUser(null)
+      queryClient.invalidateQueries({ queryKey: ['superadmin-users'] });
+      setShowEditModal(false);
+      setSelectedUser(null);
     },
-  })
+  });
 
   // Delete user mutation
   const deleteUser = useMutation({
@@ -127,58 +133,59 @@ export default function SuperAdminUsers() {
       const response = await fetch(`/api/v1/users/${userId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
-      })
-      if (!response.ok) throw new Error('Failed to delete user')
-      return response.json()
+      });
+      if (!response.ok) throw new Error('Failed to delete user');
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin-users'] })
+      queryClient.invalidateQueries({ queryKey: ['superadmin-users'] });
     },
-  })
+  });
 
-  const users: User[] = usersData?.data || []
+  const users: User[] = usersData?.data || [];
 
   // Filter users
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = !search ||
+    const matchesSearch =
+      !search ||
       user.email.toLowerCase().includes(search.toLowerCase()) ||
-      user.full_name?.toLowerCase().includes(search.toLowerCase())
-    const matchesRole = !roleFilter || user.role === roleFilter
-    return matchesSearch && matchesRole
-  })
+      user.full_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesRole = !roleFilter || user.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const handleInvite = () => {
-    if (!inviteEmail) return
+    if (!inviteEmail) return;
     inviteUser.mutate({
       email: inviteEmail,
       role: inviteRole,
       full_name: inviteName || undefined,
-    })
-  }
+    });
+  };
 
   const handleEdit = (user: User) => {
-    setSelectedUser(user)
-    setEditRole(user.role)
-    setEditActive(user.is_active)
-    setShowEditModal(true)
-  }
+    setSelectedUser(user);
+    setEditRole(user.role);
+    setEditActive(user.is_active);
+    setShowEditModal(true);
+  };
 
   const handleSaveEdit = () => {
-    if (!selectedUser) return
+    if (!selectedUser) return;
     updateUser.mutate({
       userId: selectedUser.id,
       data: {
         role: editRole,
         is_active: editActive,
       },
-    })
-  }
+    });
+  };
 
   const handleDelete = (user: User) => {
     if (confirm(`Are you sure you want to delete ${user.email}?`)) {
-      deleteUser.mutate(user.id)
+      deleteUser.mutate(user.id);
     }
-  }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -233,15 +240,21 @@ export default function SuperAdminUsers() {
           <div className="text-sm text-neutral-400">Total Users</div>
         </div>
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
-          <div className="text-2xl font-bold text-green-400">{users.filter(u => u.is_active).length}</div>
+          <div className="text-2xl font-bold text-green-400">
+            {users.filter((u) => u.is_active).length}
+          </div>
           <div className="text-sm text-neutral-400">Active</div>
         </div>
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
-          <div className="text-2xl font-bold text-purple-400">{users.filter(u => u.role === 'superadmin' || u.role === 'admin').length}</div>
+          <div className="text-2xl font-bold text-purple-400">
+            {users.filter((u) => u.role === 'superadmin' || u.role === 'admin').length}
+          </div>
           <div className="text-sm text-neutral-400">Admins</div>
         </div>
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
-          <div className="text-2xl font-bold text-blue-400">{users.filter(u => u.is_verified).length}</div>
+          <div className="text-2xl font-bold text-blue-400">
+            {users.filter((u) => u.is_verified).length}
+          </div>
           <div className="text-sm text-neutral-400">Verified</div>
         </div>
       </div>
@@ -251,12 +264,24 @@ export default function SuperAdminUsers() {
         <table className="w-full">
           <thead className="bg-neutral-800/50">
             <tr>
-              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">User</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">Role</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">Status</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">Last Login</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">Created</th>
-              <th className="text-right px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">Actions</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                User
+              </th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                Last Login
+              </th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                Created
+              </th>
+              <th className="text-right px-6 py-3 text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-800">
@@ -287,8 +312,15 @@ export default function SuperAdminUsers() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={cn('px-2 py-1 rounded-full text-xs font-medium', roleColors[user.role] || 'bg-neutral-600')}>
-                      {user.role === 'superadmin' && <ShieldCheckIcon className="w-3 h-3 inline mr-1" />}
+                    <span
+                      className={cn(
+                        'px-2 py-1 rounded-full text-xs font-medium',
+                        roleColors[user.role] || 'bg-neutral-600'
+                      )}
+                    >
+                      {user.role === 'superadmin' && (
+                        <ShieldCheckIcon className="w-3 h-3 inline mr-1" />
+                      )}
                       {roleLabels[user.role] || user.role}
                     </span>
                   </td>
@@ -313,8 +345,7 @@ export default function SuperAdminUsers() {
                   <td className="px-6 py-4 text-sm text-neutral-400">
                     {user.last_login_at
                       ? new Date(user.last_login_at).toLocaleDateString()
-                      : 'Never'
-                    }
+                      : 'Never'}
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-400">
                     {new Date(user.created_at).toLocaleDateString()}
@@ -390,7 +421,11 @@ export default function SuperAdminUsers() {
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => { setShowInviteModal(false); setInviteEmail(''); setInviteName(''); }}
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setInviteEmail('');
+                  setInviteName('');
+                }}
                 className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
               >
                 Cancel
@@ -436,12 +471,17 @@ export default function SuperAdminUsers() {
                   onChange={(e) => setEditActive(e.target.checked)}
                   className="w-4 h-4 rounded border-neutral-600 text-purple-600 focus:ring-purple-500"
                 />
-                <label htmlFor="editActive" className="text-sm text-neutral-300">Active</label>
+                <label htmlFor="editActive" className="text-sm text-neutral-300">
+                  Active
+                </label>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => { setShowEditModal(false); setSelectedUser(null); }}
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedUser(null);
+                }}
                 className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
               >
                 Cancel
@@ -458,5 +498,5 @@ export default function SuperAdminUsers() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -5,21 +5,21 @@
 User profile and management endpoints.
 """
 
-from typing import List, Optional
-from datetime import datetime, timezone
 import secrets
+from datetime import UTC, datetime
+from typing import Optional
 
+import redis.asyncio as redis
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-import redis.asyncio as redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.security import decrypt_pii, encrypt_pii, get_password_hash, hash_pii_for_lookup
 from app.db.session import get_async_session
-from app.models import User, UserRole, Tenant
+from app.models import Tenant, User, UserRole
 from app.schemas import APIResponse, UserProfileResponse, UserResponse, UserUpdate
 from app.services.email_service import get_email_service
 
@@ -30,6 +30,7 @@ INVITE_TOKEN_EXPIRY = 7 * 24 * 3600  # 7 days
 
 class InviteUserRequest(BaseModel):
     """Request schema for inviting a new user."""
+
     email: EmailStr
     full_name: Optional[str] = None
     role: str = Field(default="user", description="User role: admin, manager, user")
@@ -37,9 +38,11 @@ class InviteUserRequest(BaseModel):
 
 class UpdateUserRequest(BaseModel):
     """Request schema for admin updating a user."""
+
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -121,9 +124,9 @@ async def update_current_user(
     update_dict = update_data.model_dump(exclude_unset=True)
 
     # Encrypt PII fields
-    if "full_name" in update_dict and update_dict["full_name"]:
+    if update_dict.get("full_name"):
         update_dict["full_name"] = encrypt_pii(update_dict["full_name"])
-    if "phone" in update_dict and update_dict["phone"]:
+    if update_dict.get("phone"):
         update_dict["phone"] = encrypt_pii(update_dict["phone"])
 
     for field, value in update_dict.items():
@@ -158,7 +161,7 @@ async def update_current_user(
     )
 
 
-@router.get("", response_model=APIResponse[List[UserResponse]])
+@router.get("", response_model=APIResponse[list[UserResponse]])
 async def list_users(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -240,18 +243,14 @@ async def invite_user(
         )
 
     # Get tenant name for invite email
-    tenant_result = await db.execute(
-        select(Tenant).where(Tenant.id == tenant_id)
-    )
+    tenant_result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = tenant_result.scalar_one_or_none()
     tenant_name = tenant.name if tenant else "Stratum AI"
 
     # Get inviter's name
     inviter_name = "An administrator"
     if requester_user_id:
-        inviter_result = await db.execute(
-            select(User).where(User.id == requester_user_id)
-        )
+        inviter_result = await db.execute(select(User).where(User.id == requester_user_id))
         inviter = inviter_result.scalar_one_or_none()
         if inviter and inviter.full_name:
             inviter_name = decrypt_pii(inviter.full_name)
@@ -478,7 +477,7 @@ async def delete_user(
     # Soft delete
     user.is_deleted = True
     user.is_active = False
-    user.deleted_at = datetime.now(timezone.utc)
+    user.deleted_at = datetime.now(UTC)
 
     await db.commit()
 

@@ -4,49 +4,49 @@
  * Automated report generation, scheduling, and delivery management.
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  useReportTemplates,
-  useReportSchedules,
-  useReportExecutions,
   useDeliveryChannelConfigs,
   useGenerateReport,
   usePauseReportSchedule,
+  useReportExecutions,
+  useReportSchedules,
+  useReportTemplates,
   useResumeReportSchedule,
-} from '@/api/hooks'
+} from '@/api/hooks';
 import {
-  DocumentTextIcon,
-  PlayIcon,
-  PauseIcon,
-  PlusIcon,
-  EnvelopeIcon,
-  ChatBubbleLeftIcon,
   ArrowDownTrayIcon,
-  ClockIcon,
+  ChatBubbleLeftIcon,
   CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
-type TabType = 'templates' | 'schedules' | 'history' | 'delivery'
+type TabType = 'templates' | 'schedules' | 'history' | 'delivery';
 
 export default function Reporting() {
-  const [activeTab, setActiveTab] = useState<TabType>('templates')
+  const [activeTab, setActiveTab] = useState<TabType>('templates');
 
-  const { data: templates } = useReportTemplates()
-  const { data: schedules } = useReportSchedules()
-  const { data: executions } = useReportExecutions({ limit: 20 })
-  const { data: deliveryConfigs } = useDeliveryChannelConfigs()
-  const generateReport = useGenerateReport()
-  const pauseSchedule = usePauseReportSchedule()
-  const resumeSchedule = useResumeReportSchedule()
+  const { data: templates } = useReportTemplates();
+  const { data: schedules } = useReportSchedules();
+  const { data: executions } = useReportExecutions({ limit: 20 });
+  const { data: deliveryConfigs } = useDeliveryChannelConfigs();
+  const generateReport = useGenerateReport();
+  const pauseSchedule = usePauseReportSchedule();
+  const resumeSchedule = useResumeReportSchedule();
 
   const tabs = [
     { id: 'templates' as TabType, label: 'Templates' },
     { id: 'schedules' as TabType, label: 'Schedules' },
     { id: 'history' as TabType, label: 'History' },
     { id: 'delivery' as TabType, label: 'Delivery Settings' },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -111,10 +111,7 @@ export default function Reporting() {
 
               <div className="flex flex-wrap gap-2 mb-4">
                 {(template.config?.sections ?? []).map((section: string, idx: number) => (
-                  <span
-                    key={idx}
-                    className="px-2 py-1 rounded-full text-xs bg-muted"
-                  >
+                  <span key={idx} className="px-2 py-1 rounded-full text-xs bg-muted">
                     {section}
                   </span>
                 ))}
@@ -125,11 +122,15 @@ export default function Reporting() {
                   Format: {template.defaultFormat.toUpperCase()}
                 </span>
                 <button
-                  onClick={() => generateReport.mutate({
-                    templateId: template.id,
-                    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    endDate: new Date().toISOString().split('T')[0],
-                  })}
+                  onClick={() =>
+                    generateReport.mutate({
+                      templateId: template.id,
+                      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                        .toISOString()
+                        .split('T')[0],
+                      endDate: new Date().toISOString().split('T')[0],
+                    })
+                  }
                   disabled={generateReport.isPending}
                   className="flex items-center gap-1 text-sm text-primary hover:underline"
                 >
@@ -171,15 +172,11 @@ export default function Reporting() {
                   <td className="px-4 py-3 text-sm">
                     {templates?.find((t) => t.id === schedule.templateId)?.name || 'Unknown'}
                   </td>
-                  <td className="px-4 py-3 text-sm capitalize">
-                    {schedule.frequency}
-                  </td>
+                  <td className="px-4 py-3 text-sm capitalize">{schedule.frequency}</td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center gap-1">
                       <ClockIcon className="h-4 w-4 text-muted-foreground" />
-                      {schedule.nextRunAt
-                        ? new Date(schedule.nextRunAt).toLocaleString()
-                        : '-'}
+                      {schedule.nextRunAt ? new Date(schedule.nextRunAt).toLocaleString() : '-'}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -213,11 +210,15 @@ export default function Reporting() {
                         </button>
                       )}
                       <button
-                        onClick={() => generateReport.mutate({
-                          templateId: schedule.templateId,
-                          startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                          endDate: new Date().toISOString().split('T')[0],
-                        })}
+                        onClick={() =>
+                          generateReport.mutate({
+                            templateId: schedule.templateId,
+                            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                              .toISOString()
+                              .split('T')[0],
+                            endDate: new Date().toISOString().split('T')[0],
+                          })
+                        }
                         className="p-1 rounded hover:bg-muted"
                         title="Run Now"
                       >
@@ -325,7 +326,9 @@ export default function Reporting() {
                     : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
                 )}
               >
-                {deliveryConfigs?.find((c) => c.channel === 'email')?.isActive ? 'Enabled' : 'Disabled'}
+                {deliveryConfigs?.find((c) => c.channel === 'email')?.isActive
+                  ? 'Enabled'
+                  : 'Disabled'}
               </span>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 text-sm">
@@ -344,9 +347,7 @@ export default function Reporting() {
                 </div>
                 <div>
                   <h3 className="font-medium">Slack Delivery</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Post reports to Slack channels
-                  </p>
+                  <p className="text-sm text-muted-foreground">Post reports to Slack channels</p>
                 </div>
               </div>
               <span
@@ -357,7 +358,9 @@ export default function Reporting() {
                     : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
                 )}
               >
-                {deliveryConfigs?.find((c) => c.channel === 'slack')?.isActive ? 'Enabled' : 'Disabled'}
+                {deliveryConfigs?.find((c) => c.channel === 'slack')?.isActive
+                  ? 'Enabled'
+                  : 'Disabled'}
               </span>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 text-sm">
@@ -389,7 +392,9 @@ export default function Reporting() {
                     : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
                 )}
               >
-                {deliveryConfigs?.find((c) => (c.channel as string) === 'whatsapp')?.isActive ? 'Enabled' : 'Disabled'}
+                {deliveryConfigs?.find((c) => (c.channel as string) === 'whatsapp')?.isActive
+                  ? 'Enabled'
+                  : 'Disabled'}
               </span>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 text-sm">
@@ -401,5 +406,5 @@ export default function Reporting() {
         </div>
       )}
     </div>
-  )
+  );
 }

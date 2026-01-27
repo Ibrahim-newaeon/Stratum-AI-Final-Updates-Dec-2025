@@ -8,11 +8,12 @@ Sends real-time notifications to Slack channels for:
 - Daily/weekly summary reports
 """
 
-import httpx
-from typing import Optional, Dict, Any, List
+import logging
 from datetime import datetime
 from enum import Enum
-import logging
+from typing import Any, Optional
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +77,8 @@ class SlackNotificationService:
     async def send_message(
         self,
         text: str,
-        blocks: Optional[List[Dict[str, Any]]] = None,
-        attachments: Optional[List[Dict[str, Any]]] = None,
+        blocks: Optional[list[dict[str, Any]]] = None,
+        attachments: Optional[list[dict[str, Any]]] = None,
         webhook_url: Optional[str] = None,
     ) -> bool:
         """
@@ -97,7 +98,7 @@ class SlackNotificationService:
             logger.warning("No Slack webhook URL configured")
             return False
 
-        payload: Dict[str, Any] = {"text": text}
+        payload: dict[str, Any] = {"text": text}
         if blocks:
             payload["blocks"] = blocks
         if attachments:
@@ -122,7 +123,7 @@ class SlackNotificationService:
         status: TrustGateStatus,
         signal_health: float,
         threshold: float = 70.0,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
         webhook_url: Optional[str] = None,
     ) -> bool:
         """
@@ -155,7 +156,7 @@ class SlackNotificationService:
                     "type": "plain_text",
                     "text": f"{emoji} Trust Gate: {status.value.upper()}",
                     "emoji": True,
-                }
+                },
             },
             {
                 "type": "section",
@@ -164,30 +165,27 @@ class SlackNotificationService:
                     {"type": "mrkdwn", "text": f"*Automation:*\n{automation_name}"},
                     {"type": "mrkdwn", "text": f"*Signal Health:*\n{signal_health:.1f}/100"},
                     {"type": "mrkdwn", "text": f"*Threshold:*\n{threshold:.1f}"},
-                ]
+                ],
             },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Action:* {action_text}"
-                }
-            },
+            {"type": "section", "text": {"type": "mrkdwn", "text": f"*Action:* {action_text}"}},
             {
                 "type": "context",
                 "elements": [
                     {"type": "mrkdwn", "text": f"🕐 {timestamp} | Stratum AI Trust Engine"}
-                ]
-            }
+                ],
+            },
         ]
 
         # Add details if provided
         if details:
             detail_text = "\n".join([f"• *{k}:* {v}" for k, v in details.items()])
-            blocks.insert(3, {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*Details:*\n{detail_text}"}
-            })
+            blocks.insert(
+                3,
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"*Details:*\n{detail_text}"},
+                },
+            )
 
         attachments = [{"color": color, "blocks": blocks}]
 
@@ -229,26 +227,31 @@ class SlackNotificationService:
                     "type": "plain_text",
                     "text": f"{emoji} Signal Health Alert",
                     "emoji": True,
-                }
+                },
             },
             {
                 "type": "section",
                 "fields": [
                     {"type": "mrkdwn", "text": f"*Tenant:*\n{tenant_name}"},
                     {"type": "mrkdwn", "text": f"*Signal:*\n{signal_name}"},
-                    {"type": "mrkdwn", "text": f"*Current Health:*\n{status_text} ({current_health:.1f})"},
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Current Health:*\n{status_text} ({current_health:.1f})",
+                    },
                     {"type": "mrkdwn", "text": f"*Change:*\n{direction} {change:+.1f}"},
-                ]
+                ],
             },
             {
                 "type": "context",
                 "elements": [
                     {"type": "mrkdwn", "text": f"🕐 {timestamp} | Previous: {previous_health:.1f}"}
-                ]
-            }
+                ],
+            },
         ]
 
-        color = "#ef4444" if current_health < 40 else "#eab308" if current_health < 70 else "#22c55e"
+        color = (
+            "#ef4444" if current_health < 40 else "#eab308" if current_health < 70 else "#22c55e"
+        )
 
         return await self.send_message(
             text=f"Signal Health Alert: {signal_name} at {current_health:.1f}",
@@ -272,7 +275,9 @@ class SlackNotificationService:
         emoji = self._get_severity_emoji(severity)
         timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 
-        deviation_pct = ((current_value - expected_value) / expected_value * 100) if expected_value != 0 else 0
+        deviation_pct = (
+            ((current_value - expected_value) / expected_value * 100) if expected_value != 0 else 0
+        )
 
         blocks = [
             {
@@ -281,7 +286,7 @@ class SlackNotificationService:
                     "type": "plain_text",
                     "text": f"{emoji} Anomaly Detected",
                     "emoji": True,
-                }
+                },
             },
             {
                 "type": "section",
@@ -292,14 +297,14 @@ class SlackNotificationService:
                     {"type": "mrkdwn", "text": f"*Expected:*\n{expected_value:,.2f}"},
                     {"type": "mrkdwn", "text": f"*Z-Score:*\n{z_score:.2f}σ"},
                     {"type": "mrkdwn", "text": f"*Deviation:*\n{deviation_pct:+.1f}%"},
-                ]
+                ],
             },
             {
                 "type": "context",
                 "elements": [
                     {"type": "mrkdwn", "text": f"🕐 {timestamp} | Stratum AI Anomaly Detection"}
-                ]
-            }
+                ],
+            },
         ]
 
         color = "#ef4444" if abs(z_score) > 3 else "#eab308"
@@ -313,7 +318,7 @@ class SlackNotificationService:
     async def send_daily_summary(
         self,
         tenant_name: str,
-        stats: Dict[str, Any],
+        stats: dict[str, Any],
         webhook_url: Optional[str] = None,
     ) -> bool:
         """
@@ -343,16 +348,10 @@ class SlackNotificationService:
                     "type": "plain_text",
                     "text": f"📊 Daily Trust Report - {tenant_name}",
                     "emoji": True,
-                }
+                },
             },
             {"type": "divider"},
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Summary for {timestamp}*"
-                }
-            },
+            {"type": "section", "text": {"type": "mrkdwn", "text": f"*Summary for {timestamp}*"}},
             {
                 "type": "section",
                 "fields": [
@@ -361,23 +360,23 @@ class SlackNotificationService:
                     {"type": "mrkdwn", "text": f"🟢 *Passed:*\n{passed}"},
                     {"type": "mrkdwn", "text": f"🟡 *Held:*\n{held}"},
                     {"type": "mrkdwn", "text": f"🔴 *Blocked:*\n{blocked}"},
-                    {"type": "mrkdwn", "text": f"*Avg Signal Health:*\n{avg_signal_health:.1f}/100"},
-                ]
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Avg Signal Health:*\n{avg_signal_health:.1f}/100",
+                    },
+                ],
             },
             {
                 "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Anomalies Detected:* {anomalies_detected}"
-                }
+                "text": {"type": "mrkdwn", "text": f"*Anomalies Detected:* {anomalies_detected}"},
             },
             {"type": "divider"},
             {
                 "type": "context",
                 "elements": [
                     {"type": "mrkdwn", "text": "📈 Stratum AI - Trust-Gated Revenue Operations"}
-                ]
-            }
+                ],
+            },
         ]
 
         # Determine overall status color
@@ -398,15 +397,18 @@ class SlackNotificationService:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "✅ *Stratum AI Connected!*\n\nYour Slack integration is working. You'll receive Trust Gate alerts and reports in this channel."
-                }
+                    "text": "✅ *Stratum AI Connected!*\n\nYour Slack integration is working. You'll receive Trust Gate alerts and reports in this channel.",
+                },
             },
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": f"🔗 Connection verified at {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"}
-                ]
-            }
+                    {
+                        "type": "mrkdwn",
+                        "text": f"🔗 Connection verified at {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+                    }
+                ],
+            },
         ]
 
         return await self.send_message(

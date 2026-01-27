@@ -3,14 +3,14 @@
  * Individual blog post page - fetches from CMS API
  */
 
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  CalendarIcon,
-  UserIcon,
-  ClockIcon,
   ArrowLeftIcon,
+  CalendarIcon,
+  ClockIcon,
   TagIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
 import { usePost } from '@/api/cms';
 
@@ -125,10 +125,7 @@ export default function BlogPost() {
 
           {/* Excerpt */}
           {post.excerpt && (
-            <p
-              className="text-lg md:text-xl mb-8"
-              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-            >
+            <p className="text-lg md:text-xl mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               {post.excerpt}
             </p>
           )}
@@ -176,11 +173,7 @@ export default function BlogPost() {
           {/* Featured Image */}
           {post.featured_image_url && (
             <div className="my-8 rounded-2xl overflow-hidden">
-              <img
-                src={post.featured_image_url}
-                alt={post.title}
-                className="w-full h-auto"
-              />
+              <img src={post.featured_image_url} alt={post.title} className="w-full h-auto" />
             </div>
           )}
 
@@ -195,7 +188,10 @@ export default function BlogPost() {
 
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
-            <div className="mt-12 pt-8 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+            <div
+              className="mt-12 pt-8 border-t"
+              style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+            >
               <div className="flex items-center gap-3 flex-wrap">
                 <TagIcon className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
                 {post.tags.map((tag) => (

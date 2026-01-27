@@ -7,7 +7,7 @@ Implements Module B: Unified Campaign Model.
 """
 
 from datetime import date, timedelta
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
@@ -41,7 +41,7 @@ async def list_campaigns(
     platform: Optional[AdPlatform] = None,
     status: Optional[CampaignStatus] = None,
     search: Optional[str] = None,
-    labels: Optional[List[str]] = Query(None),
+    labels: Optional[list[str]] = Query(None),
 ):
     """
     List campaigns with filtering and pagination.

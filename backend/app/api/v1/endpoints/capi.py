@@ -6,21 +6,21 @@ API endpoints for server-side Conversion API integration.
 Provides no-code platform connection, event streaming, and data quality analysis.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any, Optional
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from app.core.logging import get_logger
-from app.services.capi import CAPIService
 from app.schemas import APIResponse
+from app.services.capi import CAPIService
 
 logger = get_logger(__name__)
 router = APIRouter()
 
 # Global CAPI service instance (per-tenant in production)
-_capi_services: Dict[int, CAPIService] = {}
+_capi_services: dict[int, CAPIService] = {}
 
 
 def get_capi_service(tenant_id: int) -> CAPIService:
@@ -35,15 +35,21 @@ def get_capi_service(tenant_id: int) -> CAPIService:
 # =============================================================================
 class PlatformCredentials(BaseModel):
     """Credentials for connecting to a platform."""
-    platform: str = Field(..., description="Platform name: meta, google, tiktok, snapchat, linkedin")
-    credentials: Dict[str, str] = Field(..., description="Platform-specific credentials")
+
+    platform: str = Field(
+        ..., description="Platform name: meta, google, tiktok, snapchat, linkedin"
+    )
+    credentials: dict[str, str] = Field(..., description="Platform-specific credentials")
 
 
 class ConversionEvent(BaseModel):
     """Conversion event to stream."""
+
     event_name: str = Field(..., description="Event name (e.g., Purchase, Lead)")
-    user_data: Dict[str, Any] = Field(..., description="User identification data")
-    parameters: Optional[Dict[str, Any]] = Field(default={}, description="Event parameters (value, currency, etc.)")
+    user_data: dict[str, Any] = Field(..., description="User identification data")
+    parameters: Optional[dict[str, Any]] = Field(
+        default={}, description="Event parameters (value, currency, etc.)"
+    )
     event_time: Optional[int] = Field(default=None, description="Unix timestamp")
     event_source_url: Optional[str] = Field(default=None, description="URL where event occurred")
     event_id: Optional[str] = Field(default=None, description="Unique event ID for deduplication")
@@ -51,13 +57,15 @@ class ConversionEvent(BaseModel):
 
 class BatchEventsRequest(BaseModel):
     """Request for streaming batch events."""
-    events: List[ConversionEvent]
-    platforms: Optional[List[str]] = Field(default=None, description="Platforms to send to")
+
+    events: list[ConversionEvent]
+    platforms: Optional[list[str]] = Field(default=None, description="Platforms to send to")
 
 
 class DataQualityRequest(BaseModel):
     """Request for data quality analysis."""
-    user_data: Dict[str, Any]
+
+    user_data: dict[str, Any]
     platform: Optional[str] = Field(default=None)
 
 
@@ -232,7 +240,7 @@ async def stream_batch_events(
             "event_name": e.event_name,
             "user_data": e.user_data,
             "parameters": e.parameters,
-            "event_time": e.event_time or int(datetime.now(timezone.utc).timestamp()),
+            "event_time": e.event_time or int(datetime.now(UTC).timestamp()),
             "event_source_url": e.event_source_url,
             "event_id": e.event_id,
         }
@@ -381,7 +389,7 @@ async def get_live_insights(
 async def map_event(
     request: Request,
     event_name: str,
-    parameters: Optional[Dict[str, Any]] = None,
+    parameters: Optional[dict[str, Any]] = None,
 ):
     """
     Map a custom event to standard platform events.
@@ -402,7 +410,7 @@ async def map_event(
 @router.post("/pii/detect", response_model=APIResponse)
 async def detect_pii(
     request: Request,
-    data: Dict[str, Any],
+    data: dict[str, Any],
 ):
     """
     Detect PII fields in data.
@@ -427,7 +435,7 @@ async def detect_pii(
 @router.post("/pii/hash", response_model=APIResponse)
 async def hash_user_data(
     request: Request,
-    user_data: Dict[str, Any],
+    user_data: dict[str, Any],
 ):
     """
     Hash user data for CAPI transmission.

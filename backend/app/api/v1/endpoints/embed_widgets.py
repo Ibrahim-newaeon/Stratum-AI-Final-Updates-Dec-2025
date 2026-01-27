@@ -13,43 +13,40 @@ Endpoints:
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.core.tiers import SubscriptionTier, Feature, has_feature, get_tier_limit
-from app.core.feature_gate import get_current_tier, require_feature
 from app.core.config import settings
-
+from app.core.feature_gate import get_current_tier
+from app.core.tiers import Feature, SubscriptionTier, get_tier_limit, has_feature
+from app.db.session import get_db
 from app.models.embed_widgets import (
-    EmbedWidget,
-    EmbedToken,
-    EmbedDomainWhitelist,
-    WidgetType,
     BrandingLevel,
+    EmbedToken,
+    EmbedWidget,
+    WidgetType,
 )
 from app.schemas.embed_widgets import (
-    WidgetCreate,
-    WidgetUpdate,
-    WidgetResponse,
-    TokenCreate,
-    TokenCreateResponse,
-    TokenResponse,
-    TokenRefresh,
-    TokenRefreshResponse,
     DomainWhitelistCreate,
     DomainWhitelistResponse,
     EmbedCodeResponse,
+    TokenCreate,
+    TokenCreateResponse,
+    TokenRefresh,
+    TokenRefreshResponse,
+    TokenResponse,
+    WidgetCreate,
+    WidgetResponse,
     WidgetType as WidgetTypeEnum,
+    WidgetUpdate,
 )
 from app.services.embed_widgets import (
+    EmbedSecurityService,
     EmbedTokenService,
     EmbedWidgetService,
-    EmbedSecurityService,
 )
 
 router = APIRouter(prefix="/embed-widgets", tags=["embed-widgets"])
@@ -58,6 +55,7 @@ router = APIRouter(prefix="/embed-widgets", tags=["embed-widgets"])
 # =============================================================================
 # Dependencies
 # =============================================================================
+
 
 def get_widget_service(db: Session = Depends(get_db)) -> EmbedWidgetService:
     return EmbedWidgetService(db)
@@ -68,7 +66,7 @@ def get_token_service(db: Session = Depends(get_db)) -> EmbedTokenService:
 
 
 def get_security_service() -> EmbedSecurityService:
-    signing_key = getattr(settings, 'EMBED_SIGNING_KEY', 'stratum-embed-secret-key')
+    signing_key = getattr(settings, "EMBED_SIGNING_KEY", "stratum-embed-secret-key")
     return EmbedSecurityService(signing_key)
 
 
@@ -81,6 +79,7 @@ def get_tenant_id() -> int:
 # =============================================================================
 # Widget Endpoints
 # =============================================================================
+
 
 @router.post("/widgets", response_model=WidgetResponse, status_code=status.HTTP_201_CREATED)
 async def create_widget(
@@ -101,15 +100,14 @@ async def create_widget(
     # Check feature access
     if not has_feature(tier, Feature.EMBED_WIDGETS_BASIC):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Embed widgets not available in your plan"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Embed widgets not available in your plan"
         )
 
     widget = service.create_widget(tenant_id, data, tier)
     return widget
 
 
-@router.get("/widgets", response_model=List[WidgetResponse])
+@router.get("/widgets", response_model=list[WidgetResponse])
 async def list_widgets(
     widget_type: Optional[WidgetTypeEnum] = None,
     is_active: Optional[bool] = None,
@@ -130,10 +128,7 @@ async def get_widget(
     """Get a specific widget by ID."""
     widget = service.get_widget(tenant_id, widget_id)
     if not widget:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Widget not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
     return widget
 
 
@@ -164,7 +159,12 @@ async def delete_widget(
 # Token Endpoints
 # =============================================================================
 
-@router.post("/widgets/{widget_id}/tokens", response_model=TokenCreateResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/widgets/{widget_id}/tokens",
+    response_model=TokenCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_token(
     widget_id: UUID,
     data: TokenCreate,
@@ -197,17 +197,22 @@ async def create_token(
     )
 
 
-@router.get("/widgets/{widget_id}/tokens", response_model=List[TokenResponse])
+@router.get("/widgets/{widget_id}/tokens", response_model=list[TokenResponse])
 async def list_tokens(
     widget_id: UUID,
     tenant_id: int = Depends(get_tenant_id),
     db: Session = Depends(get_db),
 ):
     """List all tokens for a widget (without actual token values)."""
-    tokens = db.query(EmbedToken).filter(
-        EmbedToken.widget_id == widget_id,
-        EmbedToken.tenant_id == tenant_id,
-    ).order_by(EmbedToken.created_at.desc()).all()
+    tokens = (
+        db.query(EmbedToken)
+        .filter(
+            EmbedToken.widget_id == widget_id,
+            EmbedToken.tenant_id == tenant_id,
+        )
+        .order_by(EmbedToken.created_at.desc())
+        .all()
+    )
 
     return tokens
 
@@ -246,7 +251,10 @@ async def revoke_token(
 # Domain Whitelist Endpoints
 # =============================================================================
 
-@router.post("/domains", response_model=DomainWhitelistResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/domains", response_model=DomainWhitelistResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_domain(
     data: DomainWhitelistCreate,
     tenant_id: int = Depends(get_tenant_id),
@@ -268,7 +276,7 @@ async def add_domain(
     return domain
 
 
-@router.get("/domains", response_model=List[DomainWhitelistResponse])
+@router.get("/domains", response_model=list[DomainWhitelistResponse])
 async def list_domains(
     tenant_id: int = Depends(get_tenant_id),
     service: EmbedWidgetService = Depends(get_widget_service),
@@ -292,6 +300,7 @@ async def remove_domain(
 # Embed Code Generation
 # =============================================================================
 
+
 @router.get("/widgets/{widget_id}/embed-code", response_model=EmbedCodeResponse)
 async def get_embed_code(
     widget_id: UUID,
@@ -307,30 +316,28 @@ async def get_embed_code(
     """
     widget = service.get_widget(tenant_id, widget_id)
     if not widget:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Widget not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
 
     # Get token
-    token = db.query(EmbedToken).filter(
-        EmbedToken.id == token_id,
-        EmbedToken.widget_id == widget_id,
-    ).first()
+    token = (
+        db.query(EmbedToken)
+        .filter(
+            EmbedToken.id == token_id,
+            EmbedToken.widget_id == widget_id,
+        )
+        .first()
+    )
 
     if not token:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Token not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
 
     # Note: We use the token prefix for the embed code, not the full token
     # The full token was given at creation and should be stored by the user
-    base_url = getattr(settings, 'BASE_URL', 'https://app.stratum.ai')
+    base_url = getattr(settings, "BASE_URL", "https://app.stratum.ai")
 
     codes = service.generate_embed_code(
         widget=widget,
-        token=f"{{YOUR_TOKEN}}",  # Placeholder - user provides actual token
+        token="{YOUR_TOKEN}",  # Placeholder - user provides actual token
         base_url=base_url,
     )
 
@@ -346,6 +353,7 @@ async def get_embed_code(
 # =============================================================================
 # Tier Information
 # =============================================================================
+
 
 @router.get("/tier-info")
 async def get_embed_tier_info():

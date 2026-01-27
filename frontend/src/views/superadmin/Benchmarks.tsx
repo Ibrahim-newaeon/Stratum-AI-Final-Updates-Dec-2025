@@ -5,45 +5,48 @@
  * Shows P25/P50/P75 percentiles and trends
  */
 
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
-import { useEmqBenchmarks } from '@/api/hooks'
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useEmqBenchmarks } from '@/api/hooks';
 import {
-  ChartBarIcon,
-  ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
   CalendarIcon,
+  ChartBarIcon,
   InformationCircleIcon,
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/outline';
 
-type Platform = 'all' | 'meta' | 'google' | 'tiktok' | 'snapchat'
-type TimeRange = '7d' | '30d' | '90d'
-type Metric = 'emq' | 'freshness' | 'dataLoss' | 'variance' | 'errors'
+type Platform = 'all' | 'meta' | 'google' | 'tiktok' | 'snapchat';
+type TimeRange = '7d' | '30d' | '90d';
+type Metric = 'emq' | 'freshness' | 'dataLoss' | 'variance' | 'errors';
 
 interface BenchmarkData {
-  platform: string
-  p25: number
-  p50: number
-  p75: number
-  trend: number // percentage change from previous period
-  sampleSize: number
+  platform: string;
+  p25: number;
+  p50: number;
+  p75: number;
+  trend: number; // percentage change from previous period
+  sampleSize: number;
 }
 
 interface DriverBenchmark {
-  driver: string
-  label: string
-  p25: number
-  p50: number
-  p75: number
-  yourValue?: number
+  driver: string;
+  label: string;
+  p25: number;
+  p50: number;
+  p75: number;
+  yourValue?: number;
 }
 
 export default function Benchmarks() {
-  const [platform, _setPlatform] = useState<Platform>('all')
-  const [timeRange, setTimeRange] = useState<TimeRange>('30d')
-  const [selectedMetric, setSelectedMetric] = useState<Metric>('emq')
+  const [platform, _setPlatform] = useState<Platform>('all');
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+  const [selectedMetric, setSelectedMetric] = useState<Metric>('emq');
 
-  const { data: _benchmarksData } = useEmqBenchmarks(new Date().toISOString().split('T')[0], platform === 'all' ? undefined : platform)
+  const { data: _benchmarksData } = useEmqBenchmarks(
+    new Date().toISOString().split('T')[0],
+    platform === 'all' ? undefined : platform
+  );
 
   // Sample benchmark data
   const platformBenchmarks: BenchmarkData[] = [
@@ -51,14 +54,14 @@ export default function Benchmarks() {
     { platform: 'Google', p25: 78, p50: 86, p75: 93, trend: 1.8, sampleSize: 312 },
     { platform: 'TikTok', p25: 65, p50: 76, p75: 85, trend: -1.2, sampleSize: 156 },
     { platform: 'Snapchat', p25: 58, p50: 71, p75: 82, trend: 0.5, sampleSize: 89 },
-  ]
+  ];
 
   const driverBenchmarks: DriverBenchmark[] = [
     { driver: 'freshness', label: 'Data Freshness', p25: 85, p50: 92, p75: 98 },
     { driver: 'dataLoss', label: 'Data Completeness', p25: 78, p50: 88, p75: 95 },
     { driver: 'variance', label: 'Attribution Variance', p25: 70, p50: 82, p75: 91 },
     { driver: 'errors', label: 'Error Rate (inverted)', p25: 88, p50: 94, p75: 99 },
-  ]
+  ];
 
   // Industry benchmarks
   const industryBenchmarks = [
@@ -68,19 +71,19 @@ export default function Benchmarks() {
     { industry: 'Healthcare', p50: 81, trend: 1.2, count: 45 },
     { industry: 'Finance', p50: 88, trend: 2.8, count: 67 },
     { industry: 'Education', p50: 77, trend: 0.3, count: 34 },
-  ]
+  ];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-success'
-    if (score >= 60) return 'text-warning'
-    return 'text-danger'
-  }
+    if (score >= 80) return 'text-success';
+    if (score >= 60) return 'text-warning';
+    return 'text-danger';
+  };
 
   const getTrendIcon = (trend: number) => {
-    if (trend > 0) return <ArrowTrendingUpIcon className="w-4 h-4 text-success" />
-    if (trend < 0) return <ArrowTrendingDownIcon className="w-4 h-4 text-danger" />
-    return null
-  }
+    if (trend > 0) return <ArrowTrendingUpIcon className="w-4 h-4 text-success" />;
+    if (trend < 0) return <ArrowTrendingDownIcon className="w-4 h-4 text-danger" />;
+    return null;
+  };
 
   const renderPercentileBar = (p25: number, p50: number, p75: number) => {
     return (
@@ -96,10 +99,7 @@ export default function Benchmarks() {
           style={{ left: `${p25}%` }}
         />
         {/* P50 marker (median) */}
-        <div
-          className="absolute top-0 bottom-0 w-1 bg-stratum-500"
-          style={{ left: `${p50}%` }}
-        />
+        <div className="absolute top-0 bottom-0 w-1 bg-stratum-500" style={{ left: `${p50}%` }} />
         {/* P75 marker */}
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-stratum-400/50"
@@ -111,8 +111,8 @@ export default function Benchmarks() {
           <span>100</span>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   const metrics = [
     { id: 'emq' as Metric, label: 'Overall EMQ' },
@@ -120,7 +120,7 @@ export default function Benchmarks() {
     { id: 'dataLoss' as Metric, label: 'Completeness' },
     { id: 'variance' as Metric, label: 'Variance' },
     { id: 'errors' as Metric, label: 'Error Rate' },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -223,7 +223,8 @@ export default function Benchmarks() {
                     <div className="flex items-center gap-1 text-sm">
                       {getTrendIcon(benchmark.trend)}
                       <span className={benchmark.trend >= 0 ? 'text-success' : 'text-danger'}>
-                        {benchmark.trend >= 0 ? '+' : ''}{benchmark.trend}%
+                        {benchmark.trend >= 0 ? '+' : ''}
+                        {benchmark.trend}%
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -288,9 +289,7 @@ export default function Benchmarks() {
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-medium text-white">{benchmark.industry}</span>
-                  <span className="text-xs text-text-muted">
-                    {benchmark.count} tenants
-                  </span>
+                  <span className="text-xs text-text-muted">{benchmark.count} tenants</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={cn('text-3xl font-bold', getScoreColor(benchmark.p50))}>
@@ -299,7 +298,8 @@ export default function Benchmarks() {
                   <div className="flex items-center gap-1 text-sm">
                     {getTrendIcon(benchmark.trend)}
                     <span className={benchmark.trend >= 0 ? 'text-success' : 'text-danger'}>
-                      {benchmark.trend >= 0 ? '+' : ''}{benchmark.trend}%
+                      {benchmark.trend >= 0 ? '+' : ''}
+                      {benchmark.trend}%
                     </span>
                   </div>
                 </div>
@@ -334,5 +334,5 @@ export default function Benchmarks() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -5,71 +5,73 @@
  * Shows user actions, system events, and API activity
  */
 
-import { useState, useEffect } from 'react'
-import { cn } from '@/lib/utils'
-import { useAuditLogs } from '@/api/hooks'
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useAuditLogs } from '@/api/hooks';
 import {
-  MagnifyingGlassIcon,
-  FunnelIcon,
   ArrowDownTrayIcon,
-  ClockIcon,
-  UserIcon,
-  ServerIcon,
-  ShieldCheckIcon,
-  DocumentTextIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-} from '@heroicons/react/24/outline'
+  ClockIcon,
+  DocumentTextIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  ServerIcon,
+  ShieldCheckIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 
-type LogCategory = 'all' | 'user' | 'system' | 'security' | 'api'
-type LogSeverity = 'info' | 'warning' | 'error' | 'critical'
+type LogCategory = 'all' | 'user' | 'system' | 'security' | 'api';
+type LogSeverity = 'info' | 'warning' | 'error' | 'critical';
 
 interface AuditLog {
-  id: string
-  timestamp: Date
-  category: LogCategory
-  severity: LogSeverity
-  action: string
-  description: string
+  id: string;
+  timestamp: Date;
+  category: LogCategory;
+  severity: LogSeverity;
+  action: string;
+  description: string;
   actor: {
-    type: 'user' | 'system' | 'api'
-    id: string
-    name: string
-  }
+    type: 'user' | 'system' | 'api';
+    id: string;
+    name: string;
+  };
   target: {
-    type: string
-    id: string
-    name: string
-  } | null
-  metadata: Record<string, unknown>
-  ipAddress: string | null
-  userAgent: string | null
+    type: string;
+    id: string;
+    name: string;
+  } | null;
+  metadata: Record<string, unknown>;
+  ipAddress: string | null;
+  userAgent: string | null;
 }
 
 export default function Audit() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState<LogCategory>('all')
-  const [severityFilter, setSeverityFilter] = useState<LogSeverity | 'all'>('all')
-  const [expandedLog, setExpandedLog] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<LogCategory>('all');
+  const [severityFilter, setSeverityFilter] = useState<LogSeverity | 'all'>('all');
+  const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState({
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
-  })
-  const [currentPage, setCurrentPage] = useState(1)
-  const [exportFeedback, setExportFeedback] = useState<string | null>(null)
-  const itemsPerPage = 10
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
+  const itemsPerPage = 10;
 
   const { data: auditLogsData, isLoading } = useAuditLogs({
     startDate: dateRange.start,
     endDate: dateRange.end,
     action: categoryFilter !== 'all' ? categoryFilter : undefined,
-  })
+  });
 
   // Map API data to component format
   const auditLogs: AuditLog[] = auditLogsData?.items?.map((log) => ({
     id: log.id,
     timestamp: new Date(log.timestamp),
-    category: (log.severity === 'critical' || log.severity === 'error' ? 'security' : 'user') as LogCategory,
+    category: (log.severity === 'critical' || log.severity === 'error'
+      ? 'security'
+      : 'user') as LogCategory,
     severity: log.severity as LogSeverity,
     action: log.action,
     description: log.details,
@@ -78,7 +80,9 @@ export default function Audit() {
       id: log.userId,
       name: log.userName ?? 'User',
     },
-    target: log.tenantId ? { type: 'tenant', id: String(log.tenantId), name: log.tenantName ?? 'Unknown' } : null,
+    target: log.tenantId
+      ? { type: 'tenant', id: String(log.tenantId), name: log.tenantName ?? 'Unknown' }
+      : null,
     metadata: log.metadata ?? {},
     ipAddress: log.ipAddress ?? null,
     userAgent: log.userAgent ?? null,
@@ -174,74 +178,84 @@ export default function Audit() {
       ipAddress: null,
       userAgent: null,
     },
-  ]
+  ];
 
   // Filter logs
   const filteredLogs = auditLogs.filter((log) => {
-    if (categoryFilter !== 'all' && log.category !== categoryFilter) return false
-    if (severityFilter !== 'all' && log.severity !== severityFilter) return false
+    if (categoryFilter !== 'all' && log.category !== categoryFilter) return false;
+    if (severityFilter !== 'all' && log.severity !== severityFilter) return false;
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       return (
         log.action.toLowerCase().includes(query) ||
         log.description.toLowerCase().includes(query) ||
         log.actor.name.toLowerCase().includes(query) ||
         log.target?.name.toLowerCase().includes(query)
-      )
+      );
     }
-    return true
-  })
+    return true;
+  });
 
   const getCategoryIcon = (category: LogCategory) => {
     switch (category) {
       case 'user':
-        return <UserIcon className="w-4 h-4" />
+        return <UserIcon className="w-4 h-4" />;
       case 'system':
-        return <ServerIcon className="w-4 h-4" />
+        return <ServerIcon className="w-4 h-4" />;
       case 'security':
-        return <ShieldCheckIcon className="w-4 h-4" />
+        return <ShieldCheckIcon className="w-4 h-4" />;
       case 'api':
-        return <DocumentTextIcon className="w-4 h-4" />
+        return <DocumentTextIcon className="w-4 h-4" />;
       default:
-        return <ClockIcon className="w-4 h-4" />
+        return <ClockIcon className="w-4 h-4" />;
     }
-  }
+  };
 
   const getSeverityColor = (severity: LogSeverity) => {
     switch (severity) {
       case 'info':
-        return 'text-text-muted bg-surface-tertiary'
+        return 'text-text-muted bg-surface-tertiary';
       case 'warning':
-        return 'text-warning bg-warning/10'
+        return 'text-warning bg-warning/10';
       case 'error':
-        return 'text-danger bg-danger/10'
+        return 'text-danger bg-danger/10';
       case 'critical':
-        return 'text-danger bg-danger/20 animate-pulse'
+        return 'text-danger bg-danger/20 animate-pulse';
     }
-  }
+  };
 
   const formatTimestamp = (date: Date) => {
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const mins = Math.floor(diff / 60000)
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const mins = Math.floor(diff / 60000);
 
-    if (mins < 60) return `${mins}m ago`
-    const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}h ago`
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
 
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
-  }
+    });
+  };
 
   const handleExport = () => {
     try {
       // Prepare CSV content
-      const headers = ['Timestamp', 'Category', 'Severity', 'Action', 'Description', 'Actor', 'Target', 'IP Address', 'User Agent']
-      const csvRows = [headers.join(',')]
+      const headers = [
+        'Timestamp',
+        'Category',
+        'Severity',
+        'Action',
+        'Description',
+        'Actor',
+        'Target',
+        'IP Address',
+        'User Agent',
+      ];
+      const csvRows = [headers.join(',')];
 
       filteredLogs.forEach((log) => {
         const row = [
@@ -254,48 +268,48 @@ export default function Audit() {
           log.target ? `"${log.target.type}: ${log.target.name}"` : '',
           log.ipAddress || '',
           `"${(log.userAgent || '').replace(/"/g, '""')}"`,
-        ]
-        csvRows.push(row.join(','))
-      })
+        ];
+        csvRows.push(row.join(','));
+      });
 
-      const csvContent = csvRows.join('\n')
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-      setExportFeedback(`Successfully exported ${filteredLogs.length} logs`)
-      setTimeout(() => setExportFeedback(null), 3000)
+      setExportFeedback(`Successfully exported ${filteredLogs.length} logs`);
+      setTimeout(() => setExportFeedback(null), 3000);
     } catch (error) {
-      setExportFeedback('Failed to export logs. Please try again.')
-      setTimeout(() => setExportFeedback(null), 3000)
+      setExportFeedback('Failed to export logs. Please try again.');
+      setTimeout(() => setExportFeedback(null), 3000);
     }
-  }
+  };
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
   const paginatedLogs = filteredLogs.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
-  )
+  );
 
   const handlePreviousPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1))
-  }
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-  }
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   // Reset to page 1 when filters change
   useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, categoryFilter, severityFilter, dateRange.start, dateRange.end])
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter, severityFilter, dateRange.start, dateRange.end]);
 
   // Stats
   const stats = {
@@ -303,7 +317,7 @@ export default function Audit() {
     warnings: auditLogs.filter((l) => l.severity === 'warning').length,
     errors: auditLogs.filter((l) => l.severity === 'error').length,
     critical: auditLogs.filter((l) => l.severity === 'critical').length,
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -315,10 +329,14 @@ export default function Audit() {
         </div>
         <div className="flex items-center gap-3">
           {exportFeedback && (
-            <span className={cn(
-              'text-sm px-3 py-1 rounded-lg',
-              exportFeedback.includes('Successfully') ? 'text-success bg-success/10' : 'text-danger bg-danger/10'
-            )}>
+            <span
+              className={cn(
+                'text-sm px-3 py-1 rounded-lg',
+                exportFeedback.includes('Successfully')
+                  ? 'text-success bg-success/10'
+                  : 'text-danger bg-danger/10'
+              )}
+            >
               {exportFeedback}
             </span>
           )}
@@ -418,7 +436,9 @@ export default function Audit() {
         {isLoading ? (
           <div className="p-8 text-center text-text-muted">Loading audit logs...</div>
         ) : filteredLogs.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No logs found matching your filters.</div>
+          <div className="p-8 text-center text-text-muted">
+            No logs found matching your filters.
+          </div>
         ) : (
           <div className="divide-y divide-white/5">
             {paginatedLogs.map((log) => (
@@ -489,9 +509,7 @@ export default function Audit() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-text-muted">Timestamp:</span>
-                          <span className="text-white ml-2">
-                            {log.timestamp.toLocaleString()}
-                          </span>
+                          <span className="text-white ml-2">{log.timestamp.toLocaleString()}</span>
                         </div>
                         {log.ipAddress && (
                           <div>
@@ -547,9 +565,7 @@ export default function Audit() {
             disabled={currentPage === 1}
             className={cn(
               'px-3 py-1 rounded bg-surface-secondary transition-colors',
-              currentPage === 1
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-surface-tertiary'
+              currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-surface-tertiary'
             )}
           >
             Previous
@@ -572,5 +588,5 @@ export default function Audit() {
         </div>
       </div>
     </div>
-  )
+  );
 }

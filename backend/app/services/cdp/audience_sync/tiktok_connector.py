@@ -12,18 +12,17 @@ Implements the TikTok Marketing API for Custom Audience operations:
 API Reference: https://business-api.tiktok.com/portal/docs?id=1739940504185857
 """
 
-import time
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+import time
+from typing import Any
 
 import httpx
 
 from .base import (
-    BaseAudienceConnector,
     AudienceConfig,
-    AudienceUser,
     AudienceSyncResult,
+    AudienceUser,
+    BaseAudienceConnector,
     IdentifierType,
 )
 
@@ -45,12 +44,12 @@ class TikTokAudienceConnector(BaseAudienceConnector):
         self,
         access_token: str,
         ad_account_id: str,  # TikTok Advertiser ID
-        **kwargs
+        **kwargs,
     ):
         super().__init__(access_token, ad_account_id, **kwargs)
         self.advertiser_id = self.ad_account_id
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get headers for TikTok API requests."""
         return {
             "Access-Token": self.access_token,
@@ -60,7 +59,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
     async def create_audience(
         self,
         config: AudienceConfig,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Create a new TikTok Custom Audience with initial users.
@@ -158,7 +157,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
     async def add_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Add users to a TikTok Custom Audience.
@@ -203,7 +202,9 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                     batches = self._chunk_list(hashes, self.BATCH_SIZE)
 
                     for batch in batches:
-                        upload_url = f"{self.BASE_URL}/{self.API_VERSION}/dmp/custom_audience/update/"
+                        upload_url = (
+                            f"{self.BASE_URL}/{self.API_VERSION}/dmp/custom_audience/update/"
+                        )
 
                         upload_payload = {
                             "advertiser_id": self.advertiser_id,
@@ -265,7 +266,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
     async def remove_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Remove users from a TikTok Custom Audience.
@@ -349,7 +350,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
     async def replace_audience(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Replace entire TikTok audience using OVERRIDE action.
@@ -474,7 +475,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
     async def get_audience_info(
         self,
         audience_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get TikTok Custom Audience information.
         """

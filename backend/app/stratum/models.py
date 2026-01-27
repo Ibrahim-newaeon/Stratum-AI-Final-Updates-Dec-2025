@@ -11,12 +11,14 @@ normalized data regardless of the source platform.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 
 class Platform(str, Enum):
     """Supported advertising platforms."""
+
     META = "meta"
     GOOGLE = "google"
     TIKTOK = "tiktok"
@@ -26,6 +28,7 @@ class Platform(str, Enum):
 
 class EntityStatus(str, Enum):
     """Unified status values across platforms."""
+
     ACTIVE = "active"
     PAUSED = "paused"
     DELETED = "deleted"
@@ -36,6 +39,7 @@ class EntityStatus(str, Enum):
 
 class BiddingStrategy(str, Enum):
     """Unified bidding strategy types."""
+
     LOWEST_COST = "lowest_cost"
     COST_CAP = "cost_cap"
     BID_CAP = "bid_cap"
@@ -49,6 +53,7 @@ class BiddingStrategy(str, Enum):
 
 class OptimizationGoal(str, Enum):
     """Unified optimization goals."""
+
     CONVERSIONS = "conversions"
     VALUE = "value"
     LEADS = "leads"
@@ -61,6 +66,7 @@ class OptimizationGoal(str, Enum):
 
 class UnifiedAccount(BaseModel):
     """Unified advertising account model."""
+
     platform: Platform
     account_id: str
     account_name: str
@@ -69,7 +75,7 @@ class UnifiedAccount(BaseModel):
     currency: str = "USD"
     daily_spend_limit: Optional[float] = None
     last_synced: Optional[datetime] = None
-    raw_data: Optional[Dict[str, Any]] = None
+    raw_data: Optional[dict[str, Any]] = None
 
     class Config:
         use_enum_values = True
@@ -77,6 +83,7 @@ class UnifiedAccount(BaseModel):
 
 class UnifiedCampaign(BaseModel):
     """Unified campaign model across platforms."""
+
     platform: Platform
     account_id: str
     campaign_id: str
@@ -94,7 +101,7 @@ class UnifiedCampaign(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     last_synced: Optional[datetime] = None
-    raw_data: Optional[Dict[str, Any]] = None
+    raw_data: Optional[dict[str, Any]] = None
 
     class Config:
         use_enum_values = True
@@ -102,6 +109,7 @@ class UnifiedCampaign(BaseModel):
 
 class UnifiedAdSet(BaseModel):
     """Unified ad set / ad group model."""
+
     platform: Platform
     account_id: str
     campaign_id: str
@@ -119,7 +127,7 @@ class UnifiedAdSet(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     last_synced: Optional[datetime] = None
-    raw_data: Optional[Dict[str, Any]] = None
+    raw_data: Optional[dict[str, Any]] = None
 
     class Config:
         use_enum_values = True
@@ -127,6 +135,7 @@ class UnifiedAdSet(BaseModel):
 
 class UnifiedAd(BaseModel):
     """Unified ad model."""
+
     platform: Platform
     account_id: str
     campaign_id: str
@@ -143,7 +152,7 @@ class UnifiedAd(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     last_synced: Optional[datetime] = None
-    raw_data: Optional[Dict[str, Any]] = None
+    raw_data: Optional[dict[str, Any]] = None
 
     class Config:
         use_enum_values = True
@@ -151,6 +160,7 @@ class UnifiedAd(BaseModel):
 
 class PerformanceMetrics(BaseModel):
     """Unified performance metrics."""
+
     impressions: int = 0
     clicks: int = 0
     spend: float = 0.0
@@ -181,12 +191,18 @@ class PerformanceMetrics(BaseModel):
             self.cpm = (self.spend / self.impressions) * 1000
         if self.conversions and self.conversions > 0 and self.spend > 0 and self.cpa is None:
             self.cpa = self.spend / self.conversions
-        if self.conversion_value and self.conversion_value > 0 and self.spend > 0 and self.roas is None:
+        if (
+            self.conversion_value
+            and self.conversion_value > 0
+            and self.spend > 0
+            and self.roas is None
+        ):
             self.roas = self.conversion_value / self.spend
 
 
 class EMQScore(BaseModel):
     """Event Match Quality score for a platform/event combination."""
+
     platform: Platform
     event_name: str
     score: float = Field(ge=0, le=10, description="EMQ score 0-10")
@@ -210,6 +226,7 @@ class EMQScore(BaseModel):
 
 class SignalHealth(BaseModel):
     """Composite signal health score with component breakdown."""
+
     overall_score: float = Field(ge=0, le=100)
     emq_score: float = Field(ge=0, le=100)
     freshness_score: float = Field(ge=0, le=100)
@@ -217,7 +234,7 @@ class SignalHealth(BaseModel):
     anomaly_score: float = Field(ge=0, le=100)
     cdp_emq_score: Optional[float] = Field(default=None, ge=0, le=100)  # CDP EMQ integration
     status: str = "healthy"  # healthy, degraded, critical
-    issues: List[str] = Field(default_factory=list)
+    issues: list[str] = Field(default_factory=list)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
 
     def is_autopilot_safe(self, threshold: float = 70.0) -> bool:
@@ -231,16 +248,17 @@ class SignalHealth(BaseModel):
 
 class AutomationAction(BaseModel):
     """Represents an automation action to be executed."""
+
     platform: Platform
     account_id: str
     entity_type: str  # campaign, adset, ad
     entity_id: str
     action_type: str  # update_budget, update_status, update_bid, etc.
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
     status: str = "pending"  # pending, executing, completed, failed
     created_at: datetime = Field(default_factory=datetime.utcnow)
     executed_at: Optional[datetime] = None
-    result: Optional[Dict[str, Any]] = None
+    result: Optional[dict[str, Any]] = None
     error_message: Optional[str] = None
     trust_gate_passed: bool = False
     signal_health_at_execution: Optional[float] = None
@@ -251,9 +269,10 @@ class AutomationAction(BaseModel):
 
 class WebhookEvent(BaseModel):
     """Normalized webhook event from any platform."""
+
     platform: Platform
     event_type: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     received_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:

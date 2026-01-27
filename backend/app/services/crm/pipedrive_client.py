@@ -8,8 +8,8 @@ Handles authentication, token refresh, and API calls.
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 from urllib.parse import urlencode
 
 import httpx
@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import encrypt_pii, decrypt_pii
+from app.core.security import decrypt_pii, encrypt_pii
 from app.models.crm import (
     CRMConnection,
     CRMConnectionStatus,
@@ -131,9 +131,7 @@ class PipedriveClient:
         # Encrypt and store tokens
         connection.access_token_enc = encrypt_pii(data["access_token"])
         connection.refresh_token_enc = encrypt_pii(data["refresh_token"])
-        connection.token_expires_at = datetime.now(timezone.utc) + timedelta(
-            seconds=data["expires_in"]
-        )
+        connection.token_expires_at = datetime.now(UTC) + timedelta(seconds=data["expires_in"])
         connection.status = CRMConnectionStatus.CONNECTED
 
         # Store API domain for this account
@@ -196,9 +194,7 @@ class PipedriveClient:
         # Update tokens
         connection.access_token_enc = encrypt_pii(data["access_token"])
         connection.refresh_token_enc = encrypt_pii(data["refresh_token"])
-        connection.token_expires_at = datetime.now(timezone.utc) + timedelta(
-            seconds=data["expires_in"]
-        )
+        connection.token_expires_at = datetime.now(UTC) + timedelta(seconds=data["expires_in"])
         connection.status = CRMConnectionStatus.CONNECTED
 
         await self.db.commit()
@@ -244,7 +240,7 @@ class PipedriveClient:
         # Check if token needs refresh (5 min buffer)
         if connection.token_expires_at:
             buffer = timedelta(minutes=5)
-            if datetime.now(timezone.utc) >= connection.token_expires_at - buffer:
+            if datetime.now(UTC) >= connection.token_expires_at - buffer:
                 if not await self.refresh_tokens():
                     return None
                 await self.db.refresh(connection)
@@ -268,9 +264,9 @@ class PipedriveClient:
         self,
         method: str,
         endpoint: str,
-        params: Optional[Dict] = None,
-        json_data: Optional[Dict] = None,
-    ) -> Optional[Dict[str, Any]]:
+        params: Optional[dict] = None,
+        json_data: Optional[dict] = None,
+    ) -> Optional[dict[str, Any]]:
         """
         Make authenticated API request to Pipedrive.
 
@@ -341,7 +337,7 @@ class PipedriveClient:
         limit: int = 100,
         start: int = 0,
         updated_since: Optional[datetime] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Get persons (contacts) from Pipedrive.
 
@@ -364,16 +360,16 @@ class PipedriveClient:
 
         return await self.api_request("GET", "/persons", params=params)
 
-    async def get_person(self, person_id: int) -> Optional[Dict[str, Any]]:
+    async def get_person(self, person_id: int) -> Optional[dict[str, Any]]:
         """Get a single person by ID."""
         return await self.api_request("GET", f"/persons/{person_id}")
 
     async def search_persons(
         self,
         term: str,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         limit: int = 100,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Search persons.
 
@@ -393,11 +389,11 @@ class PipedriveClient:
 
         return await self.api_request("GET", "/itemSearch", params=params)
 
-    async def update_person(self, person_id: int, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def update_person(self, person_id: int, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Update person properties (for writeback)."""
         return await self.api_request("PUT", f"/persons/{person_id}", json_data=data)
 
-    async def create_person(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def create_person(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Create a new person."""
         return await self.api_request("POST", "/persons", json_data=data)
 
@@ -411,7 +407,7 @@ class PipedriveClient:
         start: int = 0,
         status: str = "all_not_deleted",
         updated_since: Optional[datetime] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Get deals from Pipedrive.
 
@@ -432,15 +428,15 @@ class PipedriveClient:
 
         return await self.api_request("GET", "/deals", params=params)
 
-    async def get_deal(self, deal_id: int) -> Optional[Dict[str, Any]]:
+    async def get_deal(self, deal_id: int) -> Optional[dict[str, Any]]:
         """Get a single deal by ID."""
         return await self.api_request("GET", f"/deals/{deal_id}")
 
-    async def update_deal(self, deal_id: int, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def update_deal(self, deal_id: int, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Update deal properties (for writeback)."""
         return await self.api_request("PUT", f"/deals/{deal_id}", json_data=data)
 
-    async def get_deal_persons(self, deal_id: int) -> Optional[Dict[str, Any]]:
+    async def get_deal_persons(self, deal_id: int) -> Optional[dict[str, Any]]:
         """Get persons associated with a deal."""
         return await self.api_request("GET", f"/deals/{deal_id}/persons")
 
@@ -452,7 +448,7 @@ class PipedriveClient:
         self,
         limit: int = 100,
         start: int = 0,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get organizations (companies)."""
         params = {
             "limit": min(limit, 500),
@@ -460,7 +456,7 @@ class PipedriveClient:
         }
         return await self.api_request("GET", "/organizations", params=params)
 
-    async def get_organization(self, org_id: int) -> Optional[Dict[str, Any]]:
+    async def get_organization(self, org_id: int) -> Optional[dict[str, Any]]:
         """Get a single organization by ID."""
         return await self.api_request("GET", f"/organizations/{org_id}")
 
@@ -468,11 +464,11 @@ class PipedriveClient:
     # Pipeline & Stage Operations
     # =========================================================================
 
-    async def get_pipelines(self) -> Optional[Dict[str, Any]]:
+    async def get_pipelines(self) -> Optional[dict[str, Any]]:
         """Get all pipelines."""
         return await self.api_request("GET", "/pipelines")
 
-    async def get_stages(self, pipeline_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
+    async def get_stages(self, pipeline_id: Optional[int] = None) -> Optional[dict[str, Any]]:
         """Get pipeline stages."""
         params = {}
         if pipeline_id:
@@ -488,7 +484,7 @@ class PipedriveClient:
         limit: int = 100,
         start: int = 0,
         done: Optional[bool] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get activities."""
         params = {
             "limit": min(limit, 500),
@@ -499,7 +495,7 @@ class PipedriveClient:
 
         return await self.api_request("GET", "/activities", params=params)
 
-    async def create_activity(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def create_activity(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Create a new activity."""
         return await self.api_request("POST", "/activities", json_data=data)
 
@@ -513,7 +509,7 @@ class PipedriveClient:
         person_id: Optional[int] = None,
         deal_id: Optional[int] = None,
         org_id: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Add a note to a person, deal, or organization."""
         data = {"content": content}
         if person_id:
@@ -529,11 +525,11 @@ class PipedriveClient:
     # Custom Fields
     # =========================================================================
 
-    async def get_person_fields(self) -> Optional[Dict[str, Any]]:
+    async def get_person_fields(self) -> Optional[dict[str, Any]]:
         """Get all person custom fields."""
         return await self.api_request("GET", "/personFields")
 
-    async def get_deal_fields(self) -> Optional[Dict[str, Any]]:
+    async def get_deal_fields(self) -> Optional[dict[str, Any]]:
         """Get all deal custom fields."""
         return await self.api_request("GET", "/dealFields")
 
@@ -541,8 +537,8 @@ class PipedriveClient:
         self,
         name: str,
         field_type: str = "varchar",
-        options: Optional[List[Dict]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        options: Optional[list[dict]] = None,
+    ) -> Optional[dict[str, Any]]:
         """
         Create a custom person field.
 
@@ -564,8 +560,8 @@ class PipedriveClient:
         self,
         name: str,
         field_type: str = "varchar",
-        options: Optional[List[Dict]] = None,
-    ) -> Optional[Dict[str, Any]]:
+        options: Optional[list[dict]] = None,
+    ) -> Optional[dict[str, Any]]:
         """Create a custom deal field."""
         data = {
             "name": name,
@@ -580,11 +576,11 @@ class PipedriveClient:
     # Users
     # =========================================================================
 
-    async def get_users(self) -> Optional[Dict[str, Any]]:
+    async def get_users(self) -> Optional[dict[str, Any]]:
         """Get all users in the account."""
         return await self.api_request("GET", "/users")
 
-    async def get_current_user(self) -> Optional[Dict[str, Any]]:
+    async def get_current_user(self) -> Optional[dict[str, Any]]:
         """Get current authenticated user."""
         return await self.api_request("GET", "/users/me")
 
@@ -592,7 +588,7 @@ class PipedriveClient:
     # Webhooks
     # =========================================================================
 
-    async def get_webhooks(self) -> Optional[Dict[str, Any]]:
+    async def get_webhooks(self) -> Optional[dict[str, Any]]:
         """Get all webhooks."""
         return await self.api_request("GET", "/webhooks")
 
@@ -601,7 +597,7 @@ class PipedriveClient:
         subscription_url: str,
         event_action: str,
         event_object: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Create a webhook subscription.
 
@@ -620,7 +616,7 @@ class PipedriveClient:
             },
         )
 
-    async def delete_webhook(self, webhook_id: int) -> Optional[Dict[str, Any]]:
+    async def delete_webhook(self, webhook_id: int) -> Optional[dict[str, Any]]:
         """Delete a webhook subscription."""
         return await self.api_request("DELETE", f"/webhooks/{webhook_id}")
 
@@ -659,7 +655,7 @@ class PipedriveClient:
         self._connection = connection
         return connection
 
-    async def _get_company_info(self, access_token: str, api_domain: str) -> Optional[Dict]:
+    async def _get_company_info(self, access_token: str, api_domain: str) -> Optional[dict]:
         """Get Pipedrive company info."""
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -676,7 +672,7 @@ class PipedriveClient:
                     }
         return None
 
-    async def get_connection_status(self) -> Dict[str, Any]:
+    async def get_connection_status(self) -> dict[str, Any]:
         """Get current connection status."""
         connection = await self._get_connection()
         if not connection:
@@ -692,7 +688,9 @@ class PipedriveClient:
             "provider": "pipedrive",
             "account_id": connection.provider_account_id,
             "account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection.last_sync_at
+            else None,
             "last_sync_status": connection.last_sync_status,
         }
 
@@ -700,6 +698,7 @@ class PipedriveClient:
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def hash_email(email: str) -> str:
     """Hash email for privacy-safe identity matching."""

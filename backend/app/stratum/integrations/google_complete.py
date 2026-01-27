@@ -32,12 +32,12 @@ For Stratum's Trust-Gated Autopilot, we primarily use:
 3. GA4 Measurement Protocol - for real-time funnel events
 """
 
-import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass, field
-from enum import Enum
 import hashlib
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Optional
 
 logger = logging.getLogger("stratum.google")
 
@@ -46,8 +46,10 @@ logger = logging.getLogger("stratum.google")
 # GOOGLE ADS CHANGE HISTORY (Replaces Webhooks)
 # =============================================================================
 
+
 class ChangeEventType(str, Enum):
     """Types of changes tracked in Google Ads."""
+
     CAMPAIGN_CREATED = "CAMPAIGN_CREATED"
     CAMPAIGN_UPDATED = "CAMPAIGN_UPDATED"
     CAMPAIGN_REMOVED = "CAMPAIGN_REMOVED"
@@ -65,13 +67,14 @@ class ChangeEventType(str, Enum):
 @dataclass
 class ChangeEvent:
     """A detected change in Google Ads."""
+
     change_type: ChangeEventType
     resource_type: str  # campaign, ad_group, ad, etc.
     resource_id: str
     resource_name: str
-    changed_fields: List[str]
-    old_value: Optional[Dict[str, Any]] = None
-    new_value: Optional[Dict[str, Any]] = None
+    changed_fields: list[str]
+    old_value: Optional[dict[str, Any]] = None
+    new_value: Optional[dict[str, Any]] = None
     change_time: datetime = field(default_factory=datetime.utcnow)
     user_email: Optional[str] = None  # Who made the change
 
@@ -106,10 +109,8 @@ class GoogleAdsChangeHistory:
         self._last_poll_time: Optional[datetime] = None
 
     async def get_changes(
-        self,
-        since: Optional[datetime] = None,
-        resource_types: Optional[List[str]] = None
-    ) -> List[ChangeEvent]:
+        self, since: Optional[datetime] = None, resource_types: Optional[list[str]] = None
+    ) -> list[ChangeEvent]:
         """
         Get account changes since a given time.
 
@@ -167,8 +168,10 @@ class GoogleAdsChangeHistory:
                     resource_id=self._extract_id(event.change_resource_name),
                     resource_name=event.change_resource_name,
                     changed_fields=list(event.changed_fields.paths) if event.changed_fields else [],
-                    change_time=datetime.fromisoformat(str(event.change_date_time).replace(" ", "T")),
-                    user_email=event.user_email if event.user_email else None
+                    change_time=datetime.fromisoformat(
+                        str(event.change_date_time).replace(" ", "T")
+                    ),
+                    user_email=event.user_email if event.user_email else None,
                 )
 
                 changes.append(change)
@@ -205,7 +208,7 @@ class GoogleAdsChangeHistory:
         self,
         callback,
         poll_interval: int = 300,  # 5 minutes
-        resource_types: Optional[List[str]] = None
+        resource_types: Optional[list[str]] = None,
     ):
         """
         Continuously poll for changes and call callback.
@@ -236,6 +239,7 @@ class GoogleAdsChangeHistory:
 # OFFLINE CONVERSION IMPORT
 # =============================================================================
 
+
 @dataclass
 class OfflineConversion:
     """
@@ -247,6 +251,7 @@ class OfflineConversion:
     - WhatsApp orders
     - In-store purchases (if you have customer data)
     """
+
     # Required
     conversion_action_id: str
     conversion_time: datetime
@@ -312,10 +317,7 @@ class GoogleOfflineConversions:
         self.client = client
         self.customer_id = customer_id.replace("-", "")
 
-    async def upload_conversion(
-        self,
-        conversion: OfflineConversion
-    ) -> Dict[str, Any]:
+    async def upload_conversion(self, conversion: OfflineConversion) -> dict[str, Any]:
         """
         Upload a single offline conversion.
 
@@ -324,10 +326,7 @@ class GoogleOfflineConversions:
         """
         return await self.upload_conversions([conversion])
 
-    async def upload_conversions(
-        self,
-        conversions: List[OfflineConversion]
-    ) -> Dict[str, Any]:
+    async def upload_conversions(self, conversions: list[OfflineConversion]) -> dict[str, Any]:
         """
         Upload multiple offline conversions in batch.
 
@@ -384,11 +383,7 @@ class GoogleOfflineConversions:
         try:
             response = conversion_upload_service.upload_click_conversions(request=request)
 
-            result = {
-                "uploaded": len(response.results),
-                "errors": [],
-                "partial_failure": None
-            }
+            result = {"uploaded": len(response.results), "errors": [], "partial_failure": None}
 
             # Check for partial failures
             if response.partial_failure_error:
@@ -397,10 +392,12 @@ class GoogleOfflineConversions:
                 # Parse individual errors
                 failure_error = response.partial_failure_error
                 for error in getattr(failure_error, "errors", []):
-                    result["errors"].append({
-                        "message": str(error.message),
-                        "location": str(error.location) if error.location else None
-                    })
+                    result["errors"].append(
+                        {
+                            "message": str(error.message),
+                            "location": str(error.location) if error.location else None,
+                        }
+                    )
 
             logger.info(f"Google Offline Conversions: Uploaded {result['uploaded']}")
             return result
@@ -409,10 +406,7 @@ class GoogleOfflineConversions:
             logger.error(f"Offline conversion upload failed: {e}")
             return {"uploaded": 0, "errors": [str(e)]}
 
-    def _build_user_identifiers(
-        self,
-        conv: OfflineConversion
-    ) -> List[Any]:
+    def _build_user_identifiers(self, conv: OfflineConversion) -> list[Any]:
         """Build user identifier objects for Enhanced Conversions."""
         identifiers = []
 
@@ -439,7 +433,9 @@ class GoogleOfflineConversions:
             if conv.last_name:
                 address.hashed_last_name = self._hash_value(conv.last_name.lower().strip())
             if conv.street_address:
-                address.hashed_street_address = self._hash_value(conv.street_address.lower().strip())
+                address.hashed_street_address = self._hash_value(
+                    conv.street_address.lower().strip()
+                )
             if conv.city:
                 address.city = conv.city
             if conv.state:
@@ -455,20 +451,22 @@ class GoogleOfflineConversions:
 
     def _hash_value(self, value: str) -> str:
         """SHA256 hash a value."""
-        return hashlib.sha256(value.encode('utf-8')).hexdigest()
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     def _normalize_phone(self, phone: str) -> str:
         """Normalize phone to E.164 format."""
         import re
-        digits = re.sub(r'\D', '', phone)
+
+        digits = re.sub(r"\D", "", phone)
         if len(digits) == 10:  # US without country code
-            digits = '1' + digits
-        return '+' + digits
+            digits = "1" + digits
+        return "+" + digits
 
 
 # =============================================================================
 # GA4 MEASUREMENT PROTOCOL (Real-time Events)
 # =============================================================================
+
 
 class GA4MeasurementProtocol:
     """
@@ -508,12 +506,7 @@ class GA4MeasurementProtocol:
     ENDPOINT = "https://www.google-analytics.com/mp/collect"
     DEBUG_ENDPOINT = "https://www.google-analytics.com/debug/mp/collect"
 
-    def __init__(
-        self,
-        measurement_id: str,
-        api_secret: str,
-        debug: bool = False
-    ):
+    def __init__(self, measurement_id: str, api_secret: str, debug: bool = False):
         """
         Initialize Measurement Protocol client.
 
@@ -530,11 +523,11 @@ class GA4MeasurementProtocol:
         self,
         client_id: str,
         event_name: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         user_id: Optional[str] = None,
-        user_properties: Optional[Dict[str, Any]] = None,
-        timestamp_micros: Optional[int] = None
-    ) -> Dict[str, Any]:
+        user_properties: Optional[dict[str, Any]] = None,
+        timestamp_micros: Optional[int] = None,
+    ) -> dict[str, Any]:
         """
         Send a single event to GA4.
 
@@ -550,21 +543,13 @@ class GA4MeasurementProtocol:
 
         url = f"{self.endpoint}?measurement_id={self.measurement_id}&api_secret={self.api_secret}"
 
-        payload = {
-            "client_id": client_id,
-            "events": [{
-                "name": event_name,
-                "params": params or {}
-            }]
-        }
+        payload = {"client_id": client_id, "events": [{"name": event_name, "params": params or {}}]}
 
         if user_id:
             payload["user_id"] = user_id
 
         if user_properties:
-            payload["user_properties"] = {
-                k: {"value": v} for k, v in user_properties.items()
-            }
+            payload["user_properties"] = {k: {"value": v} for k, v in user_properties.items()}
 
         if timestamp_micros:
             payload["timestamp_micros"] = timestamp_micros
@@ -593,9 +578,9 @@ class GA4MeasurementProtocol:
         transaction_id: str,
         value: float,
         currency: str,
-        items: List[Dict[str, Any]],
-        user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        items: list[dict[str, Any]],
+        user_id: Optional[str] = None,
+    ) -> dict[str, Any]:
         """Convenience method for purchase events."""
         return await self.send_event(
             client_id=client_id,
@@ -604,49 +589,41 @@ class GA4MeasurementProtocol:
                 "transaction_id": transaction_id,
                 "value": value,
                 "currency": currency,
-                "items": items
+                "items": items,
             },
-            user_id=user_id
+            user_id=user_id,
         )
 
     async def send_add_to_cart(
         self,
         client_id: str,
-        items: List[Dict[str, Any]],
+        items: list[dict[str, Any]],
         value: Optional[float] = None,
         currency: str = "USD",
-        user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        user_id: Optional[str] = None,
+    ) -> dict[str, Any]:
         """Convenience method for add_to_cart events."""
         params = {"items": items, "currency": currency}
         if value is not None:
             params["value"] = value
 
         return await self.send_event(
-            client_id=client_id,
-            event_name="add_to_cart",
-            params=params,
-            user_id=user_id
+            client_id=client_id, event_name="add_to_cart", params=params, user_id=user_id
         )
 
     async def send_view_item(
-        self,
-        client_id: str,
-        items: List[Dict[str, Any]],
-        user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, client_id: str, items: list[dict[str, Any]], user_id: Optional[str] = None
+    ) -> dict[str, Any]:
         """Convenience method for view_item events."""
         return await self.send_event(
-            client_id=client_id,
-            event_name="view_item",
-            params={"items": items},
-            user_id=user_id
+            client_id=client_id, event_name="view_item", params={"items": items}, user_id=user_id
         )
 
 
 # =============================================================================
 # UNIFIED GOOGLE INTEGRATION
 # =============================================================================
+
 
 class GoogleAdsIntegration:
     """
@@ -692,7 +669,7 @@ class GoogleAdsIntegration:
         client: Any,
         customer_id: str,
         ga4_measurement_id: Optional[str] = None,
-        ga4_api_secret: Optional[str] = None
+        ga4_api_secret: Optional[str] = None,
     ):
         self.client = client
         self.customer_id = customer_id.replace("-", "")
@@ -706,21 +683,11 @@ class GoogleAdsIntegration:
         else:
             self.ga4 = None
 
-    async def start_change_watcher(
-        self,
-        callback,
-        poll_interval: int = 300
-    ):
+    async def start_change_watcher(self, callback, poll_interval: int = 300):
         """Start watching for account changes."""
-        await self.change_history.watch_for_changes(
-            callback=callback,
-            poll_interval=poll_interval
-        )
+        await self.change_history.watch_for_changes(callback=callback, poll_interval=poll_interval)
 
-    async def get_recent_changes(
-        self,
-        hours: int = 1
-    ) -> List[ChangeEvent]:
+    async def get_recent_changes(self, hours: int = 1) -> list[ChangeEvent]:
         """Get recent account changes."""
         since = datetime.utcnow() - timedelta(hours=hours)
         return await self.change_history.get_changes(since=since)
@@ -734,8 +701,8 @@ class GoogleAdsIntegration:
         gclid: Optional[str] = None,
         email: Optional[str] = None,
         phone: Optional[str] = None,
-        conversion_time: Optional[datetime] = None
-    ) -> Dict[str, Any]:
+        conversion_time: Optional[datetime] = None,
+    ) -> dict[str, Any]:
         """
         Track an offline conversion.
 
@@ -749,7 +716,7 @@ class GoogleAdsIntegration:
             phone=phone,
             conversion_value=value,
             currency_code=currency,
-            order_id=order_id
+            order_id=order_id,
         )
 
         return await self.offline_conversions.upload_conversion(conversion)
@@ -758,9 +725,9 @@ class GoogleAdsIntegration:
         self,
         client_id: str,
         event_name: str,
-        params: Optional[Dict[str, Any]] = None,
-        user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        params: Optional[dict[str, Any]] = None,
+        user_id: Optional[str] = None,
+    ) -> dict[str, Any]:
         """
         Send real-time event to GA4.
 
@@ -771,16 +738,14 @@ class GoogleAdsIntegration:
             return {"success": False, "error": "GA4 not configured"}
 
         return await self.ga4.send_event(
-            client_id=client_id,
-            event_name=event_name,
-            params=params,
-            user_id=user_id
+            client_id=client_id, event_name=event_name, params=params, user_id=user_id
         )
 
 
 # =============================================================================
 # GOOGLE ADS RECOMMENDATIONS (Bonus - AI Suggestions)
 # =============================================================================
+
 
 class GoogleAdsRecommendations:
     """
@@ -801,9 +766,8 @@ class GoogleAdsRecommendations:
         self.customer_id = customer_id.replace("-", "")
 
     async def get_recommendations(
-        self,
-        recommendation_types: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+        self, recommendation_types: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
         """
         Fetch active recommendations.
 
@@ -852,21 +816,23 @@ class GoogleAdsRecommendations:
                         "current": {
                             "impressions": rec.impact.base_metrics.impressions,
                             "clicks": rec.impact.base_metrics.clicks,
-                            "cost": rec.impact.base_metrics.cost_micros / 1_000_000
+                            "cost": rec.impact.base_metrics.cost_micros / 1_000_000,
                         },
                         "potential": {
                             "impressions": rec.impact.potential_metrics.impressions,
                             "clicks": rec.impact.potential_metrics.clicks,
-                            "cost": rec.impact.potential_metrics.cost_micros / 1_000_000
-                        }
-                    }
+                            "cost": rec.impact.potential_metrics.cost_micros / 1_000_000,
+                        },
+                    },
                 }
 
                 # Budget recommendation details
                 if rec.campaign_budget_recommendation.current_budget_amount_micros:
                     rec_data["budget_recommendation"] = {
-                        "current": rec.campaign_budget_recommendation.current_budget_amount_micros / 1_000_000,
-                        "recommended": rec.campaign_budget_recommendation.recommended_budget_amount_micros / 1_000_000
+                        "current": rec.campaign_budget_recommendation.current_budget_amount_micros
+                        / 1_000_000,
+                        "recommended": rec.campaign_budget_recommendation.recommended_budget_amount_micros
+                        / 1_000_000,
                     }
 
                 recommendations.append(rec_data)
@@ -878,10 +844,7 @@ class GoogleAdsRecommendations:
 
         return recommendations
 
-    async def apply_recommendation(
-        self,
-        recommendation_resource_name: str
-    ) -> Dict[str, Any]:
+    async def apply_recommendation(self, recommendation_resource_name: str) -> dict[str, Any]:
         """
         Apply a recommendation (requires Trust Gate approval in Stratum).
 
@@ -895,8 +858,7 @@ class GoogleAdsRecommendations:
 
         try:
             response = recommendation_service.apply_recommendation(
-                customer_id=self.customer_id,
-                operations=[operation]
+                customer_id=self.customer_id, operations=[operation]
             )
 
             logger.info(f"Applied recommendation: {recommendation_resource_name}")

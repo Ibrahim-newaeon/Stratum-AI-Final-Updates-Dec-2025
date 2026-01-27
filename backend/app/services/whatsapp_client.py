@@ -6,10 +6,11 @@ WhatsApp Business API client for sending messages, managing templates,
 and handling webhook interactions with the Meta Graph API.
 """
 
-from typing import List, Dict, Any, Optional
-import httpx
 import logging
 from datetime import datetime
+from typing import Any, Optional
+
+import httpx
 
 from app.core.config import settings
 
@@ -61,13 +62,11 @@ class WhatsAppClient:
         """
         self.phone_number_id = phone_number_id or settings.whatsapp_phone_number_id
         self.access_token = access_token or settings.whatsapp_access_token
-        self.business_account_id = (
-            business_account_id or settings.whatsapp_business_account_id
-        )
+        self.business_account_id = business_account_id or settings.whatsapp_business_account_id
         self.api_version = api_version or settings.whatsapp_api_version
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get authorization headers for API requests."""
         return {
             "Authorization": f"Bearer {self.access_token}",
@@ -78,21 +77,17 @@ class WhatsAppClient:
         self,
         method: str,
         endpoint: str,
-        payload: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        payload: Optional[dict] = None,
+    ) -> dict[str, Any]:
         """Make an authenticated request to the WhatsApp API."""
         url = f"{self.base_url}/{endpoint}"
 
         async with httpx.AsyncClient() as client:
             try:
                 if method == "GET":
-                    response = await client.get(
-                        url, headers=self._get_headers(), params=payload
-                    )
+                    response = await client.get(url, headers=self._get_headers(), params=payload)
                 elif method == "POST":
-                    response = await client.post(
-                        url, headers=self._get_headers(), json=payload
-                    )
+                    response = await client.post(url, headers=self._get_headers(), json=payload)
                 else:
                     raise ValueError(f"Unsupported HTTP method: {method}")
 
@@ -123,8 +118,8 @@ class WhatsAppClient:
         recipient_phone: str,
         template_name: str,
         language_code: str = "en",
-        components: Optional[List[Dict]] = None,
-    ) -> Dict[str, Any]:
+        components: Optional[list[dict]] = None,
+    ) -> dict[str, Any]:
         """
         Send a template message via WhatsApp.
 
@@ -153,13 +148,11 @@ class WhatsAppClient:
         if components:
             payload["template"]["components"] = components
 
-        return await self._make_request(
-            "POST", f"{self.phone_number_id}/messages", payload
-        )
+        return await self._make_request("POST", f"{self.phone_number_id}/messages", payload)
 
     async def send_text_message(
         self, recipient_phone: str, text: str, preview_url: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send a text message via WhatsApp.
 
@@ -184,9 +177,7 @@ class WhatsAppClient:
             },
         }
 
-        return await self._make_request(
-            "POST", f"{self.phone_number_id}/messages", payload
-        )
+        return await self._make_request("POST", f"{self.phone_number_id}/messages", payload)
 
     async def send_media_message(
         self,
@@ -195,7 +186,7 @@ class WhatsAppClient:
         media_url: str,
         caption: Optional[str] = None,
         filename: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send a media message (image, video, document, audio).
 
@@ -222,19 +213,17 @@ class WhatsAppClient:
         if filename and media_type == "document":
             payload[media_type]["filename"] = filename
 
-        return await self._make_request(
-            "POST", f"{self.phone_number_id}/messages", payload
-        )
+        return await self._make_request("POST", f"{self.phone_number_id}/messages", payload)
 
     async def send_interactive_message(
         self,
         recipient_phone: str,
         interactive_type: str,
         body_text: str,
-        action: Dict[str, Any],
-        header: Optional[Dict] = None,
+        action: dict[str, Any],
+        header: Optional[dict] = None,
         footer: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send an interactive message (buttons, lists).
 
@@ -268,15 +257,13 @@ class WhatsAppClient:
             "interactive": interactive,
         }
 
-        return await self._make_request(
-            "POST", f"{self.phone_number_id}/messages", payload
-        )
+        return await self._make_request("POST", f"{self.phone_number_id}/messages", payload)
 
     # -------------------------------------------------------------------------
     # Message Status Methods
     # -------------------------------------------------------------------------
 
-    async def mark_message_as_read(self, message_id: str) -> Dict[str, Any]:
+    async def mark_message_as_read(self, message_id: str) -> dict[str, Any]:
         """
         Mark an incoming message as read.
 
@@ -292,9 +279,7 @@ class WhatsAppClient:
             "message_id": message_id,
         }
 
-        return await self._make_request(
-            "POST", f"{self.phone_number_id}/messages", payload
-        )
+        return await self._make_request("POST", f"{self.phone_number_id}/messages", payload)
 
     # -------------------------------------------------------------------------
     # Template Management Methods
@@ -305,8 +290,8 @@ class WhatsAppClient:
         name: str,
         category: str,
         language: str,
-        components: List[Dict],
-    ) -> Dict[str, Any]:
+        components: list[dict],
+    ) -> dict[str, Any]:
         """
         Create a new message template.
 
@@ -334,7 +319,7 @@ class WhatsAppClient:
 
     async def get_templates(
         self, limit: int = 100, status: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get all message templates for the business account.
 
@@ -354,7 +339,7 @@ class WhatsAppClient:
         )
         return response.get("data", [])
 
-    async def delete_template(self, template_name: str) -> Dict[str, Any]:
+    async def delete_template(self, template_name: str) -> dict[str, Any]:
         """
         Delete a message template.
 
@@ -377,9 +362,7 @@ class WhatsAppClient:
     # Webhook Methods
     # -------------------------------------------------------------------------
 
-    def verify_webhook(
-        self, mode: str, token: str, challenge: str
-    ) -> Optional[str]:
+    def verify_webhook(self, mode: str, token: str, challenge: str) -> Optional[str]:
         """
         Verify webhook subscription from Meta.
 
@@ -395,13 +378,11 @@ class WhatsAppClient:
             logger.info("WhatsApp webhook verified successfully")
             return challenge
 
-        logger.warning(
-            f"WhatsApp webhook verification failed: mode={mode}, token mismatch"
-        )
+        logger.warning(f"WhatsApp webhook verification failed: mode={mode}, token mismatch")
         return None
 
     @staticmethod
-    def parse_webhook_payload(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def parse_webhook_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
         """
         Parse incoming webhook payload from Meta.
 
@@ -421,32 +402,36 @@ class WhatsAppClient:
                     # Parse incoming messages
                     for message in value.get("messages", []):
                         contact = value.get("contacts", [{}])[0]
-                        events.append({
-                            "type": "message",
-                            "from": message.get("from"),
-                            "wamid": message.get("id"),
-                            "timestamp": datetime.fromtimestamp(
-                                int(message.get("timestamp", 0))
-                            ),
-                            "message_type": message.get("type"),
-                            "content": message.get(message.get("type"), {}),
-                            "contact_name": contact.get("profile", {}).get("name"),
-                        })
+                        events.append(
+                            {
+                                "type": "message",
+                                "from": message.get("from"),
+                                "wamid": message.get("id"),
+                                "timestamp": datetime.fromtimestamp(
+                                    int(message.get("timestamp", 0))
+                                ),
+                                "message_type": message.get("type"),
+                                "content": message.get(message.get("type"), {}),
+                                "contact_name": contact.get("profile", {}).get("name"),
+                            }
+                        )
 
                     # Parse status updates
                     for status in value.get("statuses", []):
-                        events.append({
-                            "type": "status",
-                            "wamid": status.get("id"),
-                            "status": status.get("status"),
-                            "timestamp": datetime.fromtimestamp(
-                                int(status.get("timestamp", 0))
-                            ),
-                            "recipient_id": status.get("recipient_id"),
-                            "conversation": status.get("conversation"),
-                            "pricing": status.get("pricing"),
-                            "errors": status.get("errors"),
-                        })
+                        events.append(
+                            {
+                                "type": "status",
+                                "wamid": status.get("id"),
+                                "status": status.get("status"),
+                                "timestamp": datetime.fromtimestamp(
+                                    int(status.get("timestamp", 0))
+                                ),
+                                "recipient_id": status.get("recipient_id"),
+                                "conversation": status.get("conversation"),
+                                "pricing": status.get("pricing"),
+                                "errors": status.get("errors"),
+                            }
+                        )
 
         except Exception as e:
             logger.error(f"Error parsing webhook payload: {e}")

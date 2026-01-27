@@ -15,32 +15,32 @@ Provides consolidated endpoints for:
 All data is scoped to the authenticated user's tenant.
 """
 
-from datetime import datetime, timezone, timedelta, date
-from typing import List, Optional, Dict
-from enum import Enum
 import csv
 import json
+from datetime import UTC, date, datetime, timedelta
+from enum import Enum
 from io import StringIO
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func, and_, desc
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.deps import CurrentUserDep, VerifiedUserDep
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.auth.deps import CurrentUserDep, VerifiedUserDep
-from app.schemas import APIResponse
 from app.models import (
+    AdPlatform,
+    AuditAction,
+    AuditLog,
     Campaign,
     CampaignStatus,
-    AdPlatform,
-    AuditLog,
-    AuditAction,
 )
-from app.models.campaign_builder import TenantPlatformConnection, ConnectionStatus
-from app.models.onboarding import TenantOnboarding, OnboardingStatus
+from app.models.campaign_builder import ConnectionStatus, TenantPlatformConnection
+from app.models.onboarding import OnboardingStatus, TenantOnboarding
+from app.schemas import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -50,8 +50,10 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 # Enums
 # =============================================================================
 
+
 class TimePeriod(str, Enum):
     """Dashboard time period options."""
+
     TODAY = "today"
     YESTERDAY = "yesterday"
     LAST_7_DAYS = "7d"
@@ -63,6 +65,7 @@ class TimePeriod(str, Enum):
 
 class TrendDirection(str, Enum):
     """Trend direction indicators."""
+
     UP = "up"
     DOWN = "down"
     STABLE = "stable"
@@ -70,6 +73,7 @@ class TrendDirection(str, Enum):
 
 class RecommendationType(str, Enum):
     """Types of AI recommendations."""
+
     SCALE = "scale"
     WATCH = "watch"
     FIX = "fix"
@@ -78,6 +82,7 @@ class RecommendationType(str, Enum):
 
 class RecommendationStatus(str, Enum):
     """Recommendation action status."""
+
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -88,8 +93,10 @@ class RecommendationStatus(str, Enum):
 # Pydantic Schemas
 # =============================================================================
 
+
 class MetricValue(BaseModel):
     """A metric with value, change, and trend."""
+
     value: float
     previous_value: Optional[float] = None
     change_percent: Optional[float] = None
@@ -99,6 +106,7 @@ class MetricValue(BaseModel):
 
 class OverviewMetrics(BaseModel):
     """Key performance metrics for dashboard overview."""
+
     spend: MetricValue
     revenue: MetricValue
     roas: MetricValue
@@ -111,17 +119,19 @@ class OverviewMetrics(BaseModel):
 
 class SignalHealthSummary(BaseModel):
     """Signal health status for trust gate."""
+
     overall_score: int = Field(ge=0, le=100)
     status: str  # healthy, degraded, critical
     emq_score: Optional[float] = None
     data_freshness_minutes: Optional[int] = None
     api_health: bool = True
-    issues: List[str] = []
+    issues: list[str] = []
     autopilot_enabled: bool = False
 
 
 class PlatformSummary(BaseModel):
     """Performance summary for a single platform."""
+
     platform: str
     status: str  # connected, disconnected, error
     spend: float = 0
@@ -133,6 +143,7 @@ class PlatformSummary(BaseModel):
 
 class CampaignSummaryItem(BaseModel):
     """Summary of a campaign for dashboard listing."""
+
     id: int
     name: str
     platform: str
@@ -148,6 +159,7 @@ class CampaignSummaryItem(BaseModel):
 
 class RecommendationItem(BaseModel):
     """AI recommendation for action."""
+
     id: str
     type: RecommendationType
     entity_type: str  # campaign, adset, ad
@@ -164,6 +176,7 @@ class RecommendationItem(BaseModel):
 
 class ActivityItem(BaseModel):
     """Recent activity/event item."""
+
     id: int
     type: str  # action, alert, system
     title: str
@@ -176,6 +189,7 @@ class ActivityItem(BaseModel):
 
 class QuickAction(BaseModel):
     """Quick action button for dashboard."""
+
     id: str
     label: str
     icon: str
@@ -185,6 +199,7 @@ class QuickAction(BaseModel):
 
 class DashboardOverviewResponse(BaseModel):
     """Complete dashboard overview response."""
+
     # Account status
     onboarding_complete: bool = False
     has_connected_platforms: bool = False
@@ -193,7 +208,7 @@ class DashboardOverviewResponse(BaseModel):
     # Time period
     period: str
     period_label: str
-    date_range: Dict[str, str]
+    date_range: dict[str, str]
 
     # Core metrics
     metrics: OverviewMetrics
@@ -202,7 +217,7 @@ class DashboardOverviewResponse(BaseModel):
     signal_health: SignalHealthSummary
 
     # Platform breakdown
-    platforms: List[PlatformSummary] = []
+    platforms: list[PlatformSummary] = []
 
     # Quick stats
     total_campaigns: int = 0
@@ -213,7 +228,8 @@ class DashboardOverviewResponse(BaseModel):
 
 class CampaignPerformanceResponse(BaseModel):
     """Campaign performance list response."""
-    campaigns: List[CampaignSummaryItem]
+
+    campaigns: list[CampaignSummaryItem]
     total: int
     page: int
     page_size: int
@@ -223,31 +239,36 @@ class CampaignPerformanceResponse(BaseModel):
 
 class RecommendationsResponse(BaseModel):
     """Recommendations list response."""
-    recommendations: List[RecommendationItem]
+
+    recommendations: list[RecommendationItem]
     total: int
-    by_type: Dict[str, int]
+    by_type: dict[str, int]
 
 
 class ActivityFeedResponse(BaseModel):
     """Activity feed response."""
-    activities: List[ActivityItem]
+
+    activities: list[ActivityItem]
     total: int
     has_more: bool
 
 
 class QuickActionsResponse(BaseModel):
     """Quick actions for dashboard."""
-    actions: List[QuickAction]
+
+    actions: list[QuickAction]
 
 
 class ExportFormat(str, Enum):
     """Export format options."""
+
     CSV = "csv"
     JSON = "json"
 
 
 class DashboardExportRequest(BaseModel):
     """Dashboard export request."""
+
     format: ExportFormat = ExportFormat.CSV
     period: TimePeriod = TimePeriod.LAST_30_DAYS
     include_campaigns: bool = True
@@ -258,6 +279,7 @@ class DashboardExportRequest(BaseModel):
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def get_date_range(period: TimePeriod) -> tuple[date, date]:
     """Get start and end dates for a time period."""
@@ -341,6 +363,7 @@ def format_percentage(value: float) -> str:
 # Endpoints
 # =============================================================================
 
+
 @router.get("/overview", response_model=APIResponse[DashboardOverviewResponse])
 async def get_dashboard_overview(
     current_user: CurrentUserDep,
@@ -360,9 +383,7 @@ async def get_dashboard_overview(
 
     # Check onboarding status
     onboarding_result = await db.execute(
-        select(TenantOnboarding).where(
-            TenantOnboarding.tenant_id == tenant_id
-        )
+        select(TenantOnboarding).where(TenantOnboarding.tenant_id == tenant_id)
     )
     onboarding = onboarding_result.scalar_one_or_none()
     onboarding_complete = onboarding and onboarding.status == OnboardingStatus.COMPLETED
@@ -450,24 +471,23 @@ async def get_dashboard_overview(
     # Platform breakdown
     platforms_summary = []
     for platform in AdPlatform:
-        connection = next(
-            (c for c in connected_platforms if c.platform == platform),
-            None
-        )
+        connection = next((c for c in connected_platforms if c.platform == platform), None)
 
         platform_campaigns = [c for c in campaigns if c.platform == platform]
         platform_spend = sum(c.total_spend_cents or 0 for c in platform_campaigns) / 100
         platform_revenue = sum(c.revenue_cents or 0 for c in platform_campaigns) / 100
 
-        platforms_summary.append(PlatformSummary(
-            platform=platform.value,
-            status="connected" if connection else "disconnected",
-            spend=platform_spend,
-            revenue=platform_revenue,
-            roas=platform_revenue / platform_spend if platform_spend > 0 else None,
-            campaigns_count=len(platform_campaigns),
-            last_synced_at=connection.last_refreshed_at if connection else None,
-        ))
+        platforms_summary.append(
+            PlatformSummary(
+                platform=platform.value,
+                status="connected" if connection else "disconnected",
+                spend=platform_spend,
+                revenue=platform_revenue,
+                roas=platform_revenue / platform_spend if platform_spend > 0 else None,
+                campaigns_count=len(platform_campaigns),
+                last_synced_at=connection.last_refreshed_at if connection else None,
+            )
+        )
 
     # Campaign stats
     active_campaigns = len([c for c in campaigns if c.status == CampaignStatus.ACTIVE])
@@ -556,11 +576,7 @@ async def get_campaign_performance(
         query = query.order_by(sort_column)
 
     # Get total count
-    count_result = await db.execute(
-        select(func.count()).select_from(
-            query.subquery()
-        )
-    )
+    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar() or 0
 
     # Apply pagination
@@ -591,19 +607,21 @@ async def get_campaign_performance(
             recommendation = None
             scaling_score = None
 
-        campaign_items.append(CampaignSummaryItem(
-            id=c.id,
-            name=c.name,
-            platform=c.platform.value,
-            status=c.status.value,
-            spend=spend,
-            revenue=revenue,
-            roas=roas if spend > 0 else None,
-            conversions=c.conversions or 0,
-            trend=TrendDirection.UP if roas >= 2 else TrendDirection.STABLE,
-            scaling_score=scaling_score,
-            recommendation=recommendation,
-        ))
+        campaign_items.append(
+            CampaignSummaryItem(
+                id=c.id,
+                name=c.name,
+                platform=c.platform.value,
+                status=c.status.value,
+                spend=spend,
+                revenue=revenue,
+                roas=roas if spend > 0 else None,
+                conversions=c.conversions or 0,
+                trend=TrendDirection.UP if roas >= 2 else TrendDirection.STABLE,
+                scaling_score=scaling_score,
+                recommendation=recommendation,
+            )
+        )
 
     return APIResponse(
         success=True,
@@ -635,13 +653,15 @@ async def get_recommendations(
 
     # Get campaigns to generate recommendations
     result = await db.execute(
-        select(Campaign).where(
+        select(Campaign)
+        .where(
             and_(
                 Campaign.tenant_id == tenant_id,
                 Campaign.is_deleted == False,
                 Campaign.status == CampaignStatus.ACTIVE,
             )
-        ).limit(50)
+        )
+        .limit(50)
     )
     campaigns = result.scalars().all()
 
@@ -658,7 +678,9 @@ async def get_recommendations(
         if roas >= 3:
             rec_type = RecommendationType.SCALE
             title = f"Scale {c.name}"
-            description = f"ROAS of {roas:.2f}x exceeds target. Consider increasing budget by 20-30%."
+            description = (
+                f"ROAS of {roas:.2f}x exceeds target. Consider increasing budget by 20-30%."
+            )
             confidence = 0.85
             impact = f"+${spend * 0.25:.0f} potential revenue"
         elif roas < 1:
@@ -682,20 +704,22 @@ async def get_recommendations(
 
         by_type[rec_type.value] += 1
 
-        recommendations.append(RecommendationItem(
-            id=f"rec_{c.id}_{rec_type.value}",
-            type=rec_type,
-            entity_type="campaign",
-            entity_id=c.id,
-            entity_name=c.name,
-            platform=c.platform.value,
-            title=title,
-            description=description,
-            impact_estimate=impact,
-            confidence=confidence,
-            status=RecommendationStatus.PENDING,
-            created_at=datetime.now(timezone.utc),
-        ))
+        recommendations.append(
+            RecommendationItem(
+                id=f"rec_{c.id}_{rec_type.value}",
+                type=rec_type,
+                entity_type="campaign",
+                entity_id=c.id,
+                entity_name=c.name,
+                platform=c.platform.value,
+                title=title,
+                description=description,
+                impact_estimate=impact,
+                confidence=confidence,
+                status=RecommendationStatus.PENDING,
+                created_at=datetime.now(UTC),
+            )
+        )
 
     # Sort by confidence and limit
     recommendations.sort(key=lambda r: r.confidence, reverse=True)
@@ -727,8 +751,7 @@ async def approve_recommendation(
     parts = recommendation_id.split("_")
     if len(parts) < 3:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid recommendation ID"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid recommendation ID"
         )
 
     logger.info(
@@ -818,21 +841,21 @@ async def get_activity_feed(
             severity = "info"
             title = f"{log.action.value.title()} {log.resource_type}"
 
-        activities.append(ActivityItem(
-            id=log.id,
-            type=activity_type,
-            title=title,
-            description=None,
-            severity=severity,
-            timestamp=log.created_at,
-            entity_type=log.resource_type,
-            entity_id=log.resource_id,
-        ))
+        activities.append(
+            ActivityItem(
+                id=log.id,
+                type=activity_type,
+                title=title,
+                description=None,
+                severity=severity,
+                timestamp=log.created_at,
+                entity_type=log.resource_type,
+                entity_id=log.resource_id,
+            )
+        )
 
     # Get total count
-    count_result = await db.execute(
-        select(func.count()).where(AuditLog.tenant_id == tenant_id)
-    )
+    count_result = await db.execute(select(func.count()).where(AuditLog.tenant_id == tenant_id))
     total = count_result.scalar() or 0
 
     return APIResponse(
@@ -861,19 +884,19 @@ async def get_quick_actions(
 
     # Check onboarding status
     onboarding_result = await db.execute(
-        select(TenantOnboarding).where(
-            TenantOnboarding.tenant_id == tenant_id
-        )
+        select(TenantOnboarding).where(TenantOnboarding.tenant_id == tenant_id)
     )
     onboarding = onboarding_result.scalar_one_or_none()
 
     if not onboarding or onboarding.status != OnboardingStatus.COMPLETED:
-        actions.append(QuickAction(
-            id="complete_onboarding",
-            label="Complete Setup",
-            icon="settings",
-            action="/onboarding",
-        ))
+        actions.append(
+            QuickAction(
+                id="complete_onboarding",
+                label="Complete Setup",
+                icon="settings",
+                action="/onboarding",
+            )
+        )
 
     # Check for connected platforms
     platforms_result = await db.execute(
@@ -887,12 +910,14 @@ async def get_quick_actions(
     connected = platforms_result.scalars().all()
 
     if len(connected) == 0:
-        actions.append(QuickAction(
-            id="connect_platform",
-            label="Connect Platform",
-            icon="link",
-            action="/connect",
-        ))
+        actions.append(
+            QuickAction(
+                id="connect_platform",
+                label="Connect Platform",
+                icon="link",
+                action="/connect",
+            )
+        )
 
     # Check for campaigns
     campaigns_result = await db.execute(
@@ -906,34 +931,38 @@ async def get_quick_actions(
     campaign_count = campaigns_result.scalar() or 0
 
     if campaign_count == 0 and len(connected) > 0:
-        actions.append(QuickAction(
-            id="sync_campaigns",
-            label="Sync Campaigns",
-            icon="refresh",
-            action="/campaigns/sync",
-        ))
+        actions.append(
+            QuickAction(
+                id="sync_campaigns",
+                label="Sync Campaigns",
+                icon="refresh",
+                action="/campaigns/sync",
+            )
+        )
 
     # Standard actions
-    actions.extend([
-        QuickAction(
-            id="create_campaign",
-            label="New Campaign",
-            icon="plus",
-            action="/campaigns/new",
-        ),
-        QuickAction(
-            id="view_reports",
-            label="Reports",
-            icon="chart",
-            action="/reports",
-        ),
-        QuickAction(
-            id="manage_rules",
-            label="Automation",
-            icon="zap",
-            action="/automation",
-        ),
-    ])
+    actions.extend(
+        [
+            QuickAction(
+                id="create_campaign",
+                label="New Campaign",
+                icon="plus",
+                action="/campaigns/new",
+            ),
+            QuickAction(
+                id="view_reports",
+                label="Reports",
+                icon="chart",
+                action="/reports",
+            ),
+            QuickAction(
+                id="manage_rules",
+                label="Automation",
+                icon="zap",
+                action="/automation",
+            ),
+        ]
+    )
 
     return APIResponse(
         success=True,
@@ -956,9 +985,7 @@ async def get_signal_health(
 
     # Get onboarding settings for thresholds
     onboarding_result = await db.execute(
-        select(TenantOnboarding).where(
-            TenantOnboarding.tenant_id == tenant_id
-        )
+        select(TenantOnboarding).where(TenantOnboarding.tenant_id == tenant_id)
     )
     onboarding = onboarding_result.scalar_one_or_none()
 
@@ -1008,9 +1035,9 @@ async def get_signal_health(
         status = "healthy"
 
     autopilot_enabled = (
-        onboarding and
-        onboarding.automation_mode == "autopilot" and
-        overall_score >= autopilot_threshold
+        onboarding
+        and onboarding.automation_mode == "autopilot"
+        and overall_score >= autopilot_threshold
     )
 
     return APIResponse(
@@ -1056,7 +1083,7 @@ async def export_dashboard(
 
     # Build export data
     export_data = {
-        "export_date": datetime.now(timezone.utc).isoformat(),
+        "export_date": datetime.now(UTC).isoformat(),
         "period": request.period.value,
         "date_range": {
             "start": start_date.isoformat(),
@@ -1096,7 +1123,9 @@ async def export_dashboard(
                 "conversions": c.conversions or 0,
                 "impressions": c.impressions or 0,
                 "clicks": c.clicks or 0,
-                "roas": ((c.revenue_cents or 0) / (c.total_spend_cents or 1)) if (c.total_spend_cents or 0) > 0 else 0,
+                "roas": ((c.revenue_cents or 0) / (c.total_spend_cents or 1))
+                if (c.total_spend_cents or 0) > 0
+                else 0,
             }
             for c in campaigns
         ]
@@ -1110,17 +1139,21 @@ async def export_dashboard(
             roas = revenue / spend if spend > 0 else 0
 
             if roas >= 3:
-                recommendations.append({
-                    "campaign": c.name,
-                    "type": "scale",
-                    "description": f"Scale budget by 20-30% - ROAS {roas:.2f}x",
-                })
+                recommendations.append(
+                    {
+                        "campaign": c.name,
+                        "type": "scale",
+                        "description": f"Scale budget by 20-30% - ROAS {roas:.2f}x",
+                    }
+                )
             elif roas < 1 and spend > 0:
-                recommendations.append({
-                    "campaign": c.name,
-                    "type": "fix",
-                    "description": f"Review targeting - ROAS {roas:.2f}x below breakeven",
-                })
+                recommendations.append(
+                    {
+                        "campaign": c.name,
+                        "type": "fix",
+                        "description": f"Review targeting - ROAS {roas:.2f}x below breakeven",
+                    }
+                )
 
         export_data["recommendations"] = recommendations
 
@@ -1144,21 +1177,34 @@ async def export_dashboard(
         # Write campaigns
         if request.include_campaigns and export_data.get("campaigns"):
             writer.writerow(["=== CAMPAIGNS ==="])
-            headers = ["ID", "Name", "Platform", "Status", "Spend", "Revenue", "ROAS", "Conversions", "Impressions", "Clicks"]
+            headers = [
+                "ID",
+                "Name",
+                "Platform",
+                "Status",
+                "Spend",
+                "Revenue",
+                "ROAS",
+                "Conversions",
+                "Impressions",
+                "Clicks",
+            ]
             writer.writerow(headers)
             for campaign in export_data["campaigns"]:
-                writer.writerow([
-                    campaign["id"],
-                    campaign["name"],
-                    campaign["platform"],
-                    campaign["status"],
-                    f"${campaign['spend']:.2f}",
-                    f"${campaign['revenue']:.2f}",
-                    f"{campaign['roas']:.2f}x",
-                    campaign["conversions"],
-                    campaign["impressions"],
-                    campaign["clicks"],
-                ])
+                writer.writerow(
+                    [
+                        campaign["id"],
+                        campaign["name"],
+                        campaign["platform"],
+                        campaign["status"],
+                        f"${campaign['spend']:.2f}",
+                        f"${campaign['revenue']:.2f}",
+                        f"{campaign['roas']:.2f}x",
+                        campaign["conversions"],
+                        campaign["impressions"],
+                        campaign["clicks"],
+                    ]
+                )
             writer.writerow([])
 
         # Write recommendations

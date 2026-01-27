@@ -5,38 +5,38 @@
  * contextual actions and celebratory completion.
  */
 
-import * as React from 'react'
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
-  CheckCircle2,
-  Circle,
-  ChevronDown,
-  ChevronUp,
-  Rocket,
-  Link2,
-  Users,
-  Target,
+  ArrowRight,
   BarChart3,
   Bell,
-  Zap,
-  X,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Circle,
+  Link2,
   PartyPopper,
-  ArrowRight,
+  Rocket,
   Sparkles,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Target,
+  Users,
+  X,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChecklistItem {
-  id: string
-  title: string
-  description: string
-  icon: React.ElementType
-  actionLabel: string
-  actionUrl: string
-  completed: boolean
-  required: boolean
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  actionLabel: string;
+  actionUrl: string;
+  completed: boolean;
+  required: boolean;
 }
 
 const DEFAULT_CHECKLIST: ChecklistItem[] = [
@@ -100,92 +100,99 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
     completed: false,
     required: false,
   },
-]
+];
 
 interface OnboardingChecklistProps {
-  tenantId?: string
-  variant?: 'sidebar' | 'modal' | 'inline' | 'horizontal'
-  onComplete?: () => void
+  tenantId?: string;
+  variant?: 'sidebar' | 'modal' | 'inline' | 'horizontal';
+  onComplete?: () => void;
 }
 
-export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete }: OnboardingChecklistProps) {
-  const navigate = useNavigate()
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST)
-  const [isExpanded, setIsExpanded] = useState(true)
-  const [showCelebration, setShowCelebration] = useState(false)
-  const [isDismissed, setIsDismissed] = useState(false)
+export function OnboardingChecklist({
+  tenantId,
+  variant = 'sidebar',
+  onComplete,
+}: OnboardingChecklistProps) {
+  const navigate = useNavigate();
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   // Load progress from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('stratum_onboarding_progress')
+    const stored = localStorage.getItem('stratum_onboarding_progress');
     if (stored) {
       try {
-        const progress = JSON.parse(stored) as Record<string, boolean>
-        setChecklist(prev => prev.map(item => ({
-          ...item,
-          completed: progress[item.id] || false,
-        })))
+        const progress = JSON.parse(stored) as Record<string, boolean>;
+        setChecklist((prev) =>
+          prev.map((item) => ({
+            ...item,
+            completed: progress[item.id] || false,
+          }))
+        );
       } catch (e) {
         // Invalid stored data, use defaults
       }
     }
 
-    const dismissed = localStorage.getItem('stratum_onboarding_dismissed')
+    const dismissed = localStorage.getItem('stratum_onboarding_dismissed');
     if (dismissed === 'true') {
-      setIsDismissed(true)
+      setIsDismissed(true);
     }
-  }, [])
+  }, []);
 
   // Save progress
   const saveProgress = (items: ChecklistItem[]) => {
-    const progress = items.reduce((acc, item) => ({
-      ...acc,
-      [item.id]: item.completed,
-    }), {})
-    localStorage.setItem('stratum_onboarding_progress', JSON.stringify(progress))
-  }
+    const progress = items.reduce(
+      (acc, item) => ({
+        ...acc,
+        [item.id]: item.completed,
+      }),
+      {}
+    );
+    localStorage.setItem('stratum_onboarding_progress', JSON.stringify(progress));
+  };
 
-  const completedCount = checklist.filter(item => item.completed).length
-  const totalCount = checklist.length
-  const requiredCompleted = checklist.filter(item => item.required && item.completed).length
-  const requiredTotal = checklist.filter(item => item.required).length
-  const progress = Math.round((completedCount / totalCount) * 100)
+  const completedCount = checklist.filter((item) => item.completed).length;
+  const totalCount = checklist.length;
+  const requiredCompleted = checklist.filter((item) => item.required && item.completed).length;
+  const requiredTotal = checklist.filter((item) => item.required).length;
+  const progress = Math.round((completedCount / totalCount) * 100);
 
   const markComplete = (id: string) => {
-    const updated = checklist.map(item =>
-      item.id === id ? { ...item, completed: true } : item
-    )
-    setChecklist(updated)
-    saveProgress(updated)
+    const updated = checklist.map((item) => (item.id === id ? { ...item, completed: true } : item));
+    setChecklist(updated);
+    saveProgress(updated);
 
     // Check if all required items are complete
-    const allRequiredComplete = updated.filter(i => i.required).every(i => i.completed)
+    const allRequiredComplete = updated.filter((i) => i.required).every((i) => i.completed);
     if (allRequiredComplete && !showCelebration) {
-      setShowCelebration(true)
-      onComplete?.()
+      setShowCelebration(true);
+      onComplete?.();
     }
-  }
+  };
 
   const handleAction = (item: ChecklistItem) => {
     // Navigate and mark as in-progress
-    navigate(item.actionUrl)
+    navigate(item.actionUrl);
     // Could mark complete after navigation or via callback
     // For demo, we'll mark it complete on click
-    setTimeout(() => markComplete(item.id), 500)
-  }
+    setTimeout(() => markComplete(item.id), 500);
+  };
 
   const dismiss = () => {
-    setIsDismissed(true)
-    localStorage.setItem('stratum_onboarding_dismissed', 'true')
-  }
+    setIsDismissed(true);
+    localStorage.setItem('stratum_onboarding_dismissed', 'true');
+  };
 
   const reset = () => {
-    setChecklist(DEFAULT_CHECKLIST)
-    localStorage.removeItem('stratum_onboarding_progress')
-    localStorage.removeItem('stratum_onboarding_dismissed')
-    setIsDismissed(false)
-    setShowCelebration(false)
-  }
+    setChecklist(DEFAULT_CHECKLIST);
+    localStorage.removeItem('stratum_onboarding_progress');
+    localStorage.removeItem('stratum_onboarding_dismissed');
+    setIsDismissed(false);
+    setShowCelebration(false);
+  };
 
   if (isDismissed && progress < 100) {
     // Show minimal re-open button
@@ -197,11 +204,11 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
         <Rocket className="h-4 w-4" />
         Setup ({progress}%)
       </button>
-    )
+    );
   }
 
   if (progress === 100 && !showCelebration) {
-    return null // Fully complete and dismissed
+    return null; // Fully complete and dismissed
   }
 
   // Celebration Modal
@@ -234,13 +241,14 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
               </motion.div>
               <h2 className="text-2xl font-bold mb-2">You're All Set!</h2>
               <p className="text-muted-foreground mb-6">
-                You've completed the essential setup. Stratum AI is now ready to optimize your campaigns with trust-gated automation.
+                You've completed the essential setup. Stratum AI is now ready to optimize your
+                campaigns with trust-gated automation.
               </p>
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => {
-                    setShowCelebration(false)
-                    dismiss()
+                    setShowCelebration(false);
+                    dismiss();
                   }}
                   className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90"
                 >
@@ -251,7 +259,7 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
           </motion.div>
         </motion.div>
       </AnimatePresence>
-    )
+    );
   }
 
   // Horizontal variant - shows as a bar at the top
@@ -266,23 +274,25 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
             </div>
             <div>
               <span className="text-sm font-medium">Getting Started</span>
-              <span className="text-xs text-muted-foreground ml-2">{completedCount}/{totalCount}</span>
+              <span className="text-xs text-muted-foreground ml-2">
+                {completedCount}/{totalCount}
+              </span>
             </div>
           </div>
 
           {/* Horizontal steps */}
           <div className="flex-1 flex items-center gap-2 overflow-x-auto">
             {checklist.slice(0, 4).map((item, index) => {
-              const Icon = item.icon
+              const Icon = item.icon;
               return (
                 <button
                   key={item.id}
                   onClick={() => !item.completed && handleAction(item)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all",
+                    'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all',
                     item.completed
-                      ? "bg-green-500/10 text-green-600"
-                      : "bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                      ? 'bg-green-500/10 text-green-600'
+                      : 'bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {item.completed ? (
@@ -292,7 +302,7 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
                   )}
                   {item.title}
                 </button>
-              )
+              );
             })}
           </div>
 
@@ -308,23 +318,22 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
           </div>
 
           {/* Dismiss button */}
-          <button
-            onClick={dismiss}
-            className="p-1 rounded hover:bg-accent transition-colors"
-          >
+          <button onClick={dismiss} className="p-1 rounded hover:bg-accent transition-colors">
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // Sidebar/Inline variant
   return (
-    <div className={cn(
-      "bg-card border rounded-2xl overflow-hidden",
-      variant === 'sidebar' && "fixed bottom-4 left-4 z-40 w-80 shadow-2xl"
-    )}>
+    <div
+      className={cn(
+        'bg-card border rounded-2xl overflow-hidden',
+        variant === 'sidebar' && 'fixed bottom-4 left-4 z-40 w-80 shadow-2xl'
+      )}
+    >
       {/* Header */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent/50 transition-colors"
@@ -370,8 +379,8 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
                 <div
                   key={item.id}
                   className={cn(
-                    "group flex items-start gap-3 p-3 rounded-xl transition-colors",
-                    item.completed ? "bg-green-500/5" : "hover:bg-accent/50"
+                    'group flex items-start gap-3 p-3 rounded-xl transition-colors',
+                    item.completed ? 'bg-green-500/5' : 'hover:bg-accent/50'
                   )}
                 >
                   <div className="mt-0.5">
@@ -383,10 +392,12 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={cn(
-                        "text-sm font-medium",
-                        item.completed && "text-muted-foreground line-through"
-                      )}>
+                      <span
+                        className={cn(
+                          'text-sm font-medium',
+                          item.completed && 'text-muted-foreground line-through'
+                        )}
+                      >
                         {item.title}
                       </span>
                       {item.required && !item.completed && (
@@ -396,9 +407,7 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
                       )}
                     </div>
                     {!item.completed && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {item.description}
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                     )}
                     {!item.completed && (
                       <button
@@ -435,7 +444,7 @@ export function OnboardingChecklist({ tenantId, variant = 'sidebar', onComplete 
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
-export default OnboardingChecklist
+export default OnboardingChecklist;

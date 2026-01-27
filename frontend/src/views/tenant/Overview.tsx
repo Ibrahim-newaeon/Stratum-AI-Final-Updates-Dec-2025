@@ -5,63 +5,63 @@
  * Shows EMQ + Confidence + Autopilot Mode + Budget at Risk
  */
 
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
-  TrustStatusHeader,
-  EmqScoreCard,
-  EmqFixPlaybookPanel,
-  EmqTimeline,
-  KpiStrip,
+  type Action,
   ActionsPanel,
+  EmqFixPlaybookPanel,
+  EmqScoreCard,
+  EmqTimeline,
+  type Kpi,
+  KpiStrip,
   type PlaybookItem,
   type TimelineEvent,
-  type Action,
-  type Kpi,
-} from '@/components/shared'
+  TrustStatusHeader,
+} from '@/components/shared';
 import {
-  useEmqScore,
   useAutopilotState,
-  useEmqPlaybook,
   useEmqIncidents,
+  useEmqPlaybook,
+  useEmqScore,
   useUpdatePlaybookItem,
-} from '@/api/hooks'
-import { useTenantOverview, useTenantRecommendations } from '@/api/hooks'
-import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopilot'
-import { useToast } from '@/components/ui/use-toast'
-import { DocumentArrowDownIcon, CalendarIcon } from '@heroicons/react/24/outline'
+} from '@/api/hooks';
+import { useTenantOverview, useTenantRecommendations } from '@/api/hooks';
+import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopilot';
+import { useToast } from '@/components/ui/use-toast';
+import { CalendarIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 
 export default function TenantOverview() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const navigate = useNavigate()
-  const { toast } = useToast()
-  const tid = parseInt(tenantId || '1', 10)
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const tid = parseInt(tenantId || '1', 10);
 
   // Date range state
   const [dateRange, setDateRange] = useState({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
-  })
-  const [dateRangeLabel, setDateRangeLabel] = useState('Last 30 days')
+  });
+  const [dateRangeLabel, setDateRangeLabel] = useState('Last 30 days');
 
   // Mutation hooks for autopilot actions
-  const approveAction = useApproveAction(tid)
-  const dismissAction = useDismissAction(tid)
-  const queueAction = useQueueAction(tid)
-  const updatePlaybookItem = useUpdatePlaybookItem(tid)
+  const approveAction = useApproveAction(tid);
+  const dismissAction = useDismissAction(tid);
+  const queueAction = useQueueAction(tid);
+  const updatePlaybookItem = useUpdatePlaybookItem(tid);
 
   // Fetch data
-  const { data: emqData } = useEmqScore(tid)
-  const { data: autopilotData } = useAutopilotState(tid)
-  const { data: playbookData } = useEmqPlaybook(tid)
-  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
-  const { data: overviewData } = useTenantOverview(tid)
-  const { data: recommendationsData } = useTenantRecommendations(tid)
+  const { data: emqData } = useEmqScore(tid);
+  const { data: autopilotData } = useAutopilotState(tid);
+  const { data: playbookData } = useEmqPlaybook(tid);
+  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end);
+  const { data: overviewData } = useTenantOverview(tid);
+  const { data: recommendationsData } = useTenantRecommendations(tid);
 
   // Transform data for components
-  const emqScore = emqData?.score ?? 85
-  const autopilotMode = autopilotData?.mode ?? 'normal'
-  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 0
+  const emqScore = emqData?.score ?? 85;
+  const autopilotMode = autopilotData?.mode ?? 'normal';
+  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 0;
 
   const kpis: Kpi[] = [
     {
@@ -97,7 +97,7 @@ export default function TenantOverview() {
       trendIsPositive: false,
       confidence: emqScore,
     },
-  ]
+  ];
 
   const playbook: PlaybookItem[] = playbookData ?? [
     {
@@ -124,7 +124,7 @@ export default function TenantOverview() {
       status: 'in_progress',
       actionUrl: null,
     },
-  ]
+  ];
 
   const timeline: TimelineEvent[] = incidentsData?.map((i) => ({
     id: i.id,
@@ -157,13 +157,24 @@ export default function TenantOverview() {
       recoveryHours: 3,
       emqImpact: 5,
     },
-  ]
+  ];
 
   // Handle both array and object response shapes
   const recommendationsList = Array.isArray(recommendationsData)
     ? recommendationsData
-    : (recommendationsData as { recommendations?: unknown[] } | undefined)?.recommendations || []
-  const actions: Action[] = (recommendationsList as { id: string; priority: string; title: string; description: string; platform?: string; expectedImpact: number; status: string; createdAt?: string }[]).map((r) => ({
+    : (recommendationsData as { recommendations?: unknown[] } | undefined)?.recommendations || [];
+  const actions: Action[] = ((
+    recommendationsList as {
+      id: string;
+      priority: string;
+      title: string;
+      description: string;
+      platform?: string;
+      expectedImpact: number;
+      status: string;
+      createdAt?: string;
+    }[]
+  ).map((r) => ({
     id: r.id,
     type: r.priority === 'high' ? 'opportunity' : 'recommendation',
     title: r.title,
@@ -178,7 +189,7 @@ export default function TenantOverview() {
     status: r.status === 'approved' ? 'applied' : 'pending',
     priority: r.priority === 'high' ? 1 : 2,
     createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
-  })) as Action[] ?? [
+  })) as Action[]) ?? [
     {
       id: '1',
       type: 'opportunity',
@@ -203,22 +214,22 @@ export default function TenantOverview() {
       priority: 2,
       createdAt: new Date(),
     },
-  ]
+  ];
 
   // Handler: View EMQ details in signal hub
   const handleViewDetails = () => {
-    navigate(`/tenant/${tid}/signal-hub`)
-  }
+    navigate(`/tenant/${tid}/signal-hub`);
+  };
 
   // Handler: Playbook item click - navigate to fix page or show details
   const handlePlaybookItemClick = (item: PlaybookItem) => {
     if (item.actionUrl) {
-      navigate(item.actionUrl)
+      navigate(item.actionUrl);
     } else {
       // Navigate to signal-hub with item context
-      navigate(`/tenant/${tid}/signal-hub?issue=${item.id}`)
+      navigate(`/tenant/${tid}/signal-hub?issue=${item.id}`);
     }
-  }
+  };
 
   // Handler: Assign playbook item
   const handlePlaybookAssign = (item: PlaybookItem) => {
@@ -226,8 +237,8 @@ export default function TenantOverview() {
     toast({
       title: 'Assignment',
       description: `Assigning "${item.title}" to team. Full assignment workflow coming soon.`,
-    })
-  }
+    });
+  };
 
   // Handler: Apply playbook fix
   const handlePlaybookApply = async (item: PlaybookItem) => {
@@ -235,53 +246,53 @@ export default function TenantOverview() {
       await updatePlaybookItem.mutateAsync({
         itemId: item.id,
         updates: { status: 'completed' },
-      })
+      });
       toast({
         title: 'Fix Applied',
         description: `Successfully applied: ${item.title}. Expected EMQ improvement: +${item.estimatedImpact}`,
-      })
+      });
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to apply fix',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   // Handler: Apply action
   const handleApplyAction = async (action: Action) => {
     try {
-      await approveAction.mutateAsync(action.id)
+      await approveAction.mutateAsync(action.id);
       toast({
         title: 'Action Applied',
         description: `Successfully applied: ${action.title}`,
-      })
+      });
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to apply action',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   // Handler: Dismiss action
   const handleDismissAction = async (action: Action) => {
     try {
-      await dismissAction.mutateAsync(action.id)
+      await dismissAction.mutateAsync(action.id);
       toast({
         title: 'Action Dismissed',
         description: `Dismissed: ${action.title}`,
-      })
+      });
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to dismiss action',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   // Handler: Queue action
   const handleQueueAction = async (action: Action) => {
@@ -293,19 +304,19 @@ export default function TenantOverview() {
         entity_name: action.title,
         platform: action.platform || 'unknown',
         action_json: { description: action.description },
-      })
+      });
       toast({
         title: 'Action Queued',
         description: `Queued for later: ${action.title}`,
-      })
+      });
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to queue action',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   // Handler: Date range change
   const handleDateRangeChange = () => {
@@ -315,20 +326,20 @@ export default function TenantOverview() {
       { days: 14, label: 'Last 14 days' },
       { days: 30, label: 'Last 30 days' },
       { days: 90, label: 'Last 90 days' },
-    ]
-    const currentIndex = ranges.findIndex((r) => r.label === dateRangeLabel)
-    const nextIndex = (currentIndex + 1) % ranges.length
-    const nextRange = ranges[nextIndex]
+    ];
+    const currentIndex = ranges.findIndex((r) => r.label === dateRangeLabel);
+    const nextIndex = (currentIndex + 1) % ranges.length;
+    const nextRange = ranges[nextIndex];
 
-    const end = new Date()
-    const start = new Date(Date.now() - nextRange.days * 24 * 60 * 60 * 1000)
+    const end = new Date();
+    const start = new Date(Date.now() - nextRange.days * 24 * 60 * 60 * 1000);
 
     setDateRange({
       start: start.toISOString().split('T')[0],
       end: end.toISOString().split('T')[0],
-    })
-    setDateRangeLabel(nextRange.label)
-  }
+    });
+    setDateRangeLabel(nextRange.label);
+  };
 
   // Handler: Export report
   const handleExportReport = () => {
@@ -336,8 +347,8 @@ export default function TenantOverview() {
     toast({
       title: 'Export Started',
       description: 'Generating report for download. This feature is coming soon.',
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -386,11 +397,7 @@ export default function TenantOverview() {
         {/* Left column - EMQ Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* EMQ Score Card */}
-          <EmqScoreCard
-            score={emqScore}
-            previousScore={emqData?.previousScore ?? 82}
-            showDrivers
-          />
+          <EmqScoreCard score={emqScore} previousScore={emqData?.previousScore ?? 82} showDrivers />
 
           {/* Fix Playbook */}
           <div data-tour="fix-playbook">
@@ -421,5 +428,5 @@ export default function TenantOverview() {
         </div>
       </div>
     </div>
-  )
+  );
 }

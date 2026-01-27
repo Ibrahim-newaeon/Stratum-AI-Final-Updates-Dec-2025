@@ -6,16 +6,16 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
+  ArrowPathIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon,
-  XCircleIcon,
   ClockIcon,
-  SignalIcon,
-  ServerIcon,
   CloudIcon,
   CpuChipIcon,
+  ExclamationTriangleIcon,
+  ServerIcon,
   ShieldCheckIcon,
-  ArrowPathIcon,
+  SignalIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 
 type ServiceStatus = 'operational' | 'degraded' | 'outage' | 'maintenance';
@@ -39,11 +39,35 @@ interface Incident {
 }
 
 const services: Service[] = [
-  { name: 'API Gateway', status: 'operational', uptime: '99.99%', latency: '45ms', icon: ServerIcon },
+  {
+    name: 'API Gateway',
+    status: 'operational',
+    uptime: '99.99%',
+    latency: '45ms',
+    icon: ServerIcon,
+  },
   { name: 'Dashboard', status: 'operational', uptime: '99.98%', latency: '120ms', icon: CloudIcon },
-  { name: 'Trust Engine', status: 'operational', uptime: '99.99%', latency: '85ms', icon: ShieldCheckIcon },
-  { name: 'CDP Pipeline', status: 'operational', uptime: '99.97%', latency: '150ms', icon: CpuChipIcon },
-  { name: 'Audience Sync', status: 'operational', uptime: '99.95%', latency: '200ms', icon: ArrowPathIcon },
+  {
+    name: 'Trust Engine',
+    status: 'operational',
+    uptime: '99.99%',
+    latency: '85ms',
+    icon: ShieldCheckIcon,
+  },
+  {
+    name: 'CDP Pipeline',
+    status: 'operational',
+    uptime: '99.97%',
+    latency: '150ms',
+    icon: CpuChipIcon,
+  },
+  {
+    name: 'Audience Sync',
+    status: 'operational',
+    uptime: '99.95%',
+    latency: '200ms',
+    icon: ArrowPathIcon,
+  },
   { name: 'Webhooks', status: 'operational', uptime: '99.98%', latency: '65ms', icon: SignalIcon },
 ];
 
@@ -158,11 +182,13 @@ export default function StatusPage() {
 
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Stratum AI{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}>
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
                 System Status
               </span>
             </h1>
@@ -193,13 +219,16 @@ export default function StatusPage() {
                     <div
                       className="h-10 rounded transition-all duration-200 group-hover:scale-110"
                       style={{
-                        background: day.uptime === 100 ? '#00FF88' : day.uptime > 99 ? '#FFB800' : '#FF4757',
+                        background:
+                          day.uptime === 100 ? '#00FF88' : day.uptime > 99 ? '#FFB800' : '#FF4757',
                         opacity: 0.8,
                       }}
                     />
                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <div className="px-2 py-1 rounded text-xs text-white whitespace-nowrap"
-                        style={{ background: 'rgba(0,0,0,0.9)' }}>
+                      <div
+                        className="px-2 py-1 rounded text-xs text-white whitespace-nowrap"
+                        style={{ background: 'rgba(0,0,0,0.9)' }}
+                      >
                         {day.date}: {day.uptime}%
                       </div>
                     </div>
@@ -272,7 +301,9 @@ export default function StatusPage() {
               >
                 <CheckCircleIcon className="w-12 h-12 mx-auto mb-4 text-[#00FF88]" />
                 <p className="text-white font-medium">No incidents reported</p>
-                <p className="text-gray-400 text-sm mt-1">All systems have been operating normally.</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  All systems have been operating normally.
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -287,7 +318,9 @@ export default function StatusPage() {
                   >
                     <button
                       className="w-full flex items-center justify-between p-4"
-                      onClick={() => setExpandedIncident(expandedIncident === incident.id ? null : incident.id)}
+                      onClick={() =>
+                        setExpandedIncident(expandedIncident === incident.id ? null : incident.id)
+                      }
                     >
                       <div className="flex items-center gap-3">
                         <span
@@ -298,7 +331,10 @@ export default function StatusPage() {
                         <span
                           className="text-xs font-medium px-2 py-0.5 rounded capitalize"
                           style={{
-                            background: incident.status === 'resolved' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(255, 183, 0, 0.2)',
+                            background:
+                              incident.status === 'resolved'
+                                ? 'rgba(0, 255, 136, 0.2)'
+                                : 'rgba(255, 183, 0, 0.2)',
                             color: incident.status === 'resolved' ? '#00FF88' : '#FFB800',
                           }}
                         >
@@ -313,7 +349,9 @@ export default function StatusPage() {
                         <div className="mt-4 space-y-3">
                           {incident.updates.map((update, i) => (
                             <div key={i} className="flex gap-3">
-                              <span className="text-xs text-gray-500 w-12 flex-shrink-0">{update.time}</span>
+                              <span className="text-xs text-gray-500 w-12 flex-shrink-0">
+                                {update.time}
+                              </span>
                               <span className="text-sm text-gray-300">{update.message}</span>
                             </div>
                           ))}

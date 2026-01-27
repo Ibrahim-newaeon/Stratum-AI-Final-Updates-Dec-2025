@@ -5,23 +5,23 @@
  * with CTA to sign up for a real account.
  */
 
-import * as React from 'react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { X, Sparkles, ArrowRight, Play } from 'lucide-react'
-import { useDemo } from '@/contexts/DemoContext'
-import { cn } from '@/lib/utils'
+import * as React from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Play, Sparkles, X } from 'lucide-react';
+import { useDemo } from '@/contexts/DemoContext';
+import { cn } from '@/lib/utils';
 
 interface DemoBannerProps {
-  variant?: 'top' | 'floating'
+  variant?: 'top' | 'floating';
 }
 
 export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
-  const { isDemoMode, exitDemoMode } = useDemo()
-  const [isMinimized, setIsMinimized] = useState(false)
-  const navigate = useNavigate()
+  const { isDemoMode, exitDemoMode } = useDemo();
+  const [isMinimized, setIsMinimized] = useState(false);
+  const navigate = useNavigate();
 
-  if (!isDemoMode) return null
+  if (!isDemoMode) return null;
 
   if (variant === 'floating' && isMinimized) {
     return (
@@ -32,7 +32,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
         <Play className="h-4 w-4" />
         Demo Mode
       </button>
-    )
+    );
   }
 
   if (variant === 'floating') {
@@ -44,10 +44,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
             <Sparkles className="h-4 w-4" />
             <span className="font-semibold text-sm">Demo Mode Active</span>
           </div>
-          <button
-            onClick={() => setIsMinimized(true)}
-            className="text-white/70 hover:text-white"
-          >
+          <button onClick={() => setIsMinimized(true)} className="text-white/70 hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -75,7 +72,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Top banner variant
@@ -110,20 +107,20 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 /**
  * Demo CTA Card - Shown on landing page to enter demo mode
  */
 export function DemoCtaCard() {
-  const { enterDemoMode } = useDemo()
-  const navigate = useNavigate()
+  const { enterDemoMode } = useDemo();
+  const navigate = useNavigate();
 
   const handleEnterDemo = () => {
-    enterDemoMode()
-    navigate('/dashboard/overview')
-  }
+    enterDemoMode();
+    navigate('/dashboard/overview');
+  };
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/50 to-cyan-900/50 border border-purple-500/20 p-8">
@@ -144,8 +141,8 @@ export function DemoCtaCard() {
         </div>
 
         <p className="text-gray-300 mb-6">
-          Experience Stratum AI with real sample data. Explore trust gates, CDP profiles,
-          audience sync, and AI predictions - all in your browser.
+          Experience Stratum AI with real sample data. Explore trust gates, CDP profiles, audience
+          sync, and AI predictions - all in your browser.
         </p>
 
         <div className="flex flex-wrap gap-3 mb-6">
@@ -173,7 +170,7 @@ export function DemoCtaCard() {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default DemoBanner
+export default DemoBanner;

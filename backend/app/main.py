@@ -7,27 +7,28 @@ Configures routers, middleware, and application lifecycle events.
 """
 
 import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
+from typing import Optional
 
 import sentry_sdk
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Query, status
+import structlog
+from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, ORJSONResponse
 from sse_starlette.sse import EventSourceResponse
-import structlog
 
+from app.api.v1 import api_router
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 from app.core.metrics import setup_metrics
 from app.core.websocket import ws_manager
 from app.db.session import async_engine, check_database_health
 from app.middleware.audit import AuditMiddleware
-from app.middleware.tenant import TenantMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
-from app.api.v1 import api_router
+from app.middleware.tenant import TenantMiddleware
 
 # Setup logging
 setup_logging()
@@ -66,7 +67,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             # Additional integrations
             integrations=[],
             # Filter out health check endpoints from traces
-            traces_sampler=lambda ctx: 0.0 if ctx.get("wsgi_environ", {}).get("PATH_INFO", "").startswith("/health") else None,
+            traces_sampler=lambda ctx: 0.0
+            if ctx.get("wsgi_environ", {}).get("PATH_INFO", "").startswith("/health")
+            else None,
         )
         logger.info("sentry_initialized", environment=settings.app_env)
 
@@ -210,11 +213,14 @@ def create_application() -> FastAPI:
             with sentry_sdk.push_scope() as scope:
                 scope.set_tag("path", request.url.path)
                 scope.set_tag("method", request.method)
-                scope.set_context("request", {
-                    "url": str(request.url),
-                    "method": request.method,
-                    "headers": dict(request.headers),
-                })
+                scope.set_context(
+                    "request",
+                    {
+                        "url": str(request.url),
+                        "method": request.method,
+                        "headers": dict(request.headers),
+                    },
+                )
                 sentry_sdk.capture_exception(exc)
 
         if settings.is_development:
@@ -264,9 +270,13 @@ def create_application() -> FastAPI:
             redis_status = "healthy"
             await redis_client.close()
         except Exception as e:
-            redis_status = f"unhealthy: {str(e)}"
+            redis_status = f"unhealthy: {e!s}"
 
-        overall_status = "healthy" if db_health["status"] == "healthy" and redis_status == "healthy" else "unhealthy"
+        overall_status = (
+            "healthy"
+            if db_health["status"] == "healthy" and redis_status == "healthy"
+            else "unhealthy"
+        )
 
         return {
             "status": overall_status,
@@ -302,6 +312,7 @@ def create_application() -> FastAPI:
         Clients connect here to receive live notifications.
         """
         import asyncio
+
         import redis.asyncio as redis
 
         async def event_generator():
@@ -320,9 +331,7 @@ def create_application() -> FastAPI:
                     if await request.is_disconnected():
                         break
 
-                    message = await pubsub.get_message(
-                        ignore_subscribe_messages=True, timeout=1.0
-                    )
+                    message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
 
                     if message and message["type"] == "message":
                         yield {
@@ -369,6 +378,7 @@ def create_application() -> FastAPI:
         if token:
             try:
                 from app.auth.jwt import decode_token
+
                 payload = decode_token(token)
                 user_id = payload.get("sub")
                 if not tenant_id:

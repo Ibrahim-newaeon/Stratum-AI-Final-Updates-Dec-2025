@@ -15,24 +15,21 @@ Tasks:
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from functools import wraps
-from typing import Any, Dict, Optional
+from typing import Any
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select, and_
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, select
 
 from app.core.config import settings
-from app.db.session import SyncSessionLocal, async_session_maker
+from app.db.session import async_session_maker
 from app.models.crm import (
     CRMConnection,
     CRMConnectionStatus,
     CRMProvider,
     CRMWritebackConfig,
-    CRMWritebackSync,
-    WritebackStatus,
 )
 
 logger = get_task_logger(__name__)
@@ -43,6 +40,7 @@ def async_task(func):
     Decorator to run async functions in Celery tasks.
     Celery doesn't natively support async, so we run in an event loop.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         loop = asyncio.new_event_loop()
@@ -51,6 +49,7 @@ def async_task(func):
             return loop.run_until_complete(func(*args, **kwargs))
         finally:
             loop.close()
+
     return wrapper
 
 
@@ -58,13 +57,14 @@ def async_task(func):
 # HubSpot Sync Tasks
 # =============================================================================
 
+
 @shared_task(bind=True, max_retries=3)
 @async_task
 async def sync_hubspot_data(
     self,
     tenant_id: int,
     full_sync: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Sync contacts and deals from HubSpot CRM.
 
@@ -106,7 +106,7 @@ async def writeback_hubspot_attribution(
     sync_contacts: bool = True,
     sync_deals: bool = True,
     full_sync: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Write attribution data back to HubSpot CRM.
 
@@ -130,9 +130,7 @@ async def writeback_hubspot_attribution(
         modified_since = None
         if not full_sync:
             result = await db.execute(
-                select(CRMWritebackConfig).where(
-                    CRMWritebackConfig.tenant_id == tenant_id
-                )
+                select(CRMWritebackConfig).where(CRMWritebackConfig.tenant_id == tenant_id)
             )
             config = result.scalar_one_or_none()
             if config and config.last_sync_at:
@@ -157,6 +155,7 @@ async def writeback_hubspot_attribution(
 # Zoho CRM Sync Tasks
 # =============================================================================
 
+
 @shared_task(bind=True, max_retries=3)
 @async_task
 async def sync_zoho_data(
@@ -164,7 +163,7 @@ async def sync_zoho_data(
     tenant_id: int,
     full_sync: bool = False,
     region: str = "com",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Sync contacts, leads, and deals from Zoho CRM.
 
@@ -208,7 +207,7 @@ async def writeback_zoho_attribution(
     sync_deals: bool = True,
     full_sync: bool = False,
     region: str = "com",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Write attribution data back to Zoho CRM.
 
@@ -263,9 +262,10 @@ async def writeback_zoho_attribution(
 # Scheduled Sync Tasks
 # =============================================================================
 
+
 @shared_task
 @async_task
-async def sync_all_crm_connections() -> Dict[str, Any]:
+async def sync_all_crm_connections() -> dict[str, Any]:
     """
     Sync all active CRM connections across all tenants.
 
@@ -274,7 +274,7 @@ async def sync_all_crm_connections() -> Dict[str, Any]:
     logger.info("Starting scheduled CRM sync for all connections")
 
     results = {
-        "started_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "hubspot": {"synced": 0, "failed": 0},
         "zoho": {"synced": 0, "failed": 0},
     }
@@ -282,9 +282,7 @@ async def sync_all_crm_connections() -> Dict[str, Any]:
     async with async_session_maker() as db:
         # Get all active CRM connections
         result = await db.execute(
-            select(CRMConnection).where(
-                CRMConnection.status == CRMConnectionStatus.CONNECTED
-            )
+            select(CRMConnection).where(CRMConnection.status == CRMConnectionStatus.CONNECTED)
         )
         connections = result.scalars().all()
 
@@ -314,7 +312,7 @@ async def sync_all_crm_connections() -> Dict[str, Any]:
                 elif connection.provider == CRMProvider.ZOHO:
                     results["zoho"]["failed"] += 1
 
-    results["completed_at"] = datetime.now(timezone.utc).isoformat()
+    results["completed_at"] = datetime.now(UTC).isoformat()
     logger.info(f"CRM sync dispatch complete: {results}")
 
     return results
@@ -322,7 +320,7 @@ async def sync_all_crm_connections() -> Dict[str, Any]:
 
 @shared_task
 @async_task
-async def run_scheduled_writebacks() -> Dict[str, Any]:
+async def run_scheduled_writebacks() -> dict[str, Any]:
     """
     Run scheduled writeback syncs for all configured connections.
 
@@ -331,7 +329,7 @@ async def run_scheduled_writebacks() -> Dict[str, Any]:
     logger.info("Checking for scheduled CRM writebacks")
 
     results = {
-        "started_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "writebacks_triggered": 0,
     }
 
@@ -347,7 +345,7 @@ async def run_scheduled_writebacks() -> Dict[str, Any]:
         )
         configs = result.scalars().all()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for config in configs:
             # Check if writeback is due
@@ -357,9 +355,7 @@ async def run_scheduled_writebacks() -> Dict[str, Any]:
             try:
                 # Get connection to determine provider
                 conn_result = await db.execute(
-                    select(CRMConnection).where(
-                        CRMConnection.id == config.connection_id
-                    )
+                    select(CRMConnection).where(CRMConnection.id == config.connection_id)
                 )
                 connection = conn_result.scalar_one_or_none()
 
@@ -389,7 +385,7 @@ async def run_scheduled_writebacks() -> Dict[str, Any]:
 
         await db.commit()
 
-    results["completed_at"] = datetime.now(timezone.utc).isoformat()
+    results["completed_at"] = datetime.now(UTC).isoformat()
     logger.info(f"Writeback scheduling complete: {results}")
 
     return results
@@ -399,12 +395,13 @@ async def run_scheduled_writebacks() -> Dict[str, Any]:
 # Identity Matching Task
 # =============================================================================
 
+
 @shared_task(bind=True, max_retries=3)
 @async_task
 async def run_identity_matching(
     self,
     tenant_id: int,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run identity matching for a tenant to link CRM contacts to ad touchpoints.
 
@@ -443,14 +440,14 @@ async def run_identity_matching(
 
 # These schedules can be added to the main Celery app configuration
 CRM_BEAT_SCHEDULE = {
-    'sync-all-crm-hourly': {
-        'task': 'app.workers.crm_sync_tasks.sync_all_crm_connections',
-        'schedule': timedelta(hours=1),
-        'options': {'queue': 'crm_sync'},
+    "sync-all-crm-hourly": {
+        "task": "app.workers.crm_sync_tasks.sync_all_crm_connections",
+        "schedule": timedelta(hours=1),
+        "options": {"queue": "crm_sync"},
     },
-    'run-writebacks-every-6-hours': {
-        'task': 'app.workers.crm_sync_tasks.run_scheduled_writebacks',
-        'schedule': timedelta(hours=6),
-        'options': {'queue': 'crm_sync'},
+    "run-writebacks-every-6-hours": {
+        "task": "app.workers.crm_sync_tasks.run_scheduled_writebacks",
+        "schedule": timedelta(hours=6),
+        "options": {"queue": "crm_sync"},
     },
 }

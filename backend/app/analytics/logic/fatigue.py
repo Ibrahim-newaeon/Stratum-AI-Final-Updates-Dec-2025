@@ -14,14 +14,15 @@ Interpretation:
 """
 
 from typing import Optional
+
+from app.analytics.logic.scoring import clamp01
 from app.analytics.logic.types import (
-    EntityMetrics,
     BaselineMetrics,
+    EntityMetrics,
     FatigueParams,
     FatigueResult,
     FatigueState,
 )
-from app.analytics.logic.scoring import clamp01
 
 
 def ema(current: float, prev: float, alpha: float = 0.4) -> float:
@@ -80,10 +81,10 @@ def creative_fatigue(
 
     # Calculate raw fatigue score
     fatigue = (
-        params.ctr_weight * ctr_drop +
-        params.roas_weight * roas_drop +
-        params.cpa_weight * cpa_rise +
-        params.exposure_weight * exposure_factor
+        params.ctr_weight * ctr_drop
+        + params.roas_weight * roas_drop
+        + params.cpa_weight * cpa_rise
+        + params.exposure_weight * exposure_factor
     )
 
     # Smooth with EMA to avoid noise

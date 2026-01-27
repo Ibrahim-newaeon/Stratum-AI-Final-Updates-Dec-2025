@@ -3,40 +3,40 @@
  * Create and analyze conversion funnels with step-by-step metrics
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  GitBranch,
-  Plus,
-  Trash2,
-  Save,
-  RefreshCw,
+  ArrowDown,
+  BarChart3,
+  Calendar,
   ChevronDown,
   ChevronRight,
-  Filter,
-  TrendingDown,
   Clock,
+  Filter,
+  GitBranch,
   Loader2,
+  Plus,
+  RefreshCw,
+  Save,
   Search,
-  BarChart3,
-  Users,
-  ArrowDown,
-  Calendar,
   Target,
+  Trash2,
+  TrendingDown,
+  Users,
   Zap,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useFunnels,
-  useCreateFunnel,
-  useUpdateFunnel,
-  useDeleteFunnel,
-  useComputeFunnel,
-  useAnalyzeFunnel,
-  useFunnelDropOffs,
   CDPFunnel,
   FunnelCreate,
   FunnelStep,
-} from '@/api/cdp'
+  useAnalyzeFunnel,
+  useComputeFunnel,
+  useCreateFunnel,
+  useDeleteFunnel,
+  useFunnelDropOffs,
+  useFunnels,
+  useUpdateFunnel,
+} from '@/api/cdp';
 
 // Step condition operators
 const CONDITION_OPERATORS = [
@@ -45,7 +45,7 @@ const CONDITION_OPERATORS = [
   { value: 'contains', label: 'contains' },
   { value: 'greater_than', label: 'greater than' },
   { value: 'less_than', label: 'less than' },
-]
+];
 
 // Common event names for suggestions
 const COMMON_EVENTS = [
@@ -58,48 +58,43 @@ const COMMON_EVENTS = [
   'Login',
   'Search',
   'FormSubmit',
-]
+];
 
 interface StepBuilderProps {
-  step: FunnelStep
-  index: number
-  onChange: (step: FunnelStep) => void
-  onRemove: () => void
-  canRemove: boolean
+  step: FunnelStep;
+  index: number;
+  onChange: (step: FunnelStep) => void;
+  onRemove: () => void;
+  canRemove: boolean;
 }
 
 function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilderProps) {
-  const [showConditions, setShowConditions] = useState(false)
+  const [showConditions, setShowConditions] = useState(false);
 
   const addCondition = () => {
     onChange({
       ...step,
-      conditions: [
-        ...(step.conditions || []),
-        { field: '', operator: 'equals', value: '' }
-      ]
-    })
-  }
+      conditions: [...(step.conditions || []), { field: '', operator: 'equals', value: '' }],
+    });
+  };
 
   const updateCondition = (condIndex: number, field: string, value: unknown) => {
-    const newConditions = [...(step.conditions || [])]
-    newConditions[condIndex] = { ...newConditions[condIndex], [field]: value }
-    onChange({ ...step, conditions: newConditions })
-  }
+    const newConditions = [...(step.conditions || [])];
+    newConditions[condIndex] = { ...newConditions[condIndex], [field]: value };
+    onChange({ ...step, conditions: newConditions });
+  };
 
   const removeCondition = (condIndex: number) => {
     onChange({
       ...step,
-      conditions: (step.conditions || []).filter((_, i) => i !== condIndex)
-    })
-  }
+      conditions: (step.conditions || []).filter((_, i) => i !== condIndex),
+    });
+  };
 
   return (
     <div className="relative pl-8">
       {/* Step connector */}
-      {index > 0 && (
-        <div className="absolute left-3 -top-6 w-0.5 h-6 bg-border" />
-      )}
+      {index > 0 && <div className="absolute left-3 -top-6 w-0.5 h-6 bg-border" />}
       <div className="absolute left-0 top-4 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
         {index + 1}
       </div>
@@ -107,7 +102,9 @@ function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilder
       <div className="p-4 rounded-lg border bg-card">
         <div className="flex items-center gap-3 mb-3">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Step Name</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              Step Name
+            </label>
             <input
               type="text"
               value={step.step_name}
@@ -117,7 +114,9 @@ function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilder
             />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Event Name</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              Event Name
+            </label>
             <div className="relative">
               <input
                 type="text"
@@ -128,7 +127,7 @@ function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilder
                 className="w-full px-3 py-1.5 rounded-md border bg-background text-sm"
               />
               <datalist id={`events-${index}`}>
-                {COMMON_EVENTS.map(event => (
+                {COMMON_EVENTS.map((event) => (
                   <option key={event} value={event} />
                 ))}
               </datalist>
@@ -149,7 +148,11 @@ function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilder
           onClick={() => setShowConditions(!showConditions)}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          {showConditions ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          {showConditions ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
           <Filter className="w-3.5 h-3.5" />
           {step.conditions?.length || 0} Conditions
         </button>
@@ -171,8 +174,10 @@ function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilder
                   onChange={(e) => updateCondition(condIndex, 'operator', e.target.value)}
                   className="px-2 py-1 rounded border bg-background text-xs"
                 >
-                  {CONDITION_OPERATORS.map(op => (
-                    <option key={op.value} value={op.value}>{op.label}</option>
+                  {CONDITION_OPERATORS.map((op) => (
+                    <option key={op.value} value={op.value}>
+                      {op.label}
+                    </option>
                   ))}
                 </select>
                 <input
@@ -201,49 +206,55 @@ function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilder
         )}
       </div>
     </div>
-  )
+  );
 }
 
 interface FunnelFormProps {
-  funnel?: CDPFunnel
-  onSave: () => void
-  onCancel: () => void
+  funnel?: CDPFunnel;
+  onSave: () => void;
+  onCancel: () => void;
 }
 
 function FunnelForm({ funnel, onSave, onCancel }: FunnelFormProps) {
-  const [name, setName] = useState(funnel?.name || '')
-  const [description, setDescription] = useState(funnel?.description || '')
+  const [name, setName] = useState(funnel?.name || '');
+  const [description, setDescription] = useState(funnel?.description || '');
   const [steps, setSteps] = useState<FunnelStep[]>(
     funnel?.steps || [
       { step_name: '', event_name: '' },
       { step_name: '', event_name: '' },
     ]
-  )
-  const [conversionWindowDays, setConversionWindowDays] = useState(funnel?.conversion_window_days || 30)
-  const [stepTimeoutHours, _setStepTimeoutHours] = useState<number | undefined>(funnel?.step_timeout_hours)
-  const [autoRefresh, setAutoRefresh] = useState(funnel?.auto_refresh ?? true)
-  const [refreshIntervalHours, setRefreshIntervalHours] = useState(funnel?.refresh_interval_hours || 24)
+  );
+  const [conversionWindowDays, setConversionWindowDays] = useState(
+    funnel?.conversion_window_days || 30
+  );
+  const [stepTimeoutHours, _setStepTimeoutHours] = useState<number | undefined>(
+    funnel?.step_timeout_hours
+  );
+  const [autoRefresh, setAutoRefresh] = useState(funnel?.auto_refresh ?? true);
+  const [refreshIntervalHours, setRefreshIntervalHours] = useState(
+    funnel?.refresh_interval_hours || 24
+  );
 
-  const createMutation = useCreateFunnel()
-  const updateMutation = useUpdateFunnel()
+  const createMutation = useCreateFunnel();
+  const updateMutation = useUpdateFunnel();
 
   const addStep = () => {
     if (steps.length < 20) {
-      setSteps([...steps, { step_name: '', event_name: '' }])
+      setSteps([...steps, { step_name: '', event_name: '' }]);
     }
-  }
+  };
 
   const updateStep = (index: number, step: FunnelStep) => {
-    const newSteps = [...steps]
-    newSteps[index] = step
-    setSteps(newSteps)
-  }
+    const newSteps = [...steps];
+    newSteps[index] = step;
+    setSteps(newSteps);
+  };
 
   const removeStep = (index: number) => {
     if (steps.length > 2) {
-      setSteps(steps.filter((_, i) => i !== index))
+      setSteps(steps.filter((_, i) => i !== index));
     }
-  }
+  };
 
   const handleSubmit = async () => {
     const data: FunnelCreate = {
@@ -254,22 +265,22 @@ function FunnelForm({ funnel, onSave, onCancel }: FunnelFormProps) {
       step_timeout_hours: stepTimeoutHours,
       auto_refresh: autoRefresh,
       refresh_interval_hours: refreshIntervalHours,
-    }
+    };
 
     try {
       if (funnel) {
-        await updateMutation.mutateAsync({ funnelId: funnel.id, update: data })
+        await updateMutation.mutateAsync({ funnelId: funnel.id, update: data });
       } else {
-        await createMutation.mutateAsync(data)
+        await createMutation.mutateAsync(data);
       }
-      onSave()
+      onSave();
     } catch (error) {
-      console.error('Save failed:', error)
+      console.error('Save failed:', error);
     }
-  }
+  };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending
-  const isValid = name && steps.length >= 2 && steps.every(s => s.step_name && s.event_name)
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+  const isValid = name && steps.length >= 2 && steps.every((s) => s.step_name && s.event_name);
 
   return (
     <div className="space-y-6">
@@ -384,62 +395,55 @@ function FunnelForm({ funnel, onSave, onCancel }: FunnelFormProps) {
           disabled={!isValid || isLoading}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
         >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {funnel ? 'Update Funnel' : 'Create Funnel'}
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 interface FunnelAnalysisViewProps {
-  funnel: CDPFunnel
-  onBack: () => void
+  funnel: CDPFunnel;
+  onBack: () => void;
 }
 
 function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [selectedStep, setSelectedStep] = useState<number | null>(null)
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedStep, setSelectedStep] = useState<number | null>(null);
 
-  const analyzeMutation = useAnalyzeFunnel()
+  const analyzeMutation = useAnalyzeFunnel();
   const { data: dropOffs, isLoading: dropOffsLoading } = useFunnelDropOffs(
     funnel.id,
     selectedStep || 0,
     { limit: 10 },
     { enabled: selectedStep !== null && selectedStep > 0 }
-  )
+  );
 
   const handleAnalyze = async () => {
     await analyzeMutation.mutateAsync({
       funnelId: funnel.id,
-      params: { start_date: startDate || undefined, end_date: endDate || undefined }
-    })
-  }
+      params: { start_date: startDate || undefined, end_date: endDate || undefined },
+    });
+  };
 
-  const analysis = analyzeMutation.data
-  const metrics = analysis?.step_analysis || funnel.step_metrics || []
+  const analysis = analyzeMutation.data;
+  const metrics = analysis?.step_analysis || funnel.step_metrics || [];
 
   // Helper to get conversion rate from either metric type
-  const getConversionRate = (step: typeof metrics[number]) => {
-    if ('conversion_rate' in step) return step.conversion_rate
-    if ('conversion_rate_from_start' in step) return step.conversion_rate_from_start
-    return 0
-  }
+  const getConversionRate = (step: (typeof metrics)[number]) => {
+    if ('conversion_rate' in step) return step.conversion_rate;
+    if ('conversion_rate_from_start' in step) return step.conversion_rate_from_start;
+    return 0;
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-          >
+          <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <ChevronRight className="w-5 h-5 rotate-180" />
           </button>
           <div>
@@ -448,10 +452,14 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={cn(
-            'px-2 py-0.5 rounded-full text-xs font-medium',
-            funnel.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'
-          )}>
+          <span
+            className={cn(
+              'px-2 py-0.5 rounded-full text-xs font-medium',
+              funnel.status === 'active'
+                ? 'bg-green-500/10 text-green-500'
+                : 'bg-gray-500/10 text-gray-500'
+            )}
+          >
             {funnel.status}
           </span>
         </div>
@@ -515,7 +523,10 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
             Conversion Rate
           </div>
           <div className="text-2xl font-bold text-green-500">
-            {((analysis?.overall_conversion_rate || funnel.overall_conversion_rate || 0) * 100).toFixed(1)}%
+            {(
+              (analysis?.overall_conversion_rate || funnel.overall_conversion_rate || 0) * 100
+            ).toFixed(1)}
+            %
           </div>
         </div>
         <div className="p-4 rounded-xl border bg-card">
@@ -536,9 +547,12 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
         <h3 className="font-medium mb-6">Funnel Steps</h3>
         <div className="space-y-4">
           {metrics.map((step, index) => {
-            const prevCount = index === 0 ? (analysis?.total_entered || funnel.total_entered) : metrics[index - 1].count
-            const dropOffPct = prevCount > 0 ? ((prevCount - step.count) / prevCount) * 100 : 0
-            const isSelected = selectedStep === step.step
+            const prevCount =
+              index === 0
+                ? analysis?.total_entered || funnel.total_entered
+                : metrics[index - 1].count;
+            const dropOffPct = prevCount > 0 ? ((prevCount - step.count) / prevCount) * 100 : 0;
+            const isSelected = selectedStep === step.step;
 
             return (
               <div key={index}>
@@ -591,7 +605,7 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       </div>
@@ -612,17 +626,27 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Profile ID</th>
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Lifecycle</th>
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Events</th>
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">Last Seen</th>
+                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                      Profile ID
+                    </th>
+                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                      Lifecycle
+                    </th>
+                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                      Events
+                    </th>
+                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                      Last Seen
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {dropOffs.profiles.map((profile) => (
                     <tr key={profile.id} className="border-b hover:bg-muted/30">
                       <td className="py-2 px-3">
-                        <code className="text-xs bg-muted px-2 py-1 rounded">{profile.id.slice(0, 12)}...</code>
+                        <code className="text-xs bg-muted px-2 py-1 rounded">
+                          {profile.id.slice(0, 12)}...
+                        </code>
                       </td>
                       <td className="py-2 px-3 capitalize text-sm">{profile.lifecycle_stage}</td>
                       <td className="py-2 px-3 text-sm">{profile.total_events}</td>
@@ -635,54 +659,53 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
               </table>
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No drop-off data available
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No drop-off data available</div>
           )}
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export function FunnelBuilder() {
-  const [showForm, setShowForm] = useState(false)
-  const [selectedFunnel, setSelectedFunnel] = useState<CDPFunnel | null>(null)
-  const [analyzingFunnel, setAnalyzingFunnel] = useState<CDPFunnel | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [showForm, setShowForm] = useState(false);
+  const [selectedFunnel, setSelectedFunnel] = useState<CDPFunnel | null>(null);
+  const [analyzingFunnel, setAnalyzingFunnel] = useState<CDPFunnel | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: funnelsData, isLoading, refetch } = useFunnels()
-  const deleteMutation = useDeleteFunnel()
-  const computeMutation = useComputeFunnel()
+  const { data: funnelsData, isLoading, refetch } = useFunnels();
+  const deleteMutation = useDeleteFunnel();
+  const computeMutation = useComputeFunnel();
 
-  const funnels = funnelsData?.funnels || []
-  const filteredFunnels = funnels.filter(f =>
-    f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    f.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const funnels = funnelsData?.funnels || [];
+  const filteredFunnels = funnels.filter(
+    (f) =>
+      f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleEdit = (funnel: CDPFunnel) => {
-    setSelectedFunnel(funnel)
-    setShowForm(true)
-  }
+    setSelectedFunnel(funnel);
+    setShowForm(true);
+  };
 
   const handleDelete = async (funnelId: string) => {
     if (confirm('Are you sure you want to delete this funnel?')) {
-      await deleteMutation.mutateAsync(funnelId)
-      refetch()
+      await deleteMutation.mutateAsync(funnelId);
+      refetch();
     }
-  }
+  };
 
   const handleCompute = async (funnelId: string) => {
-    await computeMutation.mutateAsync(funnelId)
-    refetch()
-  }
+    await computeMutation.mutateAsync(funnelId);
+    refetch();
+  };
 
   const handleFormSave = () => {
-    setShowForm(false)
-    setSelectedFunnel(null)
-    refetch()
-  }
+    setShowForm(false);
+    setSelectedFunnel(null);
+    refetch();
+  };
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -690,21 +713,21 @@ export function FunnelBuilder() {
       computing: 'bg-blue-500/10 text-blue-500',
       stale: 'bg-amber-500/10 text-amber-500',
       draft: 'bg-gray-500/10 text-gray-500',
-    }
+    };
     return (
-      <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', styles[status] || styles.draft)}>
+      <span
+        className={cn(
+          'px-2 py-0.5 rounded-full text-xs font-medium',
+          styles[status] || styles.draft
+        )}
+      >
         {status}
       </span>
-    )
-  }
+    );
+  };
 
   if (analyzingFunnel) {
-    return (
-      <FunnelAnalysisView
-        funnel={analyzingFunnel}
-        onBack={() => setAnalyzingFunnel(null)}
-      />
-    )
+    return <FunnelAnalysisView funnel={analyzingFunnel} onBack={() => setAnalyzingFunnel(null)} />;
   }
 
   if (showForm) {
@@ -712,7 +735,10 @@ export function FunnelBuilder() {
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setShowForm(false); setSelectedFunnel(null) }}
+            onClick={() => {
+              setShowForm(false);
+              setSelectedFunnel(null);
+            }}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <ChevronRight className="w-5 h-5 rotate-180" />
@@ -724,10 +750,13 @@ export function FunnelBuilder() {
         <FunnelForm
           funnel={selectedFunnel || undefined}
           onSave={handleFormSave}
-          onCancel={() => { setShowForm(false); setSelectedFunnel(null) }}
+          onCancel={() => {
+            setShowForm(false);
+            setSelectedFunnel(null);
+          }}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -823,9 +852,11 @@ export function FunnelBuilder() {
                     <div
                       className="h-full bg-primary"
                       style={{
-                        width: `${funnel.step_metrics?.[index]?.conversion_rate
-                          ? funnel.step_metrics[index].conversion_rate * 100
-                          : 100}%`
+                        width: `${
+                          funnel.step_metrics?.[index]?.conversion_rate
+                            ? funnel.step_metrics[index].conversion_rate * 100
+                            : 100
+                        }%`,
                       }}
                     />
                   </div>
@@ -851,7 +882,9 @@ export function FunnelBuilder() {
                   disabled={computeMutation.isPending}
                   className="px-3 py-1.5 rounded-md hover:bg-muted text-sm font-medium transition-colors"
                 >
-                  <RefreshCw className={cn('w-4 h-4', computeMutation.isPending && 'animate-spin')} />
+                  <RefreshCw
+                    className={cn('w-4 h-4', computeMutation.isPending && 'animate-spin')}
+                  />
                 </button>
                 <button
                   onClick={() => handleDelete(funnel.id)}
@@ -865,7 +898,7 @@ export function FunnelBuilder() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default FunnelBuilder
+export default FunnelBuilder;

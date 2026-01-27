@@ -19,7 +19,8 @@ const team = [
 const values = [
   {
     title: 'Trust First',
-    description: 'We build systems that earn and maintain trust through transparency and reliability.',
+    description:
+      'We build systems that earn and maintain trust through transparency and reliability.',
   },
   {
     title: 'Customer Obsessed',

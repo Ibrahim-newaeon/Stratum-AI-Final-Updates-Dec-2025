@@ -132,7 +132,7 @@ export function PhoneInput({
         )}
         style={{
           background: 'rgba(255, 255, 255, 0.06)',
-          border: error ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.12)'
+          border: error ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.12)',
         }}
       >
         {/* Country selector */}
@@ -176,7 +176,7 @@ export function PhoneInput({
           style={{
             background: 'rgba(20, 40, 62, 0.98)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
-            backdropFilter: 'blur(20px)'
+            backdropFilter: 'blur(20px)',
           }}
         >
           {/* Search input */}
@@ -190,17 +190,22 @@ export function PhoneInput({
               className="w-full px-3 py-2 rounded-lg text-white placeholder-white/40 text-sm outline-none transition-all"
               style={{
                 background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.12)'
+                border: '1px solid rgba(255, 255, 255, 0.12)',
               }}
-              onFocus={(e) => e.target.style.borderColor = '#FC6423'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+              onFocus={(e) => (e.target.style.borderColor = '#FC6423')}
+              onBlur={(e) => (e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)')}
             />
           </div>
 
           {/* Country list */}
           <div className="overflow-y-auto max-h-48">
             {filteredCountries.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>No countries found</div>
+              <div
+                className="px-4 py-3 text-sm text-center"
+                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              >
+                No countries found
+              </div>
             ) : (
               filteredCountries.map((country, index) => (
                 <button
@@ -209,14 +214,18 @@ export function PhoneInput({
                   onClick={() => handleCountrySelect(country)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
                   style={{
-                    background: selectedCountry.country === country.country && selectedCountry.code === country.code
-                      ? 'rgba(252, 100, 35, 0.1)'
-                      : 'transparent'
+                    background:
+                      selectedCountry.country === country.country &&
+                      selectedCountry.code === country.code
+                        ? 'rgba(252, 100, 35, 0.1)'
+                        : 'transparent',
                   }}
                 >
                   <span className="text-lg">{country.flag}</span>
                   <span className="flex-1 text-sm text-white">{country.name}</span>
-                  <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{country.code}</span>
+                  <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    {country.code}
+                  </span>
                 </button>
               ))
             )}

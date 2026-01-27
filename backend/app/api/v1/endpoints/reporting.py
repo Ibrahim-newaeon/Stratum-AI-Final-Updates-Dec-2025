@@ -12,28 +12,28 @@ Endpoints:
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db
 from app.core.logging import get_logger
 from app.models import User
 from app.models.reporting import (
-    ReportType,
-    ReportFormat,
-    ScheduleFrequency,
     DeliveryChannel,
     ExecutionStatus,
+    ReportFormat,
+    ReportType,
+    ScheduleFrequency,
 )
 from app.services.reporting import (
+    DeliveryService,
     ReportGenerator,
     ReportScheduler,
-    DeliveryService,
 )
+from app.tenancy.deps import get_current_user, get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -47,39 +47,43 @@ router = APIRouter()
 # Template Schemas
 # -------------------------------------------------------------------------
 
+
 class TemplateCreate(BaseModel):
     """Schema for creating a report template."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     report_type: ReportType
-    config: Dict[str, Any] = Field(default_factory=dict)
+    config: dict[str, Any] = Field(default_factory=dict)
     default_format: ReportFormat = ReportFormat.PDF
-    available_formats: List[str] = Field(default=["pdf", "csv"])
+    available_formats: list[str] = Field(default=["pdf", "csv"])
     template_html: Optional[str] = None
-    chart_config: Optional[Dict[str, Any]] = None
+    chart_config: Optional[dict[str, Any]] = None
 
 
 class TemplateUpdate(BaseModel):
     """Schema for updating a report template."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[dict[str, Any]] = None
     default_format: Optional[ReportFormat] = None
-    available_formats: Optional[List[str]] = None
+    available_formats: Optional[list[str]] = None
     template_html: Optional[str] = None
-    chart_config: Optional[Dict[str, Any]] = None
+    chart_config: Optional[dict[str, Any]] = None
     is_active: Optional[bool] = None
 
 
 class TemplateResponse(BaseModel):
     """Response schema for a report template."""
+
     id: UUID
     name: str
     description: Optional[str]
     report_type: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
     default_format: str
-    available_formats: List[str]
+    available_formats: list[str]
     is_active: bool
     is_system: bool
     created_at: datetime
@@ -93,8 +97,10 @@ class TemplateResponse(BaseModel):
 # Schedule Schemas
 # -------------------------------------------------------------------------
 
+
 class ScheduleCreate(BaseModel):
     """Schema for creating a scheduled report."""
+
     template_id: UUID
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
@@ -106,14 +112,15 @@ class ScheduleCreate(BaseModel):
     minute: int = Field(default=0, ge=0, le=59)
     cron_expression: Optional[str] = None
     format_override: Optional[ReportFormat] = None
-    config_override: Optional[Dict[str, Any]] = None
+    config_override: Optional[dict[str, Any]] = None
     date_range_type: str = "last_30_days"
-    delivery_channels: List[str] = Field(default=["email"])
-    delivery_config: Dict[str, Any] = Field(default_factory=dict)
+    delivery_channels: list[str] = Field(default=["email"])
+    delivery_config: dict[str, Any] = Field(default_factory=dict)
 
 
 class ScheduleUpdate(BaseModel):
     """Schema for updating a scheduled report."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     frequency: Optional[ScheduleFrequency] = None
@@ -124,15 +131,16 @@ class ScheduleUpdate(BaseModel):
     minute: Optional[int] = Field(None, ge=0, le=59)
     cron_expression: Optional[str] = None
     format_override: Optional[ReportFormat] = None
-    config_override: Optional[Dict[str, Any]] = None
+    config_override: Optional[dict[str, Any]] = None
     date_range_type: Optional[str] = None
-    delivery_channels: Optional[List[str]] = None
-    delivery_config: Optional[Dict[str, Any]] = None
+    delivery_channels: Optional[list[str]] = None
+    delivery_config: Optional[dict[str, Any]] = None
     is_active: Optional[bool] = None
 
 
 class ScheduleResponse(BaseModel):
     """Response schema for a scheduled report."""
+
     id: UUID
     template_id: UUID
     name: str
@@ -146,7 +154,7 @@ class ScheduleResponse(BaseModel):
     cron_expression: Optional[str]
     format_override: Optional[str]
     date_range_type: str
-    delivery_channels: List[str]
+    delivery_channels: list[str]
     is_active: bool
     is_paused: bool
     last_run_at: Optional[datetime]
@@ -164,19 +172,22 @@ class ScheduleResponse(BaseModel):
 # Execution Schemas
 # -------------------------------------------------------------------------
 
+
 class GenerateReportRequest(BaseModel):
     """Schema for generating a report on-demand."""
+
     template_id: UUID
     start_date: date
     end_date: date
     format: ReportFormat = ReportFormat.PDF
-    config_override: Optional[Dict[str, Any]] = None
-    deliver_to: Optional[List[str]] = None  # Channel names
-    delivery_config: Optional[Dict[str, Any]] = None
+    config_override: Optional[dict[str, Any]] = None
+    deliver_to: Optional[list[str]] = None  # Channel names
+    delivery_config: Optional[dict[str, Any]] = None
 
 
 class ExecutionResponse(BaseModel):
     """Response schema for a report execution."""
+
     id: UUID
     template_id: Optional[UUID]
     schedule_id: Optional[UUID]
@@ -192,7 +203,7 @@ class ExecutionResponse(BaseModel):
     file_url: Optional[str]
     file_size_bytes: Optional[int]
     row_count: Optional[int]
-    metrics_summary: Optional[Dict[str, Any]]
+    metrics_summary: Optional[dict[str, Any]]
     error_message: Optional[str]
 
     class Config:
@@ -203,15 +214,18 @@ class ExecutionResponse(BaseModel):
 # Delivery Schemas
 # -------------------------------------------------------------------------
 
+
 class DeliveryChannelConfigCreate(BaseModel):
     """Schema for configuring a delivery channel."""
+
     channel: DeliveryChannel
     name: str = Field(..., min_length=1, max_length=255)
-    config: Dict[str, Any]
+    config: dict[str, Any]
 
 
 class DeliveryStatusResponse(BaseModel):
     """Response schema for delivery status."""
+
     id: str
     channel: str
     recipient: str
@@ -224,6 +238,7 @@ class DeliveryStatusResponse(BaseModel):
 # =============================================================================
 # Template Endpoints
 # =============================================================================
+
 
 @router.post("/templates", response_model=TemplateResponse)
 async def create_template(
@@ -255,7 +270,7 @@ async def create_template(
     return template
 
 
-@router.get("/templates", response_model=List[TemplateResponse])
+@router.get("/templates", response_model=list[TemplateResponse])
 async def list_templates(
     report_type: Optional[ReportType] = None,
     is_active: bool = True,
@@ -265,7 +280,8 @@ async def list_templates(
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """List report templates."""
-    from sqlalchemy import select, and_
+    from sqlalchemy import and_, select
+
     from app.models.reporting import ReportTemplate
 
     conditions = [
@@ -359,6 +375,7 @@ async def delete_template(
 # Schedule Endpoints
 # =============================================================================
 
+
 @router.post("/schedules", response_model=ScheduleResponse)
 async def create_schedule(
     data: ScheduleCreate,
@@ -392,7 +409,7 @@ async def create_schedule(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/schedules", response_model=List[ScheduleResponse])
+@router.get("/schedules", response_model=list[ScheduleResponse])
 async def list_schedules(
     is_active: Optional[bool] = None,
     template_id: Optional[UUID] = None,
@@ -515,7 +532,7 @@ async def delete_schedule(
     return {"status": "deleted"}
 
 
-@router.get("/schedules/{schedule_id}/history", response_model=List[ExecutionResponse])
+@router.get("/schedules/{schedule_id}/history", response_model=list[ExecutionResponse])
 async def get_schedule_history(
     schedule_id: UUID,
     limit: int = Query(default=20, le=100),
@@ -537,6 +554,7 @@ async def get_schedule_history(
 # =============================================================================
 # Report Generation Endpoints
 # =============================================================================
+
 
 @router.post("/generate", response_model=ExecutionResponse)
 async def generate_report(
@@ -570,17 +588,18 @@ async def generate_report(
 
         # Get execution record
         from app.models.reporting import ReportExecution
+
         execution = await db.get(ReportExecution, result["execution_id"])
         return execution
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Report generation failed: {str(e)}")
+        logger.error(f"Report generation failed: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/executions", response_model=List[ExecutionResponse])
+@router.get("/executions", response_model=list[ExecutionResponse])
 async def list_executions(
     status: Optional[ExecutionStatus] = None,
     report_type: Optional[ReportType] = None,
@@ -592,7 +611,8 @@ async def list_executions(
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """List report executions."""
-    from sqlalchemy import select, and_
+    from sqlalchemy import and_, select
+
     from app.models.reporting import ReportExecution
 
     conditions = [ReportExecution.tenant_id == current_user.tenant_id]
@@ -602,9 +622,13 @@ async def list_executions(
     if report_type:
         conditions.append(ReportExecution.report_type == report_type)
     if start_date:
-        conditions.append(ReportExecution.started_at >= datetime.combine(start_date, datetime.min.time()))
+        conditions.append(
+            ReportExecution.started_at >= datetime.combine(start_date, datetime.min.time())
+        )
     if end_date:
-        conditions.append(ReportExecution.started_at <= datetime.combine(end_date, datetime.max.time()))
+        conditions.append(
+            ReportExecution.started_at <= datetime.combine(end_date, datetime.max.time())
+        )
 
     query = (
         select(ReportExecution)
@@ -655,7 +679,9 @@ async def download_report(
 
     return {
         "download_url": execution.file_url,
-        "expires_at": execution.file_url_expires_at.isoformat() if execution.file_url_expires_at else None,
+        "expires_at": execution.file_url_expires_at.isoformat()
+        if execution.file_url_expires_at
+        else None,
         "format": execution.format.value,
         "file_size_bytes": execution.file_size_bytes,
     }
@@ -665,7 +691,8 @@ async def download_report(
 # Delivery Endpoints
 # =============================================================================
 
-@router.get("/executions/{execution_id}/deliveries", response_model=List[DeliveryStatusResponse])
+
+@router.get("/executions/{execution_id}/deliveries", response_model=list[DeliveryStatusResponse])
 async def get_delivery_status(
     execution_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -676,6 +703,7 @@ async def get_delivery_status(
 
     # Verify execution exists
     from app.models.reporting import ReportExecution
+
     execution = await db.get(ReportExecution, execution_id)
     if not execution or execution.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Execution not found")
@@ -707,6 +735,7 @@ async def retry_delivery(
 # Report Type Info Endpoint
 # =============================================================================
 
+
 @router.get("/report-types")
 async def get_report_types(
     current_user: User = Depends(get_current_user),
@@ -726,20 +755,38 @@ async def get_report_types(
                 "name": "Attribution Summary",
                 "description": "Multi-touch attribution analysis across channels",
                 "default_metrics": ["attributed_revenue", "touchpoints", "conversion_paths"],
-                "available_models": ["first_touch", "last_touch", "linear", "position_based", "time_decay"],
+                "available_models": [
+                    "first_touch",
+                    "last_touch",
+                    "linear",
+                    "position_based",
+                    "time_decay",
+                ],
             },
             {
                 "type": "pacing_status",
                 "name": "Pacing Status",
                 "description": "Target pacing and forecasting report",
-                "default_metrics": ["target_value", "actual_value", "pacing_pct", "projected_value"],
+                "default_metrics": [
+                    "target_value",
+                    "actual_value",
+                    "pacing_pct",
+                    "projected_value",
+                ],
                 "available_dimensions": ["target", "metric_type", "platform"],
             },
             {
                 "type": "profit_roas",
                 "name": "Profit & ROAS",
                 "description": "Profitability analysis with COGS deduction",
-                "default_metrics": ["revenue", "cogs", "gross_profit", "net_profit", "profit_margin", "true_roas"],
+                "default_metrics": [
+                    "revenue",
+                    "cogs",
+                    "gross_profit",
+                    "net_profit",
+                    "profit_margin",
+                    "true_roas",
+                ],
                 "available_dimensions": ["campaign", "platform", "product_category"],
             },
             {

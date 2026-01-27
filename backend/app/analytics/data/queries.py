@@ -7,10 +7,9 @@ Based on Data_Schema_Events_and_Tables.md requirements.
 """
 
 from datetime import date
-from typing import List
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-
 
 # =============================================================================
 # Blended ROAS Query
@@ -219,11 +218,11 @@ async def get_blended_roas(
     tenant_id: int,
     start_date: date,
     end_date: date,
-) -> List[dict]:
+) -> list[dict]:
     """Get blended ROAS by day."""
     result = await db.execute(
         text(BLENDED_ROAS_BY_DAY),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -233,11 +232,11 @@ async def get_campaign_performance(
     tenant_id: int,
     start_date: date,
     end_date: date,
-) -> List[dict]:
+) -> list[dict]:
     """Get campaign performance table."""
     result = await db.execute(
         text(CAMPAIGN_PERFORMANCE),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -247,11 +246,11 @@ async def get_creative_fatigue(
     tenant_id: int,
     start_date: date,
     end_date: date,
-) -> List[dict]:
+) -> list[dict]:
     """Get creative fatigue dashboard data."""
     result = await db.execute(
         text(CREATIVE_FATIGUE_DASHBOARD),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -261,11 +260,11 @@ async def get_anomaly_history(
     tenant_id: int,
     start_date: date,
     end_date: date,
-) -> List[dict]:
+) -> list[dict]:
     """Get anomaly detection history."""
     result = await db.execute(
         text(ANOMALY_HISTORY),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -275,10 +274,10 @@ async def get_budget_actions(
     tenant_id: int,
     start_date: date,
     end_date: date,
-) -> List[dict]:
+) -> list[dict]:
     """Get budget actions summary."""
     result = await db.execute(
         text(BUDGET_ACTIONS_SUMMARY),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]

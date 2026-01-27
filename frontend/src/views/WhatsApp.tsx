@@ -1,37 +1,37 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Search,
-  Plus,
-  MoreHorizontal,
-  MessageCircle,
-  Users,
-  FileText,
-  Send,
+  AlertCircle,
+  ArrowLeft,
   CheckCircle,
   Clock,
-  XCircle,
-  Phone,
-  UserCheck,
+  Download,
+  Edit2,
   Eye,
+  FileSpreadsheet,
+  FileText,
+  Image,
+  Inbox,
+  Loader2,
+  MessageCircle,
+  MoreHorizontal,
+  Paperclip,
+  Phone,
+  Plus,
   Radio,
+  Search,
+  Send,
+  Smile,
   Trash2,
   Upload,
-  Inbox,
-  ArrowLeft,
-  Paperclip,
-  Image,
-  Smile,
-  FileSpreadsheet,
-  Download,
-  AlertCircle,
-  X,
-  Loader2,
-  Edit2,
+  UserCheck,
   UserMinus,
   UserPlus,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { apiClient } from '@/api/client'
+  Users,
+  X,
+  XCircle,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { apiClient } from '@/api/client';
 
 // Country codes with dial codes
 const COUNTRY_CODES = [
@@ -218,184 +218,188 @@ const COUNTRY_CODES = [
   { code: 'YE', name: 'Yemen', dial: '+967' },
   { code: 'ZM', name: 'Zambia', dial: '+260' },
   { code: 'ZW', name: 'Zimbabwe', dial: '+263' },
-]
+];
 
 // Helper to get country info from code
 const getCountryByCode = (code: string) => {
-  return COUNTRY_CODES.find(c => c.code === code?.toUpperCase())
-}
+  return COUNTRY_CODES.find((c) => c.code === code?.toUpperCase());
+};
 
 // Types
 interface WhatsAppContact {
-  id: number
-  phone_number: string
-  country_code: string
-  display_name: string | null
-  is_verified: boolean
-  opt_in_status: 'opted_in' | 'pending' | 'opted_out'
-  wa_id: string | null
-  profile_name: string | null
-  message_count: number
-  last_message_at: string | null
-  created_at: string
+  id: number;
+  phone_number: string;
+  country_code: string;
+  display_name: string | null;
+  is_verified: boolean;
+  opt_in_status: 'opted_in' | 'pending' | 'opted_out';
+  wa_id: string | null;
+  profile_name: string | null;
+  message_count: number;
+  last_message_at: string | null;
+  created_at: string;
 }
 
 interface WhatsAppTemplate {
-  id: number
-  name: string
-  language: string
-  category: string
-  body_text: string
-  status: 'approved' | 'pending' | 'rejected' | 'paused'
-  usage_count: number
-  created_at: string
+  id: number;
+  name: string;
+  language: string;
+  category: string;
+  body_text: string;
+  status: 'approved' | 'pending' | 'rejected' | 'paused';
+  usage_count: number;
+  created_at: string;
 }
 
 interface WhatsAppMessage {
-  id: number
-  contact_id: number
-  direction: 'inbound' | 'outbound'
-  message_type: string
-  status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
-  content: string | null
-  template_name: string | null
-  sent_at: string | null
-  delivered_at: string | null
-  read_at: string | null
-  created_at: string
+  id: number;
+  contact_id: number;
+  direction: 'inbound' | 'outbound';
+  message_type: string;
+  status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+  content: string | null;
+  template_name: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
+  created_at: string;
 }
 
-type OptInStatus = 'opted_in' | 'pending' | 'opted_out'
-type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
-type TemplateStatus = 'approved' | 'pending' | 'rejected' | 'paused'
+type OptInStatus = 'opted_in' | 'pending' | 'opted_out';
+type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+type TemplateStatus = 'approved' | 'pending' | 'rejected' | 'paused';
 
-type TabType = 'inbox' | 'contacts' | 'templates' | 'messages'
-type AddContactTab = 'single' | 'csv'
+type TabType = 'inbox' | 'contacts' | 'templates' | 'messages';
+type AddContactTab = 'single' | 'csv';
 
 // CSV parsed contact type
 interface CSVContact {
-  phone_number: string
-  country_code: string
-  display_name: string
-  isValid: boolean
-  error?: string
+  phone_number: string;
+  country_code: string;
+  display_name: string;
+  isValid: boolean;
+  error?: string;
 }
 
 // Conversation type for inbox
 interface Conversation {
-  id: number
-  contact: WhatsAppContact
-  lastMessage: WhatsAppMessage | null
-  unreadCount: number
-  isActive: boolean
+  id: number;
+  contact: WhatsAppContact;
+  lastMessage: WhatsAppMessage | null;
+  unreadCount: number;
+  isActive: boolean;
 }
 
 export function WhatsApp() {
-  const [activeTab, setActiveTab] = useState<TabType>('contacts')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [contacts, setContacts] = useState<WhatsAppContact[]>([])
-  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([])
-  const [messages, setMessages] = useState<WhatsAppMessage[]>([])
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [showNewContactModal, setShowNewContactModal] = useState(false)
-  const [showBroadcastModal, setShowBroadcastModal] = useState(false)
-  const [selectedContactIds, setSelectedContactIds] = useState<number[]>([])
-  const [broadcastTemplate, setBroadcastTemplate] = useState<string>('')
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
-  const [chatMessages, setChatMessages] = useState<WhatsAppMessage[]>([])
-  const [replyText, setReplyText] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSending, setIsSending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabType>('contacts');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [contacts, setContacts] = useState<WhatsAppContact[]>([]);
+  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [showNewContactModal, setShowNewContactModal] = useState(false);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [selectedContactIds, setSelectedContactIds] = useState<number[]>([]);
+  const [broadcastTemplate, setBroadcastTemplate] = useState<string>('');
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [chatMessages, setChatMessages] = useState<WhatsAppMessage[]>([]);
+  const [replyText, setReplyText] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // New contact modal state
-  const [addContactTab, setAddContactTab] = useState<AddContactTab>('single')
-  const [csvContacts, setCsvContacts] = useState<CSVContact[]>([])
-  const [csvFileName, setCsvFileName] = useState<string>('')
-  const [isDragging, setIsDragging] = useState(false)
-  const [csvError, setCsvError] = useState<string>('')
-  const [isImporting, setIsImporting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [addContactTab, setAddContactTab] = useState<AddContactTab>('single');
+  const [csvContacts, setCsvContacts] = useState<CSVContact[]>([]);
+  const [csvFileName, setCsvFileName] = useState<string>('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [csvError, setCsvError] = useState<string>('');
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Single contact form state
-  const [newContactPhone, setNewContactPhone] = useState('')
-  const [newContactCountry, setNewContactCountry] = useState('')
-  const [newContactName, setNewContactName] = useState('')
+  const [newContactPhone, setNewContactPhone] = useState('');
+  const [newContactCountry, setNewContactCountry] = useState('');
+  const [newContactName, setNewContactName] = useState('');
 
   // Contact actions state
-  const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [editingContact, setEditingContact] = useState<WhatsAppContact | null>(null)
-  const [editName, setEditName] = useState('')
-  const [isUpdating, setIsUpdating] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingContact, setEditingContact] = useState<WhatsAppContact | null>(null);
+  const [editName, setEditName] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Template management state
-  const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [templateDropdown, setTemplateDropdown] = useState<number | null>(null)
-  const [viewingTemplate, setViewingTemplate] = useState<WhatsAppTemplate | null>(null)
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateDropdown, setTemplateDropdown] = useState<number | null>(null);
+  const [viewingTemplate, setViewingTemplate] = useState<WhatsAppTemplate | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
     language: 'en',
     category: 'marketing',
     body_text: '',
     footer_text: '',
-  })
-  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false)
+  });
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   // Message view state
-  const [messageDropdown, setMessageDropdown] = useState<number | null>(null)
-  const [viewingMessage, setViewingMessage] = useState<WhatsAppMessage | null>(null)
+  const [messageDropdown, setMessageDropdown] = useState<number | null>(null);
+  const [viewingMessage, setViewingMessage] = useState<WhatsAppMessage | null>(null);
 
   // Fetch data on mount
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
-      setActiveDropdown(null)
-      setTemplateDropdown(null)
-      setMessageDropdown(null)
-    }
+      setActiveDropdown(null);
+      setTemplateDropdown(null);
+      setMessageDropdown(null);
+    };
     if (activeDropdown !== null || templateDropdown !== null || messageDropdown !== null) {
-      document.addEventListener('click', handleClickOutside)
-      return () => document.removeEventListener('click', handleClickOutside)
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [activeDropdown, templateDropdown, messageDropdown])
+  }, [activeDropdown, templateDropdown, messageDropdown]);
 
   const fetchData = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
       const [contactsRes, templatesRes, messagesRes] = await Promise.all([
         apiClient.get('/whatsapp/contacts'),
         apiClient.get('/whatsapp/templates'),
         apiClient.get('/whatsapp/messages'),
-      ])
+      ]);
 
-      const contactsList = contactsRes.data?.data?.items || []
-      const templatesList = templatesRes.data?.data?.items || []
-      const messagesList = messagesRes.data?.data?.items || []
+      const contactsList = contactsRes.data?.data?.items || [];
+      const templatesList = templatesRes.data?.data?.items || [];
+      const messagesList = messagesRes.data?.data?.items || [];
 
-      setContacts(contactsList)
-      setTemplates(templatesList)
-      setMessages(messagesList)
+      setContacts(contactsList);
+      setTemplates(templatesList);
+      setMessages(messagesList);
 
       // Build conversations from contacts and messages
       const convos: Conversation[] = contactsList
         .filter((c: WhatsAppContact) => c.message_count > 0)
         .map((contact: WhatsAppContact) => {
-          const contactMessages = messagesList.filter((m: WhatsAppMessage) => m.contact_id === contact.id)
-          const lastMessage = contactMessages.length > 0
-            ? contactMessages.sort((a: WhatsAppMessage, b: WhatsAppMessage) =>
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-              )[0]
-            : null
+          const contactMessages = messagesList.filter(
+            (m: WhatsAppMessage) => m.contact_id === contact.id
+          );
+          const lastMessage =
+            contactMessages.length > 0
+              ? contactMessages.sort(
+                  (a: WhatsAppMessage, b: WhatsAppMessage) =>
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                )[0]
+              : null;
           const unreadCount = contactMessages.filter(
             (m: WhatsAppMessage) => m.direction === 'inbound' && m.status !== 'read'
-          ).length
+          ).length;
 
           return {
             id: contact.id,
@@ -403,264 +407,276 @@ export function WhatsApp() {
             lastMessage,
             unreadCount,
             isActive: contact.last_message_at
-              ? new Date().getTime() - new Date(contact.last_message_at).getTime() < 24 * 60 * 60 * 1000
+              ? new Date().getTime() - new Date(contact.last_message_at).getTime() <
+                24 * 60 * 60 * 1000
               : false,
-          }
-        })
+          };
+        });
 
-      setConversations(convos)
+      setConversations(convos);
     } catch (err: any) {
-      console.error('Failed to fetch WhatsApp data:', err)
-      setError(err.response?.data?.detail || 'Failed to load data')
+      console.error('Failed to fetch WhatsApp data:', err);
+      setError(err.response?.data?.detail || 'Failed to load data');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Fetch messages for a specific contact
   const fetchContactMessages = async (contactId: number) => {
     try {
-      const response = await apiClient.get(`/whatsapp/messages?contact_id=${contactId}`)
-      const messages = response.data?.data?.items || []
-      setChatMessages(messages.sort((a: WhatsAppMessage, b: WhatsAppMessage) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      ))
+      const response = await apiClient.get(`/whatsapp/messages?contact_id=${contactId}`);
+      const messages = response.data?.data?.items || [];
+      setChatMessages(
+        messages.sort(
+          (a: WhatsAppMessage, b: WhatsAppMessage) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+      );
     } catch (err) {
-      console.error('Failed to fetch messages:', err)
+      console.error('Failed to fetch messages:', err);
     }
-  }
+  };
 
   // Toggle single contact selection
   const toggleContactSelection = (contactId: number) => {
     setSelectedContactIds((prev) =>
-      prev.includes(contactId)
-        ? prev.filter((id) => id !== contactId)
-        : [...prev, contactId]
-    )
-  }
+      prev.includes(contactId) ? prev.filter((id) => id !== contactId) : [...prev, contactId]
+    );
+  };
 
   // Toggle select all (only opted-in contacts)
   const toggleSelectAll = () => {
-    const optedInContacts = filteredContacts.filter((c) => c.opt_in_status === 'opted_in')
-    const allSelected = optedInContacts.every((c) => selectedContactIds.includes(c.id))
+    const optedInContacts = filteredContacts.filter((c) => c.opt_in_status === 'opted_in');
+    const allSelected = optedInContacts.every((c) => selectedContactIds.includes(c.id));
 
     if (allSelected) {
-      setSelectedContactIds([])
+      setSelectedContactIds([]);
     } else {
-      setSelectedContactIds(optedInContacts.map((c) => c.id))
+      setSelectedContactIds(optedInContacts.map((c) => c.id));
     }
-  }
+  };
 
   // Get selected contacts
-  const selectedContacts = contacts.filter((c) => selectedContactIds.includes(c.id))
+  const selectedContacts = contacts.filter((c) => selectedContactIds.includes(c.id));
 
   // Send broadcast
   const handleSendBroadcast = async () => {
-    if (selectedContactIds.length === 0 || !broadcastTemplate) return
+    if (selectedContactIds.length === 0 || !broadcastTemplate) return;
 
-    setIsSending(true)
+    setIsSending(true);
     try {
       const response = await apiClient.post('/whatsapp/messages/broadcast', {
         contact_ids: selectedContactIds,
         template_name: broadcastTemplate,
         template_variables: {},
-      })
+      });
 
-      const result = response.data?.data
-      alert(`Broadcast sent! ${result?.messages_queued || 0} messages queued.`)
+      const result = response.data?.data;
+      alert(`Broadcast sent! ${result?.messages_queued || 0} messages queued.`);
 
       // Refresh data
-      await fetchData()
+      await fetchData();
 
       // Reset state
-      setShowBroadcastModal(false)
-      setSelectedContactIds([])
-      setBroadcastTemplate('')
+      setShowBroadcastModal(false);
+      setSelectedContactIds([]);
+      setBroadcastTemplate('');
     } catch (err: any) {
-      console.error('Failed to send broadcast:', err)
-      alert(err.response?.data?.detail || 'Failed to send broadcast')
+      console.error('Failed to send broadcast:', err);
+      alert(err.response?.data?.detail || 'Failed to send broadcast');
     } finally {
-      setIsSending(false)
+      setIsSending(false);
     }
-  }
+  };
 
   // Validate phone number format
   const validatePhoneNumber = (phone: string): boolean => {
     // Basic validation: starts with + and has 10-15 digits
-    const phoneRegex = /^\+?[1-9]\d{9,14}$/
-    return phoneRegex.test(phone.replace(/[\s-]/g, ''))
-  }
+    const phoneRegex = /^\+?[1-9]\d{9,14}$/;
+    return phoneRegex.test(phone.replace(/[\s-]/g, ''));
+  };
 
   // Parse CSV content
   const parseCSV = useCallback((content: string): CSVContact[] => {
-    const lines = content.trim().split('\n')
+    const lines = content.trim().split('\n');
     if (lines.length < 2) {
-      setCsvError('CSV file must have a header row and at least one data row')
-      return []
+      setCsvError('CSV file must have a header row and at least one data row');
+      return [];
     }
 
     // Parse header
-    const header = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''))
-    const phoneIndex = header.findIndex(h => h.includes('phone') || h.includes('number') || h.includes('mobile'))
-    const countryIndex = header.findIndex(h => h.includes('country') || h.includes('code'))
-    const nameIndex = header.findIndex(h => h.includes('name') || h.includes('display'))
+    const header = lines[0]
+      .toLowerCase()
+      .split(',')
+      .map((h) => h.trim().replace(/"/g, ''));
+    const phoneIndex = header.findIndex(
+      (h) => h.includes('phone') || h.includes('number') || h.includes('mobile')
+    );
+    const countryIndex = header.findIndex((h) => h.includes('country') || h.includes('code'));
+    const nameIndex = header.findIndex((h) => h.includes('name') || h.includes('display'));
 
     if (phoneIndex === -1) {
-      setCsvError('CSV must have a column with "phone" or "number" in the header')
-      return []
+      setCsvError('CSV must have a column with "phone" or "number" in the header');
+      return [];
     }
 
     // Parse data rows
-    const contacts: CSVContact[] = []
+    const contacts: CSVContact[] = [];
     for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (!line) continue
+      const line = lines[i].trim();
+      if (!line) continue;
 
       // Handle CSV with quotes
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''))
+      const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
 
-      const phone = values[phoneIndex]?.trim() || ''
-      const country = countryIndex !== -1 ? values[countryIndex]?.trim().toUpperCase() : ''
-      const name = nameIndex !== -1 ? values[nameIndex]?.trim() : ''
+      const phone = values[phoneIndex]?.trim() || '';
+      const country = countryIndex !== -1 ? values[countryIndex]?.trim().toUpperCase() : '';
+      const name = nameIndex !== -1 ? values[nameIndex]?.trim() : '';
 
-      const isValid = validatePhoneNumber(phone)
+      const isValid = validatePhoneNumber(phone);
 
       contacts.push({
         phone_number: phone.startsWith('+') ? phone : `+${phone}`,
         country_code: country || 'US',
         display_name: name,
         isValid,
-        error: isValid ? undefined : 'Invalid phone number format'
-      })
+        error: isValid ? undefined : 'Invalid phone number format',
+      });
     }
 
-    return contacts
-  }, [])
+    return contacts;
+  }, []);
 
   // Handle file selection
-  const handleFileSelect = useCallback((file: File) => {
-    setCsvError('')
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      setCsvError('');
 
-    if (!file.name.endsWith('.csv')) {
-      setCsvError('Please upload a CSV file')
-      return
-    }
+      if (!file.name.endsWith('.csv')) {
+        setCsvError('Please upload a CSV file');
+        return;
+      }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setCsvError('File size must be less than 5MB')
-      return
-    }
+      if (file.size > 5 * 1024 * 1024) {
+        setCsvError('File size must be less than 5MB');
+        return;
+      }
 
-    setCsvFileName(file.name)
+      setCsvFileName(file.name);
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const content = e.target?.result as string
-      const parsed = parseCSV(content)
-      setCsvContacts(parsed)
-    }
-    reader.onerror = () => {
-      setCsvError('Failed to read file')
-    }
-    reader.readAsText(file)
-  }, [parseCSV])
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        const parsed = parseCSV(content);
+        setCsvContacts(parsed);
+      };
+      reader.onerror = () => {
+        setCsvError('Failed to read file');
+      };
+      reader.readAsText(file);
+    },
+    [parseCSV]
+  );
 
   // Handle drag events
   const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
 
-    const files = e.dataTransfer.files
+    const files = e.dataTransfer.files;
     if (files.length > 0) {
-      handleFileSelect(files[0])
+      handleFileSelect(files[0]);
     }
-  }
+  };
 
   // Handle single contact submission
   const handleAddSingleContact = async () => {
-    if (!newContactPhone || !newContactCountry) return
+    if (!newContactPhone || !newContactCountry) return;
 
-    setIsImporting(true)
+    setIsImporting(true);
     try {
       await apiClient.post('/whatsapp/contacts', {
         phone_number: newContactPhone.startsWith('+') ? newContactPhone : `+${newContactPhone}`,
         country_code: newContactCountry.toUpperCase(),
         display_name: newContactName || undefined,
         opt_in_method: 'web_form',
-      })
+      });
 
       // Refresh contacts
-      await fetchData()
-      resetContactModal()
+      await fetchData();
+      resetContactModal();
     } catch (err: any) {
-      console.error('Failed to add contact:', err)
-      alert(err.response?.data?.detail || 'Failed to add contact')
+      console.error('Failed to add contact:', err);
+      alert(err.response?.data?.detail || 'Failed to add contact');
     } finally {
-      setIsImporting(false)
+      setIsImporting(false);
     }
-  }
+  };
 
   // Handle CSV import
   const handleImportCSV = async () => {
-    const validContacts = csvContacts.filter(c => c.isValid)
-    if (validContacts.length === 0) return
+    const validContacts = csvContacts.filter((c) => c.isValid);
+    if (validContacts.length === 0) return;
 
-    setIsImporting(true)
+    setIsImporting(true);
 
     try {
       // Use bulk import endpoint
       const response = await apiClient.post('/whatsapp/contacts/bulk', {
-        contacts: validContacts.map(contact => ({
+        contacts: validContacts.map((contact) => ({
           phone_number: contact.phone_number,
           country_code: contact.country_code,
           display_name: contact.display_name || undefined,
           opt_in_method: 'csv_import',
         })),
-      })
+      });
 
-      const result = response.data.data
-      alert(`Imported ${result.success} contacts. ${result.failed > 0 ? `${result.failed} failed.` : ''}`)
+      const result = response.data.data;
+      alert(
+        `Imported ${result.success} contacts. ${result.failed > 0 ? `${result.failed} failed.` : ''}`
+      );
 
       // Refresh contacts
-      await fetchData()
-      resetContactModal()
+      await fetchData();
+      resetContactModal();
     } catch (err: any) {
-      console.error('Failed to import contacts:', err)
-      alert('Failed to import contacts: ' + (err.response?.data?.detail || err.message))
+      console.error('Failed to import contacts:', err);
+      alert('Failed to import contacts: ' + (err.response?.data?.detail || err.message));
     } finally {
-      setIsImporting(false)
+      setIsImporting(false);
     }
-  }
+  };
 
   // Reset contact modal state
   const resetContactModal = () => {
-    setShowNewContactModal(false)
-    setAddContactTab('single')
-    setCsvContacts([])
-    setCsvFileName('')
-    setCsvError('')
-    setNewContactPhone('')
-    setNewContactCountry('')
-    setNewContactName('')
-  }
+    setShowNewContactModal(false);
+    setAddContactTab('single');
+    setCsvContacts([]);
+    setCsvFileName('');
+    setCsvError('');
+    setNewContactPhone('');
+    setNewContactCountry('');
+    setNewContactName('');
+  };
 
   // Download sample CSV
   const downloadSampleCSV = () => {
@@ -668,89 +684,93 @@ export function WhatsApp() {
 +1234567890,US,John Smith
 +9876543210,UK,Jane Doe
 +1122334455,DE,Hans Mueller
-+5544332211,BR,Maria Silva`
++5544332211,BR,Maria Silva`;
 
-    const blob = new Blob([sampleContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'contacts_template.csv'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([sampleContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'contacts_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   // Remove a contact from CSV preview
   const removeCSVContact = (index: number) => {
-    setCsvContacts(prev => prev.filter((_, i) => i !== index))
-  }
+    setCsvContacts((prev) => prev.filter((_, i) => i !== index));
+  };
 
   // Handle edit contact
   const handleEditContact = (contact: WhatsAppContact) => {
-    setEditingContact(contact)
-    setEditName(contact.display_name || '')
-    setShowEditModal(true)
-    setActiveDropdown(null)
-  }
+    setEditingContact(contact);
+    setEditName(contact.display_name || '');
+    setShowEditModal(true);
+    setActiveDropdown(null);
+  };
 
   // Save contact edit
   const handleSaveEdit = async () => {
-    if (!editingContact) return
-    setIsUpdating(true)
+    if (!editingContact) return;
+    setIsUpdating(true);
     try {
       await apiClient.patch(`/whatsapp/contacts/${editingContact.id}`, {
         display_name: editName || null,
-      })
-      await fetchData()
-      setShowEditModal(false)
-      setEditingContact(null)
-      setEditName('')
+      });
+      await fetchData();
+      setShowEditModal(false);
+      setEditingContact(null);
+      setEditName('');
     } catch (err: any) {
-      console.error('Failed to update contact:', err)
-      alert(err.response?.data?.detail || 'Failed to update contact')
+      console.error('Failed to update contact:', err);
+      alert(err.response?.data?.detail || 'Failed to update contact');
     } finally {
-      setIsUpdating(false)
+      setIsUpdating(false);
     }
-  }
+  };
 
   // Handle delete contact
   const handleDeleteContact = async (contact: WhatsAppContact) => {
-    if (!confirm(`Are you sure you want to delete ${contact.display_name || contact.phone_number}?`)) return
-    setActiveDropdown(null)
-    try {
-      await apiClient.delete(`/whatsapp/contacts/${contact.id}`)
-      await fetchData()
-    } catch (err: any) {
-      console.error('Failed to delete contact:', err)
-      alert(err.response?.data?.detail || 'Failed to delete contact')
+    if (
+      !confirm(`Are you sure you want to delete ${contact.display_name || contact.phone_number}?`)
+    ) {
+      return;
     }
-  }
+    setActiveDropdown(null);
+    try {
+      await apiClient.delete(`/whatsapp/contacts/${contact.id}`);
+      await fetchData();
+    } catch (err: any) {
+      console.error('Failed to delete contact:', err);
+      alert(err.response?.data?.detail || 'Failed to delete contact');
+    }
+  };
 
   // Handle opt-in/opt-out
   const handleToggleOptIn = async (contact: WhatsAppContact) => {
-    setActiveDropdown(null)
+    setActiveDropdown(null);
     try {
       if (contact.opt_in_status === 'opted_in') {
-        await apiClient.post(`/whatsapp/contacts/${contact.id}/opt-out`)
+        await apiClient.post(`/whatsapp/contacts/${contact.id}/opt-out`);
       } else {
-        await apiClient.post(`/whatsapp/contacts/${contact.id}/opt-in`)
+        await apiClient.post(`/whatsapp/contacts/${contact.id}/opt-in`);
       }
-      await fetchData()
+      await fetchData();
     } catch (err: any) {
-      console.error('Failed to update opt-in status:', err)
-      alert(err.response?.data?.detail || 'Failed to update opt-in status')
+      console.error('Failed to update opt-in status:', err);
+      alert(err.response?.data?.detail || 'Failed to update opt-in status');
     }
-  }
+  };
 
   // Template handlers
   const handleCreateTemplate = async () => {
     if (!newTemplate.name || !newTemplate.body_text) {
-      alert('Template name and body text are required')
-      return
+      alert('Template name and body text are required');
+      return;
     }
 
-    setIsCreatingTemplate(true)
+    setIsCreatingTemplate(true);
     try {
       await apiClient.post('/whatsapp/templates', {
         name: newTemplate.name.toLowerCase().replace(/\s+/g, '_'),
@@ -758,65 +778,65 @@ export function WhatsApp() {
         category: newTemplate.category,
         body_text: newTemplate.body_text,
         footer_text: newTemplate.footer_text || undefined,
-      })
+      });
 
-      await fetchData()
-      setShowTemplateModal(false)
+      await fetchData();
+      setShowTemplateModal(false);
       setNewTemplate({
         name: '',
         language: 'en',
         category: 'marketing',
         body_text: '',
         footer_text: '',
-      })
+      });
     } catch (err: any) {
-      console.error('Failed to create template:', err)
-      alert(err.response?.data?.detail || 'Failed to create template')
+      console.error('Failed to create template:', err);
+      alert(err.response?.data?.detail || 'Failed to create template');
     } finally {
-      setIsCreatingTemplate(false)
+      setIsCreatingTemplate(false);
     }
-  }
+  };
 
   const handleDeleteTemplate = async (template: WhatsAppTemplate) => {
-    if (!confirm(`Are you sure you want to delete the template "${template.name}"?`)) return
-    setTemplateDropdown(null)
+    if (!confirm(`Are you sure you want to delete the template "${template.name}"?`)) return;
+    setTemplateDropdown(null);
     try {
-      await apiClient.delete(`/whatsapp/templates/${template.id}`)
-      await fetchData()
+      await apiClient.delete(`/whatsapp/templates/${template.id}`);
+      await fetchData();
     } catch (err: any) {
-      console.error('Failed to delete template:', err)
-      alert(err.response?.data?.detail || 'Failed to delete template')
+      console.error('Failed to delete template:', err);
+      alert(err.response?.data?.detail || 'Failed to delete template');
     }
-  }
+  };
 
   const handleViewTemplate = (template: WhatsAppTemplate) => {
-    setViewingTemplate(template)
-    setTemplateDropdown(null)
-  }
+    setViewingTemplate(template);
+    setTemplateDropdown(null);
+  };
 
   // Message handlers
   const handleViewMessage = (message: WhatsAppMessage) => {
-    setViewingMessage(message)
-    setMessageDropdown(null)
-  }
+    setViewingMessage(message);
+    setMessageDropdown(null);
+  };
 
   const getOptInBadge = (status: OptInStatus) => {
     const styles = {
       opted_in: 'bg-green-500/10 text-green-500',
       pending: 'bg-amber-500/10 text-amber-500',
       opted_out: 'bg-red-500/10 text-red-500',
-    }
+    };
     const labels = {
       opted_in: 'Opted In',
       pending: 'Pending',
       opted_out: 'Opted Out',
-    }
+    };
     return (
       <span className={cn('px-2 py-1 rounded-full text-xs font-medium', styles[status])}>
         {labels[status]}
       </span>
-    )
-  }
+    );
+  };
 
   const getMessageStatusBadge = (status: MessageStatus) => {
     const config = {
@@ -825,15 +845,21 @@ export function WhatsApp() {
       delivered: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
       read: { icon: Eye, color: 'text-purple-500', bg: 'bg-purple-500/10' },
       failed: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
-    }
-    const { icon: Icon, color, bg } = config[status]
+    };
+    const { icon: Icon, color, bg } = config[status];
     return (
-      <span className={cn('flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium', bg, color)}>
+      <span
+        className={cn(
+          'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
+          bg,
+          color
+        )}
+      >
         <Icon className="w-3 h-3" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
-  }
+    );
+  };
 
   const getTemplateStatusBadge = (status: TemplateStatus) => {
     const styles = {
@@ -841,85 +867,91 @@ export function WhatsApp() {
       pending: 'bg-amber-500/10 text-amber-500',
       rejected: 'bg-red-500/10 text-red-500',
       paused: 'bg-gray-500/10 text-gray-500',
-    }
+    };
     return (
       <span className={cn('px-2 py-1 rounded-full text-xs font-medium', styles[status])}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
-  }
+    );
+  };
 
   const getCategoryBadge = (category: string) => {
     const styles: Record<string, string> = {
       MARKETING: 'bg-purple-500/10 text-purple-500',
       UTILITY: 'bg-blue-500/10 text-blue-500',
       AUTHENTICATION: 'bg-amber-500/10 text-amber-500',
-    }
+    };
     return (
-      <span className={cn('px-2 py-1 rounded-full text-xs font-medium', styles[category] || 'bg-gray-500/10 text-gray-500')}>
+      <span
+        className={cn(
+          'px-2 py-1 rounded-full text-xs font-medium',
+          styles[category] || 'bg-gray-500/10 text-gray-500'
+        )}
+      >
         {category}
       </span>
-    )
-  }
+    );
+  };
 
   const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '-'
+    if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
-  }
+    });
+  };
 
   const filteredContacts = contacts.filter((contact) => {
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       if (
         !contact.phone_number.toLowerCase().includes(query) &&
         !contact.display_name?.toLowerCase().includes(query)
       ) {
-        return false
+        return false;
       }
     }
     if (statusFilter !== 'all' && contact.opt_in_status !== statusFilter) {
-      return false
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   const filteredTemplates = templates.filter((template) => {
     if (searchQuery && !template.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false
+      return false;
     }
     if (statusFilter !== 'all' && template.status !== statusFilter) {
-      return false
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   const filteredMessages = messages.filter((message) => {
     if (statusFilter !== 'all' && message.status !== statusFilter) {
-      return false
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   const getContactName = (contactId: number) => {
-    const contact = contacts.find((c) => c.id === contactId)
-    return contact?.display_name || contact?.phone_number || 'Unknown'
-  }
+    const contact = contacts.find((c) => c.id === contactId);
+    return contact?.display_name || contact?.phone_number || 'Unknown';
+  };
 
   const stats = {
     totalContacts: contacts.length,
     optedIn: contacts.filter((c) => c.opt_in_status === 'opted_in').length,
     totalMessages: messages.length,
     delivered: messages.filter((m) => m.status === 'delivered' || m.status === 'read').length,
-  }
+  };
 
-  const optedInFilteredContacts = filteredContacts.filter((c) => c.opt_in_status === 'opted_in')
-  const allOptedInSelected = optedInFilteredContacts.length > 0 &&
-    optedInFilteredContacts.every((c) => selectedContactIds.includes(c.id))
+  const optedInFilteredContacts = filteredContacts.filter((c) => c.opt_in_status === 'opted_in');
+  const allOptedInSelected =
+    optedInFilteredContacts.length > 0 &&
+    optedInFilteredContacts.every((c) => selectedContactIds.includes(c.id));
 
   // Show loading state
   if (isLoading) {
@@ -930,7 +962,7 @@ export function WhatsApp() {
           <p className="text-muted-foreground">Loading WhatsApp data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -1028,7 +1060,10 @@ export function WhatsApp() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {stats.totalMessages > 0 ? Math.round((stats.delivered / stats.totalMessages) * 100) : 0}%
+                {stats.totalMessages > 0
+                  ? Math.round((stats.delivered / stats.totalMessages) * 100)
+                  : 0}
+                %
               </p>
               <p className="text-xs text-muted-foreground">Delivery Rate</p>
             </div>
@@ -1067,7 +1102,12 @@ export function WhatsApp() {
       <div className="border-b">
         <nav className="flex gap-4">
           {[
-            { id: 'inbox', label: 'Inbox', icon: Inbox, badge: conversations.reduce((acc, c) => acc + c.unreadCount, 0) },
+            {
+              id: 'inbox',
+              label: 'Inbox',
+              icon: Inbox,
+              badge: conversations.reduce((acc, c) => acc + c.unreadCount, 0),
+            },
             { id: 'contacts', label: 'My Contacts', icon: Users },
             { id: 'templates', label: 'Templates', icon: FileText },
             { id: 'messages', label: 'Message History', icon: MessageCircle },
@@ -1075,10 +1115,10 @@ export function WhatsApp() {
             <button
               key={tab.id}
               onClick={() => {
-                setActiveTab(tab.id as TabType)
-                setSearchQuery('')
-                setStatusFilter('all')
-                setSelectedConversation(null)
+                setActiveTab(tab.id as TabType);
+                setSearchQuery('');
+                setStatusFilter('all');
+                setSelectedConversation(null);
               }}
               className={cn(
                 'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors relative',
@@ -1101,62 +1141,62 @@ export function WhatsApp() {
 
       {/* Filters - Hide when viewing a conversation */}
       {!(activeTab === 'inbox' && selectedConversation) && (
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder={
-              activeTab === 'inbox'
-                ? 'Search conversations...'
-                : activeTab === 'contacts'
-                ? 'Search your contacts...'
-                : activeTab === 'templates'
-                ? 'Search templates...'
-                : 'Search messages...'
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
-          />
-        </div>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder={
+                activeTab === 'inbox'
+                  ? 'Search conversations...'
+                  : activeTab === 'contacts'
+                    ? 'Search your contacts...'
+                    : activeTab === 'templates'
+                      ? 'Search templates...'
+                      : 'Search messages...'
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+            />
+          </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
-        >
-          <option value="all">All Statuses</option>
-          {activeTab === 'inbox' && (
-            <>
-              <option value="unread">Unread</option>
-              <option value="active">Active</option>
-            </>
-          )}
-          {activeTab === 'contacts' && (
-            <>
-              <option value="opted_in">Opted In</option>
-              <option value="pending">Pending</option>
-              <option value="opted_out">Opted Out</option>
-            </>
-          )}
-          {activeTab === 'templates' && (
-            <>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-            </>
-          )}
-          {activeTab === 'messages' && (
-            <>
-              <option value="sent">Sent</option>
-              <option value="delivered">Delivered</option>
-              <option value="read">Read</option>
-              <option value="failed">Failed</option>
-            </>
-          )}
-        </select>
-      </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
+          >
+            <option value="all">All Statuses</option>
+            {activeTab === 'inbox' && (
+              <>
+                <option value="unread">Unread</option>
+                <option value="active">Active</option>
+              </>
+            )}
+            {activeTab === 'contacts' && (
+              <>
+                <option value="opted_in">Opted In</option>
+                <option value="pending">Pending</option>
+                <option value="opted_out">Opted Out</option>
+              </>
+            )}
+            {activeTab === 'templates' && (
+              <>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+              </>
+            )}
+            {activeTab === 'messages' && (
+              <>
+                <option value="sent">Sent</option>
+                <option value="delivered">Delivered</option>
+                <option value="read">Read</option>
+                <option value="failed">Failed</option>
+              </>
+            )}
+          </select>
+        </div>
       )}
 
       {/* Content */}
@@ -1167,22 +1207,24 @@ export function WhatsApp() {
             {conversations
               .filter((conv) => {
                 if (searchQuery) {
-                  const query = searchQuery.toLowerCase()
-                  if (!conv.contact.display_name?.toLowerCase().includes(query) &&
-                      !conv.contact.phone_number.toLowerCase().includes(query)) {
-                    return false
+                  const query = searchQuery.toLowerCase();
+                  if (
+                    !conv.contact.display_name?.toLowerCase().includes(query) &&
+                    !conv.contact.phone_number.toLowerCase().includes(query)
+                  ) {
+                    return false;
                   }
                 }
-                if (statusFilter === 'unread' && conv.unreadCount === 0) return false
-                if (statusFilter === 'active' && !conv.isActive) return false
-                return true
+                if (statusFilter === 'unread' && conv.unreadCount === 0) return false;
+                if (statusFilter === 'active' && !conv.isActive) return false;
+                return true;
               })
               .map((conv) => (
                 <div
                   key={conv.id}
                   onClick={() => {
-                    setSelectedConversation(conv)
-                    fetchContactMessages(conv.contact.id)
+                    setSelectedConversation(conv);
+                    fetchContactMessages(conv.contact.id);
                   }}
                   className={cn(
                     'flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors',
@@ -1191,12 +1233,21 @@ export function WhatsApp() {
                 >
                   {/* Avatar */}
                   <div className="relative">
-                    <div className={cn(
-                      'w-12 h-12 rounded-full flex items-center justify-center',
-                      conv.unreadCount > 0 ? 'bg-green-500 text-white' : 'bg-green-500/10'
-                    )}>
-                      <span className={cn('font-medium text-lg', conv.unreadCount === 0 && 'text-green-500')}>
-                        {(conv.contact.display_name || conv.contact.phone_number).charAt(0).toUpperCase()}
+                    <div
+                      className={cn(
+                        'w-12 h-12 rounded-full flex items-center justify-center',
+                        conv.unreadCount > 0 ? 'bg-green-500 text-white' : 'bg-green-500/10'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'font-medium text-lg',
+                          conv.unreadCount === 0 && 'text-green-500'
+                        )}
+                      >
+                        {(conv.contact.display_name || conv.contact.phone_number)
+                          .charAt(0)
+                          .toUpperCase()}
                       </span>
                     </div>
                     {conv.isActive && (
@@ -1207,7 +1258,9 @@ export function WhatsApp() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className={cn('font-medium', conv.unreadCount > 0 && 'text-foreground')}>
+                      <span
+                        className={cn('font-medium', conv.unreadCount > 0 && 'text-foreground')}
+                      >
                         {conv.contact.display_name || conv.contact.phone_number}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -1215,14 +1268,21 @@ export function WhatsApp() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className={cn(
-                        'text-sm truncate max-w-[300px]',
-                        conv.unreadCount > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
-                      )}>
+                      <p
+                        className={cn(
+                          'text-sm truncate max-w-[300px]',
+                          conv.unreadCount > 0
+                            ? 'text-foreground font-medium'
+                            : 'text-muted-foreground'
+                        )}
+                      >
                         {conv.lastMessage?.direction === 'outbound' && (
                           <span className="text-muted-foreground">You: </span>
                         )}
-                        {conv.lastMessage?.content || (conv.lastMessage?.template_name ? `Template: ${conv.lastMessage.template_name}` : 'No messages')}
+                        {conv.lastMessage?.content ||
+                          (conv.lastMessage?.template_name
+                            ? `Template: ${conv.lastMessage.template_name}`
+                            : 'No messages')}
                       </p>
                       {conv.unreadCount > 0 && (
                         <span className="ml-2 w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">
@@ -1237,7 +1297,9 @@ export function WhatsApp() {
               <div className="p-12 text-center">
                 <Inbox className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
                 <p className="text-muted-foreground">No conversations yet</p>
-                <p className="text-sm text-muted-foreground mt-1">Start by sending a message to a contact</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Start by sending a message to a contact
+                </p>
               </div>
             )}
           </div>
@@ -1256,12 +1318,21 @@ export function WhatsApp() {
               </button>
               <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
                 <span className="text-green-500 font-medium">
-                  {(selectedConversation.contact.display_name || selectedConversation.contact.phone_number).charAt(0).toUpperCase()}
+                  {(
+                    selectedConversation.contact.display_name ||
+                    selectedConversation.contact.phone_number
+                  )
+                    .charAt(0)
+                    .toUpperCase()}
                 </span>
               </div>
               <div className="flex-1">
-                <p className="font-medium">{selectedConversation.contact.display_name || 'Unknown'}</p>
-                <p className="text-sm text-muted-foreground">{selectedConversation.contact.phone_number}</p>
+                <p className="font-medium">
+                  {selectedConversation.contact.display_name || 'Unknown'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedConversation.contact.phone_number}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 {selectedConversation.isActive && (
@@ -1297,28 +1368,39 @@ export function WhatsApp() {
                     )}
                   >
                     {msg.template_name && (
-                      <p className={cn(
-                        'text-xs mb-1',
-                        msg.direction === 'outbound' ? 'text-green-100' : 'text-muted-foreground'
-                      )}>
+                      <p
+                        className={cn(
+                          'text-xs mb-1',
+                          msg.direction === 'outbound' ? 'text-green-100' : 'text-muted-foreground'
+                        )}
+                      >
                         Template: {msg.template_name}
                       </p>
                     )}
                     <p className="text-sm">{msg.content || `[${msg.template_name} template]`}</p>
-                    <div className={cn(
-                      'flex items-center gap-1 mt-1',
-                      msg.direction === 'outbound' ? 'justify-end' : 'justify-start'
-                    )}>
-                      <span className={cn(
-                        'text-xs',
-                        msg.direction === 'outbound' ? 'text-green-100' : 'text-muted-foreground'
-                      )}>
-                        {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    <div
+                      className={cn(
+                        'flex items-center gap-1 mt-1',
+                        msg.direction === 'outbound' ? 'justify-end' : 'justify-start'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'text-xs',
+                          msg.direction === 'outbound' ? 'text-green-100' : 'text-muted-foreground'
+                        )}
+                      >
+                        {new Date(msg.created_at).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </span>
                       {msg.direction === 'outbound' && (
                         <>
                           {msg.status === 'read' && <Eye className="w-3 h-3 text-green-100" />}
-                          {msg.status === 'delivered' && <CheckCircle className="w-3 h-3 text-green-100" />}
+                          {msg.status === 'delivered' && (
+                            <CheckCircle className="w-3 h-3 text-green-100" />
+                          )}
                           {msg.status === 'sent' && <Send className="w-3 h-3 text-green-100" />}
                         </>
                       )}
@@ -1333,16 +1415,16 @@ export function WhatsApp() {
               {selectedConversation.isActive ? (
                 <form
                   onSubmit={async (e) => {
-                    e.preventDefault()
-                    if (!replyText.trim() || isSending) return
+                    e.preventDefault();
+                    if (!replyText.trim() || isSending) return;
 
-                    setIsSending(true)
+                    setIsSending(true);
                     try {
                       await apiClient.post('/whatsapp/messages/send', {
                         contact_id: selectedConversation.contact.id,
                         message_type: 'text',
                         content: replyText.trim(),
-                      })
+                      });
 
                       // Add message to local state for immediate feedback
                       const newMessage: WhatsAppMessage = {
@@ -1357,14 +1439,14 @@ export function WhatsApp() {
                         delivered_at: null,
                         read_at: null,
                         created_at: new Date().toISOString(),
-                      }
-                      setChatMessages(prev => [...prev, newMessage])
-                      setReplyText('')
+                      };
+                      setChatMessages((prev) => [...prev, newMessage]);
+                      setReplyText('');
                     } catch (err: any) {
-                      console.error('Failed to send message:', err)
-                      alert(err.response?.data?.detail || 'Failed to send message')
+                      console.error('Failed to send message:', err);
+                      alert(err.response?.data?.detail || 'Failed to send message');
                     } finally {
-                      setIsSending(false)
+                      setIsSending(false);
                     }
                   }}
                   className="flex items-center gap-2"
@@ -1391,7 +1473,11 @@ export function WhatsApp() {
                     disabled={!replyText.trim() || isSending}
                     className="p-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors disabled:opacity-50"
                   >
-                    {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                    {isSending ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
                   </button>
                 </form>
               ) : (
@@ -1401,8 +1487,8 @@ export function WhatsApp() {
                   </p>
                   <button
                     onClick={() => {
-                      setSelectedContactIds([selectedConversation.contact.id])
-                      setShowBroadcastModal(true)
+                      setSelectedContactIds([selectedConversation.contact.id]);
+                      setShowBroadcastModal(true);
                     }}
                     className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors text-sm"
                   >
@@ -1440,8 +1526,8 @@ export function WhatsApp() {
               </thead>
               <tbody className="divide-y">
                 {filteredContacts.map((contact) => {
-                  const isSelected = selectedContactIds.includes(contact.id)
-                  const canSelect = contact.opt_in_status === 'opted_in'
+                  const isSelected = selectedContactIds.includes(contact.id);
+                  const canSelect = contact.opt_in_status === 'opted_in';
 
                   return (
                     <tr
@@ -1466,12 +1552,16 @@ export function WhatsApp() {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-10 h-10 rounded-full flex items-center justify-center',
-                            isSelected ? 'bg-green-500 text-white' : 'bg-green-500/10'
-                          )}>
+                          <div
+                            className={cn(
+                              'w-10 h-10 rounded-full flex items-center justify-center',
+                              isSelected ? 'bg-green-500 text-white' : 'bg-green-500/10'
+                            )}
+                          >
                             <span className={cn('font-medium', !isSelected && 'text-green-500')}>
-                              {(contact.display_name || contact.phone_number).charAt(0).toUpperCase()}
+                              {(contact.display_name || contact.phone_number)
+                                .charAt(0)
+                                .toUpperCase()}
                             </span>
                           </div>
                           <div>
@@ -1500,8 +1590,8 @@ export function WhatsApp() {
                           {canSelect && (
                             <button
                               onClick={() => {
-                                setSelectedContactIds([contact.id])
-                                setShowBroadcastModal(true)
+                                setSelectedContactIds([contact.id]);
+                                setShowBroadcastModal(true);
                               }}
                               className="p-2 rounded-lg hover:bg-muted transition-colors"
                               title="Send Message"
@@ -1512,8 +1602,10 @@ export function WhatsApp() {
                           <div className="relative">
                             <button
                               onClick={(e) => {
-                                e.stopPropagation()
-                                setActiveDropdown(activeDropdown === contact.id ? null : contact.id)
+                                e.stopPropagation();
+                                setActiveDropdown(
+                                  activeDropdown === contact.id ? null : contact.id
+                                );
                               }}
                               className="p-2 rounded-lg hover:bg-muted transition-colors"
                             >
@@ -1563,7 +1655,7 @@ export function WhatsApp() {
                         </div>
                       </td>
                     </tr>
-                  )
+                  );
                 })}
               </tbody>
             </table>
@@ -1603,7 +1695,9 @@ export function WhatsApp() {
                     <td className="p-4">
                       <div>
                         <p className="font-medium font-mono">{template.name}</p>
-                        <p className="text-xs text-muted-foreground">{template.language.toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {template.language.toUpperCase()}
+                        </p>
                       </div>
                     </td>
                     <td className="p-4">{getCategoryBadge(template.category)}</td>
@@ -1613,14 +1707,20 @@ export function WhatsApp() {
                         {template.body_text}
                       </p>
                     </td>
-                    <td className="p-4 text-right font-medium">{template.usage_count.toLocaleString()}</td>
-                    <td className="p-4 text-sm text-muted-foreground">{formatDate(template.created_at)}</td>
+                    <td className="p-4 text-right font-medium">
+                      {template.usage_count.toLocaleString()}
+                    </td>
+                    <td className="p-4 text-sm text-muted-foreground">
+                      {formatDate(template.created_at)}
+                    </td>
                     <td className="p-4 text-right">
                       <div className="relative">
                         <button
                           onClick={(e) => {
-                            e.stopPropagation()
-                            setTemplateDropdown(templateDropdown === template.id ? null : template.id)
+                            e.stopPropagation();
+                            setTemplateDropdown(
+                              templateDropdown === template.id ? null : template.id
+                            );
                           }}
                           className="p-2 rounded-lg hover:bg-muted transition-colors"
                         >
@@ -1699,11 +1799,14 @@ export function WhatsApp() {
                     <td className="p-4 text-sm capitalize">{message.message_type}</td>
                     <td className="p-4 max-w-xs">
                       <p className="text-sm truncate">
-                        {message.content || (message.template_name ? `Template: ${message.template_name}` : '-')}
+                        {message.content ||
+                          (message.template_name ? `Template: ${message.template_name}` : '-')}
                       </p>
                     </td>
                     <td className="p-4">{getMessageStatusBadge(message.status)}</td>
-                    <td className="p-4 text-sm text-muted-foreground">{formatDate(message.sent_at || message.created_at)}</td>
+                    <td className="p-4 text-sm text-muted-foreground">
+                      {formatDate(message.sent_at || message.created_at)}
+                    </td>
                     <td className="p-4 text-right">
                       <button
                         onClick={() => handleViewMessage(message)}
@@ -1773,8 +1876,8 @@ export function WhatsApp() {
             {addContactTab === 'single' && (
               <form
                 onSubmit={(e) => {
-                  e.preventDefault()
-                  handleAddSingleContact()
+                  e.preventDefault();
+                  handleAddSingleContact();
                 }}
                 className="space-y-4"
               >
@@ -1788,7 +1891,9 @@ export function WhatsApp() {
                     className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Include country code (e.g., +1 for US)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Include country code (e.g., +1 for US)
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Country *</label>
@@ -1844,7 +1949,9 @@ export function WhatsApp() {
                     <FileSpreadsheet className="w-5 h-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">CSV Template</p>
-                      <p className="text-xs text-muted-foreground">Download a sample template to get started</p>
+                      <p className="text-xs text-muted-foreground">
+                        Download a sample template to get started
+                      </p>
                     </div>
                   </div>
                   <button
@@ -1876,21 +1983,21 @@ export function WhatsApp() {
                       type="file"
                       accept=".csv"
                       onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) handleFileSelect(file)
+                        const file = e.target.files?.[0];
+                        if (file) handleFileSelect(file);
                       }}
                       className="hidden"
                     />
-                    <Upload className={cn(
-                      'w-10 h-10 mx-auto mb-3',
-                      isDragging ? 'text-green-500' : 'text-muted-foreground'
-                    )} />
+                    <Upload
+                      className={cn(
+                        'w-10 h-10 mx-auto mb-3',
+                        isDragging ? 'text-green-500' : 'text-muted-foreground'
+                      )}
+                    />
                     <p className="text-sm font-medium mb-1">
                       {isDragging ? 'Drop your file here' : 'Drag & drop your CSV file here'}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      or click to browse (max 5MB)
-                    </p>
+                    <p className="text-xs text-muted-foreground">or click to browse (max 5MB)</p>
                   </div>
                 )}
 
@@ -1912,9 +2019,9 @@ export function WhatsApp() {
                       </div>
                       <button
                         onClick={() => {
-                          setCsvContacts([])
-                          setCsvFileName('')
-                          setCsvError('')
+                          setCsvContacts([]);
+                          setCsvFileName('');
+                          setCsvError('');
                         }}
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
@@ -1927,14 +2034,14 @@ export function WhatsApp() {
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
                         <span className="text-sm">
-                          <strong>{csvContacts.filter(c => c.isValid).length}</strong> valid
+                          <strong>{csvContacts.filter((c) => c.isValid).length}</strong> valid
                         </span>
                       </div>
-                      {csvContacts.filter(c => !c.isValid).length > 0 && (
+                      {csvContacts.filter((c) => !c.isValid).length > 0 && (
                         <div className="flex items-center gap-2">
                           <AlertCircle className="w-4 h-4 text-amber-500" />
                           <span className="text-sm">
-                            <strong>{csvContacts.filter(c => !c.isValid).length}</strong> invalid
+                            <strong>{csvContacts.filter((c) => !c.isValid).length}</strong> invalid
                           </span>
                         </div>
                       )}
@@ -1951,10 +2058,12 @@ export function WhatsApp() {
                           )}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={cn(
-                              'w-8 h-8 rounded-full flex items-center justify-center',
-                              contact.isValid ? 'bg-green-500/10' : 'bg-red-500/10'
-                            )}>
+                            <div
+                              className={cn(
+                                'w-8 h-8 rounded-full flex items-center justify-center',
+                                contact.isValid ? 'bg-green-500/10' : 'bg-red-500/10'
+                              )}
+                            >
                               {contact.isValid ? (
                                 <CheckCircle className="w-4 h-4 text-green-500" />
                               ) : (
@@ -1966,7 +2075,9 @@ export function WhatsApp() {
                                 {contact.display_name || 'No name'}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {contact.phone_number} • {getCountryByCode(contact.country_code)?.name || contact.country_code}
+                                {contact.phone_number} •{' '}
+                                {getCountryByCode(contact.country_code)?.name ||
+                                  contact.country_code}
                               </p>
                               {contact.error && (
                                 <p className="text-xs text-red-500">{contact.error}</p>
@@ -1996,7 +2107,7 @@ export function WhatsApp() {
                   </button>
                   <button
                     onClick={handleImportCSV}
-                    disabled={csvContacts.filter(c => c.isValid).length === 0 || isImporting}
+                    disabled={csvContacts.filter((c) => c.isValid).length === 0 || isImporting}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isImporting ? (
@@ -2007,7 +2118,7 @@ export function WhatsApp() {
                     ) : (
                       <>
                         <Upload className="w-4 h-4" />
-                        Import {csvContacts.filter(c => c.isValid).length} Contacts
+                        Import {csvContacts.filter((c) => c.isValid).length} Contacts
                       </>
                     )}
                   </button>
@@ -2020,8 +2131,14 @@ export function WhatsApp() {
 
       {/* Edit Contact Modal */}
       {showEditModal && editingContact && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowEditModal(false)}>
-          <div className="bg-card rounded-xl border shadow-lg w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            className="bg-card rounded-xl border shadow-lg w-full max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Edit Contact</h2>
               <button
@@ -2101,10 +2218,16 @@ export function WhatsApp() {
             </div>
 
             <div className="mb-4 p-3 rounded-lg bg-muted/50">
-              <p className="text-sm text-muted-foreground mb-2">Sending to {selectedContactIds.length} contact{selectedContactIds.length > 1 ? 's' : ''}:</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                Sending to {selectedContactIds.length} contact
+                {selectedContactIds.length > 1 ? 's' : ''}:
+              </p>
               <div className="flex flex-wrap gap-2">
                 {selectedContacts.slice(0, 5).map((contact) => (
-                  <span key={contact.id} className="px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium">
+                  <span
+                    key={contact.id}
+                    className="px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium"
+                  >
                     {contact.display_name || contact.phone_number}
                   </span>
                 ))}
@@ -2118,8 +2241,8 @@ export function WhatsApp() {
 
             <form
               onSubmit={(e) => {
-                e.preventDefault()
-                handleSendBroadcast()
+                e.preventDefault();
+                handleSendBroadcast();
               }}
               className="space-y-4"
             >
@@ -2155,8 +2278,8 @@ export function WhatsApp() {
                 <button
                   type="button"
                   onClick={() => {
-                    setShowBroadcastModal(false)
-                    setBroadcastTemplate('')
+                    setShowBroadcastModal(false);
+                    setBroadcastTemplate('');
                   }}
                   className="flex-1 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
                 >
@@ -2175,7 +2298,8 @@ export function WhatsApp() {
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Send to {selectedContactIds.length} Contact{selectedContactIds.length > 1 ? 's' : ''}
+                      Send to {selectedContactIds.length} Contact
+                      {selectedContactIds.length > 1 ? 's' : ''}
                     </>
                   )}
                 </button>
@@ -2187,8 +2311,14 @@ export function WhatsApp() {
 
       {/* Create Template Modal */}
       {showTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowTemplateModal(false)}>
-          <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowTemplateModal(false)}
+        >
+          <div
+            className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Create Template</h2>
               <button
@@ -2209,7 +2339,9 @@ export function WhatsApp() {
                   placeholder="e.g., welcome_message"
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
                 />
-                <p className="text-xs text-muted-foreground mt-1">Lowercase letters, numbers, and underscores only</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Lowercase letters, numbers, and underscores only
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -2253,7 +2385,9 @@ export function WhatsApp() {
                   rows={4}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20 resize-none"
                 />
-                <p className="text-xs text-muted-foreground mt-1">Use {'{{1}}'}, {'{{2}}'} etc. for variables</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use {'{{1}}'}, {'{{2}}'} etc. for variables
+                </p>
               </div>
 
               <div>
@@ -2297,8 +2431,14 @@ export function WhatsApp() {
 
       {/* View Template Modal */}
       {viewingTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setViewingTemplate(null)}>
-          <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setViewingTemplate(null)}
+        >
+          <div
+            className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Template Details</h2>
               <button
@@ -2317,21 +2457,29 @@ export function WhatsApp() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Language</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Language
+                  </label>
                   <p className="uppercase">{viewingTemplate.language}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Category</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Category
+                  </label>
                   {getCategoryBadge(viewingTemplate.category)}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Status</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Status
+                  </label>
                   {getTemplateStatusBadge(viewingTemplate.status)}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Body Text</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                  Body Text
+                </label>
                 <div className="p-3 rounded-lg bg-muted/50 border">
                   <p className="text-sm whitespace-pre-wrap">{viewingTemplate.body_text}</p>
                 </div>
@@ -2339,11 +2487,17 @@ export function WhatsApp() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Usage Count</label>
-                  <p className="text-lg font-bold">{viewingTemplate.usage_count.toLocaleString()}</p>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Usage Count
+                  </label>
+                  <p className="text-lg font-bold">
+                    {viewingTemplate.usage_count.toLocaleString()}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Created</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Created
+                  </label>
                   <p className="text-sm">{formatDate(viewingTemplate.created_at)}</p>
                 </div>
               </div>
@@ -2358,10 +2512,10 @@ export function WhatsApp() {
               </button>
               <button
                 onClick={() => {
-                  setViewingTemplate(null)
-                  setSelectedContactIds([])
-                  setBroadcastTemplate(viewingTemplate.name)
-                  setShowBroadcastModal(true)
+                  setViewingTemplate(null);
+                  setSelectedContactIds([]);
+                  setBroadcastTemplate(viewingTemplate.name);
+                  setShowBroadcastModal(true);
                 }}
                 disabled={viewingTemplate.status !== 'approved'}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
@@ -2376,8 +2530,14 @@ export function WhatsApp() {
 
       {/* View Message Modal */}
       {viewingMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setViewingMessage(null)}>
-          <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setViewingMessage(null)}
+        >
+          <div
+            className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Message Details</h2>
               <button
@@ -2391,11 +2551,15 @@ export function WhatsApp() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Contact</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Contact
+                  </label>
                   <p className="font-medium">{getContactName(viewingMessage.contact_id)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Direction</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Direction
+                  </label>
                   <span
                     className={cn(
                       'px-2 py-1 rounded-full text-xs font-medium',
@@ -2411,38 +2575,55 @@ export function WhatsApp() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Type</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Type
+                  </label>
                   <p className="capitalize">{viewingMessage.message_type}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Status</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Status
+                  </label>
                   {getMessageStatusBadge(viewingMessage.status)}
                 </div>
               </div>
 
               {viewingMessage.template_name && (
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Template</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Template
+                  </label>
                   <p className="font-mono">{viewingMessage.template_name}</p>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Content</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                  Content
+                </label>
                 <div className="p-3 rounded-lg bg-muted/50 border">
                   <p className="text-sm whitespace-pre-wrap">
-                    {viewingMessage.content || (viewingMessage.template_name ? `[Template: ${viewingMessage.template_name}]` : 'No content')}
+                    {viewingMessage.content ||
+                      (viewingMessage.template_name
+                        ? `[Template: ${viewingMessage.template_name}]`
+                        : 'No content')}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Sent At</label>
-                  <p className="text-sm">{viewingMessage.sent_at ? formatDate(viewingMessage.sent_at) : '-'}</p>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Sent At
+                  </label>
+                  <p className="text-sm">
+                    {viewingMessage.sent_at ? formatDate(viewingMessage.sent_at) : '-'}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">Created</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Created
+                  </label>
                   <p className="text-sm">{formatDate(viewingMessage.created_at)}</p>
                 </div>
               </div>
@@ -2450,12 +2631,20 @@ export function WhatsApp() {
               {viewingMessage.direction === 'outbound' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Delivered At</label>
-                    <p className="text-sm">{viewingMessage.delivered_at ? formatDate(viewingMessage.delivered_at) : '-'}</p>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                      Delivered At
+                    </label>
+                    <p className="text-sm">
+                      {viewingMessage.delivered_at ? formatDate(viewingMessage.delivered_at) : '-'}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Read At</label>
-                    <p className="text-sm">{viewingMessage.read_at ? formatDate(viewingMessage.read_at) : '-'}</p>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                      Read At
+                    </label>
+                    <p className="text-sm">
+                      {viewingMessage.read_at ? formatDate(viewingMessage.read_at) : '-'}
+                    </p>
                   </div>
                 </div>
               )}
@@ -2473,7 +2662,7 @@ export function WhatsApp() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default WhatsApp
+export default WhatsApp;

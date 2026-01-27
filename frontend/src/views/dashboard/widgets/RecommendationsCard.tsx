@@ -2,7 +2,7 @@
  * RecommendationsCard - AI recommendations with approve/reject actions
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -14,16 +14,16 @@ import {
   TrendingUp,
   Wrench,
   X,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { RecommendationItem, RecommendationType } from '@/api/dashboard'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { RecommendationItem, RecommendationType } from '@/api/dashboard';
 
 interface RecommendationsCardProps {
-  recommendations: RecommendationItem[]
-  loading?: boolean
-  onApprove: (id: string) => Promise<void>
-  onReject: (id: string) => Promise<void>
-  onViewAll?: () => void
+  recommendations: RecommendationItem[];
+  loading?: boolean;
+  onApprove: (id: string) => Promise<void>;
+  onReject: (id: string) => Promise<void>;
+  onViewAll?: () => void;
 }
 
 export function RecommendationsCard({
@@ -33,7 +33,7 @@ export function RecommendationsCard({
   onReject,
   onViewAll,
 }: RecommendationsCardProps) {
-  const [processingId, setProcessingId] = useState<string | null>(null)
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const getTypeConfig = (type: RecommendationType) => {
     switch (type) {
@@ -43,65 +43,65 @@ export function RecommendationsCard({
           color: 'text-green-500',
           bgColor: 'bg-green-500/10',
           label: 'Scale',
-        }
+        };
       case 'watch':
         return {
           icon: Eye,
           color: 'text-blue-500',
           bgColor: 'bg-blue-500/10',
           label: 'Watch',
-        }
+        };
       case 'fix':
         return {
           icon: Wrench,
           color: 'text-orange-500',
           bgColor: 'bg-orange-500/10',
           label: 'Fix',
-        }
+        };
       case 'pause':
         return {
           icon: Pause,
           color: 'text-red-500',
           bgColor: 'bg-red-500/10',
           label: 'Pause',
-        }
+        };
       default:
         return {
           icon: AlertTriangle,
           color: 'text-muted-foreground',
           bgColor: 'bg-muted',
           label: type,
-        }
+        };
     }
-  }
+  };
 
   const handleApprove = async (id: string) => {
-    setProcessingId(id)
+    setProcessingId(id);
     try {
-      await onApprove(id)
+      await onApprove(id);
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
-  }
+  };
 
   const handleReject = async (id: string) => {
-    setProcessingId(id)
+    setProcessingId(id);
     try {
-      await onReject(id)
+      await onReject(id);
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
-  const pendingRecommendations = recommendations.filter((r) => r.status === 'pending')
+  const pendingRecommendations = recommendations.filter((r) => r.status === 'pending');
 
   return (
     <div className="bg-card border rounded-lg">
@@ -134,9 +134,9 @@ export function RecommendationsCard({
           </div>
         ) : (
           pendingRecommendations.slice(0, 5).map((rec) => {
-            const typeConfig = getTypeConfig(rec.type)
-            const TypeIcon = typeConfig.icon
-            const isProcessing = processingId === rec.id
+            const typeConfig = getTypeConfig(rec.type);
+            const TypeIcon = typeConfig.icon;
+            const isProcessing = processingId === rec.id;
 
             return (
               <div key={rec.id} className="p-4">
@@ -165,9 +165,7 @@ export function RecommendationsCard({
                     </div>
 
                     <h4 className="text-sm font-medium mb-1 line-clamp-1">{rec.title}</h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {rec.description}
-                    </p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{rec.description}</p>
 
                     {rec.impact_estimate && (
                       <div className="mt-2 text-xs text-green-500 font-medium">
@@ -219,21 +217,18 @@ export function RecommendationsCard({
                   </div>
                 </div>
               </div>
-            )
+            );
           })
         )}
       </div>
 
       {pendingRecommendations.length > 5 && (
         <div className="p-3 border-t text-center">
-          <button
-            onClick={onViewAll}
-            className="text-sm text-primary hover:underline"
-          >
+          <button onClick={onViewAll} className="text-sm text-primary hover:underline">
             View {pendingRecommendations.length - 5} more recommendations
           </button>
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -5,8 +5,7 @@
 Background tasks for ML predictions and ROAS alerts.
 """
 
-from datetime import datetime, timezone
-from typing import Dict, List
+from datetime import UTC, datetime
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -80,7 +79,7 @@ def run_live_predictions(self, tenant_id: int):
                     predicted_value=prediction.get("predicted_roas"),
                     confidence=prediction.get("confidence", confidence),
                     features=prediction.get("features"),
-                    created_at=datetime.now(timezone.utc),
+                    created_at=datetime.now(UTC),
                 )
                 db.add(ml_pred)
                 predictions.append(prediction)
@@ -113,11 +112,7 @@ def run_all_tenant_predictions():
     logger.info("Starting predictions for all tenants")
 
     with SyncSessionLocal() as db:
-        tenants = (
-            db.execute(select(Tenant).where(Tenant.is_deleted == False))
-            .scalars()
-            .all()
-        )
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         task_count = 0
         for tenant in tenants:

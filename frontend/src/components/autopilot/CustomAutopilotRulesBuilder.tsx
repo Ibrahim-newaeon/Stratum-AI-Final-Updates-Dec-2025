@@ -6,91 +6,91 @@
  * trust-gated execution, and advanced actions.
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  Plus,
-  X,
-  Play,
-  Pause,
-  Save,
-  Trash2,
-  Copy,
   AlertTriangle,
+  Bell,
   CheckCircle2,
-  Clock,
-  Zap,
-  Shield,
-  Settings,
   ChevronDown,
   ChevronRight,
+  Clock,
+  Copy,
+  DollarSign,
   Info,
   Loader2,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  Bell,
   MessageCircle,
+  Pause,
+  Play,
+  Plus,
+  Save,
+  Settings,
+  Shield,
   Tag,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Target,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  X,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Types
 interface RuleCondition {
-  id: string
-  field: string
-  operator: string
-  value: string
-  valueType: 'number' | 'percentage' | 'currency'
+  id: string;
+  field: string;
+  operator: string;
+  value: string;
+  valueType: 'number' | 'percentage' | 'currency';
 }
 
 interface ConditionGroup {
-  id: string
-  logic: 'AND' | 'OR'
-  conditions: RuleCondition[]
+  id: string;
+  logic: 'AND' | 'OR';
+  conditions: RuleCondition[];
 }
 
 interface RuleAction {
-  id: string
-  type: string
-  config: Record<string, any>
-  priority: number
+  id: string;
+  type: string;
+  config: Record<string, any>;
+  priority: number;
 }
 
 interface RuleSchedule {
-  enabled: boolean
-  frequency: 'hourly' | 'daily' | 'weekly' | 'custom'
-  daysOfWeek?: number[]
-  hoursOfDay?: number[]
-  timezone: string
+  enabled: boolean;
+  frequency: 'hourly' | 'daily' | 'weekly' | 'custom';
+  daysOfWeek?: number[];
+  hoursOfDay?: number[];
+  timezone: string;
 }
 
 interface TrustGateConfig {
-  enabled: boolean
-  minSignalHealth: number
-  requireApproval: boolean
-  dryRunFirst: boolean
+  enabled: boolean;
+  minSignalHealth: number;
+  requireApproval: boolean;
+  dryRunFirst: boolean;
 }
 
 interface CustomRule {
-  id?: string
-  name: string
-  description: string
-  status: 'active' | 'paused' | 'draft'
-  conditionGroups: ConditionGroup[]
-  conditionLogic: 'AND' | 'OR'
-  actions: RuleAction[]
+  id?: string;
+  name: string;
+  description: string;
+  status: 'active' | 'paused' | 'draft';
+  conditionGroups: ConditionGroup[];
+  conditionLogic: 'AND' | 'OR';
+  actions: RuleAction[];
   targeting: {
-    platforms: string[]
-    campaignTypes: string[]
-    specificCampaigns: string[]
-  }
-  schedule: RuleSchedule
-  trustGate: TrustGateConfig
-  cooldownHours: number
-  maxExecutionsPerDay: number
-  createdAt?: string
-  lastModifiedAt?: string
+    platforms: string[];
+    campaignTypes: string[];
+    specificCampaigns: string[];
+  };
+  schedule: RuleSchedule;
+  trustGate: TrustGateConfig;
+  cooldownHours: number;
+  maxExecutionsPerDay: number;
+  createdAt?: string;
+  lastModifiedAt?: string;
 }
 
 // Available fields for conditions
@@ -100,20 +100,50 @@ const CONDITION_FIELDS = [
   { value: 'cpc', label: 'CPC', category: 'Performance', valueType: 'currency' as const },
   { value: 'cpm', label: 'CPM', category: 'Performance', valueType: 'currency' as const },
   { value: 'ctr', label: 'CTR', category: 'Performance', valueType: 'percentage' as const },
-  { value: 'conversion_rate', label: 'Conversion Rate', category: 'Performance', valueType: 'percentage' as const },
+  {
+    value: 'conversion_rate',
+    label: 'Conversion Rate',
+    category: 'Performance',
+    valueType: 'percentage' as const,
+  },
   { value: 'spend', label: 'Spend', category: 'Budget', valueType: 'currency' as const },
-  { value: 'spend_pct', label: 'Budget Spent %', category: 'Budget', valueType: 'percentage' as const },
-  { value: 'daily_budget', label: 'Daily Budget', category: 'Budget', valueType: 'currency' as const },
+  {
+    value: 'spend_pct',
+    label: 'Budget Spent %',
+    category: 'Budget',
+    valueType: 'percentage' as const,
+  },
+  {
+    value: 'daily_budget',
+    label: 'Daily Budget',
+    category: 'Budget',
+    valueType: 'currency' as const,
+  },
   { value: 'impressions', label: 'Impressions', category: 'Volume', valueType: 'number' as const },
   { value: 'clicks', label: 'Clicks', category: 'Volume', valueType: 'number' as const },
   { value: 'conversions', label: 'Conversions', category: 'Volume', valueType: 'number' as const },
   { value: 'frequency', label: 'Frequency', category: 'Delivery', valueType: 'number' as const },
   { value: 'reach', label: 'Reach', category: 'Delivery', valueType: 'number' as const },
-  { value: 'fatigue_score', label: 'Creative Fatigue Score', category: 'Health', valueType: 'percentage' as const },
-  { value: 'signal_health', label: 'Signal Health Score', category: 'Health', valueType: 'number' as const },
+  {
+    value: 'fatigue_score',
+    label: 'Creative Fatigue Score',
+    category: 'Health',
+    valueType: 'percentage' as const,
+  },
+  {
+    value: 'signal_health',
+    label: 'Signal Health Score',
+    category: 'Health',
+    valueType: 'number' as const,
+  },
   { value: 'days_running', label: 'Days Running', category: 'Time', valueType: 'number' as const },
-  { value: 'hours_since_change', label: 'Hours Since Last Change', category: 'Time', valueType: 'number' as const },
-]
+  {
+    value: 'hours_since_change',
+    label: 'Hours Since Last Change',
+    category: 'Time',
+    valueType: 'number' as const,
+  },
+];
 
 const OPERATORS = [
   { value: 'gt', label: '>', description: 'Greater than' },
@@ -125,7 +155,7 @@ const OPERATORS = [
   { value: 'between', label: 'Between', description: 'Between two values' },
   { value: 'change_gt', label: 'Changed by >', description: 'Changed by more than' },
   { value: 'change_lt', label: 'Changed by <', description: 'Changed by less than' },
-]
+];
 
 const ACTION_TYPES = [
   { value: 'adjust_budget', label: 'Adjust Budget', icon: DollarSign, category: 'Budget' },
@@ -139,15 +169,20 @@ const ACTION_TYPES = [
   { value: 'apply_label', label: 'Apply Label', icon: Tag, category: 'Organization' },
   { value: 'send_alert', label: 'Send Alert', icon: Bell, category: 'Notification' },
   { value: 'notify_slack', label: 'Notify Slack', icon: MessageCircle, category: 'Notification' },
-  { value: 'notify_whatsapp', label: 'Notify WhatsApp', icon: MessageCircle, category: 'Notification' },
-]
+  {
+    value: 'notify_whatsapp',
+    label: 'Notify WhatsApp',
+    icon: MessageCircle,
+    category: 'Notification',
+  },
+];
 
 const PLATFORMS = [
   { value: 'meta', label: 'Meta (Facebook/Instagram)' },
   { value: 'google', label: 'Google Ads' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'snapchat', label: 'Snapchat' },
-]
+];
 
 const CAMPAIGN_TYPES = [
   { value: 'prospecting', label: 'Prospecting' },
@@ -155,13 +190,13 @@ const CAMPAIGN_TYPES = [
   { value: 'brand', label: 'Brand Awareness' },
   { value: 'conversion', label: 'Conversion' },
   { value: 'engagement', label: 'Engagement' },
-]
+];
 
 interface Props {
-  rule?: CustomRule
-  onSave: (rule: CustomRule) => Promise<void>
-  onCancel: () => void
-  isLoading?: boolean
+  rule?: CustomRule;
+  onSave: (rule: CustomRule) => Promise<void>;
+  onCancel: () => void;
+  isLoading?: boolean;
 }
 
 export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading }: Props) {
@@ -175,14 +210,18 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
           id: crypto.randomUUID(),
           logic: 'AND',
           conditions: [
-            { id: crypto.randomUUID(), field: 'roas', operator: 'lt', value: '2.0', valueType: 'number' },
+            {
+              id: crypto.randomUUID(),
+              field: 'roas',
+              operator: 'lt',
+              value: '2.0',
+              valueType: 'number',
+            },
           ],
         },
       ],
       conditionLogic: 'AND',
-      actions: [
-        { id: crypto.randomUUID(), type: 'pause_campaign', config: {}, priority: 1 },
-      ],
+      actions: [{ id: crypto.randomUUID(), type: 'pause_campaign', config: {}, priority: 1 }],
       targeting: {
         platforms: [],
         campaignTypes: [],
@@ -202,10 +241,14 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
       cooldownHours: 24,
       maxExecutionsPerDay: 10,
     }
-  )
+  );
 
-  const [activeTab, setActiveTab] = useState<'conditions' | 'actions' | 'targeting' | 'schedule' | 'safety'>('conditions')
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([formData.conditionGroups[0]?.id]))
+  const [activeTab, setActiveTab] = useState<
+    'conditions' | 'actions' | 'targeting' | 'schedule' | 'safety'
+  >('conditions');
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set([formData.conditionGroups[0]?.id])
+  );
 
   // Condition Group Management
   const addConditionGroup = () => {
@@ -216,19 +259,27 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
         {
           id: crypto.randomUUID(),
           logic: 'AND',
-          conditions: [{ id: crypto.randomUUID(), field: 'roas', operator: 'lt', value: '', valueType: 'number' }],
+          conditions: [
+            {
+              id: crypto.randomUUID(),
+              field: 'roas',
+              operator: 'lt',
+              value: '',
+              valueType: 'number',
+            },
+          ],
         },
       ],
-    }))
-  }
+    }));
+  };
 
   const removeConditionGroup = (groupId: string) => {
-    if (formData.conditionGroups.length <= 1) return
+    if (formData.conditionGroups.length <= 1) return;
     setFormData((prev) => ({
       ...prev,
       conditionGroups: prev.conditionGroups.filter((g) => g.id !== groupId),
-    }))
-  }
+    }));
+  };
 
   const addCondition = (groupId: string) => {
     setFormData((prev) => ({
@@ -239,13 +290,19 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
               ...g,
               conditions: [
                 ...g.conditions,
-                { id: crypto.randomUUID(), field: 'roas', operator: 'lt', value: '', valueType: 'number' },
+                {
+                  id: crypto.randomUUID(),
+                  field: 'roas',
+                  operator: 'lt',
+                  value: '',
+                  valueType: 'number',
+                },
               ],
             }
           : g
       ),
-    }))
-  }
+    }));
+  };
 
   const removeCondition = (groupId: string, conditionId: string) => {
     setFormData((prev) => ({
@@ -255,22 +312,28 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
           ? { ...g, conditions: g.conditions.filter((c) => c.id !== conditionId) }
           : g
       ),
-    }))
-  }
+    }));
+  };
 
-  const updateCondition = (groupId: string, conditionId: string, updates: Partial<RuleCondition>) => {
+  const updateCondition = (
+    groupId: string,
+    conditionId: string,
+    updates: Partial<RuleCondition>
+  ) => {
     setFormData((prev) => ({
       ...prev,
       conditionGroups: prev.conditionGroups.map((g) =>
         g.id === groupId
           ? {
               ...g,
-              conditions: g.conditions.map((c) => (c.id === conditionId ? { ...c, ...updates } : c)),
+              conditions: g.conditions.map((c) =>
+                c.id === conditionId ? { ...c, ...updates } : c
+              ),
             }
           : g
       ),
-    }))
-  }
+    }));
+  };
 
   // Action Management
   const addAction = () => {
@@ -278,41 +341,46 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
       ...prev,
       actions: [
         ...prev.actions,
-        { id: crypto.randomUUID(), type: 'send_alert', config: {}, priority: prev.actions.length + 1 },
+        {
+          id: crypto.randomUUID(),
+          type: 'send_alert',
+          config: {},
+          priority: prev.actions.length + 1,
+        },
       ],
-    }))
-  }
+    }));
+  };
 
   const removeAction = (actionId: string) => {
-    if (formData.actions.length <= 1) return
+    if (formData.actions.length <= 1) return;
     setFormData((prev) => ({
       ...prev,
       actions: prev.actions.filter((a) => a.id !== actionId),
-    }))
-  }
+    }));
+  };
 
   const updateAction = (actionId: string, updates: Partial<RuleAction>) => {
     setFormData((prev) => ({
       ...prev,
       actions: prev.actions.map((a) => (a.id === actionId ? { ...a, ...updates } : a)),
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async () => {
-    await onSave(formData)
-  }
+    await onSave(formData);
+  };
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(groupId)) {
-        next.delete(groupId)
+        next.delete(groupId);
       } else {
-        next.add(groupId)
+        next.add(groupId);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   return (
     <div className="bg-card rounded-xl border">
@@ -441,24 +509,23 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                     ) : (
                       <ChevronRight className="w-4 h-4" />
                     )}
-                    <span className="font-medium">
-                      Condition Group {groupIndex + 1}
-                    </span>
+                    <span className="font-medium">Condition Group {groupIndex + 1}</span>
                     <span className="text-sm text-muted-foreground">
-                      ({group.conditions.length} condition{group.conditions.length !== 1 ? 's' : ''})
+                      ({group.conditions.length} condition{group.conditions.length !== 1 ? 's' : ''}
+                      )
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <select
                       value={group.logic}
                       onChange={(e) => {
-                        e.stopPropagation()
+                        e.stopPropagation();
                         setFormData((prev) => ({
                           ...prev,
                           conditionGroups: prev.conditionGroups.map((g) =>
                             g.id === group.id ? { ...g, logic: e.target.value as 'AND' | 'OR' } : g
                           ),
-                        }))
+                        }));
                       }}
                       onClick={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs rounded border bg-background"
@@ -469,8 +536,8 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                     {formData.conditionGroups.length > 1 && (
                       <button
                         onClick={(e) => {
-                          e.stopPropagation()
-                          removeConditionGroup(group.id)
+                          e.stopPropagation();
+                          removeConditionGroup(group.id);
                         }}
                         className="p-1 rounded hover:bg-destructive/10 text-destructive"
                       >
@@ -493,20 +560,23 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                         <select
                           value={condition.field}
                           onChange={(e) => {
-                            const field = CONDITION_FIELDS.find((f) => f.value === e.target.value)
+                            const field = CONDITION_FIELDS.find((f) => f.value === e.target.value);
                             updateCondition(group.id, condition.id, {
                               field: e.target.value,
                               valueType: field?.valueType || 'number',
-                            })
+                            });
                           }}
                           className="flex-1 px-3 py-2 rounded-lg border bg-background text-sm"
                         >
                           {Object.entries(
-                            CONDITION_FIELDS.reduce((acc, f) => {
-                              acc[f.category] = acc[f.category] || []
-                              acc[f.category].push(f)
-                              return acc
-                            }, {} as Record<string, typeof CONDITION_FIELDS>)
+                            CONDITION_FIELDS.reduce(
+                              (acc, f) => {
+                                acc[f.category] = acc[f.category] || [];
+                                acc[f.category].push(f);
+                                return acc;
+                              },
+                              {} as Record<string, typeof CONDITION_FIELDS>
+                            )
                           ).map(([category, fields]) => (
                             <optgroup key={category} label={category}>
                               {fields.map((f) => (
@@ -598,8 +668,8 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
             </div>
 
             {formData.actions.map((action, index) => {
-              const actionType = ACTION_TYPES.find((a) => a.value === action.type)
-              const ActionIcon = actionType?.icon || Zap
+              const actionType = ACTION_TYPES.find((a) => a.value === action.type);
+              const ActionIcon = actionType?.icon || Zap;
 
               return (
                 <div key={action.id} className="rounded-lg border p-4">
@@ -610,15 +680,20 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                     <div className="flex-1 space-y-3">
                       <select
                         value={action.type}
-                        onChange={(e) => updateAction(action.id, { type: e.target.value, config: {} })}
+                        onChange={(e) =>
+                          updateAction(action.id, { type: e.target.value, config: {} })
+                        }
                         className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
                       >
                         {Object.entries(
-                          ACTION_TYPES.reduce((acc, a) => {
-                            acc[a.category] = acc[a.category] || []
-                            acc[a.category].push(a)
-                            return acc
-                          }, {} as Record<string, typeof ACTION_TYPES>)
+                          ACTION_TYPES.reduce(
+                            (acc, a) => {
+                              acc[a.category] = acc[a.category] || [];
+                              acc[a.category].push(a);
+                              return acc;
+                            },
+                            {} as Record<string, typeof ACTION_TYPES>
+                          )
                         ).map(([category, actions]) => (
                           <optgroup key={category} label={category}>
                             {actions.map((a) => (
@@ -724,7 +799,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                     )}
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
@@ -750,7 +825,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                             ? prev.targeting.platforms.filter((p) => p !== platform.value)
                             : [...prev.targeting.platforms, platform.value],
                         },
-                      }))
+                      }));
                     }}
                     className={cn(
                       'px-3 py-2 rounded-lg border text-sm transition-colors',
@@ -788,7 +863,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                             ? prev.targeting.campaignTypes.filter((t) => t !== type.value)
                             : [...prev.targeting.campaignTypes, type.value],
                         },
-                      }))
+                      }));
                     }}
                     className={cn(
                       'px-3 py-2 rounded-lg border text-sm transition-colors',
@@ -918,9 +993,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                   }
                   className="w-20 px-3 py-2 rounded-lg border bg-background text-sm"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Limit executions per 24 hours
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Limit executions per 24 hours</p>
               </div>
             </div>
           </div>
@@ -937,8 +1010,8 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                     Trust-Gated Execution
                   </h4>
                   <p className="text-sm text-amber-600 dark:text-amber-300 mt-1">
-                    Actions are only executed when signal health meets the threshold.
-                    This protects against automation during data quality issues.
+                    Actions are only executed when signal health meets the threshold. This protects
+                    against automation during data quality issues.
                   </p>
                 </div>
               </div>
@@ -1103,7 +1176,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default CustomAutopilotRulesBuilder
+export default CustomAutopilotRulesBuilder;

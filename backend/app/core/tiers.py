@@ -12,14 +12,11 @@ Tiers:
 
 import enum
 from dataclasses import dataclass
-from typing import Dict, List, Set
-from functools import wraps
-
-from fastapi import HTTPException, status
 
 
 class SubscriptionTier(str, enum.Enum):
     """Subscription tier levels."""
+
     STARTER = "starter"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
@@ -112,13 +109,13 @@ class Feature(str, enum.Enum):
     IDENTITY_GRAPH = "identity_graph"
 
     # Embed Widgets
-    EMBED_WIDGETS_BASIC = "embed_widgets_basic"      # Starter: with full branding
+    EMBED_WIDGETS_BASIC = "embed_widgets_basic"  # Starter: with full branding
     EMBED_WIDGETS_MINIMAL = "embed_widgets_minimal"  # Professional: minimal branding
     EMBED_WIDGETS_WHITELABEL = "embed_widgets_whitelabel"  # Enterprise: no branding
 
 
 # Feature sets per tier
-TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
+TIER_FEATURES: dict[SubscriptionTier, set[Feature]] = {
     SubscriptionTier.STARTER: {
         # Core
         Feature.AD_ACCOUNTS_BASIC,
@@ -143,7 +140,6 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         # Embed Widgets (with full branding)
         Feature.EMBED_WIDGETS_BASIC,
     },
-
     SubscriptionTier.PROFESSIONAL: {
         # All Starter features (inherited)
         Feature.AD_ACCOUNTS_BASIC,
@@ -174,7 +170,6 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
         Feature.EMBED_WIDGETS_BASIC,
         Feature.EMBED_WIDGETS_MINIMAL,
     },
-
     SubscriptionTier.ENTERPRISE: {
         # All Starter & Professional features
         Feature.AD_ACCOUNTS_BASIC,
@@ -223,7 +218,7 @@ TIER_FEATURES: Dict[SubscriptionTier, Set[Feature]] = {
 
 
 # Tier limits
-TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
+TIER_LIMITS: dict[SubscriptionTier, dict[str, int]] = {
     SubscriptionTier.STARTER: {
         "max_ad_accounts": 5,
         "max_users": 3,
@@ -270,9 +265,11 @@ TIER_LIMITS: Dict[SubscriptionTier, Dict[str, int]] = {
 # TierLimits Dataclass - Type-safe access to tier limits
 # =============================================================================
 
+
 @dataclass
 class TierLimits:
     """Type-safe representation of tier limits."""
+
     max_ad_accounts: int
     max_users: int
     max_segments: int
@@ -286,7 +283,7 @@ class TierLimits:
     max_webhooks: int
 
     @classmethod
-    def from_dict(cls, limits_dict: Dict[str, int]) -> "TierLimits":
+    def from_dict(cls, limits_dict: dict[str, int]) -> "TierLimits":
         """Create TierLimits from a dictionary."""
         return cls(
             max_ad_accounts=limits_dict.get("max_ad_accounts", 0),
@@ -334,12 +331,12 @@ def tier_at_least(tier: SubscriptionTier, minimum: SubscriptionTier) -> bool:
     return tier_index >= min_index
 
 
-def get_available_features(tier: SubscriptionTier) -> List[str]:
+def get_available_features(tier: SubscriptionTier) -> list[str]:
     """Get list of available feature names for a tier."""
     return [f.value for f in TIER_FEATURES.get(tier, set())]
 
 
-def get_tier_info(tier: SubscriptionTier) -> Dict:
+def get_tier_info(tier: SubscriptionTier) -> dict:
     """Get complete tier information."""
     return {
         "tier": tier.value,

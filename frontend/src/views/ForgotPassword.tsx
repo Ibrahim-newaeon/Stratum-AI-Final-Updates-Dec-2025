@@ -3,18 +3,18 @@
  * Clean white + blue accent + professional
  */
 
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
-  EnvelopeIcon,
   ArrowLeftIcon,
   CheckCircleIcon,
+  EnvelopeIcon,
   ExclamationCircleIcon,
-} from '@heroicons/react/24/outline'
-import { useForgotPassword } from '@/api/auth'
+} from '@heroicons/react/24/outline';
+import { useForgotPassword } from '@/api/auth';
 
 // Apple Style Theme
 const theme = {
@@ -29,21 +29,21 @@ const theme = {
   textMuted: '#86868B',
   border: 'rgba(0, 0, 0, 0.08)',
   success: '#34C759',
-}
+};
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email'),
-})
+});
 
-type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>
+type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPassword() {
-  const [submittedEmail, setSubmittedEmail] = useState('')
-  const forgotPasswordMutation = useForgotPassword()
+  const [submittedEmail, setSubmittedEmail] = useState('');
+  const forgotPasswordMutation = useForgotPassword();
 
-  const isLoading = forgotPasswordMutation.isPending
-  const isSuccess = forgotPasswordMutation.isSuccess
-  const apiError = forgotPasswordMutation.error?.message
+  const isLoading = forgotPasswordMutation.isPending;
+  const isSuccess = forgotPasswordMutation.isSuccess;
+  const apiError = forgotPasswordMutation.error?.message;
 
   const {
     register,
@@ -51,16 +51,19 @@ export default function ForgotPassword() {
     formState: { errors },
   } = useForm<ForgotPasswordForm>({
     resolver: zodResolver(forgotPasswordSchema),
-  })
+  });
 
   const onSubmit = async (data: ForgotPasswordForm) => {
-    setSubmittedEmail(data.email)
-    forgotPasswordMutation.mutate({ email: data.email })
-  }
+    setSubmittedEmail(data.email);
+    forgotPasswordMutation.mutate({ email: data.email });
+  };
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
+      <div
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{ background: theme.bgElevated }}
+      >
         <div className="max-w-md w-full text-center">
           <div
             className="p-8 rounded-2xl"
@@ -76,9 +79,15 @@ export default function ForgotPassword() {
             >
               <CheckCircleIcon className="w-8 h-8" style={{ color: theme.success }} />
             </div>
-            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>Check your email</h1>
-            <p className="mb-2" style={{ color: theme.textMuted }}>We've sent a password reset link to:</p>
-            <p className="font-medium mb-6" style={{ color: theme.textPrimary }}>{submittedEmail}</p>
+            <h1 className="text-2xl font-semibold mb-3" style={{ color: theme.textPrimary }}>
+              Check your email
+            </h1>
+            <p className="mb-2" style={{ color: theme.textMuted }}>
+              We've sent a password reset link to:
+            </p>
+            <p className="font-medium mb-6" style={{ color: theme.textPrimary }}>
+              {submittedEmail}
+            </p>
             <p className="text-sm mb-6" style={{ color: theme.textMuted }}>
               If you don't see it in your inbox, check your spam folder.
             </p>
@@ -86,8 +95,8 @@ export default function ForgotPassword() {
               to="/login"
               className="block w-full py-3 rounded-xl text-white font-semibold text-center transition-all duration-200"
               style={{ background: theme.blue }}
-              onMouseEnter={(e) => e.currentTarget.style.background = theme.blueHover}
-              onMouseLeave={(e) => e.currentTarget.style.background = theme.blue}
+              onMouseEnter={(e) => (e.currentTarget.style.background = theme.blueHover)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = theme.blue)}
             >
               Back to Login
             </Link>
@@ -101,11 +110,14 @@ export default function ForgotPassword() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: theme.bgElevated }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ background: theme.bgElevated }}
+    >
       <div className="max-w-md w-full">
         <Link
           to="/login"
@@ -123,7 +135,9 @@ export default function ForgotPassword() {
           >
             <span className="text-white font-semibold text-lg">S</span>
           </div>
-          <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>Stratum AI</span>
+          <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>
+            Stratum AI
+          </span>
         </Link>
 
         <div
@@ -134,7 +148,9 @@ export default function ForgotPassword() {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
           }}
         >
-          <h1 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>Forgot your password?</h1>
+          <h1 className="text-2xl font-semibold mb-2" style={{ color: theme.textPrimary }}>
+            Forgot your password?
+          </h1>
           <p className="mb-6" style={{ color: theme.textMuted }}>
             Enter your email and we'll send you a reset link.
           </p>
@@ -155,9 +171,14 @@ export default function ForgotPassword() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>Email address</label>
+              <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                Email address
+              </label>
               <div className="relative">
-                <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: theme.textMuted }} />
+                <EnvelopeIcon
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                  style={{ color: theme.textMuted }}
+                />
                 <input
                   {...register('email')}
                   type="email"
@@ -169,12 +190,12 @@ export default function ForgotPassword() {
                     color: theme.textPrimary,
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = theme.blue
-                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`
+                    e.target.style.borderColor = theme.blue;
+                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = theme.border
-                    e.target.style.boxShadow = 'none'
+                    e.target.style.borderColor = theme.border;
+                    e.target.style.boxShadow = 'none';
                   }}
                 />
               </div>
@@ -187,17 +208,29 @@ export default function ForgotPassword() {
               className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
               style={{ background: theme.blue }}
               onMouseEnter={(e) => {
-                if (!isLoading) e.currentTarget.style.background = theme.blueHover
+                if (!isLoading) e.currentTarget.style.background = theme.blueHover;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.blue
+                e.currentTarget.style.background = theme.blue;
               }}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Sending...
                 </span>
@@ -209,5 +242,5 @@ export default function ForgotPassword() {
         </div>
       </div>
     </div>
-  )
+  );
 }

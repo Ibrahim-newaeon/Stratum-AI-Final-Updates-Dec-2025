@@ -8,8 +8,8 @@ Implements Module B: Digital Asset Management.
 
 import os
 import uuid
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC
+from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy import func, select
@@ -43,7 +43,7 @@ async def list_assets(
     page_size: int = Query(20, ge=1, le=100),
     asset_type: Optional[AssetType] = None,
     folder: Optional[str] = None,
-    tags: Optional[List[str]] = Query(None),
+    tags: Optional[list[str]] = Query(None),
     min_fatigue_score: Optional[float] = None,
     max_fatigue_score: Optional[float] = None,
 ):
@@ -122,7 +122,7 @@ async def list_folders(
     return APIResponse(success=True, data=folders)
 
 
-@router.get("/fatigued", response_model=APIResponse[List[CreativeAssetResponse]])
+@router.get("/fatigued", response_model=APIResponse[list[CreativeAssetResponse]])
 async def get_fatigued_assets(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -183,7 +183,9 @@ async def get_asset(
     )
 
 
-@router.post("", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_asset(
     request: Request,
     asset_data: CreativeAssetCreate,
@@ -210,7 +212,11 @@ async def create_asset(
     )
 
 
-@router.post("/upload", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/upload",
+    response_model=APIResponse[CreativeAssetResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_asset(
     request: Request,
     file: UploadFile = File(...),
@@ -384,7 +390,6 @@ async def calculate_fatigue_score(
         )
 
     # Calculate fatigue score
-    from datetime import datetime, timezone
 
     base_score = 0.0
 
@@ -394,7 +399,7 @@ async def calculate_fatigue_score(
 
     # Factor 2: Age since first use (max 30 points)
     if asset.first_used_at:
-        days_active = (datetime.now(timezone.utc) - asset.first_used_at).days
+        days_active = (datetime.now(UTC) - asset.first_used_at).days
         base_score += min(30, days_active * 0.5)
 
     # Factor 3: High impression volume (max 20 points)

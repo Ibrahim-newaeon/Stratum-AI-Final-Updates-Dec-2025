@@ -3,58 +3,61 @@
  * Matches landing page with purple/cyan gradients
  */
 
-import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { motion, AnimatePresence } from 'framer-motion'
-import { dropdownVariants } from '@/lib/animations'
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { AnimatePresence, motion } from 'framer-motion';
+import { dropdownVariants } from '@/lib/animations';
 import {
-  HomeIcon,
-  ChartBarIcon,
-  FolderIcon,
-  CogIcon,
-  BoltIcon,
-  PhotoIcon,
-  TrophyIcon,
-  Bars3Icon,
-  XMarkIcon,
-  BookOpenIcon,
-  ChatBubbleLeftRightIcon,
-  Squares2X2Icon,
-  BuildingOffice2Icon,
-  CpuChipIcon,
-  SignalIcon,
-  ChartPieIcon,
-  CircleStackIcon,
-  ShieldCheckIcon,
-  ArrowRightOnRectangleIcon,
-  UserGroupIcon,
-  TagIcon,
-  ClockIcon,
-  ShareIcon,
-  ChevronDownIcon,
-  ArrowUpOnSquareIcon,
-  PresentationChartBarIcon,
-  FunnelIcon,
-  CalculatorIcon,
-  ShieldExclamationIcon,
   AdjustmentsHorizontalIcon,
-  DocumentChartBarIcon,
-  UserMinusIcon,
-  DocumentTextIcon,
+  ArrowRightOnRectangleIcon,
+  ArrowUpOnSquareIcon,
+  Bars3Icon,
+  BoltIcon,
+  BookOpenIcon,
+  BuildingOffice2Icon,
+  CalculatorIcon,
+  ChartBarIcon,
+  ChartPieIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CircleStackIcon,
+  ClockIcon,
+  CogIcon,
+  CpuChipIcon,
+  DocumentChartBarIcon,
+  DocumentTextIcon,
+  FolderIcon,
+  FunnelIcon,
   GiftIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
-import LearningHub from '@/components/guide/LearningHub'
-import { CommandPalette } from '@/components/ui/command-palette'
-import { DemoBanner } from '@/components/demo/DemoBanner'
-import { NotificationCenter, NotificationBell } from '@/components/notifications/NotificationCenter'
-import { WhatsNewModal, useWhatsNew } from '@/components/changelog/WhatsNew'
-import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts'
-import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
-import { useAuth } from '@/contexts/AuthContext'
+  HomeIcon,
+  PhotoIcon,
+  PresentationChartBarIcon,
+  ShareIcon,
+  ShieldCheckIcon,
+  ShieldExclamationIcon,
+  SignalIcon,
+  Squares2X2Icon,
+  TagIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  UserMinusIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import LearningHub from '@/components/guide/LearningHub';
+import { CommandPalette } from '@/components/ui/command-palette';
+import { DemoBanner } from '@/components/demo/DemoBanner';
+import {
+  NotificationBell,
+  NotificationCenter,
+} from '@/components/notifications/NotificationCenter';
+import { useWhatsNew, WhatsNewModal } from '@/components/changelog/WhatsNew';
+import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Dark Theme - Purple/Cyan Gradients (matches landing page)
 const theme = {
@@ -73,20 +76,51 @@ const theme = {
   danger: '#ef4444',
   // Gradient for accents
   gradient: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-}
+};
 
 const navigation = [
-  { name: 'nav.overview', href: '/dashboard/overview', icon: HomeIcon, tourId: 'nav-overview', dataTour: 'overview' },
+  {
+    name: 'nav.overview',
+    href: '/dashboard/overview',
+    icon: HomeIcon,
+    tourId: 'nav-overview',
+    dataTour: 'overview',
+  },
   { name: 'nav.dashboard', href: '/dashboard', icon: Squares2X2Icon, tourId: 'nav-dashboard' },
-  { name: 'nav.campaigns', href: '/dashboard/campaigns', icon: ChartBarIcon, tourId: 'nav-campaigns' },
+  {
+    name: 'nav.campaigns',
+    href: '/dashboard/campaigns',
+    icon: ChartBarIcon,
+    tourId: 'nav-campaigns',
+  },
   { name: 'nav.stratum', href: '/dashboard/stratum', icon: TrophyIcon, tourId: 'nav-stratum' },
-  { name: 'nav.benchmarks', href: '/dashboard/benchmarks', icon: FolderIcon, tourId: 'nav-benchmarks' },
+  {
+    name: 'nav.benchmarks',
+    href: '/dashboard/benchmarks',
+    icon: FolderIcon,
+    tourId: 'nav-benchmarks',
+  },
   { name: 'nav.assets', href: '/dashboard/assets', icon: PhotoIcon, tourId: 'nav-assets' },
   { name: 'nav.rules', href: '/dashboard/rules', icon: BoltIcon, tourId: 'nav-rules' },
-  { name: 'Custom Autopilot', href: '/dashboard/custom-autopilot-rules', icon: AdjustmentsHorizontalIcon, tourId: 'nav-custom-autopilot' },
-  { name: 'Custom Reports', href: '/dashboard/custom-reports', icon: DocumentChartBarIcon, tourId: 'nav-custom-reports' },
-  { name: 'nav.whatsapp', href: '/dashboard/whatsapp', icon: ChatBubbleLeftRightIcon, tourId: 'nav-whatsapp' },
-]
+  {
+    name: 'Custom Autopilot',
+    href: '/dashboard/custom-autopilot-rules',
+    icon: AdjustmentsHorizontalIcon,
+    tourId: 'nav-custom-autopilot',
+  },
+  {
+    name: 'Custom Reports',
+    href: '/dashboard/custom-reports',
+    icon: DocumentChartBarIcon,
+    tourId: 'nav-custom-reports',
+  },
+  {
+    name: 'nav.whatsapp',
+    href: '/dashboard/whatsapp',
+    icon: ChatBubbleLeftRightIcon,
+    tourId: 'nav-whatsapp',
+  },
+];
 
 const cdpNavigation = [
   { name: 'CDP Overview', href: '/dashboard/cdp', icon: CircleStackIcon },
@@ -100,50 +134,59 @@ const cdpNavigation = [
   { name: 'Consent', href: '/dashboard/cdp/consent', icon: ShieldExclamationIcon },
   { name: 'Predictive Churn', href: '/dashboard/cdp/predictive-churn', icon: UserMinusIcon },
   { name: 'Audience Sync', href: '/dashboard/cdp/audience-sync', icon: ArrowUpOnSquareIcon },
-]
+];
 
 export default function DashboardLayout() {
-  const { t, i18n } = useTranslation()
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [learningHubOpen, setLearningHubOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'))
-  const [superadminExpanded, setSuperadminExpanded] = useState(location.pathname.startsWith('/dashboard/superadmin'))
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [whatsNewOpen, setWhatsNewOpen] = useState(false)
-  const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  const { hasNewUpdates } = useWhatsNew()
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [learningHubOpen, setLearningHubOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'));
+  const [superadminExpanded, setSuperadminExpanded] = useState(
+    location.pathname.startsWith('/dashboard/superadmin')
+  );
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const { hasNewUpdates } = useWhatsNew();
 
   // Set dark theme
   useEffect(() => {
-    document.documentElement.classList.remove('light')
-    document.documentElement.classList.add('dark')
-    localStorage.setItem('stratum-theme', 'dark')
-  }, [])
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('stratum-theme', 'dark');
+  }, []);
 
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'ar' : 'en'
-    i18n.changeLanguage(newLang)
-    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr'
-  }
+    const newLang = i18n.language === 'en' ? 'ar' : 'en';
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+    logout();
+    navigate('/login');
+  };
 
   const getUserInitials = () => {
-    if (!user?.name) return 'U'
-    const names = user.name.split(' ')
-    return names.map(n => n[0]).join('').toUpperCase().slice(0, 2)
-  }
+    if (!user?.name) return 'U';
+    const names = user.name.split(' ');
+    return names
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: theme.bgElevated }}>
+    <div
+      className="flex flex-col h-screen overflow-hidden"
+      style={{ background: theme.bgElevated }}
+    >
       <DemoBanner variant="top" />
 
       <div className="flex flex-1 overflow-hidden relative z-10">
@@ -176,10 +219,12 @@ export default function DashboardLayout() {
             borderRight: `1px solid ${theme.border}`,
           }}
         >
-          <div className={cn(
-            "flex h-full flex-col w-64 transition-opacity duration-200",
-            sidebarCollapsed ? "lg:opacity-0" : "lg:opacity-100"
-          )}>
+          <div
+            className={cn(
+              'flex h-full flex-col w-64 transition-opacity duration-200',
+              sidebarCollapsed ? 'lg:opacity-0' : 'lg:opacity-100'
+            )}
+          >
             {/* Logo */}
             <div
               className="flex h-16 items-center justify-between px-4"
@@ -222,7 +267,7 @@ export default function DashboardLayout() {
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="sidebar-nav">
               {navigation.map((item) => {
-                const isActive = location.pathname === item.href
+                const isActive = location.pathname === item.href;
                 return (
                   <NavLink
                     key={item.name}
@@ -236,12 +281,12 @@ export default function DashboardLayout() {
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.background = theme.bgElevated
+                        e.currentTarget.style.background = theme.bgElevated;
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.background = 'transparent';
                       }
                     }}
                     onClick={() => setSidebarOpen(false)}
@@ -252,7 +297,7 @@ export default function DashboardLayout() {
                     />
                     {t(item.name)}
                   </NavLink>
-                )
+                );
               })}
 
               {/* CDP Section */}
@@ -261,21 +306,30 @@ export default function DashboardLayout() {
                   onClick={() => setCdpExpanded(!cdpExpanded)}
                   className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
                   style={{
-                    background: location.pathname.startsWith('/dashboard/cdp') ? theme.purpleLight : 'transparent',
-                    color: location.pathname.startsWith('/dashboard/cdp') ? theme.purple : theme.textSecondary,
+                    background: location.pathname.startsWith('/dashboard/cdp')
+                      ? theme.purpleLight
+                      : 'transparent',
+                    color: location.pathname.startsWith('/dashboard/cdp')
+                      ? theme.purple
+                      : theme.textSecondary,
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <CircleStackIcon
                       className="h-5 w-5"
                       style={{
-                        color: location.pathname.startsWith('/dashboard/cdp') ? theme.purple : theme.textMuted
+                        color: location.pathname.startsWith('/dashboard/cdp')
+                          ? theme.purple
+                          : theme.textMuted,
                       }}
                     />
                     <span>CDP</span>
                   </div>
                   <ChevronDownIcon
-                    className={cn('h-4 w-4 transition-transform duration-200', cdpExpanded && 'rotate-180')}
+                    className={cn(
+                      'h-4 w-4 transition-transform duration-200',
+                      cdpExpanded && 'rotate-180'
+                    )}
                     style={{ color: theme.textMuted }}
                   />
                 </button>
@@ -291,7 +345,7 @@ export default function DashboardLayout() {
                       style={{ borderLeft: `2px solid ${theme.purpleLight}` }}
                     >
                       {cdpNavigation.map((item, index) => {
-                        const isActive = location.pathname === item.href
+                        const isActive = location.pathname === item.href;
                         return (
                           <motion.div
                             key={item.name}
@@ -315,7 +369,7 @@ export default function DashboardLayout() {
                               {item.name}
                             </NavLink>
                           </motion.div>
-                        )
+                        );
                       })}
                     </motion.div>
                   )}
@@ -332,8 +386,12 @@ export default function DashboardLayout() {
                     onClick={() => setSuperadminExpanded(!superadminExpanded)}
                     className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150"
                     style={{
-                      background: location.pathname.startsWith('/dashboard/superadmin') ? theme.purpleLight : 'transparent',
-                      color: location.pathname.startsWith('/dashboard/superadmin') ? theme.purple : theme.textSecondary,
+                      background: location.pathname.startsWith('/dashboard/superadmin')
+                        ? theme.purpleLight
+                        : 'transparent',
+                      color: location.pathname.startsWith('/dashboard/superadmin')
+                        ? theme.purple
+                        : theme.textSecondary,
                     }}
                   >
                     <div className="flex items-center gap-3">
@@ -341,14 +399,25 @@ export default function DashboardLayout() {
                       <span>Superadmin</span>
                     </div>
                     <ChevronDownIcon
-                      className={cn('h-4 w-4 transition-transform', superadminExpanded && 'rotate-180')}
+                      className={cn(
+                        'h-4 w-4 transition-transform',
+                        superadminExpanded && 'rotate-180'
+                      )}
                       style={{ color: theme.textMuted }}
                     />
                   </button>
                   {superadminExpanded && (
-                    <div className="mt-1 ml-3 pl-3 space-y-0.5" style={{ borderLeft: `2px solid ${theme.purpleLight}` }}>
+                    <div
+                      className="mt-1 ml-3 pl-3 space-y-0.5"
+                      style={{ borderLeft: `2px solid ${theme.purpleLight}` }}
+                    >
                       {[
-                        { href: '/dashboard/superadmin', icon: ChartPieIcon, name: 'Dashboard', end: true },
+                        {
+                          href: '/dashboard/superadmin',
+                          icon: ChartPieIcon,
+                          name: 'Dashboard',
+                          end: true,
+                        },
                         { href: '/dashboard/superadmin/cms', icon: DocumentTextIcon, name: 'CMS' },
                         { href: '/dashboard/superadmin/users', icon: UserGroupIcon, name: 'Users' },
                       ].map((item) => (
@@ -358,8 +427,10 @@ export default function DashboardLayout() {
                           end={item.end}
                           className="flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition-all duration-150"
                           style={{
-                            background: location.pathname === item.href ? theme.purpleLight : 'transparent',
-                            color: location.pathname === item.href ? theme.purple : theme.textSecondary,
+                            background:
+                              location.pathname === item.href ? theme.purpleLight : 'transparent',
+                            color:
+                              location.pathname === item.href ? theme.purple : theme.textSecondary,
                           }}
                         >
                           <item.icon className="h-4 w-4" style={{ color: theme.textMuted }} />
@@ -377,10 +448,19 @@ export default function DashboardLayout() {
                 { href: '/dashboard/ml-training', icon: CpuChipIcon, name: 'nav.mlTraining' },
                 { href: '/dashboard/capi-setup', icon: SignalIcon, name: 'nav.capiSetup' },
                 { href: '/dashboard/data-quality', icon: ChartPieIcon, name: 'nav.dataQuality' },
-                { href: '/dashboard/emq-dashboard', icon: CircleStackIcon, name: 'nav.emqDashboard' },
-                { href: '/dashboard/settings', icon: CogIcon, name: 'nav.settings', dataTour: 'settings' },
+                {
+                  href: '/dashboard/emq-dashboard',
+                  icon: CircleStackIcon,
+                  name: 'nav.emqDashboard',
+                },
+                {
+                  href: '/dashboard/settings',
+                  icon: CogIcon,
+                  name: 'nav.settings',
+                  dataTour: 'settings',
+                },
               ].map((item) => {
-                const isActive = location.pathname === item.href
+                const isActive = location.pathname === item.href;
                 return (
                   <NavLink
                     key={item.href}
@@ -398,7 +478,7 @@ export default function DashboardLayout() {
                     />
                     {t(item.name)}
                   </NavLink>
-                )
+                );
               })}
             </div>
 
@@ -443,10 +523,12 @@ export default function DashboardLayout() {
         )}
 
         {/* Main content */}
-        <div className={cn(
-          "flex flex-1 flex-col overflow-hidden transition-all duration-300",
-          sidebarCollapsed ? "lg:ml-0" : "lg:ml-64"
-        )}>
+        <div
+          className={cn(
+            'flex flex-1 flex-col overflow-hidden transition-all duration-300',
+            sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-64'
+          )}
+        >
           {/* Header */}
           <header
             className="flex h-14 items-center justify-between px-4 lg:px-6"
@@ -474,8 +556,8 @@ export default function DashboardLayout() {
                 style={{ color: theme.textMuted }}
                 onClick={() => setLearningHubOpen(!learningHubOpen)}
                 title="Learning Hub"
-                onMouseEnter={(e) => e.currentTarget.style.color = theme.purple}
-                onMouseLeave={(e) => e.currentTarget.style.color = theme.textMuted}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.purple)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
               >
                 <BookOpenIcon className="h-5 w-5" />
               </button>
@@ -488,12 +570,12 @@ export default function DashboardLayout() {
                 }}
                 onClick={toggleLanguage}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = theme.purple
-                  e.currentTarget.style.color = theme.purple
+                  e.currentTarget.style.borderColor = theme.purple;
+                  e.currentTarget.style.color = theme.purple;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = theme.border
-                  e.currentTarget.style.color = theme.textMuted
+                  e.currentTarget.style.borderColor = theme.border;
+                  e.currentTarget.style.color = theme.textMuted;
                 }}
               >
                 {i18n.language === 'en' ? 'AR' : 'EN'}
@@ -504,8 +586,8 @@ export default function DashboardLayout() {
                 className="relative p-2 rounded-lg transition-colors"
                 style={{ color: theme.textMuted }}
                 title="What's New"
-                onMouseEnter={(e) => e.currentTarget.style.color = theme.purple}
-                onMouseLeave={(e) => e.currentTarget.style.color = theme.textMuted}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.purple)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
               >
                 <GiftIcon className="h-5 w-5" />
                 {hasNewUpdates && (
@@ -551,7 +633,10 @@ export default function DashboardLayout() {
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                         }}
                       >
-                        <div className="px-3 py-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                        <div
+                          className="px-3 py-2"
+                          style={{ borderBottom: `1px solid ${theme.border}` }}
+                        >
                           <p className="text-sm font-medium" style={{ color: theme.textPrimary }}>
                             {user?.name}
                           </p>
@@ -564,8 +649,10 @@ export default function DashboardLayout() {
                           className="flex items-center gap-2 px-3 py-2 text-sm transition-colors"
                           style={{ color: theme.textSecondary }}
                           onClick={() => setUserMenuOpen(false)}
-                          onMouseEnter={(e) => e.currentTarget.style.background = theme.bgElevated}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = theme.bgElevated)
+                          }
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
                           <CogIcon className="w-4 h-4" />
                           {t('common.settings')}
@@ -574,8 +661,10 @@ export default function DashboardLayout() {
                           onClick={handleLogout}
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors"
                           style={{ color: theme.danger }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = theme.bgElevated}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = theme.bgElevated)
+                          }
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
                           <ArrowRightOnRectangleIcon className="w-4 h-4" />
                           {t('common.logout')}
@@ -608,10 +697,13 @@ export default function DashboardLayout() {
         </div>
 
         <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
-        <NotificationCenter isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+        <NotificationCenter
+          isOpen={notificationsOpen}
+          onClose={() => setNotificationsOpen(false)}
+        />
         <WhatsNewModal isOpen={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
         <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       </div>
     </div>
-  )
+  );
 }

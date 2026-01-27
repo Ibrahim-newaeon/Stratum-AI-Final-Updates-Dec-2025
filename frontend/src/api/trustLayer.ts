@@ -7,80 +7,85 @@
  * - Combined trust status
  */
 
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from './client'
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from './client';
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type SignalHealthStatus = 'ok' | 'risk' | 'degraded' | 'critical' | 'no_data'
-export type AttributionVarianceStatus = 'healthy' | 'minor_variance' | 'moderate_variance' | 'high_variance' | 'no_data'
+export type SignalHealthStatus = 'ok' | 'risk' | 'degraded' | 'critical' | 'no_data';
+export type AttributionVarianceStatus =
+  | 'healthy'
+  | 'minor_variance'
+  | 'moderate_variance'
+  | 'high_variance'
+  | 'no_data';
 
 export interface MetricCard {
-  title: string
-  value: string
-  status: 'ok' | 'risk' | 'degraded' | 'neutral'
-  description?: string
+  title: string;
+  value: string;
+  status: 'ok' | 'risk' | 'degraded' | 'neutral';
+  description?: string;
 }
 
 export interface TrustBanner {
-  type: 'info' | 'warning' | 'error'
-  title: string
-  message: string
-  actions: string[]
+  type: 'info' | 'warning' | 'error';
+  title: string;
+  message: string;
+  actions: string[];
 }
 
 export interface PlatformHealthRow {
-  platform: string
-  account_id?: string
-  emq_score?: number
-  event_loss_pct?: number
-  freshness_minutes?: number
-  api_error_rate?: number
-  status: SignalHealthStatus
+  platform: string;
+  account_id?: string;
+  emq_score?: number;
+  event_loss_pct?: number;
+  freshness_minutes?: number;
+  api_error_rate?: number;
+  status: SignalHealthStatus;
 }
 
 export interface SignalHealthData {
-  date: string
-  status: SignalHealthStatus
-  automation_blocked: boolean
-  cards: MetricCard[]
-  platform_rows: PlatformHealthRow[]
-  banners: TrustBanner[]
-  issues: string[]
-  actions: string[]
+  date: string;
+  status: SignalHealthStatus;
+  automation_blocked: boolean;
+  cards: MetricCard[];
+  platform_rows: PlatformHealthRow[];
+  banners: TrustBanner[];
+  issues: string[];
+  actions: string[];
 }
 
 export interface PlatformVarianceRow {
-  platform: string
-  ga4_revenue: number
-  platform_revenue: number
-  revenue_delta_pct: number
-  ga4_conversions: number
-  platform_conversions: number
-  conversion_delta_pct: number
-  confidence: number
-  status: AttributionVarianceStatus
+  platform: string;
+  ga4_revenue: number;
+  platform_revenue: number;
+  revenue_delta_pct: number;
+  ga4_conversions: number;
+  platform_conversions: number;
+  conversion_delta_pct: number;
+  confidence: number;
+  status: AttributionVarianceStatus;
 }
 
 export interface AttributionVarianceData {
-  date: string
-  status: AttributionVarianceStatus
-  overall_revenue_variance_pct: number
-  overall_conversion_variance_pct: number
-  cards: MetricCard[]
-  platform_rows: PlatformVarianceRow[]
-  banners: TrustBanner[]
+  date: string;
+  status: AttributionVarianceStatus;
+  overall_revenue_variance_pct: number;
+  overall_conversion_variance_pct: number;
+  cards: MetricCard[];
+  platform_rows: PlatformVarianceRow[];
+  banners: TrustBanner[];
 }
 
 export interface TrustStatusData {
-  date: string
-  overall_status: SignalHealthStatus
-  automation_allowed: boolean
-  signal_health: SignalHealthData | null
-  attribution_variance: AttributionVarianceData | null
-  banners: TrustBanner[]
+  date: string;
+  overall_status: SignalHealthStatus;
+  automation_allowed: boolean;
+  signal_health: SignalHealthData | null;
+  attribution_variance: AttributionVarianceData | null;
+  banners: TrustBanner[];
 }
 
 // =============================================================================
@@ -94,40 +99,36 @@ export function useSignalHealth(tenantId: number, date?: string) {
   return useQuery({
     queryKey: ['signal-health', tenantId, date],
     queryFn: async () => {
-      const params = date ? `?date=${date}` : ''
+      const params = date ? `?date=${date}` : '';
       const response = await apiClient.get<{ data: SignalHealthData }>(
         `/trust-layer/tenant/${tenantId}/signal-health${params}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-  })
+  });
 }
 
 /**
  * Fetch signal health history for trend analysis.
  */
-export function useSignalHealthHistory(
-  tenantId: number,
-  days: number = 7,
-  platform?: string
-) {
+export function useSignalHealthHistory(tenantId: number, days: number = 7, platform?: string) {
   return useQuery({
     queryKey: ['signal-health-history', tenantId, days, platform],
     queryFn: async () => {
-      const params = new URLSearchParams({ days: days.toString() })
-      if (platform) params.append('platform', platform)
+      const params = new URLSearchParams({ days: days.toString() });
+      if (platform) params.append('platform', platform);
 
       const response = await apiClient.get<{ data: { history: SignalHealthData[] } }>(
         `/trust-layer/tenant/${tenantId}/signal-health/history?${params}`
-      )
-      return response.data.data.history
+      );
+      return response.data.data.history;
     },
     enabled: !!tenantId,
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 }
 
 /**
@@ -137,16 +138,16 @@ export function useAttributionVariance(tenantId: number, date?: string) {
   return useQuery({
     queryKey: ['attribution-variance', tenantId, date],
     queryFn: async () => {
-      const params = date ? `?date=${date}` : ''
+      const params = date ? `?date=${date}` : '';
       const response = await apiClient.get<{ data: AttributionVarianceData }>(
         `/trust-layer/tenant/${tenantId}/attribution-variance${params}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-  })
+  });
 }
 
 /**
@@ -157,16 +158,16 @@ export function useTrustStatus(tenantId: number, date?: string) {
   return useQuery({
     queryKey: ['trust-status', tenantId, date],
     queryFn: async () => {
-      const params = date ? `?date=${date}` : ''
+      const params = date ? `?date=${date}` : '';
       const response = await apiClient.get<{ data: TrustStatusData }>(
         `/trust-layer/tenant/${tenantId}/trust-status${params}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-  })
+  });
 }
 
 // =============================================================================
@@ -187,8 +188,8 @@ export function getStatusColor(status: SignalHealthStatus | AttributionVarianceS
     critical: 'red',
     high_variance: 'red',
     no_data: 'gray',
-  }
-  return colors[status] || 'gray'
+  };
+  return colors[status] || 'gray';
 }
 
 /**
@@ -205,8 +206,8 @@ export function getStatusLabel(status: SignalHealthStatus | AttributionVarianceS
     critical: 'Critical',
     high_variance: 'High Variance',
     no_data: 'No Data',
-  }
-  return labels[status] || status
+  };
+  return labels[status] || status;
 }
 
 /**
@@ -217,8 +218,8 @@ export function getBannerIcon(type: 'info' | 'warning' | 'error'): string {
     info: 'ℹ️',
     warning: '⚠️',
     error: '🚨',
-  }
-  return icons[type] || 'ℹ️'
+  };
+  return icons[type] || 'ℹ️';
 }
 
 // =============================================================================
@@ -226,67 +227,67 @@ export function getBannerIcon(type: 'info' | 'warning' | 'error'): string {
 // =============================================================================
 
 export interface TrustGateAuditLog {
-  id: string
-  created_at: string
-  decision_type: 'execute' | 'hold' | 'block'
-  action_type: string
-  entity_type: string
-  entity_id: string
-  entity_name?: string
-  platform?: string
-  signal_health_score?: number
-  signal_health_status?: string
-  gate_passed: boolean
-  gate_reason?: Record<string, unknown>
-  is_dry_run: boolean
-  healthy_threshold?: number
-  degraded_threshold?: number
-  triggered_by_system: boolean
+  id: string;
+  created_at: string;
+  decision_type: 'execute' | 'hold' | 'block';
+  action_type: string;
+  entity_type: string;
+  entity_id: string;
+  entity_name?: string;
+  platform?: string;
+  signal_health_score?: number;
+  signal_health_status?: string;
+  gate_passed: boolean;
+  gate_reason?: Record<string, unknown>;
+  is_dry_run: boolean;
+  healthy_threshold?: number;
+  degraded_threshold?: number;
+  triggered_by_system: boolean;
 }
 
 export interface TrustGateAuditLogsResponse {
-  logs: TrustGateAuditLog[]
+  logs: TrustGateAuditLog[];
   pagination: {
-    total: number
-    limit: number
-    offset: number
-    has_more: boolean
-  }
+    total: number;
+    limit: number;
+    offset: number;
+    has_more: boolean;
+  };
   summary: {
-    total_decisions: number
-    executed: number
-    held: number
-    blocked: number
-    pass_rate: number
-  }
+    total_decisions: number;
+    executed: number;
+    held: number;
+    blocked: number;
+    pass_rate: number;
+  };
   date_range: {
-    start: string
-    end: string
-  }
+    start: string;
+    end: string;
+  };
 }
 
 export interface SignalHealthHistoryRecord {
-  date: string
-  overall_score: number
-  status: SignalHealthStatus
-  emq_score_avg?: number
-  event_loss_pct_avg?: number
-  freshness_minutes_avg?: number
-  api_error_rate_avg?: number
-  platforms_ok: number
-  platforms_risk: number
-  platforms_degraded: number
-  platforms_critical: number
-  automation_blocked: boolean
+  date: string;
+  overall_score: number;
+  status: SignalHealthStatus;
+  emq_score_avg?: number;
+  event_loss_pct_avg?: number;
+  freshness_minutes_avg?: number;
+  api_error_rate_avg?: number;
+  platforms_ok: number;
+  platforms_risk: number;
+  platforms_degraded: number;
+  platforms_critical: number;
+  automation_blocked: boolean;
 }
 
 export interface SignalHealthHistoryResponse {
-  days: number
-  platform?: string
-  start_date: string
-  end_date: string
-  history: SignalHealthHistoryRecord[]
-  total_records: number
+  days: number;
+  platform?: string;
+  start_date: string;
+  end_date: string;
+  history: SignalHealthHistoryRecord[];
+  total_records: number;
 }
 
 // =============================================================================
@@ -299,31 +300,31 @@ export interface SignalHealthHistoryResponse {
 export function useTrustGateAuditLogs(
   tenantId: number,
   options?: {
-    days?: number
-    decisionType?: string
-    entityType?: string
-    limit?: number
-    offset?: number
+    days?: number;
+    decisionType?: string;
+    entityType?: string;
+    limit?: number;
+    offset?: number;
   }
 ) {
   return useQuery({
     queryKey: ['trust-gate-audit-logs', tenantId, options],
     queryFn: async () => {
-      const params = new URLSearchParams()
-      if (options?.days) params.append('days', options.days.toString())
-      if (options?.decisionType) params.append('decision_type', options.decisionType)
-      if (options?.entityType) params.append('entity_type', options.entityType)
-      if (options?.limit) params.append('limit', options.limit.toString())
-      if (options?.offset) params.append('offset', options.offset.toString())
+      const params = new URLSearchParams();
+      if (options?.days) params.append('days', options.days.toString());
+      if (options?.decisionType) params.append('decision_type', options.decisionType);
+      if (options?.entityType) params.append('entity_type', options.entityType);
+      if (options?.limit) params.append('limit', options.limit.toString());
+      if (options?.offset) params.append('offset', options.offset.toString());
 
       const response = await apiClient.get<{ data: TrustGateAuditLogsResponse }>(
         `/trust-layer/tenant/${tenantId}/trust-gate/audit-logs?${params}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 60 * 1000,
-  })
+  });
 }
 
 /**
@@ -337,15 +338,15 @@ export function useSignalHealthHistoryDetailed(
   return useQuery({
     queryKey: ['signal-health-history-detailed', tenantId, days, platform],
     queryFn: async () => {
-      const params = new URLSearchParams({ days: days.toString() })
-      if (platform) params.append('platform', platform)
+      const params = new URLSearchParams({ days: days.toString() });
+      if (platform) params.append('platform', platform);
 
       const response = await apiClient.get<{ data: SignalHealthHistoryResponse }>(
         `/trust-layer/tenant/${tenantId}/signal-health/history?${params}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 }

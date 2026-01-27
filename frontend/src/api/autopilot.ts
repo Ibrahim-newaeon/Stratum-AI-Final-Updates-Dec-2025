@@ -7,14 +7,14 @@
  * - Status monitoring
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from './client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from './client';
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type ActionStatus = 'queued' | 'approved' | 'applied' | 'failed' | 'dismissed'
+export type ActionStatus = 'queued' | 'approved' | 'applied' | 'failed' | 'dismissed';
 
 export type ActionType =
   | 'budget_increase'
@@ -26,81 +26,81 @@ export type ActionType =
   | 'enable_adset'
   | 'enable_creative'
   | 'bid_increase'
-  | 'bid_decrease'
+  | 'bid_decrease';
 
 export interface AutopilotAction {
-  id: string
-  date: string
-  action_type: ActionType
-  entity_type: 'campaign' | 'adset' | 'creative'
-  entity_id: string
-  entity_name: string | null
-  platform: string
-  action_json: Record<string, unknown>
-  before_value: Record<string, unknown> | null
-  after_value: Record<string, unknown> | null
-  status: ActionStatus
-  created_at: string
-  approved_at: string | null
-  applied_at: string | null
-  error: string | null
+  id: string;
+  date: string;
+  action_type: ActionType;
+  entity_type: 'campaign' | 'adset' | 'creative';
+  entity_id: string;
+  entity_name: string | null;
+  platform: string;
+  action_json: Record<string, unknown>;
+  before_value: Record<string, unknown> | null;
+  after_value: Record<string, unknown> | null;
+  status: ActionStatus;
+  created_at: string;
+  approved_at: string | null;
+  applied_at: string | null;
+  error: string | null;
 }
 
 export interface AutopilotStatus {
-  autopilot_level: number
-  autopilot_level_name: string
-  pending_actions: number
+  autopilot_level: number;
+  autopilot_level_name: string;
+  pending_actions: number;
   caps: {
-    max_daily_budget_change: number
-    max_budget_pct_change: number
-    max_actions_per_day: number
-  }
-  enabled: boolean
+    max_daily_budget_change: number;
+    max_budget_pct_change: number;
+    max_actions_per_day: number;
+  };
+  enabled: boolean;
 }
 
 export interface ActionsSummary {
-  days: number
-  start_date: string
-  status_counts: Record<ActionStatus, number>
-  type_counts: Record<ActionType, number>
-  platform_counts: Record<string, number>
-  total: number
-  pending_approval: number
-  success_rate: number
+  days: number;
+  start_date: string;
+  status_counts: Record<ActionStatus, number>;
+  type_counts: Record<ActionType, number>;
+  platform_counts: Record<string, number>;
+  total: number;
+  pending_approval: number;
+  success_rate: number;
 }
 
 export interface QueueActionRequest {
-  action_type: ActionType
-  entity_type: 'campaign' | 'adset' | 'creative'
-  entity_id: string
-  entity_name: string
-  platform: string
-  action_json: Record<string, unknown>
-  before_value?: Record<string, unknown>
+  action_type: ActionType;
+  entity_type: 'campaign' | 'adset' | 'creative';
+  entity_id: string;
+  entity_name: string;
+  platform: string;
+  action_json: Record<string, unknown>;
+  before_value?: Record<string, unknown>;
 }
 
 export interface DryRunRequest {
-  action_type: string
-  entity_type: 'campaign' | 'adset' | 'creative'
-  entity_id: string
-  entity_name?: string
-  platform: string
-  action_json: Record<string, unknown>
+  action_type: string;
+  entity_type: 'campaign' | 'adset' | 'creative';
+  entity_id: string;
+  entity_name?: string;
+  platform: string;
+  action_json: Record<string, unknown>;
 }
 
 export interface DryRunResult {
-  would_execute: boolean
-  decision_type: 'execute' | 'hold' | 'block'
-  signal_health_score: number | null
-  signal_health_status: string | null
-  gate_passed: boolean
-  gate_reasons: string[]
-  healthy_threshold: number
-  degraded_threshold: number
-  action_preview: Record<string, unknown>
-  warnings: string[]
-  audit_log_id: string
-  message: string
+  would_execute: boolean;
+  decision_type: 'execute' | 'hold' | 'block';
+  signal_health_score: number | null;
+  signal_health_status: string | null;
+  gate_passed: boolean;
+  gate_reasons: string[];
+  healthy_threshold: number;
+  degraded_threshold: number;
+  action_preview: Record<string, unknown>;
+  warnings: string[];
+  audit_log_id: string;
+  message: string;
 }
 
 // =============================================================================
@@ -116,13 +116,13 @@ export function useAutopilotStatus(tenantId: number) {
     queryFn: async () => {
       const response = await apiClient.get<{ data: AutopilotStatus }>(
         `/autopilot/tenant/${tenantId}/autopilot/status`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 30 * 1000, // Refetch every 30 seconds
-  })
+  });
 }
 
 /**
@@ -131,30 +131,30 @@ export function useAutopilotStatus(tenantId: number) {
 export function useAutopilotActions(
   tenantId: number,
   filters?: {
-    date?: string
-    status?: ActionStatus
-    platform?: string
-    limit?: number
+    date?: string;
+    status?: ActionStatus;
+    platform?: string;
+    limit?: number;
   }
 ) {
   return useQuery({
     queryKey: ['autopilot-actions', tenantId, filters],
     queryFn: async () => {
-      const params = new URLSearchParams()
-      if (filters?.date) params.append('date', filters.date)
-      if (filters?.status) params.append('status', filters.status)
-      if (filters?.platform) params.append('platform', filters.platform)
-      if (filters?.limit) params.append('limit', filters.limit.toString())
+      const params = new URLSearchParams();
+      if (filters?.date) params.append('date', filters.date);
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.platform) params.append('platform', filters.platform);
+      if (filters?.limit) params.append('limit', filters.limit.toString());
 
       const response = await apiClient.get<{
-        data: { actions: AutopilotAction[]; count: number }
-      }>(`/autopilot/tenant/${tenantId}/autopilot/actions?${params}`)
-      return response.data.data
+        data: { actions: AutopilotAction[]; count: number };
+      }>(`/autopilot/tenant/${tenantId}/autopilot/actions?${params}`);
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // Refetch every minute
-  })
+  });
 }
 
 /**
@@ -166,12 +166,12 @@ export function useActionsSummary(tenantId: number, days: number = 7) {
     queryFn: async () => {
       const response = await apiClient.get<{ data: ActionsSummary }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/summary?days=${days}`
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     enabled: !!tenantId,
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 }
 
 /**
@@ -183,11 +183,11 @@ export function useAutopilotAction(tenantId: number, actionId: string) {
     queryFn: async () => {
       const response = await apiClient.get<{ data: { action: AutopilotAction } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}`
-      )
-      return response.data.data.action
+      );
+      return response.data.data.action;
     },
     enabled: !!tenantId && !!actionId,
-  })
+  });
 }
 
 // =============================================================================
@@ -198,88 +198,88 @@ export function useAutopilotAction(tenantId: number, actionId: string) {
  * Queue a new action.
  */
 export function useQueueAction(tenantId: number) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (request: QueueActionRequest) => {
       const response = await apiClient.post<{
         data: {
-          action: AutopilotAction
-          auto_approved: boolean
-          requires_approval: boolean
-          reason: string | null
-        }
-      }>(`/autopilot/tenant/${tenantId}/autopilot/actions`, request)
-      return response.data.data
+          action: AutopilotAction;
+          auto_approved: boolean;
+          requires_approval: boolean;
+          reason: string | null;
+        };
+      }>(`/autopilot/tenant/${tenantId}/autopilot/actions`, request);
+      return response.data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] })
-      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] })
-      queryClient.invalidateQueries({ queryKey: ['autopilot-summary', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-summary', tenantId] });
     },
-  })
+  });
 }
 
 /**
  * Approve an action.
  */
 export function useApproveAction(tenantId: number) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (actionId: string) => {
       const response = await apiClient.post<{ data: { action: AutopilotAction } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}/approve`
-      )
-      return response.data.data.action
+      );
+      return response.data.data.action;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] })
-      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] });
     },
-  })
+  });
 }
 
 /**
  * Approve multiple actions at once.
  */
 export function useApproveAllActions(tenantId: number) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (actionIds?: string[]) => {
       const response = await apiClient.post<{ data: { approved_count: number } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/approve-all`,
         actionIds ? { action_ids: actionIds } : undefined
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] })
-      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] })
-      queryClient.invalidateQueries({ queryKey: ['autopilot-summary', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-summary', tenantId] });
     },
-  })
+  });
 }
 
 /**
  * Dismiss an action.
  */
 export function useDismissAction(tenantId: number) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (actionId: string) => {
       const response = await apiClient.post<{ data: { action: AutopilotAction } }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}/dismiss`
-      )
-      return response.data.data.action
+      );
+      return response.data.data.action;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] })
-      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] });
     },
-  })
+  });
 }
 
 /**
@@ -291,10 +291,10 @@ export function useDryRunAction(tenantId: number) {
       const response = await apiClient.post<{ data: DryRunResult }>(
         `/autopilot/tenant/${tenantId}/autopilot/actions/dry-run`,
         request
-      )
-      return response.data.data
+      );
+      return response.data.data;
     },
-  })
+  });
 }
 
 // =============================================================================
@@ -316,8 +316,8 @@ export function getActionTypeLabel(type: ActionType): string {
     enable_creative: 'Enable Creative',
     bid_increase: 'Bid Increase',
     bid_decrease: 'Bid Decrease',
-  }
-  return labels[type] || type
+  };
+  return labels[type] || type;
 }
 
 /**
@@ -330,8 +330,8 @@ export function getActionStatusColor(status: ActionStatus): string {
     applied: 'green',
     failed: 'red',
     dismissed: 'gray',
-  }
-  return colors[status] || 'gray'
+  };
+  return colors[status] || 'gray';
 }
 
 /**
@@ -344,8 +344,8 @@ export function getActionStatusLabel(status: ActionStatus): string {
     applied: 'Applied',
     failed: 'Failed',
     dismissed: 'Dismissed',
-  }
-  return labels[status] || status
+  };
+  return labels[status] || status;
 }
 
 /**
@@ -357,6 +357,6 @@ export function getPlatformIcon(platform: string): string {
     google: '🔴',
     tiktok: '🎵',
     snapchat: '👻',
-  }
-  return icons[platform] || '📊'
+  };
+  return icons[platform] || '📊';
 }

@@ -9,13 +9,13 @@ Implements GDPR-compliant encryption for sensitive data.
 import base64
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional, Union
 
+import bcrypt
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import bcrypt
 from jose import JWTError, jwt
 
 from app.core.config import settings
@@ -23,18 +23,12 @@ from app.core.config import settings
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash using bcrypt directly."""
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"),
-        hashed_password.encode("utf-8")
-    )
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def get_password_hash(password: str) -> str:
     """Generate password hash using bcrypt directly."""
-    return bcrypt.hashpw(
-        password.encode("utf-8"),
-        bcrypt.gensalt()
-    ).decode("utf-8")
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def create_access_token(
@@ -54,25 +48,21 @@ def create_access_token(
         Encoded JWT token string
     """
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.access_token_expire_minutes
-        )
+        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode = {
         "sub": str(subject),
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
         "type": "access",
     }
 
     if additional_claims:
         to_encode.update(additional_claims)
 
-    return jwt.encode(
-        to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
-    )
+    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
 def create_refresh_token(
@@ -90,23 +80,19 @@ def create_refresh_token(
         Encoded JWT refresh token string
     """
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            days=settings.refresh_token_expire_days
-        )
+        expire = datetime.now(UTC) + timedelta(days=settings.refresh_token_expire_days)
 
     to_encode = {
         "sub": str(subject),
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
         "type": "refresh",
         "jti": secrets.token_urlsafe(32),  # Unique token ID for revocation
     }
 
-    return jwt.encode(
-        to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
-    )
+    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
 def decode_token(token: str) -> Optional[dict[str, Any]]:
@@ -120,9 +106,7 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
         Decoded token payload or None if invalid
     """
     try:
-        payload = jwt.decode(
-            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
-        )
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         return payload
     except JWTError:
         return None
@@ -131,6 +115,7 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
 # =============================================================================
 # PII Encryption (GDPR Compliance)
 # =============================================================================
+
 
 def _get_fernet_key() -> bytes:
     """
@@ -148,9 +133,7 @@ def _get_fernet_key() -> bytes:
         iterations=100000,
     )
 
-    key = base64.urlsafe_b64encode(
-        kdf.derive(settings.pii_encryption_key.encode())
-    )
+    key = base64.urlsafe_b64encode(kdf.derive(settings.pii_encryption_key.encode()))
     return key
 
 
@@ -201,7 +184,7 @@ def hash_pii_for_lookup(value: str) -> str:
     Returns:
         Hex-encoded SHA256 hash
     """
-    salted = f"{settings.pii_encryption_key}:{value}".encode("utf-8")
+    salted = f"{settings.pii_encryption_key}:{value}".encode()
     return hashlib.sha256(salted).hexdigest()
 
 
@@ -240,6 +223,7 @@ def hash_api_key(api_key: str) -> str:
 # Permission Decorator
 # =============================================================================
 
+
 def require_permission(permission: str):
     """
     Dependency factory that checks if the current user has the required permission.
@@ -263,10 +247,7 @@ def require_permission(permission: str):
 
         # Check if user has the required permission
         if permission not in user_permissions:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Permission denied: {permission} required"
-            )
+            raise HTTPException(status_code=403, detail=f"Permission denied: {permission} required")
 
         return True
 

@@ -4,27 +4,27 @@
  */
 
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
-import { chartTheme, chartFormatters } from '@/lib/chartTheme'
-import { PlatformSummary } from '@/types/dashboard'
-import { ChartSkeleton } from '@/components/ui/Skeleton'
-import { NoChartDataState } from '@/components/ui/EmptyState'
-import { ErrorBoundary, ChartErrorFallback } from '@/components/ui/ErrorBoundary'
+} from 'recharts';
+import { chartFormatters, chartTheme } from '@/lib/chartTheme';
+import { PlatformSummary } from '@/types/dashboard';
+import { ChartSkeleton } from '@/components/ui/Skeleton';
+import { NoChartDataState } from '@/components/ui/EmptyState';
+import { ChartErrorFallback, ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 interface PlatformPerformanceChartProps {
-  data: PlatformSummary[]
-  loading?: boolean
-  height?: number
-  title?: string
-  onRefresh?: () => void
+  data: PlatformSummary[];
+  loading?: boolean;
+  height?: number;
+  title?: string;
+  onRefresh?: () => void;
 }
 
 function PlatformPerformanceChartInner({
@@ -33,18 +33,19 @@ function PlatformPerformanceChartInner({
   title = 'Platform Performance Comparison',
 }: Omit<PlatformPerformanceChartProps, 'loading' | 'onRefresh'>) {
   if (!data || data.length === 0) {
-    return <NoChartDataState />
+    return <NoChartDataState />;
   }
 
   return (
     <div className="rounded-xl border bg-card p-6">
       <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>
-      <div style={{ height }} role="img" aria-label={`${title} showing spend and revenue comparison`}>
+      <div
+        style={{ height }}
+        role="img"
+        aria-label={`${title} showing spend and revenue comparison`}
+      >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-          >
+          <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={chartTheme.colors.spend} stopOpacity={1} />
@@ -84,10 +85,7 @@ function PlatformPerformanceChartInner({
               ]}
               cursor={{ fill: 'hsl(var(--primary) / 0.05)' }}
             />
-            <Legend
-              wrapperStyle={chartTheme.legend.wrapperStyle}
-              iconType="circle"
-            />
+            <Legend wrapperStyle={chartTheme.legend.wrapperStyle} iconType="circle" />
             <Bar
               dataKey="spend"
               name="Spend"
@@ -106,7 +104,7 @@ function PlatformPerformanceChartInner({
         </ResponsiveContainer>
       </div>
     </div>
-  )
+  );
 }
 
 export function PlatformPerformanceChart({
@@ -116,16 +114,14 @@ export function PlatformPerformanceChart({
   ...props
 }: PlatformPerformanceChartProps) {
   if (loading) {
-    return <ChartSkeleton height={props.height} />
+    return <ChartSkeleton height={props.height} />;
   }
 
   return (
-    <ErrorBoundary
-      fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}
-    >
+    <ErrorBoundary fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}>
       <PlatformPerformanceChartInner data={data} {...props} />
     </ErrorBoundary>
-  )
+  );
 }
 
-export default PlatformPerformanceChart
+export default PlatformPerformanceChart;

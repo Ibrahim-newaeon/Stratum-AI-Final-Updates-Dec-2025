@@ -7,13 +7,13 @@ import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowLeftIcon,
-  CheckCircleIcon,
   ArrowRightIcon,
-  CloudArrowUpIcon,
-  UserGroupIcon,
   ChartBarIcon,
+  CheckCircleIcon,
   ClockIcon,
+  CloudArrowUpIcon,
   ShieldCheckIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 const platforms = [
@@ -62,25 +62,29 @@ const features = [
   {
     icon: CloudArrowUpIcon,
     title: 'One-Click Sync',
-    description: 'Push your CDP segments to all ad platforms with a single click. No manual exports or uploads required.',
+    description:
+      'Push your CDP segments to all ad platforms with a single click. No manual exports or uploads required.',
     color: '#f97316',
   },
   {
     icon: ClockIcon,
     title: 'Auto-Refresh',
-    description: 'Keep audiences fresh with configurable sync intervals from 1 hour to 1 week. Set it and forget it.',
+    description:
+      'Keep audiences fresh with configurable sync intervals from 1 hour to 1 week. Set it and forget it.',
     color: '#06b6d4',
   },
   {
     icon: UserGroupIcon,
     title: 'Smart Matching',
-    description: 'Hashed identifier matching for emails, phones, and MAIDs ensures privacy while maximizing match rates.',
+    description:
+      'Hashed identifier matching for emails, phones, and MAIDs ensures privacy while maximizing match rates.',
     color: '#22c55e',
   },
   {
     icon: ChartBarIcon,
     title: 'Match Rate Analytics',
-    description: 'Track match rates, profiles synced, and audience health across all platforms in one dashboard.',
+    description:
+      'Track match rates, profiles synced, and audience health across all platforms in one dashboard.',
     color: '#a855f7',
   },
   {
@@ -114,7 +118,8 @@ export default function AudienceSyncLaunch() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)',
+              background:
+                'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)',
               border: '1px solid rgba(168, 85, 247, 0.3)',
             }}
           >
@@ -146,8 +151,8 @@ export default function AudienceSyncLaunch() {
             className="text-lg md:text-xl max-w-2xl mx-auto mb-8"
             style={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
-            Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click.
-            Keep your audiences fresh with automated syncing and maximize your ad targeting precision.
+            Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep your
+            audiences fresh with automated syncing and maximize your ad targeting precision.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -196,7 +201,10 @@ export default function AudienceSyncLaunch() {
               >
                 <div
                   className="w-16 h-16 rounded-xl mx-auto mb-4 flex items-center justify-center transition-colors"
-                  style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
                 >
                   {platform.logo}
                 </div>
@@ -213,15 +221,13 @@ export default function AudienceSyncLaunch() {
       {/* Features */}
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-4">
-            Why Audience Sync?
-          </h2>
+          <h2 className="text-2xl font-bold text-white text-center mb-4">Why Audience Sync?</h2>
           <p
             className="text-center max-w-2xl mx-auto mb-12"
             style={{ color: 'rgba(255, 255, 255, 0.6)' }}
           >
-            Stop wasting time with manual exports and CSV uploads. Stratum's Audience Sync
-            keeps your targeting fresh and your campaigns optimized.
+            Stop wasting time with manual exports and CSV uploads. Stratum's Audience Sync keeps
+            your targeting fresh and your campaigns optimized.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -235,10 +241,7 @@ export default function AudienceSyncLaunch() {
                   boxShadow: `0 8px 32px ${feature.color}10`,
                 }}
               >
-                <feature.icon
-                  className="w-10 h-10 mb-4"
-                  style={{ color: feature.color }}
-                />
+                <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                   {feature.description}
@@ -252,31 +255,33 @@ export default function AudienceSyncLaunch() {
       {/* How It Works */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-12">
-            How It Works
-          </h2>
+          <h2 className="text-2xl font-bold text-white text-center mb-12">How It Works</h2>
 
           <div className="space-y-8">
             {[
               {
                 step: '1',
                 title: 'Connect Your Ad Accounts',
-                description: 'Authorize Stratum to access your Meta, Google, TikTok, and Snapchat ad accounts with secure OAuth.',
+                description:
+                  'Authorize Stratum to access your Meta, Google, TikTok, and Snapchat ad accounts with secure OAuth.',
               },
               {
                 step: '2',
                 title: 'Select a CDP Segment',
-                description: 'Choose from your existing segments or create a new one with our powerful segment builder.',
+                description:
+                  'Choose from your existing segments or create a new one with our powerful segment builder.',
               },
               {
                 step: '3',
                 title: 'Configure Sync Settings',
-                description: 'Set your sync frequency, choose identifier types (email, phone, MAID), and enable auto-refresh.',
+                description:
+                  'Set your sync frequency, choose identifier types (email, phone, MAID), and enable auto-refresh.',
               },
               {
                 step: '4',
                 title: 'Launch & Monitor',
-                description: 'Hit sync and watch your audiences populate across platforms. Track match rates and audience health in real-time.',
+                description:
+                  'Hit sync and watch your audiences populate across platforms. Track match rates and audience health in real-time.',
               },
             ].map((item) => (
               <div key={item.step} className="flex gap-6 items-start">
@@ -304,7 +309,8 @@ export default function AudienceSyncLaunch() {
           <div
             className="p-12 rounded-3xl backdrop-blur-xl"
             style={{
-              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
+              background:
+                'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
               border: '1px solid rgba(168, 85, 247, 0.3)',
               boxShadow: '0 8px 32px rgba(168, 85, 247, 0.15), 0 8px 32px rgba(6, 182, 212, 0.15)',
             }}

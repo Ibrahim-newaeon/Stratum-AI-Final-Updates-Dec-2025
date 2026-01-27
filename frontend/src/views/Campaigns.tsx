@@ -1,40 +1,51 @@
-import { useState, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  Search,
-  Filter,
-  Plus,
-  MoreHorizontal,
   ChevronDown,
   ChevronUp,
-  TrendingUp,
-  TrendingDown,
+  Edit,
+  ExternalLink,
+  Filter,
+  Loader2,
+  MoreHorizontal,
   Pause,
   Play,
-  Edit,
+  Plus,
+  Search,
   Trash2,
-  ExternalLink,
-  Loader2,
-} from 'lucide-react'
-import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
-import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal'
-import { useCampaigns, usePauseCampaign, useActivateCampaign, useDeleteCampaign } from '@/api/hooks'
-import { useTenantStore } from '@/stores/tenantStore'
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
+import {
+  cn,
+  formatCompactNumber,
+  formatCurrency,
+  formatPercent,
+  getPlatformColor,
+} from '@/lib/utils';
+import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal';
+import {
+  useActivateCampaign,
+  useCampaigns,
+  useDeleteCampaign,
+  usePauseCampaign,
+} from '@/api/hooks';
+import { useTenantStore } from '@/stores/tenantStore';
 
 interface Campaign {
-  id: number
-  name: string
-  platform: string
-  status: 'active' | 'paused' | 'completed' | 'draft'
-  spend: number
-  budget: number
-  revenue: number
-  roas: number
-  impressions: number
-  clicks: number
-  conversions: number
-  ctr: number
-  trend: 'up' | 'down' | 'stable'
+  id: number;
+  name: string;
+  platform: string;
+  status: 'active' | 'paused' | 'completed' | 'draft';
+  spend: number;
+  budget: number;
+  revenue: number;
+  roas: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ctr: number;
+  trend: 'up' | 'down' | 'stable';
 }
 
 const mockCampaigns: Campaign[] = [
@@ -113,29 +124,29 @@ const mockCampaigns: Campaign[] = [
     ctr: 3.0,
     trend: 'up',
   },
-]
+];
 
-type SortField = 'name' | 'spend' | 'revenue' | 'roas' | 'conversions'
-type SortDirection = 'asc' | 'desc'
+type SortField = 'name' | 'spend' | 'revenue' | 'roas' | 'conversions';
+type SortDirection = 'asc' | 'desc';
 
 export function Campaigns() {
-  const { t } = useTranslation()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [platformFilter, setPlatformFilter] = useState<string>('all')
-  const [sortField, setSortField] = useState<SortField>('spend')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
-  const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([])
-  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [platformFilter, setPlatformFilter] = useState<string>('all');
+  const [sortField, setSortField] = useState<SortField>('spend');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Use tenant store for context (reserved for API calls)
-  useTenantStore((state) => state.tenantId)
+  useTenantStore((state) => state.tenantId);
 
   // Fetch campaigns from API
-  const { data: campaignsData, isLoading } = useCampaigns()
-  const pauseCampaign = usePauseCampaign()
-  const activateCampaign = useActivateCampaign()
-  const deleteCampaign = useDeleteCampaign()
+  const { data: campaignsData, isLoading } = useCampaigns();
+  const pauseCampaign = usePauseCampaign();
+  const activateCampaign = useActivateCampaign();
+  const deleteCampaign = useDeleteCampaign();
 
   // Transform API data or fall back to mock
   const campaigns = useMemo((): Campaign[] => {
@@ -154,89 +165,89 @@ export function Campaigns() {
         conversions: c.conversions || 0,
         ctr: c.ctr || (c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0),
         trend: c.trend || (c.roas >= 3.5 ? 'up' : c.roas < 2.5 ? 'down' : 'stable'),
-      }))
+      }));
     }
-    return mockCampaigns
-  }, [campaignsData])
+    return mockCampaigns;
+  }, [campaignsData]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortField(field)
-      setSortDirection('desc')
+      setSortField(field);
+      setSortDirection('desc');
     }
-  }
+  };
 
   const filteredCampaigns = campaigns
     .filter((campaign) => {
       if (searchQuery && !campaign.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false
+        return false;
       }
       if (statusFilter !== 'all' && campaign.status !== statusFilter) {
-        return false
+        return false;
       }
       if (platformFilter !== 'all' && campaign.platform !== platformFilter) {
-        return false
+        return false;
       }
-      return true
+      return true;
     })
     .sort((a, b) => {
-      const aValue = a[sortField]
-      const bValue = b[sortField]
-      const direction = sortDirection === 'asc' ? 1 : -1
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      const direction = sortDirection === 'asc' ? 1 : -1;
       if (typeof aValue === 'string') {
-        return aValue.localeCompare(bValue as string) * direction
+        return aValue.localeCompare(bValue as string) * direction;
       }
-      return ((aValue as number) - (bValue as number)) * direction
-    })
+      return (aValue - (bValue as number)) * direction;
+    });
 
   // Handle bulk pause
   const handleBulkPause = async () => {
     for (const id of selectedCampaigns) {
-      await pauseCampaign.mutateAsync(id.toString())
+      await pauseCampaign.mutateAsync(id.toString());
     }
-    setSelectedCampaigns([])
-  }
+    setSelectedCampaigns([]);
+  };
 
   // Handle bulk activate
   const handleBulkActivate = async () => {
     for (const id of selectedCampaigns) {
-      await activateCampaign.mutateAsync(id.toString())
+      await activateCampaign.mutateAsync(id.toString());
     }
-    setSelectedCampaigns([])
-  }
+    setSelectedCampaigns([]);
+  };
 
   // Handle bulk delete
   const handleBulkDelete = async () => {
     for (const id of selectedCampaigns) {
-      await deleteCampaign.mutateAsync(id.toString())
+      await deleteCampaign.mutateAsync(id.toString());
     }
-    setSelectedCampaigns([])
-  }
+    setSelectedCampaigns([]);
+  };
 
   const toggleSelectAll = () => {
     if (selectedCampaigns.length === filteredCampaigns.length) {
-      setSelectedCampaigns([])
+      setSelectedCampaigns([]);
     } else {
-      setSelectedCampaigns(filteredCampaigns.map((c) => c.id))
+      setSelectedCampaigns(filteredCampaigns.map((c) => c.id));
     }
-  }
+  };
 
   const toggleSelectCampaign = (id: number) => {
     setSelectedCampaigns((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    )
-  }
+    );
+  };
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null
+    if (sortField !== field) return null;
     return sortDirection === 'asc' ? (
       <ChevronUp className="w-4 h-4" />
     ) : (
       <ChevronDown className="w-4 h-4" />
-    )
-  }
+    );
+  };
 
   const getStatusBadge = (status: Campaign['status']) => {
     const styles = {
@@ -244,14 +255,14 @@ export function Campaigns() {
       paused: 'bg-amber-500/10 text-amber-500',
       completed: 'bg-blue-500/10 text-blue-500',
       draft: 'bg-gray-500/10 text-gray-500',
-    }
+    };
 
     return (
       <span className={cn('px-2 py-1 rounded-full text-xs font-medium', styles[status])}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
-  }
+    );
+  };
 
   const getPlatformBadge = (platform: string) => (
     <div
@@ -261,7 +272,7 @@ export function Campaigns() {
     >
       {platform.charAt(0).toUpperCase()}
     </div>
-  )
+  );
 
   return (
     <div className="space-y-6">
@@ -337,7 +348,11 @@ export function Campaigns() {
               disabled={pauseCampaign.isPending}
               className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm disabled:opacity-50"
             >
-              {pauseCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
+              {pauseCampaign.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Pause className="w-4 h-4" />
+              )}
               {t('campaigns.pauseSelected')}
             </button>
             <button
@@ -345,7 +360,11 @@ export function Campaigns() {
               disabled={activateCampaign.isPending}
               className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm disabled:opacity-50"
             >
-              {activateCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {activateCampaign.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
               {t('campaigns.activateSelected')}
             </button>
             <button
@@ -353,7 +372,11 @@ export function Campaigns() {
               disabled={deleteCampaign.isPending}
               className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-sm disabled:opacity-50"
             >
-              {deleteCampaign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {deleteCampaign.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
               {t('campaigns.deleteSelected')}
             </button>
           </div>
@@ -369,7 +392,10 @@ export function Campaigns() {
                 <th className="p-4 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedCampaigns.length === filteredCampaigns.length && filteredCampaigns.length > 0}
+                    checked={
+                      selectedCampaigns.length === filteredCampaigns.length &&
+                      filteredCampaigns.length > 0
+                    }
                     onChange={toggleSelectAll}
                     className="rounded border-muted-foreground/50"
                   />
@@ -519,7 +545,10 @@ export function Campaigns() {
           )}
         </p>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50" disabled>
+          <button
+            className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50"
+            disabled
+          >
             {t('common.previous')}
           </button>
           <button className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm">
@@ -539,12 +568,12 @@ export function Campaigns() {
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSuccess={(campaign) => {
-          console.log('Campaign created:', campaign)
+          console.log('Campaign created:', campaign);
           // In a real app, you'd refetch the campaigns list here
         }}
       />
     </div>
-  )
+  );
 }
 
-export default Campaigns
+export default Campaigns;

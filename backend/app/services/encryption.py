@@ -6,7 +6,7 @@ Encryption utilities for OAuth tokens and sensitive credentials.
 Wraps core security functions for token-specific operations.
 """
 
-from app.core.security import encrypt_pii, decrypt_pii
+from app.core.security import decrypt_pii, encrypt_pii
 
 
 def encrypt_token(token: str) -> str:

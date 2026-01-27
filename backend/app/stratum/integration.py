@@ -12,12 +12,11 @@ Provides compatibility layer to integrate:
 
 import logging
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Optional
 
-from app.stratum.models import Platform, SignalHealth, AutomationAction, EMQScore
 from app.stratum.core.signal_health import SignalHealthCalculator
 from app.stratum.core.trust_gate import TrustGate, TrustGateResult
-
+from app.stratum.models import AutomationAction, EMQScore, Platform, SignalHealth
 
 logger = logging.getLogger("stratum.integration")
 
@@ -36,7 +35,7 @@ class StratumIntegration:
 
     def calculate_signal_health_from_emq_response(
         self,
-        emq_data: Dict[str, Any],
+        emq_data: dict[str, Any],
     ) -> SignalHealth:
         """
         Calculate signal health from the existing EMQ service response.
@@ -60,7 +59,7 @@ class StratumIntegration:
 
     def evaluate_action(
         self,
-        emq_data: Dict[str, Any],
+        emq_data: dict[str, Any],
         action: AutomationAction,
     ) -> TrustGateResult:
         """
@@ -78,8 +77,8 @@ class StratumIntegration:
 
     def get_autopilot_config(
         self,
-        emq_data: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        emq_data: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Get autopilot configuration based on current signal health.
 
@@ -158,7 +157,7 @@ def create_automation_action(
     entity_type: str,
     entity_id: str,
     action_type: str,
-    parameters: Optional[Dict[str, Any]] = None,
+    parameters: Optional[dict[str, Any]] = None,
 ) -> AutomationAction:
     """
     Create an AutomationAction from individual parameters.

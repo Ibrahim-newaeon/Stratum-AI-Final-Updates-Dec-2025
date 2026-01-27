@@ -9,51 +9,51 @@
  */
 
 // Core components
-export * from './button'
-export * from './card'
-export * from './badge'
-export * from './input'
-export * from './select'
+export * from './button';
+export * from './card';
+export * from './badge';
+export * from './input';
+export * from './select';
 
 // New reusable components (Phase 1)
-export * from './data-table'
-export * from './pagination'
-export * from './toggle'
-export * from './dropdown-menu'
-export * from './breadcrumb'
-export * from './tooltip'
-export * from './progress'
+export * from './data-table';
+export * from './pagination';
+export * from './toggle';
+export * from './dropdown-menu';
+export * from './breadcrumb';
+export * from './tooltip';
+export * from './progress';
 
 // Accessibility
-export * from './skip-to-content'
+export * from './skip-to-content';
 
 // Layout & containers
-export * from './dialog'
-export * from './tabs'
-export * from './accordion'
-export * from './separator'
-export * from './scroll-area'
-export * from './carousel'
+export * from './dialog';
+export * from './tabs';
+export * from './accordion';
+export * from './separator';
+export * from './scroll-area';
+export * from './carousel';
 
 // Form elements
-export * from './phone-input'
-export * from './otp-input'
+export * from './phone-input';
+export * from './otp-input';
 
 // Display components
-export * from './avatar'
-export * from './chart'
-export * from './Skeleton'
-export * from './EmptyState'
-export * from './InfoIcon'
+export * from './avatar';
+export * from './chart';
+export * from './Skeleton';
+export * from './EmptyState';
+export * from './InfoIcon';
 
 // Feedback
-export * from './toast'
-export * from './toaster'
-export * from './ErrorBoundary'
+export * from './toast';
+export * from './toaster';
+export * from './ErrorBoundary';
 
 // Effects & utilities
-export * from './motion'
-export * from './background-effects'
-export * from './export-button'
-export * from './command-palette'
-export * from './keyboard-shortcuts'
+export * from './motion';
+export * from './background-effects';
+export * from './export-button';
+export * from './command-palette';
+export * from './keyboard-shortcuts';

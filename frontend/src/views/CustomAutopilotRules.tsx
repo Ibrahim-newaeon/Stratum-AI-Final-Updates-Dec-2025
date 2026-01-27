@@ -5,26 +5,26 @@
  * Enterprise tier only.
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  Zap,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Edit,
+  Filter,
+  Loader2,
+  MoreHorizontal,
+  Pause,
+  Play,
   Plus,
   Search,
-  Filter,
-  CheckCircle2,
-  Pause,
-  Edit,
-  AlertTriangle,
-  Clock,
   Shield,
-  Play,
   Trash2,
-  Copy,
-  MoreHorizontal,
-  Loader2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { CustomAutopilotRulesBuilder } from '@/components/autopilot/CustomAutopilotRulesBuilder'
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { CustomAutopilotRulesBuilder } from '@/components/autopilot/CustomAutopilotRulesBuilder';
 
 // Mock data for existing rules
 const mockRules = [
@@ -39,12 +39,25 @@ const mockRules = [
         logic: 'AND' as const,
         conditions: [
           { id: '1', field: 'roas', operator: 'gt', value: '4.0', valueType: 'number' as const },
-          { id: '2', field: 'days_running', operator: 'gte', value: '3', valueType: 'number' as const },
+          {
+            id: '2',
+            field: 'days_running',
+            operator: 'gte',
+            value: '3',
+            valueType: 'number' as const,
+          },
         ],
       },
     ],
     conditionLogic: 'AND' as const,
-    actions: [{ id: '1', type: 'scale_budget', config: { direction: 'increase', amount: '20' }, priority: 1 }],
+    actions: [
+      {
+        id: '1',
+        type: 'scale_budget',
+        config: { direction: 'increase', amount: '20' },
+        priority: 1,
+      },
+    ],
     targeting: { platforms: ['meta', 'google'], campaignTypes: [], specificCampaigns: [] },
     schedule: { enabled: false, frequency: 'hourly' as const, timezone: 'UTC' },
     trustGate: { enabled: true, minSignalHealth: 70, requireApproval: false, dryRunFirst: true },
@@ -65,8 +78,20 @@ const mockRules = [
         logic: 'AND' as const,
         conditions: [
           { id: '1', field: 'cpa', operator: 'gt', value: '50', valueType: 'currency' as const },
-          { id: '2', field: 'conversions', operator: 'lt', value: '10', valueType: 'number' as const },
-          { id: '3', field: 'days_running', operator: 'gte', value: '7', valueType: 'number' as const },
+          {
+            id: '2',
+            field: 'conversions',
+            operator: 'lt',
+            value: '10',
+            valueType: 'number' as const,
+          },
+          {
+            id: '3',
+            field: 'days_running',
+            operator: 'gte',
+            value: '7',
+            valueType: 'number' as const,
+          },
         ],
       },
     ],
@@ -91,12 +116,20 @@ const mockRules = [
         id: '1',
         logic: 'AND' as const,
         conditions: [
-          { id: '1', field: 'fatigue_score', operator: 'gt', value: '70', valueType: 'percentage' as const },
+          {
+            id: '1',
+            field: 'fatigue_score',
+            operator: 'gt',
+            value: '70',
+            valueType: 'percentage' as const,
+          },
         ],
       },
     ],
     conditionLogic: 'AND' as const,
-    actions: [{ id: '1', type: 'notify_slack', config: { channel: '#creative-alerts' }, priority: 1 }],
+    actions: [
+      { id: '1', type: 'notify_slack', config: { channel: '#creative-alerts' }, priority: 1 },
+    ],
     targeting: { platforms: ['meta'], campaignTypes: [], specificCampaigns: [] },
     schedule: { enabled: true, frequency: 'daily' as const, timezone: 'America/New_York' },
     trustGate: { enabled: false, minSignalHealth: 0, requireApproval: false, dryRunFirst: false },
@@ -106,57 +139,62 @@ const mockRules = [
     lastTriggered: '2024-12-05T10:00:00Z',
     createdAt: '2024-09-20',
   },
-]
+];
 
 export default function CustomAutopilotRules() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [showBuilder, setShowBuilder] = useState(false)
-  const [editingRule, setEditingRule] = useState<typeof mockRules[0] | null>(null)
-  const [rules, setRules] = useState(mockRules)
-  const [isSaving, setIsSaving] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [editingRule, setEditingRule] = useState<(typeof mockRules)[0] | null>(null);
+  const [rules, setRules] = useState(mockRules);
+  const [isSaving, setIsSaving] = useState(false);
 
   const filteredRules = rules.filter((rule) => {
     if (searchQuery && !rule.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false
+      return false;
     }
     if (statusFilter !== 'all' && rule.status !== statusFilter) {
-      return false
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   const handleSaveRule = async (rule: any) => {
-    setIsSaving(true)
+    setIsSaving(true);
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     if (editingRule) {
-      setRules((prev) => prev.map((r) => (r.id === editingRule.id ? { ...rule, id: editingRule.id } : r)))
+      setRules((prev) =>
+        prev.map((r) => (r.id === editingRule.id ? { ...rule, id: editingRule.id } : r))
+      );
     } else {
-      setRules((prev) => [...prev, { ...rule, id: crypto.randomUUID(), triggerCount: 0, lastTriggered: null }])
+      setRules((prev) => [
+        ...prev,
+        { ...rule, id: crypto.randomUUID(), triggerCount: 0, lastTriggered: null },
+      ]);
     }
 
-    setIsSaving(false)
-    setShowBuilder(false)
-    setEditingRule(null)
-  }
+    setIsSaving(false);
+    setShowBuilder(false);
+    setEditingRule(null);
+  };
 
   const handleToggleRule = (ruleId: string) => {
     setRules((prev) =>
       prev.map((r) =>
         r.id === ruleId ? { ...r, status: r.status === 'active' ? 'paused' : 'active' } : r
       )
-    )
-  }
+    );
+  };
 
   const handleDeleteRule = (ruleId: string) => {
     if (confirm('Are you sure you want to delete this rule?')) {
-      setRules((prev) => prev.filter((r) => r.id !== ruleId))
+      setRules((prev) => prev.filter((r) => r.id !== ruleId));
     }
-  }
+  };
 
-  const handleDuplicateRule = (rule: typeof mockRules[0]) => {
+  const handleDuplicateRule = (rule: (typeof mockRules)[0]) => {
     setRules((prev) => [
       ...prev,
       {
@@ -168,35 +206,40 @@ export default function CustomAutopilotRules() {
         lastTriggered: null,
         createdAt: new Date().toISOString().split('T')[0],
       },
-    ])
-  }
+    ]);
+  };
 
   const getStatusBadge = (status: string) => {
     const config = {
       active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
       paused: { color: 'bg-amber-500/10 text-amber-500', icon: Pause, label: 'Paused' },
       draft: { color: 'bg-gray-500/10 text-gray-500', icon: Edit, label: 'Draft' },
-    }
-    const { color, icon: Icon, label } = config[status as keyof typeof config] || config.draft
+    };
+    const { color, icon: Icon, label } = config[status as keyof typeof config] || config.draft;
     return (
-      <span className={cn('px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', color)}>
+      <span
+        className={cn(
+          'px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1',
+          color
+        )}
+      >
         <Icon className="w-3 h-3" />
         {label}
       </span>
-    )
-  }
+    );
+  };
 
   const formatLastTriggered = (date: string | null) => {
-    if (!date) return 'Never'
-    const d = new Date(date)
-    const now = new Date()
-    const diffHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60))
+    if (!date) return 'Never';
+    const d = new Date(date);
+    const now = new Date();
+    const diffHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60));
 
-    if (diffHours < 1) return 'Just now'
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffHours < 48) return 'Yesterday'
-    return d.toLocaleDateString()
-  }
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 48) return 'Yesterday';
+    return d.toLocaleDateString();
+  };
 
   if (showBuilder || editingRule) {
     return (
@@ -205,13 +248,13 @@ export default function CustomAutopilotRules() {
           rule={editingRule || undefined}
           onSave={handleSaveRule}
           onCancel={() => {
-            setShowBuilder(false)
-            setEditingRule(null)
+            setShowBuilder(false);
+            setEditingRule(null);
           }}
           isLoading={isSaving}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -268,9 +311,7 @@ export default function CustomAutopilotRules() {
         </div>
         <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">Trust-Gated</p>
-          <p className="text-2xl font-bold">
-            {rules.filter((r) => r.trustGate.enabled).length}
-          </p>
+          <p className="text-2xl font-bold">{rules.filter((r) => r.trustGate.enabled).length}</p>
         </div>
       </div>
 
@@ -389,7 +430,9 @@ export default function CustomAutopilotRules() {
                 <span className="font-medium text-primary">IF</span>
                 {rule.conditionGroups.map((group, gIdx) => (
                   <span key={group.id} className="flex items-center gap-2">
-                    {gIdx > 0 && <span className="text-primary font-medium">{rule.conditionLogic}</span>}
+                    {gIdx > 0 && (
+                      <span className="text-primary font-medium">{rule.conditionLogic}</span>
+                    )}
                     <span className="text-muted-foreground">(</span>
                     {group.conditions.map((cond, cIdx) => (
                       <span key={cond.id} className="flex items-center gap-1">
@@ -397,9 +440,19 @@ export default function CustomAutopilotRules() {
                         <code className="px-1.5 py-0.5 rounded bg-background text-xs">
                           {cond.field}
                         </code>
-                        <span className="font-mono text-xs">{cond.operator === 'gt' ? '>' : cond.operator === 'lt' ? '<' : cond.operator}</span>
+                        <span className="font-mono text-xs">
+                          {cond.operator === 'gt'
+                            ? '>'
+                            : cond.operator === 'lt'
+                              ? '<'
+                              : cond.operator}
+                        </span>
                         <code className="px-1.5 py-0.5 rounded bg-background text-xs">
-                          {cond.valueType === 'currency' ? `$${cond.value}` : cond.valueType === 'percentage' ? `${cond.value}%` : cond.value}
+                          {cond.valueType === 'currency'
+                            ? `$${cond.value}`
+                            : cond.valueType === 'percentage'
+                              ? `${cond.value}%`
+                              : cond.value}
                         </code>
                       </span>
                     ))}
@@ -408,9 +461,13 @@ export default function CustomAutopilotRules() {
                 ))}
                 <span className="font-medium text-primary">THEN</span>
                 {rule.actions.map((action) => (
-                  <code key={action.id} className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs">
+                  <code
+                    key={action.id}
+                    className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs"
+                  >
                     {action.type.replace('_', ' ')}
-                    {action.config.amount && ` ${action.config.direction === 'decrease' ? '-' : '+'}${action.config.amount}%`}
+                    {action.config.amount &&
+                      ` ${action.config.direction === 'decrease' ? '-' : '+'}${action.config.amount}%`}
                   </code>
                 ))}
               </div>
@@ -463,5 +520,5 @@ export default function CustomAutopilotRules() {
         </div>
       )}
     </div>
-  )
+  );
 }

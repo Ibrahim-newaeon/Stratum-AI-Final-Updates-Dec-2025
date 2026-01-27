@@ -12,27 +12,27 @@ Endpoints:
 """
 
 from datetime import date
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db
 from app.core.logging import get_logger
 from app.models import User
 from app.models.profit import (
+    COGSSource,
     MarginType,
     ProductStatus,
-    COGSSource,
 )
 from app.services.profit import (
-    ProfitCalculationService,
-    COGSService,
     COGSIngestionService,
+    COGSService,
     ProductCatalogService,
+    ProfitCalculationService,
 )
+from app.tenancy.deps import get_current_user, get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -42,8 +42,10 @@ router = APIRouter()
 # Pydantic Schemas
 # =============================================================================
 
+
 class ProductCreate(BaseModel):
     """Schema for creating a product."""
+
     sku: str = Field(..., min_length=1, max_length=100)
     name: str = Field(..., min_length=1, max_length=500)
     description: Optional[str] = None
@@ -53,12 +55,13 @@ class ProductCreate(BaseModel):
     product_type: Optional[str] = None
     base_price: Optional[float] = Field(None, ge=0)
     currency: str = Field(default="USD", max_length=3)
-    external_ids: Optional[Dict[str, str]] = None
-    attributes: Optional[Dict[str, Any]] = None
+    external_ids: Optional[dict[str, str]] = None
+    attributes: Optional[dict[str, Any]] = None
 
 
 class ProductUpdate(BaseModel):
     """Schema for updating a product."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=500)
     description: Optional[str] = None
     category: Optional[str] = None
@@ -71,6 +74,7 @@ class ProductUpdate(BaseModel):
 
 class COGSSet(BaseModel):
     """Schema for setting product COGS."""
+
     cogs: Optional[float] = Field(None, ge=0, description="COGS per unit in dollars")
     cogs_percentage: Optional[float] = Field(None, ge=0, le=100, description="COGS as % of revenue")
     effective_date: Optional[date] = None
@@ -82,6 +86,7 @@ class COGSSet(BaseModel):
 
 class MarginRuleCreate(BaseModel):
     """Schema for creating a margin rule."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     margin_type: MarginType = MarginType.PERCENTAGE
@@ -96,6 +101,7 @@ class MarginRuleCreate(BaseModel):
 
 class MarginRuleUpdate(BaseModel):
     """Schema for updating a margin rule."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     default_margin_percentage: Optional[float] = Field(None, ge=0, le=100)
@@ -108,12 +114,13 @@ class MarginRuleUpdate(BaseModel):
 # Product Endpoints
 # =============================================================================
 
-@router.post("/products", response_model=Dict[str, Any])
+
+@router.post("/products", response_model=dict[str, Any])
 async def create_product(
     product_data: ProductCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create a new product in the catalog."""
     service = ProductCatalogService(db, current_user.tenant_id)
 
@@ -142,7 +149,7 @@ async def create_product(
     }
 
 
-@router.get("/products", response_model=Dict[str, Any])
+@router.get("/products", response_model=dict[str, Any])
 async def list_products(
     status: Optional[ProductStatus] = Query(None),
     category: Optional[str] = Query(None),
@@ -152,7 +159,7 @@ async def list_products(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List products with optional filters."""
     service = ProductCatalogService(db, current_user.tenant_id)
 
@@ -185,11 +192,11 @@ async def list_products(
     }
 
 
-@router.get("/products/categories", response_model=Dict[str, Any])
+@router.get("/products/categories", response_model=dict[str, Any])
 async def get_categories(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get all product categories."""
     service = ProductCatalogService(db, current_user.tenant_id)
     categories = await service.get_categories()
@@ -200,11 +207,11 @@ async def get_categories(
     }
 
 
-@router.get("/products/coverage", response_model=Dict[str, Any])
+@router.get("/products/coverage", response_model=dict[str, Any])
 async def get_cogs_coverage(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get COGS data coverage statistics."""
     service = ProductCatalogService(db, current_user.tenant_id)
     coverage = await service.get_cogs_coverage()
@@ -215,12 +222,12 @@ async def get_cogs_coverage(
     }
 
 
-@router.get("/products/missing-cogs", response_model=Dict[str, Any])
+@router.get("/products/missing-cogs", response_model=dict[str, Any])
 async def get_products_missing_cogs(
     limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get products that don't have COGS data."""
     service = ProductCatalogService(db, current_user.tenant_id)
     products = await service.get_products_missing_cogs(limit=limit)
@@ -240,12 +247,12 @@ async def get_products_missing_cogs(
     }
 
 
-@router.get("/products/{product_id}", response_model=Dict[str, Any])
+@router.get("/products/{product_id}", response_model=dict[str, Any])
 async def get_product(
     product_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get product details with COGS data."""
     service = ProductCatalogService(db, current_user.tenant_id)
     product = await service.get_product_with_cogs(product_id)
@@ -259,19 +266,21 @@ async def get_product(
     }
 
 
-@router.patch("/products/{product_id}", response_model=Dict[str, Any])
+@router.patch("/products/{product_id}", response_model=dict[str, Any])
 async def update_product(
     product_id: UUID,
     product_data: ProductUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update a product."""
     service = ProductCatalogService(db, current_user.tenant_id)
 
     update_dict = product_data.model_dump(exclude_unset=True)
     if "base_price" in update_dict:
-        update_dict["base_price_cents"] = int(update_dict.pop("base_price") * 100) if update_dict["base_price"] else None
+        update_dict["base_price_cents"] = (
+            int(update_dict.pop("base_price") * 100) if update_dict["base_price"] else None
+        )
 
     product = await service.update_product(product_id, **update_dict)
 
@@ -284,12 +293,12 @@ async def update_product(
     }
 
 
-@router.delete("/products/{product_id}", response_model=Dict[str, Any])
+@router.delete("/products/{product_id}", response_model=dict[str, Any])
 async def delete_product(
     product_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Delete (discontinue) a product."""
     service = ProductCatalogService(db, current_user.tenant_id)
     success = await service.delete_product(product_id)
@@ -303,13 +312,13 @@ async def delete_product(
     }
 
 
-@router.post("/products/import", response_model=Dict[str, Any])
+@router.post("/products/import", response_model=dict[str, Any])
 async def import_products(
     file: UploadFile = File(...),
     update_existing: bool = Query(True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Import products from CSV file."""
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="File must be a CSV")
@@ -333,13 +342,14 @@ async def import_products(
 # COGS Endpoints
 # =============================================================================
 
-@router.post("/products/{product_id}/cogs", response_model=Dict[str, Any])
+
+@router.post("/products/{product_id}/cogs", response_model=dict[str, Any])
 async def set_product_cogs(
     product_id: UUID,
     cogs_data: COGSSet,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Set COGS for a product."""
     if not cogs_data.cogs and not cogs_data.cogs_percentage:
         raise HTTPException(status_code=400, detail="Must provide either cogs or cogs_percentage")
@@ -367,12 +377,12 @@ async def set_product_cogs(
     }
 
 
-@router.get("/products/{product_id}/cogs/history", response_model=Dict[str, Any])
+@router.get("/products/{product_id}/cogs/history", response_model=dict[str, Any])
 async def get_cogs_history(
     product_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get COGS history for a product."""
     service = COGSService(db, current_user.tenant_id)
     history = await service.get_cogs_history(product_id)
@@ -396,13 +406,13 @@ async def get_cogs_history(
     }
 
 
-@router.post("/cogs/upload", response_model=Dict[str, Any])
+@router.post("/cogs/upload", response_model=dict[str, Any])
 async def upload_cogs(
     file: UploadFile = File(...),
     effective_date: Optional[date] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Upload COGS data from CSV file.
 
@@ -438,12 +448,12 @@ async def upload_cogs(
     }
 
 
-@router.get("/cogs/uploads", response_model=Dict[str, Any])
+@router.get("/cogs/uploads", response_model=dict[str, Any])
 async def get_cogs_uploads(
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get COGS upload history."""
     service = COGSIngestionService(db, current_user.tenant_id)
     uploads = await service.get_upload_history(limit=limit)
@@ -471,17 +481,18 @@ async def get_cogs_uploads(
 # Margin Rules Endpoints
 # =============================================================================
 
-@router.post("/margin-rules", response_model=Dict[str, Any])
+
+@router.post("/margin-rules", response_model=dict[str, Any])
 async def create_margin_rule(
     rule_data: MarginRuleCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create a margin rule."""
     if not rule_data.default_margin_percentage and not rule_data.default_cogs_percentage:
         raise HTTPException(
             status_code=400,
-            detail="Must provide either default_margin_percentage or default_cogs_percentage"
+            detail="Must provide either default_margin_percentage or default_cogs_percentage",
         )
 
     service = COGSService(db, current_user.tenant_id)
@@ -506,12 +517,12 @@ async def create_margin_rule(
     }
 
 
-@router.get("/margin-rules", response_model=Dict[str, Any])
+@router.get("/margin-rules", response_model=dict[str, Any])
 async def list_margin_rules(
     active_only: bool = Query(True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List all margin rules."""
     service = COGSService(db, current_user.tenant_id)
     rules = await service.list_margin_rules(active_only=active_only)
@@ -537,13 +548,13 @@ async def list_margin_rules(
     }
 
 
-@router.patch("/margin-rules/{rule_id}", response_model=Dict[str, Any])
+@router.patch("/margin-rules/{rule_id}", response_model=dict[str, Any])
 async def update_margin_rule(
     rule_id: UUID,
     rule_data: MarginRuleUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update a margin rule."""
     service = COGSService(db, current_user.tenant_id)
 
@@ -561,12 +572,12 @@ async def update_margin_rule(
     }
 
 
-@router.delete("/margin-rules/{rule_id}", response_model=Dict[str, Any])
+@router.delete("/margin-rules/{rule_id}", response_model=dict[str, Any])
 async def delete_margin_rule(
     rule_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Delete a margin rule."""
     service = COGSService(db, current_user.tenant_id)
     success = await service.delete_margin_rule(rule_id)
@@ -584,7 +595,8 @@ async def delete_margin_rule(
 # Profit ROAS Endpoints
 # =============================================================================
 
-@router.get("/profit/roas", response_model=Dict[str, Any])
+
+@router.get("/profit/roas", response_model=dict[str, Any])
 async def get_profit_roas(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -593,7 +605,7 @@ async def get_profit_roas(
     product_id: Optional[UUID] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Calculate Profit ROAS for a date range.
 
@@ -614,7 +626,7 @@ async def get_profit_roas(
     )
 
 
-@router.get("/profit/trend", response_model=Dict[str, Any])
+@router.get("/profit/trend", response_model=dict[str, Any])
 async def get_profit_trend(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -623,7 +635,7 @@ async def get_profit_trend(
     granularity: str = Query("daily", regex="^(daily|weekly|monthly)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get Profit ROAS trend over time."""
     service = ProfitCalculationService(db, current_user.tenant_id)
 
@@ -636,7 +648,7 @@ async def get_profit_trend(
     )
 
 
-@router.get("/profit/by-product", response_model=Dict[str, Any])
+@router.get("/profit/by-product", response_model=dict[str, Any])
 async def get_product_profitability(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -645,7 +657,7 @@ async def get_product_profitability(
     sort_by: str = Query("gross_profit", regex="^(gross_profit|net_profit|gross_profit_roas)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get profitability breakdown by product."""
     service = ProfitCalculationService(db, current_user.tenant_id)
 
@@ -658,14 +670,14 @@ async def get_product_profitability(
     )
 
 
-@router.get("/profit/by-campaign", response_model=Dict[str, Any])
+@router.get("/profit/by-campaign", response_model=dict[str, Any])
 async def get_campaign_profitability(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
     platform: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get profitability breakdown by campaign."""
     service = ProfitCalculationService(db, current_user.tenant_id)
 
@@ -676,7 +688,7 @@ async def get_campaign_profitability(
     )
 
 
-@router.post("/profit/report", response_model=Dict[str, Any])
+@router.post("/profit/report", response_model=dict[str, Any])
 async def generate_profit_report(
     start_date: date = Query(..., description="Report start date"),
     end_date: date = Query(..., description="Report end date"),
@@ -686,7 +698,7 @@ async def generate_profit_report(
     category: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Generate and save a profit ROAS report."""
     service = ProfitCalculationService(db, current_user.tenant_id)
 
@@ -710,8 +722,12 @@ async def generate_profit_report(
         "summary": {
             "total_revenue": report.total_revenue_cents / 100 if report.total_revenue_cents else 0,
             "total_cogs": report.total_cogs_cents / 100 if report.total_cogs_cents else 0,
-            "total_gross_profit": report.total_gross_profit_cents / 100 if report.total_gross_profit_cents else 0,
-            "total_ad_spend": report.total_ad_spend_cents / 100 if report.total_ad_spend_cents else 0,
+            "total_gross_profit": report.total_gross_profit_cents / 100
+            if report.total_gross_profit_cents
+            else 0,
+            "total_ad_spend": report.total_ad_spend_cents / 100
+            if report.total_ad_spend_cents
+            else 0,
             "revenue_roas": report.revenue_roas,
             "gross_profit_roas": report.gross_profit_roas,
             "net_profit_roas": report.net_profit_roas,

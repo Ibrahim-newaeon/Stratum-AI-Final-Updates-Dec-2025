@@ -3,7 +3,7 @@
  * Shows a banner when the user is offline
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { WifiIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
@@ -56,9 +56,7 @@ export function OfflineIndicator({ className }: OfflineIndicatorProps) {
       )}
     >
       <WifiIcon className="w-4 h-4" aria-hidden="true" />
-      <span>
-        {isOnline ? 'Back online' : 'You are offline'}
-      </span>
+      <span>{isOnline ? 'Back online' : 'You are offline'}</span>
     </div>
   );
 }

@@ -15,20 +15,18 @@ Default creates 25 users (matching default VU count for load tests).
 import argparse
 import asyncio
 import sys
-from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
+from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
 from app.models import Tenant, User, UserRole
-from app.core.security import get_password_hash, hash_pii_for_lookup, encrypt_pii
-
 
 # Load test user credentials template
 TEST_PASSWORD = "TestPassword123!"
@@ -49,9 +47,7 @@ async def seed_load_test_users(count: int = 25):
     # Create async engine
     engine = create_async_engine(settings.database_url, echo=False)
 
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     print("=" * 60)
     print("  Stratum AI - Multiple Load Test Users Setup")
@@ -65,9 +61,7 @@ async def seed_load_test_users(count: int = 25):
             tenant = result.scalar_one_or_none()
 
             if not tenant:
-                result = await db.execute(
-                    select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG)
-                )
+                result = await db.execute(select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG))
                 tenant = result.scalar_one_or_none()
 
             if not tenant:
@@ -93,9 +87,7 @@ async def seed_load_test_users(count: int = 25):
                 email_hash = hash_pii_for_lookup(email.lower())
 
                 # Check if user already exists
-                result = await db.execute(
-                    select(User).where(User.email_hash == email_hash)
-                )
+                result = await db.execute(select(User).where(User.email_hash == email_hash))
                 existing_user = result.scalar_one_or_none()
 
                 if existing_user:

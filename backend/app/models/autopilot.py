@@ -10,32 +10,43 @@ Models:
 - EnforcementAuditLog: Intervention audit log
 """
 
-from uuid import uuid4
 import enum
+from uuid import uuid4
 
 from sqlalchemy import (
-    Column, String, Integer, DateTime, Float, Text, ForeignKey,
-    Index, Enum as SQLEnum, Boolean, UniqueConstraint
+    Boolean,
+    Column,
+    DateTime,
+    Enum as SQLEnum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, TimestampMixin
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class EnforcementMode(str, enum.Enum):
     """Autopilot enforcement modes."""
-    ADVISORY = "advisory"      # Warn only, no blocking
+
+    ADVISORY = "advisory"  # Warn only, no blocking
     SOFT_BLOCK = "soft_block"  # Warn + require confirmation to proceed
     HARD_BLOCK = "hard_block"  # Prevent action via API, log override attempts
 
 
 class ViolationType(str, enum.Enum):
     """Types of enforcement rule violations."""
+
     BUDGET_EXCEEDED = "budget_exceeded"
     ROAS_BELOW_THRESHOLD = "roas_below_threshold"
     DAILY_SPEND_LIMIT = "daily_spend_limit"
@@ -45,6 +56,7 @@ class ViolationType(str, enum.Enum):
 
 class InterventionAction(str, enum.Enum):
     """Actions taken by enforcer."""
+
     WARNED = "warned"
     BLOCKED = "blocked"
     AUTO_PAUSED = "auto_paused"
@@ -57,11 +69,13 @@ class InterventionAction(str, enum.Enum):
 # Tenant Enforcement Settings Model
 # =============================================================================
 
+
 class TenantEnforcementSettings(Base, TimestampMixin):
     """
     Per-tenant enforcement configuration.
     One row per tenant storing all enforcement settings.
     """
+
     __tablename__ = "tenant_enforcement_settings"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -80,7 +94,7 @@ class TenantEnforcementSettings(Base, TimestampMixin):
     default_mode = Column(
         SQLEnum(
             EnforcementMode,
-            name='enforcement_mode',
+            name="enforcement_mode",
             create_type=False,
             values_callable=lambda x: [e.value for e in x],
         ),
@@ -109,9 +123,7 @@ class TenantEnforcementSettings(Base, TimestampMixin):
         cascade="all, delete-orphan",
     )
 
-    __table_args__ = (
-        Index("ix_tenant_enforcement_settings_tenant_id", "tenant_id"),
-    )
+    __table_args__ = (Index("ix_tenant_enforcement_settings_tenant_id", "tenant_id"),)
 
     def to_dict(self) -> dict:
         """Convert to dictionary for API responses."""
@@ -119,7 +131,9 @@ class TenantEnforcementSettings(Base, TimestampMixin):
             "id": str(self.id),
             "tenant_id": self.tenant_id,
             "enforcement_enabled": self.enforcement_enabled,
-            "default_mode": self.default_mode.value if isinstance(self.default_mode, EnforcementMode) else self.default_mode,
+            "default_mode": self.default_mode.value
+            if isinstance(self.default_mode, EnforcementMode)
+            else self.default_mode,
             "max_daily_budget": self.max_daily_budget,
             "max_campaign_budget": self.max_campaign_budget,
             "budget_increase_limit_pct": self.budget_increase_limit_pct,
@@ -136,11 +150,13 @@ class TenantEnforcementSettings(Base, TimestampMixin):
 # Custom Enforcement Rules Model
 # =============================================================================
 
+
 class TenantEnforcementRule(Base, TimestampMixin):
     """
     Custom enforcement rules per tenant.
     Allows fine-grained control over specific thresholds.
     """
+
     __tablename__ = "tenant_enforcement_rules"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -161,7 +177,7 @@ class TenantEnforcementRule(Base, TimestampMixin):
     rule_type = Column(
         SQLEnum(
             ViolationType,
-            name='violation_type',
+            name="violation_type",
             create_type=False,
             values_callable=lambda x: [e.value for e in x],
         ),
@@ -171,7 +187,7 @@ class TenantEnforcementRule(Base, TimestampMixin):
     enforcement_mode = Column(
         SQLEnum(
             EnforcementMode,
-            name='enforcement_mode',
+            name="enforcement_mode",
             create_type=False,
             values_callable=lambda x: [e.value for e in x],
         ),
@@ -195,9 +211,13 @@ class TenantEnforcementRule(Base, TimestampMixin):
         return {
             "id": str(self.id),
             "rule_id": self.rule_id,
-            "rule_type": self.rule_type.value if isinstance(self.rule_type, ViolationType) else self.rule_type,
+            "rule_type": self.rule_type.value
+            if isinstance(self.rule_type, ViolationType)
+            else self.rule_type,
             "threshold_value": self.threshold_value,
-            "enforcement_mode": self.enforcement_mode.value if isinstance(self.enforcement_mode, EnforcementMode) else self.enforcement_mode,
+            "enforcement_mode": self.enforcement_mode.value
+            if isinstance(self.enforcement_mode, EnforcementMode)
+            else self.enforcement_mode,
             "enabled": self.enabled,
             "description": self.description,
         }
@@ -207,11 +227,13 @@ class TenantEnforcementRule(Base, TimestampMixin):
 # Enforcement Audit Log Model
 # =============================================================================
 
+
 class EnforcementAuditLog(Base):
     """
     Audit log for all enforcement interventions.
     Tracks blocks, warnings, overrides, and auto-pause events.
     """
+
     __tablename__ = "enforcement_audit_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -234,7 +256,7 @@ class EnforcementAuditLog(Base):
     violation_type = Column(
         SQLEnum(
             ViolationType,
-            name='violation_type',
+            name="violation_type",
             create_type=False,
             values_callable=lambda x: [e.value for e in x],
         ),
@@ -245,7 +267,7 @@ class EnforcementAuditLog(Base):
     intervention_action = Column(
         SQLEnum(
             InterventionAction,
-            name='intervention_action',
+            name="intervention_action",
             create_type=False,
             values_callable=lambda x: [e.value for e in x],
         ),
@@ -254,7 +276,7 @@ class EnforcementAuditLog(Base):
     enforcement_mode = Column(
         SQLEnum(
             EnforcementMode,
-            name='enforcement_mode',
+            name="enforcement_mode",
             create_type=False,
             values_callable=lambda x: [e.value for e in x],
         ),
@@ -281,9 +303,15 @@ class EnforcementAuditLog(Base):
             "action_type": self.action_type,
             "entity_type": self.entity_type,
             "entity_id": self.entity_id,
-            "violation_type": self.violation_type.value if isinstance(self.violation_type, ViolationType) else self.violation_type,
-            "intervention_action": self.intervention_action.value if isinstance(self.intervention_action, InterventionAction) else self.intervention_action,
-            "enforcement_mode": self.enforcement_mode.value if isinstance(self.enforcement_mode, EnforcementMode) else self.enforcement_mode,
+            "violation_type": self.violation_type.value
+            if isinstance(self.violation_type, ViolationType)
+            else self.violation_type,
+            "intervention_action": self.intervention_action.value
+            if isinstance(self.intervention_action, InterventionAction)
+            else self.intervention_action,
+            "enforcement_mode": self.enforcement_mode.value
+            if isinstance(self.enforcement_mode, EnforcementMode)
+            else self.enforcement_mode,
             "details": self.details,
             "user_id": self.user_id,
             "override_reason": self.override_reason,
@@ -294,11 +322,13 @@ class EnforcementAuditLog(Base):
 # Pending Confirmation Tokens Model
 # =============================================================================
 
+
 class PendingConfirmationToken(Base):
     """
     Stores pending soft-block confirmation tokens.
     Tokens expire after a configured time period.
     """
+
     __tablename__ = "pending_confirmation_tokens"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)

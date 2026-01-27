@@ -13,68 +13,68 @@ import {
   Loader2,
   Settings,
   Zap,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { ActivityItem } from '@/api/dashboard'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { ActivityItem } from '@/api/dashboard';
 
 interface ActivityFeedProps {
-  activities: ActivityItem[]
-  loading?: boolean
-  onViewAll?: () => void
+  activities: ActivityItem[];
+  loading?: boolean;
+  onViewAll?: () => void;
 }
 
 export function ActivityFeed({ activities, loading = false, onViewAll }: ActivityFeedProps) {
   const getTypeConfig = (type: ActivityItem['type']) => {
     switch (type) {
       case 'action':
-        return { icon: Zap, color: 'text-blue-500', bgColor: 'bg-blue-500/10' }
+        return { icon: Zap, color: 'text-blue-500', bgColor: 'bg-blue-500/10' };
       case 'alert':
-        return { icon: AlertCircle, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' }
+        return { icon: AlertCircle, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' };
       case 'auth':
-        return { icon: Key, color: 'text-purple-500', bgColor: 'bg-purple-500/10' }
+        return { icon: Key, color: 'text-purple-500', bgColor: 'bg-purple-500/10' };
       case 'system':
-        return { icon: Settings, color: 'text-muted-foreground', bgColor: 'bg-muted' }
+        return { icon: Settings, color: 'text-muted-foreground', bgColor: 'bg-muted' };
       default:
-        return { icon: Activity, color: 'text-muted-foreground', bgColor: 'bg-muted' }
+        return { icon: Activity, color: 'text-muted-foreground', bgColor: 'bg-muted' };
     }
-  }
+  };
 
   const getSeverityConfig = (severity: ActivityItem['severity']) => {
     switch (severity) {
       case 'success':
-        return { icon: CheckCircle, color: 'text-green-500' }
+        return { icon: CheckCircle, color: 'text-green-500' };
       case 'warning':
-        return { icon: AlertTriangle, color: 'text-yellow-500' }
+        return { icon: AlertTriangle, color: 'text-yellow-500' };
       case 'error':
-        return { icon: AlertCircle, color: 'text-red-500' }
+        return { icon: AlertCircle, color: 'text-red-500' };
       case 'info':
-        return { icon: Info, color: 'text-blue-500' }
+        return { icon: Info, color: 'text-blue-500' };
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString()
-  }
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
 
   if (loading) {
     return (
       <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -103,10 +103,10 @@ export function ActivityFeed({ activities, loading = false, onViewAll }: Activit
           </div>
         ) : (
           activities.map((activity) => {
-            const typeConfig = getTypeConfig(activity.type)
-            const severityConfig = getSeverityConfig(activity.severity)
-            const TypeIcon = typeConfig.icon
-            const SeverityIcon = severityConfig?.icon
+            const typeConfig = getTypeConfig(activity.type);
+            const severityConfig = getSeverityConfig(activity.severity);
+            const TypeIcon = typeConfig.icon;
+            const SeverityIcon = severityConfig?.icon;
 
             return (
               <div key={activity.id} className="p-3 hover:bg-muted/50 transition-colors">
@@ -152,10 +152,10 @@ export function ActivityFeed({ activities, loading = false, onViewAll }: Activit
                   </div>
                 </div>
               </div>
-            )
+            );
           })
         )}
       </div>
     </div>
-  )
+  );
 }

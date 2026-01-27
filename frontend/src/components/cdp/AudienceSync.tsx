@@ -3,57 +3,60 @@
  * Manage audience sync to ad platforms (Meta, Google, TikTok, Snapchat)
  */
 
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import {
-  Users,
-  Plus,
-  Trash2,
-  RefreshCw,
+  AlertCircle,
+  ArrowUpRight,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Search,
   Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Loader2,
-  ExternalLink,
-  History,
-  Zap,
-  Settings2,
-  ArrowUpRight,
-  X,
   Download,
+  ExternalLink,
   FileJson,
   FileSpreadsheet,
+  History,
   Link2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Loader2,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings2,
+  Trash2,
+  Users,
+  X,
+  XCircle,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useConnectedPlatforms,
-  usePlatformAudiences,
-  useSegments,
-  useCreatePlatformAudience,
-  useTriggerSync,
-  useDeletePlatformAudience,
-  useSyncHistory,
-  useExportAudience,
+  AudienceExportParams,
+  CDPSegment,
   PlatformAudience,
+  SyncJob,
   SyncPlatform,
   SyncStatus,
-  SyncJob,
-  CDPSegment,
-  AudienceExportParams,
-} from '@/api/cdp'
+  useConnectedPlatforms,
+  useCreatePlatformAudience,
+  useDeletePlatformAudience,
+  useExportAudience,
+  usePlatformAudiences,
+  useSegments,
+  useSyncHistory,
+  useTriggerSync,
+} from '@/api/cdp';
 
 // Platform configurations
-const PLATFORM_CONFIG: Record<SyncPlatform, {
-  name: string
-  color: string
-  bgColor: string
-  icon: string
-}> = {
+const PLATFORM_CONFIG: Record<
+  SyncPlatform,
+  {
+    name: string;
+    color: string;
+    bgColor: string;
+    icon: string;
+  }
+> = {
   meta: {
     name: 'Meta',
     color: 'text-blue-500',
@@ -78,32 +81,43 @@ const PLATFORM_CONFIG: Record<SyncPlatform, {
     bgColor: 'bg-yellow-500/10',
     icon: 'S',
   },
-}
+};
 
 // Platform icon component
-function PlatformIcon({ platform, size = 'md' }: { platform: SyncPlatform; size?: 'sm' | 'md' | 'lg' }) {
-  const config = PLATFORM_CONFIG[platform]
+function PlatformIcon({
+  platform,
+  size = 'md',
+}: {
+  platform: SyncPlatform;
+  size?: 'sm' | 'md' | 'lg';
+}) {
+  const config = PLATFORM_CONFIG[platform];
   const sizeClasses = {
     sm: 'w-6 h-6 text-xs',
     md: 'w-8 h-8 text-sm',
     lg: 'w-10 h-10 text-base',
-  }
+  };
 
   return (
-    <div className={cn(
-      'rounded-lg flex items-center justify-center font-bold',
-      config.bgColor,
-      config.color,
-      sizeClasses[size]
-    )}>
+    <div
+      className={cn(
+        'rounded-lg flex items-center justify-center font-bold',
+        config.bgColor,
+        config.color,
+        sizeClasses[size]
+      )}
+    >
       {config.icon}
     </div>
-  )
+  );
 }
 
 // Status badge component
 function StatusBadge({ status }: { status: SyncStatus | null }) {
-  const statusConfig: Record<SyncStatus, { icon: React.ReactNode; className: string; label: string }> = {
+  const statusConfig: Record<
+    SyncStatus,
+    { icon: React.ReactNode; className: string; label: string }
+  > = {
     pending: {
       icon: <Clock className="w-3 h-3" />,
       className: 'bg-gray-500/10 text-gray-500',
@@ -129,7 +143,7 @@ function StatusBadge({ status }: { status: SyncStatus | null }) {
       className: 'bg-amber-500/10 text-amber-500',
       label: 'Partial',
     },
-  }
+  };
 
   if (!status) {
     return (
@@ -137,75 +151,82 @@ function StatusBadge({ status }: { status: SyncStatus | null }) {
         <Clock className="w-3 h-3" />
         Never synced
       </span>
-    )
+    );
   }
 
-  const config = statusConfig[status]
+  const config = statusConfig[status];
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
-      config.className
-    )}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
+        config.className
+      )}
+    >
       {config.icon}
       {config.label}
     </span>
-  )
+  );
 }
 
 // Create audience modal
 interface CreateAudienceModalProps {
-  isOpen: boolean
-  onClose: () => void
-  segments: CDPSegment[]
+  isOpen: boolean;
+  onClose: () => void;
+  segments: CDPSegment[];
   connectedPlatforms: Array<{
-    platform: SyncPlatform
-    ad_accounts: Array<{ ad_account_id: string; ad_account_name: string | null }>
-  }>
+    platform: SyncPlatform;
+    ad_accounts: Array<{ ad_account_id: string; ad_account_name: string | null }>;
+  }>;
 }
 
-function CreateAudienceModal({ isOpen, onClose, segments, connectedPlatforms }: CreateAudienceModalProps) {
-  const [segmentId, setSegmentId] = useState('')
-  const [platform, setPlatform] = useState<SyncPlatform | ''>('')
-  const [adAccountId, setAdAccountId] = useState('')
-  const [audienceName, setAudienceName] = useState('')
-  const [description, setDescription] = useState('')
-  const [autoSync, setAutoSync] = useState(true)
-  const [syncInterval, setSyncInterval] = useState(24)
+function CreateAudienceModal({
+  isOpen,
+  onClose,
+  segments,
+  connectedPlatforms,
+}: CreateAudienceModalProps) {
+  const [segmentId, setSegmentId] = useState('');
+  const [platform, setPlatform] = useState<SyncPlatform | ''>('');
+  const [adAccountId, setAdAccountId] = useState('');
+  const [audienceName, setAudienceName] = useState('');
+  const [description, setDescription] = useState('');
+  const [autoSync, setAutoSync] = useState(true);
+  const [syncInterval, setSyncInterval] = useState(24);
 
-  const createMutation = useCreatePlatformAudience()
+  const createMutation = useCreatePlatformAudience();
 
-  const selectedPlatform = connectedPlatforms.find(p => p.platform === platform)
-  const adAccounts = selectedPlatform?.ad_accounts || []
+  const selectedPlatform = connectedPlatforms.find((p) => p.platform === platform);
+  const adAccounts = selectedPlatform?.ad_accounts || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!segmentId || !platform || !adAccountId || !audienceName) return
+    e.preventDefault();
+    if (!segmentId || !platform || !adAccountId || !audienceName) return;
 
     try {
       await createMutation.mutateAsync({
         segment_id: segmentId,
-        platform: platform as SyncPlatform,
+        platform: platform,
         ad_account_id: adAccountId,
         audience_name: audienceName,
         description: description || undefined,
         auto_sync: autoSync,
         sync_interval_hours: syncInterval,
-      })
-      onClose()
+      });
+      onClose();
       // Reset form
-      setSegmentId('')
-      setPlatform('')
-      setAdAccountId('')
-      setAudienceName('')
-      setDescription('')
-      setAutoSync(true)
-      setSyncInterval(24)
+      setSegmentId('');
+      setPlatform('');
+      setAdAccountId('');
+      setAudienceName('');
+      setDescription('');
+      setAutoSync(true);
+      setSyncInterval(24);
     } catch (error) {
-      console.error('Failed to create audience:', error)
+      console.error('Failed to create audience:', error);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -229,7 +250,7 @@ function CreateAudienceModal({ isOpen, onClose, segments, connectedPlatforms }: 
               required
             >
               <option value="">Select a segment...</option>
-              {segments.map(segment => (
+              {segments.map((segment) => (
                 <option key={segment.id} value={segment.id}>
                   {segment.name} ({segment.profile_count?.toLocaleString() || 0} profiles)
                 </option>
@@ -241,13 +262,13 @@ function CreateAudienceModal({ isOpen, onClose, segments, connectedPlatforms }: 
           <div>
             <label className="block text-sm font-medium mb-1.5">Ad Platform</label>
             <div className="grid grid-cols-2 gap-2">
-              {connectedPlatforms.map(p => (
+              {connectedPlatforms.map((p) => (
                 <button
                   key={p.platform}
                   type="button"
                   onClick={() => {
-                    setPlatform(p.platform)
-                    setAdAccountId('')
+                    setPlatform(p.platform);
+                    setAdAccountId('');
                   }}
                   className={cn(
                     'flex items-center gap-2 p-3 rounded-lg border transition-all',
@@ -279,7 +300,7 @@ function CreateAudienceModal({ isOpen, onClose, segments, connectedPlatforms }: 
                 required
               >
                 <option value="">Select an ad account...</option>
-                {adAccounts.map(account => (
+                {adAccounts.map((account) => (
                   <option key={account.ad_account_id} value={account.ad_account_id}>
                     {account.ad_account_name || account.ad_account_id}
                   </option>
@@ -357,7 +378,9 @@ function CreateAudienceModal({ isOpen, onClose, segments, connectedPlatforms }: 
             </button>
             <button
               type="submit"
-              disabled={!segmentId || !platform || !adAccountId || !audienceName || createMutation.isPending}
+              disabled={
+                !segmentId || !platform || !adAccountId || !audienceName || createMutation.isPending
+              }
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               {createMutation.isPending ? (
@@ -371,31 +394,31 @@ function CreateAudienceModal({ isOpen, onClose, segments, connectedPlatforms }: 
         </form>
       </div>
     </div>
-  )
+  );
 }
 
 // Sync history panel
 interface SyncHistoryPanelProps {
-  audienceId: string
-  audienceName: string
-  onClose: () => void
+  audienceId: string;
+  audienceName: string;
+  onClose: () => void;
 }
 
 function SyncHistoryPanel({ audienceId, audienceName, onClose }: SyncHistoryPanelProps) {
-  const { data, isLoading } = useSyncHistory(audienceId, 20)
-  const jobs = data?.jobs || []
+  const { data, isLoading } = useSyncHistory(audienceId, 20);
+  const jobs = data?.jobs || [];
 
   const formatDuration = (ms: number | null) => {
-    if (!ms) return '-'
-    if (ms < 1000) return `${ms}ms`
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
-    return `${(ms / 60000).toFixed(1)}m`
-  }
+    if (!ms) return '-';
+    if (ms < 1000) return `${ms}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    return `${(ms / 60000).toFixed(1)}m`;
+  };
 
   const formatDate = (date: string | null) => {
-    if (!date) return '-'
-    return new Date(date).toLocaleString()
-  }
+    if (!date) return '-';
+    return new Date(date).toLocaleString();
+  };
 
   return (
     <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-card border-l shadow-xl z-50 overflow-hidden flex flex-col">
@@ -421,9 +444,7 @@ function SyncHistoryPanel({ audienceId, audienceName, onClose }: SyncHistoryPane
           <div className="text-center py-12">
             <History className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="font-semibold mb-2">No sync history</h3>
-            <p className="text-sm text-muted-foreground">
-              This audience hasn't been synced yet.
-            </p>
+            <p className="text-sm text-muted-foreground">This audience hasn't been synced yet.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -448,7 +469,9 @@ function SyncHistoryPanel({ audienceId, audienceName, onClose }: SyncHistoryPane
                   </div>
                   <div>
                     <div className="text-muted-foreground">Added</div>
-                    <div className="font-semibold text-green-500">+{job.profiles_added.toLocaleString()}</div>
+                    <div className="font-semibold text-green-500">
+                      +{job.profiles_added.toLocaleString()}
+                    </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">Duration</div>
@@ -477,69 +500,69 @@ function SyncHistoryPanel({ audienceId, audienceName, onClose }: SyncHistoryPane
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Export audience modal
 interface ExportAudienceModalProps {
-  isOpen: boolean
-  onClose: () => void
-  segments: CDPSegment[]
+  isOpen: boolean;
+  onClose: () => void;
+  segments: CDPSegment[];
 }
 
 function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalProps) {
-  const [segmentId, setSegmentId] = useState<string>('')
-  const [format, setFormat] = useState<'csv' | 'json'>('csv')
-  const [includeTraits, setIncludeTraits] = useState(true)
-  const [includeEvents, setIncludeEvents] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
+  const [segmentId, setSegmentId] = useState<string>('');
+  const [format, setFormat] = useState<'csv' | 'json'>('csv');
+  const [includeTraits, setIncludeTraits] = useState(true);
+  const [includeEvents, setIncludeEvents] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const exportMutation = useExportAudience()
+  const exportMutation = useExportAudience();
 
   const handleExport = async () => {
-    setIsExporting(true)
+    setIsExporting(true);
     try {
       const params: AudienceExportParams = {
         format,
         segment_ids: segmentId ? [segmentId] : undefined,
         include_traits: includeTraits,
         include_events: includeEvents,
-      }
+      };
 
-      const result = await exportMutation.mutateAsync(params)
+      const result = await exportMutation.mutateAsync(params);
 
       // Handle file download
       if (result instanceof Blob) {
-        const url = URL.createObjectURL(result)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `audience-export-${new Date().toISOString().split('T')[0]}.${format}`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
+        const url = URL.createObjectURL(result);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audience-export-${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       } else {
         // JSON response - convert to downloadable file
-        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `audience-export-${new Date().toISOString().split('T')[0]}.json`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
+        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audience-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
 
-      onClose()
+      onClose();
     } catch (error) {
-      console.error('Export failed:', error)
+      console.error('Export failed:', error);
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -565,15 +588,13 @@ function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalP
               className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20"
             >
               <option value="">All profiles</option>
-              {segments.map(segment => (
+              {segments.map((segment) => (
                 <option key={segment.id} value={segment.id}>
                   {segment.name} ({segment.profile_count?.toLocaleString() || 0} profiles)
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Leave empty to export all profiles
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Leave empty to export all profiles</p>
           </div>
 
           {/* Format selection */}
@@ -668,39 +689,37 @@ function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalP
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Audience card component
 interface AudienceCardProps {
-  audience: PlatformAudience
-  onSync: () => void
-  onDelete: () => void
-  onViewHistory: () => void
-  isSyncing: boolean
+  audience: PlatformAudience;
+  onSync: () => void;
+  onDelete: () => void;
+  onViewHistory: () => void;
+  isSyncing: boolean;
 }
 
 function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: AudienceCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const formatDate = (date: string | null) => {
-    if (!date) return 'Never'
-    return new Date(date).toLocaleDateString()
-  }
+    if (!date) return 'Never';
+    return new Date(date).toLocaleDateString();
+  };
 
-  const matchRate = audience.match_rate
-    ? `${audience.match_rate.toFixed(1)}%`
-    : '-'
+  const matchRate = audience.match_rate ? `${audience.match_rate.toFixed(1)}%` : '-';
 
   return (
     <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-all">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <PlatformIcon platform={audience.platform as SyncPlatform} />
+          <PlatformIcon platform={audience.platform} />
           <div>
             <h3 className="font-semibold">{audience.platform_audience_name}</h3>
             <p className="text-sm text-muted-foreground">
-              {PLATFORM_CONFIG[audience.platform as SyncPlatform]?.name} • {audience.ad_account_id}
+              {PLATFORM_CONFIG[audience.platform]?.name} • {audience.ad_account_id}
             </p>
           </div>
         </div>
@@ -708,17 +727,13 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
       </div>
 
       {audience.description && (
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-          {audience.description}
-        </p>
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{audience.description}</p>
       )}
 
       <div className="grid grid-cols-3 gap-4 text-sm mb-4">
         <div>
           <div className="text-muted-foreground">Platform Size</div>
-          <div className="font-semibold">
-            {audience.platform_size?.toLocaleString() || '-'}
-          </div>
+          <div className="font-semibold">{audience.platform_size?.toLocaleString() || '-'}</div>
         </div>
         <div>
           <div className="text-muted-foreground">Match Rate</div>
@@ -745,11 +760,7 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
           disabled={isSyncing}
           className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium transition-colors disabled:opacity-50"
         >
-          {isSyncing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Zap className="w-4 h-4" />
-          )}
+          {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
           Sync Now
         </button>
         <button
@@ -781,7 +792,9 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Platform Audience ID</span>
-            <span className="font-mono text-xs">{audience.platform_audience_id || 'Not created yet'}</span>
+            <span className="font-mono text-xs">
+              {audience.platform_audience_id || 'Not created yet'}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Created</span>
@@ -790,70 +803,79 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // Main component
 export function AudienceSync() {
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [platformFilter, setPlatformFilter] = useState<SyncPlatform | ''>('')
-  const [historyAudience, setHistoryAudience] = useState<PlatformAudience | null>(null)
-  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set())
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [platformFilter, setPlatformFilter] = useState<SyncPlatform | ''>('');
+  const [historyAudience, setHistoryAudience] = useState<PlatformAudience | null>(null);
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
 
   // Queries
-  const { data: platformsData, isLoading: platformsLoading } = useConnectedPlatforms()
-  const { data: audiencesData, isLoading: audiencesLoading, refetch } = usePlatformAudiences({
+  const { data: platformsData, isLoading: platformsLoading } = useConnectedPlatforms();
+  const {
+    data: audiencesData,
+    isLoading: audiencesLoading,
+    refetch,
+  } = usePlatformAudiences({
     platform: platformFilter || undefined,
-  })
-  const { data: segmentsData } = useSegments({ status: 'active' })
+  });
+  const { data: segmentsData } = useSegments({ status: 'active' });
 
   // Mutations
-  const syncMutation = useTriggerSync()
-  const deleteMutation = useDeletePlatformAudience()
+  const syncMutation = useTriggerSync();
+  const deleteMutation = useDeletePlatformAudience();
 
-  const connectedPlatforms = platformsData || []
-  const audiences = audiencesData?.audiences || []
-  const segments = segmentsData?.segments || []
+  const connectedPlatforms = platformsData || [];
+  const audiences = audiencesData?.audiences || [];
+  const segments = segmentsData?.segments || [];
 
   // Filter audiences by search
-  const filteredAudiences = audiences.filter(a =>
-    a.platform_audience_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredAudiences = audiences.filter(
+    (a) =>
+      a.platform_audience_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Handle sync
   const handleSync = async (audienceId: string) => {
-    setSyncingIds(prev => new Set(prev).add(audienceId))
+    setSyncingIds((prev) => new Set(prev).add(audienceId));
     try {
-      await syncMutation.mutateAsync({ audienceId, operation: 'update' })
-      refetch()
+      await syncMutation.mutateAsync({ audienceId, operation: 'update' });
+      refetch();
     } catch (error) {
-      console.error('Sync failed:', error)
+      console.error('Sync failed:', error);
     } finally {
-      setSyncingIds(prev => {
-        const next = new Set(prev)
-        next.delete(audienceId)
-        return next
-      })
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(audienceId);
+        return next;
+      });
     }
-  }
+  };
 
   // Handle delete
   const handleDelete = async (audienceId: string) => {
-    if (!confirm('Are you sure you want to delete this audience? This will also remove it from the ad platform.')) {
-      return
+    if (
+      !confirm(
+        'Are you sure you want to delete this audience? This will also remove it from the ad platform.'
+      )
+    ) {
+      return;
     }
     try {
-      await deleteMutation.mutateAsync({ audienceId, deleteFromPlatform: true })
-      refetch()
+      await deleteMutation.mutateAsync({ audienceId, deleteFromPlatform: true });
+      refetch();
     } catch (error) {
-      console.error('Delete failed:', error)
+      console.error('Delete failed:', error);
     }
-  }
+  };
 
-  const isLoading = platformsLoading || audiencesLoading
+  const isLoading = platformsLoading || audiencesLoading;
 
   return (
     <div className="space-y-6">
@@ -903,7 +925,7 @@ export function AudienceSync() {
             </Link>
           </div>
         ) : (
-          connectedPlatforms.map(p => (
+          connectedPlatforms.map((p) => (
             <div
               key={p.platform}
               className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted text-sm"
@@ -935,7 +957,9 @@ export function AudienceSync() {
         >
           <option value="">All Platforms</option>
           {Object.entries(PLATFORM_CONFIG).map(([key, config]) => (
-            <option key={key} value={key}>{config.name}</option>
+            <option key={key} value={key}>
+              {config.name}
+            </option>
           ))}
         </select>
       </div>
@@ -1021,7 +1045,7 @@ export function AudienceSync() {
         />
       )}
     </div>
-  )
+  );
 }
 
-export default AudienceSync
+export default AudienceSync;

@@ -6,21 +6,22 @@ Service for managing autopilot actions and execution.
 Handles action queuing, approval workflow, and platform execution.
 """
 
-from datetime import datetime, date, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
-from enum import Enum
 import json
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func, update
+from datetime import UTC, date, datetime, timedelta
+from enum import Enum
+from typing import Any, Optional
 from uuid import UUID
 
-from app.models.trust_layer import FactActionsQueue
+from sqlalchemy import and_, func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.features.flags import AutopilotLevel, get_autopilot_caps
+from app.models.trust_layer import FactActionsQueue
 
 
 class ActionStatus(str, Enum):
     """Action lifecycle statuses."""
+
     QUEUED = "queued"
     APPROVED = "approved"
     APPLIED = "applied"
@@ -30,6 +31,7 @@ class ActionStatus(str, Enum):
 
 class ActionType(str, Enum):
     """Types of autopilot actions."""
+
     BUDGET_INCREASE = "budget_increase"
     BUDGET_DECREASE = "budget_decrease"
     PAUSE_CAMPAIGN = "pause_campaign"
@@ -65,8 +67,8 @@ class AutopilotService:
         entity_id: str,
         entity_name: str,
         platform: str,
-        action_json: Dict[str, Any],
-        before_value: Optional[Dict[str, Any]] = None,
+        action_json: dict[str, Any],
+        before_value: Optional[dict[str, Any]] = None,
         created_by_user_id: Optional[int] = None,
     ) -> FactActionsQueue:
         """
@@ -111,11 +113,9 @@ class AutopilotService:
         status: Optional[str] = None,
         platform: Optional[str] = None,
         limit: int = 100,
-    ) -> List[FactActionsQueue]:
+    ) -> list[FactActionsQueue]:
         """Get queued actions for a tenant."""
-        query = select(FactActionsQueue).where(
-            FactActionsQueue.tenant_id == tenant_id
-        )
+        query = select(FactActionsQueue).where(FactActionsQueue.tenant_id == tenant_id)
 
         if target_date:
             query = query.where(FactActionsQueue.date == target_date)
@@ -163,7 +163,7 @@ class AutopilotService:
 
         action.status = ActionStatus.APPROVED.value
         action.approved_by_user_id = user_id
-        action.approved_at = datetime.now(timezone.utc)
+        action.approved_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(action)
         return action
@@ -172,7 +172,7 @@ class AutopilotService:
         self,
         tenant_id: int,
         user_id: int,
-        action_ids: Optional[List[UUID]] = None,
+        action_ids: Optional[list[UUID]] = None,
     ) -> int:
         """Approve multiple actions at once."""
         query = (
@@ -186,7 +186,7 @@ class AutopilotService:
             .values(
                 status=ActionStatus.APPROVED.value,
                 approved_by_user_id=user_id,
-                approved_at=datetime.now(timezone.utc),
+                approved_at=datetime.now(UTC),
             )
         )
 
@@ -213,7 +213,7 @@ class AutopilotService:
 
         action.status = ActionStatus.DISMISSED.value
         action.approved_by_user_id = user_id
-        action.approved_at = datetime.now(timezone.utc)
+        action.approved_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(action)
         return action
@@ -221,8 +221,8 @@ class AutopilotService:
     async def mark_applied(
         self,
         action_id: UUID,
-        after_value: Dict[str, Any],
-        platform_response: Dict[str, Any],
+        after_value: dict[str, Any],
+        platform_response: dict[str, Any],
         user_id: Optional[int] = None,
     ) -> Optional[FactActionsQueue]:
         """Mark an action as successfully applied."""
@@ -234,7 +234,7 @@ class AutopilotService:
             return None
 
         action.status = ActionStatus.APPLIED.value
-        action.applied_at = datetime.now(timezone.utc)
+        action.applied_at = datetime.now(UTC)
         action.applied_by_user_id = user_id
         action.after_value = json.dumps(after_value)
         action.platform_response = json.dumps(platform_response)
@@ -246,7 +246,7 @@ class AutopilotService:
         self,
         action_id: UUID,
         error: str,
-        platform_response: Optional[Dict[str, Any]] = None,
+        platform_response: Optional[dict[str, Any]] = None,
     ) -> Optional[FactActionsQueue]:
         """Mark an action as failed."""
         result = await self.db.execute(
@@ -268,7 +268,7 @@ class AutopilotService:
         self,
         tenant_id: int,
         days: int = 7,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get summary of actions over the past N days."""
         start_date = date.today() - timedelta(days=days)
 
@@ -338,15 +338,16 @@ class AutopilotService:
                     + status_counts.get(ActionStatus.FAILED.value, 0),
                     1,
                 )
-            ) * 100,
+            )
+            * 100,
         }
 
     def can_auto_execute(
         self,
         autopilot_level: int,
         action_type: str,
-        action_details: Dict[str, Any],
-    ) -> Tuple[bool, Optional[str]]:
+        action_details: dict[str, Any],
+    ) -> tuple[bool, Optional[str]]:
         """
         Check if an action can be auto-executed based on autopilot level.
 
@@ -388,9 +389,9 @@ class AutopilotService:
 
 
 def process_recommendations_to_actions(
-    recommendations: Dict[str, Any],
+    recommendations: dict[str, Any],
     autopilot_level: int,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Convert recommendations engine output to action queue items.
 
@@ -407,48 +408,54 @@ def process_recommendations_to_actions(
     for action in recommendations.get("actions", []):
         action_type = action.get("type")
         if action_type in ["increase", "decrease"]:
-            actions.append({
-                "action_type": f"budget_{action_type}",
-                "entity_type": "campaign",
-                "entity_id": action.get("entity_id"),
-                "entity_name": action.get("entity_name"),
-                "action_json": {
-                    "amount": action.get("amount"),
-                    "reason": action.get("reason"),
-                },
-                "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
-            })
+            actions.append(
+                {
+                    "action_type": f"budget_{action_type}",
+                    "entity_type": "campaign",
+                    "entity_id": action.get("entity_id"),
+                    "entity_name": action.get("entity_name"),
+                    "action_json": {
+                        "amount": action.get("amount"),
+                        "reason": action.get("reason"),
+                    },
+                    "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
+                }
+            )
 
     # Process recommendations
     for rec in recommendations.get("recommendations", []):
         rec_type = rec.get("type")
 
         if rec_type == "creative_refresh":
-            actions.append({
-                "action_type": ActionType.PAUSE_CREATIVE.value,
-                "entity_type": "creative",
-                "entity_id": rec.get("entity_id"),
-                "entity_name": rec.get("entity_name"),
-                "action_json": {
-                    "reason": rec.get("description"),
-                    "fatigue_score": rec.get("expected_impact", {}).get("fatigue_score"),
-                },
-                "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
-            })
+            actions.append(
+                {
+                    "action_type": ActionType.PAUSE_CREATIVE.value,
+                    "entity_type": "creative",
+                    "entity_id": rec.get("entity_id"),
+                    "entity_name": rec.get("entity_name"),
+                    "action_json": {
+                        "reason": rec.get("description"),
+                        "fatigue_score": rec.get("expected_impact", {}).get("fatigue_score"),
+                    },
+                    "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
+                }
+            )
 
         elif rec_type == "fix_campaign":
             # Underperforming campaigns may need budget reduction or pause
-            actions.append({
-                "action_type": ActionType.BUDGET_DECREASE.value,
-                "entity_type": "campaign",
-                "entity_id": rec.get("entity_id"),
-                "entity_name": rec.get("entity_name"),
-                "action_json": {
-                    "reason": rec.get("description"),
-                    "scaling_score": rec.get("expected_impact", {}).get("scaling_score"),
-                    "recommendations": rec.get("action_params", {}).get("recommendations", []),
-                },
-                "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
-            })
+            actions.append(
+                {
+                    "action_type": ActionType.BUDGET_DECREASE.value,
+                    "entity_type": "campaign",
+                    "entity_id": rec.get("entity_id"),
+                    "entity_name": rec.get("entity_name"),
+                    "action_json": {
+                        "reason": rec.get("description"),
+                        "scaling_score": rec.get("expected_impact", {}).get("scaling_score"),
+                        "recommendations": rec.get("action_params", {}).get("recommendations", []),
+                    },
+                    "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
+                }
+            )
 
     return actions

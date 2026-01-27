@@ -5,39 +5,39 @@
  * tags, authors, and contact form submissions.
  */
 
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 import {
-  FileText,
-  FolderOpen,
-  Tags,
-  Users,
-  MessageSquare,
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  Eye,
-  MoreVertical,
-  Filter,
-  RefreshCw,
-  Mail,
-  MailOpen,
   AlertTriangle,
+  Archive,
+  Calendar,
   CheckCircle,
   Clock,
-  Send,
-  ThumbsUp,
-  ThumbsDown,
-  MessageCircle,
-  Calendar,
-  Rocket,
-  Archive,
-  RotateCcw,
-  History,
+  Edit2,
+  Eye,
+  FileText,
+  Filter,
+  FolderOpen,
   GitBranch,
+  History,
+  Mail,
+  MailOpen,
+  MessageCircle,
+  MessageSquare,
+  MoreVertical,
+  Plus,
+  RefreshCw,
+  Rocket,
+  RotateCcw,
+  Search,
+  Send,
+  Tags,
+  ThumbsDown,
+  ThumbsUp,
+  Trash2,
+  Users,
   XCircle,
-} from 'lucide-react'
+} from 'lucide-react';
 import {
   useAdminPosts,
   useAdminCategories,
@@ -82,10 +82,10 @@ import {
   CMSPage,
   CMSContact,
   PostStatus,
-} from '@/api/cms'
-import { PostEditor } from '@/components/cms/PostEditor'
+} from '@/api/cms';
+import { PostEditor } from '@/components/cms/PostEditor';
 
-type TabType = 'posts' | 'pages' | 'categories' | 'tags' | 'authors' | 'contacts'
+type TabType = 'posts' | 'pages' | 'categories' | 'tags' | 'authors' | 'contacts';
 
 const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
   { id: 'posts', label: 'Posts', icon: <FileText className="w-4 h-4" /> },
@@ -94,7 +94,7 @@ const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
   { id: 'tags', label: 'Tags', icon: <Tags className="w-4 h-4" /> },
   { id: 'authors', label: 'Authors', icon: <Users className="w-4 h-4" /> },
   { id: 'contacts', label: 'Contact Inbox', icon: <MessageSquare className="w-4 h-4" /> },
-]
+];
 
 // 2026 Workflow Status Colors
 const statusColors: Record<PostStatus, string> = {
@@ -107,7 +107,7 @@ const statusColors: Record<PostStatus, string> = {
   unpublished: 'bg-neutral-500 text-neutral-200',
   archived: 'bg-neutral-700 text-neutral-300',
   rejected: 'bg-red-600 text-red-200',
-}
+};
 
 // Status icons for visual clarity
 const statusIcons: Record<PostStatus, React.ReactNode> = {
@@ -120,270 +120,291 @@ const statusIcons: Record<PostStatus, React.ReactNode> = {
   unpublished: <XCircle className="w-3 h-3" />,
   archived: <Archive className="w-3 h-3" />,
   rejected: <ThumbsDown className="w-3 h-3" />,
-}
+};
 
 export default function CMS() {
-  const [activeTab, setActiveTab] = useState<TabType>('posts')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<PostStatus | ''>('')
-  const [showPostEditor, setShowPostEditor] = useState(false)
-  const [editingPost, setEditingPost] = useState<CMSPost | undefined>()
-  const [page, setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState<TabType>('posts');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<PostStatus | ''>('');
+  const [showPostEditor, setShowPostEditor] = useState(false);
+  const [editingPost, setEditingPost] = useState<CMSPost | undefined>();
+  const [page, setPage] = useState(1);
 
   // 2026 Workflow state
-  const [selectedPostForWorkflow, setSelectedPostForWorkflow] = useState<CMSPost | null>(null)
-  const [showWorkflowHistory, setShowWorkflowHistory] = useState(false)
-  const [showVersionHistory, setShowVersionHistory] = useState(false)
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [showRejectModal, setShowRejectModal] = useState(false)
-  const [showChangesModal, setShowChangesModal] = useState(false)
-  const [scheduleDate, setScheduleDate] = useState('')
-  const [rejectReason, setRejectReason] = useState('')
-  const [changesNotes, setChangesNotes] = useState('')
+  const [selectedPostForWorkflow, setSelectedPostForWorkflow] = useState<CMSPost | null>(null);
+  const [showWorkflowHistory, setShowWorkflowHistory] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showChangesModal, setShowChangesModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+  const [changesNotes, setChangesNotes] = useState('');
 
   // Data hooks
-  const { data: postsData, isLoading: postsLoading, refetch: refetchPosts } = useAdminPosts({
+  const {
+    data: postsData,
+    isLoading: postsLoading,
+    refetch: refetchPosts,
+  } = useAdminPosts({
     page,
     page_size: 20,
     search: search || undefined,
     status_filter: statusFilter || undefined,
-  })
-  const { data: categoriesData, isLoading: categoriesLoading, refetch: refetchCategories } = useAdminCategories()
-  const { data: tagsData, isLoading: tagsLoading, refetch: refetchTags } = useAdminTags()
-  const { data: authorsData, isLoading: authorsLoading, refetch: refetchAuthors } = useAdminAuthors()
-  const { data: pagesData, isLoading: pagesLoading, refetch: refetchPages } = useAdminPages()
-  const { data: contactsData, isLoading: contactsLoading, refetch: refetchContacts } = useAdminContacts({
+  });
+  const {
+    data: categoriesData,
+    isLoading: categoriesLoading,
+    refetch: refetchCategories,
+  } = useAdminCategories();
+  const { data: tagsData, isLoading: tagsLoading, refetch: refetchTags } = useAdminTags();
+  const {
+    data: authorsData,
+    isLoading: authorsLoading,
+    refetch: refetchAuthors,
+  } = useAdminAuthors();
+  const { data: pagesData, isLoading: pagesLoading, refetch: refetchPages } = useAdminPages();
+  const {
+    data: contactsData,
+    isLoading: contactsLoading,
+    refetch: refetchContacts,
+  } = useAdminContacts({
     page,
     page_size: 20,
-  })
+  });
 
   // Mutation hooks
-  const createPost = useCreatePost()
-  const updatePost = useUpdatePost()
-  const deletePost = useDeletePost()
-  const createCategory = useCreateCategory()
-  const updateCategory = useUpdateCategory()
-  const deleteCategory = useDeleteCategory()
-  const createTag = useCreateTag()
-  const deleteTag = useDeleteTag()
-  const createAuthor = useCreateAuthor()
-  const updateAuthor = useUpdateAuthor()
-  const deleteAuthor = useDeleteAuthor()
-  const createPage = useCreatePage()
-  const updatePage = useUpdatePage()
-  const deletePage = useDeletePage()
-  const markContactRead = useMarkContactRead()
-  const markContactSpam = useMarkContactSpam()
+  const createPost = useCreatePost();
+  const updatePost = useUpdatePost();
+  const deletePost = useDeletePost();
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
+  const deleteCategory = useDeleteCategory();
+  const createTag = useCreateTag();
+  const deleteTag = useDeleteTag();
+  const createAuthor = useCreateAuthor();
+  const updateAuthor = useUpdateAuthor();
+  const deleteAuthor = useDeleteAuthor();
+  const createPage = useCreatePage();
+  const updatePage = useUpdatePage();
+  const deletePage = useDeletePage();
+  const markContactRead = useMarkContactRead();
+  const markContactSpam = useMarkContactSpam();
 
   // 2026 Workflow mutation hooks
-  const submitForReview = useSubmitForReview()
-  const approvePost = useApprovePost()
-  const rejectPost = useRejectPost()
-  const requestChanges = useRequestChanges()
-  const schedulePost = useSchedulePost()
-  const publishPost = usePublishPost()
-  const unpublishPost = useUnpublishPost()
-  const archivePost = useArchivePost()
-  const restoreVersion = useRestoreVersion()
+  const submitForReview = useSubmitForReview();
+  const approvePost = useApprovePost();
+  const rejectPost = useRejectPost();
+  const requestChanges = useRequestChanges();
+  const schedulePost = useSchedulePost();
+  const publishPost = usePublishPost();
+  const unpublishPost = useUnpublishPost();
+  const archivePost = useArchivePost();
+  const restoreVersion = useRestoreVersion();
 
   // Workflow history hooks (conditional)
   const { data: workflowHistoryData } = useWorkflowHistory(
     selectedPostForWorkflow?.id || '',
     1,
     50
-  )
-  const { data: versionHistoryData } = useVersionHistory(
-    selectedPostForWorkflow?.id || '',
-    1,
-    50
-  )
+  );
+  const { data: versionHistoryData } = useVersionHistory(selectedPostForWorkflow?.id || '', 1, 50);
 
   // Handlers
   const handleCreatePost = () => {
-    setEditingPost(undefined)
-    setShowPostEditor(true)
-  }
+    setEditingPost(undefined);
+    setShowPostEditor(true);
+  };
 
   const handleEditPost = (post: CMSPost) => {
-    setEditingPost(post)
-    setShowPostEditor(true)
-  }
+    setEditingPost(post);
+    setShowPostEditor(true);
+  };
 
   const handleSavePost = async (data: any) => {
     try {
       if (editingPost) {
-        await updatePost.mutateAsync({ id: editingPost.id, data })
+        await updatePost.mutateAsync({ id: editingPost.id, data });
       } else {
-        await createPost.mutateAsync(data)
+        await createPost.mutateAsync(data);
       }
-      setShowPostEditor(false)
-      setEditingPost(undefined)
+      setShowPostEditor(false);
+      setEditingPost(undefined);
     } catch (error) {
-      console.error('Failed to save post:', error)
+      console.error('Failed to save post:', error);
     }
-  }
+  };
 
   const handleDeletePost = async (id: string) => {
     if (confirm('Are you sure you want to delete this post?')) {
-      await deletePost.mutateAsync(id)
+      await deletePost.mutateAsync(id);
     }
-  }
+  };
 
   const handleCreateCategory = async () => {
-    const name = prompt('Enter category name:')
+    const name = prompt('Enter category name:');
     if (name) {
-      await createCategory.mutateAsync({ name })
+      await createCategory.mutateAsync({ name });
     }
-  }
+  };
 
   const handleDeleteCategory = async (id: string) => {
     if (confirm('Are you sure you want to delete this category?')) {
-      await deleteCategory.mutateAsync(id)
+      await deleteCategory.mutateAsync(id);
     }
-  }
+  };
 
   const handleCreateTag = async () => {
-    const name = prompt('Enter tag name:')
+    const name = prompt('Enter tag name:');
     if (name) {
-      await createTag.mutateAsync({ name })
+      await createTag.mutateAsync({ name });
     }
-  }
+  };
 
   const handleDeleteTag = async (id: string) => {
     if (confirm('Are you sure you want to delete this tag?')) {
-      await deleteTag.mutateAsync(id)
+      await deleteTag.mutateAsync(id);
     }
-  }
+  };
 
   const handleCreateAuthor = async () => {
-    const name = prompt('Enter author name:')
+    const name = prompt('Enter author name:');
     if (name) {
       try {
-        await createAuthor.mutateAsync({ name })
+        await createAuthor.mutateAsync({ name });
         // Force refetch authors list after successful creation
-        await refetchAuthors()
+        await refetchAuthors();
       } catch (error: any) {
-        console.error('Failed to create author:', error)
-        alert(error?.response?.data?.detail || error?.message || 'Failed to create author. The name might already exist.')
+        console.error('Failed to create author:', error);
+        alert(
+          error?.response?.data?.detail ||
+            error?.message ||
+            'Failed to create author. The name might already exist.'
+        );
       }
     }
-  }
+  };
 
   const handleDeleteAuthor = async (id: string) => {
     if (confirm('Are you sure you want to delete this author?')) {
-      await deleteAuthor.mutateAsync(id)
+      await deleteAuthor.mutateAsync(id);
     }
-  }
+  };
 
   const handleMarkRead = async (id: string, isRead: boolean) => {
-    await markContactRead.mutateAsync({ id, isRead })
-  }
+    await markContactRead.mutateAsync({ id, isRead });
+  };
 
   const handleMarkSpam = async (id: string, isSpam: boolean) => {
-    await markContactSpam.mutateAsync({ id, isSpam })
-  }
+    await markContactSpam.mutateAsync({ id, isSpam });
+  };
 
   // 2026 Workflow handlers
   const handleSubmitForReview = async (post: CMSPost) => {
     try {
-      await submitForReview.mutateAsync({ postId: post.id })
+      await submitForReview.mutateAsync({ postId: post.id });
     } catch (error) {
-      console.error('Failed to submit for review:', error)
+      console.error('Failed to submit for review:', error);
     }
-  }
+  };
 
   const handleApprove = async (post: CMSPost) => {
     try {
-      await approvePost.mutateAsync({ postId: post.id })
+      await approvePost.mutateAsync({ postId: post.id });
     } catch (error) {
-      console.error('Failed to approve:', error)
+      console.error('Failed to approve:', error);
     }
-  }
+  };
 
   const handleReject = async () => {
-    if (!selectedPostForWorkflow || rejectReason.length < 10) return
+    if (!selectedPostForWorkflow || rejectReason.length < 10) return;
     try {
       await rejectPost.mutateAsync({
         postId: selectedPostForWorkflow.id,
         reason: rejectReason,
-      })
-      setShowRejectModal(false)
-      setRejectReason('')
-      setSelectedPostForWorkflow(null)
+      });
+      setShowRejectModal(false);
+      setRejectReason('');
+      setSelectedPostForWorkflow(null);
     } catch (error) {
-      console.error('Failed to reject:', error)
+      console.error('Failed to reject:', error);
     }
-  }
+  };
 
   const handleRequestChanges = async () => {
-    if (!selectedPostForWorkflow || changesNotes.length < 10) return
+    if (!selectedPostForWorkflow || changesNotes.length < 10) return;
     try {
       await requestChanges.mutateAsync({
         postId: selectedPostForWorkflow.id,
         notes: changesNotes,
-      })
-      setShowChangesModal(false)
-      setChangesNotes('')
-      setSelectedPostForWorkflow(null)
+      });
+      setShowChangesModal(false);
+      setChangesNotes('');
+      setSelectedPostForWorkflow(null);
     } catch (error) {
-      console.error('Failed to request changes:', error)
+      console.error('Failed to request changes:', error);
     }
-  }
+  };
 
   const handleSchedule = async () => {
-    if (!selectedPostForWorkflow || !scheduleDate) return
+    if (!selectedPostForWorkflow || !scheduleDate) return;
     try {
       await schedulePost.mutateAsync({
         postId: selectedPostForWorkflow.id,
         scheduledAt: new Date(scheduleDate).toISOString(),
-      })
-      setShowScheduleModal(false)
-      setScheduleDate('')
-      setSelectedPostForWorkflow(null)
+      });
+      setShowScheduleModal(false);
+      setScheduleDate('');
+      setSelectedPostForWorkflow(null);
     } catch (error) {
-      console.error('Failed to schedule:', error)
+      console.error('Failed to schedule:', error);
     }
-  }
+  };
 
   const handlePublish = async (post: CMSPost) => {
     try {
-      await publishPost.mutateAsync(post.id)
+      await publishPost.mutateAsync(post.id);
     } catch (error) {
-      console.error('Failed to publish:', error)
+      console.error('Failed to publish:', error);
     }
-  }
+  };
 
   const handleUnpublish = async (post: CMSPost) => {
     try {
-      await unpublishPost.mutateAsync(post.id)
+      await unpublishPost.mutateAsync(post.id);
     } catch (error) {
-      console.error('Failed to unpublish:', error)
+      console.error('Failed to unpublish:', error);
     }
-  }
+  };
 
   const handleArchive = async (post: CMSPost) => {
     if (confirm('Are you sure you want to archive this post?')) {
       try {
-        await archivePost.mutateAsync(post.id)
+        await archivePost.mutateAsync(post.id);
       } catch (error) {
-        console.error('Failed to archive:', error)
+        console.error('Failed to archive:', error);
       }
     }
-  }
+  };
 
   const openWorkflowHistory = (post: CMSPost) => {
-    setSelectedPostForWorkflow(post)
-    setShowWorkflowHistory(true)
-  }
+    setSelectedPostForWorkflow(post);
+    setShowWorkflowHistory(true);
+  };
 
   const openVersionHistory = (post: CMSPost) => {
-    setSelectedPostForWorkflow(post)
-    setShowVersionHistory(true)
-  }
+    setSelectedPostForWorkflow(post);
+    setShowVersionHistory(true);
+  };
 
   // Get available workflow actions for a post based on its status
   const getWorkflowActions = (post: CMSPost) => {
-    const actions: { label: string; icon: React.ReactNode; action: () => void; variant?: string }[] = []
+    const actions: {
+      label: string;
+      icon: React.ReactNode;
+      action: () => void;
+      variant?: string;
+    }[] = [];
 
     switch (post.status) {
       case 'draft':
@@ -393,19 +414,22 @@ export default function CMS() {
           label: 'Submit for Review',
           icon: <Send className="w-4 h-4" />,
           action: () => handleSubmitForReview(post),
-        })
+        });
         actions.push({
           label: 'Schedule',
           icon: <Calendar className="w-4 h-4" />,
-          action: () => { setSelectedPostForWorkflow(post); setShowScheduleModal(true) },
-        })
+          action: () => {
+            setSelectedPostForWorkflow(post);
+            setShowScheduleModal(true);
+          },
+        });
         actions.push({
           label: 'Publish Now',
           icon: <Rocket className="w-4 h-4" />,
           action: () => handlePublish(post),
           variant: 'success',
-        })
-        break
+        });
+        break;
 
       case 'in_review':
         actions.push({
@@ -413,34 +437,43 @@ export default function CMS() {
           icon: <ThumbsUp className="w-4 h-4" />,
           action: () => handleApprove(post),
           variant: 'success',
-        })
+        });
         actions.push({
           label: 'Request Changes',
           icon: <MessageCircle className="w-4 h-4" />,
-          action: () => { setSelectedPostForWorkflow(post); setShowChangesModal(true) },
+          action: () => {
+            setSelectedPostForWorkflow(post);
+            setShowChangesModal(true);
+          },
           variant: 'warning',
-        })
+        });
         actions.push({
           label: 'Reject',
           icon: <ThumbsDown className="w-4 h-4" />,
-          action: () => { setSelectedPostForWorkflow(post); setShowRejectModal(true) },
+          action: () => {
+            setSelectedPostForWorkflow(post);
+            setShowRejectModal(true);
+          },
           variant: 'danger',
-        })
-        break
+        });
+        break;
 
       case 'approved':
         actions.push({
           label: 'Schedule',
           icon: <Calendar className="w-4 h-4" />,
-          action: () => { setSelectedPostForWorkflow(post); setShowScheduleModal(true) },
-        })
+          action: () => {
+            setSelectedPostForWorkflow(post);
+            setShowScheduleModal(true);
+          },
+        });
         actions.push({
           label: 'Publish Now',
           icon: <Rocket className="w-4 h-4" />,
           action: () => handlePublish(post),
           variant: 'success',
-        })
-        break
+        });
+        break;
 
       case 'scheduled':
         actions.push({
@@ -448,8 +481,8 @@ export default function CMS() {
           icon: <Rocket className="w-4 h-4" />,
           action: () => handlePublish(post),
           variant: 'success',
-        })
-        break
+        });
+        break;
 
       case 'published':
         actions.push({
@@ -457,13 +490,13 @@ export default function CMS() {
           icon: <XCircle className="w-4 h-4" />,
           action: () => handleUnpublish(post),
           variant: 'warning',
-        })
+        });
         actions.push({
           label: 'Archive',
           icon: <Archive className="w-4 h-4" />,
           action: () => handleArchive(post),
-        })
-        break
+        });
+        break;
 
       case 'unpublished':
         actions.push({
@@ -471,13 +504,13 @@ export default function CMS() {
           icon: <Rocket className="w-4 h-4" />,
           action: () => handlePublish(post),
           variant: 'success',
-        })
+        });
         actions.push({
           label: 'Archive',
           icon: <Archive className="w-4 h-4" />,
           action: () => handleArchive(post),
-        })
-        break
+        });
+        break;
     }
 
     // Always add history actions
@@ -485,15 +518,15 @@ export default function CMS() {
       label: 'Workflow History',
       icon: <History className="w-4 h-4" />,
       action: () => openWorkflowHistory(post),
-    })
+    });
     actions.push({
       label: 'Version History',
       icon: <GitBranch className="w-4 h-4" />,
       action: () => openVersionHistory(post),
-    })
+    });
 
-    return actions
-  }
+    return actions;
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -547,25 +580,45 @@ export default function CMS() {
                 <table className="w-full">
                   <thead className="bg-neutral-800/50">
                     <tr>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Title</th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Status</th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Author</th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Views</th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Date</th>
-                      <th className="text-right px-4 py-3 text-sm font-medium text-neutral-400">Actions</th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Title
+                      </th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Status
+                      </th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Author
+                      </th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Views
+                      </th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Date
+                      </th>
+                      <th className="text-right px-4 py-3 text-sm font-medium text-neutral-400">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {postsData?.posts.map((post) => {
-                      const workflowActions = getWorkflowActions(post)
+                      const workflowActions = getWorkflowActions(post);
                       return (
-                        <tr key={post.id} className="border-t border-neutral-800 hover:bg-neutral-800/30">
+                        <tr
+                          key={post.id}
+                          className="border-t border-neutral-800 hover:bg-neutral-800/30"
+                        >
                           <td className="px-4 py-3">
                             <div className="font-medium text-white">{post.title}</div>
                             <div className="text-sm text-neutral-500">/blog/{post.slug}</div>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={cn('px-2 py-1 text-xs rounded-full inline-flex items-center gap-1', statusColors[post.status])}>
+                            <span
+                              className={cn(
+                                'px-2 py-1 text-xs rounded-full inline-flex items-center gap-1',
+                                statusColors[post.status]
+                              )}
+                            >
                               {statusIcons[post.status]}
                               {post.status.replace('_', ' ')}
                             </span>
@@ -584,10 +637,14 @@ export default function CMS() {
                                   onClick={action.action}
                                   className={cn(
                                     'p-1.5 rounded text-xs transition-colors',
-                                    action.variant === 'success' && 'text-green-400 hover:bg-green-500/20',
-                                    action.variant === 'warning' && 'text-yellow-400 hover:bg-yellow-500/20',
-                                    action.variant === 'danger' && 'text-red-400 hover:bg-red-500/20',
-                                    !action.variant && 'text-neutral-400 hover:text-white hover:bg-neutral-700'
+                                    action.variant === 'success' &&
+                                      'text-green-400 hover:bg-green-500/20',
+                                    action.variant === 'warning' &&
+                                      'text-yellow-400 hover:bg-yellow-500/20',
+                                    action.variant === 'danger' &&
+                                      'text-red-400 hover:bg-red-500/20',
+                                    !action.variant &&
+                                      'text-neutral-400 hover:text-white hover:bg-neutral-700'
                                   )}
                                   title={action.label}
                                 >
@@ -615,9 +672,12 @@ export default function CMS() {
                                       onClick={action.action}
                                       className={cn(
                                         'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors',
-                                        action.variant === 'success' && 'text-green-400 hover:bg-green-500/20',
-                                        action.variant === 'warning' && 'text-yellow-400 hover:bg-yellow-500/20',
-                                        action.variant === 'danger' && 'text-red-400 hover:bg-red-500/20',
+                                        action.variant === 'success' &&
+                                          'text-green-400 hover:bg-green-500/20',
+                                        action.variant === 'warning' &&
+                                          'text-yellow-400 hover:bg-yellow-500/20',
+                                        action.variant === 'danger' &&
+                                          'text-red-400 hover:bg-red-500/20',
                                         !action.variant && 'text-neutral-300 hover:bg-neutral-700'
                                       )}
                                     >
@@ -638,7 +698,7 @@ export default function CMS() {
                             </div>
                           </td>
                         </tr>
-                      )
+                      );
                     })}
                   </tbody>
                 </table>
@@ -652,7 +712,8 @@ export default function CMS() {
             {postsData && postsData.total > 20 && (
               <div className="flex items-center justify-between">
                 <div className="text-sm text-neutral-400">
-                  Showing {((page - 1) * 20) + 1} - {Math.min(page * 20, postsData.total)} of {postsData.total}
+                  Showing {(page - 1) * 20 + 1} - {Math.min(page * 20, postsData.total)} of{' '}
+                  {postsData.total}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -673,7 +734,7 @@ export default function CMS() {
               </div>
             )}
           </div>
-        )
+        );
 
       case 'categories':
         return (
@@ -726,7 +787,7 @@ export default function CMS() {
               </div>
             )}
           </div>
-        )
+        );
 
       case 'tags':
         return (
@@ -770,7 +831,7 @@ export default function CMS() {
               </div>
             )}
           </div>
-        )
+        );
 
       case 'authors':
         return (
@@ -828,7 +889,7 @@ export default function CMS() {
               </div>
             )}
           </div>
-        )
+        );
 
       case 'pages':
         return (
@@ -836,7 +897,9 @@ export default function CMS() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-white">Static Pages</h3>
               <button
-                onClick={() => {/* TODO: Page editor */}}
+                onClick={() => {
+                  /* TODO: Page editor */
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
@@ -851,25 +914,42 @@ export default function CMS() {
                 <table className="w-full">
                   <thead className="bg-neutral-800/50">
                     <tr>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Title</th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Status</th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">In Nav</th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">Template</th>
-                      <th className="text-right px-4 py-3 text-sm font-medium text-neutral-400">Actions</th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Title
+                      </th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Status
+                      </th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        In Nav
+                      </th>
+                      <th className="text-left px-4 py-3 text-sm font-medium text-neutral-400">
+                        Template
+                      </th>
+                      <th className="text-right px-4 py-3 text-sm font-medium text-neutral-400">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {pagesData?.pages.map((page) => (
-                      <tr key={page.id} className="border-t border-neutral-800 hover:bg-neutral-800/30">
+                      <tr
+                        key={page.id}
+                        className="border-t border-neutral-800 hover:bg-neutral-800/30"
+                      >
                         <td className="px-4 py-3">
                           <div className="font-medium text-white">{page.title}</div>
                           <div className="text-sm text-neutral-500">/{page.slug}</div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={cn(
-                            'px-2 py-1 text-xs rounded-full',
-                            page.status === 'published' ? 'bg-green-600 text-green-200' : 'bg-neutral-600 text-neutral-200'
-                          )}>
+                          <span
+                            className={cn(
+                              'px-2 py-1 text-xs rounded-full',
+                              page.status === 'published'
+                                ? 'bg-green-600 text-green-200'
+                                : 'bg-neutral-600 text-neutral-200'
+                            )}
+                          >
                             {page.status}
                           </span>
                         </td>
@@ -908,7 +988,7 @@ export default function CMS() {
               </div>
             )}
           </div>
-        )
+        );
 
       case 'contacts':
         return (
@@ -956,7 +1036,9 @@ export default function CMS() {
                           {contact.subject && (
                             <div className="text-sm text-neutral-400 mt-1">{contact.subject}</div>
                           )}
-                          <p className="text-sm text-neutral-300 mt-2 line-clamp-2">{contact.message}</p>
+                          <p className="text-sm text-neutral-300 mt-2 line-clamp-2">
+                            {contact.message}
+                          </p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
                             <span>{new Date(contact.created_at).toLocaleString()}</span>
                             {contact.company && <span>Company: {contact.company}</span>}
@@ -970,7 +1052,11 @@ export default function CMS() {
                           className="p-2 text-neutral-400 hover:text-white transition-colors"
                           title={contact.is_read ? 'Mark unread' : 'Mark read'}
                         >
-                          {contact.is_read ? <Mail className="w-4 h-4" /> : <MailOpen className="w-4 h-4" />}
+                          {contact.is_read ? (
+                            <Mail className="w-4 h-4" />
+                          ) : (
+                            <MailOpen className="w-4 h-4" />
+                          )}
                         </button>
                         <button
                           onClick={() => handleMarkSpam(contact.id, !contact.is_spam)}
@@ -992,9 +1078,9 @@ export default function CMS() {
               </div>
             )}
           </div>
-        )
+        );
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -1021,11 +1107,12 @@ export default function CMS() {
           >
             {tab.icon}
             {tab.label}
-            {tab.id === 'contacts' && contactsData?.contacts.filter((c) => !c.is_read).length > 0 && (
-              <span className="px-1.5 py-0.5 text-xs bg-blue-500 text-white rounded-full">
-                {contactsData?.contacts.filter((c) => !c.is_read).length}
-              </span>
-            )}
+            {tab.id === 'contacts' &&
+              contactsData?.contacts.filter((c) => !c.is_read).length > 0 && (
+                <span className="px-1.5 py-0.5 text-xs bg-blue-500 text-white rounded-full">
+                  {contactsData?.contacts.filter((c) => !c.is_read).length}
+                </span>
+              )}
           </button>
         ))}
       </div>
@@ -1042,8 +1129,8 @@ export default function CMS() {
           tags={tagsData?.tags || []}
           onSave={handleSavePost}
           onCancel={() => {
-            setShowPostEditor(false)
-            setEditingPost(undefined)
+            setShowPostEditor(false);
+            setEditingPost(undefined);
           }}
           isLoading={createPost.isPending || updatePost.isPending}
         />
@@ -1065,7 +1152,11 @@ export default function CMS() {
             />
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => { setShowScheduleModal(false); setScheduleDate(''); setSelectedPostForWorkflow(null) }}
+                onClick={() => {
+                  setShowScheduleModal(false);
+                  setScheduleDate('');
+                  setSelectedPostForWorkflow(null);
+                }}
                 className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
               >
                 Cancel
@@ -1099,7 +1190,11 @@ export default function CMS() {
             />
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => { setShowRejectModal(false); setRejectReason(''); setSelectedPostForWorkflow(null) }}
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason('');
+                  setSelectedPostForWorkflow(null);
+                }}
                 className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
               >
                 Cancel
@@ -1122,7 +1217,8 @@ export default function CMS() {
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-white mb-4">Request Changes</h3>
             <p className="text-neutral-400 text-sm mb-4">
-              Request changes on "{selectedPostForWorkflow.title}". Describe what needs to be changed (min 10 characters).
+              Request changes on "{selectedPostForWorkflow.title}". Describe what needs to be
+              changed (min 10 characters).
             </p>
             <textarea
               value={changesNotes}
@@ -1133,7 +1229,11 @@ export default function CMS() {
             />
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => { setShowChangesModal(false); setChangesNotes(''); setSelectedPostForWorkflow(null) }}
+                onClick={() => {
+                  setShowChangesModal(false);
+                  setChangesNotes('');
+                  setSelectedPostForWorkflow(null);
+                }}
                 className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
               >
                 Cancel
@@ -1157,7 +1257,10 @@ export default function CMS() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Workflow History</h3>
               <button
-                onClick={() => { setShowWorkflowHistory(false); setSelectedPostForWorkflow(null) }}
+                onClick={() => {
+                  setShowWorkflowHistory(false);
+                  setSelectedPostForWorkflow(null);
+                }}
                 className="p-2 text-neutral-400 hover:text-white transition-colors"
               >
                 <XCircle className="w-5 h-5" />
@@ -1168,12 +1271,17 @@ export default function CMS() {
             </p>
             <div className="flex-1 overflow-y-auto space-y-3">
               {workflowHistoryData?.history.map((entry) => (
-                <div key={entry.id} className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg">
+                <div
+                  key={entry.id}
+                  className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg"
+                >
                   <div className="flex items-center justify-between mb-2">
-                    <span className={cn(
-                      'px-2 py-0.5 text-xs rounded-full',
-                      entry.to_status && statusColors[entry.to_status as PostStatus]
-                    )}>
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 text-xs rounded-full',
+                        entry.to_status && statusColors[entry.to_status as PostStatus]
+                      )}
+                    >
                       {entry.action.replace('_', ' ')}
                     </span>
                     <span className="text-xs text-neutral-500">
@@ -1205,18 +1313,25 @@ export default function CMS() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Version History</h3>
               <button
-                onClick={() => { setShowVersionHistory(false); setSelectedPostForWorkflow(null) }}
+                onClick={() => {
+                  setShowVersionHistory(false);
+                  setSelectedPostForWorkflow(null);
+                }}
                 className="p-2 text-neutral-400 hover:text-white transition-colors"
               >
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
             <p className="text-neutral-400 text-sm mb-4">
-              Content versions for "{selectedPostForWorkflow.title}" (Current: v{versionHistoryData?.current_version || 1})
+              Content versions for "{selectedPostForWorkflow.title}" (Current: v
+              {versionHistoryData?.current_version || 1})
             </p>
             <div className="flex-1 overflow-y-auto space-y-3">
               {versionHistoryData?.versions.map((version) => (
-                <div key={version.id} className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg">
+                <div
+                  key={version.id}
+                  className="p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <span className="px-2 py-0.5 text-xs bg-blue-600/20 text-blue-400 rounded-full">
                       Version {version.version}
@@ -1229,7 +1344,10 @@ export default function CMS() {
                         <button
                           onClick={() => {
                             if (confirm(`Restore to version ${version.version}?`)) {
-                              restoreVersion.mutate({ postId: selectedPostForWorkflow.id, version: version.version })
+                              restoreVersion.mutate({
+                                postId: selectedPostForWorkflow.id,
+                                version: version.version,
+                              });
                             }
                           }}
                           className="p-1 text-neutral-400 hover:text-white transition-colors"
@@ -1246,7 +1364,9 @@ export default function CMS() {
                   )}
                   <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
                     {version.word_count && <span>{version.word_count} words</span>}
-                    {version.reading_time_minutes && <span>{version.reading_time_minutes} min read</span>}
+                    {version.reading_time_minutes && (
+                      <span>{version.reading_time_minutes} min read</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1258,5 +1378,5 @@ export default function CMS() {
         </div>
       )}
     </div>
-  )
+  );
 }

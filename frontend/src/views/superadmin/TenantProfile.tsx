@@ -5,57 +5,57 @@
  * Shows EMQ history, incidents, actions, and allows admin controls
  */
 
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { cn } from '@/lib/utils'
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
-  TrustStatusHeader,
+  type AutopilotMode,
+  EmqFixPlaybookPanel,
   EmqScoreCard,
   EmqTimeline,
-  EmqFixPlaybookPanel,
-  KpiStrip,
-  type TimelineEvent,
-  type PlaybookItem,
-  type AutopilotMode,
   type Kpi,
-} from '@/components/shared'
+  KpiStrip,
+  type PlaybookItem,
+  type TimelineEvent,
+  TrustStatusHeader,
+} from '@/components/shared';
 import {
-  useTenant,
-  useEmqScore,
   useAutopilotState,
-  useEmqPlaybook,
   useEmqIncidents,
-  useUpdateAutopilotMode,
+  useEmqPlaybook,
+  useEmqScore,
   useSuspendTenant,
-} from '@/api/hooks'
-import { useToast } from '@/components/ui/use-toast'
+  useTenant,
+  useUpdateAutopilotMode,
+} from '@/api/hooks';
+import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowLeftIcon,
+  ArrowPathIcon,
   BuildingOfficeIcon,
-  UserGroupIcon,
   CalendarIcon,
-  Cog6ToothIcon,
-  ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
-  ArrowPathIcon,
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
+  UserGroupIcon,
   XMarkIcon,
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/outline';
 
-type AdminAction = 'restrict' | 'support' | 'override'
+type AdminAction = 'restrict' | 'support' | 'override';
 
 // Confirmation dialog component
 interface ConfirmDialogProps {
-  isOpen: boolean
-  title: string
-  message: string
-  confirmLabel: string
-  confirmVariant?: 'danger' | 'warning' | 'primary'
-  onConfirm: () => void
-  onCancel: () => void
-  isLoading?: boolean
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmLabel: string;
+  confirmVariant?: 'danger' | 'warning' | 'primary';
+  onConfirm: () => void;
+  onCancel: () => void;
+  isLoading?: boolean;
 }
 
 function ConfirmDialog({
@@ -68,13 +68,13 @@ function ConfirmDialog({
   onCancel,
   isLoading = false,
 }: ConfirmDialogProps) {
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const variantStyles = {
     danger: 'bg-danger hover:bg-danger/80 text-white',
     warning: 'bg-warning hover:bg-warning/80 text-black',
     primary: 'bg-stratum-500 hover:bg-stratum-600 text-white',
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -109,25 +109,27 @@ function ConfirmDialog({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function TenantProfile() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const tid = parseInt(tenantId || '1', 10)
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const tid = parseInt(tenantId || '1', 10);
 
-  const { toast } = useToast()
+  const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'incidents' | 'actions' | 'settings'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'incidents' | 'actions' | 'settings'>(
+    'overview'
+  );
 
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean
-    title: string
-    message: string
-    confirmLabel: string
-    confirmVariant: 'danger' | 'warning' | 'primary'
-    onConfirm: () => void
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel: string;
+    confirmVariant: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
   }>({
     isOpen: false,
     title: '',
@@ -135,7 +137,7 @@ export default function TenantProfile() {
     confirmLabel: '',
     confirmVariant: 'primary',
     onConfirm: () => {},
-  })
+  });
 
   // Local feature flags state (for UI toggle)
   const [localFeatures, setLocalFeatures] = useState<Record<string, boolean>>({
@@ -143,28 +145,32 @@ export default function TenantProfile() {
     campaignBuilder: true,
     competitorIntel: false,
     predictions: true,
-  })
+  });
 
   // Date range
   const dateRange = {
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
-  }
+  };
 
   // Fetch data
-  const { data: tenantData } = useTenant(tid)
-  const { data: emqData } = useEmqScore(tid)
-  const { data: autopilotData, refetch: refetchAutopilot } = useAutopilotState(tid)
-  const { data: playbookData } = useEmqPlaybook(tid)
-  const { data: incidentsData, refetch: refetchIncidents } = useEmqIncidents(tid, dateRange.start, dateRange.end)
+  const { data: tenantData } = useTenant(tid);
+  const { data: emqData } = useEmqScore(tid);
+  const { data: autopilotData, refetch: refetchAutopilot } = useAutopilotState(tid);
+  const { data: playbookData } = useEmqPlaybook(tid);
+  const { data: incidentsData, refetch: refetchIncidents } = useEmqIncidents(
+    tid,
+    dateRange.start,
+    dateRange.end
+  );
 
   // Mutations
-  const updateAutopilotModeMutation = useUpdateAutopilotMode(tid)
-  const suspendTenantMutation = useSuspendTenant()
+  const updateAutopilotModeMutation = useUpdateAutopilotMode(tid);
+  const suspendTenantMutation = useSuspendTenant();
 
-  const emqScore = emqData?.score ?? 72
-  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'limited'
-  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 8500
+  const emqScore = emqData?.score ?? 72;
+  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'limited';
+  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 8500;
 
   // Sample tenant details
   const tenant = {
@@ -181,36 +187,39 @@ export default function TenantProfile() {
     status: 'active' as const,
     features: localFeatures,
     restrictions: [] as string[],
-  }
+  };
 
   // Close confirmation dialog
   const closeConfirmDialog = () => {
-    setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
-  }
+    setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+  };
 
   // Handle feature toggle with confirmation
   const handleFeatureToggle = (feature: string, currentEnabled: boolean) => {
-    const action = currentEnabled ? 'disable' : 'enable'
+    const action = currentEnabled ? 'disable' : 'enable';
     setConfirmDialog({
       isOpen: true,
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} ${feature.replace(/([A-Z])/g, ' $1').trim()}?`,
-      message: `Are you sure you want to ${action} the ${feature.replace(/([A-Z])/g, ' $1').trim().toLowerCase()} feature for this tenant?`,
+      message: `Are you sure you want to ${action} the ${feature
+        .replace(/([A-Z])/g, ' $1')
+        .trim()
+        .toLowerCase()} feature for this tenant?`,
       confirmLabel: action.charAt(0).toUpperCase() + action.slice(1),
       confirmVariant: currentEnabled ? 'warning' : 'primary',
       onConfirm: () => {
-        setLocalFeatures((prev) => ({ ...prev, [feature]: !currentEnabled }))
+        setLocalFeatures((prev) => ({ ...prev, [feature]: !currentEnabled }));
         toast({
           title: 'Feature Updated',
           description: `${feature.replace(/([A-Z])/g, ' $1').trim()} has been ${action}d for this tenant.`,
-        })
-        closeConfirmDialog()
+        });
+        closeConfirmDialog();
       },
-    })
-  }
+    });
+  };
 
   // Handle autopilot mode override with confirmation
   const handleModeOverride = (newMode: AutopilotMode) => {
-    if (newMode === autopilotMode) return
+    if (newMode === autopilotMode) return;
 
     setConfirmDialog({
       isOpen: true,
@@ -223,23 +232,23 @@ export default function TenantProfile() {
           await updateAutopilotModeMutation.mutateAsync({
             mode: newMode,
             reason: 'Admin manual override',
-          })
+          });
           toast({
             title: 'Mode Updated',
             description: `Autopilot mode has been changed to ${newMode.replace('_', ' ')}.`,
-          })
-          refetchAutopilot()
+          });
+          refetchAutopilot();
         } catch (error) {
           toast({
             title: 'Error',
             description: error instanceof Error ? error.message : 'Failed to update autopilot mode',
             variant: 'destructive',
-          })
+          });
         }
-        closeConfirmDialog()
+        closeConfirmDialog();
       },
-    })
-  }
+    });
+  };
 
   // Handle suspend tenant with confirmation
   const handleSuspendTenant = () => {
@@ -254,39 +263,39 @@ export default function TenantProfile() {
           await suspendTenantMutation.mutateAsync({
             id: tid,
             reason: 'Admin manual suspension',
-          })
+          });
           toast({
             title: 'Tenant Suspended',
             description: `${tenant.name} has been suspended.`,
-          })
+          });
         } catch (error) {
           toast({
             title: 'Error',
             description: error instanceof Error ? error.message : 'Failed to suspend tenant',
             variant: 'destructive',
-          })
+          });
         }
-        closeConfirmDialog()
+        closeConfirmDialog();
       },
-    })
-  }
+    });
+  };
 
   // Handle refresh action log
   const handleRefreshActionLog = async () => {
     try {
-      await refetchIncidents()
+      await refetchIncidents();
       toast({
         title: 'Refreshed',
         description: 'Action log has been refreshed.',
-      })
+      });
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to refresh action log.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const kpis: Kpi[] = [
     {
@@ -321,7 +330,7 @@ export default function TenantProfile() {
       previousValue: 98.5,
       confidence: emqScore,
     },
-  ]
+  ];
 
   const playbook: PlaybookItem[] = playbookData ?? [
     {
@@ -348,7 +357,7 @@ export default function TenantProfile() {
       status: 'pending',
       actionUrl: null,
     },
-  ]
+  ];
 
   const timeline: TimelineEvent[] = incidentsData?.map((i) => ({
     id: i.id,
@@ -389,7 +398,7 @@ export default function TenantProfile() {
       recoveryHours: 6,
       emqImpact: 8,
     },
-  ]
+  ];
 
   const handleAdminAction = (action: AdminAction) => {
     switch (action) {
@@ -397,32 +406,32 @@ export default function TenantProfile() {
         toast({
           title: 'Contact Support',
           description: 'Opening support ticket system...',
-        })
+        });
         // In production, this would open a support modal or redirect
-        break
+        break;
       case 'override':
-        setActiveTab('settings')
+        setActiveTab('settings');
         toast({
           title: 'Mode Override',
           description: 'Navigate to Admin Controls to override autopilot mode.',
-        })
-        break
+        });
+        break;
       case 'restrict':
         toast({
           title: 'Apply Restriction',
           description: 'Navigate to Admin Controls to manage restrictions.',
-        })
-        setActiveTab('settings')
-        break
+        });
+        setActiveTab('settings');
+        break;
     }
-  }
+  };
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview' },
     { id: 'incidents' as const, label: 'Incidents' },
     { id: 'actions' as const, label: 'Action Log' },
     { id: 'settings' as const, label: 'Admin Controls' },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -518,7 +527,10 @@ export default function TenantProfile() {
             {Object.entries(tenant.features)
               .filter(([, enabled]) => enabled)
               .map(([feature]) => (
-                <span key={feature} className="px-2 py-1 rounded bg-stratum-500/10 text-stratum-400 text-xs">
+                <span
+                  key={feature}
+                  className="px-2 py-1 rounded bg-stratum-500/10 text-stratum-400 text-xs"
+                >
                   {feature}
                 </span>
               ))}
@@ -678,7 +690,9 @@ export default function TenantProfile() {
               {Object.entries(tenant.features).map(([feature, enabled]) => (
                 <div key={feature} className="flex items-center justify-between">
                   <div>
-                    <span className="text-white capitalize">{feature.replace(/([A-Z])/g, ' $1')}</span>
+                    <span className="text-white capitalize">
+                      {feature.replace(/([A-Z])/g, ' $1')}
+                    </span>
                     <p className="text-sm text-text-muted">
                       {feature === 'autopilot' && 'Automated budget and bid adjustments'}
                       {feature === 'campaignBuilder' && 'Create and publish campaigns'}
@@ -784,5 +798,5 @@ export default function TenantProfile() {
         isLoading={updateAutopilotModeMutation.isPending || suspendTenantMutation.isPending}
       />
     </div>
-  )
+  );
 }

@@ -331,11 +331,13 @@ Need help? Check out our documentation at {self.frontend_url}/docs
             urgency = "Final payment notice"
             action_text = "Your subscription will be suspended if payment is not received. Please update your payment method now."
 
-        subject = f"Action Required: Payment failed for your Stratum AI subscription"
+        subject = "Action Required: Payment failed for your Stratum AI subscription"
 
         amount_section = ""
         if amount_due:
-            amount_section = f'<p style="font-size: 18px; font-weight: 600;">Amount Due: {amount_due}</p>'
+            amount_section = (
+                f'<p style="font-size: 18px; font-weight: 600;">Amount Due: {amount_due}</p>'
+            )
 
         html_content = f"""
 <!DOCTYPE html>

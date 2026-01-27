@@ -11,13 +11,13 @@ import {
   Server,
   XCircle,
   Zap,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { SignalHealthSummary } from '@/api/dashboard'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { SignalHealthSummary } from '@/api/dashboard';
 
 interface SignalHealthCardProps {
-  signalHealth?: SignalHealthSummary
-  loading?: boolean
+  signalHealth?: SignalHealthSummary;
+  loading?: boolean;
 }
 
 export function SignalHealthCard({ signalHealth, loading = false }: SignalHealthCardProps) {
@@ -26,7 +26,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
       <div className="glass border border-white/10 rounded-xl p-5 h-full flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!signalHealth) {
@@ -37,7 +37,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           <p>No signal health data available</p>
         </div>
       </div>
-    )
+    );
   }
 
   const getStatusConfig = (status: SignalHealthSummary['status']) => {
@@ -48,49 +48,49 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           bgColor: 'bg-green-500/10',
           icon: CheckCircle2,
           label: 'Healthy',
-        }
+        };
       case 'degraded':
         return {
           color: 'text-yellow-500',
           bgColor: 'bg-yellow-500/10',
           icon: AlertTriangle,
           label: 'Degraded',
-        }
+        };
       case 'critical':
         return {
           color: 'text-red-500',
           bgColor: 'bg-red-500/10',
           icon: XCircle,
           label: 'Critical',
-        }
+        };
       default:
         return {
           color: 'text-muted-foreground',
           bgColor: 'bg-muted',
           icon: Activity,
           label: 'Unknown',
-        }
+        };
     }
-  }
+  };
 
-  const statusConfig = getStatusConfig(signalHealth.status)
-  const StatusIcon = statusConfig.icon
+  const statusConfig = getStatusConfig(signalHealth.status);
+  const StatusIcon = statusConfig.icon;
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return 'text-green-500'
-    if (score >= 40) return 'text-yellow-500'
-    return 'text-red-500'
-  }
+    if (score >= 70) return 'text-green-500';
+    if (score >= 40) return 'text-yellow-500';
+    return 'text-red-500';
+  };
 
   const formatFreshness = (minutes: number | null) => {
-    if (minutes === null) return 'Unknown'
-    if (minutes < 1) return 'Just now'
-    if (minutes < 60) return `${minutes}m ago`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `${hours}h ago`
-    const days = Math.floor(hours / 24)
-    return `${days}d ago`
-  }
+    if (minutes === null) return 'Unknown';
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
 
   return (
     <div className="glass border border-white/10 rounded-xl p-5 h-full card-3d">
@@ -103,12 +103,14 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
             statusConfig.color
           )}
         >
-          <div className={cn(
-            'w-1.5 h-1.5 rounded-full',
-            signalHealth.status === 'healthy' && 'dot-healthy',
-            signalHealth.status === 'degraded' && 'dot-degraded',
-            signalHealth.status === 'critical' && 'dot-critical'
-          )} />
+          <div
+            className={cn(
+              'w-1.5 h-1.5 rounded-full',
+              signalHealth.status === 'healthy' && 'dot-healthy',
+              signalHealth.status === 'degraded' && 'dot-degraded',
+              signalHealth.status === 'critical' && 'dot-critical'
+            )}
+          />
           <StatusIcon className="w-3.5 h-3.5" />
           {statusConfig.label}
         </div>
@@ -125,9 +127,11 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           <div
             className={cn(
               'h-full rounded-full transition-all duration-500',
-              signalHealth.overall_score >= 70 ? 'bg-gradient-to-r from-green-500 to-emerald-400' :
-              signalHealth.overall_score >= 40 ? 'bg-gradient-to-r from-yellow-500 to-amber-400' :
-              'bg-gradient-to-r from-red-500 to-red-400'
+              signalHealth.overall_score >= 70
+                ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                : signalHealth.overall_score >= 40
+                  ? 'bg-gradient-to-r from-yellow-500 to-amber-400'
+                  : 'bg-gradient-to-r from-red-500 to-red-400'
             )}
             style={{ width: `${signalHealth.overall_score}%` }}
           />
@@ -164,7 +168,10 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
             <span>API Health</span>
           </div>
           <span
-            className={cn('font-medium', signalHealth.api_health ? 'text-green-500' : 'text-red-500')}
+            className={cn(
+              'font-medium',
+              signalHealth.api_health ? 'text-green-500' : 'text-red-500'
+            )}
           >
             {signalHealth.api_health ? 'Online' : 'Offline'}
           </span>
@@ -206,5 +213,5 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
         </div>
       )}
     </div>
-  )
+  );
 }

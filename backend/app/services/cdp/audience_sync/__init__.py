@@ -11,12 +11,12 @@ Supported Platforms:
 - Snapchat Audience Match
 """
 
-from .service import AudienceSyncService
-from .base import BaseAudienceConnector, AudienceSyncResult
-from .meta_connector import MetaAudienceConnector
+from .base import AudienceSyncResult, BaseAudienceConnector
 from .google_connector import GoogleAudienceConnector
-from .tiktok_connector import TikTokAudienceConnector
+from .meta_connector import MetaAudienceConnector
+from .service import AudienceSyncService
 from .snapchat_connector import SnapchatAudienceConnector
+from .tiktok_connector import TikTokAudienceConnector
 
 __all__ = [
     "AudienceSyncService",

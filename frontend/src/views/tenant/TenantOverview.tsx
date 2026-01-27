@@ -5,24 +5,24 @@
  * recent activity, and quick access to campaign builder features.
  */
 
-import { useParams } from 'react-router-dom'
-import { useTenantStore } from '@/stores/tenantStore'
+import { useParams } from 'react-router-dom';
+import { useTenantStore } from '@/stores/tenantStore';
 import {
+  ArrowTrendingUpIcon,
   ChartBarIcon,
   CurrencyDollarIcon,
-  UserGroupIcon,
-  ArrowTrendingUpIcon,
   LinkIcon,
   PlusCircleIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
-  title: string
-  value: string
-  change?: string
-  changeType?: 'positive' | 'negative' | 'neutral'
-  icon: React.ComponentType<{ className?: string }>
+  title: string;
+  value: string;
+  change?: string;
+  changeType?: 'positive' | 'negative' | 'neutral';
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 function MetricCard({ title, value, change, changeType = 'neutral', icon: Icon }: MetricCardProps) {
@@ -52,12 +52,12 @@ function MetricCard({ title, value, change, changeType = 'neutral', icon: Icon }
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export default function TenantOverview() {
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const { tenant } = useTenantStore()
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const { tenant } = useTenantStore();
 
   return (
     <div className="space-y-6">
@@ -92,11 +92,7 @@ export default function TenantOverview() {
           changeType="positive"
           icon={ArrowTrendingUpIcon}
         />
-        <MetricCard
-          title="Connected Accounts"
-          value="5"
-          icon={UserGroupIcon}
-        />
+        <MetricCard title="Connected Accounts" value="5" icon={UserGroupIcon} />
       </div>
 
       {/* Quick Actions */}
@@ -158,7 +154,9 @@ export default function TenantOverview() {
               key={platform.name}
               className={cn(
                 'p-4 rounded-lg border',
-                platform.status === 'connected' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' : 'bg-muted/50'
+                platform.status === 'connected'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800'
+                  : 'bg-muted/50'
               )}
             >
               <p className="font-medium text-sm">{platform.name}</p>
@@ -172,5 +170,5 @@ export default function TenantOverview() {
         </div>
       </div>
     </div>
-  )
+  );
 }

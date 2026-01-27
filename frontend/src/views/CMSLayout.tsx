@@ -4,25 +4,25 @@
  */
 
 import { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
-  PencilSquareIcon,
-  DocumentTextIcon,
-  RectangleStackIcon,
-  TagIcon,
-  UserCircleIcon,
-  EnvelopeIcon,
-  HomeIcon,
   ArrowLeftOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon,
   ChevronDownIcon,
-  SparklesIcon,
-  CurrencyDollarIcon,
-  QuestionMarkCircleIcon,
   Cog6ToothIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  HomeIcon,
+  PencilSquareIcon,
+  QuestionMarkCircleIcon,
+  RectangleStackIcon,
+  SparklesIcon,
+  TagIcon,
+  UserCircleIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
@@ -120,10 +120,7 @@ export default function CMSLayout() {
           >
             <span>Landing Content</span>
             <ChevronDownIcon
-              className={cn(
-                'w-4 h-4 transition-transform',
-                landingExpanded && 'rotate-180'
-              )}
+              className={cn('w-4 h-4 transition-transform', landingExpanded && 'rotate-180')}
             />
           </button>
           {landingExpanded && (
@@ -177,9 +174,7 @@ export default function CMSLayout() {
             {user?.name?.charAt(0) || user?.email?.charAt(0) || 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-white truncate">
-              {user?.name || 'Admin'}
-            </div>
+            <div className="text-sm font-medium text-white truncate">{user?.name || 'Admin'}</div>
             <div className="text-xs text-white/50 truncate">{user?.email}</div>
           </div>
         </div>
@@ -215,10 +210,7 @@ export default function CMSLayout() {
           sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
       >
-        <div
-          className="absolute inset-0 bg-black/50"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
         <div
           className={cn(
             'absolute left-0 top-0 bottom-0 w-72 bg-surface-secondary border-r border-white/10 flex flex-col transition-transform',

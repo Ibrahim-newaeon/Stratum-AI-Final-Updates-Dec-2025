@@ -6,18 +6,18 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  CurrencyDollarIcon,
-  UserGroupIcon,
-  SparklesIcon,
-  ChartBarIcon,
-  ExclamationTriangleIcon,
-  LightBulbIcon,
+  ArrowPathIcon,
   ArrowTrendingUpIcon,
-  ClockIcon,
   BeakerIcon,
-  EyeIcon,
+  ChartBarIcon,
+  ClockIcon,
   CubeTransparentIcon,
-  ArrowPathIcon
+  CurrencyDollarIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  LightBulbIcon,
+  SparklesIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 const aiModels = [
@@ -25,12 +25,13 @@ const aiModels = [
     id: 'roas',
     title: 'ROAS Predictor',
     subtitle: 'Know ROI Before You Spend',
-    description: 'ML-powered predictions for Meta, Google, TikTok & Snapchat campaigns with platform-specific baselines.',
+    description:
+      'ML-powered predictions for Meta, Google, TikTok & Snapchat campaigns with platform-specific baselines.',
     icon: CurrencyDollarIcon,
     gradient: 'from-green-500 to-emerald-500',
     bgGradient: 'from-green-500/10 to-emerald-500/5',
     stats: { accuracy: '94%', latency: '23ms' },
-    size: 'large'
+    size: 'large',
   },
   {
     id: 'ltv',
@@ -41,7 +42,7 @@ const aiModels = [
     gradient: 'from-purple-500 to-violet-500',
     bgGradient: 'from-purple-500/10 to-violet-500/5',
     stats: { segments: '5', timeframes: '4' },
-    size: 'medium'
+    size: 'medium',
   },
   {
     id: 'churn',
@@ -52,7 +53,7 @@ const aiModels = [
     gradient: 'from-red-500 to-orange-500',
     bgGradient: 'from-red-500/10 to-orange-500/5',
     stats: { rocAuc: '0.89', precision: '87%' },
-    size: 'medium'
+    size: 'medium',
   },
   {
     id: 'conversion',
@@ -63,61 +64,63 @@ const aiModels = [
     gradient: 'from-cyan-500 to-blue-500',
     bgGradient: 'from-cyan-500/10 to-blue-500/5',
     stats: { accuracy: '91%', features: '12' },
-    size: 'medium'
+    size: 'medium',
   },
   {
     id: 'creative',
     title: 'Creative Lifecycle',
     subtitle: 'Refresh Before Performance Drops',
-    description: 'Predicts creative fatigue with lifecycle phases: Learning → Growth → Maturity → Decline.',
+    description:
+      'Predicts creative fatigue with lifecycle phases: Learning → Growth → Maturity → Decline.',
     icon: SparklesIcon,
     gradient: 'from-orange-500 to-amber-500',
     bgGradient: 'from-orange-500/10 to-amber-500/5',
     stats: { phases: '5', urgencyLevels: '5' },
-    size: 'large'
+    size: 'large',
   },
   {
     id: 'forecaster',
     title: 'ROAS Forecaster',
     subtitle: 'Plan Budget Cycles',
-    description: 'Time-series revenue forecasting with confidence intervals and baseline calculations.',
+    description:
+      'Time-series revenue forecasting with confidence intervals and baseline calculations.',
     icon: ChartBarIcon,
     gradient: 'from-indigo-500 to-purple-500',
     bgGradient: 'from-indigo-500/10 to-purple-500/5',
     stats: { granularity: '3', horizon: '90d' },
-    size: 'medium'
-  }
+    size: 'medium',
+  },
 ];
 
 const additionalFeatures = [
   {
     icon: BeakerIcon,
     title: 'A/B Testing Framework',
-    description: 'Champion/challenger model testing with auto-promotion'
+    description: 'Champion/challenger model testing with auto-promotion',
   },
   {
     icon: EyeIcon,
     title: 'SHAP Explainability',
-    description: 'See why AI made each recommendation'
+    description: 'See why AI made each recommendation',
   },
   {
     icon: CubeTransparentIcon,
     title: 'What-If Simulator',
-    description: 'Test budget scenarios before committing'
+    description: 'Test budget scenarios before committing',
   },
   {
     icon: ArrowPathIcon,
     title: 'RFM Segmentation',
-    description: '11 behavioral segments automatically classified'
-  }
+    description: '11 behavioral segments automatically classified',
+  },
 ];
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
+    transition: { staggerChildren: 0.1 },
+  },
 };
 
 const itemVariants = {
@@ -125,8 +128,8 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-  }
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
 export default function AIFeatures() {
@@ -155,7 +158,8 @@ export default function AIFeatures() {
           </h2>
 
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            Every model is trained on YOUR data. No generic predictions—tailored insights for your unique business patterns.
+            Every model is trained on YOUR data. No generic predictions—tailored insights for your
+            unique business patterns.
           </p>
         </motion.div>
 
@@ -175,24 +179,28 @@ export default function AIFeatures() {
               }`}
             >
               {/* Gradient accent line */}
-              <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${model.gradient} opacity-60`} />
+              <div
+                className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${model.gradient} opacity-60`}
+              />
 
               <div className="p-8">
                 {/* Icon */}
-                <div className={`inline-flex p-3 rounded-2xl bg-gradient-to-br ${model.gradient} mb-6`}>
+                <div
+                  className={`inline-flex p-3 rounded-2xl bg-gradient-to-br ${model.gradient} mb-6`}
+                >
                   <model.icon className="w-6 h-6 text-white" />
                 </div>
 
                 {/* Title & Subtitle */}
                 <h3 className="text-xl font-semibold text-white mb-1">{model.title}</h3>
-                <p className={`text-sm font-medium bg-gradient-to-r ${model.gradient} bg-clip-text text-transparent mb-3`}>
+                <p
+                  className={`text-sm font-medium bg-gradient-to-r ${model.gradient} bg-clip-text text-transparent mb-3`}
+                >
                   {model.subtitle}
                 </p>
 
                 {/* Description */}
-                <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                  {model.description}
-                </p>
+                <p className="text-gray-400 text-sm leading-relaxed mb-6">{model.description}</p>
 
                 {/* Stats */}
                 <div className="flex items-center gap-4">
@@ -205,7 +213,9 @@ export default function AIFeatures() {
                 </div>
 
                 {/* Hover glow effect */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${model.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`} />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-r ${model.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`}
+                />
               </div>
             </motion.div>
           ))}

@@ -11,7 +11,7 @@ const categoryColors: Record<string, string> = {
   'Analytics & Attribution': '#06b6d4',
   'CRM & Sales': '#a855f7',
   'E-commerce': '#22c55e',
-  'Communication': '#3b82f6',
+  Communication: '#3b82f6',
 };
 
 const integrations = {
@@ -39,7 +39,7 @@ const integrations = {
     { name: 'WooCommerce', description: 'WordPress commerce', logo: 'WC' },
     { name: 'Magento', description: 'Adobe Commerce', logo: 'MG' },
   ],
-  'Communication': [
+  Communication: [
     { name: 'Slack', description: 'Team messaging', logo: 'SL' },
     { name: 'WhatsApp Business', description: 'Customer messaging', logo: 'WA' },
     { name: 'Intercom', description: 'Customer messaging', logo: 'IC' },

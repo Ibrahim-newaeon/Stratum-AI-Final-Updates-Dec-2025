@@ -6,11 +6,11 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  EnvelopeIcon,
-  MapPinIcon,
   ChatBubbleLeftRightIcon,
   CheckCircleIcon,
+  EnvelopeIcon,
   ExclamationCircleIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { useSubmitContact } from '@/api/cms';
 
@@ -182,10 +182,7 @@ export default function Contact() {
                     Help Center
                   </a>{' '}
                   or email{' '}
-                  <a
-                    href="mailto:support@stratum.ai"
-                    className="text-orange-500 hover:underline"
-                  >
+                  <a href="mailto:support@stratum.ai" className="text-orange-500 hover:underline">
                     support@stratum.ai
                   </a>
                 </p>

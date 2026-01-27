@@ -6,15 +6,15 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
-  TrophyIcon,
-  ArrowTrendingUpIcon,
-  ArrowRightIcon,
-  BuildingStorefrontIcon,
-  BuildingOffice2Icon,
-  ShoppingBagIcon,
-  HeartIcon,
   AcademicCapIcon,
+  ArrowRightIcon,
+  ArrowTrendingUpIcon,
+  BuildingOffice2Icon,
+  BuildingStorefrontIcon,
   GlobeAltIcon,
+  HeartIcon,
+  ShoppingBagIcon,
+  TrophyIcon,
 } from '@heroicons/react/24/outline';
 
 const caseStudies = [
@@ -26,13 +26,15 @@ const caseStudies = [
     logo: 'L',
     color: '#8B5CF6',
     headline: '340% increase in ROAS with Trust-Gated Automation',
-    description: 'How a luxury fashion retailer transformed their ad performance by only executing when signal health was optimal.',
+    description:
+      'How a luxury fashion retailer transformed their ad performance by only executing when signal health was optimal.',
     metrics: [
       { label: 'ROAS Increase', value: '340%' },
       { label: 'CAC Reduction', value: '45%' },
       { label: 'Time Saved', value: '20hrs/week' },
     ],
-    quote: 'Stratum AI changed how we think about automation. The trust gates give us confidence to scale aggressively.',
+    quote:
+      'Stratum AI changed how we think about automation. The trust gates give us confidence to scale aggressively.',
     author: 'Sarah Chen',
     role: 'VP of Growth',
   },
@@ -44,13 +46,15 @@ const caseStudies = [
     logo: 'F',
     color: '#00D4FF',
     headline: '67% reduction in wasted ad spend',
-    description: 'A fintech unicorn used signal health monitoring to pause campaigns before they burned budget.',
+    description:
+      'A fintech unicorn used signal health monitoring to pause campaigns before they burned budget.',
     metrics: [
       { label: 'Spend Saved', value: '$2.3M' },
       { label: 'Lead Quality', value: '+89%' },
       { label: 'Compliance Score', value: '100%' },
     ],
-    quote: 'The visibility into signal health helped us maintain compliance while scaling our acquisition campaigns.',
+    quote:
+      'The visibility into signal health helped us maintain compliance while scaling our acquisition campaigns.',
     author: 'Marcus Webb',
     role: 'Director of Performance Marketing',
   },
@@ -62,13 +66,15 @@ const caseStudies = [
     logo: 'H',
     color: '#00FF88',
     headline: 'Unified 2M+ patient profiles across channels',
-    description: 'How a healthcare network used CDP to create personalized patient journeys while maintaining HIPAA compliance.',
+    description:
+      'How a healthcare network used CDP to create personalized patient journeys while maintaining HIPAA compliance.',
     metrics: [
       { label: 'Profiles Unified', value: '2.3M' },
       { label: 'Engagement Rate', value: '+156%' },
       { label: 'Match Rate', value: '94%' },
     ],
-    quote: 'The identity resolution capabilities let us personalize without compromising patient privacy.',
+    quote:
+      'The identity resolution capabilities let us personalize without compromising patient privacy.',
     author: 'Dr. Lisa Park',
     role: 'Chief Digital Officer',
   },
@@ -80,13 +86,15 @@ const caseStudies = [
     logo: 'L',
     color: '#FFB800',
     headline: '5x improvement in student acquisition efficiency',
-    description: 'An online education platform used predictive churn analysis to optimize their enrollment funnels.',
+    description:
+      'An online education platform used predictive churn analysis to optimize their enrollment funnels.',
     metrics: [
       { label: 'Enrollment Rate', value: '+212%' },
       { label: 'Churn Reduction', value: '38%' },
       { label: 'LTV Increase', value: '+67%' },
     ],
-    quote: 'Predictive churn scoring helped us intervene early and keep students engaged throughout their journey.',
+    quote:
+      'Predictive churn scoring helped us intervene early and keep students engaged throughout their journey.',
     author: 'James Liu',
     role: 'Head of Growth',
   },
@@ -98,13 +106,15 @@ const caseStudies = [
     logo: 'M',
     color: '#FF6B6B',
     headline: 'Synced 500K customer segments to 4 ad platforms',
-    description: 'A national retail chain used Audience Sync to maintain consistent targeting across all digital channels.',
+    description:
+      'A national retail chain used Audience Sync to maintain consistent targeting across all digital channels.',
     metrics: [
       { label: 'Segments Synced', value: '127' },
       { label: 'Audience Size', value: '500K+' },
       { label: 'Attribution Accuracy', value: '+73%' },
     ],
-    quote: 'One-click audience sync eliminated hours of manual work and kept our targeting fresh across platforms.',
+    quote:
+      'One-click audience sync eliminated hours of manual work and kept our targeting fresh across platforms.',
     author: 'Amanda Torres',
     role: 'CMO',
   },
@@ -116,13 +126,15 @@ const caseStudies = [
     logo: 'C',
     color: '#A78BFA',
     headline: 'Reduced sales cycle by 40% with predictive scoring',
-    description: 'An enterprise SaaS company used ML-powered lead scoring to prioritize high-intent accounts.',
+    description:
+      'An enterprise SaaS company used ML-powered lead scoring to prioritize high-intent accounts.',
     metrics: [
       { label: 'Sales Cycle', value: '-40%' },
       { label: 'Win Rate', value: '+52%' },
       { label: 'Pipeline Value', value: '+$4.2M' },
     ],
-    quote: 'The predictive models surfaced accounts we would have missed. It changed how our sales team prioritizes.',
+    quote:
+      'The predictive models surfaced accounts we would have missed. It changed how our sales team prioritizes.',
     author: 'Robert Chang',
     role: 'VP of Revenue',
   },
@@ -143,29 +155,33 @@ export default function CaseStudiesPage() {
         <section className="relative py-20 overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
                 style={{
                   background: 'rgba(0, 212, 255, 0.1)',
                   border: '1px solid rgba(0, 212, 255, 0.2)',
-                }}>
+                }}
+              >
                 <TrophyIcon className="w-4 h-4 text-[#00D4FF]" />
                 <span className="text-sm font-medium text-[#00D4FF]">Case Studies</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Success Stories from{' '}
-                <span style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   Industry Leaders
                 </span>
               </h1>
 
               <p className="text-lg text-gray-400">
-                Discover how companies across industries use Stratum AI to transform
-                their marketing performance with trust-gated automation.
+                Discover how companies across industries use Stratum AI to transform their marketing
+                performance with trust-gated automation.
               </p>
             </div>
 
@@ -195,11 +211,7 @@ export default function CaseStudiesPage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {caseStudies.map((study) => (
-                <Link
-                  key={study.id}
-                  to={`/case-studies/${study.id}`}
-                  className="group block"
-                >
+                <Link key={study.id} to={`/case-studies/${study.id}`} className="group block">
                   <div
                     className="h-full p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2"
                     style={{
@@ -281,7 +293,8 @@ export default function CaseStudiesPage() {
             <div
               className="rounded-2xl p-8 md:p-12 text-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
+                background:
+                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
                 border: '1px solid rgba(139, 92, 246, 0.2)',
               }}
             >
@@ -289,7 +302,8 @@ export default function CaseStudiesPage() {
                 Ready to write your success story?
               </h2>
               <p className="text-gray-400 mb-8">
-                Join hundreds of companies using Stratum AI to transform their marketing performance.
+                Join hundreds of companies using Stratum AI to transform their marketing
+                performance.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link

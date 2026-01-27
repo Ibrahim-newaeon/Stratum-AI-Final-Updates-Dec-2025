@@ -17,41 +17,41 @@ Features:
 - Automatic retry with exponential backoff
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.audience_sync import (
+    AudienceSyncCredential,
+    AudienceSyncJob,
+    PlatformAudience,
+    SyncOperation,
+    SyncPlatform,
+    SyncStatus,
+)
 from app.models.cdp import (
     CDPProfile,
     CDPSegment,
     CDPSegmentMembership,
-    CDPProfileIdentifier,
 )
-from app.models.audience_sync import (
-    PlatformAudience,
-    AudienceSyncJob,
-    AudienceSyncCredential,
-    SyncPlatform,
-    SyncStatus,
-    SyncOperation,
-)
+
 from .base import (
-    BaseAudienceConnector,
     AudienceConfig,
-    AudienceUser,
     AudienceSyncResult,
-    UserIdentifier,
+    AudienceUser,
+    BaseAudienceConnector,
     IdentifierType,
+    UserIdentifier,
 )
-from .meta_connector import MetaAudienceConnector
 from .google_connector import GoogleAudienceConnector
-from .tiktok_connector import TikTokAudienceConnector
+from .meta_connector import MetaAudienceConnector
 from .snapchat_connector import SnapchatAudienceConnector
+from .tiktok_connector import TikTokAudienceConnector
 
 logger = structlog.get_logger()
 
@@ -86,7 +86,7 @@ class AudienceSyncService:
         description: Optional[str] = None,
         auto_sync: bool = True,
         sync_interval_hours: int = 24,
-    ) -> Tuple[PlatformAudience, AudienceSyncJob]:
+    ) -> tuple[PlatformAudience, AudienceSyncJob]:
         """
         Create a platform audience linked to a CDP segment.
         Creates the audience on the platform and syncs initial users.
@@ -111,7 +111,9 @@ class AudienceSyncService:
             description=description,
             auto_sync=auto_sync,
             sync_interval_hours=sync_interval_hours,
-            next_sync_at=datetime.now(timezone.utc) + timedelta(hours=sync_interval_hours) if auto_sync else None,
+            next_sync_at=datetime.now(UTC) + timedelta(hours=sync_interval_hours)
+            if auto_sync
+            else None,
         )
         self.db.add(platform_audience)
         await self.db.flush()
@@ -139,7 +141,7 @@ class AudienceSyncService:
 
             # Update platform audience with result
             platform_audience.platform_audience_id = result.platform_audience_id
-            platform_audience.last_sync_at = datetime.now(timezone.utc)
+            platform_audience.last_sync_at = datetime.now(UTC)
             platform_audience.last_sync_status = sync_job.status
             platform_audience.platform_size = result.audience_size
             platform_audience.matched_size = result.matched_size
@@ -208,11 +210,11 @@ class AudienceSyncService:
             )
 
             # Update platform audience
-            platform_audience.last_sync_at = datetime.now(timezone.utc)
+            platform_audience.last_sync_at = datetime.now(UTC)
             platform_audience.last_sync_status = sync_job.status
 
             if platform_audience.auto_sync:
-                platform_audience.next_sync_at = datetime.now(timezone.utc) + timedelta(
+                platform_audience.next_sync_at = datetime.now(UTC) + timedelta(
                     hours=platform_audience.sync_interval_hours
                 )
 
@@ -281,7 +283,7 @@ class AudienceSyncService:
         Execute a sync job against the platform.
         """
         sync_job.status = SyncStatus.PROCESSING.value
-        sync_job.started_at = datetime.now(timezone.utc)
+        sync_job.started_at = datetime.now(UTC)
         await self.db.flush()
 
         # Get connector
@@ -322,7 +324,7 @@ class AudienceSyncService:
             raise ValueError(f"Unknown operation: {operation}")
 
         # Update sync job with results
-        sync_job.completed_at = datetime.now(timezone.utc)
+        sync_job.completed_at = datetime.now(UTC)
         sync_job.duration_ms = result.duration_ms
         sync_job.profiles_sent = result.users_sent
         sync_job.profiles_added = result.users_added
@@ -364,13 +366,11 @@ class AudienceSyncService:
         platform: Optional[str] = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> Tuple[List[PlatformAudience], int]:
+    ) -> tuple[list[PlatformAudience], int]:
         """
         List platform audiences with optional filtering.
         """
-        query = select(PlatformAudience).where(
-            PlatformAudience.tenant_id == self.tenant_id
-        )
+        query = select(PlatformAudience).where(PlatformAudience.tenant_id == self.tenant_id)
 
         if segment_id:
             query = query.where(PlatformAudience.segment_id == segment_id)
@@ -388,9 +388,7 @@ class AudienceSyncService:
 
         # Get results
         result = await self.db.execute(
-            query.order_by(PlatformAudience.created_at.desc())
-            .offset(offset)
-            .limit(limit)
+            query.order_by(PlatformAudience.created_at.desc()).offset(offset).limit(limit)
         )
         audiences = list(result.scalars().all())
 
@@ -400,7 +398,7 @@ class AudienceSyncService:
         self,
         platform_audience_id: UUID,
         limit: int = 20,
-    ) -> List[AudienceSyncJob]:
+    ) -> list[AudienceSyncJob]:
         """
         Get sync job history for a platform audience.
         """
@@ -417,13 +415,12 @@ class AudienceSyncService:
 
     async def get_connected_platforms(
         self,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get list of platforms with active credentials.
         """
         result = await self.db.execute(
-            select(AudienceSyncCredential)
-            .where(
+            select(AudienceSyncCredential).where(
                 AudienceSyncCredential.tenant_id == self.tenant_id,
                 AudienceSyncCredential.is_active == True,
             )
@@ -437,10 +434,12 @@ class AudienceSyncService:
                     "platform": cred.platform,
                     "ad_accounts": [],
                 }
-            platforms[cred.platform]["ad_accounts"].append({
-                "ad_account_id": cred.ad_account_id,
-                "ad_account_name": cred.ad_account_name,
-            })
+            platforms[cred.platform]["ad_accounts"].append(
+                {
+                    "ad_account_id": cred.ad_account_id,
+                    "ad_account_name": cred.ad_account_name,
+                }
+            )
 
         return list(platforms.values())
 
@@ -451,8 +450,7 @@ class AudienceSyncService:
     async def _get_segment(self, segment_id: UUID) -> Optional[CDPSegment]:
         """Get a CDP segment by ID."""
         result = await self.db.execute(
-            select(CDPSegment)
-            .where(
+            select(CDPSegment).where(
                 CDPSegment.id == segment_id,
                 CDPSegment.tenant_id == self.tenant_id,
             )
@@ -462,8 +460,7 @@ class AudienceSyncService:
     async def _get_platform_audience(self, audience_id: UUID) -> Optional[PlatformAudience]:
         """Get a platform audience by ID."""
         result = await self.db.execute(
-            select(PlatformAudience)
-            .where(
+            select(PlatformAudience).where(
                 PlatformAudience.id == audience_id,
                 PlatformAudience.tenant_id == self.tenant_id,
             )
@@ -477,8 +474,7 @@ class AudienceSyncService:
     ) -> Optional[AudienceSyncCredential]:
         """Get credentials for a platform/ad account."""
         result = await self.db.execute(
-            select(AudienceSyncCredential)
-            .where(
+            select(AudienceSyncCredential).where(
                 AudienceSyncCredential.tenant_id == self.tenant_id,
                 AudienceSyncCredential.platform == platform,
                 AudienceSyncCredential.ad_account_id == ad_account_id,
@@ -491,7 +487,7 @@ class AudienceSyncService:
         self,
         segment_id: UUID,
         limit: int = 1000000,
-    ) -> List[CDPProfile]:
+    ) -> list[CDPProfile]:
         """Get all profiles in a segment."""
         result = await self.db.execute(
             select(CDPProfile)
@@ -508,8 +504,8 @@ class AudienceSyncService:
 
     async def _profiles_to_audience_users(
         self,
-        profiles: List[CDPProfile],
-    ) -> List[AudienceUser]:
+        profiles: list[CDPProfile],
+    ) -> list[AudienceUser]:
         """Convert CDP profiles to audience users."""
         users = []
 
@@ -519,16 +515,20 @@ class AudienceSyncService:
             for pid in profile.identifiers:
                 id_type = self._map_identifier_type(pid.identifier_type)
                 if id_type:
-                    identifiers.append(UserIdentifier(
-                        identifier_type=id_type,
-                        hashed_value=pid.identifier_hash,
-                    ))
+                    identifiers.append(
+                        UserIdentifier(
+                            identifier_type=id_type,
+                            hashed_value=pid.identifier_hash,
+                        )
+                    )
 
             if identifiers:
-                users.append(AudienceUser(
-                    profile_id=str(profile.id),
-                    identifiers=identifiers,
-                ))
+                users.append(
+                    AudienceUser(
+                        profile_id=str(profile.id),
+                        identifiers=identifiers,
+                    )
+                )
 
         return users
 
@@ -559,7 +559,5 @@ class AudienceSyncService:
             kwargs["app_secret"] = credentials.config.get("app_secret")
 
         return connector_class(
-            access_token=credentials.access_token,
-            ad_account_id=credentials.ad_account_id,
-            **kwargs
+            access_token=credentials.access_token, ad_account_id=credentials.ad_account_id, **kwargs
         )

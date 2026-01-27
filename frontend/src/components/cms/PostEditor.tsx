@@ -5,28 +5,28 @@
  * title, content (TipTap), SEO settings, featured image, and metadata.
  */
 
-import { useState, useEffect } from 'react'
-import { X, Save, Eye, Calendar, Image as ImageIcon, Link2 } from 'lucide-react'
-import { RichTextEditor } from './RichTextEditor'
+import { useEffect, useState } from 'react';
+import { Calendar, Eye, Image as ImageIcon, Link2, Save, X } from 'lucide-react';
+import { RichTextEditor } from './RichTextEditor';
 import {
-  CMSPost,
-  CMSCategory,
   CMSAuthor,
+  CMSCategory,
+  CMSPost,
   CMSTag,
-  PostCreate,
-  PostUpdate,
-  PostStatus,
   ContentType,
-} from '@/api/cms'
+  PostCreate,
+  PostStatus,
+  PostUpdate,
+} from '@/api/cms';
 
 interface PostEditorProps {
-  post?: CMSPost
-  categories: CMSCategory[]
-  authors: CMSAuthor[]
-  tags: CMSTag[]
-  onSave: (data: PostCreate | PostUpdate) => void
-  onCancel: () => void
-  isLoading?: boolean
+  post?: CMSPost;
+  categories: CMSCategory[];
+  authors: CMSAuthor[];
+  tags: CMSTag[];
+  onSave: (data: PostCreate | PostUpdate) => void;
+  onCancel: () => void;
+  isLoading?: boolean;
 }
 
 const statusOptions: { value: PostStatus; label: string }[] = [
@@ -34,7 +34,7 @@ const statusOptions: { value: PostStatus; label: string }[] = [
   { value: 'scheduled', label: 'Scheduled' },
   { value: 'published', label: 'Published' },
   { value: 'archived', label: 'Archived' },
-]
+];
 
 const contentTypeOptions: { value: ContentType; label: string }[] = [
   { value: 'blog_post', label: 'Blog Post' },
@@ -42,7 +42,7 @@ const contentTypeOptions: { value: ContentType; label: string }[] = [
   { value: 'guide', label: 'Guide' },
   { value: 'whitepaper', label: 'Whitepaper' },
   { value: 'announcement', label: 'Announcement' },
-]
+];
 
 export function PostEditor({
   post,
@@ -72,9 +72,9 @@ export function PostEditor({
     canonical_url: '',
     is_featured: false,
     allow_comments: true,
-  })
+  });
 
-  const [activeTab, setActiveTab] = useState<'content' | 'seo' | 'settings'>('content')
+  const [activeTab, setActiveTab] = useState<'content' | 'seo' | 'settings'>('content');
 
   // Initialize form with existing post data
   useEffect(() => {
@@ -98,9 +98,9 @@ export function PostEditor({
         canonical_url: post.canonical_url || '',
         is_featured: post.is_featured,
         allow_comments: post.allow_comments,
-      })
+      });
     }
-  }, [post])
+  }, [post]);
 
   // Auto-generate slug from title
   const generateSlug = (title: string) => {
@@ -108,24 +108,24 @@ export function PostEditor({
       .toLowerCase()
       .trim()
       .replace(/[^\w\s-]/g, '')
-      .replace(/[-\s]+/g, '-')
-  }
+      .replace(/[-\s]+/g, '-');
+  };
 
   const handleTitleChange = (title: string) => {
     setFormData((prev) => ({
       ...prev,
       title,
       slug: prev.slug || generateSlug(title),
-    }))
-  }
+    }));
+  };
 
   const handleContentChange = (html: string, json: Record<string, unknown>) => {
     setFormData((prev) => ({
       ...prev,
       content: html,
       content_json: json,
-    }))
-  }
+    }));
+  };
 
   const handleTagToggle = (tagId: string) => {
     setFormData((prev) => ({
@@ -133,13 +133,13 @@ export function PostEditor({
       tag_ids: prev.tag_ids?.includes(tagId)
         ? prev.tag_ids.filter((id) => id !== tagId)
         : [...(prev.tag_ids || []), tagId],
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData)
-  }
+    e.preventDefault();
+    onSave(formData);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
@@ -185,9 +185,7 @@ export function PostEditor({
             <div className="space-y-6">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Title *
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -200,9 +198,7 @@ export function PostEditor({
 
               {/* Slug */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Slug
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Slug</label>
                 <div className="flex items-center gap-2">
                   <span className="text-neutral-500 text-sm">/blog/</span>
                   <input
@@ -217,9 +213,7 @@ export function PostEditor({
 
               {/* Excerpt */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Excerpt
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Excerpt</label>
                 <textarea
                   value={formData.excerpt}
                   onChange={(e) => setFormData((prev) => ({ ...prev, excerpt: e.target.value }))}
@@ -231,9 +225,7 @@ export function PostEditor({
 
               {/* Content Editor */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Content
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Content</label>
                 <RichTextEditor
                   content={formData.content}
                   contentJson={formData.content_json}
@@ -265,9 +257,7 @@ export function PostEditor({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    Author
-                  </label>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">Author</label>
                   <select
                     value={formData.author_id || ''}
                     onChange={(e) =>
@@ -287,9 +277,7 @@ export function PostEditor({
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Tags
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Tags</label>
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
                     <button
@@ -365,9 +353,7 @@ export function PostEditor({
                 <input
                   type="text"
                   value={formData.meta_title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, meta_title: e.target.value }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, meta_title: e.target.value }))}
                   maxLength={70}
                   placeholder="SEO title (defaults to post title)"
                   className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
@@ -407,9 +393,7 @@ export function PostEditor({
                   placeholder="https://example.com/original-post"
                   className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
                 />
-                <p className="text-xs text-neutral-500 mt-1">
-                  Leave empty to use the default URL
-                </p>
+                <p className="text-xs text-neutral-500 mt-1">Leave empty to use the default URL</p>
               </div>
 
               <div>
@@ -454,9 +438,7 @@ export function PostEditor({
               {/* Status & Content Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    Status
-                  </label>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) =>
@@ -556,7 +538,7 @@ export function PostEditor({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default PostEditor
+export default PostEditor;

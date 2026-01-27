@@ -5,27 +5,27 @@
  * with filtering, marking as read, and quick actions.
  */
 
-import * as React from 'react'
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Activity,
+  AlertTriangle,
   Bell,
-  X,
   Check,
   CheckCheck,
+  Clock,
+  Filter,
+  Settings,
   Shield,
-  AlertTriangle,
-  XCircle,
-  Activity,
+  Trash2,
   TrendingUp,
   Users,
+  X,
+  XCircle,
   Zap,
-  Settings,
-  Trash2,
-  Filter,
-  Clock,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type NotificationType =
   | 'trust_gate_pass'
@@ -35,17 +35,17 @@ export type NotificationType =
   | 'anomaly'
   | 'campaign'
   | 'segment'
-  | 'system'
+  | 'system';
 
 export interface Notification {
-  id: string
-  type: NotificationType
-  title: string
-  message: string
-  timestamp: Date
-  read: boolean
-  actionUrl?: string
-  metadata?: Record<string, any>
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
+  metadata?: Record<string, any>;
 }
 
 // Demo notifications
@@ -117,88 +117,85 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     read: true,
     actionUrl: '/dashboard/cdp/audience-sync',
   },
-]
+];
 
 const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
     case 'trust_gate_pass':
-      return { icon: Shield, color: 'text-green-500', bg: 'bg-green-500/10' }
+      return { icon: Shield, color: 'text-green-500', bg: 'bg-green-500/10' };
     case 'trust_gate_hold':
-      return { icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-500/10' }
+      return { icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-500/10' };
     case 'trust_gate_block':
-      return { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' }
+      return { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' };
     case 'signal_health':
-      return { icon: Activity, color: 'text-cyan-500', bg: 'bg-cyan-500/10' }
+      return { icon: Activity, color: 'text-cyan-500', bg: 'bg-cyan-500/10' };
     case 'anomaly':
-      return { icon: Zap, color: 'text-purple-500', bg: 'bg-purple-500/10' }
+      return { icon: Zap, color: 'text-purple-500', bg: 'bg-purple-500/10' };
     case 'campaign':
-      return { icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-500/10' }
+      return { icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-500/10' };
     case 'segment':
-      return { icon: Users, color: 'text-orange-500', bg: 'bg-orange-500/10' }
+      return { icon: Users, color: 'text-orange-500', bg: 'bg-orange-500/10' };
     case 'system':
-      return { icon: Settings, color: 'text-gray-500', bg: 'bg-gray-500/10' }
+      return { icon: Settings, color: 'text-gray-500', bg: 'bg-gray-500/10' };
     default:
-      return { icon: Bell, color: 'text-gray-500', bg: 'bg-gray-500/10' }
+      return { icon: Bell, color: 'text-gray-500', bg: 'bg-gray-500/10' };
   }
-}
+};
 
 const formatTimestamp = (date: Date) => {
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'Just now'
-  if (minutes < 60) return `${minutes}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 7) return `${days}d ago`
-  return date.toLocaleDateString()
-}
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
+};
 
 interface NotificationCenterProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
-  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS)
-  const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const filteredNotifications = filter === 'unread'
-    ? notifications.filter(n => !n.read)
-    : notifications
+  const filteredNotifications =
+    filter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
 
   const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    )
-  }
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-  }
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
   const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-  }
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
 
   const clearAll = () => {
-    setNotifications([])
-  }
+    setNotifications([]);
+  };
 
   // Close on escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+      if (e.key === 'Escape') onClose();
+    };
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -248,8 +245,8 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                 <button
                   onClick={() => setFilter('all')}
                   className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                    filter === 'all' ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                    'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                    filter === 'all' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
                   )}
                 >
                   All
@@ -257,8 +254,8 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                 <button
                   onClick={() => setFilter('unread')}
                   className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                    filter === 'unread' ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                    'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                    filter === 'unread' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
                   )}
                 >
                   Unread ({unreadCount})
@@ -295,13 +292,15 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                   </div>
                   <h3 className="font-medium mb-1">No notifications</h3>
                   <p className="text-sm text-muted-foreground">
-                    {filter === 'unread' ? "You've read all notifications" : "You're all caught up!"}
+                    {filter === 'unread'
+                      ? "You've read all notifications"
+                      : "You're all caught up!"}
                   </p>
                 </div>
               ) : (
                 <div className="divide-y">
                   {filteredNotifications.map((notification) => {
-                    const { icon: Icon, color, bg } = getNotificationIcon(notification.type)
+                    const { icon: Icon, color, bg } = getNotificationIcon(notification.type);
                     return (
                       <motion.div
                         key={notification.id}
@@ -309,26 +308,33 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         className={cn(
-                          "group relative px-4 py-3 hover:bg-accent/50 transition-colors cursor-pointer",
-                          !notification.read && "bg-primary/5"
+                          'group relative px-4 py-3 hover:bg-accent/50 transition-colors cursor-pointer',
+                          !notification.read && 'bg-primary/5'
                         )}
                         onClick={() => {
-                          markAsRead(notification.id)
+                          markAsRead(notification.id);
                           if (notification.actionUrl) {
-                            window.location.href = notification.actionUrl
+                            window.location.href = notification.actionUrl;
                           }
                         }}
                       >
                         <div className="flex gap-3">
-                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bg)}>
-                            <Icon className={cn("h-5 w-5", color)} />
+                          <div
+                            className={cn(
+                              'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                              bg
+                            )}
+                          >
+                            <Icon className={cn('h-5 w-5', color)} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <h4 className={cn(
-                                "text-sm font-medium truncate",
-                                !notification.read && "font-semibold"
-                              )}>
+                              <h4
+                                className={cn(
+                                  'text-sm font-medium truncate',
+                                  !notification.read && 'font-semibold'
+                                )}
+                              >
                                 {notification.title}
                               </h4>
                               {!notification.read && (
@@ -352,8 +358,8 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                           {!notification.read && (
                             <button
                               onClick={(e) => {
-                                e.stopPropagation()
-                                markAsRead(notification.id)
+                                e.stopPropagation();
+                                markAsRead(notification.id);
                               }}
                               className="p-1.5 rounded-lg bg-card border hover:bg-accent transition-colors"
                               title="Mark as read"
@@ -363,8 +369,8 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                           )}
                           <button
                             onClick={(e) => {
-                              e.stopPropagation()
-                              deleteNotification(notification.id)
+                              e.stopPropagation();
+                              deleteNotification(notification.id);
                             }}
                             className="p-1.5 rounded-lg bg-card border hover:bg-destructive/10 hover:text-destructive transition-colors"
                             title="Delete"
@@ -373,7 +379,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                           </button>
                         </div>
                       </motion.div>
-                    )
+                    );
                   })}
                 </div>
               )}
@@ -389,23 +395,20 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
 /**
  * Notification Bell Button - Shows unread count badge
  */
 interface NotificationBellProps {
-  onClick: () => void
-  unreadCount?: number
+  onClick: () => void;
+  unreadCount?: number;
 }
 
 export function NotificationBell({ onClick, unreadCount = 0 }: NotificationBellProps) {
   return (
-    <button
-      onClick={onClick}
-      className="relative p-2 rounded-lg hover:bg-accent transition-colors"
-    >
+    <button onClick={onClick} className="relative p-2 rounded-lg hover:bg-accent transition-colors">
       <Bell className="h-5 w-5" />
       {unreadCount > 0 && (
         <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-destructive rounded-full animate-pulse">
@@ -413,7 +416,7 @@ export function NotificationBell({ onClick, unreadCount = 0 }: NotificationBellP
         </span>
       )}
     </button>
-  )
+  );
 }
 
-export default NotificationCenter
+export default NotificationCenter;

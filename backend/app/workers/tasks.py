@@ -7,8 +7,8 @@ Implements idempotent, retriable operations with exponential backoff.
 """
 
 import json
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -32,35 +32,34 @@ from app.models import (
 
 logger = get_task_logger(__name__)
 
+
 def _calculate_task_confidence(campaign_data: list, analysis_type: str = "portfolio") -> float:
     """
     Calculate model-derived confidence for background task predictions.
-    
+
     Args:
         campaign_data: List of campaign dicts with metrics
         analysis_type: Type of analysis (portfolio, campaign, alerts)
-    
+
     Returns:
         Confidence score between 0.0 and 0.95
     """
     if not campaign_data:
         return 0.3  # Minimum confidence for empty data
-    
+
     n = len(campaign_data)
-    
+
     # Base confidence from sample size
     sample_conf = min(0.5, 0.25 + (n / 40))
-    
+
     # Data completeness
     complete = sum(1 for c in campaign_data if c.get("roas", 0) > 0 and c.get("spend", 0) > 0)
     completeness_conf = (complete / n) * 0.25 if n > 0 else 0
-    
+
     # Analysis type adjustments
     type_bonus = {"portfolio": 0.1, "campaign": 0.15, "alerts": 0.2}.get(analysis_type, 0.1)
-    
+
     return round(min(0.95, sample_conf + completeness_conf + type_bonus), 2)
-
-
 
 
 # =============================================================================
@@ -101,9 +100,10 @@ def sync_campaign_data(self, tenant_id: int, campaign_id: int):
                 manager = MockAdNetworkManager(tenant_id)
                 # Get time series data
                 from app.services.mock_client import MockAdNetwork
+
                 network = MockAdNetwork(seed=tenant_id)
 
-                end_date = datetime.now(timezone.utc).date()
+                end_date = datetime.now(UTC).date()
                 start_date = campaign.start_date or (end_date - timedelta(days=30))
 
                 time_series = network.generate_time_series(
@@ -143,16 +143,20 @@ def sync_campaign_data(self, tenant_id: int, campaign_id: int):
 
                 # Update campaign aggregates
                 campaign.calculate_metrics()
-                campaign.last_synced_at = datetime.now(timezone.utc)
+                campaign.last_synced_at = datetime.now(UTC)
                 campaign.sync_error = None
 
             db.commit()
 
             # Publish real-time event
-            _publish_event(tenant_id, "sync_complete", {
-                "campaign_id": campaign_id,
-                "campaign_name": campaign.name,
-            })
+            _publish_event(
+                tenant_id,
+                "sync_complete",
+                {
+                    "campaign_id": campaign_id,
+                    "campaign_name": campaign.name,
+                },
+            )
 
             logger.info(f"Campaign {campaign_id} synced successfully")
             return {"status": "success", "campaign_id": campaign_id}
@@ -173,19 +177,21 @@ def sync_all_campaigns():
 
     with SyncSessionLocal() as db:
         # Get all active tenants
-        tenants = db.execute(
-            select(Tenant).where(Tenant.is_deleted == False)
-        ).scalars().all()
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         task_count = 0
         for tenant in tenants:
             # Get active campaigns for tenant
-            campaigns = db.execute(
-                select(Campaign).where(
-                    Campaign.tenant_id == tenant.id,
-                    Campaign.is_deleted == False,
+            campaigns = (
+                db.execute(
+                    select(Campaign).where(
+                        Campaign.tenant_id == tenant.id,
+                        Campaign.is_deleted == False,
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
 
             for campaign in campaigns:
                 # Queue individual sync task
@@ -224,7 +230,7 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
         # Check cooldown
         if rule.last_triggered_at:
             cooldown_end = rule.last_triggered_at + timedelta(hours=rule.cooldown_hours)
-            if datetime.now(timezone.utc) < cooldown_end:
+            if datetime.now(UTC) < cooldown_end:
                 return {"status": "in_cooldown"}
 
         # Get campaigns to evaluate
@@ -249,7 +255,7 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
                 tenant_id=tenant_id,
                 rule_id=rule_id,
                 campaign_id=campaign.id,
-                executed_at=datetime.now(timezone.utc),
+                executed_at=datetime.now(UTC),
                 triggered=result["triggered"],
                 condition_result=result["condition"],
                 action_result=result.get("action"),
@@ -262,16 +268,20 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
                 _execute_action(rule, campaign, db)
 
         # Update rule metadata
-        rule.last_evaluated_at = datetime.now(timezone.utc)
+        rule.last_evaluated_at = datetime.now(UTC)
         if triggered:
-            rule.last_triggered_at = datetime.now(timezone.utc)
+            rule.last_triggered_at = datetime.now(UTC)
             rule.trigger_count += 1
 
             # Publish event
-            _publish_event(tenant_id, "rule_triggered", {
-                "rule_id": rule_id,
-                "rule_name": rule.name,
-            })
+            _publish_event(
+                tenant_id,
+                "rule_triggered",
+                {
+                    "rule_id": rule_id,
+                    "rule_name": rule.name,
+                },
+            )
 
         db.commit()
 
@@ -288,12 +298,16 @@ def evaluate_all_rules():
 
     with SyncSessionLocal() as db:
         # Get all active rules
-        rules = db.execute(
-            select(Rule).where(
-                Rule.status == RuleStatus.ACTIVE,
-                Rule.is_deleted == False,
+        rules = (
+            db.execute(
+                select(Rule).where(
+                    Rule.status == RuleStatus.ACTIVE,
+                    Rule.is_deleted == False,
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         task_count = 0
         for rule in rules:
@@ -304,7 +318,7 @@ def evaluate_all_rules():
     return {"tasks_queued": task_count}
 
 
-def _evaluate_condition(rule: Rule, campaign: Campaign) -> Dict[str, Any]:
+def _evaluate_condition(rule: Rule, campaign: Campaign) -> dict[str, Any]:
     """Evaluate a rule condition against a campaign."""
     try:
         # Get the field value
@@ -371,7 +385,7 @@ def _parse_condition_value(value: str, target_type: type) -> Any:
     return value
 
 
-def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> Dict[str, Any]:
+def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> dict[str, Any]:
     """Execute the rule action."""
     action = rule.action_type.value
     config = rule.action_config
@@ -389,6 +403,7 @@ def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> Dict[str, An
 
     elif action == "pause_campaign":
         from app.models import CampaignStatus
+
         campaign.status = CampaignStatus.PAUSED
         return {"action": "pause_campaign", "new_status": "paused"}
 
@@ -438,6 +453,7 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
         try:
             # Use market intelligence service
             import asyncio
+
             from app.services.market_proxy import MarketIntelligenceService
 
             service = MarketIntelligenceService()
@@ -446,9 +462,7 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
-                data = loop.run_until_complete(
-                    service.get_competitor_data(competitor.domain)
-                )
+                data = loop.run_until_complete(service.get_competitor_data(competitor.domain))
             finally:
                 loop.close()
 
@@ -465,7 +479,7 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
             competitor.estimated_ad_spend_cents = data.estimated_ad_spend_cents
             competitor.detected_ad_platforms = data.detected_ad_platforms
             competitor.data_source = data.data_source
-            competitor.last_fetched_at = datetime.now(timezone.utc)
+            competitor.last_fetched_at = datetime.now(UTC)
             competitor.fetch_error = data.error
 
             # Store historical snapshot
@@ -473,7 +487,7 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
                 competitor.metrics_history = []
 
             snapshot = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "traffic": data.estimated_traffic,
                 "keywords": data.organic_keywords_count,
             }
@@ -488,7 +502,7 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
 
         except Exception as e:
             competitor.fetch_error = str(e)
-            competitor.last_fetched_at = datetime.now(timezone.utc)
+            competitor.last_fetched_at = datetime.now(UTC)
             db.commit()
             raise
 
@@ -502,9 +516,7 @@ def refresh_all_competitors():
     logger.info("Starting refresh of all competitor data")
 
     with SyncSessionLocal() as db:
-        competitors = db.execute(
-            select(CompetitorBenchmark)
-        ).scalars().all()
+        competitors = db.execute(select(CompetitorBenchmark)).scalars().all()
 
         task_count = 0
         for comp in competitors:
@@ -519,7 +531,7 @@ def refresh_all_competitors():
 # ML Tasks
 # =============================================================================
 @shared_task
-def generate_forecast(tenant_id: int, campaign_ids: List[int] = None):
+def generate_forecast(tenant_id: int, campaign_ids: list[int] = None):
     """
     Generate ML forecasts for campaigns.
     """
@@ -539,9 +551,7 @@ def generate_daily_forecasts():
     logger.info("Generating daily forecasts for all tenants")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(
-            select(Tenant).where(Tenant.is_deleted == False)
-        ).scalars().all()
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         for tenant in tenants:
             generate_forecast.delay(tenant.id)
@@ -561,9 +571,11 @@ def calculate_all_fatigue_scores():
     logger.info("Calculating fatigue scores for all assets")
 
     with SyncSessionLocal() as db:
-        assets = db.execute(
-            select(CreativeAsset).where(CreativeAsset.is_deleted == False)
-        ).scalars().all()
+        assets = (
+            db.execute(select(CreativeAsset).where(CreativeAsset.is_deleted == False))
+            .scalars()
+            .all()
+        )
 
         for asset in assets:
             # Simple fatigue calculation
@@ -573,7 +585,7 @@ def calculate_all_fatigue_scores():
                 base_score += min(30, asset.times_used * 3)
 
             if asset.first_used_at:
-                days_active = (datetime.now(timezone.utc) - asset.first_used_at).days
+                days_active = (datetime.now(UTC) - asset.first_used_at).days
                 base_score += min(30, days_active * 0.5)
 
             if asset.impressions > 100000:
@@ -647,7 +659,7 @@ def process_audit_log_queue():
 # =============================================================================
 # Helper Functions
 # =============================================================================
-def _publish_event(tenant_id: int, event_type: str, payload: Dict[str, Any]):
+def _publish_event(tenant_id: int, event_type: str, payload: dict[str, Any]):
     """Publish a real-time event via Redis pub/sub."""
     try:
         import redis
@@ -655,12 +667,14 @@ def _publish_event(tenant_id: int, event_type: str, payload: Dict[str, Any]):
         client = redis.from_url(settings.redis_url)
         channel = f"events:tenant:{tenant_id}"
 
-        message = json.dumps({
-            "event_type": event_type,
-            "payload": payload,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "tenant_id": tenant_id,
-        })
+        message = json.dumps(
+            {
+                "event_type": event_type,
+                "payload": payload,
+                "timestamp": datetime.now(UTC).isoformat(),
+                "tenant_id": tenant_id,
+            }
+        )
 
         client.publish(channel, message)
         client.close()
@@ -686,7 +700,7 @@ def send_whatsapp_message(
     contact_phone: str,
     message_type: str,
     template_name: Optional[str] = None,
-    template_variables: Optional[Dict] = None,
+    template_variables: Optional[dict] = None,
     content: Optional[str] = None,
     media_url: Optional[str] = None,
 ):
@@ -697,6 +711,7 @@ def send_whatsapp_message(
     the actual sending asynchronously.
     """
     import asyncio
+
     from app.models import WhatsAppMessage, WhatsAppMessageStatus
 
     logger.info(f"Sending WhatsApp message {message_id} to {contact_phone}")
@@ -716,7 +731,7 @@ def send_whatsapp_message(
 
         try:
             # Import WhatsApp client
-            from app.services.whatsapp_client import WhatsAppClient, WhatsAppAPIError
+            from app.services.whatsapp_client import WhatsAppAPIError, WhatsAppClient
 
             client = WhatsAppClient()
 
@@ -734,10 +749,7 @@ def send_whatsapp_message(
                             for v in template_variables.get("body", [])
                         ]
                         if body_params:
-                            components.append({
-                                "type": "body",
-                                "parameters": body_params
-                            })
+                            components.append({"type": "body", "parameters": body_params})
 
                     response = loop.run_until_complete(
                         client.send_template_message(
@@ -775,14 +787,16 @@ def send_whatsapp_message(
             wamid = response.get("messages", [{}])[0].get("id")
             message.wamid = wamid
             message.status = WhatsAppMessageStatus.SENT
-            message.sent_at = datetime.now(timezone.utc)
+            message.sent_at = datetime.now(UTC)
 
             # Update status history
             status_history = message.status_history or []
-            status_history.append({
-                "status": "sent",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            status_history.append(
+                {
+                    "status": "sent",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
             message.status_history = status_history
 
             db.commit()
@@ -790,10 +804,14 @@ def send_whatsapp_message(
             logger.info(f"Message {message_id} sent successfully, wamid: {wamid}")
 
             # Publish real-time event
-            _publish_event(tenant_id, "message_sent", {
-                "message_id": message_id,
-                "wamid": wamid,
-            })
+            _publish_event(
+                tenant_id,
+                "message_sent",
+                {
+                    "message_id": message_id,
+                    "wamid": wamid,
+                },
+            )
 
             return {"status": "sent", "wamid": wamid}
 
@@ -803,11 +821,13 @@ def send_whatsapp_message(
             message.error_message = e.message
 
             status_history = message.status_history or []
-            status_history.append({
-                "status": "failed",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "error": e.message,
-            })
+            status_history.append(
+                {
+                    "status": "failed",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "error": e.message,
+                }
+            )
             message.status_history = status_history
 
             db.commit()
@@ -830,20 +850,24 @@ def process_scheduled_whatsapp_messages():
     Process WhatsApp messages that are scheduled to be sent.
     Scheduled every minute by Celery beat.
     """
-    from app.models import WhatsAppMessage, WhatsAppMessageStatus, WhatsAppContact
+    from app.models import WhatsAppContact, WhatsAppMessage, WhatsAppMessageStatus
 
     logger.info("Processing scheduled WhatsApp messages")
 
     with SyncSessionLocal() as db:
         # Get messages scheduled for now or earlier
-        now = datetime.now(timezone.utc)
-        messages = db.execute(
-            select(WhatsAppMessage).where(
-                WhatsAppMessage.status == WhatsAppMessageStatus.PENDING,
-                WhatsAppMessage.scheduled_at <= now,
-                WhatsAppMessage.scheduled_at.isnot(None),
+        now = datetime.now(UTC)
+        messages = (
+            db.execute(
+                select(WhatsAppMessage).where(
+                    WhatsAppMessage.status == WhatsAppMessageStatus.PENDING,
+                    WhatsAppMessage.scheduled_at <= now,
+                    WhatsAppMessage.scheduled_at.isnot(None),
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         task_count = 0
         for msg in messages:
@@ -890,12 +914,16 @@ def run_live_predictions(self, tenant_id: int):
 
     with SyncSessionLocal() as db:
         # Get all active campaigns
-        campaigns = db.execute(
-            select(Campaign).where(
-                Campaign.tenant_id == tenant_id,
-                Campaign.is_deleted == False,
+        campaigns = (
+            db.execute(
+                select(Campaign).where(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         if not campaigns:
             logger.info(f"No campaigns found for tenant {tenant_id}")
@@ -904,31 +932,32 @@ def run_live_predictions(self, tenant_id: int):
         # Convert to dict format
         campaign_data = []
         for c in campaigns:
-            campaign_data.append({
-                "id": c.id,
-                "name": c.name,
-                "platform": c.platform.value if c.platform else "meta",
-                "spend": c.total_spend_cents / 100 if c.total_spend_cents else 0,
-                "revenue": c.revenue_cents / 100 if c.revenue_cents else 0,
-                "roas": c.roas or 0,
-                "impressions": c.impressions or 0,
-                "clicks": c.clicks or 0,
-                "conversions": c.conversions or 0,
-                "ctr": c.ctr or 0,
-                "daily_budget": c.daily_budget_cents / 100 if c.daily_budget_cents else 0,
-                "status": c.status.value if c.status else "unknown",
-            })
+            campaign_data.append(
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "platform": c.platform.value if c.platform else "meta",
+                    "spend": c.total_spend_cents / 100 if c.total_spend_cents else 0,
+                    "revenue": c.revenue_cents / 100 if c.revenue_cents else 0,
+                    "roas": c.roas or 0,
+                    "impressions": c.impressions or 0,
+                    "clicks": c.clicks or 0,
+                    "conversions": c.conversions or 0,
+                    "ctr": c.ctr or 0,
+                    "daily_budget": c.daily_budget_cents / 100 if c.daily_budget_cents else 0,
+                    "status": c.status.value if c.status else "unknown",
+                }
+            )
 
         # Run ROAS optimization analysis
         import asyncio
+
         optimizer = ROASOptimizer()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
         try:
-            analysis = loop.run_until_complete(
-                optimizer.analyze_portfolio(campaign_data)
-            )
+            analysis = loop.run_until_complete(optimizer.analyze_portfolio(campaign_data))
         finally:
             loop.close()
 
@@ -955,7 +984,9 @@ def run_live_predictions(self, tenant_id: int):
                     "recommendations": camp_analysis.get("recommendations"),
                     "optimal_budget": camp_analysis.get("optimal_budget"),
                 },
-                confidence_score=_calculate_task_confidence([camp_analysis.get("current_metrics", {})], "campaign"),
+                confidence_score=_calculate_task_confidence(
+                    [camp_analysis.get("current_metrics", {})], "campaign"
+                ),
                 model_version="roas_optimizer_v1.0",
             )
             db.add(camp_prediction)
@@ -963,13 +994,19 @@ def run_live_predictions(self, tenant_id: int):
         db.commit()
 
         # Publish event for real-time updates
-        _publish_event(tenant_id, "predictions_updated", {
-            "campaign_count": len(campaigns),
-            "portfolio_roas": analysis.get("portfolio_metrics", {}).get("portfolio_roas"),
-            "potential_uplift": analysis.get("potential_uplift", {}).get("uplift_percent"),
-        })
+        _publish_event(
+            tenant_id,
+            "predictions_updated",
+            {
+                "campaign_count": len(campaigns),
+                "portfolio_roas": analysis.get("portfolio_metrics", {}).get("portfolio_roas"),
+                "potential_uplift": analysis.get("potential_uplift", {}).get("uplift_percent"),
+            },
+        )
 
-        logger.info(f"Live predictions completed for tenant {tenant_id}: {len(campaigns)} campaigns analyzed")
+        logger.info(
+            f"Live predictions completed for tenant {tenant_id}: {len(campaigns)} campaigns analyzed"
+        )
 
         return {
             "status": "completed",
@@ -988,9 +1025,7 @@ def run_all_tenant_predictions():
 
     with SyncSessionLocal() as db:
         # Get all active tenants
-        tenants = db.execute(
-            select(Tenant).where(Tenant.is_active == True)
-        ).scalars().all()
+        tenants = db.execute(select(Tenant).where(Tenant.is_active == True)).scalars().all()
 
         task_count = 0
         for tenant in tenants:
@@ -1018,47 +1053,57 @@ def generate_roas_alerts(self, tenant_id: int):
 
     with SyncSessionLocal() as db:
         # Get campaigns
-        campaigns = db.execute(
-            select(Campaign).where(
-                Campaign.tenant_id == tenant_id,
-                Campaign.is_deleted == False,
+        campaigns = (
+            db.execute(
+                select(Campaign).where(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         alerts = []
         for campaign in campaigns:
             # Check for ROAS below threshold
             if campaign.roas and campaign.roas < 1.0:
-                alerts.append({
-                    "campaign_id": campaign.id,
-                    "campaign_name": campaign.name,
-                    "type": "low_roas",
-                    "severity": "critical" if campaign.roas < 0.5 else "high",
-                    "message": f"ROAS is {campaign.roas:.2f}x - below break-even",
-                    "recommendation": "Consider pausing or reducing budget",
-                })
+                alerts.append(
+                    {
+                        "campaign_id": campaign.id,
+                        "campaign_name": campaign.name,
+                        "type": "low_roas",
+                        "severity": "critical" if campaign.roas < 0.5 else "high",
+                        "message": f"ROAS is {campaign.roas:.2f}x - below break-even",
+                        "recommendation": "Consider pausing or reducing budget",
+                    }
+                )
 
             # Check for high ROAS - scaling opportunity
             if campaign.roas and campaign.roas > 3.0:
-                alerts.append({
-                    "campaign_id": campaign.id,
-                    "campaign_name": campaign.name,
-                    "type": "scaling_opportunity",
-                    "severity": "info",
-                    "message": f"ROAS is {campaign.roas:.2f}x - excellent performance",
-                    "recommendation": "Consider increasing budget by 20-30%",
-                })
+                alerts.append(
+                    {
+                        "campaign_id": campaign.id,
+                        "campaign_name": campaign.name,
+                        "type": "scaling_opportunity",
+                        "severity": "info",
+                        "message": f"ROAS is {campaign.roas:.2f}x - excellent performance",
+                        "recommendation": "Consider increasing budget by 20-30%",
+                    }
+                )
 
             # Check for low CTR
             if campaign.ctr and campaign.ctr < 0.5:
-                alerts.append({
-                    "campaign_id": campaign.id,
-                    "campaign_name": campaign.name,
-                    "type": "low_ctr",
-                    "severity": "medium",
-                    "message": f"CTR is {campaign.ctr:.2f}% - below average",
-                    "recommendation": "Review ad creative and targeting",
-                })
+                alerts.append(
+                    {
+                        "campaign_id": campaign.id,
+                        "campaign_name": campaign.name,
+                        "type": "low_ctr",
+                        "severity": "medium",
+                        "message": f"CTR is {campaign.ctr:.2f}% - below average",
+                        "recommendation": "Review ad creative and targeting",
+                    }
+                )
 
         # Store alerts
         if alerts:
@@ -1067,17 +1112,23 @@ def generate_roas_alerts(self, tenant_id: int):
                 prediction_type="roas_alerts",
                 input_data={"campaign_count": len(campaigns)},
                 prediction_result={"alerts": alerts, "alert_count": len(alerts)},
-                confidence_score=_calculate_task_confidence([{"roas": c.roas, "spend": c.total_spend_cents} for c in campaigns], "alerts"),
+                confidence_score=_calculate_task_confidence(
+                    [{"roas": c.roas, "spend": c.total_spend_cents} for c in campaigns], "alerts"
+                ),
                 model_version="alert_engine_v1.0",
             )
             db.add(alert_record)
             db.commit()
 
             # Publish alert event
-            _publish_event(tenant_id, "roas_alerts_generated", {
-                "alert_count": len(alerts),
-                "critical_count": len([a for a in alerts if a["severity"] == "critical"]),
-            })
+            _publish_event(
+                tenant_id,
+                "roas_alerts_generated",
+                {
+                    "alert_count": len(alerts),
+                    "critical_count": len([a for a in alerts if a["severity"] == "critical"]),
+                },
+            )
 
         logger.info(f"Generated {len(alerts)} ROAS alerts for tenant {tenant_id}")
 
@@ -1098,23 +1149,24 @@ def calculate_cost_allocation():
     logger.info("Calculating daily cost allocation for all tenants")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(
-            select(Tenant).where(Tenant.is_deleted == False)
-        ).scalars().all()
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         records_created = 0
 
         for tenant in tenants:
             # Calculate estimated costs based on usage
 
             # Get campaign count for compute estimation
-            campaign_count = db.execute(
-                select(func.count(Campaign.id)).where(
-                    Campaign.tenant_id == tenant.id,
-                    Campaign.is_deleted == False,
-                )
-            ).scalar() or 0
+            campaign_count = (
+                db.execute(
+                    select(func.count(Campaign.id)).where(
+                        Campaign.tenant_id == tenant.id,
+                        Campaign.is_deleted == False,
+                    )
+                ).scalar()
+                or 0
+            )
 
             # Estimate warehouse storage (based on data volume)
             storage_gb = (campaign_count * 0.05) + 0.1  # Base + per-campaign
@@ -1149,10 +1201,13 @@ def calculate_cost_allocation():
                 tenant_mrr = 999.0
 
             # Calculate margin
-            gross_margin = ((tenant_mrr / 30) - total_cost) / (tenant_mrr / 30) * 100 if tenant_mrr > 0 else 0
+            gross_margin = (
+                ((tenant_mrr / 30) - total_cost) / (tenant_mrr / 30) * 100 if tenant_mrr > 0 else 0
+            )
 
             # Insert cost allocation record
             from sqlalchemy import text
+
             db.execute(
                 text("""
                     INSERT INTO fact_cost_allocation_daily
@@ -1215,22 +1270,23 @@ def calculate_usage_rollup():
     with SyncSessionLocal() as db:
         from app.models import User
 
-        tenants = db.execute(
-            select(Tenant).where(Tenant.is_deleted == False)
-        ).scalars().all()
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         records_created = 0
 
         for tenant in tenants:
             # Get user count (proxy for DAU in this example)
-            user_count = db.execute(
-                select(func.count(User.id)).where(
-                    User.tenant_id == tenant.id,
-                    User.is_deleted == False,
-                    User.is_active == True,
-                )
-            ).scalar() or 0
+            user_count = (
+                db.execute(
+                    select(func.count(User.id)).where(
+                        User.tenant_id == tenant.id,
+                        User.is_deleted == False,
+                        User.is_active == True,
+                    )
+                ).scalar()
+                or 0
+            )
 
             # Calculate mock usage metrics
             # In production, these would come from actual event tracking
@@ -1246,6 +1302,7 @@ def calculate_usage_rollup():
 
             # Insert usage record
             from sqlalchemy import text
+
             db.execute(
                 text("""
                     INSERT INTO feature_usage
@@ -1295,9 +1352,7 @@ def check_pipeline_health():
     logger.info("Running pipeline health check")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(
-            select(Tenant).where(Tenant.is_deleted == False)
-        ).scalars().all()
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         alerts_generated = 0
         issues_found = []
@@ -1306,12 +1361,16 @@ def check_pipeline_health():
             tenant_issues = []
 
             # Check campaign sync freshness
-            campaigns = db.execute(
-                select(Campaign).where(
-                    Campaign.tenant_id == tenant.id,
-                    Campaign.is_deleted == False,
+            campaigns = (
+                db.execute(
+                    select(Campaign).where(
+                        Campaign.tenant_id == tenant.id,
+                        Campaign.is_deleted == False,
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
 
             stale_campaigns = 0
             sync_errors = 0
@@ -1320,7 +1379,7 @@ def check_pipeline_health():
                 # Check if data is stale (last synced > 6 hours ago)
                 if campaign.last_synced_at:
                     hours_since_sync = (
-                        datetime.now(timezone.utc) - campaign.last_synced_at
+                        datetime.now(UTC) - campaign.last_synced_at
                     ).total_seconds() / 3600
                     if hours_since_sync > 6:
                         stale_campaigns += 1
@@ -1331,43 +1390,53 @@ def check_pipeline_health():
 
             # Generate alerts for stale data
             if stale_campaigns > 0:
-                tenant_issues.append({
-                    "type": "stale_data",
-                    "severity": "high" if stale_campaigns > 5 else "medium",
-                    "message": f"{stale_campaigns} campaigns have stale data (>6 hours)",
-                    "count": stale_campaigns,
-                })
+                tenant_issues.append(
+                    {
+                        "type": "stale_data",
+                        "severity": "high" if stale_campaigns > 5 else "medium",
+                        "message": f"{stale_campaigns} campaigns have stale data (>6 hours)",
+                        "count": stale_campaigns,
+                    }
+                )
                 alerts_generated += 1
 
             # Generate alerts for sync errors
             if sync_errors > 0:
-                tenant_issues.append({
-                    "type": "sync_error",
-                    "severity": "critical" if sync_errors > 3 else "high",
-                    "message": f"{sync_errors} campaigns have sync errors",
-                    "count": sync_errors,
-                })
+                tenant_issues.append(
+                    {
+                        "type": "sync_error",
+                        "severity": "critical" if sync_errors > 3 else "high",
+                        "message": f"{sync_errors} campaigns have sync errors",
+                        "count": sync_errors,
+                    }
+                )
                 alerts_generated += 1
 
             # Check API rate limits (placeholder - would check platform_rate_limits table)
             # ...
 
             if tenant_issues:
-                issues_found.append({
-                    "tenant_id": tenant.id,
-                    "tenant_name": tenant.name,
-                    "issues": tenant_issues,
-                })
+                issues_found.append(
+                    {
+                        "tenant_id": tenant.id,
+                        "tenant_name": tenant.name,
+                        "issues": tenant_issues,
+                    }
+                )
 
                 # Publish alert event
-                _publish_event(tenant.id, "pipeline_health_alert", {
-                    "issues": tenant_issues,
-                    "severity": max(i["severity"] for i in tenant_issues),
-                })
+                _publish_event(
+                    tenant.id,
+                    "pipeline_health_alert",
+                    {
+                        "issues": tenant_issues,
+                        "severity": max(i["severity"] for i in tenant_issues),
+                    },
+                )
 
     logger.info(f"Pipeline health check complete. {alerts_generated} alerts generated.")
     return {
-        "tenants_checked": len(tenants) if 'tenants' in dir() else 0,
+        "tenants_checked": len(tenants) if "tenants" in dir() else 0,
         "alerts_generated": alerts_generated,
         "issues": issues_found,
     }
@@ -1384,27 +1453,29 @@ def calculate_daily_scores():
 
     Scheduled daily at 4 AM UTC.
     """
-    from app.analytics.logic.types import EntityMetrics, BaselineMetrics, EntityLevel, Platform
     from app.analytics.logic.scoring import scaling_score
+    from app.analytics.logic.types import BaselineMetrics, EntityLevel, EntityMetrics, Platform
 
     logger.info("Running daily scoring calculations")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(
-            select(Tenant).where(Tenant.is_deleted == False)
-        ).scalars().all()
+        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
 
         total_scored = 0
         scale_candidates = 0
         fix_candidates = 0
 
         for tenant in tenants:
-            campaigns = db.execute(
-                select(Campaign).where(
-                    Campaign.tenant_id == tenant.id,
-                    Campaign.is_deleted == False,
+            campaigns = (
+                db.execute(
+                    select(Campaign).where(
+                        Campaign.tenant_id == tenant.id,
+                        Campaign.is_deleted == False,
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
 
             for campaign in campaigns:
                 spend = campaign.total_spend_cents / 100 if campaign.total_spend_cents else 0
@@ -1419,7 +1490,7 @@ def calculate_daily_scores():
                     entity_name=campaign.name,
                     entity_level=EntityLevel.CAMPAIGN,
                     platform=Platform(campaign.platform.value if campaign.platform else "meta"),
-                    date=datetime.now(timezone.utc),
+                    date=datetime.now(UTC),
                     spend=spend,
                     impressions=campaign.impressions or 0,
                     clicks=campaign.clicks or 0,
@@ -1469,10 +1540,10 @@ def calculate_daily_scores():
 # Additional helper for missing function
 from sqlalchemy import func
 
-
 # =============================================================================
 # CDP (Customer Data Platform) Tasks
 # =============================================================================
+
 
 @shared_task(
     bind=True,
@@ -1489,7 +1560,8 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
     Idempotent: Safe to retry without side effects.
     """
     from uuid import UUID
-    from app.models.cdp import CDPSegment, CDPProfile, CDPSegmentMembership, SegmentStatus
+
+    from app.models.cdp import CDPProfile, CDPSegment, CDPSegmentMembership, SegmentStatus
 
     logger.info(f"Computing CDP segment {segment_id} for tenant {tenant_id}")
 
@@ -1510,25 +1582,24 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
             segment.status = SegmentStatus.COMPUTING
             db.commit()
 
-            start_time = datetime.now(timezone.utc)
+            start_time = datetime.now(UTC)
 
             # Clear existing memberships for fresh computation
             db.execute(
-                select(CDPSegmentMembership).where(
-                    CDPSegmentMembership.segment_id == segment.id
-                )
+                select(CDPSegmentMembership).where(CDPSegmentMembership.segment_id == segment.id)
             )
             from sqlalchemy import delete
+
             db.execute(
-                delete(CDPSegmentMembership).where(
-                    CDPSegmentMembership.segment_id == segment.id
-                )
+                delete(CDPSegmentMembership).where(CDPSegmentMembership.segment_id == segment.id)
             )
 
             # Get all profiles for this tenant
-            profiles = db.execute(
-                select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
-            ).scalars().all()
+            profiles = (
+                db.execute(select(CDPProfile).where(CDPProfile.tenant_id == tenant_id))
+                .scalars()
+                .all()
+            )
 
             # Evaluate each profile against segment rules
             matched_count = 0
@@ -1548,7 +1619,7 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
                     matched_count += 1
 
             # Update segment stats
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(UTC)
             duration_ms = int((end_time - start_time).total_seconds() * 1000)
 
             segment.profile_count = matched_count
@@ -1563,14 +1634,20 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
             db.commit()
 
             # Publish event
-            _publish_event(tenant_id, "segment_computed", {
-                "segment_id": segment_id,
-                "segment_name": segment.name,
-                "profile_count": matched_count,
-                "duration_ms": duration_ms,
-            })
+            _publish_event(
+                tenant_id,
+                "segment_computed",
+                {
+                    "segment_id": segment_id,
+                    "segment_name": segment.name,
+                    "profile_count": matched_count,
+                    "duration_ms": duration_ms,
+                },
+            )
 
-            logger.info(f"Segment {segment_id} computed: {matched_count} profiles matched in {duration_ms}ms")
+            logger.info(
+                f"Segment {segment_id} computed: {matched_count} profiles matched in {duration_ms}ms"
+            )
             return {
                 "status": "success",
                 "segment_id": segment_id,
@@ -1585,7 +1662,7 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
             raise
 
 
-def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
+def _evaluate_segment_rules(profile, rules: dict[str, Any]) -> dict[str, Any]:
     """Evaluate a profile against segment rules."""
     try:
         logic = rules.get("logic", "and")
@@ -1616,7 +1693,11 @@ def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
             matched = any(condition_results)
 
         # Calculate match score (percentage of conditions met)
-        score = sum(1 for r in condition_results if r) / len(condition_results) if condition_results else 0.0
+        score = (
+            sum(1 for r in condition_results if r) / len(condition_results)
+            if condition_results
+            else 0.0
+        )
 
         return {"matched": matched, "score": score}
 
@@ -1625,7 +1706,7 @@ def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
         return {"matched": False, "score": 0.0}
 
 
-def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
+def _evaluate_condition_single(profile, condition: dict[str, Any]) -> bool:
     """Evaluate a single condition against a profile."""
     field = condition.get("field", "")
     operator = condition.get("operator", "equals")
@@ -1672,20 +1753,18 @@ def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
             return field_value not in (value if isinstance(value, list) else [value])
         elif operator == "is_null":
             return field_value is None
-        elif operator == "is_not_null":
-            return field_value is not None
-        elif operator == "exists":
+        elif operator == "is_not_null" or operator == "exists":
             return field_value is not None
         elif operator == "not_exists":
             return field_value is None
         elif operator == "within_last":
             # value is number of days
             if isinstance(field_value, datetime):
-                return field_value >= datetime.now(timezone.utc) - timedelta(days=int(value))
+                return field_value >= datetime.now(UTC) - timedelta(days=int(value))
             return False
         elif operator == "not_within_last":
             if isinstance(field_value, datetime):
-                return field_value < datetime.now(timezone.utc) - timedelta(days=int(value))
+                return field_value < datetime.now(UTC) - timedelta(days=int(value))
             return False
         elif operator == "between":
             if isinstance(value, list) and len(value) == 2:
@@ -1711,7 +1790,7 @@ def compute_all_cdp_segments(tenant_id: int = None):
     logger.info("Computing all CDP segments" + (f" for tenant {tenant_id}" if tenant_id else ""))
 
     with SyncSessionLocal() as db:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Build query for segments needing refresh
         query = select(CDPSegment).where(
@@ -1743,15 +1822,16 @@ def compute_all_cdp_segments(tenant_id: int = None):
     retry_backoff_max=300,
     max_retries=3,
 )
-def compute_cdp_rfm(self, tenant_id: int, config: Optional[Dict] = None):
+def compute_cdp_rfm(self, tenant_id: int, config: Optional[dict] = None):
     """
     Compute RFM scores for all profiles of a tenant.
 
     Uses purchase events to calculate Recency, Frequency, and Monetary values.
     Assigns RFM segment based on score thresholds.
     """
-    from app.models.cdp import CDPProfile, CDPEvent
     from decimal import Decimal
+
+    from app.models.cdp import CDPEvent, CDPProfile
 
     logger.info(f"Computing RFM scores for tenant {tenant_id}")
 
@@ -1761,26 +1841,30 @@ def compute_cdp_rfm(self, tenant_id: int, config: Optional[Dict] = None):
     analysis_window_days = config.get("analysis_window_days", 365)
 
     with SyncSessionLocal() as db:
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
         window_start = start_time - timedelta(days=analysis_window_days)
 
         # Get all profiles for this tenant
-        profiles = db.execute(
-            select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
-        ).scalars().all()
+        profiles = (
+            db.execute(select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)).scalars().all()
+        )
 
         segment_counts = {}
         profiles_processed = 0
 
         for profile in profiles:
             # Get purchase events for this profile
-            purchase_events = db.execute(
-                select(CDPEvent).where(
-                    CDPEvent.profile_id == profile.id,
-                    CDPEvent.event_name == purchase_event,
-                    CDPEvent.event_time >= window_start,
+            purchase_events = (
+                db.execute(
+                    select(CDPEvent).where(
+                        CDPEvent.profile_id == profile.id,
+                        CDPEvent.event_name == purchase_event,
+                        CDPEvent.event_time >= window_start,
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
 
             if not purchase_events:
                 # No purchases - skip or assign 'lost'/'hibernating'
@@ -1843,14 +1927,18 @@ def compute_cdp_rfm(self, tenant_id: int, config: Optional[Dict] = None):
 
         db.commit()
 
-        duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+        duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
         # Publish event
-        _publish_event(tenant_id, "rfm_computed", {
-            "profiles_processed": profiles_processed,
-            "segment_distribution": segment_counts,
-            "duration_ms": duration_ms,
-        })
+        _publish_event(
+            tenant_id,
+            "rfm_computed",
+            {
+                "profiles_processed": profiles_processed,
+                "segment_distribution": segment_counts,
+                "duration_ms": duration_ms,
+            },
+        )
 
         logger.info(f"RFM computed for {profiles_processed} profiles in {duration_ms}ms")
         return {
@@ -1861,7 +1949,7 @@ def compute_cdp_rfm(self, tenant_id: int, config: Optional[Dict] = None):
         }
 
 
-def _calculate_rfm_score(value: float, thresholds: List[float], reverse: bool = False) -> int:
+def _calculate_rfm_score(value: float, thresholds: list[float], reverse: bool = False) -> int:
     """Calculate RFM score (1-5) based on value and thresholds."""
     score = 1
     for i, threshold in enumerate(thresholds, start=2):
@@ -1928,12 +2016,16 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
     Otherwise, compute all active traits.
     """
     from uuid import UUID
-    from app.models.cdp import CDPProfile, CDPComputedTrait
 
-    logger.info(f"Computing CDP traits for tenant {tenant_id}" + (f" (trait: {trait_id})" if trait_id else ""))
+    from app.models.cdp import CDPComputedTrait, CDPProfile
+
+    logger.info(
+        f"Computing CDP traits for tenant {tenant_id}"
+        + (f" (trait: {trait_id})" if trait_id else "")
+    )
 
     with SyncSessionLocal() as db:
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
 
         # Get traits to compute
         trait_query = select(CDPComputedTrait).where(
@@ -1949,9 +2041,9 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
             return {"status": "no_traits", "computed": 0}
 
         # Get all profiles
-        profiles = db.execute(
-            select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
-        ).scalars().all()
+        profiles = (
+            db.execute(select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)).scalars().all()
+        )
 
         profiles_updated = 0
         errors = 0
@@ -1964,7 +2056,9 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
                     value = _compute_trait_value(db, profile, trait)
                     computed[trait.name] = value
                 except Exception as e:
-                    logger.warning(f"Error computing trait {trait.name} for profile {profile.id}: {e}")
+                    logger.warning(
+                        f"Error computing trait {trait.name} for profile {profile.id}: {e}"
+                    )
                     errors += 1
 
             profile.computed_traits = computed
@@ -1972,11 +2066,11 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
 
         # Update trait metadata
         for trait in traits:
-            trait.last_computed_at = datetime.now(timezone.utc)
+            trait.last_computed_at = datetime.now(UTC)
 
         db.commit()
 
-        duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+        duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
         logger.info(f"Traits computed for {profiles_updated} profiles in {duration_ms}ms")
         return {
@@ -2004,7 +2098,7 @@ def _compute_trait_value(db, profile, trait) -> Any:
         query = query.where(CDPEvent.event_name == event_name)
 
     if time_window_days:
-        window_start = datetime.now(timezone.utc) - timedelta(days=time_window_days)
+        window_start = datetime.now(UTC) - timedelta(days=time_window_days)
         query = query.where(CDPEvent.event_time >= window_start)
 
     events = db.execute(query).scalars().all()
@@ -2068,7 +2162,8 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
     Evaluates all profiles through funnel steps and updates conversion metrics.
     """
     from uuid import UUID
-    from app.models.cdp import CDPFunnel, CDPFunnelEntry, CDPProfile, CDPEvent, FunnelStatus
+
+    from app.models.cdp import CDPEvent, CDPFunnel, CDPFunnelEntry, CDPProfile, FunnelStatus
 
     logger.info(f"Computing CDP funnel {funnel_id} for tenant {tenant_id}")
 
@@ -2089,7 +2184,7 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
             funnel.status = FunnelStatus.COMPUTING
             db.commit()
 
-            start_time = datetime.now(timezone.utc)
+            start_time = datetime.now(UTC)
             steps = funnel.steps or []
 
             if len(steps) < 2:
@@ -2099,18 +2194,21 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
 
             # Clear existing entries
             from sqlalchemy import delete
-            db.execute(
-                delete(CDPFunnelEntry).where(CDPFunnelEntry.funnel_id == funnel.id)
-            )
+
+            db.execute(delete(CDPFunnelEntry).where(CDPFunnelEntry.funnel_id == funnel.id))
 
             # Get conversion window
             conversion_window = timedelta(days=funnel.conversion_window_days)
-            step_timeout = timedelta(hours=funnel.step_timeout_hours) if funnel.step_timeout_hours else None
+            step_timeout = (
+                timedelta(hours=funnel.step_timeout_hours) if funnel.step_timeout_hours else None
+            )
 
             # Get all profiles
-            profiles = db.execute(
-                select(CDPProfile).where(CDPProfile.tenant_id == tenant_id)
-            ).scalars().all()
+            profiles = (
+                db.execute(select(CDPProfile).where(CDPProfile.tenant_id == tenant_id))
+                .scalars()
+                .all()
+            )
 
             total_entered = 0
             total_converted = 0
@@ -2119,16 +2217,23 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
 
             for profile in profiles:
                 # Get all events for this profile
-                events = db.execute(
-                    select(CDPEvent).where(CDPEvent.profile_id == profile.id)
-                    .order_by(CDPEvent.event_time)
-                ).scalars().all()
+                events = (
+                    db.execute(
+                        select(CDPEvent)
+                        .where(CDPEvent.profile_id == profile.id)
+                        .order_by(CDPEvent.event_time)
+                    )
+                    .scalars()
+                    .all()
+                )
 
                 if not events:
                     continue
 
                 # Track progress through funnel
-                entry_result = _track_funnel_progress(events, steps, conversion_window, step_timeout)
+                entry_result = _track_funnel_progress(
+                    events, steps, conversion_window, step_timeout
+                )
 
                 if entry_result["entered"]:
                     total_entered += 1
@@ -2166,42 +2271,54 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
                 drop_off = prev_count - count if i > 0 else 0
                 drop_off_rate = (drop_off / prev_count * 100) if prev_count > 0 else 0
 
-                step_metrics.append({
-                    "step": i + 1,
-                    "name": step.get("step_name", f"Step {i + 1}"),
-                    "event_name": step.get("event_name", ""),
-                    "count": count,
-                    "conversion_rate": round(conversion_rate, 2),
-                    "drop_off_rate": round(drop_off_rate, 2),
-                    "drop_off_count": drop_off,
-                })
+                step_metrics.append(
+                    {
+                        "step": i + 1,
+                        "name": step.get("step_name", f"Step {i + 1}"),
+                        "event_name": step.get("event_name", ""),
+                        "count": count,
+                        "conversion_rate": round(conversion_rate, 2),
+                        "drop_off_rate": round(drop_off_rate, 2),
+                        "drop_off_count": drop_off,
+                    }
+                )
 
             # Update funnel metrics
-            duration_ms = int((datetime.now(timezone.utc) - start_time).total_seconds() * 1000)
+            duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
             funnel.total_entered = total_entered
             funnel.total_converted = total_converted
-            funnel.overall_conversion_rate = (total_converted / total_entered * 100) if total_entered > 0 else 0
+            funnel.overall_conversion_rate = (
+                (total_converted / total_entered * 100) if total_entered > 0 else 0
+            )
             funnel.step_metrics = step_metrics
             funnel.status = FunnelStatus.ACTIVE
-            funnel.last_computed_at = datetime.now(timezone.utc)
+            funnel.last_computed_at = datetime.now(UTC)
             funnel.computation_duration_ms = duration_ms
 
             if funnel.auto_refresh:
-                funnel.next_refresh_at = datetime.now(timezone.utc) + timedelta(hours=funnel.refresh_interval_hours)
+                funnel.next_refresh_at = datetime.now(UTC) + timedelta(
+                    hours=funnel.refresh_interval_hours
+                )
 
             db.commit()
 
             # Publish event
-            _publish_event(tenant_id, "funnel_computed", {
-                "funnel_id": funnel_id,
-                "funnel_name": funnel.name,
-                "total_entered": total_entered,
-                "total_converted": total_converted,
-                "conversion_rate": funnel.overall_conversion_rate,
-            })
+            _publish_event(
+                tenant_id,
+                "funnel_computed",
+                {
+                    "funnel_id": funnel_id,
+                    "funnel_name": funnel.name,
+                    "total_entered": total_entered,
+                    "total_converted": total_converted,
+                    "conversion_rate": funnel.overall_conversion_rate,
+                },
+            )
 
-            logger.info(f"Funnel {funnel_id} computed: {total_entered} entered, {total_converted} converted")
+            logger.info(
+                f"Funnel {funnel_id} computed: {total_entered} entered, {total_converted} converted"
+            )
             return {
                 "status": "success",
                 "funnel_id": funnel_id,
@@ -2218,7 +2335,7 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
             raise
 
 
-def _track_funnel_progress(events, steps, conversion_window, step_timeout) -> Dict[str, Any]:
+def _track_funnel_progress(events, steps, conversion_window, step_timeout) -> dict[str, Any]:
     """Track a profile's progress through funnel steps."""
     if not events or not steps:
         return {"entered": False}
@@ -2281,6 +2398,7 @@ def _track_funnel_progress(events, steps, conversion_window, step_timeout) -> Di
         last_step_str = str(len(steps))
         if last_step_str in step_timestamps:
             from dateutil.parser import parse
+
             converted_at = parse(step_timestamps[last_step_str])
             total_duration_seconds = int((converted_at - entered_at).total_seconds())
 
@@ -2310,17 +2428,24 @@ def _check_step_conditions(event, conditions) -> bool:
 
         field_value = props.get(field)
 
-        if operator == "equals" and field_value != value:
-            return False
-        elif operator == "not_equals" and field_value == value:
-            return False
-        elif operator == "greater_than" and not (field_value and float(field_value) > float(value)):
-            return False
-        elif operator == "less_than" and not (field_value and float(field_value) < float(value)):
-            return False
-        elif operator == "contains" and not (field_value and str(value) in str(field_value)):
-            return False
-        elif operator == "exists" and field_value is None:
+        if (
+            operator == "equals"
+            and field_value != value
+            or operator == "not_equals"
+            and field_value == value
+            or (
+                operator == "greater_than"
+                and not (field_value and float(field_value) > float(value))
+                or operator == "less_than"
+                and not (field_value and float(field_value) < float(value))
+            )
+            or (
+                operator == "contains"
+                and not (field_value and str(value) in str(field_value))
+                or operator == "exists"
+                and field_value is None
+            )
+        ):
             return False
 
     return True
@@ -2338,7 +2463,7 @@ def compute_all_cdp_funnels(tenant_id: int = None):
     logger.info("Computing all CDP funnels" + (f" for tenant {tenant_id}" if tenant_id else ""))
 
     with SyncSessionLocal() as db:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         query = select(CDPFunnel).where(
             CDPFunnel.auto_refresh == True,
@@ -2364,6 +2489,7 @@ def compute_all_cdp_funnels(tenant_id: int = None):
 # CMS (Content Management System) Tasks - 2026 Workflow
 # =============================================================================
 
+
 @shared_task
 def publish_scheduled_cms_posts():
     """
@@ -2372,22 +2498,25 @@ def publish_scheduled_cms_posts():
     2026 Standard: Automated scheduled publishing with audit trail.
     This task runs every minute via Celery Beat.
     """
-    from uuid import UUID
     from app.models.cms import CMSPost, CMSPostStatus, CMSWorkflowAction, CMSWorkflowLog
 
     logger.info("Processing scheduled CMS posts")
 
     with SyncSessionLocal() as db:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Find all posts that are scheduled and ready to publish
-        posts_to_publish = db.execute(
-            select(CMSPost).where(
-                CMSPost.status == CMSPostStatus.SCHEDULED.value,
-                CMSPost.scheduled_at <= now,
-                CMSPost.is_deleted == False,
+        posts_to_publish = (
+            db.execute(
+                select(CMSPost).where(
+                    CMSPost.status == CMSPostStatus.SCHEDULED.value,
+                    CMSPost.scheduled_at <= now,
+                    CMSPost.is_deleted == False,
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         published_count = 0
         failed_count = 0
@@ -2428,7 +2557,9 @@ def publish_scheduled_cms_posts():
                 failed_count += 1
                 logger.error(f"Failed to publish scheduled CMS post {post.id}: {e}")
 
-        logger.info(f"Scheduled CMS publishing complete: {published_count} published, {failed_count} failed")
+        logger.info(
+            f"Scheduled CMS publishing complete: {published_count} published, {failed_count} failed"
+        )
         return {
             "status": "success",
             "published_count": published_count,
@@ -2453,6 +2584,7 @@ def publish_cms_post(self, post_id: str, published_by_id: int = None):
         published_by_id: User ID who triggered the publish (optional)
     """
     from uuid import UUID
+
     from app.models.cms import CMSPost, CMSPostStatus, CMSWorkflowAction, CMSWorkflowLog
 
     logger.info(f"Publishing CMS post {post_id}")
@@ -2483,7 +2615,7 @@ def publish_cms_post(self, post_id: str, published_by_id: int = None):
             }
 
         try:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             previous_status = post.status
 
             # Update post
@@ -2530,14 +2662,13 @@ def create_cms_post_version(post_id: str, created_by_id: int, change_summary: st
     Called automatically when content is updated.
     """
     from uuid import UUID
+
     from app.models.cms import CMSPost, CMSPostVersion
 
     logger.info(f"Creating version snapshot for CMS post {post_id}")
 
     with SyncSessionLocal() as db:
-        post = db.execute(
-            select(CMSPost).where(CMSPost.id == UUID(post_id))
-        ).scalar_one_or_none()
+        post = db.execute(select(CMSPost).where(CMSPost.id == UUID(post_id))).scalar_one_or_none()
 
         if not post:
             logger.warning(f"CMS post {post_id} not found")

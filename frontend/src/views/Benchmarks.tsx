@@ -1,39 +1,39 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
   PolarAngleAxis,
+  PolarGrid,
   PolarRadiusAxis,
   Radar,
-} from 'recharts'
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import {
-  Trophy,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  Users,
-  Globe,
   Download,
-  RefreshCw,
-  Info,
   ExternalLink,
+  Globe,
+  Info,
   Plus,
-} from 'lucide-react'
-import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
-import { SmartTooltip } from '@/components/guide/SmartTooltip'
-import { useCompetitors } from '@/api/hooks'
+  RefreshCw,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+  Users,
+} from 'lucide-react';
+import { cn, formatCompactNumber, formatCurrency, formatPercent } from '@/lib/utils';
+import { SmartTooltip } from '@/components/guide/SmartTooltip';
+import { useCompetitors } from '@/api/hooks';
 
 // Colors for competitors in charts
-const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899']
+const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899'];
 
 // Mock radar data
 const mockRadarData = [
@@ -43,7 +43,7 @@ const mockRadarData = [
   { metric: 'Conv Rate', you: 82, industry: 60 },
   { metric: 'Reach', you: 65, industry: 80 },
   { metric: 'Engagement', you: 90, industry: 72 },
-]
+];
 
 // Mock market share trend - exported for chart components
 export const mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
@@ -52,7 +52,7 @@ export const mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
   compA: 22 + Math.random() * 4 - i * 0.2,
   compB: 20 + Math.random() * 3,
   compC: 14 + Math.random() * 4 + i * 0.1,
-}))
+}));
 
 // Mock demographic data for heatmap
 const mockDemographics = [
@@ -60,9 +60,9 @@ const mockDemographics = [
   { age: '25-34', male: 3.5, female: 4.2, ctr: 3.85 },
   { age: '35-44', male: 2.8, female: 3.1, ctr: 2.95 },
   { age: '45-54', male: 1.9, female: 2.2, ctr: 2.05 },
-  { age: '55-64', male: 1.4, female: 1.6, ctr: 1.50 },
-  { age: '65+', male: 0.9, female: 1.1, ctr: 1.00 },
-]
+  { age: '55-64', male: 1.4, female: 1.6, ctr: 1.5 },
+  { age: '65+', male: 0.9, female: 1.1, ctr: 1.0 },
+];
 
 // Mock geographic data
 const mockGeoData = [
@@ -71,25 +71,25 @@ const mockGeoData = [
   { region: 'Texas', impressions: 3200000, ctr: 2.5, roas: 3.2, x: 200, y: 280, z: 32 },
   { region: 'Florida', impressions: 2900000, ctr: 2.7, roas: 3.5, x: 340, y: 320, z: 29 },
   { region: 'Illinois', impressions: 2100000, ctr: 2.3, roas: 3.0, x: 250, y: 180, z: 21 },
-]
+];
 
 export function Benchmarks() {
-  const { t } = useTranslation()
-  const [selectedIndustry, setSelectedIndustry] = useState('ecommerce')
-  const [selectedPlatform, setSelectedPlatform] = useState('all')
+  const { t } = useTranslation();
+  const [selectedIndustry, setSelectedIndustry] = useState('ecommerce');
+  const [selectedPlatform, setSelectedPlatform] = useState('all');
 
   // Fetch competitors from API
-  const { data: competitorsData, isLoading: isLoadingCompetitors } = useCompetitors()
+  const { data: competitorsData, isLoading: isLoadingCompetitors } = useCompetitors();
 
   // Generate Meta Ads Library URL
   const getMetaAdsLibraryUrl = (name: string, country: string = 'SA') => {
-    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`
-  }
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`;
+  };
 
   // Generate Google Ads Transparency URL
   const getGoogleTransparencyUrl = (name: string) => {
-    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
-  }
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`;
+  };
 
   // Build competitor data for charts - combine user's competitors with "Your Brand" and "Industry Avg"
   const chartCompetitors = [
@@ -105,11 +105,19 @@ export function Benchmarks() {
       share: 10 + Math.random() * 20,
       color: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length],
     })),
-    { name: 'Industry Avg', roas: 3.0, ctr: 2.4, cpc: 1.3, share: 22, color: '#6b7280', isAvg: true },
-  ]
+    {
+      name: 'Industry Avg',
+      roas: 3.0,
+      ctr: 2.4,
+      cpc: 1.3,
+      share: 22,
+      color: '#6b7280',
+      isAvg: true,
+    },
+  ];
 
   // Check if user has competitors
-  const hasCompetitors = (competitorsData?.items?.length || 0) > 0
+  const hasCompetitors = (competitorsData?.items?.length || 0) > 0;
 
   const benchmarkMetrics = [
     {
@@ -148,13 +156,13 @@ export function Benchmarks() {
       format: 'percent',
       tooltip: t('benchmarks.convRateTooltip'),
     },
-  ]
+  ];
 
   const formatValue = (value: number, format?: string) => {
-    if (format === 'percent') return formatPercent(value)
-    if (format === 'currency') return formatCurrency(value)
-    return value.toFixed(2) + 'x'
-  }
+    if (format === 'percent') return formatPercent(value);
+    if (format === 'currency') return formatCurrency(value);
+    return value.toFixed(2) + 'x';
+  };
 
   return (
     <div className="space-y-6">
@@ -207,15 +215,31 @@ export function Benchmarks() {
         {benchmarkMetrics.map((metric, index) => {
           const isAboveAvg = metric.invertTrend
             ? metric.yours < metric.industry
-            : metric.yours > metric.industry
-          const diff = ((metric.yours - metric.industry) / metric.industry) * 100
+            : metric.yours > metric.industry;
+          const diff = ((metric.yours - metric.industry) / metric.industry) * 100;
           const colors = [
-            { bg: 'rgba(168, 85, 247, 0.1)', border: 'rgba(168, 85, 247, 0.2)', shadow: 'rgba(168, 85, 247, 0.1)' }, // Purple
-            { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.2)', shadow: 'rgba(34, 197, 94, 0.1)' }, // Green
-            { bg: 'rgba(217, 38, 101, 0.1)', border: 'rgba(217, 38, 101, 0.2)', shadow: 'rgba(217, 38, 101, 0.1)' }, // Magenta
-            { bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.2)', shadow: 'rgba(249, 115, 22, 0.1)' }, // Orange
-          ]
-          const color = colors[index % colors.length]
+            {
+              bg: 'rgba(168, 85, 247, 0.1)',
+              border: 'rgba(168, 85, 247, 0.2)',
+              shadow: 'rgba(168, 85, 247, 0.1)',
+            }, // Purple
+            {
+              bg: 'rgba(34, 197, 94, 0.1)',
+              border: 'rgba(34, 197, 94, 0.2)',
+              shadow: 'rgba(34, 197, 94, 0.1)',
+            }, // Green
+            {
+              bg: 'rgba(217, 38, 101, 0.1)',
+              border: 'rgba(217, 38, 101, 0.2)',
+              shadow: 'rgba(217, 38, 101, 0.1)',
+            }, // Magenta
+            {
+              bg: 'rgba(249, 115, 22, 0.1)',
+              border: 'rgba(249, 115, 22, 0.2)',
+              shadow: 'rgba(249, 115, 22, 0.1)',
+            }, // Orange
+          ];
+          const color = colors[index % colors.length];
 
           return (
             <div
@@ -240,9 +264,7 @@ export function Benchmarks() {
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-2xl font-bold">
-                    {formatValue(metric.yours, metric.format)}
-                  </p>
+                  <p className="text-2xl font-bold">{formatValue(metric.yours, metric.format)}</p>
                   <p className="text-xs text-muted-foreground">
                     Industry: {formatValue(metric.industry, metric.format)}
                   </p>
@@ -271,7 +293,7 @@ export function Benchmarks() {
                 />
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -378,12 +400,7 @@ export function Benchmarks() {
               <BarChart data={chartCompetitors} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  tick={{ fontSize: 12 }}
-                  width={100}
-                />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={100} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
@@ -395,7 +412,9 @@ export function Benchmarks() {
                   {chartCompetitors.map((entry: any, index: number) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : entry.color || '#94a3b8'}
+                      fill={
+                        entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : entry.color || '#94a3b8'
+                      }
                     />
                   ))}
                 </Bar>
@@ -420,13 +439,7 @@ export function Benchmarks() {
                 <PolarGrid className="stroke-muted" />
                 <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12 }} />
                 <PolarRadiusAxis tick={{ fontSize: 10 }} domain={[0, 100]} />
-                <Radar
-                  name="You"
-                  dataKey="you"
-                  stroke="#0ea5e9"
-                  fill="#0ea5e9"
-                  fillOpacity={0.3}
-                />
+                <Radar name="You" dataKey="you" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.3} />
                 <Radar
                   name="Industry"
                   dataKey="industry"
@@ -570,10 +583,10 @@ export function Benchmarks() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Benchmarks
+export default Benchmarks;
 
 // Cell component for BarChart (needed for recharts)
-const Cell = ({ fill, ...props }: any) => <rect fill={fill} {...props} />
+const Cell = ({ fill, ...props }: any) => <rect fill={fill} {...props} />;

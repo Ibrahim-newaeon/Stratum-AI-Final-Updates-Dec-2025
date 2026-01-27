@@ -11,15 +11,22 @@ Tests:
 - Integration bridge
 """
 
-import sys
 import os
+import sys
 
 # Fix Windows encoding
-if sys.platform == 'win32':
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
+sys.path.insert(
+    0,
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        )
+    ),
+)
 
 from datetime import datetime, timedelta
 
@@ -31,12 +38,18 @@ CHECK = "[OK]"
 
 def test_models():
     """Test unified data models."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Unified Data Models")
-    print("="*60)
+    print("=" * 60)
 
     from app.stratum.models import (
-        Platform, EntityStatus, UnifiedCampaign, PerformanceMetrics, EMQScore, SignalHealth, AutomationAction
+        AutomationAction,
+        EMQScore,
+        EntityStatus,
+        PerformanceMetrics,
+        Platform,
+        SignalHealth,
+        UnifiedCampaign,
     )
 
     # Test Platform enum
@@ -120,9 +133,9 @@ def test_models():
 
 def test_signal_health_calculator():
     """Test signal health calculator."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Signal Health Calculator")
-    print("="*60)
+    print("=" * 60)
 
     from app.stratum.core.signal_health import SignalHealthCalculator, SignalHealthConfig
 
@@ -187,7 +200,9 @@ def test_signal_health_calculator():
     calculator_custom = SignalHealthCalculator(config=custom_config)
 
     health_custom = calculator_custom.calculate(emq_scores=[7.5])
-    print(f"\n  Custom Config - Score: {health_custom.overall_score}, Status: {health_custom.status}")
+    print(
+        f"\n  Custom Config - Score: {health_custom.overall_score}, Status: {health_custom.status}"
+    )
 
     # With threshold 80, a score of 75 should be degraded
     if health_custom.overall_score < 80:
@@ -200,13 +215,13 @@ def test_signal_health_calculator():
 
 def test_trust_gate():
     """Test trust gate evaluation."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Trust Gate Evaluation")
-    print("="*60)
+    print("=" * 60)
 
-    from app.stratum.core.trust_gate import TrustGate, GateDecision
     from app.stratum.core.signal_health import SignalHealthCalculator
-    from app.stratum.models import Platform, AutomationAction, SignalHealth
+    from app.stratum.core.trust_gate import GateDecision, TrustGate
+    from app.stratum.models import AutomationAction, Platform, SignalHealth
 
     gate = TrustGate()
     calculator = SignalHealthCalculator()
@@ -335,15 +350,16 @@ def test_trust_gate():
 
 def test_integration_bridge():
     """Test integration bridge with existing EMQ service."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Integration Bridge")
-    print("="*60)
+    print("=" * 60)
 
-    from app.stratum.integration import (
-        get_integration,
-        convert_platform_emq_to_score, create_automation_action
-    )
     from app.stratum.core.trust_gate import GateDecision
+    from app.stratum.integration import (
+        convert_platform_emq_to_score,
+        create_automation_action,
+        get_integration,
+    )
 
     # Simulate EMQ service response
     emq_response = {
@@ -351,11 +367,41 @@ def test_integration_bridge():
         "previousScore": 76.2,
         "confidenceBand": "directional",
         "drivers": [
-            {"name": "Event Match Rate", "value": 82.5, "weight": 0.30, "status": "good", "trend": "up"},
-            {"name": "Pixel Coverage", "value": 88.0, "weight": 0.25, "status": "good", "trend": "flat"},
-            {"name": "Conversion Latency", "value": 65.0, "weight": 0.20, "status": "warning", "trend": "down"},
-            {"name": "Attribution Accuracy", "value": 75.0, "weight": 0.15, "status": "good", "trend": "flat"},
-            {"name": "Data Freshness", "value": 92.0, "weight": 0.10, "status": "good", "trend": "flat"},
+            {
+                "name": "Event Match Rate",
+                "value": 82.5,
+                "weight": 0.30,
+                "status": "good",
+                "trend": "up",
+            },
+            {
+                "name": "Pixel Coverage",
+                "value": 88.0,
+                "weight": 0.25,
+                "status": "good",
+                "trend": "flat",
+            },
+            {
+                "name": "Conversion Latency",
+                "value": 65.0,
+                "weight": 0.20,
+                "status": "warning",
+                "trend": "down",
+            },
+            {
+                "name": "Attribution Accuracy",
+                "value": 75.0,
+                "weight": 0.15,
+                "status": "good",
+                "trend": "flat",
+            },
+            {
+                "name": "Data Freshness",
+                "value": 92.0,
+                "weight": 0.10,
+                "status": "good",
+                "trend": "flat",
+            },
         ],
         "lastUpdated": "2024-01-15T10:30:00Z",
     }
@@ -379,7 +425,7 @@ def test_integration_bridge():
     print("[OK] Signal health calculated from EMQ response")
 
     # Test 3: Evaluate action
-    from app.stratum.models import Platform, AutomationAction
+    from app.stratum.models import AutomationAction, Platform
 
     action = AutomationAction(
         platform=Platform.META,
@@ -407,13 +453,15 @@ def test_integration_bridge():
     print(f"  Reason: {autopilot_config['reason']}")
     print(f"  Allowed Actions: {autopilot_config['allowedActions'][:3]}...")
 
-    assert autopilot_config['mode'] in ['normal', 'limited', 'cuts_only', 'frozen']
+    assert autopilot_config["mode"] in ["normal", "limited", "cuts_only", "frozen"]
     print("[OK] Autopilot config generated correctly")
 
     # Test 5: Helper functions
     emq_score = convert_platform_emq_to_score("meta", 8.5)
     # Platform may be enum or string depending on Pydantic config
-    platform_val = emq_score.platform.value if hasattr(emq_score.platform, 'value') else emq_score.platform
+    platform_val = (
+        emq_score.platform.value if hasattr(emq_score.platform, "value") else emq_score.platform
+    )
     assert platform_val == "meta"
     assert emq_score.score == 8.5
     print("[OK] convert_platform_emq_to_score works")
@@ -426,7 +474,9 @@ def test_integration_bridge():
         action_type="pause_underperforming",
     )
     # Platform may be enum or string depending on Pydantic config
-    action_platform = action.platform.value if hasattr(action.platform, 'value') else action.platform
+    action_platform = (
+        action.platform.value if hasattr(action.platform, "value") else action.platform
+    )
     assert action_platform == "google"
     assert action.action_type == "pause_underperforming"
     print("[OK] create_automation_action works")
@@ -437,9 +487,9 @@ def test_integration_bridge():
 
 def test_adapter_registry():
     """Test adapter registry."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Adapter Registry")
-    print("="*60)
+    print("=" * 60)
 
     from app.stratum.adapters.registry import AdapterRegistry
 
@@ -464,9 +514,9 @@ def test_adapter_registry():
 
 def run_all_tests():
     """Run all tests and report results."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("STRATUM INTEGRATION MODULE TEST SUITE")
-    print("="*60)
+    print("=" * 60)
 
     tests = [
         ("Models", test_models),
@@ -483,14 +533,15 @@ def run_all_tests():
             results.append((name, success, None))
         except Exception as e:
             import traceback
+
             results.append((name, False, str(e)))
             print(f"\n[FAIL] {name} FAILED: {e}")
             traceback.print_exc()
 
     # Summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     passed = sum(1 for _, success, _ in results if success)
     total = len(results)

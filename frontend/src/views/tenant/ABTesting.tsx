@@ -4,37 +4,37 @@
  * Comprehensive A/B testing framework with power analysis, LTV impact, and statistical results.
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  useABTests,
-  useABTest,
-  useABTestResults,
-  useStartABTest,
-  usePauseABTest,
-  useStopABTest,
-  usePowerAnalysis,
-  useLTVImpact,
+  ABTest,
   TestStatus,
   TestType,
-  ABTest,
-} from '@/api/abTesting'
+  useABTest,
+  useABTestResults,
+  useABTests,
+  useLTVImpact,
+  usePauseABTest,
+  usePowerAnalysis,
+  useStartABTest,
+  useStopABTest,
+} from '@/api/abTesting';
 import {
+  ArrowTrendingUpIcon,
   BeakerIcon,
-  PlayIcon,
-  PauseIcon,
-  StopIcon,
-  PlusIcon,
+  CalculatorIcon,
   ChartBarIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  ArrowTrendingUpIcon,
   LightBulbIcon,
-  CalculatorIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
   SparklesIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+  StopIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
-type TabType = 'active' | 'completed' | 'drafts' | 'power-analysis'
+type TabType = 'active' | 'completed' | 'drafts' | 'power-analysis';
 
 const statusColors: Record<TestStatus, string> = {
   draft: 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
@@ -42,7 +42,7 @@ const statusColors: Record<TestStatus, string> = {
   paused: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
   completed: 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
   stopped: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-}
+};
 
 const testTypeLabels: Record<TestType, string> = {
   campaign: 'Campaign',
@@ -50,41 +50,41 @@ const testTypeLabels: Record<TestType, string> = {
   audience: 'Audience',
   landing_page: 'Landing Page',
   bid_strategy: 'Bid Strategy',
-}
+};
 
 export default function ABTesting() {
-  const [activeTab, setActiveTab] = useState<TabType>('active')
-  const [selectedTestId, setSelectedTestId] = useState<string | null>(null)
-  const [_showNewTestModal, setShowNewTestModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('active');
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [_showNewTestModal, setShowNewTestModal] = useState(false);
   const [powerAnalysisParams, setPowerAnalysisParams] = useState({
     baselineConversionRate: 2.5,
     minimumDetectableEffect: 10,
     confidenceLevel: 0.95 as 0.9 | 0.95 | 0.99,
     dailyTraffic: 10000,
-  })
+  });
 
-  const { data: activeTests } = useABTests({ status: 'running' })
-  const { data: completedTests } = useABTests({ status: 'completed' })
-  const { data: draftTests } = useABTests({ status: 'draft' })
-  const { data: _selectedTest } = useABTest(selectedTestId || '')
-  const { data: testResults } = useABTestResults(selectedTestId || '')
-  const { data: ltvImpact } = useLTVImpact(selectedTestId || '')
+  const { data: activeTests } = useABTests({ status: 'running' });
+  const { data: completedTests } = useABTests({ status: 'completed' });
+  const { data: draftTests } = useABTests({ status: 'draft' });
+  const { data: _selectedTest } = useABTest(selectedTestId || '');
+  const { data: testResults } = useABTestResults(selectedTestId || '');
+  const { data: ltvImpact } = useLTVImpact(selectedTestId || '');
 
-  const startTest = useStartABTest()
-  const pauseTest = usePauseABTest()
-  const stopTest = useStopABTest()
-  const powerAnalysis = usePowerAnalysis()
+  const startTest = useStartABTest();
+  const pauseTest = usePauseABTest();
+  const stopTest = useStopABTest();
+  const powerAnalysis = usePowerAnalysis();
 
   const tabs = [
     { id: 'active' as TabType, label: 'Active Tests', count: activeTests?.length || 0 },
     { id: 'completed' as TabType, label: 'Completed', count: completedTests?.length || 0 },
     { id: 'drafts' as TabType, label: 'Drafts', count: draftTests?.length || 0 },
     { id: 'power-analysis' as TabType, label: 'Power Analysis' },
-  ]
+  ];
 
   const runPowerAnalysis = () => {
-    powerAnalysis.mutate(powerAnalysisParams)
-  }
+    powerAnalysis.mutate(powerAnalysisParams);
+  };
 
   const renderTestCard = (test: ABTest) => (
     <div
@@ -98,9 +98,7 @@ export default function ABTesting() {
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="font-semibold">{test.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            {testTypeLabels[test.testType]} Test
-          </p>
+          <p className="text-sm text-muted-foreground">{testTypeLabels[test.testType]} Test</p>
         </div>
         <span className={cn('px-2 py-1 rounded-full text-xs', statusColors[test.status])}>
           {test.status}
@@ -145,8 +143,8 @@ export default function ABTesting() {
         <div className="flex gap-2">
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              pauseTest.mutate(test.id)
+              e.stopPropagation();
+              pauseTest.mutate(test.id);
             }}
             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg border hover:bg-muted text-sm"
           >
@@ -155,8 +153,8 @@ export default function ABTesting() {
           </button>
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              stopTest.mutate({ testId: test.id })
+              e.stopPropagation();
+              stopTest.mutate({ testId: test.id });
             }}
             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm"
           >
@@ -169,8 +167,8 @@ export default function ABTesting() {
       {test.status === 'paused' && (
         <button
           onClick={(e) => {
-            e.stopPropagation()
-            startTest.mutate(test.id)
+            e.stopPropagation();
+            startTest.mutate(test.id);
           }}
           className="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm"
         >
@@ -182,8 +180,8 @@ export default function ABTesting() {
       {test.status === 'draft' && (
         <button
           onClick={(e) => {
-            e.stopPropagation()
-            startTest.mutate(test.id)
+            e.stopPropagation();
+            startTest.mutate(test.id);
           }}
           className="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm"
         >
@@ -192,7 +190,7 @@ export default function ABTesting() {
         </button>
       )}
     </div>
-  )
+  );
 
   return (
     <div className="space-y-6">
@@ -229,9 +227,7 @@ export default function ABTesting() {
             >
               {tab.label}
               {tab.count !== undefined && tab.count > 0 && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-muted">
-                  {tab.count}
-                </span>
+                <span className="px-2 py-0.5 text-xs rounded-full bg-muted">{tab.count}</span>
               )}
             </button>
           ))}
@@ -269,7 +265,9 @@ export default function ABTesting() {
                   {testResults.isSignificant ? (
                     <>
                       <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
-                      <span className="text-emerald-600 font-medium">Statistically Significant</span>
+                      <span className="text-emerald-600 font-medium">
+                        Statistically Significant
+                      </span>
                     </>
                   ) : (
                     <>
@@ -289,10 +287,12 @@ export default function ABTesting() {
                     <span className="font-medium">Conversion Uplift</span>
                   </div>
                   <p className="text-3xl font-bold text-primary">
-                    {testResults.uplift > 0 ? '+' : ''}{testResults.uplift.toFixed(1)}%
+                    {testResults.uplift > 0 ? '+' : ''}
+                    {testResults.uplift.toFixed(1)}%
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    95% CI: [{testResults.upliftRange.lower.toFixed(1)}%, {testResults.upliftRange.upper.toFixed(1)}%]
+                    95% CI: [{testResults.upliftRange.lower.toFixed(1)}%,{' '}
+                    {testResults.upliftRange.upper.toFixed(1)}%]
                   </p>
                 </div>
 
@@ -303,7 +303,8 @@ export default function ABTesting() {
                       key={variant.variantId}
                       className={cn(
                         'rounded-lg border p-4',
-                        variant.isWinner && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
+                        variant.isWinner &&
+                          'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -335,8 +336,13 @@ export default function ABTesting() {
                       </div>
                       {variant.relativeUplift !== undefined && !variant.isControl && (
                         <p className="text-sm mt-2">
-                          <span className={variant.relativeUplift > 0 ? 'text-emerald-600' : 'text-red-600'}>
-                            {variant.relativeUplift > 0 ? '+' : ''}{variant.relativeUplift.toFixed(1)}%
+                          <span
+                            className={
+                              variant.relativeUplift > 0 ? 'text-emerald-600' : 'text-red-600'
+                            }
+                          >
+                            {variant.relativeUplift > 0 ? '+' : ''}
+                            {variant.relativeUplift.toFixed(1)}%
                           </span>
                           <span className="text-muted-foreground"> vs control</span>
                         </p>
@@ -518,7 +524,9 @@ export default function ABTesting() {
 
               <div className="space-y-4">
                 <div className="rounded-lg bg-primary/10 p-4">
-                  <p className="text-sm text-muted-foreground">Required Sample Size (per variant)</p>
+                  <p className="text-sm text-muted-foreground">
+                    Required Sample Size (per variant)
+                  </p>
                   <p className="text-3xl font-bold text-primary">
                     {powerAnalysis.data.requiredSampleSize.toLocaleString()}
                   </p>
@@ -531,7 +539,9 @@ export default function ABTesting() {
                   </div>
                   <div className="rounded-lg bg-muted/50 p-4">
                     <p className="text-sm text-muted-foreground">Statistical Power</p>
-                    <p className="text-xl font-bold">{(powerAnalysis.data.currentPower * 100).toFixed(0)}%</p>
+                    <p className="text-xl font-bold">
+                      {(powerAnalysis.data.currentPower * 100).toFixed(0)}%
+                    </p>
                   </div>
                 </div>
 
@@ -555,5 +565,5 @@ export default function ABTesting() {
         </div>
       )}
     </div>
-  )
+  );
 }

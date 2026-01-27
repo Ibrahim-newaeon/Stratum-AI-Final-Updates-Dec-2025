@@ -3,42 +3,42 @@
  * Interactive graph showing profile identities and their relationships
  */
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react';
 import {
-  Network,
-  User,
-  Mail,
-  Phone,
-  Smartphone,
-  Globe,
-  Key,
-  Link2,
-  GitMerge,
-  History,
-  Search,
-  Loader2,
   AlertCircle,
+  ArrowRight,
   CheckCircle2,
   ChevronRight,
-  Eye,
-  RefreshCw,
-  Shield,
   Clock,
-  ArrowRight,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Eye,
+  GitMerge,
+  Globe,
+  History,
+  Key,
+  Link2,
+  Loader2,
+  Mail,
+  Network,
+  Phone,
+  RefreshCw,
+  Search,
+  Shield,
+  Smartphone,
+  User,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useIdentityGraph,
-  useCanonicalIdentity,
-  useMergeProfiles,
-  useMergeHistory,
-  useProfileMergeHistory,
-  useCDPProfile,
-  IdentityGraphNode,
-  IdentityGraphEdge,
-  ProfileMerge,
   IdentifierType,
-} from '@/api/cdp'
+  IdentityGraphEdge,
+  IdentityGraphNode,
+  ProfileMerge,
+  useCanonicalIdentity,
+  useCDPProfile,
+  useIdentityGraph,
+  useMergeHistory,
+  useMergeProfiles,
+  useProfileMergeHistory,
+} from '@/api/cdp';
 
 // Icon mapping for identifier types
 const IDENTIFIER_ICONS: Record<IdentifierType, React.ReactNode> = {
@@ -47,7 +47,7 @@ const IDENTIFIER_ICONS: Record<IdentifierType, React.ReactNode> = {
   device_id: <Smartphone className="w-4 h-4" />,
   anonymous_id: <Globe className="w-4 h-4" />,
   external_id: <Key className="w-4 h-4" />,
-}
+};
 
 // Color mapping for identifier types
 const IDENTIFIER_COLORS: Record<IdentifierType, string> = {
@@ -56,14 +56,14 @@ const IDENTIFIER_COLORS: Record<IdentifierType, string> = {
   device_id: 'bg-purple-500',
   anonymous_id: 'bg-gray-500',
   external_id: 'bg-amber-500',
-}
+};
 
 interface GraphNodeProps {
-  node: IdentityGraphNode
-  isSelected: boolean
-  isPrimary: boolean
-  onClick: () => void
-  position: { x: number; y: number }
+  node: IdentityGraphNode;
+  isSelected: boolean;
+  isPrimary: boolean;
+  onClick: () => void;
+  position: { x: number; y: number };
 }
 
 function GraphNode({ node, isSelected, isPrimary, onClick, position }: GraphNodeProps) {
@@ -71,7 +71,9 @@ function GraphNode({ node, isSelected, isPrimary, onClick, position }: GraphNode
     <div
       className={cn(
         'absolute flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all transform -translate-x-1/2 -translate-y-1/2',
-        isSelected ? 'border-primary ring-2 ring-primary/20 scale-110 z-10' : 'border-border hover:border-primary/50',
+        isSelected
+          ? 'border-primary ring-2 ring-primary/20 scale-110 z-10'
+          : 'border-border hover:border-primary/50',
         isPrimary ? 'bg-primary/10' : 'bg-card'
       )}
       style={{ left: position.x, top: position.y }}
@@ -86,24 +88,22 @@ function GraphNode({ node, isSelected, isPrimary, onClick, position }: GraphNode
           {node.hash.slice(0, 12)}...
         </div>
       </div>
-      {isPrimary && (
-        <Shield className="w-4 h-4 text-primary ml-1" />
-      )}
+      {isPrimary && <Shield className="w-4 h-4 text-primary ml-1" />}
     </div>
-  )
+  );
 }
 
 interface GraphEdgeProps {
-  from: { x: number; y: number }
-  to: { x: number; y: number }
-  edge: IdentityGraphEdge
-  isHighlighted: boolean
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  edge: IdentityGraphEdge;
+  isHighlighted: boolean;
 }
 
 function GraphEdge({ from, to, edge, isHighlighted }: GraphEdgeProps) {
   // Calculate midpoint for label
-  const midX = (from.x + to.x) / 2
-  const midY = (from.y + to.y) / 2
+  const midX = (from.x + to.x) / 2;
+  const midY = (from.y + to.y) / 2;
 
   return (
     <svg className="absolute inset-0 pointer-events-none overflow-visible">
@@ -137,11 +137,11 @@ function GraphEdge({ from, to, edge, isHighlighted }: GraphEdgeProps) {
         {Math.round(edge.confidence * 100)}
       </text>
     </svg>
-  )
+  );
 }
 
 interface MergeHistoryItemProps {
-  merge: ProfileMerge
+  merge: ProfileMerge;
 }
 
 function MergeHistoryItem({ merge }: MergeHistoryItemProps) {
@@ -151,15 +151,17 @@ function MergeHistoryItem({ merge }: MergeHistoryItemProps) {
       manual_merge: 'Manual Merge',
       login_event: 'Login Event',
       cross_device: 'Cross-Device',
-    }
-    return labels[reason] || reason
-  }
+    };
+    return labels[reason] || reason;
+  };
 
   return (
-    <div className={cn(
-      'p-3 rounded-lg border',
-      merge.is_rolled_back ? 'bg-muted/30 opacity-60' : 'bg-card'
-    )}>
+    <div
+      className={cn(
+        'p-3 rounded-lg border',
+        merge.is_rolled_back ? 'bg-muted/30 opacity-60' : 'bg-card'
+      )}
+    >
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium">{getReasonLabel(merge.merge_reason)}</span>
         {merge.is_rolled_back ? (
@@ -187,62 +189,69 @@ function MergeHistoryItem({ merge }: MergeHistoryItemProps) {
         {new Date(merge.created_at).toLocaleString()}
       </div>
     </div>
-  )
+  );
 }
 
 interface IdentityGraphVisualizationProps {
-  profileId: string
-  onClose?: () => void
+  profileId: string;
+  onClose?: () => void;
 }
 
-export function IdentityGraphVisualization({ profileId, onClose: _onClose }: IdentityGraphVisualizationProps) {
-  const [selectedNode, setSelectedNode] = useState<string | null>(null)
-  const [showMergeHistory, setShowMergeHistory] = useState(false)
+export function IdentityGraphVisualization({
+  profileId,
+  onClose: _onClose,
+}: IdentityGraphVisualizationProps) {
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [showMergeHistory, setShowMergeHistory] = useState(false);
 
-  const { data: profile, isLoading: profileLoading } = useCDPProfile(profileId)
-  const { data: graph, isLoading: graphLoading, refetch: refetchGraph } = useIdentityGraph(profileId)
-  const { data: canonical, isLoading: canonicalLoading } = useCanonicalIdentity(profileId)
-  const { data: mergeHistory, isLoading: historyLoading } = useProfileMergeHistory(profileId)
+  const { data: profile, isLoading: profileLoading } = useCDPProfile(profileId);
+  const {
+    data: graph,
+    isLoading: graphLoading,
+    refetch: refetchGraph,
+  } = useIdentityGraph(profileId);
+  const { data: canonical, isLoading: canonicalLoading } = useCanonicalIdentity(profileId);
+  const { data: mergeHistory, isLoading: historyLoading } = useProfileMergeHistory(profileId);
 
-  const isLoading = profileLoading || graphLoading || canonicalLoading
+  const isLoading = profileLoading || graphLoading || canonicalLoading;
 
   // Calculate node positions in a circular layout
   const nodePositions = useMemo(() => {
-    if (!graph?.nodes) return {}
+    if (!graph?.nodes) return {};
 
-    const positions: Record<string, { x: number; y: number }> = {}
-    const centerX = 250
-    const centerY = 200
-    const radius = 150
+    const positions: Record<string, { x: number; y: number }> = {};
+    const centerX = 250;
+    const centerY = 200;
+    const radius = 150;
 
     graph.nodes.forEach((node, index) => {
-      const angle = (2 * Math.PI * index) / graph.nodes.length - Math.PI / 2
+      const angle = (2 * Math.PI * index) / graph.nodes.length - Math.PI / 2;
       positions[node.id] = {
         x: centerX + radius * Math.cos(angle),
         y: centerY + radius * Math.sin(angle),
-      }
-    })
+      };
+    });
 
-    return positions
-  }, [graph?.nodes])
+    return positions;
+  }, [graph?.nodes]);
 
   // Get edges connected to selected node
   const highlightedEdges = useMemo(() => {
-    if (!selectedNode || !graph?.edges) return new Set<string>()
+    if (!selectedNode || !graph?.edges) return new Set<string>();
 
     return new Set(
       graph.edges
-        .filter(e => e.source === selectedNode || e.target === selectedNode)
-        .map(e => `${e.source}-${e.target}`)
-    )
-  }, [selectedNode, graph?.edges])
+        .filter((e) => e.source === selectedNode || e.target === selectedNode)
+        .map((e) => `${e.source}-${e.target}`)
+    );
+  }, [selectedNode, graph?.edges]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
-    )
+    );
   }
 
   if (!graph || !profile) {
@@ -254,7 +263,7 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
           Unable to load identity graph for this profile
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -297,9 +306,9 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
           <div className="relative h-[400px] bg-card rounded-xl border overflow-hidden">
             {/* Edges */}
             {graph.edges.map((edge, index) => {
-              const fromPos = nodePositions[edge.source]
-              const toPos = nodePositions[edge.target]
-              if (!fromPos || !toPos) return null
+              const fromPos = nodePositions[edge.source];
+              const toPos = nodePositions[edge.target];
+              if (!fromPos || !toPos) return null;
 
               return (
                 <GraphEdge
@@ -309,7 +318,7 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
                   edge={edge}
                   isHighlighted={highlightedEdges.has(`${edge.source}-${edge.target}`)}
                 />
-              )
+              );
             })}
 
             {/* Nodes */}
@@ -329,7 +338,12 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
               <div className="font-medium mb-2">Identifier Types</div>
               {Object.entries(IDENTIFIER_ICONS).map(([type, icon]) => (
                 <div key={type} className="flex items-center gap-2">
-                  <div className={cn('p-1 rounded text-white', IDENTIFIER_COLORS[type as IdentifierType])}>
+                  <div
+                    className={cn(
+                      'p-1 rounded text-white',
+                      IDENTIFIER_COLORS[type as IdentifierType]
+                    )}
+                  >
                     {icon}
                   </div>
                   <span className="capitalize">{type.replace('_', ' ')}</span>
@@ -351,7 +365,9 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium capitalize">{canonical.canonical_type || 'None'}</span>
+                  <span className="font-medium capitalize">
+                    {canonical.canonical_type || 'None'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Priority Score</span>
@@ -405,8 +421,8 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
                 Selected Identifier
               </h3>
               {(() => {
-                const node = graph.nodes.find(n => n.id === selectedNode)
-                if (!node) return null
+                const node = graph.nodes.find((n) => n.id === selectedNode);
+                if (!node) return null;
 
                 return (
                   <div className="space-y-2 text-sm">
@@ -433,7 +449,7 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
                       </code>
                     </div>
                   </div>
-                )
+                );
               })()}
             </div>
           )}
@@ -466,35 +482,37 @@ export function IdentityGraphVisualization({ profileId, onClose: _onClose }: Ide
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // Main IdentityGraph component for searching/selecting profiles
 export function IdentityGraph() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
-  const [sourceProfileId, setSourceProfileId] = useState('')
-  const [targetProfileId, setTargetProfileId] = useState('')
-  const [showMergeForm, setShowMergeForm] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [sourceProfileId, setSourceProfileId] = useState('');
+  const [targetProfileId, setTargetProfileId] = useState('');
+  const [showMergeForm, setShowMergeForm] = useState(false);
 
-  const { data: globalMergeHistory, isLoading: globalHistoryLoading } = useMergeHistory({ limit: 10 })
-  const mergeMutation = useMergeProfiles()
+  const { data: globalMergeHistory, isLoading: globalHistoryLoading } = useMergeHistory({
+    limit: 10,
+  });
+  const mergeMutation = useMergeProfiles();
 
   const handleMerge = async () => {
-    if (!sourceProfileId || !targetProfileId) return
+    if (!sourceProfileId || !targetProfileId) return;
 
     try {
       await mergeMutation.mutateAsync({
         source_profile_id: sourceProfileId,
         target_profile_id: targetProfileId,
-      })
-      setSourceProfileId('')
-      setTargetProfileId('')
-      setShowMergeForm(false)
+      });
+      setSourceProfileId('');
+      setTargetProfileId('');
+      setShowMergeForm(false);
     } catch (error) {
-      console.error('Merge failed:', error)
+      console.error('Merge failed:', error);
     }
-  }
+  };
 
   if (selectedProfileId) {
     return (
@@ -511,7 +529,7 @@ export function IdentityGraph() {
           onClose={() => setSelectedProfileId(null)}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -531,9 +549,7 @@ export function IdentityGraph() {
           onClick={() => setShowMergeForm(!showMergeForm)}
           className={cn(
             'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
-            showMergeForm
-              ? 'bg-primary text-primary-foreground'
-              : 'border hover:bg-muted'
+            showMergeForm ? 'bg-primary text-primary-foreground' : 'border hover:bg-muted'
           )}
         >
           <GitMerge className="w-4 h-4" />
@@ -604,7 +620,7 @@ export function IdentityGraph() {
           className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && searchQuery) {
-              setSelectedProfileId(searchQuery)
+              setSelectedProfileId(searchQuery);
             }
           }}
         />
@@ -633,14 +649,30 @@ export function IdentityGraph() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Merged Profile</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Surviving Profile</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Reason</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Events</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Identifiers</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Merged Profile
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Surviving Profile
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Reason
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Events
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Identifiers
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Status
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Date
+                  </th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -706,7 +738,7 @@ export function IdentityGraph() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default IdentityGraph
+export default IdentityGraph;

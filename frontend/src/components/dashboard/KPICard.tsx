@@ -3,31 +3,31 @@
  * Displays key performance indicators with trend indicators and animations
  */
 
-import React, { useState } from 'react'
-import CountUp from 'react-countup'
-import { TrendingUp, TrendingDown, Eye, Bell, Download } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React, { useState } from 'react';
+import CountUp from 'react-countup';
+import { Bell, Download, Eye, TrendingDown, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface KPICardProps {
-  title: string
-  value: string | number
-  numericValue?: number
-  prefix?: string
-  suffix?: string
-  decimals?: number
-  delta?: number
-  deltaText?: string
-  trend?: 'up' | 'down' | 'neutral'
-  trendIsGood?: boolean
-  highlight?: boolean
-  size?: 'small' | 'normal'
-  icon?: React.ReactNode
-  className?: string
-  loading?: boolean
-  enableAnimation?: boolean
-  onViewDetails?: () => void
-  onSetAlert?: () => void
-  onExport?: () => void
+  title: string;
+  value: string | number;
+  numericValue?: number;
+  prefix?: string;
+  suffix?: string;
+  decimals?: number;
+  delta?: number;
+  deltaText?: string;
+  trend?: 'up' | 'down' | 'neutral';
+  trendIsGood?: boolean;
+  highlight?: boolean;
+  size?: 'small' | 'normal';
+  icon?: React.ReactNode;
+  className?: string;
+  loading?: boolean;
+  enableAnimation?: boolean;
+  onViewDetails?: () => void;
+  onSetAlert?: () => void;
+  onExport?: () => void;
 }
 
 export const KPICard: React.FC<KPICardProps> = ({
@@ -51,11 +51,11 @@ export const KPICard: React.FC<KPICardProps> = ({
   onSetAlert,
   onExport,
 }) => {
-  const [showActions, setShowActions] = useState(false)
-  const hasActions = onViewDetails || onSetAlert || onExport
+  const [showActions, setShowActions] = useState(false);
+  const hasActions = onViewDetails || onSetAlert || onExport;
 
   // Determine if trend is positive based on context
-  const isPositiveTrend = trendIsGood ? trend === 'up' : trend === 'down'
+  const isPositiveTrend = trendIsGood ? trend === 'up' : trend === 'down';
 
   // Color classes for delta - using design system colors
   const deltaColorClass =
@@ -63,16 +63,16 @@ export const KPICard: React.FC<KPICardProps> = ({
       ? isPositiveTrend
         ? 'text-success'
         : 'text-danger'
-      : 'text-muted-foreground'
+      : 'text-muted-foreground';
 
   // Parse numeric value from string if needed
   const getNumericValue = (): number => {
-    if (numericValue !== undefined) return numericValue
-    if (typeof value === 'number') return value
+    if (numericValue !== undefined) return numericValue;
+    if (typeof value === 'number') return value;
     // Try to parse from formatted string
-    const parsed = parseFloat(value.toString().replace(/[^0-9.-]/g, ''))
-    return isNaN(parsed) ? 0 : parsed
-  }
+    const parsed = parseFloat(value.toString().replace(/[^0-9.-]/g, ''));
+    return isNaN(parsed) ? 0 : parsed;
+  };
 
   // Loading skeleton
   if (loading) {
@@ -99,7 +99,7 @@ export const KPICard: React.FC<KPICardProps> = ({
           )}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -190,10 +190,12 @@ export const KPICard: React.FC<KPICardProps> = ({
             {title}
           </p>
           {icon && (
-            <div className={cn(
-              highlight ? 'text-primary-foreground/80' : 'text-muted-foreground',
-              'transition-transform group-hover:scale-110'
-            )}>
+            <div
+              className={cn(
+                highlight ? 'text-primary-foreground/80' : 'text-muted-foreground',
+                'transition-transform group-hover:scale-110'
+              )}
+            >
               {icon}
             </div>
           )}
@@ -255,7 +257,7 @@ export const KPICard: React.FC<KPICardProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default KPICard
+export default KPICard;

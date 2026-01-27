@@ -13,16 +13,15 @@ API Reference: https://developers.google.com/google-ads/api/docs/remarketing/aud
 """
 
 import time
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import httpx
 
 from .base import (
-    BaseAudienceConnector,
     AudienceConfig,
-    AudienceUser,
     AudienceSyncResult,
+    AudienceUser,
+    BaseAudienceConnector,
     IdentifierType,
 )
 
@@ -46,7 +45,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
         ad_account_id: str,  # Google Ads Customer ID
         developer_token: Optional[str] = None,
         login_customer_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(access_token, ad_account_id, **kwargs)
         self.developer_token = developer_token
@@ -54,7 +53,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
         # Remove dashes from customer ID
         self.customer_id = self.ad_account_id.replace("-", "")
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get headers for Google Ads API requests."""
         headers = {
             "Authorization": f"Bearer {self.access_token}",
@@ -69,7 +68,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
     async def create_audience(
         self,
         config: AudienceConfig,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Create a new Google Ads Customer Match user list with initial users.
@@ -78,7 +77,9 @@ class GoogleAudienceConnector(BaseAudienceConnector):
 
         try:
             # Step 1: Create the user list
-            create_url = f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
+            create_url = (
+                f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
+            )
 
             user_list_operation = {
                 "create": {
@@ -89,13 +90,11 @@ class GoogleAudienceConnector(BaseAudienceConnector):
                     "crmBasedUserList": {
                         "uploadKeyType": "CONTACT_INFO",
                         "dataSourceType": "FIRST_PARTY",
-                    }
+                    },
                 }
             }
 
-            payload = {
-                "operations": [user_list_operation]
-            }
+            payload = {"operations": [user_list_operation]}
 
             async with httpx.AsyncClient(timeout=60) as client:
                 response = await client.post(
@@ -173,7 +172,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
     async def add_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Add users to a Google Customer Match user list.
@@ -193,7 +192,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
                     "type": "CUSTOMER_MATCH_USER_LIST",
                     "customerMatchUserListMetadata": {
                         "userList": f"customers/{self.customer_id}/userLists/{audience_id}"
-                    }
+                    },
                 }
             }
 
@@ -221,9 +220,13 @@ class GoogleAudienceConnector(BaseAudienceConnector):
 
             async with httpx.AsyncClient(timeout=300) as client:
                 for batch in batches:
-                    operations = [{"create": {"userIdentifiers": identifiers}} for identifiers in batch]
+                    operations = [
+                        {"create": {"userIdentifiers": identifiers}} for identifiers in batch
+                    ]
 
-                    add_url = f"{self.BASE_URL}/{self.API_VERSION}/{job_resource_name}:addOperations"
+                    add_url = (
+                        f"{self.BASE_URL}/{self.API_VERSION}/{job_resource_name}:addOperations"
+                    )
                     add_payload = {
                         "operations": operations,
                         "enablePartialFailure": True,
@@ -295,7 +298,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
     async def remove_users(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Remove users from a Google Customer Match user list.
@@ -313,7 +316,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
                     "type": "CUSTOMER_MATCH_USER_LIST",
                     "customerMatchUserListMetadata": {
                         "userList": f"customers/{self.customer_id}/userLists/{audience_id}"
-                    }
+                    },
                 }
             }
 
@@ -332,7 +335,9 @@ class GoogleAudienceConnector(BaseAudienceConnector):
 
             async with httpx.AsyncClient(timeout=300) as client:
                 # Add remove operations
-                operations = [{"remove": {"userIdentifiers": identifiers}} for identifiers in user_data]
+                operations = [
+                    {"remove": {"userIdentifiers": identifiers}} for identifiers in user_data
+                ]
 
                 add_url = f"{self.BASE_URL}/{self.API_VERSION}/{job_resource_name}:addOperations"
                 add_payload = {"operations": operations}
@@ -374,7 +379,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
     async def replace_audience(
         self,
         audience_id: str,
-        users: List[AudienceUser],
+        users: list[AudienceUser],
     ) -> AudienceSyncResult:
         """
         Replace audience by removing all and re-adding.
@@ -410,16 +415,20 @@ class GoogleAudienceConnector(BaseAudienceConnector):
         start_time = time.time()
 
         try:
-            url = f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
+            url = (
+                f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
+            )
 
             payload = {
-                "operations": [{
-                    "update": {
-                        "resourceName": f"customers/{self.customer_id}/userLists/{audience_id}",
-                        "membershipStatus": "CLOSED"
-                    },
-                    "updateMask": "membershipStatus"
-                }]
+                "operations": [
+                    {
+                        "update": {
+                            "resourceName": f"customers/{self.customer_id}/userLists/{audience_id}",
+                            "membershipStatus": "CLOSED",
+                        },
+                        "updateMask": "membershipStatus",
+                    }
+                ]
             }
 
             async with httpx.AsyncClient(timeout=30) as client:
@@ -453,7 +462,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
     async def get_audience_info(
         self,
         audience_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get Google Ads user list information.
         """
@@ -503,7 +512,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
     # Google-specific helpers
     # =========================================================================
 
-    def _prepare_google_user_data(self, users: List[AudienceUser]) -> List[List[Dict]]:
+    def _prepare_google_user_data(self, users: list[AudienceUser]) -> list[list[dict]]:
         """
         Prepare user data in Google's Customer Match format.
         Each user is a list of identifier objects.

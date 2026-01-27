@@ -1,36 +1,44 @@
-import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  User,
-  Building,
+  AlertTriangle,
   Bell,
-  Shield,
-  Palette,
-  Link2,
+  Building,
+  Check,
+  ChevronRight,
+  Copy,
   CreditCard,
   Download,
-  Trash2,
-  Save,
-  Check,
-  AlertTriangle,
-  ChevronRight,
   Eye,
   EyeOff,
-  Copy,
-  RefreshCw,
+  Link2,
   Loader2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useTenantStore } from '@/stores/tenantStore'
-import { useExportData, useRequestDeletion } from '@/api/hooks'
+  Palette,
+  RefreshCw,
+  Save,
+  Shield,
+  Trash2,
+  User,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useTenantStore } from '@/stores/tenantStore';
+import { useExportData, useRequestDeletion } from '@/api/hooks';
 
-type SettingsTab = 'profile' | 'organization' | 'notifications' | 'security' | 'integrations' | 'preferences' | 'billing' | 'gdpr'
+type SettingsTab =
+  | 'profile'
+  | 'organization'
+  | 'notifications'
+  | 'security'
+  | 'integrations'
+  | 'preferences'
+  | 'billing'
+  | 'gdpr';
 
 export function Settings() {
-  const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
-  const [showApiKey, setShowApiKey] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const tabs = [
     { id: 'profile', label: t('settings.profile'), icon: User },
@@ -41,38 +49,38 @@ export function Settings() {
     { id: 'preferences', label: t('settings.preferences'), icon: Palette },
     { id: 'billing', label: t('settings.billing'), icon: CreditCard },
     { id: 'gdpr', label: t('settings.gdpr'), icon: Download },
-  ] as const
+  ] as const;
 
   const handleSave = () => {
-    setSaveStatus('saving')
+    setSaveStatus('saving');
     setTimeout(() => {
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
-    }, 1000)
-  }
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    }, 1000);
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
-        return <ProfileSettings />
+        return <ProfileSettings />;
       case 'organization':
-        return <OrganizationSettings />
+        return <OrganizationSettings />;
       case 'notifications':
-        return <NotificationSettings />
+        return <NotificationSettings />;
       case 'security':
-        return <SecuritySettings showApiKey={showApiKey} setShowApiKey={setShowApiKey} />
+        return <SecuritySettings showApiKey={showApiKey} setShowApiKey={setShowApiKey} />;
       case 'integrations':
-        return <IntegrationSettings />
+        return <IntegrationSettings />;
       case 'preferences':
-        return <PreferenceSettings />
+        return <PreferenceSettings />;
       case 'billing':
-        return <BillingSettings />
+        return <BillingSettings />;
       case 'gdpr':
-        return <GDPRSettings />
+        return <GDPRSettings />;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -103,7 +111,7 @@ export function Settings() {
         <div className="w-64 flex-shrink-0">
           <nav className="space-y-1">
             {tabs.map((tab) => {
-              const Icon = tab.icon
+              const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
@@ -119,7 +127,7 @@ export function Settings() {
                   <span>{tab.label}</span>
                   {activeTab === tab.id && <ChevronRight className="w-4 h-4 ml-auto" />}
                 </button>
-              )
+              );
             })}
           </nav>
         </div>
@@ -128,23 +136,23 @@ export function Settings() {
         <div className="flex-1 rounded-xl border bg-card p-6">{renderTabContent()}</div>
       </div>
     </div>
-  )
+  );
 }
 
 function ProfileSettings() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   // Get user data from tenant store
-  const user = useTenantStore((state) => state.user)
+  const user = useTenantStore((state) => state.user);
 
   // Parse name into first/last (fallback to mock data)
-  const fullName = user?.full_name || 'John Doe'
-  const nameParts = fullName.split(' ')
-  const firstName = nameParts[0] || 'John'
-  const lastName = nameParts.slice(1).join(' ') || 'Doe'
-  const initials = `${firstName[0] || 'J'}${lastName[0] || 'D'}`
-  const email = user?.email || 'john.doe@company.com'
-  const role = user?.role || 'media_buyer'
-  const timezone = user?.timezone || 'America/New_York'
+  const fullName = user?.full_name || 'John Doe';
+  const nameParts = fullName.split(' ');
+  const firstName = nameParts[0] || 'John';
+  const lastName = nameParts.slice(1).join(' ') || 'Doe';
+  const initials = `${firstName[0] || 'J'}${lastName[0] || 'D'}`;
+  const email = user?.email || 'john.doe@company.com';
+  const role = user?.role || 'media_buyer';
+  const timezone = user?.timezone || 'America/New_York';
 
   // Format role for display
   const formatRole = (role: string) => {
@@ -156,9 +164,9 @@ function ProfileSettings() {
       analyst: 'Analyst',
       account_manager: 'Account Manager',
       viewer: 'Viewer',
-    }
-    return roleLabels[role] || role
-  }
+    };
+    return roleLabels[role] || role;
+  };
 
   return (
     <div className="space-y-6">
@@ -167,7 +175,11 @@ function ProfileSettings() {
       <div className="flex items-center gap-6">
         <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
           {user?.avatar_url ? (
-            <img src={user.avatar_url} alt={fullName} className="w-full h-full rounded-full object-cover" />
+            <img
+              src={user.avatar_url}
+              alt={fullName}
+              className="w-full h-full rounded-full object-cover"
+            />
           ) : (
             initials.toUpperCase()
           )}
@@ -234,94 +246,96 @@ function ProfileSettings() {
         </select>
       </div>
     </div>
-  )
+  );
 }
 
 function OrganizationSettings() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   // Get tenant data from store
-  const tenant = useTenantStore((state) => state.tenant)
+  const tenant = useTenantStore((state) => state.tenant);
 
   // Use tenant data or fall back to mock
-  const companyName = tenant?.name || 'Acme Corporation'
-  const industry = tenant?.settings?.industry || 'ecommerce'
-  const plan = tenant?.plan || 'pro'
-  const maxUsers = tenant?.max_users || 10
+  const companyName = tenant?.name || 'Acme Corporation';
+  const industry = tenant?.settings?.industry || 'ecommerce';
+  const plan = tenant?.plan || 'pro';
+  const maxUsers = tenant?.max_users || 10;
 
   // State for users management
-  const [teamMembers, setTeamMembers] = useState<Array<{id: number, email: string, role: string, is_active: boolean}>>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('user')
-  const [isInviting, setIsInviting] = useState(false)
-  const [removingUserId, setRemovingUserId] = useState<number | null>(null)
+  const [teamMembers, setTeamMembers] = useState<
+    Array<{ id: number; email: string; role: string; is_active: boolean }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('user');
+  const [isInviting, setIsInviting] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<number | null>(null);
 
   // Fetch team members
   const fetchTeamMembers = async () => {
     try {
-      setIsLoading(true)
-      const { apiClient } = await import('@/api/client')
-      const response = await apiClient.get('/users')
+      setIsLoading(true);
+      const { apiClient } = await import('@/api/client');
+      const response = await apiClient.get('/users');
       if (response.data.success) {
-        setTeamMembers(response.data.data)
+        setTeamMembers(response.data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch team members:', error)
+      console.error('Failed to fetch team members:', error);
       // Fallback to mock data
       setTeamMembers([
         { id: 1, email: 'admin@company.com', role: 'admin', is_active: true },
         { id: 2, email: 'jane.smith@company.com', role: 'manager', is_active: true },
         { id: 3, email: 'bob.wilson@company.com', role: 'user', is_active: true },
-      ])
+      ]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchTeamMembers()
-  }, [])
+    fetchTeamMembers();
+  }, []);
 
   // Invite new user
   const handleInvite = async () => {
-    if (!inviteEmail) return
-    setIsInviting(true)
+    if (!inviteEmail) return;
+    setIsInviting(true);
     try {
-      const { apiClient } = await import('@/api/client')
+      const { apiClient } = await import('@/api/client');
       const response = await apiClient.post('/users/invite', {
         email: inviteEmail,
         role: inviteRole,
-      })
+      });
       if (response.data.success) {
-        setTeamMembers([...teamMembers, response.data.data])
-        setShowInviteModal(false)
-        setInviteEmail('')
-        setInviteRole('user')
+        setTeamMembers([...teamMembers, response.data.data]);
+        setShowInviteModal(false);
+        setInviteEmail('');
+        setInviteRole('user');
       }
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to invite user')
+      alert(error.response?.data?.detail || 'Failed to invite user');
     } finally {
-      setIsInviting(false)
+      setIsInviting(false);
     }
-  }
+  };
 
   // Remove user
   const handleRemove = async (userId: number) => {
-    if (!confirm('Are you sure you want to remove this user?')) return
-    setRemovingUserId(userId)
+    if (!confirm('Are you sure you want to remove this user?')) return;
+    setRemovingUserId(userId);
     try {
-      const { apiClient } = await import('@/api/client')
-      const response = await apiClient.delete(`/users/${userId}`)
+      const { apiClient } = await import('@/api/client');
+      const response = await apiClient.delete(`/users/${userId}`);
       if (response.data.success) {
-        setTeamMembers(teamMembers.filter(m => m.id !== userId))
+        setTeamMembers(teamMembers.filter((m) => m.id !== userId));
       }
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to remove user')
+      alert(error.response?.data?.detail || 'Failed to remove user');
     } finally {
-      setRemovingUserId(null)
+      setRemovingUserId(null);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -369,26 +383,28 @@ function OrganizationSettings() {
             <div className="flex items-center justify-center p-4">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
-          ) : teamMembers.map((member) => (
-            <div
-              key={member.id}
-              className="flex items-center justify-between p-3 rounded-lg border"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-sm">{member.email}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-muted capitalize">
-                  {member.role}
-                </span>
-              </div>
-              <button
-                onClick={() => handleRemove(member.id)}
-                disabled={removingUserId === member.id}
-                className="text-sm text-red-500 hover:underline disabled:opacity-50"
+          ) : (
+            teamMembers.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center justify-between p-3 rounded-lg border"
               >
-                {removingUserId === member.id ? 'Removing...' : 'Remove'}
-              </button>
-            </div>
-          ))}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm">{member.email}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-muted capitalize">
+                    {member.role}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleRemove(member.id)}
+                  disabled={removingUserId === member.id}
+                  className="text-sm text-red-500 hover:underline disabled:opacity-50"
+                >
+                  {removingUserId === member.id ? 'Removing...' : 'Remove'}
+                </button>
+              </div>
+            ))
+          )}
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
@@ -446,11 +462,11 @@ function OrganizationSettings() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function NotificationSettings() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
     pushNotifications: true,
@@ -458,7 +474,7 @@ function NotificationSettings() {
     campaignAlerts: true,
     budgetAlerts: true,
     performanceAlerts: false,
-  })
+  });
 
   return (
     <div className="space-y-6">
@@ -466,10 +482,7 @@ function NotificationSettings() {
 
       <div className="space-y-4">
         {Object.entries(notifications).map(([key, value]) => (
-          <div
-            key={key}
-            className="flex items-center justify-between p-4 rounded-lg border"
-          >
+          <div key={key} className="flex items-center justify-between p-4 rounded-lg border">
             <div>
               <p className="font-medium">{t(`settings.${key}`)}</p>
               <p className="text-sm text-muted-foreground">{t(`settings.${key}Desc`)}</p>
@@ -492,20 +505,20 @@ function NotificationSettings() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function SecuritySettings({
   showApiKey,
   setShowApiKey,
 }: {
-  showApiKey: boolean
-  setShowApiKey: (show: boolean) => void
+  showApiKey: boolean;
+  setShowApiKey: (show: boolean) => void;
 }) {
-  const { t } = useTranslation()
-  const [showTestKey, setShowTestKey] = useState(false)
-  const [copiedKey, setCopiedKey] = useState<string | null>(null)
-  const [regenerating, setRegenerating] = useState<string | null>(null)
+  const { t } = useTranslation();
+  const [showTestKey, setShowTestKey] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState<string | null>(null);
 
   // API Keys data
   const apiKeys = [
@@ -529,24 +542,28 @@ function SecuritySettings({
       created: 'Jan 10, 2024',
       lastUsed: '3 days ago',
     },
-  ]
+  ];
 
   const copyToClipboard = (key: string, keyId: string) => {
-    navigator.clipboard.writeText(key)
-    setCopiedKey(keyId)
-    setTimeout(() => setCopiedKey(null), 2000)
-  }
+    navigator.clipboard.writeText(key);
+    setCopiedKey(keyId);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
 
   const handleRegenerate = async (keyId: string) => {
-    if (!confirm(`Are you sure you want to regenerate the ${keyId} API key? This will invalidate the current key.`)) {
-      return
+    if (
+      !confirm(
+        `Are you sure you want to regenerate the ${keyId} API key? This will invalidate the current key.`
+      )
+    ) {
+      return;
     }
-    setRegenerating(keyId)
+    setRegenerating(keyId);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setRegenerating(null)
-    alert(`${keyId} API key has been regenerated. Please update your integrations.`)
-  }
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setRegenerating(null);
+    alert(`${keyId} API key has been regenerated. Please update your integrations.`);
+  };
 
   return (
     <div className="space-y-6">
@@ -599,14 +616,11 @@ function SecuritySettings({
 
         <div className="space-y-4">
           {apiKeys.map((apiKey) => {
-            const isVisible = apiKey.type === 'live' ? showApiKey : showTestKey
-            const setVisible = apiKey.type === 'live' ? setShowApiKey : setShowTestKey
+            const isVisible = apiKey.type === 'live' ? showApiKey : showTestKey;
+            const setVisible = apiKey.type === 'live' ? setShowApiKey : setShowTestKey;
 
             return (
-              <div
-                key={apiKey.id}
-                className="p-4 rounded-xl border border-white/10 glass card-3d"
-              >
+              <div key={apiKey.id} className="p-4 rounded-xl border border-white/10 glass card-3d">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <h4 className="font-medium">{apiKey.name}</h4>
@@ -676,16 +690,16 @@ function SecuritySettings({
                   <span>Last used: {apiKey.lastUsed}</span>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function IntegrationSettings() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   const [webhooks, setWebhooks] = useState([
     {
       id: '1',
@@ -694,10 +708,10 @@ function IntegrationSettings() {
       status: 'active' as const,
       lastTriggered: '5 minutes ago',
     },
-  ])
-  const [showAddWebhook, setShowAddWebhook] = useState(false)
-  const [newWebhookUrl, setNewWebhookUrl] = useState('')
-  const [newWebhookEvents, setNewWebhookEvents] = useState<string[]>([])
+  ]);
+  const [showAddWebhook, setShowAddWebhook] = useState(false);
+  const [newWebhookUrl, setNewWebhookUrl] = useState('');
+  const [newWebhookEvents, setNewWebhookEvents] = useState<string[]>([]);
 
   // Platform integration icons as SVG components
   const IntegrationIcon = ({ type }: { type: string }) => {
@@ -709,50 +723,61 @@ function IntegrationSettings() {
       ),
       'google-tag-manager': (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <path d="M12 0L1.5 6v12L12 24l10.5-6V6L12 0zm0 2.2l8.2 4.7v9.4L12 21l-8.2-4.7V6.9L12 2.2z"/>
-          <path d="M12 7.5L7.5 10.2v5.4l4.5 2.7 4.5-2.7v-5.4L12 7.5z"/>
+          <path d="M12 0L1.5 6v12L12 24l10.5-6V6L12 0zm0 2.2l8.2 4.7v9.4L12 21l-8.2-4.7V6.9L12 2.2z" />
+          <path d="M12 7.5L7.5 10.2v5.4l4.5 2.7 4.5-2.7v-5.4L12 7.5z" />
         </svg>
       ),
       shopify: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <path d="M15.34 5.55c-.03-.24-.24-.36-.4-.38-.16-.02-3.38-.07-3.38-.07s-2.25-2.2-2.5-2.45c-.24-.24-.72-.17-.9-.11-.03 0-.5.15-1.3.4C6.45 1.73 5.92.94 4.9.94c-1.64 0-2.44 2.05-2.69 3.09-.65.2-1.1.34-1.16.36-.36.11-.37.12-.42.46C.58 5.22 0 19.4 0 19.4l12.2 2.28 6.58-1.43S15.37 5.79 15.34 5.55zM10.7 3.57l-1.67.52c0-.82-.11-1.98-.48-2.97.93.18 1.48 1.22 1.75 2.14.14.1.27.2.4.31zm-2.66.82L5.65 5.15c.31-1.22.9-1.81 1.7-2.03.26.53.43 1.28.49 2.04.06.07.12.15.2.23zM4.93 1.78c.11 0 .22.04.32.1-.8.38-1.66 1.33-2.02 3.24l-1.57.49c.43-1.47 1.44-3.83 3.27-3.83z"/>
-          <path d="M14.94 5.17c-.16.02-3.38.07-3.38.07s-2.25-2.2-2.5-2.45c-.09-.09-.2-.14-.31-.16l-.86 18.09 6.58-1.43S15.37 5.79 15.34 5.55c-.03-.24-.24-.36-.4-.38z" opacity=".5"/>
+          <path d="M15.34 5.55c-.03-.24-.24-.36-.4-.38-.16-.02-3.38-.07-3.38-.07s-2.25-2.2-2.5-2.45c-.24-.24-.72-.17-.9-.11-.03 0-.5.15-1.3.4C6.45 1.73 5.92.94 4.9.94c-1.64 0-2.44 2.05-2.69 3.09-.65.2-1.1.34-1.16.36-.36.11-.37.12-.42.46C.58 5.22 0 19.4 0 19.4l12.2 2.28 6.58-1.43S15.37 5.79 15.34 5.55zM10.7 3.57l-1.67.52c0-.82-.11-1.98-.48-2.97.93.18 1.48 1.22 1.75 2.14.14.1.27.2.4.31zm-2.66.82L5.65 5.15c.31-1.22.9-1.81 1.7-2.03.26.53.43 1.28.49 2.04.06.07.12.15.2.23zM4.93 1.78c.11 0 .22.04.32.1-.8.38-1.66 1.33-2.02 3.24l-1.57.49c.43-1.47 1.44-3.83 3.27-3.83z" />
+          <path
+            d="M14.94 5.17c-.16.02-3.38.07-3.38.07s-2.25-2.2-2.5-2.45c-.09-.09-.2-.14-.31-.16l-.86 18.09 6.58-1.43S15.37 5.79 15.34 5.55c-.03-.24-.24-.36-.4-.38z"
+            opacity=".5"
+          />
         </svg>
       ),
       stripe: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+          <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z" />
         </svg>
       ),
       wordpress: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-1.46 14.58L7.93 5.51c.46-.02.88-.07.88-.07.41-.05.36-.66-.05-.64 0 0-1.24.1-2.04.1-.14 0-.31 0-.48-.01C7.58 2.91 9.66 1.8 12 1.8c1.73 0 3.31.66 4.5 1.74-.03 0-.06-.01-.09-.01-.72 0-1.23.63-1.23 1.3 0 .6.35 1.11.72 1.72.28.48.6 1.1.6 2 0 .62-.24 1.34-.56 2.34l-.73 2.44-2.65-7.89c.44-.02.84-.07.84-.07.4-.05.35-.64-.05-.62 0 0-1.2.09-1.98.09-.07 0-.15 0-.22 0l2.87 8.58-1.96 5.86-3.82-11.34zM12 22.2c-1.22 0-2.39-.22-3.47-.62l3.68-10.69 3.77 10.33c.02.06.05.12.08.17-1.26.52-2.64.81-4.06.81zm8.4-5.14c.33-1.35.53-2.9.53-4.62 0-1.81-.33-3.38-.86-4.72l-4.7 13.62c3.03-1.46 5.03-4.57 5.03-8.28zm-17.9-4.62c0 3.27 1.61 6.16 4.07 7.93L2.92 9.45c-.28 1.03-.42 2.12-.42 3.25v.74z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-1.46 14.58L7.93 5.51c.46-.02.88-.07.88-.07.41-.05.36-.66-.05-.64 0 0-1.24.1-2.04.1-.14 0-.31 0-.48-.01C7.58 2.91 9.66 1.8 12 1.8c1.73 0 3.31.66 4.5 1.74-.03 0-.06-.01-.09-.01-.72 0-1.23.63-1.23 1.3 0 .6.35 1.11.72 1.72.28.48.6 1.1.6 2 0 .62-.24 1.34-.56 2.34l-.73 2.44-2.65-7.89c.44-.02.84-.07.84-.07.4-.05.35-.64-.05-.62 0 0-1.2.09-1.98.09-.07 0-.15 0-.22 0l2.87 8.58-1.96 5.86-3.82-11.34zM12 22.2c-1.22 0-2.39-.22-3.47-.62l3.68-10.69 3.77 10.33c.02.06.05.12.08.17-1.26.52-2.64.81-4.06.81zm8.4-5.14c.33-1.35.53-2.9.53-4.62 0-1.81-.33-3.38-.86-4.72l-4.7 13.62c3.03-1.46 5.03-4.57 5.03-8.28zm-17.9-4.62c0 3.27 1.61 6.16 4.07 7.93L2.92 9.45c-.28 1.03-.42 2.12-.42 3.25v.74z" />
         </svg>
       ),
       'google-ads': (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <circle cx="12" cy="12" r="10" fill="#4285F4"/>
-          <text x="12" y="16" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">G</text>
+          <circle cx="12" cy="12" r="10" fill="#4285F4" />
+          <text x="12" y="16" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+            G
+          </text>
         </svg>
       ),
       meta: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.92 3.77-3.92 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z" fill="#0866FF"/>
+          <path
+            d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.52 1.49-3.92 3.77-3.92 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"
+            fill="#0866FF"
+          />
         </svg>
       ),
       tiktok: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
         </svg>
       ),
       slack: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" fill="#E01E5A"/>
+          <path
+            d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"
+            fill="#E01E5A"
+          />
         </svg>
       ),
-    }
-    return icons[type] || <div className="w-6 h-6 rounded-full bg-muted" />
-  }
+    };
+    return icons[type] || <div className="w-6 h-6 rounded-full bg-muted" />;
+  };
 
   // Ad Platforms
   const adPlatforms = [
@@ -760,38 +785,80 @@ function IntegrationSettings() {
     { id: 'meta', name: 'Meta Ads', connected: true, color: 'text-blue-600' },
     { id: 'tiktok', name: 'TikTok Ads', connected: false, color: 'text-gray-400' },
     { id: 'slack', name: 'Slack', connected: true, color: 'text-purple-500' },
-  ]
+  ];
 
   // Analytics & Tracking
   const analyticsIntegrations = [
-    { id: 'google-analytics', name: 'Google Analytics', connected: true, color: 'text-orange-500', description: 'Track website traffic and behavior' },
-    { id: 'google-tag-manager', name: 'Google Tag Manager', connected: true, color: 'text-blue-500', description: 'Manage tracking pixels and tags' },
-  ]
+    {
+      id: 'google-analytics',
+      name: 'Google Analytics',
+      connected: true,
+      color: 'text-orange-500',
+      description: 'Track website traffic and behavior',
+    },
+    {
+      id: 'google-tag-manager',
+      name: 'Google Tag Manager',
+      connected: true,
+      color: 'text-blue-500',
+      description: 'Manage tracking pixels and tags',
+    },
+  ];
 
   // E-commerce & Payments
   const commerceIntegrations = [
-    { id: 'shopify', name: 'Shopify', connected: true, color: 'text-green-500', description: 'Sync orders and product catalog' },
-    { id: 'stripe', name: 'Stripe', connected: false, color: 'text-purple-500', description: 'Track payments and subscriptions' },
-    { id: 'wordpress', name: 'WordPress', connected: false, color: 'text-blue-500', description: 'Connect WooCommerce and forms' },
-  ]
+    {
+      id: 'shopify',
+      name: 'Shopify',
+      connected: true,
+      color: 'text-green-500',
+      description: 'Sync orders and product catalog',
+    },
+    {
+      id: 'stripe',
+      name: 'Stripe',
+      connected: false,
+      color: 'text-purple-500',
+      description: 'Track payments and subscriptions',
+    },
+    {
+      id: 'wordpress',
+      name: 'WordPress',
+      connected: false,
+      color: 'text-blue-500',
+      description: 'Connect WooCommerce and forms',
+    },
+  ];
 
   // Webhook event types
   const webhookEventTypes = [
-    { id: 'campaign.updated', label: 'Campaign Updated', description: 'When campaign settings change' },
+    {
+      id: 'campaign.updated',
+      label: 'Campaign Updated',
+      description: 'When campaign settings change',
+    },
     { id: 'campaign.paused', label: 'Campaign Paused', description: 'When a campaign is paused' },
-    { id: 'alert.triggered', label: 'Alert Triggered', description: 'When performance alerts fire' },
+    {
+      id: 'alert.triggered',
+      label: 'Alert Triggered',
+      description: 'When performance alerts fire',
+    },
     { id: 'budget.depleted', label: 'Budget Depleted', description: 'When daily budget runs out' },
     { id: 'sync.completed', label: 'Sync Completed', description: 'When data sync finishes' },
-    { id: 'anomaly.detected', label: 'Anomaly Detected', description: 'When unusual patterns found' },
-  ]
+    {
+      id: 'anomaly.detected',
+      label: 'Anomaly Detected',
+      description: 'When unusual patterns found',
+    },
+  ];
 
   const toggleWebhookEvent = (eventId: string) => {
     if (newWebhookEvents.includes(eventId)) {
-      setNewWebhookEvents(newWebhookEvents.filter(e => e !== eventId))
+      setNewWebhookEvents(newWebhookEvents.filter((e) => e !== eventId));
     } else {
-      setNewWebhookEvents([...newWebhookEvents, eventId])
+      setNewWebhookEvents([...newWebhookEvents, eventId]);
     }
-  }
+  };
 
   const addWebhook = () => {
     if (newWebhookUrl && newWebhookEvents.length > 0) {
@@ -804,23 +871,27 @@ function IntegrationSettings() {
           status: 'active',
           lastTriggered: 'Never',
         },
-      ])
-      setNewWebhookUrl('')
-      setNewWebhookEvents([])
-      setShowAddWebhook(false)
+      ]);
+      setNewWebhookUrl('');
+      setNewWebhookEvents([]);
+      setShowAddWebhook(false);
     }
-  }
+  };
 
   const deleteWebhook = (id: string) => {
     if (confirm('Are you sure you want to delete this webhook?')) {
-      setWebhooks(webhooks.filter(w => w.id !== id))
+      setWebhooks(webhooks.filter((w) => w.id !== id));
     }
-  }
+  };
 
-  const IntegrationCard = ({ integration, showDescription = false }: { integration: any; showDescription?: boolean }) => (
-    <div
-      className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d"
-    >
+  const IntegrationCard = ({
+    integration,
+    showDescription = false,
+  }: {
+    integration: any;
+    showDescription?: boolean;
+  }) => (
+    <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d">
       <div className="flex items-center gap-4">
         <div className={cn('p-2 rounded-xl bg-black/30', integration.color)}>
           <IntegrationIcon type={integration.id} />
@@ -855,7 +926,7 @@ function IntegrationSettings() {
         </button>
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="space-y-8">
@@ -866,7 +937,9 @@ function IntegrationSettings() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-medium">Webhooks</h3>
-            <p className="text-sm text-muted-foreground">Receive real-time notifications for platform events</p>
+            <p className="text-sm text-muted-foreground">
+              Receive real-time notifications for platform events
+            </p>
           </div>
           <button
             onClick={() => setShowAddWebhook(true)}
@@ -897,9 +970,7 @@ function IntegrationSettings() {
                   <span className="px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30">
                     Active
                   </span>
-                  <button
-                    className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-sm"
-                  >
+                  <button className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-sm">
                     Edit
                   </button>
                   <button
@@ -910,7 +981,9 @@ function IntegrationSettings() {
                   </button>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">Last triggered: {webhook.lastTriggered}</p>
+              <p className="text-xs text-muted-foreground">
+                Last triggered: {webhook.lastTriggered}
+              </p>
             </div>
           ))}
         </div>
@@ -1023,18 +1096,18 @@ function IntegrationSettings() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function PreferenceSettings() {
-  const { t, i18n } = useTranslation()
-  const [theme, setTheme] = useState('system')
-  const [language, setLanguage] = useState(i18n.language)
+  const { t, i18n } = useTranslation();
+  const [theme, setTheme] = useState('system');
+  const [language, setLanguage] = useState(i18n.language);
 
   const handleLanguageChange = (lang: string) => {
-    setLanguage(lang)
-    i18n.changeLanguage(lang)
-  }
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+  };
 
   return (
     <div className="space-y-6">
@@ -1089,11 +1162,11 @@ function PreferenceSettings() {
         </select>
       </div>
     </div>
-  )
+  );
 }
 
 function BillingSettings() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6">
@@ -1138,7 +1211,7 @@ function BillingSettings() {
                 <th className="p-3 text-left text-sm font-medium">{t('settings.date')}</th>
                 <th className="p-3 text-left text-sm font-medium">{t('settings.description')}</th>
                 <th className="p-3 text-right text-sm font-medium">{t('settings.amount')}</th>
-                <th className="p-3 text-right text-sm font-medium"></th>
+                <th className="p-3 text-right text-sm font-medium" />
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -1163,44 +1236,46 @@ function BillingSettings() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function GDPRSettings() {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   // API hooks for GDPR operations
-  const exportData = useExportData()
-  const requestDeletion = useRequestDeletion()
+  const exportData = useExportData();
+  const requestDeletion = useRequestDeletion();
 
-  const [exportStatus, setExportStatus] = useState<'idle' | 'processing' | 'ready'>('idle')
+  const [exportStatus, setExportStatus] = useState<'idle' | 'processing' | 'ready'>('idle');
 
   // Handle data export request
   const handleExport = async () => {
-    setExportStatus('processing')
+    setExportStatus('processing');
     try {
-      await exportData.mutateAsync('json')
-      setExportStatus('ready')
+      await exportData.mutateAsync('json');
+      setExportStatus('ready');
     } catch (error) {
-      console.error('Export failed:', error)
+      console.error('Export failed:', error);
       // Fallback to mock success for demo
-      setTimeout(() => setExportStatus('ready'), 3000)
+      setTimeout(() => setExportStatus('ready'), 3000);
     }
-  }
+  };
 
   // Handle account deletion request
   const handleDeleteRequest = async () => {
-    if (!confirm('Are you sure you want to request account deletion? This action cannot be undone.')) {
-      return
+    if (
+      !confirm('Are you sure you want to request account deletion? This action cannot be undone.')
+    ) {
+      return;
     }
     try {
-      await requestDeletion.mutateAsync('User requested account deletion')
-      alert('Deletion request submitted. You will receive an email confirmation.')
+      await requestDeletion.mutateAsync('User requested account deletion');
+      alert('Deletion request submitted. You will receive an email confirmation.');
     } catch (error) {
-      console.error('Deletion request failed:', error)
-      alert('Deletion request submitted (demo mode).')
+      console.error('Deletion request failed:', error);
+      alert('Deletion request submitted (demo mode).');
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -1260,7 +1335,7 @@ function GDPRSettings() {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default Settings
+export default Settings;

@@ -13,12 +13,10 @@ Tests:
 - Step condition checking
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
+import pytest
 
 # =============================================================================
 # Import Task Helper Functions
@@ -29,7 +27,7 @@ from decimal import Decimal
 # to a separate module for easier testing.
 
 
-def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
+def _evaluate_condition_single(profile, condition: dict[str, Any]) -> bool:
     """Evaluate a single condition against a profile."""
     field = condition.get("field", "")
     operator = condition.get("operator", "equals")
@@ -38,10 +36,10 @@ def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
     # Get field value from profile
     if field.startswith("profile_data."):
         data_field = field[13:]
-        field_value = (getattr(profile, 'profile_data', None) or {}).get(data_field)
+        field_value = (getattr(profile, "profile_data", None) or {}).get(data_field)
     elif field.startswith("computed_traits."):
         trait_field = field[16:]
-        field_value = (getattr(profile, 'computed_traits', None) or {}).get(trait_field)
+        field_value = (getattr(profile, "computed_traits", None) or {}).get(trait_field)
     else:
         field_value = getattr(profile, field, None)
 
@@ -75,19 +73,17 @@ def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
             return field_value not in (value if isinstance(value, list) else [value])
         elif operator == "is_null":
             return field_value is None
-        elif operator == "is_not_null":
-            return field_value is not None
-        elif operator == "exists":
+        elif operator == "is_not_null" or operator == "exists":
             return field_value is not None
         elif operator == "not_exists":
             return field_value is None
         elif operator == "within_last":
             if isinstance(field_value, datetime):
-                return field_value >= datetime.now(timezone.utc) - timedelta(days=int(value))
+                return field_value >= datetime.now(UTC) - timedelta(days=int(value))
             return False
         elif operator == "not_within_last":
             if isinstance(field_value, datetime):
-                return field_value < datetime.now(timezone.utc) - timedelta(days=int(value))
+                return field_value < datetime.now(UTC) - timedelta(days=int(value))
             return False
         elif operator == "between":
             if isinstance(value, list) and len(value) == 2:
@@ -99,7 +95,7 @@ def _evaluate_condition_single(profile, condition: Dict[str, Any]) -> bool:
         return False
 
 
-def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
+def _evaluate_segment_rules(profile, rules: dict[str, Any]) -> dict[str, Any]:
     """Evaluate a profile against segment rules."""
     try:
         logic = rules.get("logic", "and")
@@ -126,7 +122,11 @@ def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
         else:
             matched = any(condition_results)
 
-        score = sum(1 for r in condition_results if r) / len(condition_results) if condition_results else 0.0
+        score = (
+            sum(1 for r in condition_results if r) / len(condition_results)
+            if condition_results
+            else 0.0
+        )
 
         return {"matched": matched, "score": score}
 
@@ -134,7 +134,7 @@ def _evaluate_segment_rules(profile, rules: Dict[str, Any]) -> Dict[str, Any]:
         return {"matched": False, "score": 0.0}
 
 
-def _calculate_rfm_score(value: float, thresholds: List[float], reverse: bool = False) -> int:
+def _calculate_rfm_score(value: float, thresholds: list[float], reverse: bool = False) -> int:
     """Calculate RFM score (1-5) based on value and thresholds."""
     score = 1
     for i, threshold in enumerate(thresholds, start=2):
@@ -180,7 +180,7 @@ def _check_step_conditions(event, conditions) -> bool:
     if not conditions:
         return True
 
-    props = getattr(event, 'properties', None) or {}
+    props = getattr(event, "properties", None) or {}
 
     for condition in conditions:
         field = condition.get("field", "")
@@ -189,17 +189,24 @@ def _check_step_conditions(event, conditions) -> bool:
 
         field_value = props.get(field)
 
-        if operator == "equals" and field_value != value:
-            return False
-        elif operator == "not_equals" and field_value == value:
-            return False
-        elif operator == "greater_than" and not (field_value and float(field_value) > float(value)):
-            return False
-        elif operator == "less_than" and not (field_value and float(field_value) < float(value)):
-            return False
-        elif operator == "contains" and not (field_value and str(value) in str(field_value)):
-            return False
-        elif operator == "exists" and field_value is None:
+        if (
+            operator == "equals"
+            and field_value != value
+            or operator == "not_equals"
+            and field_value == value
+            or (
+                operator == "greater_than"
+                and not (field_value and float(field_value) > float(value))
+                or operator == "less_than"
+                and not (field_value and float(field_value) < float(value))
+            )
+            or (
+                operator == "contains"
+                and not (field_value and str(value) in str(field_value))
+                or operator == "exists"
+                and field_value is None
+            )
+        ):
             return False
 
     return True
@@ -209,6 +216,7 @@ def _check_step_conditions(event, conditions) -> bool:
 # Mock Profile Class
 # =============================================================================
 
+
 class MockProfile:
     """Mock profile for testing segment evaluation."""
 
@@ -217,8 +225,8 @@ class MockProfile:
         lifecycle_stage: str = "known",
         total_events: int = 10,
         total_revenue: float = 500.0,
-        profile_data: Dict = None,
-        computed_traits: Dict = None,
+        profile_data: dict = None,
+        computed_traits: dict = None,
         last_seen_at: datetime = None,
     ):
         self.lifecycle_stage = lifecycle_stage
@@ -226,7 +234,7 @@ class MockProfile:
         self.total_revenue = total_revenue
         self.profile_data = profile_data or {}
         self.computed_traits = computed_traits or {}
-        self.last_seen_at = last_seen_at or datetime.now(timezone.utc)
+        self.last_seen_at = last_seen_at or datetime.now(UTC)
 
 
 class MockEvent:
@@ -236,16 +244,17 @@ class MockEvent:
         self,
         event_name: str,
         event_time: datetime = None,
-        properties: Dict = None,
+        properties: dict = None,
     ):
         self.event_name = event_name
-        self.event_time = event_time or datetime.now(timezone.utc)
+        self.event_time = event_time or datetime.now(UTC)
         self.properties = properties or {}
 
 
 # =============================================================================
 # Segment Condition Operator Tests
 # =============================================================================
+
 
 class TestConditionOperators:
     """Tests for segment condition operators."""
@@ -328,7 +337,11 @@ class TestConditionOperators:
     def test_not_in_operator(self):
         """Test not_in operator with list."""
         profile = MockProfile(lifecycle_stage="anonymous")
-        condition = {"field": "lifecycle_stage", "operator": "not_in", "value": ["customer", "known"]}
+        condition = {
+            "field": "lifecycle_stage",
+            "operator": "not_in",
+            "value": ["customer", "known"],
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_is_null_operator(self):
@@ -351,7 +364,7 @@ class TestConditionOperators:
 
     def test_within_last_operator(self):
         """Test within_last operator for date fields."""
-        recent_time = datetime.now(timezone.utc) - timedelta(days=5)
+        recent_time = datetime.now(UTC) - timedelta(days=5)
         profile = MockProfile(last_seen_at=recent_time)
         condition = {"field": "last_seen_at", "operator": "within_last", "value": 7}
         assert _evaluate_condition_single(profile, condition) is True
@@ -367,6 +380,7 @@ class TestConditionOperators:
 # Segment Rules Evaluation Tests
 # =============================================================================
 
+
 class TestSegmentRulesEvaluation:
     """Tests for segment rules evaluation with AND/OR logic."""
 
@@ -378,7 +392,7 @@ class TestSegmentRulesEvaluation:
             "conditions": [
                 {"field": "lifecycle_stage", "operator": "equals", "value": "customer"},
                 {"field": "total_events", "operator": "gte", "value": 50},
-            ]
+            ],
         }
         result = _evaluate_segment_rules(profile, rules)
         assert result["matched"] is True
@@ -392,7 +406,7 @@ class TestSegmentRulesEvaluation:
             "conditions": [
                 {"field": "lifecycle_stage", "operator": "equals", "value": "customer"},
                 {"field": "total_events", "operator": "gte", "value": 50},
-            ]
+            ],
         }
         result = _evaluate_segment_rules(profile, rules)
         assert result["matched"] is False
@@ -406,7 +420,7 @@ class TestSegmentRulesEvaluation:
             "conditions": [
                 {"field": "lifecycle_stage", "operator": "equals", "value": "customer"},
                 {"field": "total_events", "operator": "gte", "value": 50},
-            ]
+            ],
         }
         result = _evaluate_segment_rules(profile, rules)
         assert result["matched"] is True
@@ -419,18 +433,14 @@ class TestSegmentRulesEvaluation:
             "conditions": [
                 {"field": "lifecycle_stage", "operator": "equals", "value": "customer"},
                 {"field": "total_events", "operator": "gte", "value": 50},
-            ]
+            ],
         }
         result = _evaluate_segment_rules(profile, rules)
         assert result["matched"] is False
 
     def test_nested_groups(self):
         """Test nested rule groups."""
-        profile = MockProfile(
-            lifecycle_stage="customer",
-            total_events=100,
-            total_revenue=2000
-        )
+        profile = MockProfile(lifecycle_stage="customer", total_events=100, total_revenue=2000)
         rules = {
             "logic": "and",
             "conditions": [
@@ -442,9 +452,9 @@ class TestSegmentRulesEvaluation:
                     "conditions": [
                         {"field": "total_events", "operator": "gte", "value": 50},
                         {"field": "total_revenue", "operator": "gte", "value": 1000},
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
         result = _evaluate_segment_rules(profile, rules)
         assert result["matched"] is True
@@ -460,6 +470,7 @@ class TestSegmentRulesEvaluation:
 # =============================================================================
 # RFM Score Calculation Tests
 # =============================================================================
+
 
 class TestRFMScoreCalculation:
     """Tests for RFM score calculation."""
@@ -514,6 +525,7 @@ class TestRFMScoreCalculation:
 # =============================================================================
 # RFM Segment Determination Tests
 # =============================================================================
+
 
 class TestRFMSegmentDetermination:
     """Tests for RFM segment determination."""
@@ -587,6 +599,7 @@ class TestRFMSegmentDetermination:
 # Funnel Step Condition Tests
 # =============================================================================
 
+
 class TestFunnelStepConditions:
     """Tests for funnel step condition checking."""
 
@@ -640,11 +653,9 @@ class TestFunnelStepConditions:
 
     def test_multiple_conditions_all_match(self):
         """Test multiple conditions all matching."""
-        event = MockEvent("Purchase", properties={
-            "category": "electronics",
-            "amount": 200,
-            "currency": "USD"
-        })
+        event = MockEvent(
+            "Purchase", properties={"category": "electronics", "amount": 200, "currency": "USD"}
+        )
         conditions = [
             {"field": "category", "operator": "equals", "value": "electronics"},
             {"field": "amount", "operator": "greater_than", "value": 100},
@@ -653,10 +664,13 @@ class TestFunnelStepConditions:
 
     def test_multiple_conditions_one_fails(self):
         """Test multiple conditions when one fails."""
-        event = MockEvent("Purchase", properties={
-            "category": "clothing",
-            "amount": 200,
-        })
+        event = MockEvent(
+            "Purchase",
+            properties={
+                "category": "clothing",
+                "amount": 200,
+            },
+        )
         conditions = [
             {"field": "category", "operator": "equals", "value": "electronics"},
             {"field": "amount", "operator": "greater_than", "value": 100},

@@ -3,7 +3,7 @@
  * Traps focus within a container element for accessibility (modals, dialogs)
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 const FOCUSABLE_SELECTORS = [
   'a[href]',

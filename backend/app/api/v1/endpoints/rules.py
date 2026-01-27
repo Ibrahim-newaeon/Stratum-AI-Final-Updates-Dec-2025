@@ -6,7 +6,7 @@ IFTTT-style automation rules management.
 Implements Module C: Stratum Automation.
 """
 
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
@@ -308,7 +308,7 @@ async def test_rule(
     )
 
 
-@router.get("/{rule_id}/executions", response_model=APIResponse[List[RuleExecutionResponse]])
+@router.get("/{rule_id}/executions", response_model=APIResponse[list[RuleExecutionResponse]])
 async def get_rule_executions(
     request: Request,
     rule_id: int,

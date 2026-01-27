@@ -14,37 +14,48 @@ Models:
 All models are multi-tenant with tenant_id column.
 """
 
+import enum
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 from uuid import uuid4
-import enum
 
 from sqlalchemy import (
-    Column, String, Integer, DateTime, Text, ForeignKey,
-    Index, Boolean, BigInteger, Numeric, UniqueConstraint
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, TimestampMixin
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class SourceType(str, enum.Enum):
     """Types of data sources that can send events."""
-    WEBSITE = "website"   # Browser pixel/JavaScript SDK
-    SERVER = "server"     # Server-side API
-    SGTM = "sgtm"         # Server-side Google Tag Manager
-    IMPORT = "import"     # CSV/bulk import
-    CRM = "crm"           # CRM sync (HubSpot, Salesforce, etc.)
+
+    WEBSITE = "website"  # Browser pixel/JavaScript SDK
+    SERVER = "server"  # Server-side API
+    SGTM = "sgtm"  # Server-side Google Tag Manager
+    IMPORT = "import"  # CSV/bulk import
+    CRM = "crm"  # CRM sync (HubSpot, Salesforce, etc.)
 
 
 class IdentifierType(str, enum.Enum):
     """Types of customer identifiers."""
+
     EMAIL = "email"
     PHONE = "phone"
     DEVICE_ID = "device_id"
@@ -54,30 +65,34 @@ class IdentifierType(str, enum.Enum):
 
 class LifecycleStage(str, enum.Enum):
     """Customer lifecycle stages."""
-    ANONYMOUS = "anonymous"   # Unknown visitor
-    KNOWN = "known"           # Identified (email/phone collected)
-    CUSTOMER = "customer"     # Has made a purchase
-    CHURNED = "churned"       # Inactive for defined period
+
+    ANONYMOUS = "anonymous"  # Unknown visitor
+    KNOWN = "known"  # Identified (email/phone collected)
+    CUSTOMER = "customer"  # Has made a purchase
+    CHURNED = "churned"  # Inactive for defined period
 
 
 class ConsentType(str, enum.Enum):
     """Types of privacy consent."""
-    ANALYTICS = "analytics"   # Analytics/tracking consent
-    ADS = "ads"               # Advertising consent
-    EMAIL = "email"           # Email marketing consent
-    SMS = "sms"               # SMS marketing consent
-    ALL = "all"               # Global consent (all types)
+
+    ANALYTICS = "analytics"  # Analytics/tracking consent
+    ADS = "ads"  # Advertising consent
+    EMAIL = "email"  # Email marketing consent
+    SMS = "sms"  # SMS marketing consent
+    ALL = "all"  # Global consent (all types)
 
 
 # =============================================================================
 # CDP Source Model
 # =============================================================================
 
+
 class CDPSource(Base, TimestampMixin):
     """
     Data source configuration for CDP event ingestion.
     Each source has a unique API key for authentication.
     """
+
     __tablename__ = "cdp_sources"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -91,7 +106,7 @@ class CDPSource(Base, TimestampMixin):
     # Source identification
     name = Column(String(255), nullable=False)
     source_type = Column(String(50), nullable=False)  # Using string for flexibility
-    source_key = Column(String(64), nullable=False)   # API key for this source
+    source_key = Column(String(64), nullable=False)  # API key for this source
 
     # Configuration (JSON for flexibility)
     config = Column(JSONB, nullable=False, default=dict)
@@ -118,11 +133,13 @@ class CDPSource(Base, TimestampMixin):
 # CDP Profile Model
 # =============================================================================
 
+
 class CDPProfile(Base, TimestampMixin):
     """
     Unified customer profile. One row per unique customer.
     Aggregates data from multiple identifiers and events.
     """
+
     __tablename__ = "cdp_profiles"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -199,11 +216,13 @@ class CDPProfile(Base, TimestampMixin):
 # CDP Profile Identifier Model
 # =============================================================================
 
+
 class CDPProfileIdentifier(Base):
     """
     Identity mapping - links identifiers (email, phone, device) to profiles.
     Identifiers are hashed for privacy.
     """
+
     __tablename__ = "cdp_profile_identifiers"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -222,8 +241,8 @@ class CDPProfileIdentifier(Base):
 
     # Identifier details
     identifier_type = Column(String(50), nullable=False)
-    identifier_value = Column(String(512), nullable=True)   # Original (can be redacted)
-    identifier_hash = Column(String(64), nullable=False)    # SHA256 hash
+    identifier_value = Column(String(512), nullable=True)  # Original (can be redacted)
+    identifier_hash = Column(String(64), nullable=False)  # SHA256 hash
 
     # Metadata
     is_primary = Column(Boolean, nullable=False, default=False)
@@ -244,8 +263,10 @@ class CDPProfileIdentifier(Base):
         Index("ix_cdp_identifiers_lookup", "tenant_id", "identifier_type", "identifier_hash"),
         Index("ix_cdp_identifiers_hash", "identifier_hash"),
         UniqueConstraint(
-            "tenant_id", "identifier_type", "identifier_hash",
-            name="uq_cdp_identifiers_tenant_type_hash"
+            "tenant_id",
+            "identifier_type",
+            "identifier_hash",
+            name="uq_cdp_identifiers_tenant_type_hash",
         ),
     )
 
@@ -257,11 +278,13 @@ class CDPProfileIdentifier(Base):
 # CDP Event Model
 # =============================================================================
 
+
 class CDPEvent(Base):
     """
     Append-only event store. Events are never updated or deleted.
     Each event is linked to a profile (if identifiable) and a source.
     """
+
     __tablename__ = "cdp_events"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -326,11 +349,13 @@ class CDPEvent(Base):
 # CDP Consent Model
 # =============================================================================
 
+
 class CDPConsent(Base, TimestampMixin):
     """
     Privacy consent tracking per profile per consent type.
     Maintains audit trail for compliance (GDPR, PDPL, etc.).
     """
+
     __tablename__ = "cdp_consents"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -370,8 +395,7 @@ class CDPConsent(Base, TimestampMixin):
         Index("ix_cdp_consents_profile", "profile_id"),
         Index("ix_cdp_consents_type", "tenant_id", "consent_type", "granted"),
         UniqueConstraint(
-            "tenant_id", "profile_id", "consent_type",
-            name="uq_cdp_consents_tenant_profile_type"
+            "tenant_id", "profile_id", "consent_type", name="uq_cdp_consents_tenant_profile_type"
         ),
     )
 
@@ -384,8 +408,10 @@ class CDPConsent(Base, TimestampMixin):
 # CDP Webhook Model
 # =============================================================================
 
+
 class WebhookEventType(str, enum.Enum):
     """Events that can trigger webhooks."""
+
     EVENT_RECEIVED = "event.received"
     PROFILE_CREATED = "profile.created"
     PROFILE_UPDATED = "profile.updated"
@@ -396,21 +422,23 @@ class WebhookEventType(str, enum.Enum):
 
 class IdentityLinkType(str, enum.Enum):
     """Types of identity links in the graph."""
-    SAME_SESSION = "same_session"       # Identifiers seen in same session
-    SAME_EVENT = "same_event"           # Identifiers sent in same event
-    LOGIN = "login"                     # Anonymous linked to known via login
-    FORM_SUBMIT = "form_submit"         # Anonymous linked via form submission
-    PURCHASE = "purchase"               # Linked during purchase
-    MANUAL = "manual"                   # Manually linked by admin
-    INFERRED = "inferred"               # Inferred from behavior patterns
+
+    SAME_SESSION = "same_session"  # Identifiers seen in same session
+    SAME_EVENT = "same_event"  # Identifiers sent in same event
+    LOGIN = "login"  # Anonymous linked to known via login
+    FORM_SUBMIT = "form_submit"  # Anonymous linked via form submission
+    PURCHASE = "purchase"  # Linked during purchase
+    MANUAL = "manual"  # Manually linked by admin
+    INFERRED = "inferred"  # Inferred from behavior patterns
 
 
 class MergeReason(str, enum.Enum):
     """Reasons for profile merges."""
-    IDENTITY_MATCH = "identity_match"   # Same identifier found
-    MANUAL_MERGE = "manual_merge"       # Admin merged profiles
-    LOGIN_EVENT = "login_event"         # Login linked anonymous to known
-    CROSS_DEVICE = "cross_device"       # Cross-device identification
+
+    IDENTITY_MATCH = "identity_match"  # Same identifier found
+    MANUAL_MERGE = "manual_merge"  # Admin merged profiles
+    LOGIN_EVENT = "login_event"  # Login linked anonymous to known
+    CROSS_DEVICE = "cross_device"  # Cross-device identification
 
 
 class CDPWebhook(Base, TimestampMixin):
@@ -418,6 +446,7 @@ class CDPWebhook(Base, TimestampMixin):
     Webhook destination for CDP events.
     Allows tenants to receive real-time notifications when events occur.
     """
+
     __tablename__ = "cdp_webhooks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -463,11 +492,11 @@ class CDPWebhook(Base, TimestampMixin):
 
 # Identity resolution priority (higher = stronger identity)
 IDENTITY_PRIORITY = {
-    "external_id": 100,    # Customer ID from client system
-    "email": 80,           # Email (strong, verified)
-    "phone": 70,           # Phone (strong, verified)
-    "device_id": 40,       # Device fingerprint
-    "anonymous_id": 10,    # Anonymous/cookie ID (weakest)
+    "external_id": 100,  # Customer ID from client system
+    "email": 80,  # Email (strong, verified)
+    "phone": 70,  # Phone (strong, verified)
+    "device_id": 40,  # Device fingerprint
+    "anonymous_id": 10,  # Anonymous/cookie ID (weakest)
 }
 
 
@@ -478,6 +507,7 @@ class CDPIdentityLink(Base):
     This creates a graph where nodes are identifiers and edges represent
     relationships between them. Used for identity stitching.
     """
+
     __tablename__ = "cdp_identity_links"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -537,8 +567,10 @@ class CDPIdentityLink(Base):
         Index("ix_cdp_identity_links_type", "tenant_id", "link_type"),
         # Prevent duplicate links
         UniqueConstraint(
-            "tenant_id", "source_identifier_id", "target_identifier_id",
-            name="uq_cdp_identity_links_source_target"
+            "tenant_id",
+            "source_identifier_id",
+            "target_identifier_id",
+            name="uq_cdp_identity_links_source_target",
         ),
     )
 
@@ -553,6 +585,7 @@ class CDPProfileMerge(Base):
     When two profiles are identified as the same person, they are merged.
     This table keeps an audit trail of all merges for debugging and rollback.
     """
+
     __tablename__ = "cdp_profile_merges"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -620,6 +653,7 @@ class CDPCanonicalIdentity(Base):
     Each profile has one canonical identity that represents the best-known
     identity for that person. Used for identity resolution priority.
     """
+
     __tablename__ = "cdp_canonical_identities"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -679,24 +713,28 @@ class CDPCanonicalIdentity(Base):
 # CDP Segment Models
 # =============================================================================
 
+
 class SegmentType(str, enum.Enum):
     """Types of segments."""
-    STATIC = "static"       # Manually defined membership
-    DYNAMIC = "dynamic"     # Rule-based, auto-updated
-    COMPUTED = "computed"   # ML/algorithm-based
+
+    STATIC = "static"  # Manually defined membership
+    DYNAMIC = "dynamic"  # Rule-based, auto-updated
+    COMPUTED = "computed"  # ML/algorithm-based
 
 
 class SegmentStatus(str, enum.Enum):
     """Segment computation status."""
-    DRAFT = "draft"         # Not yet computed
-    COMPUTING = "computing" # Currently being computed
-    ACTIVE = "active"       # Ready for use
-    STALE = "stale"         # Needs recomputation
-    ARCHIVED = "archived"   # No longer in use
+
+    DRAFT = "draft"  # Not yet computed
+    COMPUTING = "computing"  # Currently being computed
+    ACTIVE = "active"  # Ready for use
+    STALE = "stale"  # Needs recomputation
+    ARCHIVED = "archived"  # No longer in use
 
 
 class ConditionOperator(str, enum.Enum):
     """Operators for segment conditions."""
+
     EQUALS = "equals"
     NOT_EQUALS = "not_equals"
     CONTAINS = "contains"
@@ -712,8 +750,8 @@ class ConditionOperator(str, enum.Enum):
     NOT_IN = "not_in"
     IS_NULL = "is_null"
     IS_NOT_NULL = "is_not_null"
-    BEFORE = "before"       # Date comparison
-    AFTER = "after"         # Date comparison
+    BEFORE = "before"  # Date comparison
+    AFTER = "after"  # Date comparison
     WITHIN_LAST = "within_last"  # e.g., within_last 30 days
 
 
@@ -724,6 +762,7 @@ class CDPSegment(Base, TimestampMixin):
     Segments can be static (manual membership) or dynamic (rule-based).
     Dynamic segments are evaluated against profile data and events.
     """
+
     __tablename__ = "cdp_segments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -789,6 +828,7 @@ class CDPSegmentMembership(Base):
     Tracks which profiles belong to which segments.
     For dynamic segments, this is computed automatically.
     """
+
     __tablename__ = "cdp_segment_memberships"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -833,32 +873,35 @@ class CDPSegmentMembership(Base):
         Index("ix_cdp_memberships_active", "segment_id", "is_active"),
         # One active membership per profile per segment
         UniqueConstraint(
-            "tenant_id", "segment_id", "profile_id",
-            name="uq_cdp_memberships_segment_profile"
+            "tenant_id", "segment_id", "profile_id", name="uq_cdp_memberships_segment_profile"
         ),
     )
 
     def __repr__(self) -> str:
         status = "active" if self.is_active else "inactive"
-        return f"<CDPSegmentMembership segment={self.segment_id} profile={self.profile_id} ({status})>"
+        return (
+            f"<CDPSegmentMembership segment={self.segment_id} profile={self.profile_id} ({status})>"
+        )
 
 
 # =============================================================================
 # CDP Computed Traits Models
 # =============================================================================
 
+
 class ComputedTraitType(str, enum.Enum):
     """Types of computed traits."""
-    COUNT = "count"           # Count of events
-    SUM = "sum"               # Sum of property values
-    AVERAGE = "average"       # Average of property values
-    MIN = "min"               # Minimum value
-    MAX = "max"               # Maximum value
-    FIRST = "first"           # First occurrence
-    LAST = "last"             # Last occurrence
+
+    COUNT = "count"  # Count of events
+    SUM = "sum"  # Sum of property values
+    AVERAGE = "average"  # Average of property values
+    MIN = "min"  # Minimum value
+    MAX = "max"  # Maximum value
+    FIRST = "first"  # First occurrence
+    LAST = "last"  # Last occurrence
     UNIQUE_COUNT = "unique_count"  # Count of unique values
-    EXISTS = "exists"         # Boolean - if event/property exists
-    FORMULA = "formula"       # Custom formula
+    EXISTS = "exists"  # Boolean - if event/property exists
+    FORMULA = "formula"  # Custom formula
 
 
 class CDPComputedTrait(Base, TimestampMixin):
@@ -868,6 +911,7 @@ class CDPComputedTrait(Base, TimestampMixin):
     Computed traits are derived values calculated from profile events.
     Examples: total_purchases, average_order_value, days_since_last_login
     """
+
     __tablename__ = "cdp_computed_traits"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -891,7 +935,9 @@ class CDPComputedTrait(Base, TimestampMixin):
     source_config = Column(JSONB, nullable=False, default=dict)
 
     # Output configuration
-    output_type = Column(String(50), nullable=False, default="number")  # number, string, boolean, date
+    output_type = Column(
+        String(50), nullable=False, default="number"
+    )  # number, string, boolean, date
     default_value = Column(String(255), nullable=True)  # Default if no data
 
     # State
@@ -912,13 +958,15 @@ class CDPComputedTrait(Base, TimestampMixin):
 # CDP Funnel/Journey Models
 # =============================================================================
 
+
 class FunnelStatus(str, enum.Enum):
     """Funnel computation status."""
-    DRAFT = "draft"         # Not yet computed
-    COMPUTING = "computing" # Currently being computed
-    ACTIVE = "active"       # Ready for analysis
-    STALE = "stale"         # Needs recomputation
-    ARCHIVED = "archived"   # No longer in use
+
+    DRAFT = "draft"  # Not yet computed
+    COMPUTING = "computing"  # Currently being computed
+    ACTIVE = "active"  # Ready for analysis
+    STALE = "stale"  # Needs recomputation
+    ARCHIVED = "archived"  # No longer in use
 
 
 class CDPFunnel(Base, TimestampMixin):
@@ -928,6 +976,7 @@ class CDPFunnel(Base, TimestampMixin):
     A funnel tracks user progression through a series of events/steps.
     Examples: Registration funnel, Purchase funnel, Onboarding flow.
     """
+
     __tablename__ = "cdp_funnels"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -951,7 +1000,9 @@ class CDPFunnel(Base, TimestampMixin):
     steps = Column(JSONB, nullable=False, default=list)
 
     # Analysis configuration
-    conversion_window_days = Column(Integer, nullable=False, default=30)  # Max days between first and last step
+    conversion_window_days = Column(
+        Integer, nullable=False, default=30
+    )  # Max days between first and last step
     step_timeout_hours = Column(Integer, nullable=True)  # Max hours between steps (null = no limit)
 
     # Computed metrics (cached for performance)
@@ -992,6 +1043,7 @@ class CDPFunnelEntry(Base):
 
     Tracks each user's journey through funnel steps with timestamps.
     """
+
     __tablename__ = "cdp_funnel_entries"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -1045,7 +1097,6 @@ class CDPFunnelEntry(Base):
         Index("ix_cdp_funnel_entries_converted", "funnel_id", "is_converted"),
         # One entry per profile per funnel (for now - could support multiple journeys later)
         UniqueConstraint(
-            "tenant_id", "funnel_id", "profile_id",
-            name="uq_cdp_funnel_entries_funnel_profile"
+            "tenant_id", "funnel_id", "profile_id", name="uq_cdp_funnel_entries_funnel_profile"
         ),
     )

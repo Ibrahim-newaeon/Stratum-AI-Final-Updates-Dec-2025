@@ -3,87 +3,113 @@
  * Create and manage webhook destinations for CDP events
  */
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  Webhook,
-  Plus,
-  Trash2,
-  Save,
-  RefreshCw,
+  CheckCircle2,
   ChevronRight,
-  ExternalLink,
-  Play,
   Copy,
+  ExternalLink,
   Eye,
   EyeOff,
-  CheckCircle2,
-  XCircle,
   Loader2,
+  Play,
+  Plus,
+  RefreshCw,
+  Save,
   Search,
   Settings,
   Shield,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Trash2,
+  Webhook,
+  XCircle,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
+  CDPWebhook,
   useCDPWebhooks,
   useCreateWebhook,
-  useUpdateWebhook,
   useDeleteWebhook,
-  useTestWebhook,
   useRotateWebhookSecret,
-  CDPWebhook,
+  useTestWebhook,
+  useUpdateWebhook,
   WebhookEventType,
-} from '@/api/cdp'
+} from '@/api/cdp';
 
 // Available event types
 const EVENT_TYPES: { value: WebhookEventType; label: string; description: string }[] = [
-  { value: 'event.received', label: 'Event Received', description: 'Triggered when a new event is ingested' },
-  { value: 'profile.created', label: 'Profile Created', description: 'Triggered when a new profile is created' },
-  { value: 'profile.updated', label: 'Profile Updated', description: 'Triggered when a profile is updated' },
-  { value: 'profile.merged', label: 'Profile Merged', description: 'Triggered when profiles are merged' },
-  { value: 'consent.updated', label: 'Consent Updated', description: 'Triggered when consent is granted/revoked' },
+  {
+    value: 'event.received',
+    label: 'Event Received',
+    description: 'Triggered when a new event is ingested',
+  },
+  {
+    value: 'profile.created',
+    label: 'Profile Created',
+    description: 'Triggered when a new profile is created',
+  },
+  {
+    value: 'profile.updated',
+    label: 'Profile Updated',
+    description: 'Triggered when a profile is updated',
+  },
+  {
+    value: 'profile.merged',
+    label: 'Profile Merged',
+    description: 'Triggered when profiles are merged',
+  },
+  {
+    value: 'consent.updated',
+    label: 'Consent Updated',
+    description: 'Triggered when consent is granted/revoked',
+  },
   { value: 'all', label: 'All Events', description: 'Receive all event types' },
-]
+];
 
 interface WebhookFormProps {
-  webhook?: CDPWebhook
-  onSave: () => void
-  onCancel: () => void
+  webhook?: CDPWebhook;
+  onSave: () => void;
+  onCancel: () => void;
 }
 
 function WebhookForm({ webhook, onSave, onCancel }: WebhookFormProps) {
-  const [name, setName] = useState(webhook?.name || '')
-  const [url, setUrl] = useState(webhook?.url || '')
-  const [eventTypes, setEventTypes] = useState<WebhookEventType[]>(webhook?.event_types || [])
-  const [maxRetries, setMaxRetries] = useState(webhook?.max_retries || 3)
-  const [timeoutSeconds, setTimeoutSeconds] = useState(webhook?.timeout_seconds || 30)
+  const [name, setName] = useState(webhook?.name || '');
+  const [url, setUrl] = useState(webhook?.url || '');
+  const [eventTypes, setEventTypes] = useState<WebhookEventType[]>(webhook?.event_types || []);
+  const [maxRetries, setMaxRetries] = useState(webhook?.max_retries || 3);
+  const [timeoutSeconds, setTimeoutSeconds] = useState(webhook?.timeout_seconds || 30);
 
-  const createMutation = useCreateWebhook()
-  const updateMutation = useUpdateWebhook()
+  const createMutation = useCreateWebhook();
+  const updateMutation = useUpdateWebhook();
 
   const toggleEventType = (type: WebhookEventType) => {
     if (type === 'all') {
-      setEventTypes(['all'])
-      return
+      setEventTypes(['all']);
+      return;
     }
 
     // Remove 'all' if selecting specific types
-    const filteredTypes = eventTypes.filter(t => t !== 'all')
+    const filteredTypes = eventTypes.filter((t) => t !== 'all');
 
     if (filteredTypes.includes(type)) {
-      setEventTypes(filteredTypes.filter(t => t !== type))
+      setEventTypes(filteredTypes.filter((t) => t !== type));
     } else {
-      setEventTypes([...filteredTypes, type])
+      setEventTypes([...filteredTypes, type]);
     }
-  }
+  };
 
   const handleSubmit = async () => {
     try {
       if (webhook) {
         await updateMutation.mutateAsync({
           webhookId: webhook.id,
-          update: { name, url, event_types: eventTypes, max_retries: maxRetries, timeout_seconds: timeoutSeconds }
-        })
+          update: {
+            name,
+            url,
+            event_types: eventTypes,
+            max_retries: maxRetries,
+            timeout_seconds: timeoutSeconds,
+          },
+        });
       } else {
         await createMutation.mutateAsync({
           name,
@@ -91,16 +117,16 @@ function WebhookForm({ webhook, onSave, onCancel }: WebhookFormProps) {
           event_types: eventTypes,
           max_retries: maxRetries,
           timeout_seconds: timeoutSeconds,
-        })
+        });
       }
-      onSave()
+      onSave();
     } catch (error) {
-      console.error('Save failed:', error)
+      console.error('Save failed:', error);
     }
-  }
+  };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending
-  const isValid = name && url && eventTypes.length > 0
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+  const isValid = name && url && eventTypes.length > 0;
 
   return (
     <div className="space-y-6">
@@ -144,11 +170,17 @@ function WebhookForm({ webhook, onSave, onCancel }: WebhookFormProps) {
               onClick={() => toggleEventType(type.value)}
             >
               <div className="flex items-center gap-2 mb-1">
-                <div className={cn(
-                  'w-4 h-4 rounded border flex items-center justify-center',
-                  eventTypes.includes(type.value) ? 'bg-primary border-primary' : 'border-muted-foreground/50'
-                )}>
-                  {eventTypes.includes(type.value) && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                <div
+                  className={cn(
+                    'w-4 h-4 rounded border flex items-center justify-center',
+                    eventTypes.includes(type.value)
+                      ? 'bg-primary border-primary'
+                      : 'border-muted-foreground/50'
+                  )}
+                >
+                  {eventTypes.includes(type.value) && (
+                    <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+                  )}
                 </div>
                 <span className="font-medium text-sm">{type.label}</span>
               </div>
@@ -207,70 +239,67 @@ function WebhookForm({ webhook, onSave, onCancel }: WebhookFormProps) {
           disabled={!isValid || isLoading}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
         >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {webhook ? 'Update Webhook' : 'Create Webhook'}
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 interface WebhookDetailProps {
-  webhook: CDPWebhook
-  onBack: () => void
-  onRefresh: () => void
+  webhook: CDPWebhook;
+  onBack: () => void;
+  onRefresh: () => void;
 }
 
 function WebhookDetail({ webhook, onBack, onRefresh }: WebhookDetailProps) {
-  const [showSecret, setShowSecret] = useState(false)
-  const [copiedSecret, setCopiedSecret] = useState(false)
+  const [showSecret, setShowSecret] = useState(false);
+  const [copiedSecret, setCopiedSecret] = useState(false);
 
-  const testMutation = useTestWebhook()
-  const rotateMutation = useRotateWebhookSecret()
-  const updateMutation = useUpdateWebhook()
+  const testMutation = useTestWebhook();
+  const rotateMutation = useRotateWebhookSecret();
+  const updateMutation = useUpdateWebhook();
 
   const handleTest = async () => {
-    await testMutation.mutateAsync(webhook.id)
-  }
+    await testMutation.mutateAsync(webhook.id);
+  };
 
   const handleRotateSecret = async () => {
-    if (confirm('Are you sure you want to rotate the secret key? This will invalidate the current key.')) {
-      await rotateMutation.mutateAsync(webhook.id)
-      onRefresh()
+    if (
+      confirm(
+        'Are you sure you want to rotate the secret key? This will invalidate the current key.'
+      )
+    ) {
+      await rotateMutation.mutateAsync(webhook.id);
+      onRefresh();
     }
-  }
+  };
 
   const handleToggleActive = async () => {
     await updateMutation.mutateAsync({
       webhookId: webhook.id,
-      update: { is_active: !webhook.is_active }
-    })
-    onRefresh()
-  }
+      update: { is_active: !webhook.is_active },
+    });
+    onRefresh();
+  };
 
   const copySecret = () => {
     if (webhook.secret_key) {
-      navigator.clipboard.writeText(webhook.secret_key)
-      setCopiedSecret(true)
-      setTimeout(() => setCopiedSecret(false), 2000)
+      navigator.clipboard.writeText(webhook.secret_key);
+      setCopiedSecret(true);
+      setTimeout(() => setCopiedSecret(false), 2000);
     }
-  }
+  };
 
-  const testResult = testMutation.data
+  const testResult = testMutation.data;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-          >
+          <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <ChevronRight className="w-5 h-5 rotate-180" />
           </button>
           <div>
@@ -318,10 +347,12 @@ function WebhookDetail({ webhook, onBack, onRefresh }: WebhookDetailProps) {
           </button>
         </div>
         {testResult && (
-          <div className={cn(
-            'p-3 rounded-lg flex items-center gap-3',
-            testResult.success ? 'bg-green-500/10' : 'bg-red-500/10'
-          )}>
+          <div
+            className={cn(
+              'p-3 rounded-lg flex items-center gap-3',
+              testResult.success ? 'bg-green-500/10' : 'bg-red-500/10'
+            )}
+          >
             {testResult.success ? (
               <CheckCircle2 className="w-5 h-5 text-green-500" />
             ) : (
@@ -376,7 +407,11 @@ function WebhookDetail({ webhook, onBack, onRefresh }: WebhookDetailProps) {
             disabled={!webhook.secret_key}
             className="p-2 rounded-md hover:bg-muted transition-colors"
           >
-            {copiedSecret ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            {copiedSecret ? (
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
           </button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
@@ -427,10 +462,7 @@ function WebhookDetail({ webhook, onBack, onRefresh }: WebhookDetailProps) {
         </div>
         <div className="p-4 rounded-xl border bg-card">
           <div className="text-sm text-muted-foreground">Failure Count</div>
-          <div className={cn(
-            'font-semibold',
-            webhook.failure_count > 0 ? 'text-amber-500' : ''
-          )}>
+          <div className={cn('font-semibold', webhook.failure_count > 0 ? 'text-amber-500' : '')}>
             {webhook.failure_count}
           </div>
         </div>
@@ -450,63 +482,68 @@ function WebhookDetail({ webhook, onBack, onRefresh }: WebhookDetailProps) {
           </div>
           <div>
             <span className="text-muted-foreground">Created:</span>
-            <span className="font-medium ml-2">{new Date(webhook.created_at).toLocaleDateString()}</span>
+            <span className="font-medium ml-2">
+              {new Date(webhook.created_at).toLocaleDateString()}
+            </span>
           </div>
           <div>
             <span className="text-muted-foreground">Updated:</span>
-            <span className="font-medium ml-2">{new Date(webhook.updated_at).toLocaleDateString()}</span>
+            <span className="font-medium ml-2">
+              {new Date(webhook.updated_at).toLocaleDateString()}
+            </span>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function WebhookManager() {
-  const [showForm, setShowForm] = useState(false)
-  const [selectedWebhook, setSelectedWebhook] = useState<CDPWebhook | null>(null)
-  const [viewingWebhook, setViewingWebhook] = useState<CDPWebhook | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [showForm, setShowForm] = useState(false);
+  const [selectedWebhook, setSelectedWebhook] = useState<CDPWebhook | null>(null);
+  const [viewingWebhook, setViewingWebhook] = useState<CDPWebhook | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: webhooksData, isLoading, refetch } = useCDPWebhooks()
-  const deleteMutation = useDeleteWebhook()
+  const { data: webhooksData, isLoading, refetch } = useCDPWebhooks();
+  const deleteMutation = useDeleteWebhook();
 
-  const webhooks = webhooksData?.webhooks || []
-  const filteredWebhooks = webhooks.filter(w =>
-    w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    w.url.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const webhooks = webhooksData?.webhooks || [];
+  const filteredWebhooks = webhooks.filter(
+    (w) =>
+      w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      w.url.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleEdit = (webhook: CDPWebhook) => {
-    setSelectedWebhook(webhook)
-    setShowForm(true)
-  }
+    setSelectedWebhook(webhook);
+    setShowForm(true);
+  };
 
   const handleDelete = async (webhookId: string) => {
     if (confirm('Are you sure you want to delete this webhook?')) {
-      await deleteMutation.mutateAsync(webhookId)
-      refetch()
+      await deleteMutation.mutateAsync(webhookId);
+      refetch();
     }
-  }
+  };
 
   const handleFormSave = () => {
-    setShowForm(false)
-    setSelectedWebhook(null)
-    refetch()
-  }
+    setShowForm(false);
+    setSelectedWebhook(null);
+    refetch();
+  };
 
   const getStatusIndicator = (webhook: CDPWebhook) => {
     if (!webhook.is_active) {
-      return <span className="w-2 h-2 rounded-full bg-gray-400" />
+      return <span className="w-2 h-2 rounded-full bg-gray-400" />;
     }
     if (webhook.failure_count > 5) {
-      return <span className="w-2 h-2 rounded-full bg-red-500" />
+      return <span className="w-2 h-2 rounded-full bg-red-500" />;
     }
     if (webhook.failure_count > 0) {
-      return <span className="w-2 h-2 rounded-full bg-amber-500" />
+      return <span className="w-2 h-2 rounded-full bg-amber-500" />;
     }
-    return <span className="w-2 h-2 rounded-full bg-green-500" />
-  }
+    return <span className="w-2 h-2 rounded-full bg-green-500" />;
+  };
 
   if (viewingWebhook) {
     return (
@@ -514,13 +551,13 @@ export function WebhookManager() {
         webhook={viewingWebhook}
         onBack={() => setViewingWebhook(null)}
         onRefresh={() => {
-          refetch()
+          refetch();
           // Refresh the viewing webhook
-          const updated = webhooks.find(w => w.id === viewingWebhook.id)
-          if (updated) setViewingWebhook(updated)
+          const updated = webhooks.find((w) => w.id === viewingWebhook.id);
+          if (updated) setViewingWebhook(updated);
         }}
       />
-    )
+    );
   }
 
   if (showForm) {
@@ -528,7 +565,10 @@ export function WebhookManager() {
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setShowForm(false); setSelectedWebhook(null) }}
+            onClick={() => {
+              setShowForm(false);
+              setSelectedWebhook(null);
+            }}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <ChevronRight className="w-5 h-5 rotate-180" />
@@ -540,10 +580,13 @@ export function WebhookManager() {
         <WebhookForm
           webhook={selectedWebhook || undefined}
           onSave={handleFormSave}
-          onCancel={() => { setShowForm(false); setSelectedWebhook(null) }}
+          onCancel={() => {
+            setShowForm(false);
+            setSelectedWebhook(null);
+          }}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -605,12 +648,24 @@ export function WebhookManager() {
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Name</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">URL</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Events</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Last Triggered</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Name
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  URL
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Events
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Last Triggered
+                </th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -623,10 +678,12 @@ export function WebhookManager() {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       {getStatusIndicator(webhook)}
-                      <span className={cn(
-                        'text-xs font-medium',
-                        webhook.is_active ? 'text-green-500' : 'text-gray-500'
-                      )}>
+                      <span
+                        className={cn(
+                          'text-xs font-medium',
+                          webhook.is_active ? 'text-green-500' : 'text-gray-500'
+                        )}
+                      >
                         {webhook.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
@@ -657,7 +714,10 @@ export function WebhookManager() {
                       : 'Never'}
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex items-center justify-end gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         onClick={() => handleEdit(webhook)}
                         className="p-1.5 rounded-md hover:bg-muted transition-colors"
@@ -681,7 +741,7 @@ export function WebhookManager() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default WebhookManager
+export default WebhookManager;

@@ -13,18 +13,18 @@ Matching priority (best to worst accuracy):
 5. utm_campaign + timestamp - Fallback, least accurate
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.crm import (
+    AttributionModel,
     CRMContact,
     CRMDeal,
     Touchpoint,
-    AttributionModel,
 )
 
 logger = get_logger(__name__)
@@ -54,7 +54,7 @@ class IdentityMatcher:
         self.tenant_id = tenant_id
         self.lookback_days = min(lookback_days, MAX_LOOKBACK_DAYS)
 
-    async def match_contacts_to_touchpoints(self) -> Dict[str, Any]:
+    async def match_contacts_to_touchpoints(self) -> dict[str, Any]:
         """
         Match all unmatched contacts to their ad touchpoints.
 
@@ -97,19 +97,21 @@ class IdentityMatcher:
 
         return results
 
-    async def _get_unattributed_contacts(self) -> List[CRMContact]:
+    async def _get_unattributed_contacts(self) -> list[CRMContact]:
         """Get contacts that haven't been matched to touchpoints."""
         result = await self.db.execute(
-            select(CRMContact).where(
+            select(CRMContact)
+            .where(
                 and_(
                     CRMContact.tenant_id == self.tenant_id,
                     CRMContact.first_touch_campaign_id.is_(None),
                 )
-            ).limit(1000)  # Process in batches
+            )
+            .limit(1000)  # Process in batches
         )
         return result.scalars().all()
 
-    async def _match_contact(self, contact: CRMContact) -> Dict[str, Any]:
+    async def _match_contact(self, contact: CRMContact) -> dict[str, Any]:
         """
         Find and link touchpoints for a contact.
 
@@ -208,8 +210,8 @@ class IdentityMatcher:
             tp.contact_id = contact.id
             tp.touch_position = i + 1
             tp.total_touches = len(touchpoints)
-            tp.is_first_touch = (i == 0)
-            tp.is_last_touch = (i == len(touchpoints) - 1)
+            tp.is_first_touch = i == 0
+            tp.is_last_touch = i == len(touchpoints) - 1
 
         return {"matched": True, "signal": match_signal, "touch_count": len(touchpoints)}
 
@@ -217,16 +219,18 @@ class IdentityMatcher:
         self,
         click_id_field: str,
         click_id_value: str,
-    ) -> List[Touchpoint]:
+    ) -> list[Touchpoint]:
         """Find touchpoints by platform click ID."""
         column = getattr(Touchpoint, click_id_field)
         result = await self.db.execute(
-            select(Touchpoint).where(
+            select(Touchpoint)
+            .where(
                 and_(
                     Touchpoint.tenant_id == self.tenant_id,
                     column == click_id_value,
                 )
-            ).order_by(Touchpoint.event_ts)
+            )
+            .order_by(Touchpoint.event_ts)
         )
         return list(result.scalars().all())
 
@@ -235,7 +239,7 @@ class IdentityMatcher:
         identity_field: str,
         identity_value: str,
         conversion_time: Optional[datetime] = None,
-    ) -> List[Touchpoint]:
+    ) -> list[Touchpoint]:
         """Find touchpoints by identity hash within lookback window."""
         column = getattr(Touchpoint, identity_field)
 
@@ -243,17 +247,19 @@ class IdentityMatcher:
         if conversion_time:
             lookback_start = conversion_time - timedelta(days=self.lookback_days)
         else:
-            lookback_start = datetime.now(timezone.utc) - timedelta(days=self.lookback_days)
+            lookback_start = datetime.now(UTC) - timedelta(days=self.lookback_days)
 
         result = await self.db.execute(
-            select(Touchpoint).where(
+            select(Touchpoint)
+            .where(
                 and_(
                     Touchpoint.tenant_id == self.tenant_id,
                     column == identity_value,
                     Touchpoint.event_ts >= lookback_start,
-                    Touchpoint.event_ts <= (conversion_time or datetime.now(timezone.utc)),
+                    Touchpoint.event_ts <= (conversion_time or datetime.now(UTC)),
                 )
-            ).order_by(Touchpoint.event_ts)
+            )
+            .order_by(Touchpoint.event_ts)
         )
         return list(result.scalars().all())
 
@@ -263,7 +269,7 @@ class IdentityMatcher:
         utm_medium: Optional[str],
         utm_campaign: Optional[str],
         conversion_time: Optional[datetime] = None,
-    ) -> List[Touchpoint]:
+    ) -> list[Touchpoint]:
         """
         Find touchpoints by UTM parameters (fallback method).
         This is the least accurate matching method.
@@ -277,7 +283,7 @@ class IdentityMatcher:
             lookback_start = conversion_time - timedelta(days=utm_lookback_days)
             lookback_end = conversion_time
         else:
-            lookback_end = datetime.now(timezone.utc)
+            lookback_end = datetime.now(UTC)
             lookback_start = lookback_end - timedelta(days=utm_lookback_days)
 
         conditions = [
@@ -301,7 +307,7 @@ class IdentityMatcher:
         self,
         deal: CRMDeal,
         model: AttributionModel = AttributionModel.LAST_TOUCH,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Attribute a deal to ad campaigns based on contact touchpoints.
 
@@ -317,12 +323,14 @@ class IdentityMatcher:
 
         # Get contact's touchpoints
         result = await self.db.execute(
-            select(Touchpoint).where(
+            select(Touchpoint)
+            .where(
                 and_(
                     Touchpoint.contact_id == deal.contact_id,
-                    Touchpoint.event_ts <= (deal.won_at or datetime.now(timezone.utc)),
+                    Touchpoint.event_ts <= (deal.won_at or datetime.now(UTC)),
                 )
-            ).order_by(Touchpoint.event_ts)
+            )
+            .order_by(Touchpoint.event_ts)
         )
         touchpoints = list(result.scalars().all())
 
@@ -352,9 +360,7 @@ class IdentityMatcher:
             # 40% first, 40% last, 20% middle
             for i, tp in enumerate(touchpoints):
                 tp.is_converting_touch = True
-                if i == 0:
-                    tp.attribution_weight = 0.4
-                elif i == len(touchpoints) - 1:
+                if i == 0 or i == len(touchpoints) - 1:
                     tp.attribution_weight = 0.4
                 else:
                     tp.attribution_weight = 0.2 / max(1, len(touchpoints) - 2)
@@ -362,10 +368,10 @@ class IdentityMatcher:
 
         elif model == AttributionModel.TIME_DECAY:
             # More recent touchpoints get more credit
-            total_weight = sum(2 ** i for i in range(len(touchpoints)))
+            total_weight = sum(2**i for i in range(len(touchpoints)))
             for i, tp in enumerate(touchpoints):
                 tp.is_converting_touch = True
-                tp.attribution_weight = (2 ** i) / total_weight
+                tp.attribution_weight = (2**i) / total_weight
             attributed_tp = touchpoints[-1]
 
         else:
@@ -396,7 +402,7 @@ class IdentityMatcher:
 
     def _calculate_confidence(
         self,
-        touchpoints: List[Touchpoint],
+        touchpoints: list[Touchpoint],
         model: AttributionModel,
     ) -> float:
         """
@@ -432,7 +438,7 @@ class IdentityMatcher:
         start_date: datetime,
         end_date: datetime,
         group_by: str = "campaign",  # campaign, platform, source
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Generate attribution report for won deals.
 
@@ -459,7 +465,7 @@ class IdentityMatcher:
         deals = result.scalars().all()
 
         # Group metrics
-        groups: Dict[str, Dict[str, Any]] = {}
+        groups: dict[str, dict[str, Any]] = {}
 
         for deal in deals:
             if group_by == "campaign":
@@ -495,10 +501,11 @@ class IdentityMatcher:
 # Utility Functions
 # =============================================================================
 
+
 async def create_touchpoint_from_click(
     db: AsyncSession,
     tenant_id: int,
-    click_data: Dict[str, Any],
+    click_data: dict[str, Any],
 ) -> Touchpoint:
     """
     Create a touchpoint from ad click data.
@@ -513,7 +520,7 @@ async def create_touchpoint_from_click(
     """
     touchpoint = Touchpoint(
         tenant_id=tenant_id,
-        event_ts=click_data.get("timestamp", datetime.now(timezone.utc)),
+        event_ts=click_data.get("timestamp", datetime.now(UTC)),
         event_type=click_data.get("event_type", "click"),
         source=click_data.get("source", "unknown"),
         campaign_id=click_data.get("campaign_id"),

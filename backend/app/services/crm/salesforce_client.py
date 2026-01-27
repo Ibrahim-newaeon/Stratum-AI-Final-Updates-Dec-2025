@@ -14,13 +14,12 @@ Features:
 """
 
 import hashlib
-import secrets
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any, Optional
 from urllib.parse import urlencode
 
 import aiohttp
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -63,13 +62,15 @@ def hash_email(email: str) -> str:
 def hash_phone(phone: str) -> str:
     """Hash phone for identity matching."""
     import re
-    normalized = re.sub(r'\D', '', phone)
+
+    normalized = re.sub(r"\D", "", phone)
     return hashlib.sha256(normalized.encode()).hexdigest()
 
 
 # =============================================================================
 # Salesforce Client
 # =============================================================================
+
 
 class SalesforceClient:
     """
@@ -141,7 +142,7 @@ class SalesforceClient:
 
         # Check if token is expired (with 5 min buffer)
         if connection.token_expires_at:
-            if datetime.now(timezone.utc) >= connection.token_expires_at - timedelta(minutes=5):
+            if datetime.now(UTC) >= connection.token_expires_at - timedelta(minutes=5):
                 await self._refresh_token()
                 connection = await self._get_connection()
 
@@ -154,10 +155,10 @@ class SalesforceClient:
         self,
         method: str,
         endpoint: str,
-        data: Optional[Dict] = None,
-        params: Optional[Dict] = None,
+        data: Optional[dict] = None,
+        params: Optional[dict] = None,
         use_instance_url: bool = True,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Make authenticated request to Salesforce API."""
         access_token = await self._get_access_token()
         if not access_token:
@@ -229,7 +230,7 @@ class SalesforceClient:
         self,
         redirect_uri: str,
         state: str,
-        scopes: Optional[List[str]] = None,
+        scopes: Optional[list[str]] = None,
     ) -> str:
         """
         Generate OAuth authorization URL.
@@ -296,7 +297,7 @@ class SalesforceClient:
         issued_at = int(token_data.get("issued_at", 0)) / 1000  # Convert ms to seconds
 
         # Calculate expiration (Salesforce tokens typically last 2 hours)
-        expires_at = datetime.fromtimestamp(issued_at, tz=timezone.utc) + timedelta(hours=2)
+        expires_at = datetime.fromtimestamp(issued_at, tz=UTC) + timedelta(hours=2)
 
         # Get user info for account details
         async with aiohttp.ClientSession() as session:
@@ -322,7 +323,9 @@ class SalesforceClient:
             connection.refresh_token_enc = encrypt_token(refresh_token)
         connection.token_expires_at = expires_at
         connection.provider_account_id = user_info.get("organization_id", "")
-        connection.provider_account_name = user_info.get("organization_name", user_info.get("name", ""))
+        connection.provider_account_name = user_info.get(
+            "organization_name", user_info.get("name", "")
+        )
         connection.scopes = token_data.get("scope", "")
         connection.status = CRMConnectionStatus.CONNECTED
         connection.status_message = None
@@ -384,7 +387,7 @@ class SalesforceClient:
         # Update connection with new token
         connection.access_token_enc = encrypt_token(token_data["access_token"])
         issued_at = int(token_data.get("issued_at", 0)) / 1000
-        connection.token_expires_at = datetime.fromtimestamp(issued_at, tz=timezone.utc) + timedelta(hours=2)
+        connection.token_expires_at = datetime.fromtimestamp(issued_at, tz=UTC) + timedelta(hours=2)
 
         # Update instance URL if provided
         if "instance_url" in token_data:
@@ -425,7 +428,7 @@ class SalesforceClient:
         logger.info("salesforce_disconnected", tenant_id=self.tenant_id)
         return True
 
-    async def get_connection_status(self) -> Dict[str, Any]:
+    async def get_connection_status(self) -> dict[str, Any]:
         """Get current connection status."""
         connection = await self._get_connection()
 
@@ -442,7 +445,9 @@ class SalesforceClient:
             "provider": "salesforce",
             "account_id": connection.provider_account_id,
             "account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection.last_sync_at
+            else None,
             "last_sync_status": connection.last_sync_status,
             "scopes": connection.scopes.split(" ") if connection.scopes else [],
             "is_sandbox": (connection.raw_properties or {}).get("is_sandbox", False),
@@ -457,11 +462,20 @@ class SalesforceClient:
         limit: int = 100,
         offset: int = 0,
         modified_since: Optional[datetime] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get contacts from Salesforce."""
         fields = [
-            "Id", "FirstName", "LastName", "Name", "Email", "Phone",
-            "AccountId", "OwnerId", "LeadSource", "CreatedDate", "LastModifiedDate",
+            "Id",
+            "FirstName",
+            "LastName",
+            "Name",
+            "Email",
+            "Phone",
+            "AccountId",
+            "OwnerId",
+            "LeadSource",
+            "CreatedDate",
+            "LastModifiedDate",
         ]
 
         query = f"SELECT {', '.join(fields)} FROM Contact"
@@ -479,11 +493,21 @@ class SalesforceClient:
         limit: int = 100,
         offset: int = 0,
         modified_since: Optional[datetime] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get leads from Salesforce."""
         fields = [
-            "Id", "FirstName", "LastName", "Name", "Email", "Phone", "Company",
-            "OwnerId", "LeadSource", "Status", "CreatedDate", "LastModifiedDate",
+            "Id",
+            "FirstName",
+            "LastName",
+            "Name",
+            "Email",
+            "Phone",
+            "Company",
+            "OwnerId",
+            "LeadSource",
+            "Status",
+            "CreatedDate",
+            "LastModifiedDate",
         ]
 
         query = f"SELECT {', '.join(fields)} FROM Lead"
@@ -496,23 +520,23 @@ class SalesforceClient:
 
         return await self._make_request("GET", "/query", params={"q": query})
 
-    async def get_contact(self, contact_id: str) -> Optional[Dict[str, Any]]:
+    async def get_contact(self, contact_id: str) -> Optional[dict[str, Any]]:
         """Get a single contact by ID."""
         return await self._make_request("GET", f"/sobjects/Contact/{contact_id}")
 
     async def update_contact(
         self,
         contact_id: str,
-        properties: Dict[str, Any],
-    ) -> Optional[Dict[str, Any]]:
+        properties: dict[str, Any],
+    ) -> Optional[dict[str, Any]]:
         """Update a contact."""
         return await self._make_request("PATCH", f"/sobjects/Contact/{contact_id}", data=properties)
 
-    async def create_contact(self, properties: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def create_contact(self, properties: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Create a new contact."""
         return await self._make_request("POST", "/sobjects/Contact", data=properties)
 
-    async def search_contacts(self, query: str) -> Optional[Dict[str, Any]]:
+    async def search_contacts(self, query: str) -> Optional[dict[str, Any]]:
         """Search contacts by email or name using SOSL."""
         sosl = f"FIND {{{query}}} IN EMAIL FIELDS RETURNING Contact(Id, Name, Email, Phone)"
         return await self._make_request("GET", "/search", params={"q": sosl})
@@ -526,12 +550,22 @@ class SalesforceClient:
         limit: int = 100,
         offset: int = 0,
         modified_since: Optional[datetime] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get opportunities from Salesforce."""
         fields = [
-            "Id", "Name", "Amount", "StageName", "Probability",
-            "CloseDate", "AccountId", "OwnerId", "IsClosed", "IsWon",
-            "CreatedDate", "LastModifiedDate", "LeadSource",
+            "Id",
+            "Name",
+            "Amount",
+            "StageName",
+            "Probability",
+            "CloseDate",
+            "AccountId",
+            "OwnerId",
+            "IsClosed",
+            "IsWon",
+            "CreatedDate",
+            "LastModifiedDate",
+            "LeadSource",
         ]
 
         query = f"SELECT {', '.join(fields)} FROM Opportunity"
@@ -544,26 +578,28 @@ class SalesforceClient:
 
         return await self._make_request("GET", "/query", params={"q": query})
 
-    async def get_opportunity(self, opportunity_id: str) -> Optional[Dict[str, Any]]:
+    async def get_opportunity(self, opportunity_id: str) -> Optional[dict[str, Any]]:
         """Get a single opportunity by ID."""
         return await self._make_request("GET", f"/sobjects/Opportunity/{opportunity_id}")
 
     async def update_opportunity(
         self,
         opportunity_id: str,
-        properties: Dict[str, Any],
-    ) -> Optional[Dict[str, Any]]:
+        properties: dict[str, Any],
+    ) -> Optional[dict[str, Any]]:
         """Update an opportunity."""
-        return await self._make_request("PATCH", f"/sobjects/Opportunity/{opportunity_id}", data=properties)
+        return await self._make_request(
+            "PATCH", f"/sobjects/Opportunity/{opportunity_id}", data=properties
+        )
 
-    async def create_opportunity(self, properties: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def create_opportunity(self, properties: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Create a new opportunity."""
         return await self._make_request("POST", "/sobjects/Opportunity", data=properties)
 
     async def get_opportunity_contact_roles(
         self,
         opportunity_id: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get contact roles for an opportunity."""
         query = f"SELECT Id, ContactId, Role, IsPrimary FROM OpportunityContactRole WHERE OpportunityId = '{opportunity_id}'"
         return await self._make_request("GET", "/query", params={"q": query})
@@ -577,11 +613,17 @@ class SalesforceClient:
         limit: int = 100,
         offset: int = 0,
         modified_since: Optional[datetime] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get accounts from Salesforce."""
         fields = [
-            "Id", "Name", "Website", "Industry", "Type",
-            "OwnerId", "CreatedDate", "LastModifiedDate",
+            "Id",
+            "Name",
+            "Website",
+            "Industry",
+            "Type",
+            "OwnerId",
+            "CreatedDate",
+            "LastModifiedDate",
         ]
 
         query = f"SELECT {', '.join(fields)} FROM Account"
@@ -594,7 +636,7 @@ class SalesforceClient:
 
         return await self._make_request("GET", "/query", params={"q": query})
 
-    async def get_account(self, account_id: str) -> Optional[Dict[str, Any]]:
+    async def get_account(self, account_id: str) -> Optional[dict[str, Any]]:
         """Get a single account by ID."""
         return await self._make_request("GET", f"/sobjects/Account/{account_id}")
 
@@ -602,11 +644,11 @@ class SalesforceClient:
     # Custom Field Operations
     # =========================================================================
 
-    async def describe_object(self, object_name: str) -> Optional[Dict[str, Any]]:
+    async def describe_object(self, object_name: str) -> Optional[dict[str, Any]]:
         """Get metadata about an object including fields."""
         return await self._make_request("GET", f"/sobjects/{object_name}/describe")
 
-    async def get_custom_fields(self, object_name: str) -> List[Dict[str, Any]]:
+    async def get_custom_fields(self, object_name: str) -> list[dict[str, Any]]:
         """Get list of custom fields for an object."""
         describe = await self.describe_object(object_name)
         if not describe:
@@ -622,7 +664,7 @@ class SalesforceClient:
         field_type: str,
         label: str,
         description: str = "",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Create a custom field (requires Metadata API).
 
@@ -646,7 +688,7 @@ class SalesforceClient:
         self,
         object_name: str,
         operation: str,  # insert, update, upsert, delete
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Create a bulk API job."""
         data = {
             "object": object_name,
@@ -658,8 +700,8 @@ class SalesforceClient:
     async def upload_bulk_data(
         self,
         job_id: str,
-        records: List[Dict[str, Any]],
-    ) -> Optional[Dict[str, Any]]:
+        records: list[dict[str, Any]],
+    ) -> Optional[dict[str, Any]]:
         """Upload data to a bulk job."""
         return await self._make_request(
             "PUT",
@@ -667,7 +709,7 @@ class SalesforceClient:
             data=records,
         )
 
-    async def close_bulk_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+    async def close_bulk_job(self, job_id: str) -> Optional[dict[str, Any]]:
         """Close a bulk job and start processing."""
         return await self._make_request(
             "PATCH",
@@ -675,7 +717,7 @@ class SalesforceClient:
             data={"state": "UploadComplete"},
         )
 
-    async def get_bulk_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
+    async def get_bulk_job_status(self, job_id: str) -> Optional[dict[str, Any]]:
         """Get status of a bulk job."""
         return await self._make_request("GET", f"/jobs/ingest/{job_id}")
 
@@ -683,14 +725,16 @@ class SalesforceClient:
     # Query Operations
     # =========================================================================
 
-    async def query(self, soql: str) -> Optional[Dict[str, Any]]:
+    async def query(self, soql: str) -> Optional[dict[str, Any]]:
         """Execute a SOQL query."""
         return await self._make_request("GET", "/query", params={"q": soql})
 
-    async def query_more(self, next_records_url: str) -> Optional[Dict[str, Any]]:
+    async def query_more(self, next_records_url: str) -> Optional[dict[str, Any]]:
         """Get next page of query results."""
         # next_records_url is a relative URL like /services/data/vXX.X/query/xxx-xxx
-        return await self._make_request("GET", next_records_url.replace(f"/services/data/{API_VERSION}", ""))
+        return await self._make_request(
+            "GET", next_records_url.replace(f"/services/data/{API_VERSION}", "")
+        )
 
     # =========================================================================
     # Campaign Operations
@@ -700,13 +744,22 @@ class SalesforceClient:
         self,
         limit: int = 100,
         offset: int = 0,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get campaigns from Salesforce."""
         fields = [
-            "Id", "Name", "Type", "Status", "StartDate", "EndDate",
-            "IsActive", "NumberOfLeads", "NumberOfContacts",
-            "NumberOfOpportunities", "AmountAllOpportunities",
-            "CreatedDate", "LastModifiedDate",
+            "Id",
+            "Name",
+            "Type",
+            "Status",
+            "StartDate",
+            "EndDate",
+            "IsActive",
+            "NumberOfLeads",
+            "NumberOfContacts",
+            "NumberOfOpportunities",
+            "AmountAllOpportunities",
+            "CreatedDate",
+            "LastModifiedDate",
         ]
 
         query = f"SELECT {', '.join(fields)} FROM Campaign"
@@ -718,7 +771,7 @@ class SalesforceClient:
         self,
         campaign_id: str,
         limit: int = 100,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get members of a campaign."""
         query = f"""
             SELECT Id, ContactId, LeadId, Status, FirstRespondedDate

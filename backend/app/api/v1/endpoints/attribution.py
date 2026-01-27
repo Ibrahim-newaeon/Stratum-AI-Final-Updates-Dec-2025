@@ -8,21 +8,21 @@ Provides attribution calculations, journey analysis, and conversion path insight
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db, get_tenant_id
 from app.core.logging import get_logger
-from app.models import User, AttributionModel
+from app.models import AttributionModel, User
 from app.services.attribution import (
-    AttributionService,
     AttributionCalculator,
+    AttributionService,
     JourneyService,
 )
+from app.tenancy.deps import get_current_user, get_db, get_tenant_id
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/attribution", tags=["attribution"])
@@ -32,8 +32,10 @@ router = APIRouter(prefix="/attribution", tags=["attribution"])
 # Pydantic Schemas
 # =============================================================================
 
+
 class AttributeDealRequest(BaseModel):
     """Request to attribute a single deal."""
+
     deal_id: UUID
     model: AttributionModel = AttributionModel.LAST_TOUCH
     half_life_days: float = Field(default=7.0, ge=1, le=90)
@@ -41,34 +43,38 @@ class AttributeDealRequest(BaseModel):
 
 class BatchAttributeRequest(BaseModel):
     """Request to batch attribute deals."""
+
     model: AttributionModel = AttributionModel.LAST_TOUCH
-    deal_ids: Optional[List[UUID]] = None
+    deal_ids: Optional[list[UUID]] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
 
 
 class AttributionResponse(BaseModel):
     """Attribution calculation response."""
+
     success: bool
     deal_id: Optional[str] = None
     model: Optional[str] = None
     touchpoint_count: Optional[int] = None
     total_revenue: Optional[float] = None
     confidence: Optional[float] = None
-    breakdown: Optional[List[dict]] = None
+    breakdown: Optional[list[dict]] = None
     error: Optional[str] = None
 
 
 class BatchAttributionResponse(BaseModel):
     """Batch attribution response."""
+
     total: int
     attributed: int
     failed: int
-    errors: List[dict]
+    errors: list[dict]
 
 
 class ModelComparisonResponse(BaseModel):
     """Attribution model comparison response."""
+
     start_date: str
     end_date: str
     deals_analyzed: int
@@ -78,18 +84,20 @@ class ModelComparisonResponse(BaseModel):
 
 class JourneyResponse(BaseModel):
     """Contact journey response."""
+
     success: bool
     contact_id: Optional[str] = None
     path: Optional[str] = None
     touch_count: Optional[int] = None
-    timeline: Optional[List[dict]] = None
-    deals: Optional[List[dict]] = None
+    timeline: Optional[list[dict]] = None
+    deals: Optional[list[dict]] = None
     metrics: Optional[dict] = None
     error: Optional[str] = None
 
 
 class ConversionPathResponse(BaseModel):
     """Top conversion paths response."""
+
     path: str
     conversions: int
     total_revenue: float
@@ -101,14 +109,16 @@ class ConversionPathResponse(BaseModel):
 
 class ChannelTransitionsResponse(BaseModel):
     """Channel transitions (Sankey) response."""
-    nodes: List[dict]
-    links: List[dict]
+
+    nodes: list[dict]
+    links: list[dict]
     total_transitions: int
     unique_paths: int
 
 
 class AssistedConversionsResponse(BaseModel):
     """Assisted conversions response."""
+
     key: str
     name: str
     last_touch_conversions: int
@@ -124,6 +134,7 @@ class AssistedConversionsResponse(BaseModel):
 # =============================================================================
 # Attribution Endpoints
 # =============================================================================
+
 
 @router.post("/deals/attribute", response_model=AttributionResponse)
 async def attribute_deal(
@@ -177,7 +188,7 @@ async def compare_attribution_models(
     end_date: datetime = Query(..., description="End date for analysis"),
     models: Optional[str] = Query(
         None,
-        description="Comma-separated list of models to compare (first_touch,last_touch,linear,position_based,time_decay)"
+        description="Comma-separated list of models to compare (first_touch,last_touch,linear,position_based,time_decay)",
     ),
     db: AsyncSession = Depends(get_db),
     tenant_id: int = Depends(get_tenant_id),
@@ -262,6 +273,7 @@ async def get_campaign_attribution(
 # Journey Endpoints
 # =============================================================================
 
+
 @router.get("/journeys/contact/{contact_id}", response_model=JourneyResponse)
 async def get_contact_journey(
     contact_id: UUID,
@@ -284,7 +296,7 @@ async def get_contact_journey(
     return JourneyResponse(**result)
 
 
-@router.get("/journeys/conversion-paths", response_model=List[ConversionPathResponse])
+@router.get("/journeys/conversion-paths", response_model=list[ConversionPathResponse])
 async def get_top_conversion_paths(
     start_date: datetime = Query(..., description="Start date"),
     end_date: datetime = Query(..., description="End date"),
@@ -358,7 +370,7 @@ async def get_journey_metrics(
     return {"data": result}
 
 
-@router.get("/journeys/assisted-conversions", response_model=List[AssistedConversionsResponse])
+@router.get("/journeys/assisted-conversions", response_model=list[AssistedConversionsResponse])
 async def get_assisted_conversions(
     start_date: datetime = Query(..., description="Start date"),
     end_date: datetime = Query(..., description="End date"),
@@ -408,6 +420,7 @@ async def get_time_lag_report(
 # =============================================================================
 # Utility Endpoints
 # =============================================================================
+
 
 @router.get("/models")
 async def list_attribution_models(

@@ -18,21 +18,21 @@ Usage:
         ...
 """
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, List, Optional, Union
+from typing import Optional
 
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.routing import APIRoute
+from fastapi import HTTPException, Request, status
 from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.tiers import (
+    TIER_FEATURES,
     Feature,
     SubscriptionTier,
-    has_feature,
     get_tier_limit,
+    has_feature,
     tier_at_least,
-    TIER_FEATURES,
 )
 
 
@@ -70,7 +70,11 @@ class LimitExceededError(HTTPException):
 
 def get_required_tier(feature: Feature) -> Optional[SubscriptionTier]:
     """Get the minimum tier required for a feature."""
-    for tier in [SubscriptionTier.STARTER, SubscriptionTier.PROFESSIONAL, SubscriptionTier.ENTERPRISE]:
+    for tier in [
+        SubscriptionTier.STARTER,
+        SubscriptionTier.PROFESSIONAL,
+        SubscriptionTier.ENTERPRISE,
+    ]:
         if feature in TIER_FEATURES.get(tier, set()):
             return tier
     return None
@@ -86,7 +90,7 @@ def get_current_tier() -> SubscriptionTier:
     This function returns the default tier from settings or ENTERPRISE
     as a fallback when request context is not available.
     """
-    tier_value = getattr(settings, 'subscription_tier', 'starter')
+    tier_value = getattr(settings, "subscription_tier", "starter")
     try:
         return SubscriptionTier(tier_value.lower())
     except ValueError:
@@ -103,15 +107,12 @@ async def get_tenant_tier(tenant_id: int) -> SubscriptionTier:
     Returns:
         SubscriptionTier for the tenant, defaults to STARTER if not found
     """
-    from app.db.session import get_async_session
     from app.base_models import Tenant
+    from app.db.session import get_async_session
 
     async for db in get_async_session():
         result = await db.execute(
-            select(Tenant.plan).where(
-                Tenant.id == tenant_id,
-                Tenant.is_deleted == False
-            )
+            select(Tenant.plan).where(Tenant.id == tenant_id, Tenant.is_deleted == False)
         )
         plan = result.scalar_one_or_none()
 
@@ -119,10 +120,10 @@ async def get_tenant_tier(tenant_id: int) -> SubscriptionTier:
             # Map plan names to subscription tiers
             plan_lower = plan.lower()
             tier_mapping = {
-                'free': SubscriptionTier.STARTER,
-                'starter': SubscriptionTier.STARTER,
-                'professional': SubscriptionTier.PROFESSIONAL,
-                'enterprise': SubscriptionTier.ENTERPRISE,
+                "free": SubscriptionTier.STARTER,
+                "starter": SubscriptionTier.STARTER,
+                "professional": SubscriptionTier.PROFESSIONAL,
+                "enterprise": SubscriptionTier.ENTERPRISE,
             }
             return tier_mapping.get(plan_lower, SubscriptionTier.STARTER)
 
@@ -142,7 +143,7 @@ def get_tier_from_request(request: Request) -> SubscriptionTier:
     Returns:
         SubscriptionTier from request state or STARTER default
     """
-    tier_value = getattr(request.state, 'subscription_tier', None)
+    tier_value = getattr(request.state, "subscription_tier", None)
     if tier_value:
         try:
             return SubscriptionTier(tier_value.lower())
@@ -185,7 +186,7 @@ class FeatureGate:
 
     async def __call__(self, request: Request) -> None:
         # Get tenant_id from request state (set by middleware)
-        tenant_id = getattr(request.state, 'tenant_id', None)
+        tenant_id = getattr(request.state, "tenant_id", None)
 
         if tenant_id:
             # Check subscription status first (if enabled)
@@ -204,7 +205,7 @@ class FeatureGate:
                             "message": sub_info.restriction_reason or "Subscription has expired",
                             "feature": self.feature.value,
                             "renew_url": "/settings/billing",
-                        }
+                        },
                     )
 
                 current_tier = sub_info.tier
@@ -245,7 +246,7 @@ class TierGate:
 
     async def __call__(self, request: Request) -> None:
         # Get tenant_id from request state
-        tenant_id = getattr(request.state, 'tenant_id', None)
+        tenant_id = getattr(request.state, "tenant_id", None)
 
         if tenant_id:
             # Check subscription status first (if enabled)
@@ -263,7 +264,7 @@ class TierGate:
                             "status": sub_info.status.value,
                             "message": sub_info.restriction_reason or "Subscription has expired",
                             "renew_url": "/settings/billing",
-                        }
+                        },
                     )
 
                 current_tier = sub_info.tier
@@ -283,7 +284,7 @@ class TierGate:
                     "required_tier": self.minimum_tier.value,
                     "message": f"This feature requires {self.minimum_tier.value} tier or higher.",
                     "upgrade_url": "/settings/billing",
-                }
+                },
             )
 
 
@@ -305,7 +306,7 @@ class LimitChecker:
 
     async def __call__(self, request: Request) -> dict:
         # Get tenant_id from request state
-        tenant_id = getattr(request.state, 'tenant_id', None)
+        tenant_id = getattr(request.state, "tenant_id", None)
 
         if tenant_id:
             current_tier = await get_tenant_tier(tenant_id)
@@ -317,12 +318,7 @@ class LimitChecker:
         current_value = await self.get_current_count(request)
 
         if current_value >= max_value:
-            raise LimitExceededError(
-                self.limit_name,
-                current_value,
-                max_value,
-                current_tier
-            )
+            raise LimitExceededError(self.limit_name, current_value, max_value, current_tier)
 
         return {
             "current": current_value,
@@ -351,6 +347,7 @@ def require_feature(feature: Feature):
         async def get_churn_prediction(...):
             ...
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -361,10 +358,10 @@ def require_feature(feature: Feature):
                     request = arg
                     break
             if not request:
-                request = kwargs.get('request')
+                request = kwargs.get("request")
 
             if request:
-                tenant_id = getattr(request.state, 'tenant_id', None)
+                tenant_id = getattr(request.state, "tenant_id", None)
                 if tenant_id:
                     current_tier = await get_tenant_tier(tenant_id)
                 else:
@@ -376,7 +373,9 @@ def require_feature(feature: Feature):
                 raise FeatureNotAvailableError(feature, current_tier)
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -399,6 +398,7 @@ def require_tier(minimum_tier: SubscriptionTier):
         async def enterprise_dashboard(...):
             ...
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -409,10 +409,10 @@ def require_tier(minimum_tier: SubscriptionTier):
                     request = arg
                     break
             if not request:
-                request = kwargs.get('request')
+                request = kwargs.get("request")
 
             if request:
-                tenant_id = getattr(request.state, 'tenant_id', None)
+                tenant_id = getattr(request.state, "tenant_id", None)
                 if tenant_id:
                     current_tier = await get_tenant_tier(tenant_id)
                 else:
@@ -428,17 +428,20 @@ def require_tier(minimum_tier: SubscriptionTier):
                         "current_tier": current_tier.value,
                         "required_tier": minimum_tier.value,
                         "message": f"This feature requires {minimum_tier.value} tier or higher.",
-                    }
+                    },
                 )
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 # =============================================================================
 # Utility Functions
 # =============================================================================
+
 
 def check_feature(feature: Feature) -> bool:
     """Quick check if current tier has a feature (uses settings fallback)."""
@@ -467,7 +470,7 @@ async def check_limit_for_tenant(tenant_id: int, limit_name: str, current_count:
 def get_tier_features_response() -> dict:
     """Get current tier info for API response (uses settings fallback)."""
     tier = get_current_tier()
-    from app.core.tiers import get_tier_info, TIER_PRICING
+    from app.core.tiers import TIER_PRICING, get_tier_info
 
     info = get_tier_info(tier)
     pricing = TIER_PRICING.get(tier, {})
@@ -480,7 +483,7 @@ def get_tier_features_response() -> dict:
 
 async def get_tier_features_for_tenant(tenant_id: int) -> dict:
     """Get tier info for a specific tenant from database."""
-    from app.core.tiers import get_tier_info, TIER_PRICING
+    from app.core.tiers import TIER_PRICING, get_tier_info
 
     tier = await get_tenant_tier(tenant_id)
     info = get_tier_info(tier)
@@ -496,6 +499,7 @@ async def get_tier_features_for_tenant(tenant_id: int) -> dict:
 # FastAPI Dependency for Tier Info
 # =============================================================================
 
+
 async def get_current_tier_dependency(request: Request) -> SubscriptionTier:
     """
     FastAPI dependency to get the current tenant's subscription tier.
@@ -507,7 +511,7 @@ async def get_current_tier_dependency(request: Request) -> SubscriptionTier:
         ):
             return {"tier": tier.value}
     """
-    tenant_id = getattr(request.state, 'tenant_id', None)
+    tenant_id = getattr(request.state, "tenant_id", None)
 
     if tenant_id:
         tier = await get_tenant_tier(tenant_id)

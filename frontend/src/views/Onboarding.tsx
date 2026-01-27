@@ -9,50 +9,50 @@
  * 5. Trust Gate Configuration - Safety thresholds
  */
 
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Building2,
-  Link2,
-  Target,
-  Zap,
-  Shield,
-  ChevronRight,
-  ChevronLeft,
-  Check,
-  Loader2,
-  SkipForward,
-  Globe,
-  Users,
-  DollarSign,
   BarChart3,
   Bell,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Building2,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Globe,
+  Link2,
+  Loader2,
+  Shield,
+  SkipForward,
+  Target,
+  Users,
+  Zap,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
-  useOnboardingStatus,
-  useSubmitBusinessProfile,
-  useSubmitPlatformSelection,
-  useSubmitGoalsSetup,
-  useSubmitAutomationPreferences,
-  useSubmitTrustGateConfig,
-  useSkipOnboarding,
-  type OnboardingStep,
+  type AdPlatform,
+  type AutomationMode,
   type Industry,
   type MonthlyAdSpend,
-  type TeamSize,
-  type AdPlatform,
+  type OnboardingStep,
   type PrimaryKPI,
-  type AutomationMode,
-} from '@/api/onboarding'
-import { useToast } from '@/components/ui/use-toast'
+  type TeamSize,
+  useOnboardingStatus,
+  useSkipOnboarding,
+  useSubmitAutomationPreferences,
+  useSubmitBusinessProfile,
+  useSubmitGoalsSetup,
+  useSubmitPlatformSelection,
+  useSubmitTrustGateConfig,
+} from '@/api/onboarding';
+import { useToast } from '@/components/ui/use-toast';
 
 // Step configuration
 const STEPS: {
-  id: OnboardingStep
-  title: string
-  description: string
-  icon: typeof Building2
+  id: OnboardingStep;
+  title: string;
+  description: string;
+  icon: typeof Building2;
 }[] = [
   {
     id: 'business_profile',
@@ -84,7 +84,7 @@ const STEPS: {
     description: 'Configure safety thresholds',
     icon: Shield,
   },
-]
+];
 
 // Options data
 const INDUSTRIES: { value: Industry; label: string }[] = [
@@ -103,7 +103,7 @@ const INDUSTRIES: { value: Industry; label: string }[] = [
   { value: 'automotive', label: 'Automotive' },
   { value: 'entertainment', label: 'Entertainment' },
   { value: 'other', label: 'Other' },
-]
+];
 
 const AD_SPEND_RANGES: { value: MonthlyAdSpend; label: string }[] = [
   { value: 'under_10k', label: 'Under $10K' },
@@ -112,7 +112,7 @@ const AD_SPEND_RANGES: { value: MonthlyAdSpend; label: string }[] = [
   { value: '100k_500k', label: '$100K - $500K' },
   { value: '500k_1m', label: '$500K - $1M' },
   { value: 'over_1m', label: 'Over $1M' },
-]
+];
 
 const TEAM_SIZES: { value: TeamSize; label: string }[] = [
   { value: 'solo', label: 'Solo' },
@@ -120,14 +120,14 @@ const TEAM_SIZES: { value: TeamSize; label: string }[] = [
   { value: '6_15', label: '6-15 people' },
   { value: '16_50', label: '16-50 people' },
   { value: '50_plus', label: '50+ people' },
-]
+];
 
 const PLATFORMS: { value: AdPlatform; label: string; color: string }[] = [
   { value: 'meta', label: 'Meta (Facebook/Instagram)', color: 'bg-blue-500' },
   { value: 'google', label: 'Google Ads', color: 'bg-red-500' },
   { value: 'tiktok', label: 'TikTok Ads', color: 'bg-black' },
   { value: 'snapchat', label: 'Snapchat Ads', color: 'bg-yellow-400' },
-]
+];
 
 const KPIS: { value: PrimaryKPI; label: string; description: string }[] = [
   { value: 'roas', label: 'ROAS', description: 'Return on Ad Spend' },
@@ -138,13 +138,13 @@ const KPIS: { value: PrimaryKPI; label: string; description: string }[] = [
   { value: 'leads', label: 'Leads', description: 'Total Leads' },
   { value: 'app_installs', label: 'App Installs', description: 'Mobile App Installs' },
   { value: 'brand_awareness', label: 'Brand Awareness', description: 'Reach & Impressions' },
-]
+];
 
 const AUTOMATION_MODES: {
-  value: AutomationMode
-  label: string
-  description: string
-  icon: typeof Zap
+  value: AutomationMode;
+  label: string;
+  description: string;
+  icon: typeof Zap;
 }[] = [
   {
     value: 'manual',
@@ -164,15 +164,15 @@ const AUTOMATION_MODES: {
     description: 'AI automatically executes when trust gate passes. Hands-free optimization.',
     icon: Zap,
   },
-]
+];
 
 export default function Onboarding() {
-  const navigate = useNavigate()
-  const { toast } = useToast()
-  const { data: status, isLoading: statusLoading } = useOnboardingStatus()
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { data: status, isLoading: statusLoading } = useOnboardingStatus();
 
   // Form state
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     // Step 1: Business Profile
     industry: '' as Industry | '',
@@ -202,25 +202,25 @@ export default function Onboarding() {
     trustThresholdAlert: 40,
     requireApprovalAbove: '',
     maxDailyActions: 10,
-  })
+  });
 
   // Mutations
-  const submitBusinessProfile = useSubmitBusinessProfile()
-  const submitPlatformSelection = useSubmitPlatformSelection()
-  const submitGoalsSetup = useSubmitGoalsSetup()
-  const submitAutomationPreferences = useSubmitAutomationPreferences()
-  const submitTrustGateConfig = useSubmitTrustGateConfig()
-  const skipOnboarding = useSkipOnboarding()
+  const submitBusinessProfile = useSubmitBusinessProfile();
+  const submitPlatformSelection = useSubmitPlatformSelection();
+  const submitGoalsSetup = useSubmitGoalsSetup();
+  const submitAutomationPreferences = useSubmitAutomationPreferences();
+  const submitTrustGateConfig = useSubmitTrustGateConfig();
+  const skipOnboarding = useSkipOnboarding();
 
   // Set current step based on status
   useEffect(() => {
     if (status) {
-      const stepIndex = STEPS.findIndex((s) => s.id === status.current_step)
+      const stepIndex = STEPS.findIndex((s) => s.id === status.current_step);
       if (stepIndex !== -1) {
-        setCurrentStep(stepIndex)
+        setCurrentStep(stepIndex);
       }
     }
-  }, [status])
+  }, [status]);
 
   const isSubmitting =
     submitBusinessProfile.isPending ||
@@ -228,11 +228,11 @@ export default function Onboarding() {
     submitGoalsSetup.isPending ||
     submitAutomationPreferences.isPending ||
     submitTrustGateConfig.isPending ||
-    skipOnboarding.isPending
+    skipOnboarding.isPending;
 
   // Handle step submission
   const handleNext = async () => {
-    const step = STEPS[currentStep]
+    const step = STEPS[currentStep];
 
     try {
       switch (step.id) {
@@ -242,18 +242,18 @@ export default function Onboarding() {
               title: 'Missing Information',
               description: 'Please fill in all required fields.',
               variant: 'destructive',
-            })
-            return
+            });
+            return;
           }
           await submitBusinessProfile.mutateAsync({
-            industry: formData.industry as Industry,
+            industry: formData.industry,
             industry_other: formData.industry === 'other' ? formData.industryOther : undefined,
-            monthly_ad_spend: formData.monthlyAdSpend as MonthlyAdSpend,
-            team_size: formData.teamSize as TeamSize,
+            monthly_ad_spend: formData.monthlyAdSpend,
+            team_size: formData.teamSize,
             company_website: formData.companyWebsite || undefined,
             target_markets: formData.targetMarkets.length > 0 ? formData.targetMarkets : undefined,
-          })
-          break
+          });
+          break;
 
         case 'platform_selection':
           if (formData.platforms.length === 0) {
@@ -261,13 +261,13 @@ export default function Onboarding() {
               title: 'Select Platforms',
               description: 'Please select at least one ad platform.',
               variant: 'destructive',
-            })
-            return
+            });
+            return;
           }
           await submitPlatformSelection.mutateAsync({
             platforms: formData.platforms,
-          })
-          break
+          });
+          break;
 
         case 'goals_setup':
           if (!formData.primaryKpi) {
@@ -275,18 +275,18 @@ export default function Onboarding() {
               title: 'Select KPI',
               description: 'Please select your primary KPI.',
               variant: 'destructive',
-            })
-            return
+            });
+            return;
           }
           await submitGoalsSetup.mutateAsync({
-            primary_kpi: formData.primaryKpi as PrimaryKPI,
+            primary_kpi: formData.primaryKpi,
             target_roas: formData.targetRoas ? parseFloat(formData.targetRoas) : undefined,
             target_cpa: formData.targetCpa ? parseFloat(formData.targetCpa) : undefined,
             monthly_budget: formData.monthlyBudget ? parseFloat(formData.monthlyBudget) : undefined,
             currency: formData.currency,
             timezone: formData.timezone,
-          })
-          break
+          });
+          break;
 
         case 'automation_preferences':
           await submitAutomationPreferences.mutateAsync({
@@ -296,8 +296,8 @@ export default function Onboarding() {
             notification_email: formData.notificationEmail,
             notification_slack: formData.notificationSlack,
             notification_whatsapp: formData.notificationWhatsapp,
-          })
-          break
+          });
+          break;
 
         case 'trust_gate_config':
           await submitTrustGateConfig.mutateAsync({
@@ -307,49 +307,49 @@ export default function Onboarding() {
               ? parseInt(formData.requireApprovalAbove)
               : undefined,
             max_daily_actions: formData.maxDailyActions,
-          })
+          });
           // Final step - redirect to dashboard
           toast({
             title: 'Setup Complete!',
             description: 'Your account is ready. Redirecting to dashboard...',
-          })
+          });
           setTimeout(() => {
-            navigate('/dashboard/overview')
-          }, 1500)
-          return
+            navigate('/dashboard/overview');
+          }, 1500);
+          return;
       }
 
       // Move to next step
-      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1))
+      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to save. Please try again.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0))
-  }
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
 
   const handleSkip = async () => {
     try {
-      await skipOnboarding.mutateAsync()
+      await skipOnboarding.mutateAsync();
       toast({
         title: 'Onboarding Skipped',
         description: 'You can complete setup later from Settings.',
-      })
-      navigate('/dashboard/overview')
+      });
+      navigate('/dashboard/overview');
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to skip onboarding.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const togglePlatform = (platform: AdPlatform) => {
     setFormData((prev) => ({
@@ -357,19 +357,19 @@ export default function Onboarding() {
       platforms: prev.platforms.includes(platform)
         ? prev.platforms.filter((p) => p !== platform)
         : [...prev.platforms, platform],
-    }))
-  }
+    }));
+  };
 
   if (statusLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
-    )
+    );
   }
 
-  const step = STEPS[currentStep]
-  const StepIcon = step.icon
+  const step = STEPS[currentStep];
+  const StepIcon = step.icon;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
@@ -391,9 +391,9 @@ export default function Onboarding() {
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-12 px-4">
           {STEPS.map((s, index) => {
-            const Icon = s.icon
-            const isCompleted = index < currentStep
-            const isCurrent = index === currentStep
+            const Icon = s.icon;
+            const isCompleted = index < currentStep;
+            const isCurrent = index === currentStep;
 
             return (
               <div key={s.id} className="flex items-center">
@@ -404,15 +404,11 @@ export default function Onboarding() {
                       isCompleted
                         ? 'bg-primary text-primary-foreground'
                         : isCurrent
-                        ? 'bg-primary/20 text-primary ring-2 ring-primary ring-offset-2'
-                        : 'bg-muted text-muted-foreground'
+                          ? 'bg-primary/20 text-primary ring-2 ring-primary ring-offset-2'
+                          : 'bg-muted text-muted-foreground'
                     )}
                   >
-                    {isCompleted ? (
-                      <Check className="w-5 h-5" />
-                    ) : (
-                      <Icon className="w-5 h-5" />
-                    )}
+                    {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                   </div>
                   <span
                     className={cn(
@@ -432,7 +428,7 @@ export default function Onboarding() {
                   />
                 )}
               </div>
-            )
+            );
           })}
         </div>
 
@@ -475,9 +471,7 @@ export default function Onboarding() {
 
                 {formData.industry === 'other' && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Specify Industry
-                    </label>
+                    <label className="block text-sm font-medium mb-2">Specify Industry</label>
                     <input
                       type="text"
                       value={formData.industryOther}
@@ -567,7 +561,12 @@ export default function Onboarding() {
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center text-white', p.color)}>
+                      <div
+                        className={cn(
+                          'w-10 h-10 rounded-lg flex items-center justify-center text-white',
+                          p.color
+                        )}
+                      >
                         {p.value[0].toUpperCase()}
                       </div>
                       <div>
@@ -597,9 +596,7 @@ export default function Onboarding() {
                       <button
                         key={kpi.value}
                         type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, primaryKpi: kpi.value }))
-                        }
+                        onClick={() => setFormData((prev) => ({ ...prev, primaryKpi: kpi.value }))}
                         className={cn(
                           'p-3 rounded-lg border text-center transition-all',
                           formData.primaryKpi === kpi.value
@@ -712,7 +709,7 @@ export default function Onboarding() {
               <>
                 <div className="space-y-4">
                   {AUTOMATION_MODES.map((mode) => {
-                    const ModeIcon = mode.icon
+                    const ModeIcon = mode.icon;
                     return (
                       <button
                         key={mode.value}
@@ -740,7 +737,7 @@ export default function Onboarding() {
                           )}
                         </div>
                       </button>
-                    )
+                    );
                   })}
                 </div>
 
@@ -846,9 +843,7 @@ export default function Onboarding() {
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     Alert Threshold
-                    <span className="text-muted-foreground ml-2">
-                      (Score to trigger warnings)
-                    </span>
+                    <span className="text-muted-foreground ml-2">(Score to trigger warnings)</span>
                   </label>
                   <div className="flex items-center gap-4">
                     <input
@@ -897,9 +892,7 @@ export default function Onboarding() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Max Daily Auto-Actions
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Max Daily Auto-Actions</label>
                   <input
                     type="number"
                     min="1"
@@ -983,5 +976,5 @@ export default function Onboarding() {
         </p>
       </div>
     </div>
-  )
+  );
 }

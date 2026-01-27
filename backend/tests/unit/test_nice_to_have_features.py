@@ -6,11 +6,11 @@ Tests for Nice to Have (Could Add) Features - Audit Items #11-15
 - #14: Predictive audience insights
 - #15: LTV prediction model
 """
-import pytest
-import time
-from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, patch
+
+from datetime import UTC, datetime, timedelta
+
 import numpy as np
+import pytest
 
 
 # ============================================================================
@@ -46,18 +46,14 @@ class TestModelExplainability:
 
         explainer = ModelExplainer("test_model", models_path="./models")
 
-        features = {
-            "spend": 500.0,
-            "impressions": 25000,
-            "clicks": 250
-        }
+        features = {"spend": 500.0, "impressions": 25000, "clicks": 250}
 
         explanation = explainer.explain_prediction(features, prediction=0.5)
 
         # All contributions should have reasonable structure
         for contrib in explanation.all_contributions:
-            assert hasattr(contrib, 'feature_name')
-            assert hasattr(contrib, 'contribution')
+            assert hasattr(contrib, "feature_name")
+            assert hasattr(contrib, "contribution")
             assert contrib.direction in ["positive", "negative", "neutral"]
 
     def test_human_readable_explanation(self):
@@ -100,9 +96,7 @@ class TestModelExplainability:
 
         features = {"metric_a": 100, "metric_b": 200}
         explanation = explainer.explain_prediction(
-            features,
-            prediction=0.6,
-            prediction_id="custom_pred_123"
+            features, prediction=0.6, prediction_id="custom_pred_123"
         )
 
         assert explanation is not None
@@ -130,7 +124,9 @@ class TestCompetitorBenchmarking:
     def test_get_benchmark_basic(self):
         """Test getting basic competitor benchmark"""
         from app.services.competitor_benchmarking_service import (
-            CompetitorBenchmarkingService, Industry, Region
+            CompetitorBenchmarkingService,
+            Industry,
+            Region,
         )
 
         service = CompetitorBenchmarkingService()
@@ -140,7 +136,7 @@ class TestCompetitorBenchmarking:
             industry=Industry.ECOMMERCE,
             region=Region.GLOBAL,
             platform="meta",
-            metrics={"ctr": 0.02, "cpc": 0.50, "roas": 3.5}
+            metrics={"ctr": 0.02, "cpc": 0.50, "roas": 3.5},
         )
 
         assert benchmark is not None
@@ -151,7 +147,9 @@ class TestCompetitorBenchmarking:
     def test_benchmark_percentile_calculation(self):
         """Test percentile calculation against industry"""
         from app.services.competitor_benchmarking_service import (
-            CompetitorBenchmarkingService, Industry, Region
+            CompetitorBenchmarkingService,
+            Industry,
+            Region,
         )
 
         service = CompetitorBenchmarkingService()
@@ -162,7 +160,7 @@ class TestCompetitorBenchmarking:
             industry=Industry.ECOMMERCE,
             region=Region.GLOBAL,
             platform="meta",
-            metrics={"ctr": 5.0, "roas": 5.0}  # Good metrics
+            metrics={"ctr": 5.0, "roas": 5.0},  # Good metrics
         )
 
         # CTR of 5% should be above median
@@ -173,7 +171,10 @@ class TestCompetitorBenchmarking:
     def test_benchmark_performance_level(self):
         """Test performance level classification"""
         from app.services.competitor_benchmarking_service import (
-            CompetitorBenchmarkingService, Industry, Region, PerformanceLevel
+            CompetitorBenchmarkingService,
+            Industry,
+            PerformanceLevel,
+            Region,
         )
 
         service = CompetitorBenchmarkingService()
@@ -184,7 +185,7 @@ class TestCompetitorBenchmarking:
             industry=Industry.ECOMMERCE,
             region=Region.GLOBAL,
             platform="google",
-            metrics={"ctr": 0.001}  # Very low CTR
+            metrics={"ctr": 0.001},  # Very low CTR
         )
 
         ctr_metric = benchmark.metrics.get("ctr")
@@ -194,13 +195,15 @@ class TestCompetitorBenchmarking:
             PerformanceLevel.POOR,
             PerformanceLevel.AVERAGE,
             PerformanceLevel.ABOVE_AVERAGE,
-            PerformanceLevel.EXCELLENT
+            PerformanceLevel.EXCELLENT,
         ]
 
     def test_benchmark_recommendations(self):
         """Test that benchmarks include recommendations"""
         from app.services.competitor_benchmarking_service import (
-            CompetitorBenchmarkingService, Industry, Region
+            CompetitorBenchmarkingService,
+            Industry,
+            Region,
         )
 
         service = CompetitorBenchmarkingService()
@@ -210,7 +213,7 @@ class TestCompetitorBenchmarking:
             industry=Industry.ECOMMERCE,
             region=Region.GLOBAL,
             platform="meta",
-            metrics={"ctr": 0.005, "cpc": 2.0}  # Below average
+            metrics={"ctr": 0.005, "cpc": 2.0},  # Below average
         )
 
         # Should have recommendations for improvement
@@ -220,15 +223,15 @@ class TestCompetitorBenchmarking:
     def test_industry_report(self):
         """Test getting full industry report"""
         from app.services.competitor_benchmarking_service import (
-            CompetitorBenchmarkingService, Industry, Region
+            CompetitorBenchmarkingService,
+            Industry,
+            Region,
         )
 
         service = CompetitorBenchmarkingService()
 
         report = service.get_industry_report(
-            industry=Industry.ECOMMERCE,
-            platform="meta",
-            region=Region.GLOBAL
+            industry=Industry.ECOMMERCE, platform="meta", region=Region.GLOBAL
         )
 
         assert report is not None
@@ -238,7 +241,8 @@ class TestCompetitorBenchmarking:
     def test_compare_across_platforms(self):
         """Test comparing performance across platforms"""
         from app.services.competitor_benchmarking_service import (
-            CompetitorBenchmarkingService, Industry
+            CompetitorBenchmarkingService,
+            Industry,
         )
 
         service = CompetitorBenchmarkingService()
@@ -248,8 +252,8 @@ class TestCompetitorBenchmarking:
             industry=Industry.ECOMMERCE,
             platform_metrics={
                 "meta": {"ctr": 0.02, "roas": 3.0},
-                "google": {"ctr": 0.03, "roas": 4.0}
-            }
+                "google": {"ctr": 0.03, "roas": 4.0},
+            },
         )
 
         assert comparison is not None
@@ -266,38 +270,42 @@ class TestBudgetReallocation:
     def test_create_reallocation_plan(self):
         """Test creating a budget reallocation plan"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 2.0, "ctr": 1.5, "cvr": 2.0, "cpa": 50},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
             CampaignBudgetState(
-                campaign_id="camp_2", campaign_name="Campaign 2", platform="meta",
-                current_daily_budget=1000, current_spend=950,
+                campaign_id="camp_2",
+                campaign_name="Campaign 2",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=950,
                 performance_metrics={"roas": 5.0, "ctr": 2.5, "cvr": 3.0, "cpa": 30},
-                data_quality_score=0.9
+                data_quality_score=0.9,
             ),
         ]
 
         config = ReallocationConfig(
             strategy=ReallocationStrategy.ROAS_MAXIMIZATION,
             min_campaign_budget=100,
-            max_change_percent=50
+            max_change_percent=50,
         )
 
-        plan = service.create_plan(
-            tenant_id="tenant_123",
-            campaigns=campaigns,
-            config=config
-        )
+        plan = service.create_plan(tenant_id="tenant_123", campaigns=campaigns, config=config)
 
         assert plan is not None
         assert plan.tenant_id == "tenant_123"
@@ -306,24 +314,32 @@ class TestBudgetReallocation:
     def test_roas_maximization_strategy(self):
         """Test ROAS maximization allocates to high performers"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="low_roas", campaign_name="Low ROAS", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="low_roas",
+                campaign_name="Low ROAS",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 1.0, "ctr": 1.0, "cvr": 1.0, "cpa": 100},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
             CampaignBudgetState(
-                campaign_id="high_roas", campaign_name="High ROAS", platform="meta",
-                current_daily_budget=1000, current_spend=950,
+                campaign_id="high_roas",
+                campaign_name="High ROAS",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=950,
                 performance_metrics={"roas": 8.0, "ctr": 3.0, "cvr": 4.0, "cpa": 20},
-                data_quality_score=0.9
+                data_quality_score=0.9,
             ),
         ]
 
@@ -337,30 +353,38 @@ class TestBudgetReallocation:
     def test_guardrails_prevent_extreme_changes(self):
         """Test that guardrails prevent extreme budget changes"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 0.1, "ctr": 0.5, "cvr": 0.5, "cpa": 200},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
             CampaignBudgetState(
-                campaign_id="camp_2", campaign_name="Campaign 2", platform="meta",
-                current_daily_budget=1000, current_spend=950,
+                campaign_id="camp_2",
+                campaign_name="Campaign 2",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=950,
                 performance_metrics={"roas": 10.0, "ctr": 4.0, "cvr": 5.0, "cpa": 15},
-                data_quality_score=0.9
+                data_quality_score=0.9,
             ),
         ]
 
         config = ReallocationConfig(
             strategy=ReallocationStrategy.ROAS_MAXIMIZATION,
-            max_change_percent=30  # Max 30% change
+            max_change_percent=30,  # Max 30% change
         )
 
         plan = service.create_plan("tenant_123", campaigns, config)
@@ -373,24 +397,28 @@ class TestBudgetReallocation:
     def test_minimum_budget_enforced(self):
         """Test that minimum budget is enforced"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=200, current_spend=180,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=200,
+                current_spend=180,
                 performance_metrics={"roas": 0.1, "ctr": 0.3, "cvr": 0.2, "cpa": 500},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
         ]
 
         config = ReallocationConfig(
-            strategy=ReallocationStrategy.ROAS_MAXIMIZATION,
-            min_campaign_budget=100
+            strategy=ReallocationStrategy.ROAS_MAXIMIZATION, min_campaign_budget=100
         )
 
         plan = service.create_plan("tenant_123", campaigns, config)
@@ -402,18 +430,23 @@ class TestBudgetReallocation:
     def test_simulate_reallocation(self):
         """Test simulating reallocation before execution"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 2.0, "ctr": 1.5, "cvr": 2.0, "cpa": 50},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
         ]
 
@@ -429,18 +462,24 @@ class TestBudgetReallocation:
     def test_approval_workflow(self):
         """Test plan approval workflow"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy, ReallocationStatus
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStatus,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 3.0, "ctr": 2.0, "cvr": 2.5, "cpa": 40},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
         ]
         config = ReallocationConfig(strategy=ReallocationStrategy.BALANCED)
@@ -457,24 +496,33 @@ class TestBudgetReallocation:
     def test_execute_reallocation(self):
         """Test executing approved reallocation"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy, ReallocationStatus
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStatus,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 2.0, "ctr": 1.5, "cvr": 2.0, "cpa": 50},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
             CampaignBudgetState(
-                campaign_id="camp_2", campaign_name="Campaign 2", platform="meta",
-                current_daily_budget=1000, current_spend=950,
+                campaign_id="camp_2",
+                campaign_name="Campaign 2",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=950,
                 performance_metrics={"roas": 4.0, "ctr": 2.5, "cvr": 3.0, "cpa": 30},
-                data_quality_score=0.9
+                data_quality_score=0.9,
             ),
         ]
 
@@ -491,18 +539,24 @@ class TestBudgetReallocation:
     def test_rollback_reallocation(self):
         """Test rolling back executed reallocation"""
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy, ReallocationStatus
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStatus,
+            ReallocationStrategy,
         )
 
         service = BudgetReallocationService()
 
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 3.0, "ctr": 2.0, "cvr": 2.5, "cpa": 40},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
         ]
         config = ReallocationConfig(strategy=ReallocationStrategy.BALANCED)
@@ -527,9 +581,7 @@ class TestAudienceInsights:
 
     def test_predict_audience_performance(self):
         """Test predicting audience performance"""
-        from app.services.audience_insights_service import (
-            AudienceInsightsService, AudienceType
-        )
+        from app.services.audience_insights_service import AudienceInsightsService, AudienceType
 
         service = AudienceInsightsService()
 
@@ -538,7 +590,7 @@ class TestAudienceInsights:
             size=500000,
             platform="meta",
             budget=5000,
-            lookalike_percent=2
+            lookalike_percent=2,
         )
 
         assert prediction is not None
@@ -551,7 +603,9 @@ class TestAudienceInsights:
     def test_audience_quality_scoring(self):
         """Test audience quality scoring"""
         from app.services.audience_insights_service import (
-            AudienceInsightsService, AudienceType, AudienceMetrics
+            AudienceInsightsService,
+            AudienceMetrics,
+            AudienceType,
         )
 
         service = AudienceInsightsService()
@@ -586,7 +640,9 @@ class TestAudienceInsights:
     def test_audience_expansion_recommendations(self):
         """Test audience expansion recommendations"""
         from app.services.audience_insights_service import (
-            AudienceInsightsService, AudienceType, AudienceMetrics
+            AudienceInsightsService,
+            AudienceMetrics,
+            AudienceType,
         )
 
         service = AudienceInsightsService()
@@ -619,9 +675,7 @@ class TestAudienceInsights:
 
     def test_audience_overlap_detection(self):
         """Test detecting overlap between audiences"""
-        from app.services.audience_insights_service import (
-            AudienceInsightsService, AudienceType
-        )
+        from app.services.audience_insights_service import AudienceInsightsService, AudienceType
 
         service = AudienceInsightsService()
 
@@ -652,7 +706,9 @@ class TestAudienceInsights:
     def test_audience_fatigue_detection(self):
         """Test audience fatigue detection via high frequency"""
         from app.services.audience_insights_service import (
-            AudienceInsightsService, AudienceType, AudienceMetrics
+            AudienceInsightsService,
+            AudienceMetrics,
+            AudienceType,
         )
 
         service = AudienceInsightsService()
@@ -724,6 +780,7 @@ class TestLTVPrediction:
     def fresh_predictor(self):
         """Create a fresh predictor without loading existing models"""
         from app.ml.ltv_predictor import LTVPredictor
+
         return LTVPredictor(models_path="./models_test_nonexistent")
 
     def test_basic_ltv_prediction(self, fresh_predictor):
@@ -734,7 +791,7 @@ class TestLTVPrediction:
 
         behavior = CustomerBehavior(
             customer_id="cust_123",
-            acquisition_date=datetime.now(timezone.utc) - timedelta(days=90),
+            acquisition_date=datetime.now(UTC) - timedelta(days=90),
             acquisition_channel="meta",
             first_order_value=100.0,
             first_order_items=2,
@@ -761,7 +818,7 @@ class TestLTVPrediction:
 
         behavior = CustomerBehavior(
             customer_id="cust_456",
-            acquisition_date=datetime.now(timezone.utc) - timedelta(days=30),
+            acquisition_date=datetime.now(UTC) - timedelta(days=30),
             acquisition_channel="google",
             first_order_value=75.0,
             first_order_items=1,
@@ -788,7 +845,7 @@ class TestLTVPrediction:
         customers = [
             CustomerBehavior(
                 customer_id="high_1",
-                acquisition_date=datetime.now(timezone.utc) - timedelta(days=365),
+                acquisition_date=datetime.now(UTC) - timedelta(days=365),
                 acquisition_channel="organic",
                 first_order_value=200,
                 total_orders=50,
@@ -800,7 +857,7 @@ class TestLTVPrediction:
             ),
             CustomerBehavior(
                 customer_id="low_1",
-                acquisition_date=datetime.now(timezone.utc) - timedelta(days=90),
+                acquisition_date=datetime.now(UTC) - timedelta(days=90),
                 acquisition_channel="affiliate",
                 first_order_value=30,
                 total_orders=1,
@@ -826,7 +883,7 @@ class TestLTVPrediction:
         # Customer showing churn signals (long time since last purchase)
         churning_behavior = CustomerBehavior(
             customer_id="churning",
-            acquisition_date=datetime.now(timezone.utc) - timedelta(days=365),
+            acquisition_date=datetime.now(UTC) - timedelta(days=365),
             acquisition_channel="meta",
             first_order_value=50,
             total_orders=3,
@@ -850,7 +907,7 @@ class TestLTVPrediction:
 
         behavior = CustomerBehavior(
             customer_id="cust_789",
-            acquisition_date=datetime.now(timezone.utc) - timedelta(days=180),
+            acquisition_date=datetime.now(UTC) - timedelta(days=180),
             acquisition_channel="referral",
             first_order_value=200.0,
             total_orders=10,
@@ -865,9 +922,7 @@ class TestLTVPrediction:
 
         # Calculate max CAC with 3:1 LTV:CAC ratio target
         max_cac = predictor.calculate_max_cac(
-            predicted_ltv=prediction.predicted_ltv_365d,
-            target_ratio=3.0,
-            margin_percent=30
+            predicted_ltv=prediction.predicted_ltv_365d, target_ratio=3.0, margin_percent=30
         )
 
         assert max_cac is not None
@@ -885,7 +940,7 @@ class TestLTVPrediction:
         customers = [
             CustomerBehavior(
                 customer_id="jan_1",
-                acquisition_date=datetime(2024, 1, 15, tzinfo=timezone.utc),
+                acquisition_date=datetime(2024, 1, 15, tzinfo=UTC),
                 acquisition_channel="meta",
                 first_order_value=100,
                 total_orders=10,
@@ -896,7 +951,7 @@ class TestLTVPrediction:
             ),
             CustomerBehavior(
                 customer_id="feb_1",
-                acquisition_date=datetime(2024, 2, 10, tzinfo=timezone.utc),
+                acquisition_date=datetime(2024, 2, 10, tzinfo=UTC),
                 acquisition_channel="google",
                 first_order_value=80,
                 total_orders=6,
@@ -926,7 +981,7 @@ class TestLTVPrediction:
         # High RFM score customer
         high_rfm = CustomerBehavior(
             customer_id="high_rfm",
-            acquisition_date=datetime.now(timezone.utc) - timedelta(days=180),
+            acquisition_date=datetime.now(UTC) - timedelta(days=180),
             acquisition_channel="organic",
             first_order_value=250.0,
             total_orders=20,  # High frequency
@@ -941,7 +996,7 @@ class TestLTVPrediction:
         # Low RFM score customer
         low_rfm = CustomerBehavior(
             customer_id="low_rfm",
-            acquisition_date=datetime.now(timezone.utc) - timedelta(days=365),
+            acquisition_date=datetime.now(UTC) - timedelta(days=365),
             acquisition_channel="affiliate",
             first_order_value=50.0,
             total_orders=1,  # Low frequency
@@ -960,27 +1015,30 @@ class TestLTVPrediction:
 
     def test_model_training(self, tmp_path):
         """Test training LTV model on historical data"""
-        from app.ml.ltv_predictor import LTVPredictor
         import pandas as pd
+
+        from app.ml.ltv_predictor import LTVPredictor
 
         # Use tmp_path to avoid interfering with other tests
         predictor = LTVPredictor(models_path=str(tmp_path))
 
         # Create training data
-        training_data = pd.DataFrame({
-            "customer_id": [f"cust_{i}" for i in range(100)],
-            "first_order_value": np.random.uniform(20, 300, 100),
-            "first_order_items": np.random.randint(1, 5, 100),
-            "days_to_first_purchase": np.random.randint(0, 30, 100),
-            "sessions_first_week": np.random.randint(1, 15, 100),
-            "pages_viewed_first_week": np.random.randint(5, 50, 100),
-            "email_opens_first_week": np.random.randint(0, 10, 100),
-            "email_clicks_first_week": np.random.randint(0, 5, 100),
-            "total_orders": np.random.randint(1, 20, 100),
-            "total_revenue": np.random.uniform(50, 3000, 100),
-            "avg_order_value": np.random.uniform(30, 200, 100),
-            "actual_ltv_365d": np.random.uniform(100, 5000, 100)  # Target variable
-        })
+        training_data = pd.DataFrame(
+            {
+                "customer_id": [f"cust_{i}" for i in range(100)],
+                "first_order_value": np.random.uniform(20, 300, 100),
+                "first_order_items": np.random.randint(1, 5, 100),
+                "days_to_first_purchase": np.random.randint(0, 30, 100),
+                "sessions_first_week": np.random.randint(1, 15, 100),
+                "pages_viewed_first_week": np.random.randint(5, 50, 100),
+                "email_opens_first_week": np.random.randint(0, 10, 100),
+                "email_clicks_first_week": np.random.randint(0, 5, 100),
+                "total_orders": np.random.randint(1, 20, 100),
+                "total_revenue": np.random.uniform(50, 3000, 100),
+                "avg_order_value": np.random.uniform(30, 200, 100),
+                "actual_ltv_365d": np.random.uniform(100, 5000, 100),  # Target variable
+            }
+        )
 
         metrics = predictor.train(training_data)
 
@@ -1000,8 +1058,10 @@ class TestNiceToHaveIntegration:
         """Test explainability integrated with budget decisions"""
         from app.ml.explainability import ModelExplainer
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStrategy,
         )
 
         # Create explainer
@@ -1015,10 +1075,13 @@ class TestNiceToHaveIntegration:
         service = BudgetReallocationService()
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=950,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=950,
                 performance_metrics={"roas": 4.0, "ctr": 2.0, "cvr": 3.0, "cpa": 30},
-                data_quality_score=0.9
+                data_quality_score=0.9,
             ),
         ]
         config = ReallocationConfig(strategy=ReallocationStrategy.ROAS_MAXIMIZATION)
@@ -1030,10 +1093,12 @@ class TestNiceToHaveIntegration:
 
     def test_audience_insights_with_ltv(self):
         """Test audience insights combined with LTV prediction"""
+        from app.ml.ltv_predictor import CustomerBehavior, LTVPredictor
         from app.services.audience_insights_service import (
-            AudienceInsightsService, AudienceType, AudienceMetrics
+            AudienceInsightsService,
+            AudienceMetrics,
+            AudienceType,
         )
-        from app.ml.ltv_predictor import LTVPredictor, CustomerBehavior
 
         # Create high-value audience
         audience_service = AudienceInsightsService()
@@ -1063,7 +1128,7 @@ class TestNiceToHaveIntegration:
         ltv_predictor = LTVPredictor(models_path="./models_test_nonexistent")
         behavior = CustomerBehavior(
             customer_id="typical_vip",
-            acquisition_date=datetime.now(timezone.utc) - timedelta(days=365),
+            acquisition_date=datetime.now(UTC) - timedelta(days=365),
             acquisition_channel="meta",
             first_order_value=200,
             total_orders=25,
@@ -1082,12 +1147,16 @@ class TestNiceToHaveIntegration:
 
     def test_competitor_benchmark_with_recommendations(self):
         """Test competitor benchmarking produces actionable recommendations"""
-        from app.services.competitor_benchmarking_service import (
-            CompetitorBenchmarkingService, Industry, Region
-        )
         from app.services.budget_reallocation_service import (
-            BudgetReallocationService, ReallocationConfig, CampaignBudgetState,
-            ReallocationStrategy
+            BudgetReallocationService,
+            CampaignBudgetState,
+            ReallocationConfig,
+            ReallocationStrategy,
+        )
+        from app.services.competitor_benchmarking_service import (
+            CompetitorBenchmarkingService,
+            Industry,
+            Region,
         )
 
         # Get benchmark
@@ -1097,23 +1166,29 @@ class TestNiceToHaveIntegration:
             industry=Industry.ECOMMERCE,
             region=Region.GLOBAL,
             platform="meta",
-            metrics={"ctr": 0.01, "roas": 2.0}  # Below average
+            metrics={"ctr": 0.01, "roas": 2.0},  # Below average
         )
 
         # Based on benchmark, create budget reallocation
         budget_service = BudgetReallocationService()
         campaigns = [
             CampaignBudgetState(
-                campaign_id="camp_1", campaign_name="Campaign 1", platform="meta",
-                current_daily_budget=1000, current_spend=900,
+                campaign_id="camp_1",
+                campaign_name="Campaign 1",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=900,
                 performance_metrics={"roas": 2.0, "ctr": 1.0, "cvr": 1.5, "cpa": 60},
-                data_quality_score=0.8
+                data_quality_score=0.8,
             ),
             CampaignBudgetState(
-                campaign_id="camp_2", campaign_name="Campaign 2", platform="meta",
-                current_daily_budget=1000, current_spend=950,
+                campaign_id="camp_2",
+                campaign_name="Campaign 2",
+                platform="meta",
+                current_daily_budget=1000,
+                current_spend=950,
                 performance_metrics={"roas": 3.5, "ctr": 2.5, "cvr": 3.0, "cpa": 35},
-                data_quality_score=0.9
+                data_quality_score=0.9,
             ),
         ]
 

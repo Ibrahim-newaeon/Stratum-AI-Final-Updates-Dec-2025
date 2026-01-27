@@ -5,18 +5,18 @@
 Pydantic schemas for embed widget API requests and responses.
 """
 
-from datetime import datetime
-from typing import Optional, List, Dict, Any
-from uuid import UUID
-from enum import Enum
-
-from pydantic import BaseModel, Field, validator, HttpUrl
 import re
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+from uuid import UUID
 
+from pydantic import BaseModel, Field, validator
 
 # =============================================================================
 # Enums
 # =============================================================================
+
 
 class WidgetType(str, Enum):
     SIGNAL_HEALTH = "signal_health"
@@ -51,8 +51,10 @@ class TokenStatus(str, Enum):
 # Domain Whitelist Schemas
 # =============================================================================
 
+
 class DomainWhitelistCreate(BaseModel):
     """Create a new whitelisted domain."""
+
     domain_pattern: str = Field(
         ...,
         description="Domain pattern (e.g., 'dashboard.client.com' or '*.client.com')",
@@ -72,6 +74,7 @@ class DomainWhitelistCreate(BaseModel):
 
 class DomainWhitelistResponse(BaseModel):
     """Domain whitelist entry response."""
+
     id: UUID
     domain_pattern: str
     is_verified: bool
@@ -87,15 +90,18 @@ class DomainWhitelistResponse(BaseModel):
 # Widget Schemas
 # =============================================================================
 
+
 class WidgetDataScope(BaseModel):
     """Scope configuration for widget data access."""
-    campaigns: Optional[List[str]] = Field(default=None, description="Specific campaign IDs")
-    ad_accounts: Optional[List[str]] = Field(default=None, description="Specific ad account IDs")
+
+    campaigns: Optional[list[str]] = Field(default=None, description="Specific campaign IDs")
+    ad_accounts: Optional[list[str]] = Field(default=None, description="Specific ad account IDs")
     date_range_days: int = Field(default=30, ge=1, le=365, description="Data lookback period")
 
 
 class WidgetCustomBranding(BaseModel):
     """Custom branding options (Enterprise only)."""
+
     custom_logo_url: Optional[str] = Field(default=None, max_length=512)
     custom_accent_color: Optional[str] = Field(default=None, regex=r"^#[0-9A-Fa-f]{6}$")
     custom_background_color: Optional[str] = Field(default=None, regex=r"^#[0-9A-Fa-f]{6}$")
@@ -104,6 +110,7 @@ class WidgetCustomBranding(BaseModel):
 
 class WidgetCreate(BaseModel):
     """Create a new embed widget."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     widget_type: WidgetType
@@ -131,6 +138,7 @@ class WidgetCreate(BaseModel):
 
 class WidgetUpdate(BaseModel):
     """Update an existing widget."""
+
     name: Optional[str] = Field(default=None, min_length=1, max_length=255)
     description: Optional[str] = None
     widget_size: Optional[WidgetSize] = None
@@ -144,6 +152,7 @@ class WidgetUpdate(BaseModel):
 
 class WidgetResponse(BaseModel):
     """Widget configuration response."""
+
     id: UUID
     name: str
     description: Optional[str]
@@ -152,7 +161,7 @@ class WidgetResponse(BaseModel):
     custom_width: Optional[int]
     custom_height: Optional[int]
     branding_level: BrandingLevel
-    data_scope: Dict[str, Any]
+    data_scope: dict[str, Any]
     refresh_interval_seconds: int
     is_active: bool
     total_views: int
@@ -173,9 +182,11 @@ class WidgetResponse(BaseModel):
 # Token Schemas
 # =============================================================================
 
+
 class TokenCreate(BaseModel):
     """Create a new embed token for a widget."""
-    allowed_domains: List[str] = Field(
+
+    allowed_domains: list[str] = Field(
         ...,
         min_items=1,
         max_items=10,
@@ -193,11 +204,12 @@ class TokenCreate(BaseModel):
 
 class TokenCreateResponse(BaseModel):
     """Response after creating a token (includes the actual token once)."""
+
     id: UUID
     token: str  # Only returned once at creation!
     refresh_token: str  # Only returned once at creation!
     token_prefix: str
-    allowed_domains: List[str]
+    allowed_domains: list[str]
     expires_at: datetime
     rate_limit_per_minute: int
 
@@ -207,9 +219,10 @@ class TokenCreateResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     """Token information response (without actual token)."""
+
     id: UUID
     token_prefix: str
-    allowed_domains: List[str]
+    allowed_domains: list[str]
     status: TokenStatus
     expires_at: datetime
     last_used_at: Optional[datetime]
@@ -223,11 +236,13 @@ class TokenResponse(BaseModel):
 
 class TokenRefresh(BaseModel):
     """Refresh an embed token."""
+
     refresh_token: str
 
 
 class TokenRefreshResponse(BaseModel):
     """Response after refreshing a token."""
+
     token: str
     refresh_token: str
     expires_at: datetime
@@ -237,16 +252,19 @@ class TokenRefreshResponse(BaseModel):
 # Widget Data Schemas (for embed endpoint responses)
 # =============================================================================
 
+
 class SignalHealthData(BaseModel):
     """Data for signal health widget."""
+
     overall_score: int = Field(..., ge=0, le=100)
     status: str  # healthy, degraded, unhealthy
-    platforms: Dict[str, int]  # platform -> score
+    platforms: dict[str, int]  # platform -> score
     last_updated: datetime
 
 
 class ROASData(BaseModel):
     """Data for ROAS display widget."""
+
     blended_roas: float
     trend: str  # up, down, stable
     trend_percentage: float
@@ -256,6 +274,7 @@ class ROASData(BaseModel):
 
 class TrustGateData(BaseModel):
     """Data for trust gate status widget."""
+
     status: str  # pass, hold, block
     signal_health: int
     automation_mode: str
@@ -265,6 +284,7 @@ class TrustGateData(BaseModel):
 
 class SpendTrackerData(BaseModel):
     """Data for spend tracker widget."""
+
     total_spend: float
     budget: Optional[float]
     utilization_percentage: Optional[float]
@@ -275,6 +295,7 @@ class SpendTrackerData(BaseModel):
 
 class AnomalyAlertData(BaseModel):
     """Data for anomaly alert widget."""
+
     has_anomalies: bool
     anomaly_count: int
     severity: str  # none, low, medium, high
@@ -284,7 +305,8 @@ class AnomalyAlertData(BaseModel):
 
 class CampaignPerformanceData(BaseModel):
     """Data for campaign performance widget."""
-    campaigns: List[Dict[str, Any]]
+
+    campaigns: list[dict[str, Any]]
     total_campaigns: int
     top_performer: Optional[str]
     last_updated: datetime
@@ -294,8 +316,10 @@ class CampaignPerformanceData(BaseModel):
 # Embed Code Response
 # =============================================================================
 
+
 class EmbedCodeResponse(BaseModel):
     """Generated embed code for a widget."""
+
     widget_id: UUID
     iframe_code: str
     script_code: str
@@ -307,17 +331,20 @@ class EmbedCodeResponse(BaseModel):
 # Widget Render Request (from embed endpoint)
 # =============================================================================
 
+
 class WidgetRenderRequest(BaseModel):
     """Request to render widget data (validated from token)."""
+
     token: str
     origin: str
 
 
 class WidgetRenderResponse(BaseModel):
     """Rendered widget data response."""
+
     widget_type: WidgetType
     branding_level: BrandingLevel
-    data: Dict[str, Any]
-    config: Dict[str, Any]
+    data: dict[str, Any]
+    config: dict[str, Any]
     signature: str  # HMAC signature for data integrity
     expires_at: datetime

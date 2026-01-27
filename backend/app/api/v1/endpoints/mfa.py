@@ -13,16 +13,16 @@ Endpoints:
 - POST /mfa/validate - Validate code during login
 """
 
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import get_current_user
-from app.db.session import get_async_session as get_db
 from app.base_models import User
 from app.core.logging import get_logger
+from app.db.session import get_async_session as get_db
 from app.services.mfa_service import MFAService, check_mfa_required, is_user_locked
 
 logger = get_logger(__name__)
@@ -33,8 +33,10 @@ router = APIRouter(prefix="/mfa", tags=["MFA"])
 # Request/Response Schemas
 # =============================================================================
 
+
 class MFAStatusResponse(BaseModel):
     """MFA status response."""
+
     enabled: bool
     verified_at: Optional[str] = None
     backup_codes_remaining: int
@@ -48,13 +50,14 @@ class MFAStatusResponse(BaseModel):
                 "verified_at": "2024-01-15T10:30:00Z",
                 "backup_codes_remaining": 8,
                 "is_locked": False,
-                "lockout_until": None
+                "lockout_until": None,
             }
         }
 
 
 class MFASetupResponse(BaseModel):
     """MFA setup response with QR code."""
+
     secret: str = Field(..., description="TOTP secret (for manual entry)")
     provisioning_uri: str = Field(..., description="otpauth:// URI")
     qr_code_base64: str = Field(..., description="QR code as base64 PNG")
@@ -64,97 +67,88 @@ class MFASetupResponse(BaseModel):
             "example": {
                 "secret": "JBSWY3DPEHPK3PXP",
                 "provisioning_uri": "otpauth://totp/Stratum%20AI:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Stratum%20AI",
-                "qr_code_base64": "iVBORw0KGgoAAAANSUhEUgAA..."
+                "qr_code_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
             }
         }
 
 
 class MFAVerifyRequest(BaseModel):
     """Request to verify TOTP code."""
+
     code: str = Field(..., min_length=6, max_length=8, description="6-digit TOTP code")
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "code": "123456"
-            }
-        }
+        json_schema_extra = {"example": {"code": "123456"}}
 
 
 class MFAVerifyResponse(BaseModel):
     """Response after enabling MFA."""
+
     success: bool
     message: str
-    backup_codes: List[str] = Field(default_factory=list, description="Backup codes (only shown once)")
+    backup_codes: list[str] = Field(
+        default_factory=list, description="Backup codes (only shown once)"
+    )
 
     class Config:
         json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "MFA enabled successfully",
-                "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012"]
+                "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012"],
             }
         }
 
 
 class MFADisableRequest(BaseModel):
     """Request to disable MFA."""
+
     code: str = Field(..., description="TOTP code or backup code")
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "code": "123456"
-            }
-        }
+        json_schema_extra = {"example": {"code": "123456"}}
 
 
 class MFAValidateRequest(BaseModel):
     """Request to validate code during login."""
+
     user_id: int = Field(..., description="User ID from login step 1")
     code: str = Field(..., description="TOTP code or backup code")
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "user_id": 123,
-                "code": "123456"
-            }
-        }
+        json_schema_extra = {"example": {"user_id": 123, "code": "123456"}}
 
 
 class MFAValidateResponse(BaseModel):
     """Response from code validation."""
+
     valid: bool
     message: str
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "valid": True,
-                "message": "Code verified"
-            }
-        }
+        json_schema_extra = {"example": {"valid": True, "message": "Code verified"}}
 
 
 class BackupCodesResponse(BaseModel):
     """Response with new backup codes."""
+
     success: bool
     message: str
-    backup_codes: List[str] = Field(default_factory=list)
+    backup_codes: list[str] = Field(default_factory=list)
 
     class Config:
         json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Backup codes regenerated",
-                "backup_codes": ["ABCD-1234", "EFGH-5678"]
+                "backup_codes": ["ABCD-1234", "EFGH-5678"],
             }
         }
 
 
 class MFARequiredResponse(BaseModel):
     """Response indicating MFA is required."""
+
     mfa_required: bool
     is_locked: bool = False
     lockout_until: Optional[str] = None
@@ -163,6 +157,7 @@ class MFARequiredResponse(BaseModel):
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("/status", response_model=MFAStatusResponse)
 async def get_mfa_status(
@@ -187,10 +182,7 @@ async def get_mfa_status(
             lockout_until=status.lockout_until.isoformat() if status.lockout_until else None,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post("/setup", response_model=MFASetupResponse)
@@ -215,7 +207,7 @@ async def initiate_mfa_setup(
         if status.enabled:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="MFA is already enabled. Disable it first to reconfigure."
+                detail="MFA is already enabled. Disable it first to reconfigure.",
             )
 
         setup_data = await service.initiate_setup(current_user.id, current_user.email)
@@ -228,10 +220,7 @@ async def initiate_mfa_setup(
             qr_code_base64=setup_data.qr_code_base64,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/verify", response_model=MFAVerifyResponse)
@@ -253,10 +242,7 @@ async def verify_and_enable_mfa(
     service = MFAService(db)
 
     try:
-        success, backup_codes = await service.verify_and_enable(
-            current_user.id,
-            request.code
-        )
+        success, backup_codes = await service.verify_and_enable(current_user.id, request.code)
 
         if success:
             logger.info("mfa_enabled", user_id=current_user.id)
@@ -272,10 +258,7 @@ async def verify_and_enable_mfa(
                 backup_codes=[],
             )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/disable", response_model=MFAVerifyResponse)
@@ -310,10 +293,7 @@ async def disable_mfa(
                 backup_codes=[],
             )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/backup-codes", response_model=BackupCodesResponse)
@@ -333,10 +313,7 @@ async def regenerate_backup_codes(
     service = MFAService(db)
 
     try:
-        success, backup_codes = await service.regenerate_backup_codes(
-            current_user.id,
-            request.code
-        )
+        success, backup_codes = await service.regenerate_backup_codes(current_user.id, request.code)
 
         if success:
             logger.info("mfa_backup_codes_regenerated", user_id=current_user.id)
@@ -352,10 +329,7 @@ async def regenerate_backup_codes(
                 backup_codes=[],
             )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/validate", response_model=MFAValidateResponse)
@@ -379,10 +353,10 @@ async def validate_mfa_code(
     # Check if user is locked
     is_locked, lockout_until = await is_user_locked(db, request.user_id)
     if is_locked:
-        remaining = (lockout_until.timestamp() - __import__('time').time()) // 60
+        remaining = (lockout_until.timestamp() - __import__("time").time()) // 60
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Account locked due to too many failed attempts. Try again in {int(remaining)} minutes."
+            detail=f"Account locked due to too many failed attempts. Try again in {int(remaining)} minutes.",
         )
 
     # Verify the code

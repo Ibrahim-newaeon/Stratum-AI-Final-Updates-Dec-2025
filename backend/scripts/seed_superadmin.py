@@ -14,7 +14,7 @@ Or from the backend folder:
 
 import asyncio
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -24,8 +24,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import settings
-from app.core.security import get_password_hash, hash_pii_for_lookup, encrypt_pii
-
+from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
 
 # =============================================================================
 # Super Admin Configuration
@@ -57,12 +56,14 @@ async def create_superadmin():
             encrypted_email = encrypt_pii(SUPERADMIN_EMAIL.lower())
             encrypted_name = encrypt_pii(SUPERADMIN_NAME)
             password_hash = get_password_hash(SUPERADMIN_PASSWORD)
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             # Check if super admin already exists
             result = await conn.execute(
-                text("SELECT id, role, is_active, is_verified FROM users WHERE email_hash = :email_hash"),
-                {"email_hash": email_hash}
+                text(
+                    "SELECT id, role, is_active, is_verified FROM users WHERE email_hash = :email_hash"
+                ),
+                {"email_hash": email_hash},
             )
             existing = result.fetchone()
 
@@ -77,7 +78,7 @@ async def create_superadmin():
             # Check/create tenant
             result = await conn.execute(
                 text("SELECT id, name FROM tenants WHERE slug = :slug"),
-                {"slug": SUPERADMIN_TENANT_SLUG}
+                {"slug": SUPERADMIN_TENANT_SLUG},
             )
             tenant = result.fetchone()
 
@@ -89,7 +90,7 @@ async def create_superadmin():
                         VALUES (:name, :slug, 'enterprise', '{}', '{}', 100, 1000, :now, :now, false)
                         RETURNING id
                     """),
-                    {"name": SUPERADMIN_TENANT_NAME, "slug": SUPERADMIN_TENANT_SLUG, "now": now}
+                    {"name": SUPERADMIN_TENANT_NAME, "slug": SUPERADMIN_TENANT_SLUG, "now": now},
                 )
                 tenant_id = result.fetchone()[0]
                 print(f"  Tenant ID: {tenant_id}")
@@ -124,7 +125,7 @@ async def create_superadmin():
                     "password_hash": password_hash,
                     "full_name": encrypted_name,
                     "now": now,
-                }
+                },
             )
             user_id = result.fetchone()[0]
 
@@ -133,7 +134,7 @@ async def create_superadmin():
             print("=" * 50)
             print(f"  Email:    {SUPERADMIN_EMAIL}")
             print(f"  Password: {SUPERADMIN_PASSWORD}")
-            print(f"  Role:     superadmin")
+            print("  Role:     superadmin")
             print(f"  Tenant:   {SUPERADMIN_TENANT_NAME}")
             print(f"  User ID:  {user_id}")
             print("=" * 50)
