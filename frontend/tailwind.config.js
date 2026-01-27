@@ -49,86 +49,72 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // NEBULA AURORA THEME - Revolutionary 2026 Palette
-        nebula: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#7C3AED', // Deep violet core
-          600: '#6D28D9',
-          700: '#5B21B6',
-          800: '#4C1D95',
-          900: '#2E1065',
-          950: '#1a0b3e',
+        // APPLE GLASS DARK THEME - Apple HIG Palette
+        apple: {
+          blue: '#0A84FF', // Primary
+          green: '#30D158',
+          orange: '#FF9F0A',
+          purple: '#BF5AF2',
+          pink: '#FF375F',
+          teal: '#64D2FF',
+          red: '#FF453A',
+          yellow: '#FFD60A',
+          indigo: '#5E5CE6',
         },
-        aurora: {
-          cyan: '#00FFFF', // Electric cyan
-          teal: '#00F5D4', // Bioluminescent teal
-          mint: '#00FF9F', // Neon mint
-          lime: '#B8FF00', // Plasma lime
-          pink: '#FF00FF', // Magenta plasma
-          rose: '#FF0080', // Hot rose
-          coral: '#FF6B6B', // Soft coral
-          gold: '#FFD700', // Pure gold
-          amber: '#FFAA00', // Warm amber
+        // Glass surfaces
+        glass: {
+          card: 'rgba(255, 255, 255, 0.03)',
+          cardHover: 'rgba(255, 255, 255, 0.05)',
+          border: 'rgba(255, 255, 255, 0.08)',
+          borderHover: 'rgba(255, 255, 255, 0.15)',
+          subtle: 'rgba(255, 255, 255, 0.02)',
         },
-        cosmic: {
-          void: '#000011', // Deep space black with blue
-          abyss: '#020617', // Slate abyss
-          deep: '#0a0a1a', // Deep purple-black
-          dark: '#0f0f23', // Dark nebula
-          medium: '#161629', // Medium depth
-          light: '#1e1e3f', // Lighter cosmic
-          glow: '#2a2a5a', // Glowing surface
-        },
-        // Legacy support - mapped to new theme
+        // Legacy support - mapped to apple theme
         stratum: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#7C3AED',
-          600: '#6D28D9',
-          700: '#5B21B6',
-          800: '#4C1D95',
-          900: '#2E1065',
-          950: '#1a0b3e',
+          50: '#e6f2ff',
+          100: '#cce4ff',
+          200: '#99c9ff',
+          300: '#66aeff',
+          400: '#3393ff',
+          500: '#0A84FF', // Apple Blue
+          600: '#0066cc',
+          700: '#004d99',
+          800: '#003366',
+          900: '#001a33',
+          950: '#000d1a',
         },
         cyan: {
-          50: '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#00FFFF',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
-          950: '#083344',
+          50: '#e6faff',
+          100: '#ccf5ff',
+          200: '#99ebff',
+          300: '#64D2FF', // Apple Teal
+          400: '#64D2FF',
+          500: '#64D2FF',
+          600: '#00a3cc',
+          700: '#007a99',
+          800: '#005266',
+          900: '#002933',
+          950: '#00141a',
         },
         meta: '#0866FF',
         google: '#4285F4',
         tiktok: '#00F2EA',
         snapchat: '#FFFC00',
         whatsapp: '#25D366',
-        success: '#00FF9F', // Aurora mint
-        warning: '#FFAA00', // Aurora amber
-        danger: '#FF0080', // Aurora rose
-        info: '#00FFFF', // Aurora cyan
-        insight: '#FF6B6B', // Aurora coral
+        success: '#30D158', // Apple green
+        warning: '#FF9F0A', // Apple orange
+        danger: '#FF453A', // Apple red
+        info: '#64D2FF', // Apple teal
+        insight: '#BF5AF2', // Apple purple
         surface: {
-          primary: '#000011', // Cosmic void
-          secondary: '#0a0a1a', // Cosmic deep
-          tertiary: '#0f0f23', // Cosmic dark
-          elevated: '#161629', // Cosmic medium
+          primary: '#000000', // Pure black
+          secondary: '#000000', // Pure black
+          tertiary: 'rgba(255, 255, 255, 0.03)', // Glass card
+          elevated: 'rgba(255, 255, 255, 0.05)', // Elevated glass
         },
         'text-primary': '#FFFFFF',
-        'text-secondary': '#94A3B8',
-        'text-muted': '#64748B',
+        'text-secondary': 'rgba(255, 255, 255, 0.7)',
+        'text-muted': 'rgba(255, 255, 255, 0.5)',
         chart: {
           1: 'hsl(var(--chart-1))',
           2: 'hsl(var(--chart-2))',
@@ -157,17 +143,26 @@ export default {
         '3xl': '32px',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+        sans: [
+          'SF Pro Display',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+        ],
         mono: [
-          'JetBrains Mono',
-          'ui-monospace',
+          'SF Mono',
           'SFMono-Regular',
+          'ui-monospace',
           'Menlo',
           'Monaco',
           'Consolas',
           'monospace',
         ],
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       fontSize: {
         micro: ['10px', { lineHeight: '1.4', fontWeight: '400' }],
@@ -188,30 +183,31 @@ export default {
         ],
       },
       boxShadow: {
-        // Nebula Aurora Glows
-        'nebula-sm': '0 0 20px rgba(124, 58, 237, 0.3)',
-        nebula: '0 0 40px rgba(124, 58, 237, 0.4)',
-        'nebula-lg': '0 0 60px rgba(124, 58, 237, 0.5)',
-        'nebula-xl': '0 0 100px rgba(124, 58, 237, 0.6)',
-        'aurora-cyan': '0 0 40px rgba(0, 255, 255, 0.4)',
-        'aurora-teal': '0 0 40px rgba(0, 245, 212, 0.4)',
-        'aurora-mint': '0 0 40px rgba(0, 255, 159, 0.4)',
-        'aurora-rose': '0 0 40px rgba(255, 0, 128, 0.4)',
-        'aurora-gold': '0 0 40px rgba(255, 215, 0, 0.4)',
-        // Multi-color aurora
-        'aurora-multi':
-          '0 0 60px rgba(124, 58, 237, 0.3), 0 0 120px rgba(0, 255, 255, 0.2), 0 0 180px rgba(255, 0, 128, 0.1)',
-        // Glass effects
-        glass: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
-        'glass-lg': '0 16px 64px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
-        // Legacy support
-        'glow-sm': '0 0 12px rgba(124, 58, 237, 0.2)',
-        glow: '0 0 20px rgba(124, 58, 237, 0.4)',
-        'glow-lg': '0 0 32px rgba(124, 58, 237, 0.5)',
-        'glow-insight': '0 0 20px rgba(255, 107, 107, 0.4)',
-        'glow-cyan': '0 0 20px rgba(0, 255, 255, 0.4)',
-        card: '0 4px 12px rgba(0, 0, 0, 0.20)',
-        'card-hover': '0 10px 30px rgba(0, 0, 0, 0.28)',
+        // Apple Glass Dark - Soft colored glows
+        'apple-sm': '0 0 20px rgba(10, 132, 255, 0.1)',
+        apple: '0 0 40px rgba(10, 132, 255, 0.15)',
+        'apple-lg': '0 0 60px rgba(10, 132, 255, 0.2)',
+        'apple-xl': '0 0 100px rgba(10, 132, 255, 0.25)',
+        'apple-green': '0 0 40px rgba(48, 209, 88, 0.15)',
+        'apple-orange': '0 0 40px rgba(255, 159, 10, 0.15)',
+        'apple-purple': '0 0 40px rgba(191, 90, 242, 0.15)',
+        'apple-teal': '0 0 40px rgba(100, 210, 255, 0.15)',
+        // Glass effects - Apple style
+        glass: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        'glass-lg': '0 25px 50px rgba(0, 0, 0, 0.4)',
+        'glass-glow': '0 0 40px rgba(10, 132, 255, 0.15), 0 25px 50px rgba(0, 0, 0, 0.4)',
+        // Legacy support - mapped to Apple blue
+        'glow-sm': '0 0 12px rgba(10, 132, 255, 0.15)',
+        glow: '0 0 20px rgba(10, 132, 255, 0.2)',
+        'glow-lg': '0 0 32px rgba(10, 132, 255, 0.25)',
+        'glow-insight': '0 0 20px rgba(191, 90, 242, 0.2)',
+        'glow-cyan': '0 0 20px rgba(100, 210, 255, 0.2)',
+        card: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        'card-hover': '0 10px 30px rgba(0, 0, 0, 0.25)',
+        // Ambient orb shadows
+        'orb-blue': '0 0 120px 60px rgba(10, 132, 255, 0.08)',
+        'orb-purple': '0 0 100px 50px rgba(191, 90, 242, 0.06)',
+        'orb-teal': '0 0 80px 40px rgba(100, 210, 255, 0.05)',
       },
       spacing: {
         1: '4px',
@@ -233,21 +229,23 @@ export default {
         'container-2xl': '1400px',
       },
       backgroundImage: {
-        // Nebula Aurora Gradients
-        'gradient-nebula': 'linear-gradient(135deg, #7C3AED 0%, #00FFFF 50%, #FF0080 100%)',
-        'gradient-aurora':
-          'linear-gradient(135deg, #00FFFF 0%, #00F5D4 25%, #00FF9F 50%, #B8FF00 75%, #FFD700 100%)',
-        'gradient-cosmic': 'linear-gradient(135deg, #000011 0%, #0a0a1a 50%, #1e1e3f 100%)',
-        'gradient-plasma': 'linear-gradient(135deg, #FF0080 0%, #7C3AED 50%, #00FFFF 100%)',
-        'gradient-bioluminescent':
-          'radial-gradient(ellipse at center, rgba(0, 255, 255, 0.15) 0%, transparent 70%)',
-        'gradient-void':
-          'radial-gradient(ellipse at center, rgba(124, 58, 237, 0.1) 0%, transparent 70%)',
-        // Legacy
+        // Apple Glass Dark Gradients
+        'gradient-apple': 'linear-gradient(135deg, #0A84FF 0%, #64D2FF 100%)',
+        'gradient-apple-warm': 'linear-gradient(135deg, #FF9F0A 0%, #FF375F 100%)',
+        'gradient-apple-cool': 'linear-gradient(135deg, #BF5AF2 0%, #64D2FF 100%)',
+        'gradient-apple-soft':
+          'linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(100, 210, 255, 0.05) 100%)',
+        // Ambient orbs for glass dark backgrounds
+        'ambient-orbs': `
+          radial-gradient(ellipse 40% 40% at 20% 30%, rgba(10, 132, 255, 0.08), transparent),
+          radial-gradient(ellipse 30% 30% at 80% 70%, rgba(191, 90, 242, 0.06), transparent),
+          radial-gradient(ellipse 35% 35% at 60% 20%, rgba(100, 210, 255, 0.05), transparent)
+        `,
+        // Legacy - mapped to Apple style
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-stratum': 'linear-gradient(135deg, #7C3AED 0%, #00FFFF 50%, #FF0080 100%)',
+        'gradient-stratum': 'linear-gradient(135deg, #0A84FF 0%, #64D2FF 100%)',
         'gradient-stratum-soft':
-          'linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(0, 255, 255, 0.05) 100%)',
+          'linear-gradient(135deg, rgba(10, 132, 255, 0.08) 0%, rgba(100, 210, 255, 0.05) 100%)',
       },
       keyframes: {
         'accordion-down': {

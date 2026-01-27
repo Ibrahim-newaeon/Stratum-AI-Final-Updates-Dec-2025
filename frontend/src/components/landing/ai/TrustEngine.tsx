@@ -98,7 +98,7 @@ export default function TrustEngine() {
   const colors = getColorClasses(current.color);
 
   return (
-    <section className="relative py-32 overflow-hidden bg-gradient-to-b from-transparent via-purple-500/[0.02] to-transparent">
+    <section className="relative py-32 overflow-hidden" style={{ background: '#000000' }}>
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <svg className="w-full h-full">
@@ -115,23 +115,40 @@ export default function TrustEngine() {
         </svg>
       </div>
 
+      {/* Ambient orb */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(10, 132, 255, 0.06), transparent 60%)' }} />
+
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
-        {/* Section Header */}
+        {/* Section Header - Centered */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+          {/* Badge - Centered above hero */}
+          <div className="flex justify-center mb-8">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: 'rgba(48, 209, 88, 0.15)',
+                border: '1px solid rgba(48, 209, 88, 0.3)',
+              }}
+            >
+              <ShieldCheckIcon className="w-4 h-4" style={{ color: '#30D158' }} />
+              <span className="text-sm font-medium" style={{ color: '#30D158' }}>Unique to Stratum AI</span>
+            </div>
+          </div>
+
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Trust-Gated</span>
             <br />
-            <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            <span style={{ color: '#0A84FF' }}>
               Autopilot
             </span>
           </h2>
 
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
             The only platform that{' '}
             <span className="text-white font-medium">refuses to execute bad recommendations</span>.
             Signal health is verified before every automated action.
@@ -306,10 +323,16 @@ export default function TrustEngine() {
             transition={{ delay: 0.7, duration: 0.6 }}
             className="mt-12 flex justify-center"
           >
-            <div className="inline-flex items-start gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 max-w-2xl">
-              <InformationCircleIcon className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+            <div
+              className="inline-flex items-start gap-3 px-6 py-4 rounded-2xl max-w-2xl"
+              style={{
+                background: 'rgba(10, 132, 255, 0.1)',
+                border: '1px solid rgba(10, 132, 255, 0.2)',
+              }}
+            >
+              <InformationCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#0A84FF' }} />
               <div>
-                <p className="text-sm text-gray-300">
+                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   <span className="font-medium text-white">
                     Never auto-execute when signal_health &lt; 70.
                   </span>{' '}

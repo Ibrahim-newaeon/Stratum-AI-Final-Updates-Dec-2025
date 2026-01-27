@@ -91,6 +91,20 @@ const fallbackTrustBadges: TrustBadge[] = [
   { id: '5', icon: '💰', text: '30-Day Money Back', displayOrder: 4 },
 ];
 
+// Apple Glass Dark theme
+const theme = {
+  primary: '#0A84FF',
+  primaryLight: 'rgba(10, 132, 255, 0.15)',
+  green: '#30D158',
+  bgBase: '#000000',
+  bgCard: 'rgba(255, 255, 255, 0.03)',
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textMuted: 'rgba(255, 255, 255, 0.5)',
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderHover: 'rgba(255, 255, 255, 0.15)',
+};
+
 export function Pricing() {
   const navigate = useNavigate();
 
@@ -105,20 +119,24 @@ export function Pricing() {
   const isLoading = plansLoading || badgesLoading;
 
   return (
-    <section className="py-32 bg-surface-primary" id="pricing">
+    <section className="py-32" id="pricing" style={{ background: theme.bgBase }}>
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-16">
           <Badge
             variant="outline"
-            className="mb-4 px-4 py-1 text-orange-400 border-orange-500/30 bg-orange-500/10"
+            className="mb-4 px-4 py-1 border-0"
+            style={{
+              background: theme.primaryLight,
+              color: theme.primary,
+            }}
           >
             Pricing
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: theme.textMuted }}>
             Choose the plan that fits your ad spend. All plans include full access to core features.
             Start free for 14 days — no credit card required.
           </p>
@@ -131,16 +149,26 @@ export function Pricing() {
           {plans.map((plan) => (
             <Card
               key={plan.id}
-              className={`relative flex flex-col ${
-                plan.highlighted
-                  ? 'bg-gradient-to-b from-orange-500/10 to-gray-900 border-2 border-orange-500/30 shadow-lg shadow-orange-500/10'
-                  : 'bg-gray-900/50 border-white/10'
-              }`}
+              className="relative flex flex-col rounded-3xl border-0 transition-all duration-300 hover:-translate-y-1"
+              style={{
+                background: plan.highlighted
+                  ? 'linear-gradient(to bottom, rgba(10, 132, 255, 0.1), rgba(255, 255, 255, 0.03))'
+                  : theme.bgCard,
+                backdropFilter: 'blur(40px)',
+                WebkitBackdropFilter: 'blur(40px)',
+                border: plan.highlighted
+                  ? '2px solid rgba(10, 132, 255, 0.3)'
+                  : `1px solid ${theme.border}`,
+                boxShadow: plan.highlighted ? '0 0 40px rgba(10, 132, 255, 0.15)' : 'none',
+              }}
             >
               {/* Badge */}
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 px-4 py-1">
+                  <Badge
+                    className="text-white border-0 px-4 py-1"
+                    style={{ background: theme.primary }}
+                  >
                     <SparklesIcon className="w-3 h-3 mr-1" />
                     {plan.badge}
                   </Badge>
@@ -149,7 +177,7 @@ export function Pricing() {
 
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl text-white">{plan.name}</CardTitle>
-                <CardDescription className="text-gray-400">{plan.description}</CardDescription>
+                <CardDescription style={{ color: theme.textMuted }}>{plan.description}</CardDescription>
               </CardHeader>
 
               <CardContent className="flex-1">
@@ -157,19 +185,19 @@ export function Pricing() {
                 <div className="mb-4">
                   <div className="flex items-baseline gap-1">
                     <span className="text-5xl font-bold text-white">{plan.price}</span>
-                    <span className="text-lg text-gray-500">{plan.period}</span>
+                    <span className="text-lg" style={{ color: theme.textMuted }}>{plan.period}</span>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">{plan.adSpend}</p>
+                  <p className="text-sm mt-1" style={{ color: theme.textMuted }}>{plan.adSpend}</p>
                 </div>
 
-                <Separator className="my-6 bg-white/10" />
+                <Separator className="my-6" style={{ background: theme.border }} />
 
                 {/* Features */}
                 <ul className="space-y-3">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-3">
-                      <CheckIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-300">{feature}</span>
+                      <CheckIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: theme.green }} />
+                      <span className="text-sm" style={{ color: theme.textSecondary }}>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -180,11 +208,20 @@ export function Pricing() {
                   onClick={() =>
                     navigate(plan.ctaLink || (plan.name === 'Enterprise' ? '/contact' : '/signup'))
                   }
-                  className={`w-full py-6 text-base font-semibold ${
+                  className="w-full py-6 text-base font-semibold rounded-2xl transition-all"
+                  style={
                     plan.highlighted
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/30'
-                      : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
-                  }`}
+                      ? {
+                          background: theme.primary,
+                          color: '#FFFFFF',
+                          boxShadow: '0 0 30px rgba(10, 132, 255, 0.3)',
+                        }
+                      : {
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          color: '#FFFFFF',
+                          border: `1px solid ${theme.border}`,
+                        }
+                  }
                   size="lg"
                 >
                   {plan.cta}
@@ -200,7 +237,13 @@ export function Pricing() {
             <Badge
               key={badge.id}
               variant="outline"
-              className="px-4 py-2 text-sm bg-gray-900/50 border-white/10 text-gray-400"
+              className="px-4 py-2 text-sm border-0"
+              style={{
+                background: theme.bgCard,
+                backdropFilter: 'blur(20px)',
+                border: `1px solid ${theme.border}`,
+                color: theme.textMuted,
+              }}
             >
               <span className="mr-2">{badge.icon}</span>
               {badge.text}
@@ -210,17 +253,30 @@ export function Pricing() {
 
         {/* Comparison teaser */}
         <div className="mt-16 text-center">
-          <Card className="inline-block bg-gray-900/50 border-white/10 px-8 py-6">
+          <Card
+            className="inline-block px-8 py-6 rounded-2xl border-0"
+            style={{
+              background: theme.bgCard,
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: `1px solid ${theme.border}`,
+            }}
+          >
             <div className="flex items-center gap-4">
               <div className="text-left">
                 <p className="text-white font-medium">Not sure which plan is right for you?</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm" style={{ color: theme.textMuted }}>
                   Talk to our team for a personalized recommendation.
                 </p>
               </div>
               <Button
                 variant="outline"
-                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                className="rounded-xl border-0"
+                style={{
+                  background: theme.primaryLight,
+                  color: theme.primary,
+                  border: `1px solid rgba(10, 132, 255, 0.3)`,
+                }}
                 onClick={() => navigate('/contact')}
               >
                 Contact Sales

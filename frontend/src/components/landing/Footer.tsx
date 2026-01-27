@@ -1,6 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+// Apple Glass Dark theme
+const theme = {
+  primary: '#0A84FF',
+  primaryLight: 'rgba(10, 132, 255, 0.15)',
+  green: '#30D158',
+  bgBase: '#000000',
+  bgCard: 'rgba(255, 255, 255, 0.03)',
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textMuted: 'rgba(255, 255, 255, 0.5)',
+  textTertiary: 'rgba(255, 255, 255, 0.4)',
+  border: 'rgba(255, 255, 255, 0.08)',
+};
+
 export function Footer() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -68,7 +82,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-gray-200" style={{ background: '#FFFFFF' }}>
+    <footer style={{ background: theme.bgBase, borderTop: `1px solid ${theme.border}` }}>
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
           {/* Brand */}
@@ -76,32 +90,32 @@ export function Footer() {
             <Link to="/" className="flex items-center gap-3 mb-4">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
-                }}
+                style={{ background: theme.primary }}
               >
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span
                 className="text-xl font-semibold"
-                style={{
-                  background: 'linear-gradient(135deg, #3730A3 0%, #4F46E5 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
+                style={{ color: theme.primary }}
               >
                 Stratum AI
               </span>
             </Link>
-            <p className="text-sm mb-4 max-w-xs" style={{ color: '#6B7280' }}>
+            <p className="text-sm mb-4 max-w-xs" style={{ color: theme.textMuted }}>
               AI-Powered Revenue Operating System with Trust-Gated Autopilot.
             </p>
 
             {/* Address & Phone */}
-            <div className="mb-4 text-sm" style={{ color: '#6B7280' }}>
+            <div className="mb-4 text-sm" style={{ color: theme.textMuted }}>
               <p>Arizona, Phoenix: 14001 N 7th ST STE F111</p>
               <p className="mt-1">
-                <a href="tel:+14807440840" className="hover:text-indigo-600 transition-colors">
+                <a
+                  href="tel:+14807440840"
+                  className="transition-colors"
+                  style={{ color: theme.textMuted }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
+                >
                   +1 (480) 744-0840
                 </a>
               </p>
@@ -114,8 +128,10 @@ export function Footer() {
                 href="https://instagram.com/stratumai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:text-indigo-600"
-                style={{ color: '#6B7280' }}
+                className="transition-colors"
+                style={{ color: theme.textMuted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on Instagram"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -127,8 +143,10 @@ export function Footer() {
                 href="https://tiktok.com/@stratumai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:text-indigo-600"
-                style={{ color: '#6B7280' }}
+                className="transition-colors"
+                style={{ color: theme.textMuted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on TikTok"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -140,8 +158,10 @@ export function Footer() {
                 href="https://youtube.com/@stratumai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:text-indigo-600"
-                style={{ color: '#6B7280' }}
+                className="transition-colors"
+                style={{ color: theme.textMuted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Subscribe on YouTube"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -153,8 +173,10 @@ export function Footer() {
                 href="https://linkedin.com/company/stratumai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:text-indigo-600"
-                style={{ color: '#6B7280' }}
+                className="transition-colors"
+                style={{ color: theme.textMuted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on LinkedIn"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -170,8 +192,10 @@ export function Footer() {
                 href="https://x.com/stratumai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-colors hover:text-indigo-600"
-                style={{ color: '#6B7280' }}
+                className="transition-colors"
+                style={{ color: theme.textMuted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on X"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -182,7 +206,7 @@ export function Footer() {
 
             {/* Newsletter Signup */}
             <div className="mt-6">
-              <p className="text-sm font-medium text-gray-900 mb-2">Get updates</p>
+              <p className="text-sm font-medium text-white mb-2">Get updates</p>
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
                 <input
                   type="email"
@@ -190,31 +214,38 @@ export function Footer() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your email"
                   required
-                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-500 transition-colors"
+                  className="flex-1 px-3 py-2 text-sm rounded-xl text-white placeholder-white/40 focus:outline-none transition-colors"
+                  style={{
+                    background: theme.bgCard,
+                    border: `1px solid ${theme.border}`,
+                  }}
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm rounded-xl text-white transition-colors disabled:opacity-50"
+                  style={{ background: theme.primary }}
                 >
                   {isSubmitting ? '...' : 'Subscribe'}
                 </button>
               </form>
-              {message && <p className="mt-2 text-xs text-green-600">{message}</p>}
+              {message && <p className="mt-2 text-xs" style={{ color: theme.green }}>{message}</p>}
             </div>
           </div>
 
           {/* Links */}
           {Object.entries(links).map(([category, items]) => (
             <div key={category}>
-              <h4 className="text-sm text-gray-900 font-semibold mb-4">{category}</h4>
+              <h4 className="text-sm text-white font-semibold mb-4">{category}</h4>
               <ul className="space-y-3">
                 {items.map((item) => (
                   <li key={item.name}>
                     <Link
                       to={item.href}
-                      className="text-sm transition-colors hover:text-indigo-600"
-                      style={{ color: '#6B7280' }}
+                      className="text-sm transition-colors"
+                      style={{ color: theme.textMuted }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                     >
                       {item.name}
                     </Link>
@@ -226,15 +257,18 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs" style={{ color: '#9CA3AF' }}>
+        <div
+          className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4"
+          style={{ borderTop: `1px solid ${theme.border}` }}
+        >
+          <p className="text-xs" style={{ color: theme.textTertiary }}>
             &copy; {new Date().getFullYear()} Stratum AI. All rights reserved. Developed and
             Prepared by Al-Ai-ai
           </p>
 
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-2 text-xs" style={{ color: '#9CA3AF' }}>
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="flex items-center gap-2 text-xs" style={{ color: theme.textTertiary }}>
+              <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: theme.green }} />
               All systems operational
             </span>
           </div>

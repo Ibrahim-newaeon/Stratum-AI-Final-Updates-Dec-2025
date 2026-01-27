@@ -270,26 +270,41 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
   switch (status) {
     case 'yes':
       return (
-        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20">
-          <CheckIcon className="w-4 h-4 text-green-400" />
+        <div
+          className="flex items-center justify-center w-6 h-6 rounded-full"
+          style={{ background: 'rgba(48, 209, 88, 0.2)' }}
+        >
+          <CheckIcon className="w-4 h-4" style={{ color: '#30D158' }} />
         </div>
       );
     case 'no':
       return (
-        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-500/20">
-          <XMarkIcon className="w-4 h-4 text-red-400" />
+        <div
+          className="flex items-center justify-center w-6 h-6 rounded-full"
+          style={{ background: 'rgba(255, 69, 58, 0.2)' }}
+        >
+          <XMarkIcon className="w-4 h-4" style={{ color: '#FF453A' }} />
         </div>
       );
     case 'partial':
       return (
-        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500/20">
-          <MinusIcon className="w-4 h-4 text-yellow-400" />
+        <div
+          className="flex items-center justify-center w-6 h-6 rounded-full"
+          style={{ background: 'rgba(255, 214, 10, 0.2)' }}
+        >
+          <MinusIcon className="w-4 h-4" style={{ color: '#FFD60A' }} />
         </div>
       );
     case 'unique':
       return (
-        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-500/20 ring-2 ring-purple-500/40">
-          <SparklesIcon className="w-4 h-4 text-purple-400" />
+        <div
+          className="flex items-center justify-center w-6 h-6 rounded-full"
+          style={{
+            background: 'rgba(10, 132, 255, 0.2)',
+            boxShadow: '0 0 0 2px rgba(10, 132, 255, 0.4)',
+          }}
+        >
+          <SparklesIcon className="w-4 h-4" style={{ color: '#0A84FF' }} />
         </div>
       );
   }
@@ -311,22 +326,38 @@ export default function BattleCard() {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/[0.02] to-transparent" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
-        {/* Section Header */}
+        {/* Section Header - Centered */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+          {/* Badge - Centered above hero */}
+          <div className="flex justify-center mb-8">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: 'rgba(255, 159, 10, 0.15)',
+                border: '1px solid rgba(255, 159, 10, 0.3)',
+              }}
+            >
+              <TrophyIcon className="w-4 h-4" style={{ color: '#FF9F0A' }} />
+              <span className="text-sm font-medium" style={{ color: '#FF9F0A' }}>
+                Competitive Battle Card
+              </span>
+            </div>
+          </div>
+
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">See How We</span>
             <br />
-            <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+            <span style={{ color: '#FF9F0A' }}>
               Stack Up
             </span>
           </h2>
 
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
+          <p className="text-lg max-w-2xl mx-auto mb-8 text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
             The only platform with Trust-Gated execution, built-in AI predictions, and visual
             identity resolution.
           </p>
@@ -341,7 +372,7 @@ export default function BattleCard() {
           </button>
         </motion.div>
 
-        {/* Legend */}
+        {/* Legend - Centered */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
@@ -350,19 +381,19 @@ export default function BattleCard() {
         >
           <div className="flex items-center gap-2">
             <StatusIcon status="unique" />
-            <span className="text-gray-400">Unique to Stratum</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Unique to Stratum AI</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="yes" />
-            <span className="text-gray-400">Full Support</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Full Support</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="partial" />
-            <span className="text-gray-400">Partial/Limited</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Partial/Limited</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="no" />
-            <span className="text-gray-400">Not Available</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Not Available</span>
           </div>
         </motion.div>
 

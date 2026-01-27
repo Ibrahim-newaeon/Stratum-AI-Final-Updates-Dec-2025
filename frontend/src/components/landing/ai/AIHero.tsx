@@ -77,38 +77,47 @@ export default function AIHero() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="text-center">
-          {/* AI Badge */}
+          {/* AI Badge - Centered */}
           <motion.div
             custom={0}
             initial="hidden"
             animate="visible"
             variants={fadeUpVariants}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 mb-8"
+            className="flex justify-center mb-8"
           >
-            <SparklesIcon className="w-4 h-4 text-purple-400" />
-            <span className="text-sm font-medium bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              Powered by 6 AI Models
-            </span>
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: 'rgba(10, 132, 255, 0.15)',
+                border: '1px solid rgba(10, 132, 255, 0.3)',
+              }}
+            >
+              <SparklesIcon className="w-4 h-4" style={{ color: '#0A84FF' }} />
+              <span className="text-sm font-medium" style={{ color: '#0A84FF' }}>
+                6 AI Models Built-In
+              </span>
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#30D158' }} />
+            </div>
           </motion.div>
 
-          {/* Main Headline */}
+          {/* Main Headline - Centered */}
           <motion.h1
             custom={1}
             initial="hidden"
             animate="visible"
             variants={fadeUpVariants}
-            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6"
+            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6 text-center"
           >
             <span className="text-white">The Only AI That</span>
             <br />
-            <span className="relative">
-              <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-orange-400 bg-clip-text text-transparent">
+            <span className="relative inline-block">
+              <span style={{ color: '#0A84FF' }}>
                 Thinks Before It Acts
               </span>
               {/* Animated underline */}
               <motion.div
-                className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 rounded-full"
+                className="absolute -bottom-2 left-0 right-0 h-1 rounded-full"
+                style={{ background: '#0A84FF' }}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -131,7 +140,7 @@ export default function AIHero() {
             . Predict ROAS, prevent churn, and sync audiences across 4 platforms—automatically.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Centered */}
           <motion.div
             custom={3}
             initial="hidden"
@@ -141,24 +150,32 @@ export default function AIHero() {
           >
             <a
               href="/signup"
-              className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold overflow-hidden"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all hover:scale-[1.02]"
+              style={{
+                background: '#0A84FF',
+                boxShadow: '0 0 40px rgba(10, 132, 255, 0.3)',
+              }}
             >
-              {/* Animated gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 bg-[length:200%_100%] animate-gradient-x" />
-              {/* Glass overlay */}
-              <div className="absolute inset-[1px] rounded-2xl bg-gradient-to-b from-white/10 to-transparent" />
-              <span className="relative text-white">Start Free Trial</span>
-              <ArrowRightIcon className="relative w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
+              <span>Start Free Trial</span>
+              <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
 
             <a
               href="#demo"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold border border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-sm transition-all"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                backdropFilter: 'blur(40px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(10, 132, 255, 0.15)' }}
+              >
                 <div className="w-0 h-0 border-l-[8px] border-l-white border-y-[5px] border-y-transparent ml-1" />
               </div>
-              <span className="text-white">Watch Demo</span>
+              <span>Watch Demo</span>
             </a>
           </motion.div>
 

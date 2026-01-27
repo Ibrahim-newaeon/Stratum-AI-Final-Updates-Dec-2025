@@ -1,6 +1,6 @@
 /**
- * Login Page - DARK THEME EDITION
- * Purple/cyan gradient + dark background
+ * Login Page - Apple Glass Dark Theme
+ * Pure black background (#000000) + frosted glass cards
  */
 
 import { useState } from 'react';
@@ -15,20 +15,22 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { pageSEO, SEO } from '@/components/common/SEO';
 
-// Dark Theme
+// Apple Glass Dark Theme
 const theme = {
-  purple: '#a855f7',
-  cyan: '#06b6d4',
-  purpleHover: '#9333ea',
-  purpleLight: 'rgba(168, 85, 247, 0.1)',
-  bgBase: '#030303',
-  bgElevated: '#0a0a0a',
-  bgSurface: '#111111',
+  primary: '#0A84FF', // Apple Blue
+  primaryLight: 'rgba(10, 132, 255, 0.15)',
+  green: '#30D158', // Apple Green
+  orange: '#FF9F0A', // Apple Orange
+  purple: '#BF5AF2', // Apple Purple
+  teal: '#64D2FF', // Apple Teal
+  bgBase: '#000000', // Pure black
+  bgCard: 'rgba(255, 255, 255, 0.03)', // Frosted glass
   textPrimary: '#FFFFFF',
-  textSecondary: '#E5E7EB',
-  textMuted: '#9CA3AF',
-  border: 'rgba(255, 255, 255, 0.1)',
-  success: '#22c55e',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textMuted: 'rgba(255, 255, 255, 0.5)',
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderHover: 'rgba(255, 255, 255, 0.15)',
+  success: '#30D158', // Apple Green
 };
 
 export default function Login() {
@@ -95,16 +97,28 @@ export default function Login() {
     <div className="min-h-screen flex" style={{ background: theme.bgBase }}>
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
 
+      {/* Ambient orbs background */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(10, 132, 255, 0.08), transparent),
+            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(191, 90, 242, 0.06), transparent),
+            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(100, 210, 255, 0.05), transparent)
+          `,
+        }}
+      />
+
       {/* LEFT PANEL - BRANDING */}
-      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgElevated }}>
+      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgBase }}>
         <div className="absolute inset-y-0 right-0 w-px" style={{ background: theme.border }} />
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <div>
             <Link to="/" className="flex items-center gap-3 mb-16 group">
               <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
-                style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
+                className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+                style={{ background: theme.primary }}
               >
                 <span className="text-white font-semibold text-lg">S</span>
               </div>
@@ -117,11 +131,7 @@ export default function Login() {
                 </span>
                 <div
                   className="text-xs tracking-widest uppercase"
-                  style={{
-                    background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  style={{ color: theme.primary }}
                 >
                   Revenue OS
                 </div>
@@ -136,16 +146,7 @@ export default function Login() {
               <br />
               System with
               <br />
-              <span
-                style={{
-                  background: `linear-gradient(to right, ${theme.purple}, ${theme.cyan})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Trust-Gated
-              </span>{' '}
-              Autopilot
+              <span style={{ color: theme.primary }}>Trust-Gated</span> Autopilot
             </h1>
             <p className="text-lg max-w-md leading-relaxed" style={{ color: theme.textMuted }}>
               AI-powered marketing intelligence with real-time attribution and automated
@@ -158,9 +159,10 @@ export default function Login() {
               {['Meta', 'Google', 'TikTok', 'Snap'].map((platform) => (
                 <div
                   key={platform}
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-300"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-medium transition-all duration-300"
                   style={{
-                    background: theme.bgSurface,
+                    background: theme.bgCard,
+                    backdropFilter: 'blur(40px)',
                     color: theme.textMuted,
                     border: `1px solid ${theme.border}`,
                   }}
@@ -198,8 +200,8 @@ export default function Login() {
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
             <div
-              className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
+              className="h-10 w-10 rounded-2xl flex items-center justify-center"
+              style={{ background: theme.primary }}
             >
               <span className="text-white font-semibold text-lg">S</span>
             </div>
@@ -209,11 +211,13 @@ export default function Login() {
           </div>
 
           <div
-            className="p-8 rounded-2xl"
+            className="p-8 rounded-3xl"
             style={{
-              background: theme.bgSurface,
+              background: theme.bgCard,
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
               border: `1px solid ${theme.border}`,
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4)',
             }}
           >
             <div className="text-center mb-8">
@@ -251,15 +255,16 @@ export default function Login() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-xl outline-none transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 rounded-2xl outline-none transition-all duration-200"
                     style={{
-                      background: theme.bgElevated,
+                      background: theme.bgCard,
+                      backdropFilter: 'blur(40px)',
                       border: `1px solid ${theme.border}`,
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple;
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
+                      e.target.style.borderColor = theme.primary;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.primaryLight}`;
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border;
@@ -280,7 +285,7 @@ export default function Login() {
                   <Link
                     to="/forgot-password"
                     className="text-sm transition-colors hover:underline"
-                    style={{ color: theme.purple }}
+                    style={{ color: theme.primary }}
                   >
                     Forgot?
                   </Link>
@@ -294,15 +299,16 @@ export default function Login() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 rounded-xl outline-none transition-all duration-200"
+                    className="w-full pl-12 pr-12 py-3 rounded-2xl outline-none transition-all duration-200"
                     style={{
-                      background: theme.bgElevated,
+                      background: theme.bgCard,
+                      backdropFilter: 'blur(40px)',
                       border: `1px solid ${theme.border}`,
                       color: theme.textPrimary,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = theme.purple;
-                      e.target.style.boxShadow = `0 0 0 3px ${theme.purpleLight}`;
+                      e.target.style.borderColor = theme.primary;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.primaryLight}`;
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = theme.border;
@@ -331,11 +337,9 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setRememberMe(!rememberMe)}
-                  className="w-5 h-5 rounded flex items-center justify-center transition-all duration-200"
+                  className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-200"
                   style={{
-                    background: rememberMe
-                      ? `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})`
-                      : theme.bgElevated,
+                    background: rememberMe ? theme.primary : theme.bgCard,
                     border: rememberMe ? 'none' : `1px solid ${theme.border}`,
                   }}
                 >
@@ -363,13 +367,20 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
-                style={{ background: `linear-gradient(135deg, ${theme.purple}, ${theme.cyan})` }}
+                className="w-full py-3.5 rounded-2xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
+                style={{
+                  background: theme.primary,
+                  boxShadow: '0 0 30px rgba(10, 132, 255, 0.2)',
+                }}
                 onMouseEnter={(e) => {
-                  if (!isLoading) e.currentTarget.style.opacity = '0.9';
+                  if (!isLoading) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 0 40px rgba(10, 132, 255, 0.3)';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 0 30px rgba(10, 132, 255, 0.2)';
                 }}
               >
                 {isLoading ? (
@@ -408,15 +419,16 @@ export default function Login() {
                     key={role}
                     onClick={() => handleDemoLogin(role as any)}
                     disabled={isLoading}
-                    className="px-3 py-2 rounded-lg text-xs font-medium capitalize transition-all duration-200 disabled:opacity-50"
+                    className="px-3 py-2 rounded-xl text-xs font-medium capitalize transition-all duration-200 disabled:opacity-50"
                     style={{
-                      background: theme.bgElevated,
+                      background: theme.bgCard,
+                      backdropFilter: 'blur(40px)',
                       border: `1px solid ${theme.border}`,
                       color: theme.textMuted,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = theme.purple;
-                      e.currentTarget.style.color = theme.purple;
+                      e.currentTarget.style.borderColor = theme.borderHover;
+                      e.currentTarget.style.color = theme.primary;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = theme.border;
@@ -434,7 +446,7 @@ export default function Login() {
               <Link
                 to="/signup"
                 className="font-medium transition-colors hover:underline"
-                style={{ color: theme.purple }}
+                style={{ color: theme.primary }}
               >
                 Sign up
               </Link>

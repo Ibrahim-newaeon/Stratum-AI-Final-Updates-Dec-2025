@@ -25,12 +25,9 @@ export default function AICTA() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section className="relative py-32 overflow-hidden">
+    <section className="relative py-32 overflow-hidden" style={{ background: '#000000' }}>
       {/* Background Effects */}
       <div className="absolute inset-0">
-        {/* Main gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent" />
-
         {/* Floating orbs */}
         <motion.div
           animate={{
@@ -38,7 +35,8 @@ export default function AICTA() {
             opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl"
+          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(10, 132, 255, 0.15), transparent 60%)' }}
         />
         <motion.div
           animate={{
@@ -46,50 +44,52 @@ export default function AICTA() {
             opacity: [0.2, 0.4, 0.2],
           }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-cyan-500/15 blur-3xl"
-        />
-        <motion.div
-          animate={{
-            y: [0, -15, 0],
-            opacity: [0.2, 0.3, 0.2],
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-          className="absolute top-1/2 right-1/3 w-48 h-48 rounded-full bg-orange-500/10 blur-3xl"
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(191, 90, 242, 0.1), transparent 60%)' }}
         />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center" ref={ref}>
-        {/* Main Headline */}
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-4"
-        >
-          <span className="text-white">Stop Guessing.</span>
-          <br />
-          <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-orange-400 bg-clip-text text-transparent">
-            Start Predicting.
-          </span>
-        </motion.h2>
-
-        {/* Badge - Under Header */}
+        {/* Badge - Centered above hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.1, duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/10 mb-6"
+          transition={{ duration: 0.6 }}
+          className="flex justify-center mb-8"
         >
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm text-gray-300">Ready to transform your revenue operations?</span>
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+            style={{
+              background: 'rgba(10, 132, 255, 0.15)',
+              border: '1px solid rgba(10, 132, 255, 0.3)',
+            }}
+          >
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#30D158' }} />
+            <span className="text-sm font-medium" style={{ color: '#0A84FF' }}>Ready to transform your revenue operations?</span>
+          </div>
         </motion.div>
+
+        {/* Main Headline - Centered */}
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.1, duration: 0.6 }}
+          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center"
+        >
+          <span className="text-white">Stop Guessing.</span>
+          <br />
+          <span style={{ color: '#0A84FF' }}>
+            Start Predicting.
+          </span>
+        </motion.h2>
 
         {/* Subheadline */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-lg text-gray-400 max-w-2xl mx-auto mb-10"
+          className="text-lg max-w-2xl mx-auto mb-10 text-center"
+          style={{ color: 'rgba(255, 255, 255, 0.5)' }}
         >
           Join 500+ revenue teams using Stratum AI to predict outcomes, automate safely, and scale
           with confidence.
@@ -104,19 +104,24 @@ export default function AICTA() {
         >
           <a
             href="/signup"
-            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold overflow-hidden"
+            className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all hover:scale-[1.02]"
+            style={{
+              background: '#0A84FF',
+              boxShadow: '0 0 40px rgba(10, 132, 255, 0.3)',
+            }}
           >
-            {/* Animated gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 bg-[length:200%_100%] animate-gradient-x" />
-            {/* Shine effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            <span className="relative text-white">Start Your Free Trial</span>
-            <ArrowRightIcon className="relative w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
+            <span>Start Your Free Trial</span>
+            <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </a>
 
           <a
             href="/demo"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold border border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.05] text-white transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
           >
             Schedule a Demo
           </a>
@@ -130,8 +135,8 @@ export default function AICTA() {
           className="flex flex-wrap items-center justify-center gap-6"
         >
           {benefits.map((benefit) => (
-            <div key={benefit.text} className="flex items-center gap-2 text-sm text-gray-400">
-              <benefit.icon className="w-4 h-4 text-purple-400" />
+            <div key={benefit.text} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              <benefit.icon className="w-4 h-4" style={{ color: '#0A84FF' }} />
               <span>{benefit.text}</span>
             </div>
           ))}

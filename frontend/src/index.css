@@ -54,52 +54,52 @@
   }
 
   .dark {
-    /* Analytics Design System - Dark-first surfaces */
-    --background: 240 10% 0.8%; /* #020204 - 2026 OLED black */
-    --foreground: 0 0% 98%; /* #FFFFFF - text primary */
+    /* Apple Glass Dark Theme - Pure black OLED backgrounds */
+    --background: 0 0% 0%; /* #000000 - Pure black */
+    --foreground: 0 0% 100%; /* #FFFFFF - text primary */
 
-    --card: 240 20% 4%; /* #0A0A0F - 2026 secondary */
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100% / 0.03; /* Frosted glass card */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 240 18% 5.5%; /* #12121A - 2026 tertiary */
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100% / 0.05; /* Elevated glass */
+    --popover-foreground: 0 0% 100%;
 
-    /* Stratum AI Brand - Purple/Cyan gradient system */
-    --primary: 0 0% 98%; /* #a855f7 */
-    --primary-foreground: 0 0% 9%;
+    /* Apple HIG Primary - Blue */
+    --primary: 211 100% 52%; /* #0A84FF - Apple Blue */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14.9%; /* #0A0A0A */
-    --secondary-foreground: 0 0% 98%; /* #A7AABB - text secondary */
+    --secondary: 0 0% 100% / 0.05; /* Glass surface */
+    --secondary-foreground: 0 0% 100% / 0.7; /* Text secondary */
 
-    --muted: 0 0% 14.9%; /* #121212 */
-    --muted-foreground: 0 0% 63.9%; /* #6E7482 - text muted */
+    --muted: 0 0% 100% / 0.03; /* Subtle glass */
+    --muted-foreground: 0 0% 100% / 0.5; /* Text muted */
 
-    --accent: 0 0% 14.9%; /* Purple at 10% */
-    --accent-foreground: 0 0% 98%;
+    --accent: 0 0% 100% / 0.08; /* Accent glass */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%; /* #EF4444 */
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 100% 62%; /* #FF453A - Apple Red */
+    --destructive-foreground: 0 0% 100%;
 
-    /* Borders - subtle transparency */
-    --border: 0 0% 14.9%; /* rgba(255,255,255,0.10) */
-    --input: 0 0% 14.9%; /* rgba(255,255,255,0.08) */
-    --ring: 0 0% 83.1%; /* #a855f7 */
+    /* Borders - subtle glass borders */
+    --border: 0 0% 100% / 0.08; /* rgba(255,255,255,0.08) */
+    --input: 0 0% 100% / 0.08;
+    --ring: 211 100% 52%; /* Apple Blue */
 
-    /* Data/Status colors from design system */
-    --success: 153 100% 50%; /* #00FF88 - 2026 Neon green */
-    --warning: 43 100% 50%; /* #FFB800 - 2026 Amber glow */
-    --danger: 357 100% 64%; /* #FF4757 - 2026 Neon red */
-    --info: 197 100% 50%; /* #00B4FF - 2026 Electric blue */
-    --insight: 0 100% 71%; /* #FF6B6B - 2026 Coral */
+    /* Apple HIG Status colors */
+    --success: 142 69% 58%; /* #30D158 - Apple Green */
+    --warning: 36 100% 53%; /* #FF9F0A - Apple Orange */
+    --danger: 0 100% 62%; /* #FF453A - Apple Red */
+    --info: 195 100% 70%; /* #64D2FF - Apple Teal */
+    --insight: 280 85% 65%; /* #BF5AF2 - Apple Purple */
 
-    /* Brand glow */
-    --glow-brand: 250 89% 68% / 0.4; /* 2026: Electric violet glow */
-    --glow-insight: 0 100% 71% / 0.4; /* 2026: Coral glow */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Apple Glass glow */
+    --glow-brand: 211 100% 52% / 0.15; /* Apple Blue glow */
+    --glow-insight: 280 85% 65% / 0.15; /* Apple Purple glow */
+    --chart-1: 211 100% 52%; /* Apple Blue */
+    --chart-2: 142 69% 58%; /* Apple Green */
+    --chart-3: 36 100% 53%; /* Apple Orange */
+    --chart-4: 280 85% 65%; /* Apple Purple */
+    --chart-5: 195 100% 70%; /* Apple Teal */
   }
 }
 
@@ -368,7 +368,7 @@
   @apply bg-muted-foreground/40;
 }
 
-/* ===== 2026 Animation Harmony System ===== */
+/* ===== Apple Glass Animation System ===== */
 :root {
   /* Layer 1: Subtle (Nav, Focus) - 100-150ms */
   --dur-subtle: 120ms;
@@ -381,14 +381,14 @@
   --dur-base: 200ms;
   --dur-slow: 280ms;
   --dur-xl: 400ms;
-  /* 2026 Easing */
+  /* Apple-style Easing */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
-  /* 2026 Glow colors */
-  --glow-brand: rgba(139, 92, 246, 0.4);
-  --glow-cyan: rgba(0, 212, 255, 0.4);
-  --glow-insight: rgba(255, 107, 107, 0.4);
+  /* Apple HIG Glow colors */
+  --glow-brand: rgba(10, 132, 255, 0.2);
+  --glow-cyan: rgba(100, 210, 255, 0.2);
+  --glow-insight: rgba(191, 90, 242, 0.2);
 }
 
 /* A) Page & Section Entrance */
@@ -407,7 +407,7 @@
   }
 }
 
-/* B) Card Hover Lift - 2026 Smooth Layer */
+/* B) Card Hover Lift - Apple Glass Style */
 .motion-card {
   transition:
     transform var(--dur-smooth) var(--ease-enter),
@@ -418,16 +418,16 @@
 .motion-card:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    0 0 16px rgba(139, 92, 246, 0.15);
+    0 8px 24px rgba(0, 0, 0, 0.25),
+    0 0 20px rgba(10, 132, 255, 0.1);
 }
 
-/* C) 2026 Glow Focus Ring - Subtle Layer */
+/* C) Apple Blue Glow Focus Ring */
 .motion-glow:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px #000,
-    0 0 0 4px rgba(139, 92, 246, 0.5);
+    0 0 0 4px rgba(10, 132, 255, 0.5);
   animation: glowPulse var(--dur-subtle) var(--ease-enter) both;
 }
 
@@ -435,18 +435,18 @@
   0% {
     box-shadow:
       0 0 0 2px #000,
-      0 0 0 4px rgba(139, 92, 246, 0);
+      0 0 0 4px rgba(10, 132, 255, 0);
   }
   50% {
     box-shadow:
       0 0 0 2px #000,
-      0 0 0 4px rgba(139, 92, 246, 0.6),
-      0 0 20px rgba(139, 92, 246, 0.3);
+      0 0 0 4px rgba(10, 132, 255, 0.6),
+      0 0 20px rgba(10, 132, 255, 0.2);
   }
   100% {
     box-shadow:
       0 0 0 2px #000,
-      0 0 0 4px rgba(139, 92, 246, 0.5);
+      0 0 0 4px rgba(10, 132, 255, 0.5);
   }
 }
 
@@ -544,7 +544,7 @@
 /* ===== Enhanced Card Styles (Analytics Design System) ===== */
 @layer components {
   .card-elevated {
-    @apply bg-card border rounded-lg shadow-card;
+    @apply bg-card border rounded-2xl shadow-card;
     transition:
       transform var(--dur-base) var(--ease-standard),
       box-shadow var(--dur-base) var(--ease-standard),
@@ -554,34 +554,29 @@
   .card-elevated:hover {
     @apply shadow-card-hover;
     transform: translateY(-2px);
-    border-color: rgba(139, 92, 246, 0.35); /* 2026 Electric violet */
+    border-color: rgba(255, 255, 255, 0.15); /* Apple Glass border hover */
     box-shadow:
-      0 10px 30px rgba(0, 0, 0, 0.28),
-      0 0 20px rgba(139, 92, 246, 0.15); /* 2026 Glow */
+      0 10px 30px rgba(0, 0, 0, 0.25),
+      0 0 20px rgba(10, 132, 255, 0.1); /* Apple Blue glow */
   }
 
   .card-glass {
-    background: rgba(10, 10, 15, 0.8); /* 2026 Surface */
-    backdrop-filter: blur(16px);
-    @apply border rounded-lg;
+    background: rgba(255, 255, 255, 0.03); /* Apple Glass surface */
+    backdrop-filter: blur(40px);
+    @apply border rounded-2xl;
   }
 
-  /* 2026 Gradient backgrounds */
+  /* Apple Blue gradient backgrounds */
   .gradient-primary {
-    background: linear-gradient(
-      135deg,
-      #8b5cf6 0%,
-      #00d4ff 50%,
-      #ff6b6b 100%
-    ); /* 2026 Holographic */
+    background: linear-gradient(135deg, #0A84FF 0%, #64D2FF 100%); /* Apple Blue to Teal */
   }
 
   .gradient-primary-soft {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 212, 255, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(10, 132, 255, 0.08) 0%, rgba(100, 210, 255, 0.05) 100%);
   }
 
   .dark .gradient-primary-soft {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(0, 212, 255, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(100, 210, 255, 0.06) 100%);
   }
 
   /* Stat card animations */
@@ -642,57 +637,58 @@
     @apply bg-blue-500/10 text-blue-600 dark:text-blue-400;
   }
 
-  /* 2026 Glow effects */
+  /* Apple Glass glow effects */
   .glow-primary {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); /* 2026 Electric violet */
+    box-shadow: 0 0 20px rgba(10, 132, 255, 0.2); /* Apple Blue */
   }
 
   .dark .glow-primary {
-    box-shadow: 0 0 24px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 24px rgba(10, 132, 255, 0.25);
   }
 
-  /* 2026 Glow variants */
+  /* Apple HIG Glow variants */
   .glow-violet {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 20px rgba(191, 90, 242, 0.2); /* Apple Purple */
   }
 
   .glow-cyan {
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 20px rgba(100, 210, 255, 0.2); /* Apple Teal */
   }
 
   .glow-coral {
-    box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 0 20px rgba(255, 55, 95, 0.2); /* Apple Pink */
   }
 
-  /* 2026 Focus glow (subtle pulse) */
+  /* Apple Blue focus glow */
   .focus-glow:focus-visible {
     box-shadow:
       0 0 0 2px #000,
-      0 0 0 4px rgba(139, 92, 246, 0.5);
+      0 0 0 4px rgba(10, 132, 255, 0.5);
     outline: none;
   }
 
-  /* 2026 Active state glow */
+  /* Apple Blue active state glow */
   .active-glow {
     box-shadow:
-      0 0 24px rgba(139, 92, 246, 0.3),
-      inset 0 0 20px rgba(139, 92, 246, 0.1);
+      0 0 24px rgba(10, 132, 255, 0.2),
+      inset 0 0 20px rgba(10, 132, 255, 0.05);
   }
 
-  /* Button enhancements */
+  /* Button enhancements - Apple Blue */
   .btn-primary {
     @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200;
+    border-radius: 12px;
   }
 
   .btn-primary:hover {
-    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4); /* 2026 Electric violet */
+    box-shadow: 0 0 30px rgba(10, 132, 255, 0.25);
   }
 
   .dark .btn-primary:hover {
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 40px rgba(10, 132, 255, 0.3);
   }
 
-  /* Sidebar active state */
+  /* Sidebar active state - Apple Blue */
   .nav-active {
     @apply relative;
   }
@@ -706,8 +702,8 @@
     width: 3px;
     height: 60%;
     border-radius: 0 4px 4px 0;
-    background: linear-gradient(180deg, #8b5cf6 0%, #00d4ff 100%); /* 2026 Electric */
-    box-shadow: 0 0 8px rgba(139, 92, 246, 0.5); /* 2026 Glow */
+    background: #0A84FF; /* Solid Apple Blue */
+    box-shadow: 0 0 8px rgba(10, 132, 255, 0.4);
   }
 
   /* ===== Standardized Button Components ===== */
@@ -848,17 +844,17 @@
   }
 }
 
-/* Insight Badge - Quantum Ember signature */
+/* Insight Badge - Apple Purple */
 .badge-insight {
-  background: rgba(255, 107, 107, 0.15); /* 2026 Coral */
-  border: 1px solid rgba(255, 107, 107, 0.4);
-  color: #ff6b6b; /* 2026 Coral */
+  background: rgba(191, 90, 242, 0.15); /* Apple Purple */
+  border: 1px solid rgba(191, 90, 242, 0.3);
+  color: #BF5AF2; /* Apple Purple */
 }
 
-/* Nav Active State - Analytics Design System */
+/* Nav Active State - Apple Blue */
 .nav-item-active {
-  background: rgba(139, 92, 246, 0.12); /* 2026 */
-  border-left: 3px solid rgba(139, 92, 246, 0.4); /* 2026 */
+  background: rgba(10, 132, 255, 0.1);
+  border-left: 3px solid rgba(10, 132, 255, 0.5);
 }
 
 /* Joyride custom styles */
@@ -1542,79 +1538,104 @@
   /* Uses float animation from tailwind.config.js */
 }
 
-/* ===== 2026 Enhanced Glass Morphism ===== */
+/* ===== Apple Glass Dark Theme ===== */
+
+/* Ambient orbs background - floating glow effect */
+.ambient-orbs {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 40% 40% at 20% 30%, rgba(10, 132, 255, 0.08), transparent),
+    radial-gradient(ellipse 30% 30% at 80% 70%, rgba(191, 90, 242, 0.06), transparent),
+    radial-gradient(ellipse 35% 35% at 60% 20%, rgba(100, 210, 255, 0.05), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Apple Glass Card - Primary card style */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  transition: all 0.2s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Glass surface variants */
 .glass {
-  background: rgba(10, 10, 15, 0.7);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-dark {
-  background: rgba(2, 2, 4, 0.85);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* 2026 Glass Variants */
-.glass-2026 {
-  background: rgba(10, 10, 15, 0.7);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(139, 92, 246, 0.1);
 }
 
 .glass-elevated {
-  background: rgba(26, 26, 38, 0.85);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
 }
 
-.glass-card {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(0, 212, 255, 0.03));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(139, 92, 246, 0.15);
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* 2026 Surface utilities - OLED Optimized */
+/* Pure black surfaces - OLED optimized */
 .surface-primary {
-  background: #020204; /* 2026: Near-black with blue hint */
+  background: #000000;
 }
 
 .surface-secondary {
-  background: #0a0a0f; /* 2026: Subtle blue undertone */
+  background: #000000;
 }
 
 .surface-tertiary {
-  background: #12121a; /* 2026: Elevated with depth */
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .surface-elevated {
-  background: #1a1a26; /* 2026: Cards/dialogs */
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* ===== 2026 Dark Theme Effects ===== */
+/* ===== Apple Glass Dark Theme Effects ===== */
 
-/* CSS Variables for 2026 theme */
+/* CSS Variables for Apple HIG theme */
 :root {
-  --theme-purple: #8b5cf6; /* 2026: Electric violet */
-  --theme-cyan: #00d4ff; /* 2026: Electric cyan */
-  --theme-orange: #ff6b6b; /* 2026: Coral */
-  --theme-green: #00ff88; /* 2026: Neon green */
+  --theme-blue: #0A84FF; /* Apple Blue - Primary */
+  --theme-green: #30D158; /* Apple Green */
+  --theme-orange: #FF9F0A; /* Apple Orange */
+  --theme-purple: #BF5AF2; /* Apple Purple */
+  --theme-pink: #FF375F; /* Apple Pink */
+  --theme-teal: #64D2FF; /* Apple Teal */
+  --theme-red: #FF453A; /* Apple Red */
 }
 
-/* 2026 Mesh Gradient Background */
+/* Apple Glass ambient mesh - subtle orbs */
 .mesh-gradient {
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse 80% 50% at 20% 30%, rgba(139, 92, 246, 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 70%, rgba(0, 212, 255, 0.08), transparent),
-    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255, 107, 107, 0.05), transparent),
-    radial-gradient(ellipse 40% 40% at 40% 60%, rgba(34, 197, 94, 0.05), transparent);
+  background:
+    radial-gradient(ellipse 50% 50% at 15% 25%, rgba(10, 132, 255, 0.06), transparent),
+    radial-gradient(ellipse 40% 40% at 85% 75%, rgba(191, 90, 242, 0.05), transparent),
+    radial-gradient(ellipse 45% 45% at 50% 10%, rgba(100, 210, 255, 0.04), transparent);
   pointer-events: none;
   z-index: -1;
 }
@@ -1641,10 +1662,10 @@
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* Gradient borders */
+/* Gradient borders - Apple style */
 .gradient-border {
   position: relative;
-  background: #0a0a0a;
+  background: #000000;
 }
 
 .gradient-border::before {
@@ -1653,7 +1674,7 @@
   inset: 0;
   padding: 1px;
   border-radius: inherit;
-  background: linear-gradient(135deg, var(--theme-purple), var(--theme-cyan), var(--theme-orange));
+  background: linear-gradient(135deg, var(--theme-blue), var(--theme-teal));
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -1664,30 +1685,30 @@
   mask-composite: exclude;
 }
 
-/* 2026 Text gradients */
+/* Apple Glass Dark text gradients */
 .text-gradient {
-  background: linear-gradient(135deg, #8b5cf6, #00d4ff, #ff6b6b); /* 2026 Holographic */
+  background: linear-gradient(135deg, #0A84FF, #64D2FF); /* Apple Blue gradient */
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .text-gradient-purple {
-  background: linear-gradient(135deg, #8b5cf6, #a78bfa); /* 2026 Electric violet */
+  background: linear-gradient(135deg, #BF5AF2, #FF375F); /* Apple Purple to Pink */
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #00d4ff, #67e8f9); /* 2026 Electric cyan */
+  background: linear-gradient(135deg, #64D2FF, #0A84FF); /* Apple Teal to Blue */
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .text-gradient-green {
-  background: linear-gradient(135deg, #00ff88, #4ade80); /* 2026 Neon green */
+  background: linear-gradient(135deg, #30D158, #64D2FF); /* Apple Green to Teal */
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1704,68 +1725,71 @@
   box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
 }
 
-/* Status dot glows */
+/* Status dot glows - Apple HIG */
 .dot-healthy {
-  background: #00ff88; /* 2026 Neon green */
-  box-shadow: 0 0 12px #00ff88;
+  background: #30D158; /* Apple Green */
+  box-shadow: 0 0 12px rgba(48, 209, 88, 0.5);
 }
 
 .dot-degraded {
-  background: #ffb800; /* 2026 Amber */
-  box-shadow: 0 0 12px #ffb800;
+  background: #FF9F0A; /* Apple Orange */
+  box-shadow: 0 0 12px rgba(255, 159, 10, 0.5);
 }
 
 .dot-critical {
-  background: #ff4757; /* 2026 Neon red */
-  box-shadow: 0 0 12px #ff4757;
+  background: #FF453A; /* Apple Red */
+  box-shadow: 0 0 12px rgba(255, 69, 58, 0.5);
 }
 
-/* Status text colors */
+/* Status text colors - Apple HIG */
 .status-healthy {
-  color: #00ff88;
-} /* 2026 */
+  color: #30D158;
+} /* Apple Green */
 .status-degraded {
-  color: #ffb800;
-} /* 2026 */
+  color: #FF9F0A;
+} /* Apple Orange */
 .status-critical {
-  color: #ff4757;
-} /* 2026 */
+  color: #FF453A;
+} /* Apple Red */
 
-/* Animated gradient button */
+/* Apple Blue primary button */
 .btn-gradient {
   position: relative;
-  background: linear-gradient(135deg, #8b5cf6, #00d4ff); /* 2026 */
-  background-size: 200% 200%;
-  animation: gradient-shift 4s ease infinite;
-  transition: all 0.3s ease;
+  background: #0A84FF; /* Solid Apple Blue */
+  transition: all 0.2s ease;
+  border-radius: 12px;
 }
 
 .btn-gradient:hover {
   transform: translateY(-2px);
-  box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 40px rgba(10, 132, 255, 0.3);
 }
 
 .btn-gradient::before {
   content: '';
   position: absolute;
   inset: 1px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
   border-radius: inherit;
   pointer-events: none;
 }
 
-/* Custom gradient scrollbar */
+/* Apple style scrollbar */
 .dark ::-webkit-scrollbar {
   width: 6px;
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: transparent;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #8b5cf6, #00d4ff); /* 2026 */
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* AI Chip shimmer animation */
@@ -1806,14 +1830,14 @@
   /* Uses gradient-shift animation from tailwind.config.js */
 }
 
-/* Glow animation */
+/* Apple Blue glow animation */
 @keyframes glow-anim {
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); /* 2026 Electric violet */
+    box-shadow: 0 0 20px rgba(10, 132, 255, 0.2);
   }
   50% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.7);
+    box-shadow: 0 0 40px rgba(10, 132, 255, 0.35);
   }
 }
 

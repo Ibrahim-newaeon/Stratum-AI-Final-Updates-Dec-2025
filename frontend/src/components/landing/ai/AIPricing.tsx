@@ -231,27 +231,36 @@ export default function AIPricing() {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/[0.02] to-transparent" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
-        {/* Section Header */}
+        {/* Section Header - Centered */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-6">
-            <SparklesIcon className="w-4 h-4 text-green-400" />
-            <span className="text-sm font-medium text-green-400">AI-Powered Pricing</span>
+          {/* Badge - Centered above hero */}
+          <div className="flex justify-center mb-8">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: 'rgba(48, 209, 88, 0.15)',
+                border: '1px solid rgba(48, 209, 88, 0.3)',
+              }}
+            >
+              <SparklesIcon className="w-4 h-4" style={{ color: '#30D158' }} />
+              <span className="text-sm font-medium" style={{ color: '#30D158' }}>AI-Powered Pricing</span>
+            </div>
           </div>
 
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Pay for the AI</span>
             <br />
-            <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">
+            <span style={{ color: '#30D158' }}>
               Power You Need
             </span>
           </h2>
 
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
+          <p className="text-lg max-w-2xl mx-auto mb-10 text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
             All plans include the core platform. Upgrade for advanced AI models and higher limits.
           </p>
 

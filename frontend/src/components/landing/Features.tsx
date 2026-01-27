@@ -24,15 +24,35 @@ const iconMap: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>
   CheckBadgeIcon,
 };
 
+// Apple Glass Dark theme
+const theme = {
+  primary: '#0A84FF',
+  primaryLight: 'rgba(10, 132, 255, 0.15)',
+  green: '#30D158',
+  greenLight: 'rgba(48, 209, 88, 0.15)',
+  orange: '#FF9F0A',
+  orangeLight: 'rgba(255, 159, 10, 0.15)',
+  purple: '#BF5AF2',
+  purpleLight: 'rgba(191, 90, 242, 0.15)',
+  teal: '#64D2FF',
+  bgBase: '#000000',
+  bgCard: 'rgba(255, 255, 255, 0.03)',
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textMuted: 'rgba(255, 255, 255, 0.5)',
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderHover: 'rgba(255, 255, 255, 0.15)',
+};
+
 // Fallback data when CMS content is not available
 const fallbackLayers: FeatureLayer[] = [
   {
     id: 'trust',
     name: 'Trust Layer',
     description: 'Know when to trust your data',
-    color: 'from-green-500 to-emerald-500',
-    bgColor: 'bg-green-500/10',
-    borderColor: 'border-green-500/20',
+    color: theme.green,
+    bgColor: theme.greenLight,
+    borderColor: 'rgba(48, 209, 88, 0.3)',
     iconName: 'ShieldCheckIcon',
     displayOrder: 0,
     features: [
@@ -63,9 +83,9 @@ const fallbackLayers: FeatureLayer[] = [
     id: 'intelligence',
     name: 'Intelligence Layer',
     description: 'AI that explains itself',
-    color: 'from-stratum-500 to-cyan-500',
-    bgColor: 'bg-stratum-500/10',
-    borderColor: 'border-stratum-500/20',
+    color: theme.primary,
+    bgColor: theme.primaryLight,
+    borderColor: 'rgba(10, 132, 255, 0.3)',
     iconName: 'SparklesIcon',
     displayOrder: 1,
     features: [
@@ -96,9 +116,9 @@ const fallbackLayers: FeatureLayer[] = [
     id: 'execution',
     name: 'Execution Layer',
     description: 'Automate with guardrails',
-    color: 'from-amber-500 to-orange-500',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
+    color: theme.orange,
+    bgColor: theme.orangeLight,
+    borderColor: 'rgba(255, 159, 10, 0.3)',
     iconName: 'BoltIcon',
     displayOrder: 2,
     features: [
@@ -139,21 +159,27 @@ export function Features() {
   const layers = cmsLayers && cmsLayers.length > 0 ? cmsLayers : fallbackLayers;
 
   return (
-    <section className="py-32 bg-surface-primary">
+    <section className="py-32" style={{ background: theme.bgBase }}>
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stratum-500/10 border border-stratum-500/20 mb-6">
-            <SparklesIcon className="w-4 h-4 text-stratum-400" />
-            <span className="text-meta text-stratum-400">The USP Stack</span>
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+            style={{
+              background: theme.primaryLight,
+              border: `1px solid rgba(10, 132, 255, 0.3)`,
+            }}
+          >
+            <SparklesIcon className="w-4 h-4" style={{ color: theme.primary }} />
+            <span className="text-sm" style={{ color: theme.primary }}>The USP Stack</span>
           </div>
-          <h2 className="text-h1 text-white mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Three layers.{' '}
-            <span className="bg-gradient-stratum bg-clip-text text-transparent">
+            <span style={{ color: theme.primary }}>
               One intelligent system.
             </span>
           </h2>
-          <p className="text-body text-text-secondary max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: theme.textSecondary }}>
             Trust your data before you act on it. Get AI recommendations you can explain. Automate
             only when it's safe.
           </p>
@@ -166,24 +192,35 @@ export function Features() {
             return (
               <div
                 key={layer.id}
-                className="motion-card group relative rounded-2xl bg-surface-secondary border border-white/5 p-8 hover:border-white/10 transition-all duration-base"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="motion-card group relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                  background: theme.bgCard,
+                  backdropFilter: 'blur(40px)',
+                  WebkitBackdropFilter: 'blur(40px)',
+                  border: `1px solid ${theme.border}`,
+                }}
               >
                 {/* Gradient accent */}
                 <div
-                  className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${layer.color}`}
+                  className="absolute top-0 left-0 right-0 h-1 rounded-t-3xl"
+                  style={{ background: layer.color }}
                 />
 
                 {/* Icon */}
                 <div
-                  className={`w-14 h-14 rounded-xl ${layer.bgColor} ${layer.borderColor} border flex items-center justify-center mb-6`}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
+                  style={{
+                    background: layer.bgColor,
+                    border: `1px solid ${layer.borderColor}`,
+                  }}
                 >
                   <LayerIcon className="w-7 h-7 text-white" />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-h3 text-white mb-2">{layer.name}</h3>
-                <p className="text-body text-text-muted mb-8">{layer.description}</p>
+                <h3 className="text-xl font-semibold text-white mb-2">{layer.name}</h3>
+                <p className="text-base mb-8" style={{ color: theme.textMuted }}>{layer.description}</p>
 
                 {/* Features list */}
                 <ul className="space-y-4">
@@ -191,12 +228,15 @@ export function Features() {
                     const FeatureIcon = getIcon(feature.iconName);
                     return (
                       <li key={feature.id} className="flex items-start gap-3">
-                        <div className="mt-0.5 p-1.5 rounded-lg bg-white/5">
-                          <FeatureIcon className="w-4 h-4 text-text-secondary" />
+                        <div
+                          className="mt-0.5 p-1.5 rounded-xl"
+                          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                        >
+                          <FeatureIcon className="w-4 h-4" style={{ color: theme.textSecondary }} />
                         </div>
                         <div>
-                          <div className="text-body text-white font-medium">{feature.title}</div>
-                          <div className="text-meta text-text-muted">{feature.description}</div>
+                          <div className="text-base text-white font-medium">{feature.title}</div>
+                          <div className="text-sm" style={{ color: theme.textMuted }}>{feature.description}</div>
                         </div>
                       </li>
                     );
@@ -209,18 +249,35 @@ export function Features() {
 
         {/* Bottom highlight */}
         <div className="mt-20 text-center">
-          <div className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-surface-secondary border border-white/5">
+          <div
+            className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl"
+            style={{
+              background: theme.bgCard,
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: `1px solid ${theme.border}`,
+            }}
+          >
             <div className="flex -space-x-2">
-              {['bg-meta', 'bg-google', 'bg-tiktok', 'bg-snapchat'].map((bg, i) => (
+              {[
+                { bg: '#1877F2' }, // Meta
+                { bg: '#4285F4' }, // Google
+                { bg: '#000000', border: 'rgba(255,255,255,0.2)' }, // TikTok
+                { bg: '#FFFC00' }, // Snapchat
+              ].map((item, i) => (
                 <div
                   key={i}
-                  className={`w-8 h-8 rounded-full ${bg} border-2 border-surface-secondary`}
+                  className="w-8 h-8 rounded-full"
+                  style={{
+                    background: item.bg,
+                    border: item.border ? `2px solid ${item.border}` : '2px solid rgba(0,0,0,0.3)',
+                  }}
                 />
               ))}
             </div>
             <div className="text-left">
-              <div className="text-body text-white font-medium">Works with your entire stack</div>
-              <div className="text-meta text-text-muted">Meta, Google, TikTok, Snapchat + GA4</div>
+              <div className="text-base text-white font-medium">Works with your entire stack</div>
+              <div className="text-sm" style={{ color: theme.textMuted }}>Meta, Google, TikTok, Snapchat + GA4</div>
             </div>
           </div>
         </div>

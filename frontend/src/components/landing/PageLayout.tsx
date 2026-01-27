@@ -1,7 +1,7 @@
 /**
  * PageLayout Component
  * Shared layout for all public-facing pages with header and footer
- * Theme: Dark with Purple/Cyan gradients
+ * Theme: Apple Glass Dark (#000000 + frosted glass)
  */
 
 import { useEffect, useState } from 'react';
@@ -75,38 +75,46 @@ export function PageLayout({ children }: PageLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#030303' }}>
-      {/* Dark Theme Header */}
+    <div className="min-h-screen flex flex-col" style={{ background: '#000000' }}>
+      {/* Ambient orbs background */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(10, 132, 255, 0.08), transparent),
+            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(191, 90, 242, 0.06), transparent),
+            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(100, 210, 255, 0.05), transparent)
+          `,
+        }}
+      />
+      {/* Apple Glass Dark Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
           isScrolled ? 'py-3' : 'py-4'
         }`}
         style={{
-          background: isScrolled ? 'rgba(3, 3, 3, 0.95)' : 'rgba(3, 3, 3, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          background: isScrolled ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
           <nav className="flex items-center justify-between">
-            {/* Logo - Purple/Cyan Gradient */}
+            {/* Logo - Apple Blue */}
             <Link to="/" className="flex items-center gap-3 group">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
+                className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
                 style={{
-                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)',
+                  background: '#0A84FF',
+                  boxShadow: '0 0 30px rgba(10, 132, 255, 0.2)',
                 }}
               >
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span
                 className="text-xl font-bold"
-                style={{
-                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
+                style={{ color: '#0A84FF' }}
               >
                 Stratum AI
               </span>
@@ -131,9 +139,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     className={`nav-link-underline absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-200 ${
                       isActiveLink(link.href) ? 'w-full' : 'w-0'
                     }`}
-                    style={{
-                      background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                    }}
+                    style={{ background: '#0A84FF' }}
                   />
                 </Link>
               ))}
@@ -202,10 +208,10 @@ export function PageLayout({ children }: PageLayoutProps) {
               </Link>
               <Link
                 to="/signup"
-                className="cta-button px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200"
+                className="cta-button px-5 py-2.5 rounded-2xl text-sm font-semibold text-white transition-all duration-200"
                 style={{
-                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  boxShadow: '0 4px 14px rgba(168, 85, 247, 0.4)',
+                  background: '#0A84FF',
+                  boxShadow: '0 0 30px rgba(10, 132, 255, 0.2)',
                 }}
               >
                 Start Free Trial
@@ -230,14 +236,16 @@ export function PageLayout({ children }: PageLayoutProps) {
             </button>
           </nav>
 
-          {/* Mobile Menu - Dark Theme */}
+          {/* Mobile Menu - Apple Glass Dark */}
           {isMobileMenuOpen && (
             <div
-              className="lg:hidden mt-4 py-4 rounded-2xl"
+              className="lg:hidden mt-4 py-4 rounded-3xl"
               style={{
-                background: 'rgba(10, 10, 10, 0.98)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
+                background: 'rgba(255, 255, 255, 0.03)',
+                backdropFilter: 'blur(40px)',
+                WebkitBackdropFilter: 'blur(40px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4)',
               }}
             >
               <div className="flex flex-col gap-2 px-4">
@@ -267,18 +275,18 @@ export function PageLayout({ children }: PageLayoutProps) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => toggleLanguage('en')}
-                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-colors ${
                         currentLanguage === 'en' ? 'text-white' : ''
                       }`}
                       style={{
                         background:
                           currentLanguage === 'en'
-                            ? 'rgba(168, 85, 247, 0.2)'
-                            : 'rgba(255, 255, 255, 0.05)',
+                            ? 'rgba(10, 132, 255, 0.15)'
+                            : 'rgba(255, 255, 255, 0.03)',
                         border:
                           currentLanguage === 'en'
-                            ? '1px solid rgba(168, 85, 247, 0.4)'
-                            : '1px solid rgba(255, 255, 255, 0.1)',
+                            ? '1px solid rgba(10, 132, 255, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.08)',
                         color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                       }}
                     >
@@ -286,18 +294,18 @@ export function PageLayout({ children }: PageLayoutProps) {
                     </button>
                     <button
                       onClick={() => toggleLanguage('ar')}
-                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-colors ${
                         currentLanguage === 'ar' ? 'text-white' : ''
                       }`}
                       style={{
                         background:
                           currentLanguage === 'ar'
-                            ? 'rgba(168, 85, 247, 0.2)'
-                            : 'rgba(255, 255, 255, 0.05)',
+                            ? 'rgba(10, 132, 255, 0.15)'
+                            : 'rgba(255, 255, 255, 0.03)',
                         border:
                           currentLanguage === 'ar'
-                            ? '1px solid rgba(168, 85, 247, 0.4)'
-                            : '1px solid rgba(255, 255, 255, 0.1)',
+                            ? '1px solid rgba(10, 132, 255, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.08)',
                         color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                       }}
                     >
@@ -317,10 +325,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                 </Link>
                 <Link
                   to="/signup"
-                  className="py-3 px-4 rounded-xl text-sm font-semibold text-white text-center"
-                  style={{
-                    background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  }}
+                  className="py-3 px-4 rounded-2xl text-sm font-semibold text-white text-center"
+                  style={{ background: '#0A84FF' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Start Free Trial
@@ -337,28 +343,22 @@ export function PageLayout({ children }: PageLayoutProps) {
       {/* Main Content */}
       <main className="flex-1 relative z-10">{children}</main>
 
-      {/* Dark Theme Footer */}
-      <footer style={{ background: '#030303', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+      {/* Apple Glass Dark Footer */}
+      <footer style={{ background: '#000000', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
             {/* Brand */}
             <div className="col-span-2">
               <Link to="/" className="flex items-center gap-3 mb-4">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  }}
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                  style={{ background: '#0A84FF' }}
                 >
                   <span className="text-white font-bold text-lg">S</span>
                 </div>
                 <span
                   className="text-xl font-semibold"
-                  style={{
-                    background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  style={{ color: '#0A84FF' }}
                 >
                   Stratum AI
                 </span>
@@ -373,7 +373,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://x.com/stratumai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-purple-400"
+                  className="transition-colors hover:text-[#0A84FF]"
                   style={{ color: 'rgba(255, 255, 255, 0.5)' }}
                   aria-label="Follow us on X"
                 >
@@ -385,7 +385,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://linkedin.com/company/stratumai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-purple-400"
+                  className="transition-colors hover:text-[#0A84FF]"
                   style={{ color: 'rgba(255, 255, 255, 0.5)' }}
                   aria-label="Follow us on LinkedIn"
                 >
@@ -446,7 +446,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     <li key={link.name}>
                       <Link
                         to={link.href}
-                        className="text-sm transition-colors hover:text-purple-400"
+                        className="text-sm transition-colors hover:text-[#0A84FF]"
                         style={{ color: 'rgba(255, 255, 255, 0.5)' }}
                       >
                         {link.name}
@@ -480,7 +480,7 @@ export function PageLayout({ children }: PageLayoutProps) {
         </div>
       </footer>
 
-      {/* Dark Theme CSS */}
+      {/* Apple Glass Dark CSS */}
       <style>{`
         .nav-link:hover {
           color: #ffffff !important;
@@ -492,7 +492,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
         .cta-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.5) !important;
+          box-shadow: 0 0 40px rgba(10, 132, 255, 0.3) !important;
         }
       `}</style>
     </div>

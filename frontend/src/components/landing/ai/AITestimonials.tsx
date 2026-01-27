@@ -50,13 +50,46 @@ const testimonials = [
   },
 ];
 
-const logos = [
-  { name: 'Meta', svg: 'M' },
-  { name: 'Google', svg: 'G' },
-  { name: 'TikTok', svg: 'T' },
-  { name: 'Snapchat', svg: 'S' },
-  { name: 'HubSpot', svg: 'H' },
-  { name: 'Salesforce', svg: 'SF' },
+const platforms = [
+  {
+    name: 'Meta',
+    api: 'Custom Audiences API',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02Z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Google',
+    api: 'Customer Match API',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'TikTok',
+    api: 'DMP Custom Audience API',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Snapchat',
+    api: 'Audience Match SAM API',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12.17 2c3 0 5.42 1.96 5.77 5.05.04.39.06.77.06 1.15 0 .7-.1 1.37-.26 2a.5.5 0 0 0 .31.61c.5.17 1.03.35 1.5.62.26.15.4.4.4.67 0 .24-.1.45-.33.58-.9.5-1.87.64-2.22.68-.03.5-.17.98-.55 1.43-.4.47-1.12 1.01-2.33 1.59-.05.03-.1.08-.12.14l-.17.54c-.04.14-.02.22.03.3.04.07.1.1.15.12.51.12 1 .32 1.35.63.23.2.38.45.38.75 0 .46-.32.83-.76 1.06-.52.27-1.16.4-1.8.4-.5 0-.95-.08-1.27-.15-.4-.09-.9-.22-1.42-.22-.5 0-1.01.13-1.43.22-.32.07-.76.15-1.26.15-.64 0-1.28-.13-1.8-.4-.44-.23-.76-.6-.76-1.06 0-.3.15-.55.38-.75.35-.31.84-.51 1.35-.63.06-.02.11-.05.15-.12.05-.08.07-.16.03-.3l-.17-.54c-.02-.06-.07-.11-.12-.14-1.21-.58-1.93-1.12-2.33-1.59-.38-.45-.52-.92-.55-1.43-.35-.04-1.32-.18-2.22-.68a.7.7 0 0 1-.33-.58c0-.27.14-.52.4-.67.47-.27 1-.45 1.5-.62a.5.5 0 0 0 .31-.61 8.8 8.8 0 0 1-.26-2c0-.38.02-.76.06-1.15C6.58 3.96 9 2 12 2h.17z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function AITestimonials() {
@@ -64,26 +97,26 @@ export default function AITestimonials() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section className="relative py-32 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/[0.02] to-transparent" />
+    <section className="relative py-32 overflow-hidden" style={{ background: '#000000' }}>
+      {/* Ambient orb */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(10, 132, 255, 0.05), transparent 60%)' }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
-        {/* Section Header */}
+        {/* Section Header - Centered */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Trusted by</span>{' '}
-            <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            <span style={{ color: '#0A84FF' }}>
               Revenue Teams
             </span>
           </h2>
 
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
             See what growth and marketing leaders say about switching to AI-powered revenue
             operations.
           </p>
@@ -165,13 +198,17 @@ export default function AITestimonials() {
             Integrates with the platforms you already use
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            {logos.map((logo) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            {platforms.map((platform) => (
               <div
-                key={logo.name}
-                className="w-16 h-16 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center text-gray-500 hover:text-white hover:border-white/10 transition-all"
+                key={platform.name}
+                className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all"
               >
-                <span className="text-lg font-bold">{logo.svg}</span>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-gray-400">
+                  {platform.icon}
+                </div>
+                <span className="text-sm font-medium text-white mb-1">{platform.name}</span>
+                <span className="text-xs text-gray-500 text-center">{platform.api}</span>
               </div>
             ))}
           </div>
