@@ -16,6 +16,7 @@ Set TEST_DATABASE_URL environment variable or use default test database.
 import os
 from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, date, datetime
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -34,11 +35,11 @@ from sqlalchemy.orm import Session, sessionmaker
 def _is_running_in_docker() -> bool:
     """Detect if we're running inside a Docker container."""
     # Check for .dockerenv file (most reliable)
-    if os.path.exists("/.dockerenv"):
+    if Path("/.dockerenv").exists():
         return True
     # Check for Docker-specific cgroup
     try:
-        with open("/proc/1/cgroup") as f:
+        with Path("/proc/1/cgroup").open() as f:
             return "docker" in f.read()
     except (FileNotFoundError, PermissionError):
         pass

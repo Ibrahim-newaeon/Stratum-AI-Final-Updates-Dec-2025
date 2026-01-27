@@ -122,7 +122,7 @@ class LocalInferenceStrategy(InferenceStrategy):
             # Load metadata if exists
             metadata_file = self.models_path / f"{model_name}_metadata.json"
             if metadata_file.exists():
-                with open(metadata_file) as f:
+                with metadata_file.open() as f:
                     self._model_metadata[model_name] = json.load(f)
             else:
                 self._model_metadata[model_name] = {

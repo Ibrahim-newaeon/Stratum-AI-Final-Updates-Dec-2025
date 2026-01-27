@@ -82,6 +82,7 @@ Usage Examples:
 
 import logging
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("stratum.mcp")
@@ -724,7 +725,7 @@ def create_mcp_server(config_path: str = "config.yaml"):
     """
     import yaml
 
-    with open(config_path) as f:
+    with Path(config_path).open() as f:
         config = yaml.safe_load(f)
 
     return StratumMCPServer(config)

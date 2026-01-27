@@ -7,8 +7,8 @@ PDF generation service for reports.
 Uses HTML templates rendered to PDF for professional-quality reports.
 """
 
-import os
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -168,23 +168,23 @@ class PDFGenerator:
         html_content = self._generate_html(template, data)
 
         # Convert to PDF
-        file_path = f"/tmp/reports/{self.tenant_id}/{execution_id}.pdf"
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        output_path = Path(f"/tmp/reports/{self.tenant_id}/{execution_id}.pdf")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Try to use weasyprint for PDF generation
         try:
             from weasyprint import HTML
 
-            HTML(string=html_content).write_pdf(file_path)
+            HTML(string=html_content).write_pdf(str(output_path))
         except ImportError:
             # Fallback: save as HTML if weasyprint not available
-            file_path = file_path.replace(".pdf", ".html")
-            with open(file_path, "w", encoding="utf-8") as f:
+            output_path = output_path.with_suffix(".html")
+            with output_path.open("w", encoding="utf-8") as f:
                 f.write(html_content)
             logger.warning("weasyprint_not_available", fallback="html")
 
-        file_size = os.path.getsize(file_path)
-        return file_path, file_size
+        file_size = output_path.stat().st_size
+        return str(output_path), file_size
 
     def _generate_html(
         self,

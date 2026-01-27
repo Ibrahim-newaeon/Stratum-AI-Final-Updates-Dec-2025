@@ -677,13 +677,14 @@ class TestCriticalFeaturesIntegration:
 
     def test_ml_training_end_to_end(self, sample_training_data):
         """End-to-end ML training test."""
-        import os
         import tempfile
+        from pathlib import Path
 
         from app.ml.train import ModelTrainer
 
         with tempfile.TemporaryDirectory() as tmpdir:
             trainer = ModelTrainer(models_path=tmpdir)
+            tmpdir_path = Path(tmpdir)
 
             # Train all models
             results = trainer.train_all(sample_training_data, include_platform_models=False)
@@ -693,8 +694,8 @@ class TestCriticalFeaturesIntegration:
             assert "budget_impact" in results
 
             # Check files were created
-            assert os.path.exists(os.path.join(tmpdir, "roas_predictor.pkl"))
-            assert os.path.exists(os.path.join(tmpdir, "roas_predictor_metadata.json"))
+            assert (tmpdir_path / "roas_predictor.pkl").exists()
+            assert (tmpdir_path / "roas_predictor_metadata.json").exists()
 
 
 # =============================================================================

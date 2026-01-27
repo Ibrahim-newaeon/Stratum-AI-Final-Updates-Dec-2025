@@ -63,6 +63,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 from functools import wraps
+from pathlib import Path
 from typing import Any
 
 try:
@@ -437,7 +438,7 @@ async def run_autopilot_all() -> dict[str, Any]:
     }
 
     try:
-        with open("config.yaml") as f:
+        with Path("config.yaml").open() as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
         return {"error": "Configuration file not found"}

@@ -68,7 +68,6 @@ ignore = [
     "N805",   # First argument self (SQLAlchemy uses cls patterns)
     "N806",   # Variable lowercase (ML uses X, Y convention)
     "N815",   # mixedCase variables (API payloads from external systems)
-    "PTH",    # Use pathlib (legacy code uses os.path)
     "RUF001", # Ambiguous unicode in string (Unicode chars intentional)
     "RUF002", # Ambiguous unicode in docstring (Unicode chars intentional)
     "RUF003", # Ambiguous unicode in comment (Greek letters in math comments)

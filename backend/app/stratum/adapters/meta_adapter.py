@@ -50,6 +50,7 @@ retrying failed requests after progressively longer delays.
 import hashlib
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 from facebook_business.adobjects.ad import Ad
@@ -897,18 +898,17 @@ class MetaAdapter(BaseAdapter):
 
         # For videos, we use the resumable upload endpoint
         # This is a simplified version; production would handle chunked upload
-        import os
         import tempfile
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as f:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(filename).suffix) as f:
             f.write(video_data)
-            temp_path = f.name
+            temp_path = Path(f.name)
 
         try:
-            result = ad_account.create_ad_video(params={"source_file": temp_path, "name": filename})
+            result = ad_account.create_ad_video(params={"source_file": str(temp_path), "name": filename})
             return result.get("id", "")
         finally:
-            os.unlink(temp_path)
+            temp_path.unlink()
 
     # ========================================================================
     # WEBHOOK SUPPORT

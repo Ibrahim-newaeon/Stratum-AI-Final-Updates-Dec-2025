@@ -13,13 +13,13 @@ Supported channels:
 """
 
 import logging
-import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -93,7 +93,7 @@ class EmailDelivery(DeliveryChannelHandler):
             msg.attach(MIMEText(body, "html"))
 
             # Attach report file
-            if execution.file_path and os.path.exists(execution.file_path):
+            if execution.file_path and Path(execution.file_path).exists():
                 await self._attach_file(msg, execution)
 
             # Send email
@@ -182,10 +182,11 @@ class EmailDelivery(DeliveryChannelHandler):
 
     async def _attach_file(self, msg: MIMEMultipart, execution: ReportExecution):
         """Attach report file to email."""
-        filename = os.path.basename(execution.file_path)
+        file_path = Path(execution.file_path)
+        filename = file_path.name
         content_type = self._get_content_type(execution.format.value)
 
-        with open(execution.file_path, "rb") as f:
+        with file_path.open("rb") as f:
             part = MIMEBase(*content_type.split("/"))
             part.set_payload(f.read())
             encoders.encode_base64(part)
@@ -538,7 +539,8 @@ class S3Delivery(DeliveryChannelHandler):
 
             # Build S3 key
             timestamp = datetime.utcnow().strftime("%Y/%m/%d")
-            filename = os.path.basename(execution.file_path)
+            file_path = Path(execution.file_path)
+            filename = file_path.name
             s3_key = f"{prefix.rstrip('/')}/{timestamp}/{filename}"
 
             session = aioboto3.Session(
@@ -548,7 +550,7 @@ class S3Delivery(DeliveryChannelHandler):
             )
 
             async with session.client("s3") as s3:
-                with open(execution.file_path, "rb") as f:
+                with file_path.open("rb") as f:
                     await s3.put_object(
                         Bucket=bucket,
                         Key=s3_key,
