@@ -430,8 +430,9 @@ class ServerEvent:
     def __post_init__(self):
         """Generate event_id if not provided."""
         if not self.event_id:
+            # Deterministic ID for deduplication (MD5 for consistency, not security)
             unique_string = f"{self.event_name.value}_{self.event_time.isoformat()}_{self.user_data.external_id or uuid.uuid4()}"
-            self.event_id = hashlib.md5(unique_string.encode()).hexdigest()[:16]
+            self.event_id = hashlib.md5(unique_string.encode()).hexdigest()[:16]  # noqa: S324
 
     def get_content_ids(self) -> list[str]:
         """Extract content IDs for platform formatting."""

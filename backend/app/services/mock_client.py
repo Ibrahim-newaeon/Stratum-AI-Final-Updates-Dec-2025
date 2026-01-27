@@ -149,7 +149,7 @@ class MockAdNetwork:
 
     def _seeded_random(self, identifier: str) -> random.Random:
         """Get a seeded random generator based on identifier."""
-        hash_val = int(hashlib.md5(f"{self.seed}:{identifier}".encode()).hexdigest()[:8], 16)
+        hash_val = int(hashlib.md5(f"{self.seed}:{identifier}".encode()).hexdigest()[:8], 16)  # noqa: S324
         return random.Random(hash_val)
 
     def generate_campaigns(

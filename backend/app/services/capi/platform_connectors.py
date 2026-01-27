@@ -1723,7 +1723,7 @@ class EventDeduplicator:
         ]
 
         content = "|".join(components)
-        return hashlib.md5(content.encode()).hexdigest()
+        return hashlib.md5(content.encode()).hexdigest()  # noqa: S324 - deduplication fingerprint
 
     def _cleanup_expired(self):
         """Remove expired entries."""

@@ -282,9 +282,9 @@ class ModelABTestingService:
         if not experiment or experiment.status != ExperimentStatus.RUNNING:
             return ModelVariant.CHAMPION
 
-        # Deterministic hash-based assignment
+        # Deterministic hash-based assignment (MD5 for consistent bucketing, not security)
         hash_input = f"{experiment_id}:{entity_id}"
-        hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)
+        hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)  # noqa: S324
         bucket = (hash_value % 1000) / 1000.0
 
         if bucket < experiment.traffic_split:

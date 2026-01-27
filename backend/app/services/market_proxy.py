@@ -374,8 +374,8 @@ class MockMarketService(MarketDataProvider):
     async def get_competitor_data(self, domain: str) -> CompetitorData:
         """Generate mock competitor data."""
 
-        # Use domain as seed for consistent data
-        seed = int(hashlib.md5(domain.encode()).hexdigest()[:8], 16)
+        # Use domain as seed for consistent data (MD5 for determinism, not security)
+        seed = int(hashlib.md5(domain.encode()).hexdigest()[:8], 16)  # noqa: S324
         rng = random.Random(seed)
 
         # Generate realistic company name from domain
