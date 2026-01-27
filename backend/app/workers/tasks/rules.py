@@ -175,9 +175,8 @@ def _evaluate_condition(rule: Rule, campaign: Campaign) -> dict[str, Any]:
         elif operator == "gte":
             if not (actual >= target):
                 all_match = False
-        elif operator == "lte":
-            if not (actual <= target):
-                all_match = False
+        elif operator == "lte" and not (actual <= target):
+            all_match = False
 
     return {"matched": all_match, "values": values}
 

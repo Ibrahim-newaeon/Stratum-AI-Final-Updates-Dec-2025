@@ -105,7 +105,10 @@
       "Bash(powershell.exe -Command \"docker stop musing_meitner; docker rm musing_meitner\")",
       "Bash(node_modules/.bin/eslint src --ext ts,tsx --max-warnings 999)",
       "Bash(node_modules/.bin/eslint:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(for pr in 14 13 12 11 9 8 7 6 5 4)",
+      "Bash(do gh pr close $pr --repo Ibrahim-newaeon/Javna-StratumAi --comment \"Closing: Stratum-AI-Final-Updates-Dec-2025 is now the primary repo\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

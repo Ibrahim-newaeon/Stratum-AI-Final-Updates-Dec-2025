@@ -697,14 +697,13 @@ class TargetService:
                 setattr(target, field, value)
 
         # Update target_value_cents if target_value changed
-        if "target_value" in kwargs:
-            if target.metric_type in [
-                TargetMetric.SPEND,
-                TargetMetric.REVENUE,
-                TargetMetric.PIPELINE_VALUE,
-                TargetMetric.WON_REVENUE,
-            ]:
-                target.target_value_cents = int(target.target_value * 100)
+        if "target_value" in kwargs and target.metric_type in [
+            TargetMetric.SPEND,
+            TargetMetric.REVENUE,
+            TargetMetric.PIPELINE_VALUE,
+            TargetMetric.WON_REVENUE,
+        ]:
+            target.target_value_cents = int(target.target_value * 100)
 
         target.updated_at = datetime.utcnow()
         await self.db.commit()

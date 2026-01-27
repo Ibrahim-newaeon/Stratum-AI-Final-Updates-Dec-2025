@@ -435,10 +435,9 @@ class MFAService:
             return True, "MFA not enabled"
 
         # Check lockout
-        if user.totp_lockout_until:
-            if datetime.now(UTC) < user.totp_lockout_until:
-                remaining = (user.totp_lockout_until - datetime.now(UTC)).seconds // 60
-                return False, f"Account locked. Try again in {remaining} minutes."
+        if user.totp_lockout_until and datetime.now(UTC) < user.totp_lockout_until:
+            remaining = (user.totp_lockout_until - datetime.now(UTC)).seconds // 60
+            return False, f"Account locked. Try again in {remaining} minutes."
 
         # Verify code
         is_valid = await self._verify_code(user, code)

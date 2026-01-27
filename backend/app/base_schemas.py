@@ -246,17 +246,19 @@ class CampaignCreate(CampaignBase):
     @model_validator(mode="after")
     def validate_dates(self):
         """Ensure end_date is after start_date."""
-        if self.start_date and self.end_date:
-            if self.end_date < self.start_date:
-                raise ValueError("end_date must be after start_date")
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValueError("end_date must be after start_date")
         return self
 
     @model_validator(mode="after")
     def validate_age_range(self):
         """Ensure age_max >= age_min."""
-        if self.targeting_age_min and self.targeting_age_max:
-            if self.targeting_age_max < self.targeting_age_min:
-                raise ValueError("targeting_age_max must be >= targeting_age_min")
+        if (
+            self.targeting_age_min
+            and self.targeting_age_max
+            and self.targeting_age_max < self.targeting_age_min
+        ):
+            raise ValueError("targeting_age_max must be >= targeting_age_min")
         return self
 
 

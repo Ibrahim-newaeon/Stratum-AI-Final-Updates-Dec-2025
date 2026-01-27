@@ -744,12 +744,15 @@ async def publish_campaign_draft(
     budget = draft.draft_json.get("campaign", {}).get("budget", {})
     budget_amount = budget.get("amount", 0)
 
-    if draft.ad_account and draft.ad_account.daily_budget_cap:
-        if budget_amount > float(draft.ad_account.daily_budget_cap):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Budget {budget_amount} exceeds account cap {draft.ad_account.daily_budget_cap}",
-            )
+    if (
+        draft.ad_account
+        and draft.ad_account.daily_budget_cap
+        and budget_amount > float(draft.ad_account.daily_budget_cap)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Budget {budget_amount} exceeds account cap {draft.ad_account.daily_budget_cap}",
+        )
 
     # Update status to publishing
     draft.status = DraftStatus.PUBLISHING.value

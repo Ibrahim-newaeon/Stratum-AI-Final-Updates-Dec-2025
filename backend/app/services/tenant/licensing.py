@@ -232,9 +232,12 @@ class LicenseValidationService:
 
         # Check domain
         allowed_domains = payload.get("domains", [])
-        if current_domain and allowed_domains:
-            if not self._domain_matches(current_domain, allowed_domains):
-                status = LicenseStatus.DOMAIN_MISMATCH
+        if (
+            current_domain
+            and allowed_domains
+            and not self._domain_matches(current_domain, allowed_domains)
+        ):
+            status = LicenseStatus.DOMAIN_MISMATCH
 
         return LicenseInfo(
             status=status,

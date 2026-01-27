@@ -429,9 +429,8 @@ class TenantMismatchError(Exception):
 
 def execute_query(query: str, tenant_id: int = None):
     """Mock query execution with tenant scoping check."""
-    if "WHERE" not in query.upper() or "tenant_id" not in query.lower():
-        if tenant_id is None:
-            raise TenantScopingError("Query must include tenant_id filter")
+    if ("WHERE" not in query.upper() or "tenant_id" not in query.lower()) and tenant_id is None:
+        raise TenantScopingError("Query must include tenant_id filter")
     return {"data": []}
 
 

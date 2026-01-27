@@ -309,9 +309,8 @@ class ConversionLatencyTracker:
             by_type: dict[str, list[float]] = defaultdict(list)
 
             for m in self._measurements:
-                if m.end_time >= cutoff:
-                    if platform is None or m.platform == platform:
-                        by_type[m.event_type].append(m.latency_ms)
+                if m.end_time >= cutoff and (platform is None or m.platform == platform):
+                    by_type[m.event_type].append(m.latency_ms)
 
             return {
                 event_type: self._calculate_stats(latencies)

@@ -130,10 +130,9 @@ class GoalsSetupRequest(BaseModel):
     def validate_currency(cls, v):
         """Validate currency code."""
         valid_currencies = {"USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CNY", "INR", "BRL", "MXN"}
-        if v.upper() not in valid_currencies:
+        if v.upper() not in valid_currencies and (len(v) != 3 or not v.isalpha()):
             # Allow any 3-letter code
-            if len(v) != 3 or not v.isalpha():
-                raise ValueError("Currency must be a valid 3-letter code")
+            raise ValueError("Currency must be a valid 3-letter code")
         return v.upper()
 
 

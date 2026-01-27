@@ -141,10 +141,12 @@ class SalesforceClient:
             return None
 
         # Check if token is expired (with 5 min buffer)
-        if connection.token_expires_at:
-            if datetime.now(UTC) >= connection.token_expires_at - timedelta(minutes=5):
-                await self._refresh_token()
-                connection = await self._get_connection()
+        if (
+            connection.token_expires_at
+            and datetime.now(UTC) >= connection.token_expires_at - timedelta(minutes=5)
+        ):
+            await self._refresh_token()
+            connection = await self._get_connection()
 
         if not connection or not connection.access_token_enc:
             return None
