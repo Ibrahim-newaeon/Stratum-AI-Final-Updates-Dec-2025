@@ -693,12 +693,12 @@ class IdentityResolutionService:
 
         edges = [
             {
-                "source": str(l.source_identifier_id),
-                "target": str(l.target_identifier_id),
-                "type": l.link_type,
-                "confidence": float(l.confidence_score),
+                "source": str(link.source_identifier_id),
+                "target": str(link.target_identifier_id),
+                "type": link.link_type,
+                "confidence": float(link.confidence_score),
             }
-            for l in links
+            for link in links
         ]
 
         return {"nodes": nodes, "edges": edges}

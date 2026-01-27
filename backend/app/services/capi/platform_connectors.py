@@ -183,9 +183,9 @@ def get_event_delivery_logs(
     """Get event delivery logs for EMQ measurement."""
     logs = _event_delivery_logs
     if platform:
-        logs = [l for l in logs if l.platform == platform]
+        logs = [log for log in logs if log.platform == platform]
     if since:
-        logs = [l for l in logs if l.timestamp >= since]
+        logs = [log for log in logs if log.timestamp >= since]
     return logs
 
 

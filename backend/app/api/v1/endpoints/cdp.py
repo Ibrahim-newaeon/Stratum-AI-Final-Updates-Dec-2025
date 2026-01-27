@@ -2034,7 +2034,7 @@ async def export_audience(
                 row["monetary_score"] = profile.computed_traits.get("monetary_score", "")
 
             if include_identifiers and hasattr(profile, "identifiers"):
-                id_types = list(set(i.identifier_type for i in profile.identifiers))
+                id_types = list({i.identifier_type for i in profile.identifiers})
                 row["identifier_types"] = ",".join(id_types)
 
             writer.writerow(row)

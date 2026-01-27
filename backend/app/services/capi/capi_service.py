@@ -131,7 +131,7 @@ class CAPIService:
                 "connected": True,
                 "platform_name": platform.title(),
             }
-            for platform in self.connectors.keys()
+            for platform in self.connectors
         }
 
     async def test_all_connections(self) -> dict[str, ConnectionResult]:
@@ -251,7 +251,7 @@ class CAPIService:
         results = await asyncio.gather(*tasks)
 
         # Compile results
-        platform_results = {p: r for p, r in results}
+        platform_results = dict(results)
         failed_platforms = [p for p, r in results if not r.success]
         successful_platforms = len(platforms) - len(failed_platforms)
 

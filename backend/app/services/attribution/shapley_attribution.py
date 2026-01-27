@@ -384,7 +384,7 @@ class ShapleyAttributionService:
         breakdown = []
 
         # Get unique channels in journey
-        journey_channels = set(tp.source or "unknown" for tp in touchpoints)
+        journey_channels = {tp.source or "unknown" for tp in touchpoints}
 
         # Normalize weights for channels in this journey
         journey_weights = {c: weights.get(c, 0.0) for c in journey_channels}

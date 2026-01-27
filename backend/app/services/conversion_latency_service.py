@@ -459,8 +459,8 @@ class ConversionLatencyTracker:
                 "total_measurements": len(self._measurements),
                 "pending_conversions": len(self._pending),
                 "pending_by_platform": self.get_pending_count(),
-                "platforms_tracked": list(set(m.platform for m in self._measurements)),
-                "event_types_tracked": list(set(m.event_type for m in self._measurements)),
+                "platforms_tracked": list({m.platform for m in self._measurements}),
+                "event_types_tracked": list({m.event_type for m in self._measurements}),
                 "oldest_measurement": self._measurements[0].end_time.isoformat()
                 if self._measurements
                 else None,
@@ -941,7 +941,7 @@ class AttributionWindowOptimizer:
         """Get attribution window recommendations for all platforms."""
         recommendations = []
 
-        for platform in self.DEFAULT_WINDOWS.keys():
+        for platform in self.DEFAULT_WINDOWS:
             rec = self.recommend_window(platform)
             recommendations.append(rec)
 

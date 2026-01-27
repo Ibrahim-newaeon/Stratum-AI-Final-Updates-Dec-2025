@@ -761,7 +761,7 @@ class AttributionService:
         touchpoints = touchpoint_result.scalars().all()
 
         # Get contacts with these touchpoints
-        contact_ids = list(set(tp.contact_id for tp in touchpoints if tp.contact_id))
+        contact_ids = list({tp.contact_id for tp in touchpoints if tp.contact_id})
 
         if not contact_ids:
             return {

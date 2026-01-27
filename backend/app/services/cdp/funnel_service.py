@@ -435,7 +435,7 @@ class FunnelService:
         Returns a funnel entry if the profile completed at least step 1.
         """
         # Get all events for this profile (ordered by time)
-        events = sorted(list(profile.events), key=lambda e: e.event_time)
+        events = sorted(profile.events, key=lambda e: e.event_time)
 
         if not events:
             return None

@@ -2198,32 +2198,34 @@ async def test_slack_webhook(
     }
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(
                 request.webhook_url,
                 json=message,
                 headers={"Content-Type": "application/json"},
                 timeout=aiohttp.ClientTimeout(total=10),
-            ) as response:
-                response_text = await response.text()
+            ) as response,
+        ):
+            response_text = await response.text()
 
-                if response.status == 200:
-                    logger.info("slack_test_success", webhook_url=request.webhook_url[:50])
-                    return APIResponse(
-                        success=True,
-                        data={"success": True, "message": "Test message sent successfully"},
-                        message="Slack webhook test successful",
-                    )
-                else:
-                    logger.warning(
-                        "slack_test_failed",
-                        status=response.status,
-                        response=response_text,
-                    )
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Slack returned error: {response.status} - {response_text}",
-                    )
+            if response.status == 200:
+                logger.info("slack_test_success", webhook_url=request.webhook_url[:50])
+                return APIResponse(
+                    success=True,
+                    data={"success": True, "message": "Test message sent successfully"},
+                    message="Slack webhook test successful",
+                )
+            else:
+                logger.warning(
+                    "slack_test_failed",
+                    status=response.status,
+                    response=response_text,
+                )
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Slack returned error: {response.status} - {response_text}",
+                )
 
     except aiohttp.ClientError as e:
         logger.error("slack_test_connection_error", error=str(e))

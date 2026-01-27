@@ -206,7 +206,7 @@ class TestEventDeliveryLog:
 
         logs = get_event_delivery_logs(platform="meta")
         assert len(logs) > 0
-        assert any(l.event_id == "test_event_123" for l in logs)
+        assert any(log.event_id == "test_event_123" for log in logs)
 
 
 class TestMetaCAPIConnector:

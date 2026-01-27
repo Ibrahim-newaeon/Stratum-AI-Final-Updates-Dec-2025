@@ -75,7 +75,7 @@ class JourneyAggregator:
 
         first_touch = touchpoints[0]
         last_touch = touchpoints[-1]
-        unique_channels = len(set(tp.source for tp in touchpoints if tp.source))
+        unique_channels = len({tp.source for tp in touchpoints if tp.source})
 
         first_to_last_hours = None
         if len(touchpoints) > 1:

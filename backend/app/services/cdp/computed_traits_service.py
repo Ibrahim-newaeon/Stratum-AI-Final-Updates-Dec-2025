@@ -240,11 +240,11 @@ class ComputedTraitsService:
         elif trait_type == ComputedTraitType.UNIQUE_COUNT.value:
             if not property_name:
                 return 0
-            unique_values = set(
+            unique_values = {
                 e.properties.get(property_name)
                 for e in events
                 if e.properties.get(property_name) is not None
-            )
+            }
             return len(unique_values)
 
         elif trait_type == ComputedTraitType.EXISTS.value:

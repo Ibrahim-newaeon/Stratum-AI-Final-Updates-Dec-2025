@@ -143,7 +143,7 @@ class DataQualityAnalyzer:
 
         # Analyze for all platforms
         platform_results = {}
-        for platform in self.FIELD_WEIGHTS.keys():
+        for platform in self.FIELD_WEIGHTS:
             completeness = self.hasher.calculate_data_completeness(user_data, platform)
             platform_results[platform] = completeness
 
@@ -183,7 +183,7 @@ class DataQualityAnalyzer:
             detected_types = {d.detected_type for d in detections}
 
             for platform in platforms:
-                for field in self.FIELD_WEIGHTS.get(platform, {}).keys():
+                for field in self.FIELD_WEIGHTS.get(platform, {}):
                     if field in detected_types:
                         field_presence[platform][field] += 1
 
@@ -203,14 +203,10 @@ class DataQualityAnalyzer:
             # Get field lists
             weights = self.FIELD_WEIGHTS.get(platform, {})
             present = [
-                f.value
-                for f in weights.keys()
-                if field_presence[platform].get(f, 0) > total_events * 0.5
+                f.value for f in weights if field_presence[platform].get(f, 0) > total_events * 0.5
             ]
             missing = [
-                f.value
-                for f in weights.keys()
-                if field_presence[platform].get(f, 0) < total_events * 0.3
+                f.value for f in weights if field_presence[platform].get(f, 0) < total_events * 0.3
             ]
 
             platform_scores[platform] = PlatformQualityScore(
@@ -253,7 +249,7 @@ class DataQualityAnalyzer:
 
         return QualityReport(
             overall_score=round(overall_score, 1),
-            platform_scores={p: ps for p, ps in platform_scores.items()},
+            platform_scores=dict(platform_scores.items()),
             top_recommendations=top_recs,
             estimated_roas_improvement=round(avg_current_lift, 1),
             data_gaps_summary=gaps_summary,

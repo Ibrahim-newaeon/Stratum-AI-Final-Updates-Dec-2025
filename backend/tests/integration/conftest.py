@@ -410,7 +410,7 @@ def setup_test_database():
     """
     # Import all models to register them with Base.metadata
     # This ensures all tables and enum types are created
-    import app.base_models  # noqa: F401
+    import app.base_models
     import app.models  # noqa: F401
     from app.core.config import settings
     from app.db.base_class import Base

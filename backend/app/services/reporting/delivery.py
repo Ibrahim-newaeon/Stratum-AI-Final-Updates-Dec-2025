@@ -229,24 +229,26 @@ class SlackDelivery(DeliveryChannelHandler):
             # Determine webhook URL
             webhook_url = config.get("webhook_url") or recipient
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
                     webhook_url,
                     json=message,
                     headers={"Content-Type": "application/json"},
-                ) as response:
-                    response_text = await response.text()
+                ) as response,
+            ):
+                response_text = await response.text()
 
-                    if response.status == 200:
-                        return {
-                            "success": True,
-                            "response": response_text,
-                        }
-                    else:
-                        return {
-                            "success": False,
-                            "error": f"Slack API error: {response.status} - {response_text}",
-                        }
+                if response.status == 200:
+                    return {
+                        "success": True,
+                        "response": response_text,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Slack API error: {response.status} - {response_text}",
+                    }
 
         except Exception as e:
             logger.error(f"Slack delivery failed: {e!s}")
@@ -354,24 +356,26 @@ class TeamsDelivery(DeliveryChannelHandler):
 
             webhook_url = config.get("webhook_url") or recipient
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
                     webhook_url,
                     json=card,
                     headers={"Content-Type": "application/json"},
-                ) as response:
-                    response_text = await response.text()
+                ) as response,
+            ):
+                response_text = await response.text()
 
-                    if response.status in (200, 202):
-                        return {
-                            "success": True,
-                            "response": response_text,
-                        }
-                    else:
-                        return {
-                            "success": False,
-                            "error": f"Teams API error: {response.status} - {response_text}",
-                        }
+                if response.status in (200, 202):
+                    return {
+                        "success": True,
+                        "response": response_text,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Teams API error: {response.status} - {response_text}",
+                    }
 
         except Exception as e:
             logger.error(f"Teams delivery failed: {e!s}")
@@ -460,25 +464,27 @@ class WebhookDelivery(DeliveryChannelHandler):
             if config.get("auth_header"):
                 headers["Authorization"] = config["auth_header"]
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
                     webhook_url,
                     json=payload,
                     headers=headers,
                     timeout=aiohttp.ClientTimeout(total=30),
-                ) as response:
-                    response_text = await response.text()
+                ) as response,
+            ):
+                response_text = await response.text()
 
-                    if response.status < 400:
-                        return {
-                            "success": True,
-                            "response": response_text,
-                        }
-                    else:
-                        return {
-                            "success": False,
-                            "error": f"Webhook error: {response.status} - {response_text}",
-                        }
+                if response.status < 400:
+                    return {
+                        "success": True,
+                        "response": response_text,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Webhook error: {response.status} - {response_text}",
+                    }
 
         except Exception as e:
             logger.error(f"Webhook delivery failed: {e!s}")

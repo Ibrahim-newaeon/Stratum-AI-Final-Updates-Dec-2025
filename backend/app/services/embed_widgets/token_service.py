@@ -384,11 +384,7 @@ class EmbedTokenService:
             return False
 
         # Check against allowed domains
-        for pattern in allowed_domains:
-            if self._domain_matches_pattern(hostname, pattern):
-                return True
-
-        return False
+        return any(self._domain_matches_pattern(hostname, pattern) for pattern in allowed_domains)
 
     def _domain_matches_pattern(self, domain: str, pattern: str) -> bool:
         """Check if domain matches a pattern (supports wildcards)."""

@@ -88,7 +88,7 @@ class SheetsReportingIntegration:
 
     async def generate_daily_report(
         self,
-        platforms: list[str] = ["meta", "google", "tiktok", "snapchat"],
+        platforms: list[str] = None,
         date_range: str = "yesterday",
     ) -> dict[str, Any]:
         """
@@ -96,6 +96,8 @@ class SheetsReportingIntegration:
 
         Returns data formatted for Sheets update.
         """
+        if platforms is None:
+            platforms = ["meta", "google", "tiktok", "snapchat"]
         report_data = {
             "generated_at": datetime.utcnow().isoformat(),
             "date_range": date_range,
