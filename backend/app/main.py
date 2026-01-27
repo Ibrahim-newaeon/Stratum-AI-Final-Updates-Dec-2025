@@ -26,6 +26,7 @@ from app.db.session import async_engine, check_database_health
 from app.middleware.audit import AuditMiddleware
 from app.middleware.tenant import TenantMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.security import SecurityHeadersMiddleware
 from app.api.v1 import api_router
 
 # Setup logging
@@ -159,6 +160,9 @@ def create_application() -> FastAPI:
 
     # Audit logging for state-changing requests
     app.add_middleware(AuditMiddleware)
+
+    # Security headers middleware (OWASP recommendations)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # Request timing middleware
     @app.middleware("http")

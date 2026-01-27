@@ -1,0 +1,103 @@
+# =============================================================================
+# Stratum AI - Ruff Configuration
+# =============================================================================
+# Fast Python linter and formatter (replacement for flake8, isort, black)
+# Documentation: https://docs.astral.sh/ruff/
+
+[lint]
+# Enable these rule categories
+select = [
+    "E",      # pycodestyle errors
+    "F",      # Pyflakes
+    "W",      # pycodestyle warnings
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade (modernize syntax)
+    "B",      # flake8-bugbear (common bugs)
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "S",      # flake8-bandit (security)
+    "A",      # flake8-builtins
+    "DTZ",    # flake8-datetimez (timezone aware)
+    "T20",    # flake8-print (no print statements)
+    "RUF",    # Ruff-specific rules
+    "ASYNC",  # flake8-async
+    "PTH",    # flake8-use-pathlib
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+    "S101",   # Use of assert (OK in tests)
+    "S104",   # Possible binding to all interfaces
+    "S105",   # Hardcoded password (false positives with variable names)
+    "S106",   # Hardcoded password (false positives)
+    "B008",   # Function calls in argument defaults (FastAPI Depends)
+    "UP007",  # Use X | Y for Union (keep Optional for clarity)
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+# Exclude paths
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "*.pyc",
+    ".mypy_cache",
+    ".pytest_cache",
+    "migrations",
+    "alembic",
+    "node_modules",
+    "dist",
+    "build",
+]
+
+# Python version target
+target-version = "py311"
+
+# Line length
+line-length = 100
+
+[lint.per-file-ignores]
+# Tests can use assert and print
+"**/tests/**/*.py" = ["S101", "T20", "B011"]
+"**/test_*.py" = ["S101", "T20", "B011"]
+# Allow print in CLI/scripts
+"**/scripts/**/*.py" = ["T20"]
+# Migrations have specific patterns
+"**/migrations/**/*.py" = ["E501", "N"]
+"**/alembic/**/*.py" = ["E501", "N"]
+
+[lint.isort]
+# Known first-party packages
+known-first-party = ["app"]
+# Force single line imports
+force-single-line = false
+# Combine as imports
+combine-as-imports = true
+# Section order
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[lint.flake8-bugbear]
+# Allow default mutable arguments for FastAPI
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "fastapi.Body"]
+
+[lint.pep8-naming]
+# Allow names like "T" for generics
+classmethod-decorators = ["classmethod", "pydantic.validator", "pydantic.field_validator"]
+
+[format]
+# Use double quotes
+quote-style = "double"
+# Use spaces for indentation
+indent-style = "space"
+# Respect magic trailing comma
+skip-magic-trailing-comma = false
+# Unix line endings
+line-ending = "auto"
+# Format docstrings
+docstring-code-format = true

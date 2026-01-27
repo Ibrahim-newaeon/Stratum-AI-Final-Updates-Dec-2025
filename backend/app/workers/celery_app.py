@@ -16,7 +16,21 @@ celery_app = Celery(
     "stratum_ai",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["app.workers.tasks"],
+    include=[
+        "app.workers.tasks.sync",
+        "app.workers.tasks.rules",
+        "app.workers.tasks.competitors",
+        "app.workers.tasks.forecast",
+        "app.workers.tasks.creative",
+        "app.workers.tasks.audit",
+        "app.workers.tasks.whatsapp",
+        "app.workers.tasks.ml",
+        "app.workers.tasks.billing",
+        "app.workers.tasks.monitoring",
+        "app.workers.tasks.scores",
+        "app.workers.tasks.cdp",
+        "app.workers.tasks.cms",
+    ],
 )
 
 # Celery configuration
@@ -44,19 +58,26 @@ celery_app.conf.update(
     # Result settings
     result_expires=86400,  # Results expire after 24 hours
 
-    # Task routing
+    # Task routing (organized by domain module)
     task_routes={
-        "app.workers.tasks.sync_campaign_data": {"queue": "sync"},
-        "app.workers.tasks.evaluate_rules": {"queue": "rules"},
-        "app.workers.tasks.fetch_competitor_data": {"queue": "intel"},
-        "app.workers.tasks.generate_forecast": {"queue": "ml"},
+        # Sync tasks
+        "app.workers.tasks.sync.sync_campaign_data": {"queue": "sync"},
+        "app.workers.tasks.sync.sync_all_campaigns": {"queue": "sync"},
+        # Rules tasks
+        "app.workers.tasks.rules.evaluate_rules": {"queue": "rules"},
+        "app.workers.tasks.rules.evaluate_all_rules": {"queue": "rules"},
+        # Competitor tasks
+        "app.workers.tasks.competitors.fetch_competitor_data": {"queue": "intel"},
+        "app.workers.tasks.competitors.refresh_all_competitors": {"queue": "intel"},
+        # ML tasks
+        "app.workers.tasks.ml.*": {"queue": "ml"},
+        "app.workers.tasks.forecast.*": {"queue": "ml"},
         # CDP tasks
-        "app.workers.tasks.compute_cdp_segment": {"queue": "cdp"},
-        "app.workers.tasks.compute_all_cdp_segments": {"queue": "cdp"},
-        "app.workers.tasks.compute_cdp_rfm": {"queue": "cdp"},
-        "app.workers.tasks.compute_cdp_traits": {"queue": "cdp"},
-        "app.workers.tasks.compute_cdp_funnel": {"queue": "cdp"},
-        "app.workers.tasks.compute_all_cdp_funnels": {"queue": "cdp"},
+        "app.workers.tasks.cdp.*": {"queue": "cdp"},
+        # CMS tasks
+        "app.workers.tasks.cms.*": {"queue": "default"},
+        # WhatsApp tasks
+        "app.workers.tasks.whatsapp.*": {"queue": "default"},
     },
 
     # Task time limits
@@ -64,117 +85,119 @@ celery_app.conf.update(
     task_soft_time_limit=540,  # 9 minutes soft limit (for graceful shutdown)
 )
 
-# Beat schedule for periodic tasks
+# Beat schedule for periodic tasks (using new modular task paths)
 celery_app.conf.beat_schedule = {
-    # Evaluate rules every 15 minutes
+    # ==========================================================================
+    # Rules Engine Tasks
+    # ==========================================================================
     "evaluate-active-rules": {
-        "task": "app.workers.tasks.evaluate_all_rules",
+        "task": "app.workers.tasks.rules.evaluate_all_rules",
         "schedule": crontab(minute="*/15"),
         "options": {"queue": "rules"},
     },
 
-    # Sync campaign data every hour
+    # ==========================================================================
+    # Data Sync Tasks
+    # ==========================================================================
     "sync-all-campaigns": {
-        "task": "app.workers.tasks.sync_all_campaigns",
+        "task": "app.workers.tasks.sync.sync_all_campaigns",
         "schedule": crontab(minute=0),
         "options": {"queue": "sync"},
     },
 
-    # Refresh competitor data every 6 hours
+    # ==========================================================================
+    # Competitor Intelligence Tasks
+    # ==========================================================================
     "refresh-competitor-data": {
-        "task": "app.workers.tasks.refresh_all_competitors",
+        "task": "app.workers.tasks.competitors.refresh_all_competitors",
         "schedule": crontab(minute=0, hour="*/6"),
         "options": {"queue": "intel"},
     },
 
-    # Generate daily forecasts at 6 AM UTC
+    # ==========================================================================
+    # ML & Forecasting Tasks
+    # ==========================================================================
     "generate-daily-forecasts": {
-        "task": "app.workers.tasks.generate_daily_forecasts",
+        "task": "app.workers.tasks.forecast.generate_daily_forecasts",
         "schedule": crontab(minute=0, hour=6),
         "options": {"queue": "ml"},
     },
-
-    # Calculate creative fatigue scores daily at 3 AM UTC
-    "calculate-fatigue-scores": {
-        "task": "app.workers.tasks.calculate_all_fatigue_scores",
-        "schedule": crontab(minute=0, hour=3),
-        "options": {"queue": "default"},
-    },
-
-    # Process audit log queue every minute
-    "process-audit-logs": {
-        "task": "app.workers.tasks.process_audit_log_queue",
-        "schedule": crontab(minute="*"),
-        "options": {"queue": "default"},
-    },
-
-    # Cost allocation daily at 2 AM UTC
-    "calculate-cost-allocation": {
-        "task": "app.workers.tasks.calculate_cost_allocation",
-        "schedule": crontab(minute=0, hour=2),
-        "options": {"queue": "default"},
-    },
-
-    # Usage rollup daily at 1 AM UTC
-    "calculate-usage-rollup": {
-        "task": "app.workers.tasks.calculate_usage_rollup",
-        "schedule": crontab(minute=0, hour=1),
-        "options": {"queue": "default"},
-    },
-
-    # Pipeline health check hourly
-    "check-pipeline-health": {
-        "task": "app.workers.tasks.check_pipeline_health",
-        "schedule": crontab(minute=30),
-        "options": {"queue": "default"},
-    },
-
-    # Daily scoring at 4 AM UTC
-    "calculate-daily-scores": {
-        "task": "app.workers.tasks.calculate_daily_scores",
-        "schedule": crontab(minute=0, hour=4),
-        "options": {"queue": "default"},
-    },
-
-    # Live predictions every 30 minutes
     "run-all-predictions": {
-        "task": "app.workers.tasks.run_all_tenant_predictions",
+        "task": "app.workers.tasks.ml.run_all_tenant_predictions",
         "schedule": crontab(minute="*/30"),
         "options": {"queue": "ml"},
     },
 
-    # Process scheduled WhatsApp messages every minute
+    # ==========================================================================
+    # Creative & Scoring Tasks
+    # ==========================================================================
+    "calculate-fatigue-scores": {
+        "task": "app.workers.tasks.creative.calculate_all_fatigue_scores",
+        "schedule": crontab(minute=0, hour=3),
+        "options": {"queue": "default"},
+    },
+    "calculate-daily-scores": {
+        "task": "app.workers.tasks.scores.calculate_daily_scores",
+        "schedule": crontab(minute=0, hour=4),
+        "options": {"queue": "default"},
+    },
+
+    # ==========================================================================
+    # Audit & Monitoring Tasks
+    # ==========================================================================
+    "process-audit-logs": {
+        "task": "app.workers.tasks.audit.process_audit_log_queue",
+        "schedule": crontab(minute="*"),
+        "options": {"queue": "default"},
+    },
+    "check-pipeline-health": {
+        "task": "app.workers.tasks.monitoring.check_pipeline_health",
+        "schedule": crontab(minute=30),
+        "options": {"queue": "default"},
+    },
+
+    # ==========================================================================
+    # Billing & Usage Tasks
+    # ==========================================================================
+    "calculate-cost-allocation": {
+        "task": "app.workers.tasks.billing.calculate_cost_allocation",
+        "schedule": crontab(minute=0, hour=2),
+        "options": {"queue": "default"},
+    },
+    "calculate-usage-rollup": {
+        "task": "app.workers.tasks.billing.calculate_usage_rollup",
+        "schedule": crontab(minute=0, hour=1),
+        "options": {"queue": "default"},
+    },
+
+    # ==========================================================================
+    # WhatsApp Tasks
+    # ==========================================================================
     "process-scheduled-whatsapp": {
-        "task": "app.workers.tasks.process_scheduled_whatsapp_messages",
+        "task": "app.workers.tasks.whatsapp.process_scheduled_whatsapp_messages",
         "schedule": crontab(minute="*"),
         "options": {"queue": "default"},
     },
 
     # ==========================================================================
-    # CDP (Customer Data Platform) Scheduled Tasks
+    # CDP (Customer Data Platform) Tasks
     # ==========================================================================
-
-    # Compute CDP segments that need refresh every hour
     "compute-cdp-segments": {
-        "task": "app.workers.tasks.compute_all_cdp_segments",
+        "task": "app.workers.tasks.cdp.compute_all_cdp_segments",
         "schedule": crontab(minute=0),
         "options": {"queue": "cdp"},
     },
-
-    # Compute CDP funnels every 2 hours
     "compute-cdp-funnels": {
-        "task": "app.workers.tasks.compute_all_cdp_funnels",
+        "task": "app.workers.tasks.cdp.compute_all_cdp_funnels",
         "schedule": crontab(minute=0, hour="*/2"),
         "options": {"queue": "cdp"},
     },
 
     # ==========================================================================
-    # CMS (Content Management System) Scheduled Tasks
+    # CMS (Content Management System) Tasks
     # ==========================================================================
-
-    # Process scheduled CMS posts every minute (2026 Workflow)
     "publish-scheduled-cms-posts": {
-        "task": "app.workers.tasks.publish_scheduled_cms_posts",
+        "task": "app.workers.tasks.cms.publish_scheduled_cms_posts",
         "schedule": crontab(minute="*"),
         "options": {"queue": "default"},
     },
