@@ -90,7 +90,7 @@ class AutopilotService:
         """
         action = FactActionsQueue(
             tenant_id=tenant_id,
-            date=date.today(),
+            date=datetime.now(UTC).date(),
             action_type=action_type,
             entity_type=entity_type,
             entity_id=entity_id,
@@ -270,7 +270,7 @@ class AutopilotService:
         days: int = 7,
     ) -> dict[str, Any]:
         """Get summary of actions over the past N days."""
-        start_date = date.today() - timedelta(days=days)
+        start_date = datetime.now(UTC).date() - timedelta(days=days)
 
         # Status counts
         status_query = (

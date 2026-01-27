@@ -14,7 +14,7 @@ Routes:
 - PUT /api/tenant/{tenant_id}/settings - Update settings
 """
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -186,11 +186,11 @@ async def get_dashboard_overview(
     # Parse date
     if date_str:
         try:
-            query_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            query_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=UTC).date()
         except ValueError:
-            query_date = date.today()
+            query_date = datetime.now(UTC).date()
     else:
-        query_date = date.today()
+        query_date = datetime.now(UTC).date()
 
     # Get campaigns for tenant
     campaigns_query = tenant_query(db, Campaign, tenant_id)

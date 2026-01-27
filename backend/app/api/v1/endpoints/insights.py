@@ -8,7 +8,7 @@ API endpoints for Intelligence Layer features:
 - Anomaly alerts
 """
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -101,7 +101,7 @@ async def get_insights(
         )
 
     if target_date is None:
-        target_date = date.today()
+        target_date = datetime.now(UTC).date()
 
     # Get tenant features for autopilot level
     features = await get_tenant_features(db, tenant_id)
@@ -211,7 +211,7 @@ async def get_recommendations(
         )
 
     if target_date is None:
-        target_date = date.today()
+        target_date = datetime.now(UTC).date()
 
     # Get metrics
     entities_today = await get_entity_metrics(db, tenant_id, target_date)
@@ -302,7 +302,7 @@ async def get_anomalies(
         )
 
     if target_date is None:
-        target_date = date.today()
+        target_date = datetime.now(UTC).date()
 
     # In production, this would:
     # 1. Fetch historical metrics for the lookback period
@@ -383,7 +383,7 @@ async def get_kpis(
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
     if target_date is None:
-        target_date = date.today()
+        target_date = datetime.now(UTC).date()
 
     # Calculate comparison date
     if comparison == "yesterday":

@@ -7,7 +7,7 @@ and handling webhook interactions with the Meta Graph API.
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 import httpx
@@ -408,7 +408,7 @@ class WhatsAppClient:
                                 "from": message.get("from"),
                                 "wamid": message.get("id"),
                                 "timestamp": datetime.fromtimestamp(
-                                    int(message.get("timestamp", 0))
+                                    int(message.get("timestamp", 0)), tz=UTC
                                 ),
                                 "message_type": message.get("type"),
                                 "content": message.get(message.get("type"), {}),
@@ -424,7 +424,7 @@ class WhatsAppClient:
                                 "wamid": status.get("id"),
                                 "status": status.get("status"),
                                 "timestamp": datetime.fromtimestamp(
-                                    int(status.get("timestamp", 0))
+                                    int(status.get("timestamp", 0)), tz=UTC
                                 ),
                                 "recipient_id": status.get("recipient_id"),
                                 "conversation": status.get("conversation"),

@@ -55,7 +55,7 @@ import json
 import logging
 import os
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query, Request
@@ -355,7 +355,7 @@ async def process_meta_lead(page_id: str, lead_data: dict[str, Any]):
             "form_id": form_id,
             "ad_id": ad_id,
             "raw_data": lead_data,
-            "received_at": datetime.utcnow().isoformat(),
+            "received_at": datetime.now(UTC).isoformat(),
         },
     )
 
@@ -518,7 +518,7 @@ async def process_whatsapp_message(
             "content": content,
             "raw_message": message,
             "timestamp": timestamp,
-            "received_at": datetime.utcnow().isoformat(),
+            "received_at": datetime.now(UTC).isoformat(),
         },
     )
 
@@ -840,7 +840,7 @@ async def process_ecommerce_event(event_data: dict[str, Any]):
 @app.get("/health")
 async def health_check():
     """Health check endpoint for load balancers."""
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now(UTC).isoformat()}
 
 
 @app.get("/webhooks/status")

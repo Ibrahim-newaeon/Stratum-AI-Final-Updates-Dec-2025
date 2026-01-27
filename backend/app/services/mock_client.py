@@ -222,7 +222,7 @@ class MockAdNetwork:
 
         # Date range
         days_ago_start = rng.randint(30, 180)
-        start_date = date.today() - timedelta(days=days_ago_start)
+        start_date = datetime.now(UTC).date() - timedelta(days=days_ago_start)
 
         if status == CampaignStatus.COMPLETED:
             campaign_length = rng.randint(14, 60)
@@ -321,7 +321,7 @@ class MockAdNetwork:
         campaign_modifier = max(0.3, min(2.0, campaign_modifier))
 
         # Calculate days active
-        actual_end = end_date or date.today()
+        actual_end = end_date or datetime.now(UTC).date()
         days_active = (actual_end - start_date).days
         days_active = max(1, min(days_active, 180))
 

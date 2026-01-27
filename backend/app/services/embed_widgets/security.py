@@ -15,7 +15,7 @@ import hashlib
 import hmac
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import HTTPException, Request, Response, status
@@ -260,7 +260,7 @@ class EmbedSecurityService:
         - Signature for verification
         - Expiration timestamp
         """
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         expires_at = now + timedelta(seconds=ttl_seconds)
 
         signature = self.sign_widget_data(data, token_id, now)

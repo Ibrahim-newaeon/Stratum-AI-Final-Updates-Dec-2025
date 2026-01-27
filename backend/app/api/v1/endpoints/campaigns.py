@@ -6,7 +6,7 @@ Campaign CRUD operations and metrics retrieval.
 Implements Module B: Unified Campaign Model.
 """
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -323,7 +323,7 @@ async def get_campaign_metrics(
 
     # Default date range
     if not end_date:
-        end_date = date.today()
+        end_date = datetime.now(UTC).date()
     if not start_date:
         start_date = end_date - timedelta(days=30)
 

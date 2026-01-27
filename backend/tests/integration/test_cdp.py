@@ -96,7 +96,7 @@ def sample_purchase_event_data():
             {
                 "event_name": "Purchase",
                 "event_time": datetime.now(UTC).isoformat(),
-                "idempotency_key": f"order_{uuid4().hex[:8]}_{int(datetime.now().timestamp())}",
+                "idempotency_key": f"order_{uuid4().hex[:8]}_{int(datetime.now(UTC).timestamp())}",
                 "identifiers": [
                     {"type": "email", "value": "customer@example.com"},
                     {"type": "anonymous_id", "value": "anon_purchase_456"},

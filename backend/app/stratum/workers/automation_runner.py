@@ -61,7 +61,7 @@ Execution Modes
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import wraps
 from pathlib import Path
 from typing import Any
@@ -160,7 +160,7 @@ async def execute_action(
         "action_type": action_data.get("action_type"),
         "entity_id": action_data.get("entity_id"),
         "platform": action_data.get("platform"),
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "status": "pending",
     }
 
@@ -202,7 +202,7 @@ async def execute_action(
         result["executed_at"] = (
             executed_action.executed_at.isoformat() if executed_action.executed_at else None
         )
-        result["completed_at"] = datetime.utcnow().isoformat()
+        result["completed_at"] = datetime.now(UTC).isoformat()
 
         if executed_action.status == "failed":
             result["error"] = executed_action.error_message
@@ -213,7 +213,7 @@ async def execute_action(
     except Exception as e:
         result["status"] = "error"
         result["error"] = str(e)
-        result["completed_at"] = datetime.utcnow().isoformat()
+        result["completed_at"] = datetime.now(UTC).isoformat()
         logger.error(f"Action {execution_id} error: {e}")
 
         # Retry on transient errors
@@ -245,7 +245,7 @@ async def execute_action_batch(
         "failed": 0,
         "blocked": 0,
         "actions": [],
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
     }
 
     try:
@@ -291,7 +291,7 @@ async def execute_action_batch(
         results["error"] = str(e)
         logger.error(f"Batch {batch_id} failed: {e}")
 
-    results["completed_at"] = datetime.utcnow().isoformat()
+    results["completed_at"] = datetime.now(UTC).isoformat()
     return results
 
 
@@ -317,7 +317,7 @@ async def run_autopilot_for_account(
     result = {
         "platform": platform,
         "account_id": account_id,
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "rules_evaluated": 0,
         "actions_proposed": 0,
         "actions_approved": 0,
@@ -349,8 +349,8 @@ async def run_autopilot_for_account(
                 account_id=account_id,
                 entity_type="campaign",
                 entity_ids=[campaign.campaign_id],
-                date_start=datetime.utcnow() - timedelta(days=1),
-                date_end=datetime.utcnow(),
+                date_start=datetime.now(UTC) - timedelta(days=1),
+                date_end=datetime.now(UTC),
             )
 
             if campaign.campaign_id not in metrics_dict:
@@ -416,7 +416,7 @@ async def run_autopilot_for_account(
         result["error"] = str(e)
         logger.error(f"Autopilot error for {platform}/{account_id}: {e}")
 
-    result["completed_at"] = datetime.utcnow().isoformat()
+    result["completed_at"] = datetime.now(UTC).isoformat()
     return result
 
 
@@ -431,7 +431,7 @@ async def run_autopilot_all() -> dict[str, Any]:
     import yaml
 
     result = {
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "accounts_processed": 0,
         "total_actions": 0,
         "platforms": {},
@@ -474,7 +474,7 @@ async def run_autopilot_all() -> dict[str, Any]:
 
         result["platforms"][platform] = platform_results
 
-    result["completed_at"] = datetime.utcnow().isoformat()
+    result["completed_at"] = datetime.now(UTC).isoformat()
     return result
 
 
@@ -494,7 +494,7 @@ def queue_action_for_review(action_data: dict[str, Any], reason: str) -> dict[st
         "id": str(uuid.uuid4()),
         "action": action_data,
         "reason": reason,
-        "queued_at": datetime.utcnow().isoformat(),
+        "queued_at": datetime.now(UTC).isoformat(),
         "status": "pending_review",
     }
 
@@ -537,7 +537,7 @@ def approve_queued_action(action_id: str, approved_by: str) -> dict[str, Any]:
     return {
         "action_id": action_id,
         "approved_by": approved_by,
-        "approved_at": datetime.utcnow().isoformat(),
+        "approved_at": datetime.now(UTC).isoformat(),
         "status": "approved",
     }
 
@@ -552,7 +552,7 @@ def reject_queued_action(action_id: str, rejected_by: str, reason: str) -> dict[
     return {
         "action_id": action_id,
         "rejected_by": rejected_by,
-        "rejected_at": datetime.utcnow().isoformat(),
+        "rejected_at": datetime.now(UTC).isoformat(),
         "reason": reason,
         "status": "rejected",
     }
@@ -582,7 +582,7 @@ async def rollback_action(
     result = {
         "rollback_id": rollback_id,
         "original_action": original_action,
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
     }
 
     try:
@@ -605,7 +605,7 @@ async def rollback_action(
         await adapter.cleanup()
 
         result["status"] = "success" if executed.status == "completed" else "failed"
-        result["completed_at"] = datetime.utcnow().isoformat()
+        result["completed_at"] = datetime.now(UTC).isoformat()
 
         logger.info(f"Rollback {rollback_id} completed: {result['status']}")
 
@@ -629,7 +629,7 @@ def cleanup_completed_actions(days_to_keep: int = 30) -> dict[str, Any]:
 
     Runs daily at 3 AM.
     """
-    cutoff = datetime.utcnow() - timedelta(days=days_to_keep)
+    cutoff = datetime.now(UTC) - timedelta(days=days_to_keep)
 
     # This would delete old action records from database
 
@@ -649,7 +649,7 @@ def get_automation_stats() -> dict[str, Any]:
     # This would query the database for stats
 
     return {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "last_24h": {"total_actions": 0, "succeeded": 0, "failed": 0, "blocked": 0, "queued": 0},
         "by_platform": {},
         "by_action_type": {},

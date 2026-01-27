@@ -12,7 +12,7 @@ any advertising platform without knowing the specific API details.
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 from app.stratum.models import (
@@ -53,13 +53,13 @@ class RateLimiter:
         self.calls_per_minute = calls_per_minute
         self.burst_size = burst_size
         self.tokens = float(burst_size)
-        self.last_update = datetime.utcnow()
+        self.last_update = datetime.now(UTC)
         self._lock = asyncio.Lock()
 
     async def acquire(self) -> None:
         """Wait until a rate limit token is available."""
         async with self._lock:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             time_passed = (now - self.last_update).total_seconds()
 
             # Regenerate tokens

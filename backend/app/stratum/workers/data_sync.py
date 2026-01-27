@@ -61,7 +61,7 @@ Or combined:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import wraps
 from pathlib import Path
 from typing import Any
@@ -235,7 +235,7 @@ async def sync_all_platforms(self) -> dict[str, Any]:
     """
     import yaml
 
-    results = {"started_at": datetime.utcnow().isoformat(), "platforms": {}}
+    results = {"started_at": datetime.now(UTC).isoformat(), "platforms": {}}
 
     try:
         # Load configuration
@@ -266,7 +266,7 @@ async def sync_all_platforms(self) -> dict[str, Any]:
         except Exception as e:
             results["platforms"][platform] = {"status": "error", "error": str(e)}
 
-    results["completed_at"] = datetime.utcnow().isoformat()
+    results["completed_at"] = datetime.now(UTC).isoformat()
     return results
 
 
@@ -306,7 +306,7 @@ async def update_metrics(
     try:
         adapter = await get_adapter(platform_enum, credentials)
 
-        date_end = datetime.utcnow()
+        date_end = datetime.now(UTC)
         date_start = date_end - timedelta(days=lookback_days)
 
         metrics = await adapter.get_metrics(
@@ -355,7 +355,7 @@ async def update_metrics_all() -> dict[str, Any]:
 
     # Placeholder implementation
     results = {
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "status": "completed",
         "note": "Implement database query for active campaigns",
     }
@@ -419,7 +419,7 @@ async def refresh_emq_all() -> dict[str, Any]:
     """
     logger.info("Starting EMQ refresh for all platforms")
 
-    results = {"started_at": datetime.utcnow().isoformat(), "status": "completed"}
+    results = {"started_at": datetime.now(UTC).isoformat(), "status": "completed"}
 
     return results
 
@@ -484,7 +484,7 @@ def calculate_signal_health(
         "autopilot_allowed": health.autopilot_allowed,
         "issues": health.issues,
         "recommendations": health.recommendations,
-        "calculated_at": datetime.utcnow().isoformat(),
+        "calculated_at": datetime.now(UTC).isoformat(),
     }
 
 
@@ -499,7 +499,7 @@ async def calculate_all_signal_health() -> dict[str, Any]:
     logger.info("Calculating signal health for all accounts")
 
     results = {
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "accounts_processed": 0,
         "healthy": 0,
         "degraded": 0,
@@ -550,7 +550,7 @@ def send_signal_health_alert(
         "alert_type": alert_type,
         "account_id": account_id,
         "platform": platform,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -565,7 +565,7 @@ def send_weekly_digest() -> dict[str, Any]:
 
     # This would compile weekly stats and send to stakeholders
 
-    return {"status": "sent", "sent_at": datetime.utcnow().isoformat()}
+    return {"status": "sent", "sent_at": datetime.now(UTC).isoformat()}
 
 
 # ============================================================================
@@ -582,7 +582,7 @@ def cleanup_old_data(days_to_keep: int = 90) -> dict[str, Any]:
     """
     logger.info(f"Cleaning up data older than {days_to_keep} days")
 
-    cutoff_date = datetime.utcnow() - timedelta(days=days_to_keep)
+    cutoff_date = datetime.now(UTC) - timedelta(days=days_to_keep)
 
     # This would delete old records from the database
 

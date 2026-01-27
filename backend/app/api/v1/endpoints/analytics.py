@@ -5,7 +5,7 @@
 Analytics endpoints for dashboard data and KPI calculations.
 """
 
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -40,7 +40,7 @@ async def get_kpi_tiles(
     tenant_id = getattr(request.state, "tenant_id", None)
 
     # Determine date ranges
-    today = date.today()
+    today = datetime.now(UTC).date()
     if period == "today":
         start_date = today
         prev_start = today - timedelta(days=1)
@@ -408,7 +408,7 @@ async def get_performance_trends(
     Get daily performance trends for a specified metric.
     """
     tenant_id = getattr(request.state, "tenant_id", None)
-    start_date = date.today() - timedelta(days=days)
+    start_date = datetime.now(UTC).date() - timedelta(days=days)
 
     result = await db.execute(
         select(
@@ -492,7 +492,7 @@ async def get_tenant_overview(
                 func.sum(CampaignMetric.impressions).label("impressions"),
             ).where(
                 CampaignMetric.tenant_id == tenant.id,
-                CampaignMetric.date >= date.today() - timedelta(days=30),
+                CampaignMetric.date >= datetime.now(UTC).date() - timedelta(days=30),
             )
         )
         metrics = metrics_result.one()
@@ -560,7 +560,7 @@ async def get_executive_summary(
             detail="Admin access required",
         )
 
-    today = date.today()
+    today = datetime.now(UTC).date()
     start_30d = today - timedelta(days=30)
     prev_start = today - timedelta(days=60)
     prev_end = today - timedelta(days=31)

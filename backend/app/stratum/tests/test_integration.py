@@ -24,7 +24,7 @@ sys.path.insert(
     str(Path(__file__).resolve().parent.parent.parent.parent.parent),
 )
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 # Use ASCII-compatible symbols for Windows
 PASS = "[PASS]"
@@ -140,7 +140,7 @@ def test_signal_health_calculator():
     # Test 1: Calculate with good EMQ scores
     health = calculator.calculate(
         emq_scores=[8.5, 9.0, 7.5],  # 0-10 scale
-        last_data_received=datetime.utcnow() - timedelta(hours=2),
+        last_data_received=datetime.now(UTC) - timedelta(hours=2),
         platform_revenue=10000.0,
         ga4_revenue=9800.0,  # 2% variance
     )
@@ -159,7 +159,7 @@ def test_signal_health_calculator():
     # Test 2: Calculate with degraded data
     health_degraded = calculator.calculate(
         emq_scores=[5.0, 4.5],  # Low EMQ
-        last_data_received=datetime.utcnow() - timedelta(hours=30),  # Stale
+        last_data_received=datetime.now(UTC) - timedelta(hours=30),  # Stale
         platform_revenue=10000.0,
         ga4_revenue=7000.0,  # 43% variance (high)
     )

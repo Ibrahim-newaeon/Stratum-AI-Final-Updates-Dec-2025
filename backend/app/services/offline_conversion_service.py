@@ -221,7 +221,7 @@ class MetaOfflineUploader(BaseOfflineUploader):
                         params={"access_token": access_token},
                         json={
                             "data": batch,
-                            "upload_tag": f"stratum_offline_{datetime.now().strftime('%Y%m%d')}",
+                            "upload_tag": f"stratum_offline_{datetime.now(UTC).strftime('%Y%m%d')}",
                         },
                         timeout=60.0,
                     )
@@ -236,7 +236,7 @@ class MetaOfflineUploader(BaseOfflineUploader):
                 errors = [r.get("error", {}) for r in all_results if "error" in r]
 
                 return UploadResult(
-                    batch_id=f"meta_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    batch_id=f"meta_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
                     platform=self.PLATFORM_NAME,
                     success=len(errors) == 0,
                     total_records=len(conversions),
@@ -366,7 +366,7 @@ class GoogleOfflineUploader(BaseOfflineUploader):
                     failed_count = len(partial_errors.get("details", []))
 
                     return UploadResult(
-                        batch_id=f"google_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        batch_id=f"google_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
                         platform=self.PLATFORM_NAME,
                         success=failed_count == 0,
                         total_records=len(conversions),
@@ -480,7 +480,7 @@ class TikTokOfflineUploader(BaseOfflineUploader):
 
                 if result.get("code") == 0:
                     return UploadResult(
-                        batch_id=f"tiktok_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        batch_id=f"tiktok_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
                         platform=self.PLATFORM_NAME,
                         success=True,
                         total_records=len(conversions),
@@ -661,7 +661,7 @@ class OfflineConversionService:
                 conversion_value = float(value_str.replace(",", "").replace("$", ""))
 
         return OfflineConversion(
-            conversion_id=f"{platform}_{row_index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            conversion_id=f"{platform}_{row_index}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
             platform=platform,
             email=email,
             phone=phone,
@@ -706,7 +706,7 @@ class OfflineConversionService:
         uploader = self._uploaders[platform]
 
         # Create batch record
-        batch_id = f"{platform}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        batch_id = f"{platform}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
         batch = OfflineConversionBatch(
             batch_id=batch_id,
             platform=platform,

@@ -68,7 +68,7 @@ entity modified.
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 from google.ads.googleads.client import GoogleAdsClient
@@ -344,7 +344,7 @@ class GoogleAdsAdapter(BaseAdapter):
                 business_id=str(self.login_customer_id),
                 timezone=cc.time_zone,
                 currency=cc.currency_code,
-                last_synced=datetime.utcnow(),
+                last_synced=datetime.now(UTC),
                 raw_data={
                     "id": cc.id,
                     "name": cc.descriptive_name,
@@ -390,7 +390,7 @@ class GoogleAdsAdapter(BaseAdapter):
                 account_name=c.descriptive_name or f"Account {c.id}",
                 timezone=c.time_zone,
                 currency=c.currency_code,
-                last_synced=datetime.utcnow(),
+                last_synced=datetime.now(UTC),
             )
             accounts.append(account)
 
@@ -665,7 +665,7 @@ class GoogleAdsAdapter(BaseAdapter):
                     platform=Platform.GOOGLE,
                     event_name=ca.name,
                     score=base_score,
-                    last_updated=datetime.utcnow(),
+                    last_updated=datetime.now(UTC),
                 )
                 emq_scores.append(emq)
 
@@ -705,7 +705,7 @@ class GoogleAdsAdapter(BaseAdapter):
                 raise ValueError(f"Unsupported action type: {action.action_type}")
 
             action.status = "completed"
-            action.executed_at = datetime.utcnow()
+            action.executed_at = datetime.now(UTC)
             action.result = result
 
             logger.info(f"Successfully executed {action.action_type} on {action.entity_id}")
@@ -1033,7 +1033,7 @@ class GoogleAdsAdapter(BaseAdapter):
             bidding_strategy=bidding_strategy,
             target_cpa=target_cpa,
             target_roas=target_roas,
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data={
                 "campaign_id": c.id,
                 "name": c.name,
@@ -1067,7 +1067,7 @@ class GoogleAdsAdapter(BaseAdapter):
             adset_name=ag.name,
             status=self.STATUS_FROM_GOOGLE.get(ag.status.name, EntityStatus.ACTIVE),
             bid_amount=bid_amount,
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data={
                 "ad_group_id": ag.id,
                 "name": ag.name,
@@ -1113,7 +1113,7 @@ class GoogleAdsAdapter(BaseAdapter):
             headline=headline,
             description=description,
             destination_url=destination_url,
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data={
                 "ad_id": ad.id,
                 "type": ad.type_.name if ad.type_ else None,

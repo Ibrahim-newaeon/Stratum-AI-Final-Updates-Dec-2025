@@ -127,7 +127,7 @@ class TestTenantDataIsolation:
         db_session,
     ):
         """Test that signal health queries are scoped to tenant."""
-        from datetime import date
+        from datetime import UTC, datetime
 
         from app.base_models import Tenant
         from app.models.trust_layer import FactSignalHealthDaily, SignalHealthStatus
@@ -142,7 +142,7 @@ class TestTenantDataIsolation:
 
         other_health = FactSignalHealthDaily(
             tenant_id=other_tenant.id,
-            date=date.today(),
+            date=datetime.now(UTC).date(),
             platform="google",
             emq_score=95.0,
             status=SignalHealthStatus.OK,

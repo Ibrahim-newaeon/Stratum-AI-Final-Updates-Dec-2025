@@ -13,7 +13,7 @@ Features:
 - Margin trending
 """
 
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Any, Optional
 from uuid import UUID
 
@@ -197,7 +197,7 @@ class ProfitCalculationService:
             Calculated profit metrics
         """
         if calculation_date is None:
-            calculation_date = date.today()
+            calculation_date = datetime.now(UTC).date()
 
         # Get COGS
         cogs_result = await self._get_cogs(

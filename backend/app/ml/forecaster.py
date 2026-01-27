@@ -6,7 +6,7 @@ Time-series forecasting for ROAS predictions.
 Uses historical data to forecast future performance.
 """
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import numpy as np
@@ -65,7 +65,7 @@ class ROASForecaster:
 
         # Generate forecasts
         predictions = []
-        today = date.today()
+        today = datetime.now(UTC).date()
 
         if granularity == "daily":
             for i in range(1, days_ahead + 1):
@@ -113,7 +113,7 @@ class ROASForecaster:
             .where(
                 CampaignMetric.campaign_id.in_(campaign_ids),
                 CampaignMetric.tenant_id == tenant_id,
-                CampaignMetric.date >= date.today() - timedelta(days=lookback_days),
+                CampaignMetric.date >= datetime.now(UTC).date() - timedelta(days=lookback_days),
             )
             .order_by(CampaignMetric.date)
         )
@@ -317,7 +317,7 @@ class ROASForecaster:
     ) -> dict[str, Any]:
         """Generate mock forecast when no historical data available."""
         predictions = []
-        today = date.today()
+        today = datetime.now(UTC).date()
 
         base_roas = 2.0
         base_spend = 500

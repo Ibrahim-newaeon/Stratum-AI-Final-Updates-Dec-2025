@@ -12,7 +12,7 @@ Features:
 """
 
 import math
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Optional
 
 from sqlalchemy import and_, select
@@ -77,7 +77,7 @@ class ForecastingService:
             Forecast results with daily predictions and confidence intervals
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Load historical data
         historical = await self._load_historical_data(metric, platform, campaign_id, as_of_date)
@@ -180,7 +180,7 @@ class ForecastingService:
         Returns:
             EOM forecast with MTD actual and projections
         """
-        today = date.today()
+        today = datetime.now(UTC).date()
         month = today.replace(day=1) if month is None else month.replace(day=1)
 
         # Get MTD actual
@@ -411,7 +411,7 @@ class ForecastingService:
         campaign_id: Optional[str] = None,
     ) -> None:
         """Save forecast to database for tracking accuracy."""
-        today = date.today()
+        today = datetime.now(UTC).date()
 
         for daily in forecast_result.get("daily_forecasts", []):
             forecast_date = date.fromisoformat(daily["date"])

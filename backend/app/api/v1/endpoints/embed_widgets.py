@@ -12,7 +12,7 @@ Endpoints:
 - Public widget data endpoint (for embedding)
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Optional
 from uuid import UUID
 
@@ -468,7 +468,7 @@ def _get_widget_data(widget: EmbedWidget, db: Session) -> dict:
             "overall_score": 87,
             "status": "healthy",
             "platforms": {"meta": 92, "google": 85, "tiktok": 78},
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.ROAS_DISPLAY.value:
@@ -477,7 +477,7 @@ def _get_widget_data(widget: EmbedWidget, db: Session) -> dict:
             "trend": "up",
             "trend_percentage": 12.5,
             "period": "Last 7 days",
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.TRUST_GATE_STATUS.value:
@@ -486,7 +486,7 @@ def _get_widget_data(widget: EmbedWidget, db: Session) -> dict:
             "signal_health": 87,
             "automation_mode": "normal",
             "pending_actions": 3,
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.SPEND_TRACKER.value:
@@ -496,7 +496,7 @@ def _get_widget_data(widget: EmbedWidget, db: Session) -> dict:
             "utilization_percentage": 75.4,
             "currency": "USD",
             "period": "This month",
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.ANOMALY_ALERT.value:
@@ -505,7 +505,7 @@ def _get_widget_data(widget: EmbedWidget, db: Session) -> dict:
             "anomaly_count": 2,
             "severity": "medium",
             "most_recent": "Unusual spend spike on Meta campaign",
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.CAMPAIGN_PERFORMANCE.value:
@@ -517,7 +517,7 @@ def _get_widget_data(widget: EmbedWidget, db: Session) -> dict:
             ],
             "total_campaigns": 12,
             "top_performer": "Retargeting",
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
     return {}

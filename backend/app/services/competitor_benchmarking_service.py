@@ -812,7 +812,7 @@ class SeasonalBenchmarkAdjuster:
 
     def get_current_quarter(self) -> str:
         """Get current quarter."""
-        month = datetime.now().month
+        month = datetime.now(UTC).month
         if month <= 3:
             return "Q1"
         elif month <= 6:

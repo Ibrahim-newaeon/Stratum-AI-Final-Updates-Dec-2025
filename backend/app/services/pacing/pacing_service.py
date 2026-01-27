@@ -12,7 +12,7 @@ Features:
 - Pacing summary snapshots
 """
 
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Optional
 from uuid import UUID
 
@@ -70,7 +70,7 @@ class PacingService:
             Pacing metrics including MTD, projections, and status
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Load target
         result = await self.db.execute(
@@ -256,7 +256,7 @@ class PacingService:
             List of pacing results for all matching targets
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Build query
         conditions = [Target.tenant_id == self.tenant_id]
@@ -322,7 +322,7 @@ class PacingService:
             Created PacingSummary or None if failed
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Get current pacing
         pacing = await self.get_target_pacing(target_id, as_of_date)
@@ -366,7 +366,7 @@ class PacingService:
             existing.on_track = pacing["status_flags"]["on_track"]
             existing.at_risk = pacing["status_flags"]["at_risk"]
             existing.will_miss = pacing["status_flags"]["will_miss"]
-            existing.updated_at = datetime.utcnow()
+            existing.updated_at = datetime.now(UTC)
 
             await self.db.commit()
             return existing
@@ -418,7 +418,7 @@ class PacingService:
             Summary of created snapshots
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Get all active targets
         result = await self.db.execute(
@@ -469,7 +469,7 @@ class PacingService:
             List of historical pacing snapshots
         """
         if end_date is None:
-            end_date = date.today()
+            end_date = datetime.now(UTC).date()
         if start_date is None:
             start_date = end_date - timedelta(days=30)
 
@@ -705,7 +705,7 @@ class TargetService:
         ]:
             target.target_value_cents = int(target.target_value * 100)
 
-        target.updated_at = datetime.utcnow()
+        target.updated_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(target)
 
@@ -718,7 +718,7 @@ class TargetService:
             return False
 
         target.is_active = False
-        target.updated_at = datetime.utcnow()
+        target.updated_at = datetime.now(UTC)
         await self.db.commit()
 
         return True
@@ -729,7 +729,7 @@ class TargetService:
         platform: Optional[str] = None,
     ) -> list[Target]:
         """Get targets that are currently active (period includes today)."""
-        today = date.today()
+        today = datetime.now(UTC).date()
 
         conditions = [
             Target.tenant_id == self.tenant_id,

@@ -9,7 +9,7 @@ Sends real-time notifications to Slack channels for:
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Optional
 
@@ -140,7 +140,7 @@ class SlackNotificationService:
         """
         emoji = self._get_trust_gate_emoji(status)
         color = self._get_trust_gate_color(status)
-        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
         # Determine action text
         action_text = {
@@ -210,7 +210,7 @@ class SlackNotificationService:
         emoji = self._get_severity_emoji(severity)
         change = current_health - previous_health
         direction = "📈" if change > 0 else "📉"
-        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
         # Determine health status text
         if current_health >= 70:
@@ -273,7 +273,7 @@ class SlackNotificationService:
         """
         severity = AlertSeverity.CRITICAL if abs(z_score) > 3 else AlertSeverity.WARNING
         emoji = self._get_severity_emoji(severity)
-        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
         deviation_pct = (
             ((current_value - expected_value) / expected_value * 100) if expected_value != 0 else 0
@@ -329,7 +329,7 @@ class SlackNotificationService:
             stats: Dictionary with summary statistics
             webhook_url: Override webhook URL
         """
-        timestamp = datetime.utcnow().strftime("%Y-%m-%d")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%d")
 
         # Extract stats with defaults
         total_automations = stats.get("total_automations", 0)
@@ -405,7 +405,7 @@ class SlackNotificationService:
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"🔗 Connection verified at {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+                        "text": f"🔗 Connection verified at {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
                     }
                 ],
             },

@@ -9,7 +9,7 @@ Service for Trust Layer operations:
 """
 
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Any, Optional
 
 from sqlalchemy import and_, select
@@ -49,7 +49,7 @@ class SignalHealthService:
             Signal health summary with status, cards, and banners
         """
         if target_date is None:
-            target_date = date.today()
+            target_date = datetime.now(UTC).date()
 
         # Get records for the date
         result = await self.db.execute(
@@ -281,7 +281,7 @@ class AttributionVarianceService:
             Attribution variance summary with status, cards, and banners
         """
         if target_date is None:
-            target_date = date.today()
+            target_date = datetime.now(UTC).date()
 
         # Get records for the date
         result = await self.db.execute(

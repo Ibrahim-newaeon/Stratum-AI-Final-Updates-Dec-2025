@@ -11,7 +11,7 @@ Features:
 - Historical alert tracking
 """
 
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Optional
 from uuid import UUID
 
@@ -75,7 +75,7 @@ class PacingAlertService:
             List of created alerts
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Get current pacing
         pacing = await self.pacing_service.get_target_pacing(target_id, as_of_date)
@@ -189,7 +189,7 @@ class PacingAlertService:
             Summary of alert check results
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Get all active targets
         result = await self.db.execute(
@@ -241,7 +241,7 @@ class PacingAlertService:
             Created alert if cliff detected, None otherwise
         """
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         # Get target
         result = await self.db.execute(
@@ -373,7 +373,7 @@ class PacingAlertService:
             return None
 
         alert.status = AlertStatus.ACKNOWLEDGED
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(alert)
 
@@ -401,10 +401,10 @@ class PacingAlertService:
             return None
 
         alert.status = AlertStatus.RESOLVED
-        alert.resolved_at = datetime.utcnow()
+        alert.resolved_at = datetime.now(UTC)
         alert.resolved_by_user_id = user_id
         alert.resolution_notes = resolution_notes
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(UTC)
 
         await self.db.commit()
         await self.db.refresh(alert)
@@ -433,10 +433,10 @@ class PacingAlertService:
             return None
 
         alert.status = AlertStatus.DISMISSED
-        alert.resolved_at = datetime.utcnow()
+        alert.resolved_at = datetime.now(UTC)
         alert.resolved_by_user_id = user_id
         alert.resolution_notes = f"Dismissed: {reason}" if reason else "Dismissed"
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(UTC)
 
         await self.db.commit()
         await self.db.refresh(alert)
@@ -460,7 +460,7 @@ class PacingAlertService:
             Alert summary statistics
         """
         if end_date is None:
-            end_date = date.today()
+            end_date = datetime.now(UTC).date()
         if start_date is None:
             start_date = end_date - timedelta(days=30)
 
@@ -547,7 +547,7 @@ class PacingAlertService:
                 existing.severity = AlertSeverity.CRITICAL
                 existing.title = title
                 existing.message = message
-                existing.updated_at = datetime.utcnow()
+                existing.updated_at = datetime.now(UTC)
                 await self.db.commit()
                 logger.info(f"Escalated alert {existing.id} to CRITICAL")
             return None
@@ -619,9 +619,9 @@ class PacingAlertService:
 
             for alert in alerts_to_resolve:
                 alert.status = AlertStatus.RESOLVED
-                alert.resolved_at = datetime.utcnow()
+                alert.resolved_at = datetime.now(UTC)
                 alert.resolution_notes = "Auto-resolved: Pacing returned to normal"
-                alert.updated_at = datetime.utcnow()
+                alert.updated_at = datetime.now(UTC)
 
             if alerts_to_resolve:
                 await self.db.commit()
@@ -730,7 +730,7 @@ class AlertNotificationService:
                             },
                         ],
                         "footer": "Stratum AI Pacing Alerts",
-                        "ts": int(datetime.utcnow().timestamp()),
+                        "ts": int(datetime.now(UTC).timestamp()),
                     }
                 ]
             }
@@ -963,7 +963,7 @@ class AlertNotificationService:
 
         # Track what was sent
         alert.notifications_sent = results
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(UTC)
         await self.db.commit()
 
         return results

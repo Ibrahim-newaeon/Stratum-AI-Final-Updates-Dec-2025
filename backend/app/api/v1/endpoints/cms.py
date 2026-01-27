@@ -744,7 +744,7 @@ async def admin_create_post(
     # Check slug uniqueness
     existing = await db.execute(select(CMSPost.id).where(CMSPost.slug == slug))
     if existing.scalar_one_or_none():
-        slug = f"{slug}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        slug = f"{slug}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
     # Calculate reading time and word count
     reading_time = body.reading_time_minutes or calculate_reading_time(body.content)

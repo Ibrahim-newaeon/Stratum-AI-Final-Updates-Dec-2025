@@ -55,7 +55,7 @@ endpoints that are unlikely to change frequently.
 
 import json
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 import requests
@@ -271,7 +271,7 @@ class TikTokAdapter(BaseAdapter):
                     account_name=adv.get("name", "Unknown"),
                     timezone=adv.get("timezone", "UTC"),
                     currency=adv.get("currency", "USD"),
-                    last_synced=datetime.utcnow(),
+                    last_synced=datetime.now(UTC),
                     raw_data=adv,
                 )
                 accounts.append(account)
@@ -533,7 +533,7 @@ class TikTokAdapter(BaseAdapter):
                     platform=Platform.TIKTOK,
                     event_name="pixel_" + str(pixel_id),
                     score=6.0,  # Default moderate score
-                    last_updated=datetime.utcnow(),
+                    last_updated=datetime.now(UTC),
                 )
                 emq_scores.append(emq)
 
@@ -570,7 +570,7 @@ class TikTokAdapter(BaseAdapter):
                 raise ValueError(f"Unsupported action type: {action.action_type}")
 
             action.status = "completed"
-            action.executed_at = datetime.utcnow()
+            action.executed_at = datetime.now(UTC)
             action.result = result
 
             logger.info(f"Successfully executed {action.action_type} on TikTok")
@@ -761,7 +761,7 @@ class TikTokAdapter(BaseAdapter):
             daily_budget=raw.get("budget", 0) / 100 if raw.get("budget") else None,
             created_at=self._parse_datetime(raw.get("create_time")),
             updated_at=self._parse_datetime(raw.get("modify_time")),
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data=raw,
         )
 
@@ -778,7 +778,7 @@ class TikTokAdapter(BaseAdapter):
             ),
             daily_budget=raw.get("budget", 0) / 100 if raw.get("budget") else None,
             bid_amount=raw.get("bid", 0) / 100 if raw.get("bid") else None,
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data=raw,
         )
 
@@ -797,7 +797,7 @@ class TikTokAdapter(BaseAdapter):
             headline=raw.get("ad_text", ""),
             destination_url=raw.get("landing_page_url", ""),
             call_to_action=raw.get("call_to_action", ""),
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data=raw,
         )
 
@@ -809,7 +809,7 @@ class TikTokAdapter(BaseAdapter):
             # TikTok uses various formats; try common ones
             for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d"]:
                 try:
-                    return datetime.strptime(timestamp, fmt)
+                    return datetime.strptime(timestamp, fmt).replace(tzinfo=UTC)
                 except ValueError:
                     continue
             return None

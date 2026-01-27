@@ -7,7 +7,7 @@ API endpoints for uploading training data and managing ML models.
 
 import os
 import shutil
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Optional
@@ -117,7 +117,7 @@ async def upload_training_data(
         data_dir = Path(settings.ml_models_path).parent / "training_data"
         data_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         output_path = data_dir / f"training_data_{timestamp}.csv"
         df.to_csv(output_path, index=False)
 
@@ -310,7 +310,7 @@ async def generate_sample_data(request: GenerateSampleRequest):
     data_dir = Path(settings.ml_models_path).parent / "training_data"
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     output_path = data_dir / f"sample_data_{timestamp}.csv"
     df.to_csv(output_path, index=False)
 
@@ -343,7 +343,7 @@ async def list_training_data():
                 "name": csv_file.name,
                 "path": str(csv_file),
                 "size_bytes": stat.st_size,
-                "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=UTC).isoformat(),
             }
         )
 

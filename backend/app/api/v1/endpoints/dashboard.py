@@ -283,7 +283,7 @@ class DashboardExportRequest(BaseModel):
 
 def get_date_range(period: TimePeriod) -> tuple[date, date]:
     """Get start and end dates for a time period."""
-    today = date.today()
+    today = datetime.now(UTC).date()
 
     if period == TimePeriod.TODAY:
         return today, today
@@ -1215,7 +1215,7 @@ async def export_dashboard(
                 writer.writerow([rec["campaign"], rec["type"], rec["description"]])
 
         output.seek(0)
-        filename = f"stratum-dashboard-export-{date.today().isoformat()}.csv"
+        filename = f"stratum-dashboard-export-{datetime.now(UTC).date().isoformat()}.csv"
 
         return StreamingResponse(
             iter([output.getvalue()]),
@@ -1225,7 +1225,7 @@ async def export_dashboard(
 
     else:
         # JSON format
-        filename = f"stratum-dashboard-export-{date.today().isoformat()}.json"
+        filename = f"stratum-dashboard-export-{datetime.now(UTC).date().isoformat()}.json"
 
         return StreamingResponse(
             iter([json.dumps(export_data, indent=2, default=str)]),

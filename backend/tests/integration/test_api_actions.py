@@ -12,7 +12,7 @@ Tests cover:
 - Bulk operations
 """
 
-from datetime import date
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -71,7 +71,7 @@ class TestActionsQueue:
         # Create a new action to dismiss
         action = FactActionsQueue(
             tenant_id=test_tenant["id"],
-            date=date.today(),
+            date=datetime.now(UTC).date(),
             action_type="pause_campaign",
             entity_type="campaign",
             entity_id="campaign_456",
@@ -108,7 +108,7 @@ class TestActionsQueue:
         for i in range(3):
             action = FactActionsQueue(
                 tenant_id=test_tenant["id"],
-                date=date.today(),
+                date=datetime.now(UTC).date(),
                 action_type="budget_increase",
                 entity_type="campaign",
                 entity_id=f"campaign_bulk_{i}",
@@ -149,7 +149,7 @@ class TestActionValidation:
         # Create an action that exceeds caps
         large_action = FactActionsQueue(
             tenant_id=test_tenant["id"],
-            date=date.today(),
+            date=datetime.now(UTC).date(),
             action_type="budget_increase",
             entity_type="campaign",
             entity_id="campaign_large",
@@ -190,7 +190,7 @@ class TestActionValidation:
         # Set signal health to degraded
         health = FactSignalHealthDaily(
             tenant_id=test_tenant["id"],
-            date=date.today(),
+            date=datetime.now(UTC).date(),
             platform="meta",
             emq_score=65.0,  # Below threshold
             event_loss_pct=15.0,  # High loss
@@ -201,7 +201,7 @@ class TestActionValidation:
         # Create an action
         action = FactActionsQueue(
             tenant_id=test_tenant["id"],
-            date=date.today(),
+            date=datetime.now(UTC).date(),
             action_type="budget_increase",
             entity_type="campaign",
             entity_id="campaign_blocked",

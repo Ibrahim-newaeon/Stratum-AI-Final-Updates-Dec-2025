@@ -1646,7 +1646,7 @@ async def export_subscribers_csv(
         message="Export generated successfully",
         data={
             "csv_content": output.getvalue(),
-            "filename": f"subscribers_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            "filename": f"subscribers_export_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
             "total_records": len(subscribers),
         },
     )

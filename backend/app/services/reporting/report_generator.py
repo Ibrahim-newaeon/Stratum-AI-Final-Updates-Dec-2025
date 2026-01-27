@@ -8,7 +8,7 @@ Collects data from various sources and formats it according to the template.
 """
 
 import json
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 from uuid import UUID
@@ -514,7 +514,7 @@ class ReportGenerator:
 
             # Update execution
             execution.status = ExecutionStatus.COMPLETED
-            execution.completed_at = datetime.utcnow()
+            execution.completed_at = datetime.now(UTC)
             execution.duration_seconds = (
                 execution.completed_at - execution.started_at
             ).total_seconds()
@@ -535,7 +535,7 @@ class ReportGenerator:
         except Exception as e:
             logger.error("report_generation_failed", error=str(e), execution_id=str(execution.id))
             execution.status = ExecutionStatus.FAILED
-            execution.completed_at = datetime.utcnow()
+            execution.completed_at = datetime.now(UTC)
             execution.error_message = str(e)
             await self.db.commit()
 
@@ -635,7 +635,7 @@ class ReportGenerator:
         reference_date: Optional[date] = None,
     ) -> tuple[date, date]:
         """Parse relative date range into absolute dates."""
-        ref = reference_date or date.today()
+        ref = reference_date or datetime.now(UTC).date()
 
         if date_range_type == "yesterday":
             d = ref - timedelta(days=1)

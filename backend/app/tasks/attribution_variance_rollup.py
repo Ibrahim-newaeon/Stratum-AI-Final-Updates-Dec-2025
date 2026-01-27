@@ -147,7 +147,7 @@ def attribution_variance_rollup(
                 rollup_date = (
                     date.fromisoformat(target_date)
                     if target_date
-                    else date.today() - timedelta(days=1)
+                    else datetime.now(UTC).date() - timedelta(days=1)
                 )
 
                 logger.info(
