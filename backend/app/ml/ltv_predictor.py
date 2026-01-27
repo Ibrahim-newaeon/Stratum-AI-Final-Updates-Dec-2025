@@ -29,7 +29,7 @@ logger = get_logger(__name__)
 # Try to import ML libraries
 try:
     import joblib
-    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+    from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
 

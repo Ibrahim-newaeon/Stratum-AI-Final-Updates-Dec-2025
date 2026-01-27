@@ -66,7 +66,7 @@ from functools import wraps
 from typing import Any
 
 try:
-    from celery import Celery, chain, group, shared_task
+    from celery import shared_task
     from celery.schedules import crontab
 
     CELERY_AVAILABLE = True
