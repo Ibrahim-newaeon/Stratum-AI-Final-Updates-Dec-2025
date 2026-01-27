@@ -476,10 +476,7 @@ class ROASOptimizer:
             new_spend = current_spend * mult
 
             # Apply diminishing returns for increases
-            if mult > 1:
-                roas_adjustment = 1 - (mult - 1) * 0.15  # 15% ROAS decline per 100% increase
-            else:
-                roas_adjustment = 1 + (1 - mult) * 0.1  # Slight ROAS improvement with decrease
+            roas_adjustment = 1 - (mult - 1) * 0.15 if mult > 1 else 1 + (1 - mult) * 0.1
 
             predicted_roas = current_roas * roas_adjustment
             predicted_revenue = new_spend * predicted_roas

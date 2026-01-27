@@ -363,11 +363,7 @@ class AttributionService:
             )
 
         # Update deal with primary attribution (based on model)
-        if model == AttributionModel.FIRST_TOUCH:
-            primary_tp = touchpoints[0]
-        else:
-            # All other models use last touch as primary
-            primary_tp = touchpoints[-1]
+        primary_tp = touchpoints[0] if model == AttributionModel.FIRST_TOUCH else touchpoints[-1]
 
         deal.attributed_touchpoint_id = primary_tp.id
         deal.attributed_campaign_id = primary_tp.campaign_id

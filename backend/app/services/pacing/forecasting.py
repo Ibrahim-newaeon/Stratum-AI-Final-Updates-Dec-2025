@@ -181,10 +181,7 @@ class ForecastingService:
             EOM forecast with MTD actual and projections
         """
         today = date.today()
-        if month is None:
-            month = today.replace(day=1)
-        else:
-            month = month.replace(day=1)
+        month = today.replace(day=1) if month is None else month.replace(day=1)
 
         # Get MTD actual
         eom = self._get_end_of_month(month)

@@ -84,10 +84,7 @@ def scaling_score(
 
     # Volume penalty (insufficient conversions)
     min_conversions = params.min_conversions
-    if today.conversions > 0:
-        vol_penalty = clamp01(min_conversions / today.conversions)
-    else:
-        vol_penalty = 1.0  # No conversions = max penalty
+    vol_penalty = clamp01(min_conversions / today.conversions) if today.conversions > 0 else 1.0
 
     # Score components (weights tuned for e-commerce ROAS)
     score = 0.0

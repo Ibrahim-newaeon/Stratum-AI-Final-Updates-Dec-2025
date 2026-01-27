@@ -131,10 +131,7 @@ def calculate_event_match_rate(metrics: PlatformMetrics) -> EmqDriverResult:
         # Estimate from pixel/CAPI overlap
         min_events = min(metrics.pixel_events, metrics.capi_events)
         max_events = max(metrics.pixel_events, metrics.capi_events)
-        if max_events > 0:
-            match_rate = (min_events / max_events) * 100
-        else:
-            match_rate = 0.0
+        match_rate = min_events / max_events * 100 if max_events > 0 else 0.0
 
     # Clamp to 0-100
     value = min(100.0, max(0.0, match_rate))

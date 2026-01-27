@@ -1447,10 +1447,7 @@ async def get_event_trends(
     for name in all_names:
         curr = current_names.get(name, 0)
         prev = previous_names.get(name, 0)
-        if prev > 0:
-            trend_pct = ((curr - prev) / prev) * 100
-        else:
-            trend_pct = 100.0 if curr > 0 else 0.0
+        trend_pct = (curr - prev) / prev * 100 if prev > 0 else 100.0 if curr > 0 else 0.0
 
         event_trends.append(
             {
