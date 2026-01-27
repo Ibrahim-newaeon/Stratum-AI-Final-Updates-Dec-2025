@@ -69,7 +69,6 @@ ignore = [
     "E741",   # Ambiguous variable name (l, O, I - used in some algorithms)
     "F401",   # Unused import (will fix incrementally)
     "F403",   # Star imports (used in __init__.py)
-    "F821",   # Undefined name (will fix incrementally)
     "F841",   # Unused variable (sometimes intentional)
     "N803",   # Argument name lowercase (ML uses X, Y convention)
     "N805",   # First argument self (SQLAlchemy uses cls patterns)
