@@ -588,7 +588,7 @@ class SegmentTransitionTracker:
 
     def __init__(self):
         self.transition_history: list[SegmentTransition] = []
-        self.customer_segment_history: dict[str, list[Tuple[datetime, RFMSegment]]] = {}
+        self.customer_segment_history: dict[str, list[tuple[datetime, RFMSegment]]] = {}
 
     def record_snapshot(
         self,

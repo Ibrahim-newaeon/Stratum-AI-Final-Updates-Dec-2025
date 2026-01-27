@@ -21,6 +21,7 @@ Supports:
 import csv
 import hashlib
 import io
+import statistics
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum

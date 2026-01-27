@@ -380,7 +380,7 @@ async def get_training_requirements(
 
     Returns data availability and recommendations.
     """
-    from sqlalchemy import func
+    from sqlalchemy import and_, func, select
 
     from app.models.crm import CRMDeal, Touchpoint
 

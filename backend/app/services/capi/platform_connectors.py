@@ -9,6 +9,7 @@ Production-ready with retry logic, circuit breakers, and rate limiting.
 
 import asyncio
 import hashlib
+import statistics
 import threading
 import time
 import uuid

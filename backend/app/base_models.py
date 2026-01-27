@@ -17,7 +17,20 @@ Models:
 
 from datetime import UTC, datetime
 from enum import Enum as PyEnum
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from app.models.campaign_builder import (
+        CampaignDraft,
+        CampaignPublishLog,
+        TenantAdAccount,
+        TenantPlatformConnection,
+    )
+    from app.models.trust_layer import (
+        FactActionsQueue,
+        FactAttributionVarianceDaily,
+        FactSignalHealthDaily,
+    )
 
 from sqlalchemy import (
     Boolean,

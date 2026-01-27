@@ -12,6 +12,7 @@ Provides:
 - Budget optimization based on predicted LTV
 """
 
+import statistics
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum

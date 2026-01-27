@@ -8,7 +8,7 @@ Tests for high priority features:
 3. Creative Performance Tracking
 """
 
-from datetime import UTC, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
