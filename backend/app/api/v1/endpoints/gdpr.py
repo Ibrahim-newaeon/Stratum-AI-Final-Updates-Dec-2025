@@ -172,7 +172,7 @@ async def export_user_data(
         generate(),
         media_type="application/json",
         headers={
-            "Content-Disposition": f"attachment; filename=user_data_export_{user.id}_{datetime.now().strftime('%Y%m%d')}.json"
+            "Content-Disposition": f"attachment; filename=user_data_export_{user.id}_{datetime.now(UTC).strftime('%Y%m%d')}.json"
         },
     )
 

@@ -434,8 +434,8 @@ async def pipeline_roas(
     """
     from datetime import datetime as dt
 
-    start = dt.strptime(start_date, "%Y-%m-%d").date()
-    end = dt.strptime(end_date, "%Y-%m-%d").date()
+    start = dt.strptime(start_date, "%Y-%m-%d").replace(tzinfo=UTC).date()
+    end = dt.strptime(end_date, "%Y-%m-%d").replace(tzinfo=UTC).date()
 
     # Build query
     conditions = [

@@ -35,7 +35,7 @@ For Stratum's Trust-Gated Autopilot, we primarily use:
 import hashlib
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, Optional
 
@@ -122,7 +122,7 @@ class GoogleAdsChangeHistory:
             List of ChangeEvent objects
         """
         if since is None:
-            since = self._last_poll_time or (datetime.utcnow() - timedelta(hours=1))
+            since = self._last_poll_time or (datetime.now(UTC) - timedelta(hours=1))
 
         # Build GAQL query for change_event
         query = f"""
@@ -176,7 +176,7 @@ class GoogleAdsChangeHistory:
 
                 changes.append(change)
 
-            self._last_poll_time = datetime.utcnow()
+            self._last_poll_time = datetime.now(UTC)
             logger.info(f"Google Ads: Found {len(changes)} changes since {since}")
 
         except Exception as e:
@@ -297,7 +297,7 @@ class GoogleOfflineConversions:
         # Upload a WhatsApp purchase
         result = await uploader.upload_conversion(OfflineConversion(
             conversion_action_id="123456789",
-            conversion_time=datetime.utcnow(),
+            conversion_time=datetime.now(UTC),
             email="customer@example.com",
             phone="+966501234567",
             conversion_value=4500.0,
@@ -689,7 +689,7 @@ class GoogleAdsIntegration:
 
     async def get_recent_changes(self, hours: int = 1) -> list[ChangeEvent]:
         """Get recent account changes."""
-        since = datetime.utcnow() - timedelta(hours=hours)
+        since = datetime.now(UTC) - timedelta(hours=hours)
         return await self.change_history.get_changes(since=since)
 
     async def track_conversion(
@@ -710,7 +710,7 @@ class GoogleAdsIntegration:
         """
         conversion = OfflineConversion(
             conversion_action_id=conversion_action_id,
-            conversion_time=conversion_time or datetime.utcnow(),
+            conversion_time=conversion_time or datetime.now(UTC),
             gclid=gclid,
             email=email,
             phone=phone,

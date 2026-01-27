@@ -18,7 +18,7 @@ The composite score determines whether automation can proceed:
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Optional
 
@@ -103,7 +103,7 @@ class SignalHealthCalculator:
 
         health = calculator.calculate(
             emq_scores=[8.5, 7.2],  # Platform EMQ scores (0-10)
-            last_data_received=datetime.utcnow() - timedelta(hours=2),
+            last_data_received=datetime.now(UTC) - timedelta(hours=2),
             platform_revenue=10000.0,
             ga4_revenue=9500.0,
             historical_variance=[0.05, 0.08, 0.12],
@@ -193,7 +193,7 @@ class SignalHealthCalculator:
             cdp_emq_score=round(cdp_score, 1) if cdp_score is not None else None,
             status=status,
             issues=issues,
-            last_updated=datetime.utcnow(),
+            last_updated=datetime.now(UTC),
         )
 
         cdp_info = f", CDP:{health.cdp_emq_score}" if health.cdp_emq_score is not None else ""
@@ -266,7 +266,7 @@ class SignalHealthCalculator:
             issues.append("No data timestamp available - assuming stale")
             return 50.0  # Moderate penalty
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         age_hours = (now - last_data_received).total_seconds() / 3600
 
         if age_hours <= self.config.max_data_age_hours:
@@ -474,5 +474,5 @@ class SignalHealthCalculator:
             anomaly_score=round(anomaly_component, 1),
             status=status,
             issues=issues,
-            last_updated=datetime.utcnow(),
+            last_updated=datetime.now(UTC),
         )

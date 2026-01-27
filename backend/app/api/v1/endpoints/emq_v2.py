@@ -17,7 +17,7 @@ Provides endpoints for:
 """
 
 import uuid
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -66,7 +66,7 @@ def parse_date(date_str: Optional[str]) -> Optional[date]:
     if not date_str:
         return None
     try:
-        return datetime.strptime(date_str, "%Y-%m-%d").date()
+        return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=UTC).date()
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 

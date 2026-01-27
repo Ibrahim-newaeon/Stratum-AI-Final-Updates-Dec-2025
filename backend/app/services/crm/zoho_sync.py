@@ -560,7 +560,7 @@ class ZohoSyncService:
             if close_date is None:
                 # Try parsing YYYY-MM-DD format
                 with contextlib.suppress(ValueError, TypeError):
-                    close_date = datetime.strptime(deal_data["Closing_Date"], "%Y-%m-%d").date()
+                    close_date = datetime.strptime(deal_data["Closing_Date"], "%Y-%m-%d").replace(tzinfo=UTC).date()
 
         # Parse dates
         crm_created = None

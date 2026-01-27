@@ -16,7 +16,7 @@ import asyncio
 import contextlib
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Optional
 
@@ -62,7 +62,7 @@ class WebSocketMessage:
 
     type: str
     payload: Any
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat() + "Z")
 
     def to_json(self) -> str:
         return json.dumps(
@@ -79,7 +79,7 @@ class WebSocketMessage:
         return cls(
             type=parsed.get("type", "unknown"),
             payload=parsed.get("payload", {}),
-            timestamp=parsed.get("timestamp", datetime.utcnow().isoformat() + "Z"),
+            timestamp=parsed.get("timestamp", datetime.now(UTC).isoformat() + "Z"),
         )
 
 

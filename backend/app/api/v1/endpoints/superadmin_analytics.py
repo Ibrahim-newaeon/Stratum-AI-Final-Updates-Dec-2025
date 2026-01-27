@@ -6,7 +6,7 @@ API endpoints for Superadmin analytics and profitability views.
 Provides cross-tenant insights and platform health monitoring.
 """
 
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -45,7 +45,7 @@ async def get_platform_overview(
     if not getattr(request.state, "is_superadmin", False):
         raise HTTPException(status_code=403, detail="Superadmin access required")
 
-    start_date = date.today() - timedelta(days=days)
+    start_date = datetime.now(UTC).date() - timedelta(days=days)
 
     # Count distinct tenants with signal health data
     tenant_count_query = select(func.count(func.distinct(FactSignalHealthDaily.tenant_id))).where(
@@ -142,7 +142,7 @@ async def get_tenant_profitability(
     if not getattr(request.state, "is_superadmin", False):
         raise HTTPException(status_code=403, detail="Superadmin access required")
 
-    start_date = date.today() - timedelta(days=days)
+    start_date = datetime.now(UTC).date() - timedelta(days=days)
 
     # Tenant activity summary
     tenant_query = (
@@ -242,7 +242,7 @@ async def get_signal_health_trends(
     if not getattr(request.state, "is_superadmin", False):
         raise HTTPException(status_code=403, detail="Superadmin access required")
 
-    start_date = date.today() - timedelta(days=days)
+    start_date = datetime.now(UTC).date() - timedelta(days=days)
 
     # Daily averages
     daily_query = (
@@ -328,7 +328,7 @@ async def get_actions_analytics(
     if not getattr(request.state, "is_superadmin", False):
         raise HTTPException(status_code=403, detail="Superadmin access required")
 
-    start_date = date.today() - timedelta(days=days)
+    start_date = datetime.now(UTC).date() - timedelta(days=days)
 
     # Action type breakdown
     type_query = (

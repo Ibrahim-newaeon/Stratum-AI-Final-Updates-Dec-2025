@@ -49,7 +49,7 @@ retrying failed requests after progressively longer delays.
 
 import hashlib
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Optional
 
@@ -674,7 +674,7 @@ class MetaAdapter(BaseAdapter):
                 raise ValueError(f"Unsupported action type: {action.action_type}")
 
             action.status = "completed"
-            action.executed_at = datetime.utcnow()
+            action.executed_at = datetime.now(UTC)
             action.result = result
 
             logger.info(f"Successfully executed {action.action_type} on {action.entity_id}")
@@ -1044,7 +1044,7 @@ class MetaAdapter(BaseAdapter):
             budget_remaining=self._cents_to_dollars(raw.get("budget_remaining")),
             created_at=self._parse_datetime(raw.get("created_time")),
             updated_at=self._parse_datetime(raw.get("updated_time")),
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data=raw,
         )
 
@@ -1079,7 +1079,7 @@ class MetaAdapter(BaseAdapter):
             end_time=self._parse_datetime(raw.get("end_time")),
             created_at=self._parse_datetime(raw.get("created_time")),
             updated_at=self._parse_datetime(raw.get("updated_time")),
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data=raw,
         )
 
@@ -1100,7 +1100,7 @@ class MetaAdapter(BaseAdapter):
             creative_id=creative.get("id") if isinstance(creative, dict) else None,
             created_at=self._parse_datetime(raw.get("created_time")),
             updated_at=self._parse_datetime(raw.get("updated_time")),
-            last_synced=datetime.utcnow(),
+            last_synced=datetime.now(UTC),
             raw_data=raw,
         )
 

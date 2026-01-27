@@ -13,7 +13,7 @@ Features:
 
 import csv
 import io
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any, Optional
 from uuid import UUID
 
@@ -184,7 +184,7 @@ class ProductCatalogService:
             if field in allowed_fields and value is not None:
                 setattr(product, field, value)
 
-        product.updated_at = datetime.utcnow()
+        product.updated_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(product)
 
@@ -197,7 +197,7 @@ class ProductCatalogService:
             return False
 
         product.status = ProductStatus.DISCONTINUED
-        product.updated_at = datetime.utcnow()
+        product.updated_at = datetime.now(UTC)
         await self.db.commit()
 
         return True
@@ -341,7 +341,7 @@ class ProductCatalogService:
     ) -> Optional[dict[str, Any]]:
         """Get product with current COGS data."""
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         product = await self.get_product(product_id)
         if not product:
@@ -427,7 +427,7 @@ class ProductCatalogService:
         total = total_result.scalar()
 
         # Products with COGS
-        today = date.today()
+        today = datetime.now(UTC).date()
         with_cogs_result = await self.db.execute(
             select(func.count(func.distinct(ProductMargin.product_id))).where(
                 and_(

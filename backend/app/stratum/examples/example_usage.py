@@ -12,7 +12,7 @@ Run this script to see how the different components work together.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 # Configure logging
 logging.basicConfig(
@@ -71,8 +71,8 @@ async def example_meta_integration():
     logger.info("      account_id='act_123456789',")
     logger.info("      entity_type='campaign',")
     logger.info("      entity_ids=['1234567890'],")
-    logger.info("      date_start=datetime.now() - timedelta(days=7),")
-    logger.info("      date_end=datetime.now()")
+    logger.info("      date_start=datetime.now(UTC) - timedelta(days=7),")
+    logger.info("      date_end=datetime.now(UTC)")
     logger.info("  )")
 
     # Simulate EMQ scores
@@ -93,8 +93,8 @@ async def example_meta_integration():
             spend=100.0 + i * 5,
             conversions=20 + i,
             cpa=5.0 + (i * 0.1),
-            date_start=datetime.now() - timedelta(days=7 - i),
-            date_end=datetime.now() - timedelta(days=6 - i),
+            date_start=datetime.now(UTC) - timedelta(days=7 - i),
+            date_end=datetime.now(UTC) - timedelta(days=6 - i),
         )
         recent_metrics.append(metrics)
     logger.info("  Generated 7 days of metrics data")
@@ -183,7 +183,7 @@ async def example_multi_platform_sync():
                 campaign_id=f"{platform.value}_campaign_1",
                 campaign_name=f"{platform.value.title()} - Furniture Sales Q1",
                 daily_budget=100.0,
-                last_synced=datetime.now(),
+                last_synced=datetime.now(UTC),
             ),
             UnifiedCampaign(
                 platform=platform,
@@ -191,7 +191,7 @@ async def example_multi_platform_sync():
                 campaign_id=f"{platform.value}_campaign_2",
                 campaign_name=f"{platform.value.title()} - Brand Awareness",
                 daily_budget=50.0,
-                last_synced=datetime.now(),
+                last_synced=datetime.now(UTC),
             ),
         ]
 
@@ -286,8 +286,8 @@ async def example_budget_optimization():
             clicks=600,
             spend=300,
             conversions=65,
-            date_start=datetime.now() - timedelta(days=1),
-            date_end=datetime.now(),
+            date_start=datetime.now(UTC) - timedelta(days=1),
+            date_end=datetime.now(UTC),
         )
     ]
 

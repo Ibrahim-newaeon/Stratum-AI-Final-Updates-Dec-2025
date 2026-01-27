@@ -57,7 +57,7 @@ import json
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
@@ -369,7 +369,7 @@ class WhatsAppAdapter(BaseAdapter):
             message_id=message_id,
             wa_id=to,
             message_type=MessageType.TEXT,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             text=text,
             status=MessageStatus.SENT,
             is_outbound=True,
@@ -429,7 +429,7 @@ class WhatsAppAdapter(BaseAdapter):
             message_id=message_id,
             wa_id=to,
             message_type=MessageType.TEMPLATE,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             template_name=template_name,
             template_params={"components": components},
             status=MessageStatus.SENT,
@@ -492,7 +492,7 @@ class WhatsAppAdapter(BaseAdapter):
             message_id=message_id,
             wa_id=to,
             message_type=MessageType.INTERACTIVE,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             interactive_data=interactive,
             status=MessageStatus.SENT,
             is_outbound=True,
@@ -554,7 +554,7 @@ class WhatsAppAdapter(BaseAdapter):
             message_id=message_id,
             wa_id=to,
             message_type=MessageType(media_type.upper()),
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             media_id=media_id,
             media_url=media_url,
             text=caption,
@@ -762,7 +762,7 @@ class WhatsAppAdapter(BaseAdapter):
             message_type=MessageType(msg_type.upper())
             if msg_type in [m.value for m in MessageType]
             else MessageType.TEXT,
-            timestamp=datetime.fromtimestamp(int(msg_data.get("timestamp", 0))),
+            timestamp=datetime.fromtimestamp(int(msg_data.get("timestamp", 0)), tz=UTC),
             status=MessageStatus.DELIVERED,
             is_outbound=False,
         )
@@ -837,7 +837,7 @@ class WhatsAppAdapter(BaseAdapter):
 
         if wa_id not in self._conversations:
             self._conversations[wa_id] = Conversation(
-                conversation_id=f"conv_{wa_id}_{datetime.utcnow().timestamp()}",
+                conversation_id=f"conv_{wa_id}_{datetime.now(UTC).timestamp()}",
                 wa_id=wa_id,
                 started_at=message.timestamp,
                 expires_at=message.timestamp + timedelta(hours=24),
@@ -876,7 +876,7 @@ class WhatsAppAdapter(BaseAdapter):
         if conv:
             conv.is_converted = True
             conv.conversion_value = value
-            conv.conversion_time = datetime.utcnow()
+            conv.conversion_time = datetime.now(UTC)
 
         # Send to Meta CAPI for attribution
         # This requires the Meta Pixel ID in credentials
@@ -890,7 +890,7 @@ class WhatsAppAdapter(BaseAdapter):
             "data": [
                 {
                     "event_name": event_name,
-                    "event_time": int(datetime.utcnow().timestamp()),
+                    "event_time": int(datetime.now(UTC).timestamp()),
                     "action_source": "chat",  # Special source for WhatsApp
                     "messaging_channel": "whatsapp",
                     "user_data": {

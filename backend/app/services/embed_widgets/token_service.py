@@ -15,7 +15,7 @@ Security Features:
 
 import hashlib
 import hmac
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -113,8 +113,8 @@ class EmbedTokenService:
         refresh_token, refresh_hash = EmbedToken.generate_refresh_token()
 
         # Calculate expiration
-        expires_at = datetime.utcnow() + timedelta(days=expires_in_days)
-        refresh_expires_at = datetime.utcnow() + timedelta(days=self.DEFAULT_REFRESH_EXPIRY_DAYS)
+        expires_at = datetime.now(UTC) + timedelta(days=expires_in_days)
+        refresh_expires_at = datetime.now(UTC) + timedelta(days=self.DEFAULT_REFRESH_EXPIRY_DAYS)
 
         # Determine rate limit based on tier
         rate_limit = self._get_rate_limit_for_tier(tier)
@@ -179,7 +179,7 @@ class EmbedTokenService:
             )
 
         # Check refresh token expiry
-        if token.refresh_expires_at and token.refresh_expires_at < datetime.utcnow():
+        if token.refresh_expires_at and token.refresh_expires_at < datetime.now(UTC):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired"
             )
@@ -192,8 +192,8 @@ class EmbedTokenService:
         token.token_prefix = new_prefix
         token.token_hash = new_hash
         token.refresh_token_hash = new_refresh_hash
-        token.expires_at = datetime.utcnow() + timedelta(days=self.DEFAULT_TOKEN_EXPIRY_DAYS)
-        token.refresh_expires_at = datetime.utcnow() + timedelta(
+        token.expires_at = datetime.now(UTC) + timedelta(days=self.DEFAULT_TOKEN_EXPIRY_DAYS)
+        token.refresh_expires_at = datetime.now(UTC) + timedelta(
             days=self.DEFAULT_REFRESH_EXPIRY_DAYS
         )
 
@@ -245,7 +245,7 @@ class EmbedTokenService:
             )
 
         # Check expiration
-        if db_token.expires_at < datetime.utcnow():
+        if db_token.expires_at < datetime.now(UTC):
             db_token.status = TokenStatus.EXPIRED.value
             self.db.commit()
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
@@ -266,7 +266,7 @@ class EmbedTokenService:
             )
 
         # Update usage stats
-        db_token.last_used_at = datetime.utcnow()
+        db_token.last_used_at = datetime.now(UTC)
         db_token.last_origin = origin
         db_token.total_requests += 1
 
@@ -287,7 +287,7 @@ class EmbedTokenService:
 
         # Update widget stats
         widget.total_views += 1
-        widget.last_viewed_at = datetime.utcnow()
+        widget.last_viewed_at = datetime.now(UTC)
 
         self.db.commit()
 
@@ -407,7 +407,7 @@ class EmbedTokenService:
 
     def _check_rate_limit(self, token: EmbedToken) -> bool:
         """Check and update rate limit for token."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         # Reset counter if minute has passed
         if (

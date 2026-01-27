@@ -25,7 +25,7 @@ This script shows how to implement each step.
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("stratum.example.whatsapp")
@@ -220,7 +220,7 @@ async def example_server_side_conversions():
     logger.info("\n[EVENT] Step 3: Create Conversion Event")
     event = ConversionEvent(
         event_name=EventType.PURCHASE,
-        event_time=datetime.utcnow(),
+        event_time=datetime.now(UTC),
         user_data=user_data,
         custom_data={
             "currency": "SAR",

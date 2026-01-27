@@ -12,7 +12,7 @@ Handles:
 """
 
 import json
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Optional
 
 from sqlalchemy import and_, func, select
@@ -53,7 +53,7 @@ class EmqService:
             Dict with score, previousScore, confidenceBand, drivers, lastUpdated
         """
         if target_date is None:
-            target_date = date.today()
+            target_date = datetime.now(UTC).date()
 
         previous_date = target_date - timedelta(days=1)
 
@@ -190,7 +190,7 @@ class EmqService:
             confidence_band = "unsafe"
 
         last_updated = (
-            max(r.updated_at for r in current_records) if current_records else datetime.utcnow()
+            max(r.updated_at for r in current_records) if current_records else datetime.now(UTC)
         )
 
         return {
@@ -245,7 +245,7 @@ class EmqService:
             if estimated_emq >= 60
             else "unsafe",
             "drivers": self._get_estimated_drivers(estimated_emq),
-            "lastUpdated": datetime.utcnow().isoformat() + "Z",
+            "lastUpdated": datetime.now(UTC).isoformat() + "Z",
         }
 
     def _get_default_emq_response(self) -> dict[str, Any]:
@@ -255,7 +255,7 @@ class EmqService:
             "previousScore": 73.0,
             "confidenceBand": "directional",
             "drivers": self._get_estimated_drivers(75.0),
-            "lastUpdated": datetime.utcnow().isoformat() + "Z",
+            "lastUpdated": datetime.now(UTC).isoformat() + "Z",
         }
 
     def _get_estimated_drivers(self, base_score: float) -> list[dict[str, Any]]:
@@ -406,7 +406,7 @@ class EmqService:
     ) -> dict[str, Any]:
         """Get signal volatility index and weekly data."""
 
-        end_date = date.today()
+        end_date = datetime.now(UTC).date()
         start_date = end_date - timedelta(weeks=weeks)
 
         # Query weekly EMQ scores
@@ -471,7 +471,7 @@ class EmqService:
 
     def _get_default_volatility(self, weeks: int) -> dict[str, Any]:
         """Return default volatility data."""
-        today = date.today()
+        today = datetime.now(UTC).date()
         data_points = []
         for i in range(weeks):
             week_date = today - timedelta(weeks=weeks - 1 - i)
@@ -690,7 +690,7 @@ class EmqAdminService:
         """Get EMQ benchmarks across all tenants."""
 
         if target_date is None:
-            target_date = date.today()
+            target_date = datetime.now(UTC).date()
 
         # Query EMQ scores grouped by platform
         query = select(
@@ -781,7 +781,7 @@ class EmqAdminService:
         """Get portfolio-wide EMQ overview."""
 
         if target_date is None:
-            target_date = date.today()
+            target_date = datetime.now(UTC).date()
 
         # Count tenants by band
         query = select(

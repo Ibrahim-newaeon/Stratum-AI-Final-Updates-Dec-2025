@@ -14,7 +14,7 @@ Features:
 
 import asyncio
 import logging
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any, Optional
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -284,7 +284,7 @@ class ReportScheduler:
     ) -> datetime:
         """Calculate the next run time for a schedule."""
         if after is None:
-            after = datetime.utcnow()
+            after = datetime.now(UTC)
 
         tz = ZoneInfo(schedule.timezone)
         local_now = after.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
@@ -405,7 +405,7 @@ class ReportScheduler:
         limit: int = 50,
     ) -> list[ScheduledReport]:
         """Get schedules that are due for execution."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         query = (
             select(ScheduledReport)
@@ -437,7 +437,7 @@ class ReportScheduler:
         from app.services.reporting.report_generator import ReportGenerator
 
         start_date, end_date = ReportGenerator.parse_date_range(
-            schedule.date_range_type, datetime.utcnow().date()
+            schedule.date_range_type, datetime.now(UTC).date()
         )
 
         # Determine format
@@ -471,7 +471,7 @@ class ReportScheduler:
             )
 
             # Update schedule
-            schedule.last_run_at = datetime.utcnow()
+            schedule.last_run_at = datetime.now(UTC)
             schedule.last_run_status = ExecutionStatus.COMPLETED
             schedule.run_count += 1
             schedule.next_run_at = self.calculate_next_run(schedule)
@@ -489,7 +489,7 @@ class ReportScheduler:
             logger.error(f"Schedule {schedule.id} failed: {e!s}")
 
             # Update schedule with failure
-            schedule.last_run_at = datetime.utcnow()
+            schedule.last_run_at = datetime.now(UTC)
             schedule.last_run_status = ExecutionStatus.FAILED
             schedule.failure_count += 1
             schedule.next_run_at = self.calculate_next_run(schedule)
@@ -660,7 +660,7 @@ class SchedulerWorker:
                     and_(
                         ScheduledReport.is_active == True,
                         ScheduledReport.is_paused == False,
-                        ScheduledReport.next_run_at <= datetime.utcnow(),
+                        ScheduledReport.next_run_at <= datetime.now(UTC),
                     )
                 )
                 .distinct()

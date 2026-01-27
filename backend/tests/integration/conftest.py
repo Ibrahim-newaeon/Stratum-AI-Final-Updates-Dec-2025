@@ -15,7 +15,7 @@ Set TEST_DATABASE_URL environment variable or use default test database.
 
 import os
 from collections.abc import AsyncGenerator, Generator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -301,7 +301,7 @@ async def test_signal_health(db_session, test_tenant) -> dict:
 
     record = FactSignalHealthDaily(
         tenant_id=test_tenant["id"],
-        date=date.today(),
+        date=datetime.now(UTC).date(),
         platform="meta",
         emq_score=85.0,
         event_loss_pct=3.5,
@@ -331,7 +331,7 @@ async def test_action(db_session, test_tenant, test_user) -> dict:
 
     action = FactActionsQueue(
         tenant_id=test_tenant["id"],
-        date=date.today(),
+        date=datetime.now(UTC).date(),
         action_type="budget_increase",
         entity_type="campaign",
         entity_id="campaign_123",

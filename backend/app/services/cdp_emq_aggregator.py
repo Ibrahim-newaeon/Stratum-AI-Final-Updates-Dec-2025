@@ -67,7 +67,7 @@ class CDPEMQAggregator:
             - issues: List of detected issues
         """
         if target_date is None:
-            target_date = date.today()
+            target_date = datetime.now(UTC).date()
 
         start_date = target_date - timedelta(days=lookback_days)
 
@@ -166,7 +166,7 @@ class CDPEMQAggregator:
         Returns:
             List of daily EMQ records with date, score, event_count
         """
-        end_date = date.today()
+        end_date = datetime.now(UTC).date()
         start_date = end_date - timedelta(days=days)
 
         result = await self.db.execute(

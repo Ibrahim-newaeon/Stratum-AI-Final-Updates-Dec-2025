@@ -49,7 +49,7 @@ Integration Opportunities
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 # =============================================================================
@@ -99,7 +99,7 @@ class SheetsReportingIntegration:
         if platforms is None:
             platforms = ["meta", "google", "tiktok", "snapchat"]
         report_data = {
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "date_range": date_range,
             "platforms": {},
         }
@@ -354,7 +354,7 @@ class LeadFollowUpIntegration:
 
         # 3. Create calendar reminder via Calendar MCP
         if self.calendar:
-            reminder_time = datetime.utcnow() + timedelta(hours=2)
+            reminder_time = datetime.now(UTC) + timedelta(hours=2)
             # Calendar MCP would create this
             results["calendar"] = {
                 "status": "would_create",
@@ -474,7 +474,7 @@ class PerformanceAlertIntegration:
 
         lines = [
             f"Performance Alert for: {campaign_name}",
-            f"Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+            f"Time: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
             "",
             "Issues Detected:",
             "",

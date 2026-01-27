@@ -568,5 +568,5 @@ class TestZohoDataValidation:
             if "T" in date_str:
                 parsed = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
             else:
-                parsed = datetime.strptime(date_str, "%Y-%m-%d")
+                parsed = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=UTC)
             assert parsed is not None

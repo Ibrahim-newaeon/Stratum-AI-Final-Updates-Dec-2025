@@ -53,7 +53,7 @@ Example:
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Optional
 
@@ -660,7 +660,7 @@ class AutopilotEngine:
         last_change = self._execution_history.get(entity_key)
         days_since = 0
         if last_change:
-            days_since = (datetime.utcnow() - last_change).days
+            days_since = (datetime.now(UTC) - last_change).days
 
         # Build context
         context = RuleContext(
@@ -700,7 +700,7 @@ class AutopilotEngine:
                         # Execute if auto_execute is on and approved
                         if self.auto_execute and gate_result.decision == GateDecision.APPROVED:
                             # Record execution time for cooldown
-                            self._execution_history[entity_key] = datetime.utcnow()
+                            self._execution_history[entity_key] = datetime.now(UTC)
 
                 results.append(
                     {

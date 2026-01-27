@@ -48,7 +48,7 @@ The API version is included in the URL path.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 
 import requests
@@ -233,7 +233,7 @@ class SnapchatAdapter(BaseAdapter):
 
         # Calculate expiry time (Snapchat returns expires_in in seconds)
         expires_in = token_data.get("expires_in", 1800)
-        self.token_expires_at = datetime.utcnow() + timedelta(seconds=expires_in - 60)
+        self.token_expires_at = datetime.now(UTC) + timedelta(seconds=expires_in - 60)
 
         # Update refresh token if a new one was provided
         if "refresh_token" in token_data:
@@ -244,7 +244,7 @@ class SnapchatAdapter(BaseAdapter):
     async def _ensure_valid_token(self) -> None:
         """Ensure the access token is valid, refreshing if needed."""
         if not self.access_token or (
-            self.token_expires_at and datetime.utcnow() >= self.token_expires_at
+            self.token_expires_at and datetime.now(UTC) >= self.token_expires_at
         ):
             await self._refresh_access_token()
 
@@ -290,7 +290,7 @@ class SnapchatAdapter(BaseAdapter):
                     business_id=self.organization_id,
                     timezone=aa.get("timezone", "UTC"),
                     currency=aa.get("currency", "USD"),
-                    last_synced=datetime.utcnow(),
+                    last_synced=datetime.now(UTC),
                     raw_data=aa,
                 )
                 accounts.append(account)
@@ -337,7 +337,7 @@ class SnapchatAdapter(BaseAdapter):
                     lifetime_budget=self._micros_to_dollars(c.get("lifetime_spend_cap_micro")),
                     created_at=self._parse_datetime(c.get("created_at")),
                     updated_at=self._parse_datetime(c.get("updated_at")),
-                    last_synced=datetime.utcnow(),
+                    last_synced=datetime.now(UTC),
                     raw_data=c,
                 )
                 campaigns.append(campaign)
@@ -403,7 +403,7 @@ class SnapchatAdapter(BaseAdapter):
                 bid_amount=self._micros_to_dollars(sq.get("bid_micro")),
                 start_time=self._parse_datetime(sq.get("start_time")),
                 end_time=self._parse_datetime(sq.get("end_time")),
-                last_synced=datetime.utcnow(),
+                last_synced=datetime.now(UTC),
                 raw_data=sq,
             )
             adsets.append(adset)
@@ -458,7 +458,7 @@ class SnapchatAdapter(BaseAdapter):
                 ),
                 creative_id=ad_data.get("creative_id"),
                 review_status=ad_data.get("review_status"),
-                last_synced=datetime.utcnow(),
+                last_synced=datetime.now(UTC),
                 raw_data=ad_data,
             )
             ads.append(ad)
@@ -612,7 +612,7 @@ class SnapchatAdapter(BaseAdapter):
                     platform=Platform.SNAPCHAT,
                     event_name=f"pixel_{pixel.get('id', 'unknown')}",
                     score=score,
-                    last_updated=datetime.utcnow(),
+                    last_updated=datetime.now(UTC),
                 )
                 emq_scores.append(emq)
 
@@ -645,7 +645,7 @@ class SnapchatAdapter(BaseAdapter):
                 raise ValueError(f"Unsupported action type: {action.action_type}")
 
             action.status = "completed"
-            action.executed_at = datetime.utcnow()
+            action.executed_at = datetime.now(UTC)
             action.result = result
 
             logger.info(f"Successfully executed {action.action_type} on Snapchat")

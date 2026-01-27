@@ -191,7 +191,7 @@ def signal_health_rollup(self, tenant_id: Optional[int] = None, target_date: Opt
                 rollup_date = (
                     date.fromisoformat(target_date)
                     if target_date
-                    else date.today() - timedelta(days=1)
+                    else datetime.now(UTC).date() - timedelta(days=1)
                 )
 
                 logger.info(

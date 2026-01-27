@@ -8,7 +8,7 @@ API endpoints for Trust Layer features:
 - Trust banners and status
 """
 
-from datetime import UTC, date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -81,7 +81,7 @@ async def get_signal_health_history(
         raise HTTPException(status_code=403, detail="Signal health history feature not enabled")
 
     # Calculate date range
-    end_date = date.today()
+    end_date = datetime.now(UTC).date()
     start_date = end_date - timedelta(days=days)
 
     # Query history records
@@ -193,7 +193,7 @@ async def get_trust_status(
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
     result = {
-        "date": (target_date or date.today()).isoformat(),
+        "date": (target_date or datetime.now(UTC).date()).isoformat(),
         "overall_status": "ok",
         "automation_allowed": True,
         "signal_health": None,

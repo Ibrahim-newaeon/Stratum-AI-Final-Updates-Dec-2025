@@ -11,7 +11,7 @@ Provides compatibility layer to integrate:
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 from app.stratum.core.signal_health import SignalHealthCalculator
@@ -147,7 +147,7 @@ def convert_platform_emq_to_score(
         platform=platform_enum,
         event_name="aggregate",
         score=min(10, max(0, emq_value)),
-        last_updated=datetime.utcnow(),
+        last_updated=datetime.now(UTC),
     )
 
 

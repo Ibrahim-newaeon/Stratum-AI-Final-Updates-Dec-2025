@@ -81,7 +81,7 @@ Usage Examples:
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -476,7 +476,7 @@ class StratumMCPServer:
             return {"error": f"Platform {platform} not configured"}
 
         # Calculate date range
-        today = datetime.utcnow().date()
+        today = datetime.now(UTC).date()
         date_ranges = {
             "today": (today, today),
             "yesterday": (today - timedelta(days=1), today - timedelta(days=1)),

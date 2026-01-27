@@ -6,7 +6,7 @@ Data loader for importing training datasets from various sources.
 Supports CSV files from Kaggle and other public datasets.
 """
 
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -209,7 +209,7 @@ class TrainingDataLoader:
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
         else:
             # Generate dates for time series
-            base_date = date.today() - timedelta(days=len(df))
+            base_date = datetime.now(UTC).date() - timedelta(days=len(df))
             df["date"] = [base_date + timedelta(days=i) for i in range(len(df))]
 
         # Add platform
@@ -359,7 +359,7 @@ class TrainingDataLoader:
             platforms = ["meta", "google", "tiktok", "snapchat", "linkedin"]
 
         data = []
-        base_date = date.today() - timedelta(days=days_per_campaign)
+        base_date = datetime.now(UTC).date() - timedelta(days=days_per_campaign)
 
         for campaign_idx in range(num_campaigns):
             platform = platforms[campaign_idx % len(platforms)]

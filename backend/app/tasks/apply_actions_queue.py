@@ -207,13 +207,12 @@ async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     Check if signal health allows action execution.
     Returns True if OK/Risk, False if Degraded/Critical.
     """
-    from datetime import date
 
     result = await db.execute(
         select(FactSignalHealthDaily).where(
             and_(
                 FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date == date.today(),
+                FactSignalHealthDaily.date == datetime.now(UTC).date(),
             )
         )
     )

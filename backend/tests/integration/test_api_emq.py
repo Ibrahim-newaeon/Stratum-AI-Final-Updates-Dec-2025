@@ -14,7 +14,7 @@ Tests cover:
 - Autopilot state management
 """
 
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -57,7 +57,7 @@ class TestEmqScoreEndpoint:
         self, authenticated_client: AsyncClient, test_tenant: dict
     ):
         """Test EMQ score retrieval with specific date."""
-        target_date = (date.today() - timedelta(days=1)).isoformat()
+        target_date = (datetime.now(UTC).date() - timedelta(days=1)).isoformat()
 
         response = await authenticated_client.get(
             f"/api/v1/tenants/{test_tenant['id']}/emq/score",
@@ -172,8 +172,8 @@ class TestIncidentsEndpoint:
         self, authenticated_client: AsyncClient, test_tenant: dict
     ):
         """Test successful incidents retrieval."""
-        start_date = (date.today() - timedelta(days=7)).isoformat()
-        end_date = date.today().isoformat()
+        start_date = (datetime.now(UTC).date() - timedelta(days=7)).isoformat()
+        end_date = datetime.now(UTC).date().isoformat()
 
         response = await authenticated_client.get(
             f"/api/v1/tenants/{test_tenant['id']}/emq/incidents",
@@ -204,8 +204,8 @@ class TestImpactEndpoint:
     @pytest.mark.asyncio
     async def test_get_impact_success(self, authenticated_client: AsyncClient, test_tenant: dict):
         """Test successful ROAS impact retrieval."""
-        start_date = (date.today() - timedelta(days=30)).isoformat()
-        end_date = date.today().isoformat()
+        start_date = (datetime.now(UTC).date() - timedelta(days=30)).isoformat()
+        end_date = datetime.now(UTC).date().isoformat()
 
         response = await authenticated_client.get(
             f"/api/v1/tenants/{test_tenant['id']}/emq/impact",

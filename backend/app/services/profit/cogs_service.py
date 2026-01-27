@@ -13,7 +13,7 @@ Features:
 
 import csv
 import io
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any, Optional
 from uuid import UUID
 
@@ -78,7 +78,7 @@ class COGSService:
             Created ProductMargin
         """
         if effective_date is None:
-            effective_date = date.today()
+            effective_date = datetime.now(UTC).date()
 
         # End any existing margin that starts before this date
         await self.db.execute(
@@ -138,7 +138,7 @@ class COGSService:
     ) -> Optional[ProductMargin]:
         """Get current COGS for a product."""
         if as_of_date is None:
-            as_of_date = date.today()
+            as_of_date = datetime.now(UTC).date()
 
         result = await self.db.execute(
             select(ProductMargin)
@@ -189,7 +189,7 @@ class COGSService:
             Count of updated, skipped, failed
         """
         if effective_date is None:
-            effective_date = date.today()
+            effective_date = datetime.now(UTC).date()
 
         updated = 0
         skipped = 0
@@ -334,7 +334,7 @@ class COGSService:
             if field in allowed_fields and value is not None:
                 setattr(rule, field, value)
 
-        rule.updated_at = datetime.utcnow()
+        rule.updated_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(rule)
 
@@ -392,7 +392,7 @@ class COGSIngestionService:
             COGSUpload record with results
         """
         if effective_date is None:
-            effective_date = date.today()
+            effective_date = datetime.now(UTC).date()
 
         # Create upload record
         upload = COGSUpload(
@@ -441,13 +441,13 @@ class COGSIngestionService:
                 upload.error_details = errors
 
             upload.status = "completed"
-            upload.processed_at = datetime.utcnow()
+            upload.processed_at = datetime.now(UTC)
 
         except Exception as e:
             logger.error(f"Failed to process COGS CSV: {e}")
             upload.status = "failed"
             upload.error_details = [{"error": str(e)}]
-            upload.processed_at = datetime.utcnow()
+            upload.processed_at = datetime.now(UTC)
 
         await self.db.commit()
         await self.db.refresh(upload)
