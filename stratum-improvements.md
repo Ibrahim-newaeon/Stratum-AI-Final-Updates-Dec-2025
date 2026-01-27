@@ -121,7 +121,7 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
 <!-- Trust Flow Diagram -->
 <div style="max-width: 1000px; margin: 0 auto 4rem;">
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; position: relative;">
-        
+
         <!-- Step 1 -->
         <div style="text-align: center; position: relative;">
             <div style="width: 80px; height: 80px; background: var(--gradient-primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">
@@ -132,11 +132,11 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                 Continuous monitoring<br>
                 EMQ • Freshness • Variance • Anomalies
             </div>
-            
+
             <!-- Arrow -->
             <div style="position: absolute; right: -1.5rem; top: 40px; color: var(--accent-orange); font-size: 2rem;">→</div>
         </div>
-        
+
         <!-- Step 2 -->
         <div style="text-align: center; position: relative;">
             <div style="width: 80px; height: 80px; background: var(--gradient-primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">
@@ -148,11 +148,11 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                 40-69: Hold<br>
                 <40: Block
             </div>
-            
+
             <!-- Arrow -->
             <div style="position: absolute; right: -1.5rem; top: 40px; color: var(--accent-orange); font-size: 2rem;">→</div>
         </div>
-        
+
         <!-- Step 3 -->
         <div style="text-align: center;">
             <div style="width: 80px; height: 80px; background: var(--gradient-primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">
@@ -187,7 +187,7 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
     </div>
     <h3 class="cdp-feature-title">One-Click Audience Sync</h3>
     <p>Push segments to Meta, Google, TikTok & Snapchat instantly. Auto-sync every hour.</p>
-    
+
     <!-- Add supported platforms badges -->
     <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
         <span style="padding: 0.25rem 0.75rem; background: rgba(57, 128, 234, 0.1); border: 1px solid rgba(57, 128, 234, 0.3); border-radius: 6px; font-size: 0.8rem;">Meta</span>
@@ -212,14 +212,14 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
             <h2>Before vs After Stratum AI</h2>
             <p class="section-description">Real results from real clients</p>
         </div>
-        
+
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 1200px; margin: 0 auto;">
-            
+
             <!-- Case 1 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2rem;">
                 <div style="font-size: 2rem; margin-bottom: 1rem;">🛍️</div>
                 <div style="font-weight: 600; margin-bottom: 1rem;">Fashion E-commerce (KSA)</div>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                     <div>
                         <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">Before</div>
@@ -232,18 +232,18 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                         <div style="font-size: 0.85rem;">ROAS</div>
                     </div>
                 </div>
-                
+
                 <div style="background: rgba(109, 207, 167, 0.1); border: 1px solid rgba(109, 207, 167, 0.3); border-radius: 12px; padding: 1rem; text-align: center;">
                     <div style="color: var(--accent-green); font-weight: 700;">+171% improvement</div>
                     <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">90 days</div>
                 </div>
             </div>
-            
+
             <!-- Case 2 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2rem;">
                 <div style="font-size: 2rem; margin-bottom: 1rem;">🏠</div>
                 <div style="font-weight: 600; margin-bottom: 1rem;">Home Decor (UAE)</div>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                     <div>
                         <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">Before</div>
@@ -256,18 +256,18 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                         <div style="font-size: 0.85rem;">CPA</div>
                     </div>
                 </div>
-                
+
                 <div style="background: rgba(109, 207, 167, 0.1); border: 1px solid rgba(109, 207, 167, 0.3); border-radius: 12px; padding: 1rem; text-align: center;">
                     <div style="color: var(--accent-green); font-weight: 700;">-64% CPA reduction</div>
                     <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">120 days</div>
                 </div>
             </div>
-            
+
             <!-- Case 3 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2rem;">
                 <div style="font-size: 2rem; margin-bottom: 1rem;">⚙️</div>
                 <div style="font-weight: 600; margin-bottom: 1rem;">B2B SaaS (Qatar)</div>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                     <div>
                         <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem;">Before</div>
@@ -280,15 +280,15 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                         <div style="font-size: 0.85rem;">SQLs/mo</div>
                     </div>
                 </div>
-                
+
                 <div style="background: rgba(109, 207, 167, 0.1); border: 1px solid rgba(109, 207, 167, 0.3); border-radius: 12px; padding: 1rem; text-align: center;">
                     <div style="color: var(--accent-green); font-weight: 700;">+322% SQL growth</div>
                     <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">60 days</div>
                 </div>
             </div>
-            
+
         </div>
-        
+
         <div style="text-align: center; margin-top: 3rem;">
             <a href="/case-studies" class="btn btn-primary">View All Case Studies</a>
         </div>
@@ -312,15 +312,15 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
             <h2>Start Free, Scale as You Grow</h2>
             <p class="section-description">14-day free trial • No credit card required • Cancel anytime</p>
         </div>
-        
+
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 1200px; margin: 0 auto;">
-            
+
             <!-- Starter -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2.5rem; transition: all 0.3s;">
                 <div style="color: var(--accent-cyan); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; margin-bottom: 1rem;">Starter</div>
                 <div style="font-size: 3rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">$1.5K</div>
                 <div style="color: var(--text-muted); margin-bottom: 2rem;">per month</div>
-                
+
                 <ul style="list-style: none; margin-bottom: 2rem;">
                     <li style="display: flex; align-items: start; gap: 0.75rem; margin-bottom: 1rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-green)">
@@ -341,18 +341,18 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                         <span style="color: var(--text-secondary);">Standard Trust Gates</span>
                     </li>
                 </ul>
-                
+
                 <button class="btn btn-secondary" style="width: 100%; justify-content: center;">Start Free Trial</button>
             </div>
-            
+
             <!-- Professional (Featured) -->
             <div style="background: var(--bg-card); border: 2px solid var(--accent-orange); border-radius: 20px; padding: 2.5rem; transform: scale(1.05); position: relative;">
                 <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent-orange); color: white; padding: 0.5rem 1.5rem; border-radius: 100px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Most Popular</div>
-                
+
                 <div style="color: var(--accent-orange); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; margin-bottom: 1rem;">Professional</div>
                 <div style="font-size: 3rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">$4K</div>
                 <div style="color: var(--text-muted); margin-bottom: 2rem;">per month</div>
-                
+
                 <ul style="list-style: none; margin-bottom: 2rem;">
                     <li style="display: flex; align-items: start; gap: 0.75rem; margin-bottom: 1rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-green)">
@@ -379,16 +379,16 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                         <span style="color: var(--text-secondary);">Priority support (12hr)</span>
                     </li>
                 </ul>
-                
+
                 <button class="btn btn-primary" style="width: 100%; justify-content: center;">Start Free Trial</button>
             </div>
-            
+
             <!-- Enterprise -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; padding: 2.5rem;">
                 <div style="color: var(--accent-purple); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; margin-bottom: 1rem;">Enterprise</div>
                 <div style="font-size: 3rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">Custom</div>
                 <div style="color: var(--text-muted); margin-bottom: 2rem;">Starting from $12K/mo</div>
-                
+
                 <ul style="list-style: none; margin-bottom: 2rem;">
                     <li style="display: flex; align-items: start; gap: 0.75rem; margin-bottom: 1rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-green)">
@@ -415,7 +415,7 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
                         <span style="color: var(--text-secondary);">24/7 support (2hr SLA)</span>
                     </li>
                 </ul>
-                
+
                 <button class="btn btn-secondary" style="width: 100%; justify-content: center;">Contact Sales</button>
             </div>
         </div>
@@ -434,58 +434,58 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
             <div class="section-label">FAQ</div>
             <h2>Frequently Asked Questions</h2>
         </div>
-        
+
         <div style="max-width: 800px; margin: 0 auto;">
-            
+
             <!-- FAQ Item 1 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
                 <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">What is Trust-Gated Autopilot?</div>
                 <p style="color: var(--text-secondary); line-height: 1.6;">
-                    Trust-Gated Autopilot is our unique safety mechanism. Before any automation executes, 
-                    we check your Signal Health score (0-100). Score ≥70 = safe to execute. Score <70 = 
+                    Trust-Gated Autopilot is our unique safety mechanism. Before any automation executes,
+                    we check your Signal Health score (0-100). Score ≥70 = safe to execute. Score <70 =
                     hold for human review. This prevents automation from running on bad data.
                 </p>
             </div>
-            
+
             <!-- FAQ Item 2 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
                 <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">How is this different from other marketing automation tools?</div>
                 <p style="color: var(--text-secondary); line-height: 1.6;">
-                    Other tools (Smartly, Sprinklr, Skai) automate blindly. If your pixel is broken or 
-                    attribution is off, they keep running and wasting budget. Stratum AI monitors data quality 
+                    Other tools (Smartly, Sprinklr, Skai) automate blindly. If your pixel is broken or
+                    attribution is off, they keep running and wasting budget. Stratum AI monitors data quality
                     24/7 and only automates when it's safe.
                 </p>
             </div>
-            
+
             <!-- FAQ Item 3 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
                 <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">What's included in the CDP?</div>
                 <p style="color: var(--text-secondary); line-height: 1.6;">
-                    Built-in Customer Data Platform with: 360° customer profiles, RFM segmentation, 
-                    identity resolution, behavioral tracking, and one-click audience sync to Meta, 
+                    Built-in Customer Data Platform with: 360° customer profiles, RFM segmentation,
+                    identity resolution, behavioral tracking, and one-click audience sync to Meta,
                     Google, TikTok & Snapchat.
                 </p>
             </div>
-            
+
             <!-- FAQ Item 4 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;">
                 <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">Can I try it for free?</div>
                 <p style="color: var(--text-secondary); line-height: 1.6;">
-                    Yes! 14-day free trial with full platform access. No credit card required. You can 
+                    Yes! 14-day free trial with full platform access. No credit card required. You can
                     cancel anytime with no questions asked.
                 </p>
             </div>
-            
+
             <!-- FAQ Item 5 -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 16px; padding: 2rem;">
                 <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">What if I need help setting up?</div>
                 <p style="color: var(--text-secondary); line-height: 1.6;">
-                    Professional plan includes priority support (12hr response). Enterprise includes 
-                    24/7 support with 2hr SLA. Plus, we offer optional onboarding packages with dedicated 
+                    Professional plan includes priority support (12hr response). Enterprise includes
+                    24/7 support with 2hr SLA. Plus, we offer optional onboarding packages with dedicated
                     implementation specialist.
                 </p>
             </div>
-            
+
         </div>
     </div>
 </section>
@@ -503,32 +503,32 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
     .hero h1 {
         font-size: 2.5rem;  /* Reduce from 4rem */
     }
-    
+
     .hero-container {
         grid-template-columns: 1fr;  /* Stack on mobile */
         gap: 2rem;
     }
-    
+
     .metric-row {
         grid-template-columns: 1fr;  /* Stack metrics */
     }
-    
+
     .value-grid,
     .pillars-grid,
     .solutions-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .dashboard-preview {
         transform: none;  /* Remove 3D effect on mobile */
     }
-    
+
     /* Make buttons full-width on mobile */
     .hero-cta {
         flex-direction: column;
         width: 100%;
     }
-    
+
     .hero-cta .btn {
         width: 100%;
         justify-content: center;
@@ -567,7 +567,7 @@ Your existing Stratum AI landing page (landing.html) is **excellent** with:
 // Lazy load images
 document.addEventListener('DOMContentLoaded', function() {
     const lazyImages = document.querySelectorAll('img[data-src]');
-    
+
     const imageObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     lazyImages.forEach(img => imageObserver.observe(img));
 });
 </script>
@@ -593,14 +593,14 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="exitPopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12, 27, 44, 0.95); z-index: 10000; align-items: center; justify-content: center;">
     <div style="background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: 24px; padding: 3rem; max-width: 500px; text-align: center; position: relative;">
         <button onclick="closeExitPopup()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">×</button>
-        
+
         <div style="font-size: 3rem; margin-bottom: 1rem;">⏰</div>
         <h3 style="font-size: 1.75rem; margin-bottom: 1rem;">Wait! Before You Go...</h3>
         <p style="color: var(--text-secondary); margin-bottom: 2rem;">
-            Join 150+ growth teams who recovered $12M+ in wasted ad spend. 
+            Join 150+ growth teams who recovered $12M+ in wasted ad spend.
             Get a personalized ROI estimate in 60 seconds.
         </p>
-        
+
         <div style="display: flex; gap: 1rem;">
             <button class="btn btn-primary" style="flex: 1;" onclick="window.location.href='/roi-calculator'">
                 Calculate My ROI
@@ -700,4 +700,3 @@ window.addEventListener('scroll', () => {
 ---
 
 **Your existing landing page is GREAT. These improvements will make it EXCEPTIONAL!**
-
