@@ -9,6 +9,7 @@ Implements Module B: Digital Asset Management.
 import os
 import uuid
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
@@ -232,7 +233,7 @@ async def upload_asset(
     tenant_id = getattr(request.state, "tenant_id", None)
 
     # Validate file extension
-    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    file_ext = Path(file.filename or "").suffix.lower()
     if file_ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -254,12 +255,12 @@ async def upload_asset(
     filename = f"{unique_id}{file_ext}"
 
     # Ensure upload directory exists
-    tenant_upload_dir = os.path.join(UPLOAD_DIR, str(tenant_id))
-    os.makedirs(tenant_upload_dir, exist_ok=True)
+    tenant_upload_dir = Path(UPLOAD_DIR) / str(tenant_id)
+    tenant_upload_dir.mkdir(parents=True, exist_ok=True)
 
     # Save file
-    file_path = os.path.join(tenant_upload_dir, filename)
-    with open(file_path, "wb") as f:
+    file_path = tenant_upload_dir / filename
+    with file_path.open("wb") as f:
         f.write(content)
 
     # Determine asset type from extension

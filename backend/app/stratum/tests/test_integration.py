@@ -11,8 +11,8 @@ Tests:
 - Integration bridge
 """
 
-import os
 import sys
+from pathlib import Path
 
 # Fix Windows encoding
 if sys.platform == "win32":
@@ -21,11 +21,7 @@ if sys.platform == "win32":
 # Add parent directory to path for imports
 sys.path.insert(
     0,
-    os.path.dirname(
-        os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        )
-    ),
+    str(Path(__file__).resolve().parent.parent.parent.parent.parent),
 )
 
 from datetime import datetime, timedelta

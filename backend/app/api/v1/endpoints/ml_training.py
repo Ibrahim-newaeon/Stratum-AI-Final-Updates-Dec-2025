@@ -148,7 +148,7 @@ async def upload_training_data(
     finally:
         # Cleanup temp file
         if "tmp_path" in locals():
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
 
 
 @router.post("/train", response_model=TrainingResponse)
@@ -243,7 +243,7 @@ async def list_models():
     if models_path.exists():
         for metadata_file in models_path.glob("*_metadata.json"):
             try:
-                with open(metadata_file) as f:
+                with metadata_file.open() as f:
                     metadata = json.load(f)
                     models.append(
                         ModelInfo(

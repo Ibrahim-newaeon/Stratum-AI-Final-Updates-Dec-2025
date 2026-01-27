@@ -718,7 +718,7 @@ class ModelTrainer:
         }
 
         metadata_path = self.models_path / f"{name}_metadata.json"
-        with open(metadata_path, "w") as f:
+        with metadata_path.open("w") as f:
             json.dump(metadata, f, indent=2)
 
         print(f"  Saved: {model_path}")

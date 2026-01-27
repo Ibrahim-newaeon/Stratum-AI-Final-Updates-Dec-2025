@@ -117,7 +117,7 @@ class RetrainingPipeline:
         history_path = self.models_path / "model_history.json"
         if history_path.exists():
             try:
-                with open(history_path) as f:
+                with history_path.open() as f:
                     data = json.load(f)
                 for model_name, versions in data.items():
                     self._model_history[model_name] = [
@@ -156,7 +156,7 @@ class RetrainingPipeline:
                 }
                 for v in versions
             ]
-        with open(history_path, "w") as f:
+        with history_path.open("w") as f:
             json.dump(data, f, indent=2)
 
     def check_retraining_needed(
@@ -180,7 +180,7 @@ class RetrainingPipeline:
             return True, RetrainingTrigger.MANUAL, "Model does not exist"
 
         # Load metadata
-        with open(metadata_path) as f:
+        with metadata_path.open() as f:
             metadata = json.load(f)
 
         created_at = datetime.fromisoformat(metadata["created_at"])
@@ -305,7 +305,7 @@ class RetrainingPipeline:
             # No production model exists, always promote
             return {"should_promote": True, "reason": "No existing model"}
 
-        with open(metadata_path) as f:
+        with metadata_path.open() as f:
             prod_metadata = json.load(f)
 
         prod_r2 = prod_metadata.get("metrics", {}).get("r2", 0)
@@ -366,7 +366,7 @@ class RetrainingPipeline:
         metadata_path = self.models_path / f"{model_name}_metadata.json"
         features = []
         if metadata_path.exists():
-            with open(metadata_path) as f:
+            with metadata_path.open() as f:
                 metadata = json.load(f)
                 features = metadata.get("features", [])
 
@@ -459,7 +459,7 @@ class RetrainingPipeline:
         for archive_dir in archive_dirs:
             metadata_path = archive_dir / f"{model_name}_metadata.json"
             if metadata_path.exists():
-                with open(metadata_path) as f:
+                with metadata_path.open() as f:
                     metadata = json.load(f)
                 archived_time = datetime.fromisoformat(metadata["created_at"])
 
@@ -497,7 +497,7 @@ class RetrainingPipeline:
 
         metadata_path = self.models_path / f"{model_name}_metadata.json"
         if metadata_path.exists():
-            with open(metadata_path) as f:
+            with metadata_path.open() as f:
                 metadata = json.load(f)
 
             status["exists"] = True

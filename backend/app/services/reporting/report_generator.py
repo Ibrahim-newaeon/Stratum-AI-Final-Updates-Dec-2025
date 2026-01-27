@@ -9,6 +9,7 @@ Collects data from various sources and formats it according to the template.
 
 import json
 from datetime import date, datetime, timedelta
+from pathlib import Path
 from typing import Any, Optional
 from uuid import UUID
 
@@ -576,7 +577,6 @@ class ReportGenerator:
         """Generate CSV output."""
         import csv
         import io
-        import os
 
         output = io.StringIO()
         writer = csv.writer(output)
@@ -602,15 +602,15 @@ class ReportGenerator:
                     writer.writerow(row.values())
 
         content = output.getvalue()
-        file_path = f"/tmp/reports/{self.tenant_id}/{execution_id}.csv"
+        output_path = Path(f"/tmp/reports/{self.tenant_id}/{execution_id}.csv")
 
         # Ensure directory exists
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(file_path, "w") as f:
+        with output_path.open("w") as f:
             f.write(content)
 
-        return file_path, len(content.encode())
+        return str(output_path), len(content.encode())
 
     async def _generate_json(
         self,
@@ -619,17 +619,15 @@ class ReportGenerator:
         execution_id: UUID,
     ) -> tuple[str, int]:
         """Generate JSON output."""
-        import os
-
         content = json.dumps(data, indent=2, default=str)
-        file_path = f"/tmp/reports/{self.tenant_id}/{execution_id}.json"
+        output_path = Path(f"/tmp/reports/{self.tenant_id}/{execution_id}.json")
 
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(file_path, "w") as f:
+        with output_path.open("w") as f:
             f.write(content)
 
-        return file_path, len(content.encode())
+        return str(output_path), len(content.encode())
 
     @staticmethod
     def parse_date_range(

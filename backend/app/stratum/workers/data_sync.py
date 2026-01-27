@@ -63,6 +63,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from functools import wraps
+from pathlib import Path
 from typing import Any
 
 # Celery imports (with fallback for when Celery isn't installed)
@@ -238,7 +239,7 @@ async def sync_all_platforms(self) -> dict[str, Any]:
 
     try:
         # Load configuration
-        with open("config.yaml") as f:
+        with Path("config.yaml").open() as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
         logger.error("config.yaml not found")

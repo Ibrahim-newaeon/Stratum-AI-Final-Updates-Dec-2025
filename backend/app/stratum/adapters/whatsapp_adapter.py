@@ -59,6 +59,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
 from typing import Any, Optional
 
 import requests
@@ -588,8 +589,9 @@ class WhatsAppAdapter(BaseAdapter):
             "sticker": "image/webp",
         }
 
-        with open(file_path, "rb") as f:
-            files = {"file": (file_path, f, mime_types.get(media_type, "application/octet-stream"))}
+        path = Path(file_path)
+        with path.open("rb") as f:
+            files = {"file": (str(path), f, mime_types.get(media_type, "application/octet-stream"))}
             data = {"messaging_product": "whatsapp", "type": mime_types.get(media_type)}
 
             url = f"{self.BASE_URL}/{self.phone_number_id}/media"

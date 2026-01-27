@@ -140,7 +140,7 @@ class ModelExplainer:
             # Load metadata
             metadata_path = self.models_path / f"{self.model_name}_metadata.json"
             if metadata_path.exists():
-                with open(metadata_path) as f:
+                with metadata_path.open() as f:
                     metadata = json.load(f)
                     self.feature_names = metadata.get("features", [])
 
