@@ -541,10 +541,7 @@ class RealEMQService:
         Returns:
             Dict with mode recommendation and details
         """
-        if platform:
-            emq_result = self.get_platform_emq(platform)
-        else:
-            emq_result = self.get_aggregate_emq()
+        emq_result = self.get_platform_emq(platform) if platform else self.get_aggregate_emq()
 
         mode, reason = determine_autopilot_mode(emq_result.score)
 

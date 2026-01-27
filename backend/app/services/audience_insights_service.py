@@ -1015,10 +1015,7 @@ class AudienceDecayPredictor:
         score_90d = current_score * (1 - adjusted_decay * 3)
 
         # Determine time to refresh (when score drops below 50% of current)
-        if adjusted_decay > 0:
-            time_to_refresh = int(0.5 / adjusted_decay * 30)
-        else:
-            time_to_refresh = 365
+        time_to_refresh = int(0.5 / adjusted_decay * 30) if adjusted_decay > 0 else 365
 
         # Identify factors
         factors = []

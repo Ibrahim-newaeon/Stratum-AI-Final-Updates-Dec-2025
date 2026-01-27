@@ -111,10 +111,7 @@ class SegmentEvaluator:
             return False, None
 
         # Apply logic
-        if logic == "and":
-            final_match = all(results)
-        else:  # or
-            final_match = any(results)
+        final_match = all(results) if logic == "and" else any(results)
 
         # Calculate average score
         avg_score = sum(scores) / len(scores) if scores else None
@@ -289,15 +286,9 @@ class SegmentEvaluator:
                 else:
                     result = False
             elif op == "in":
-                if isinstance(expected, list):
-                    result = actual in expected
-                else:
-                    result = False
+                result = actual in expected if isinstance(expected, list) else False
             elif op == "not_in":
-                if isinstance(expected, list):
-                    result = actual not in expected
-                else:
-                    result = True
+                result = actual not in expected if isinstance(expected, list) else True
             elif op == "is_null":
                 result = actual is None
             elif op == "is_not_null":

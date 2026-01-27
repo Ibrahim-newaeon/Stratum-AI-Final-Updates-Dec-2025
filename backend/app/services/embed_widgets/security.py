@@ -122,10 +122,7 @@ class EmbedSecurityService:
 
         # Extract hostname from origin
         try:
-            if "://" in origin:
-                hostname = origin.split("://")[1]
-            else:
-                hostname = origin
+            hostname = origin.split("://")[1] if "://" in origin else origin
 
             if ":" in hostname:
                 hostname = hostname.split(":")[0]

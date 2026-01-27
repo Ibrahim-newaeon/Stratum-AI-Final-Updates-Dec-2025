@@ -435,12 +435,7 @@ class CreativeLifecyclePredictor:
         fatigue_needed = self.fatigue_threshold - current_fatigue
 
         # Estimate days (simplified - fatigue increases roughly linearly with CTR decline)
-        if decay_rate > 0:
-            days_estimate = int(
-                fatigue_needed / (decay_rate * 0.3)
-            )  # 0.3 is approximate conversion
-        else:
-            days_estimate = 30
+        days_estimate = int(fatigue_needed / (decay_rate * 0.3)) if decay_rate > 0 else 30
 
         # Cap at reasonable range
         return max(0, min(days_estimate, 60))
@@ -859,10 +854,7 @@ class CreativeClusterAnalyzer:
         # Days to fatigue (when CTR drops to 35% of peak)
         fatigue_threshold = peak_ctr * 0.35
         below_fatigue = np.where(ctr_arr < fatigue_threshold)[0]
-        if len(below_fatigue) > 0:
-            days_to_fatigue = int(below_fatigue[0])
-        else:
-            days_to_fatigue = len(ctr_arr) + 7
+        days_to_fatigue = int(below_fatigue[0]) if len(below_fatigue) > 0 else len(ctr_arr) + 7
 
         # Total lifetime CTR (area under curve, proxy for total value)
         total_ctr = float(np.sum(ctr_arr))

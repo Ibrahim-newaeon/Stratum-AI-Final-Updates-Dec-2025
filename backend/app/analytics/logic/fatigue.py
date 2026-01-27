@@ -55,10 +55,7 @@ def creative_fatigue(
 
     # Calculate signal drops
     # CTR drop
-    if baseline.ctr > 0.0001:
-        ctr_drop = clamp01((baseline.ctr - today.ctr) / baseline.ctr)
-    else:
-        ctr_drop = 0.0
+    ctr_drop = clamp01((baseline.ctr - today.ctr) / baseline.ctr) if baseline.ctr > 0.0001 else 0.0
 
     # ROAS drop
     if baseline.roas > 0.01:
@@ -67,10 +64,7 @@ def creative_fatigue(
         roas_drop = 0.0
 
     # CPA rise (higher is worse)
-    if baseline.cpa > 0.01:
-        cpa_rise = clamp01((today.cpa - baseline.cpa) / baseline.cpa)
-    else:
-        cpa_rise = 0.0
+    cpa_rise = clamp01((today.cpa - baseline.cpa) / baseline.cpa) if baseline.cpa > 0.01 else 0.0
 
     # Exposure factor (frequency based)
     # frequency 2->5 maps to 0..1
@@ -88,10 +82,7 @@ def creative_fatigue(
     )
 
     # Smooth with EMA to avoid noise
-    if prev_ema is not None:
-        smoothed_fatigue = ema(fatigue, prev_ema, params.ema_alpha)
-    else:
-        smoothed_fatigue = fatigue
+    smoothed_fatigue = ema(fatigue, prev_ema, params.ema_alpha) if prev_ema is not None else fatigue
 
     # Determine state
     if smoothed_fatigue >= params.refresh_threshold:

@@ -366,10 +366,7 @@ class EmbedTokenService:
         # Origin format: https://example.com or http://localhost:3000
         try:
             # Remove protocol
-            if "://" in origin:
-                hostname = origin.split("://")[1]
-            else:
-                hostname = origin
+            hostname = origin.split("://")[1] if "://" in origin else origin
 
             # Remove port if present
             if ":" in hostname:

@@ -457,10 +457,7 @@ class ABPowerAnalyzer:
 
         # Decision
         if p_value < adjusted_alpha:
-            if p2 > p1:
-                conclusion = "variant_b_wins"
-            else:
-                conclusion = "variant_a_wins"
+            conclusion = "variant_b_wins" if p2 > p1 else "variant_a_wins"
             should_stop = True
         elif total_samples >= planned_samples:
             conclusion = "no_difference"

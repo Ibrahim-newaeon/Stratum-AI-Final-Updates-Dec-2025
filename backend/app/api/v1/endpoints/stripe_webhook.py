@@ -285,10 +285,7 @@ async def handle_subscription_deleted(db: AsyncSession, subscription: dict):
 
     # Get the ended date from subscription
     ended_at = subscription.get("ended_at")
-    if ended_at:
-        ended_datetime = datetime.fromtimestamp(ended_at, tz=UTC)
-    else:
-        ended_datetime = datetime.now(UTC)
+    ended_datetime = datetime.fromtimestamp(ended_at, tz=UTC) if ended_at else datetime.now(UTC)
 
     # Update tenant to free plan with expiry
     await db.execute(
