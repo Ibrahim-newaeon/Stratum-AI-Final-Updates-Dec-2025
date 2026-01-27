@@ -9,6 +9,7 @@ Product changelog and release notes:
 - Admin: Create/update entries
 """
 
+import contextlib
 from datetime import UTC, datetime
 from typing import Optional
 
@@ -463,10 +464,8 @@ async def update_changelog_entry(
     if body.description is not None:
         entry.description = body.description
     if body.type is not None:
-        try:
+        with contextlib.suppress(ValueError):
             entry.type = ChangelogType(body.type)
-        except ValueError:
-            pass
     if body.image_url is not None:
         entry.image_url = body.image_url
     if body.video_url is not None:

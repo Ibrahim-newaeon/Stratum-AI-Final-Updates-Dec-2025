@@ -18,6 +18,7 @@ Supports:
 - LinkedIn Offline Conversions
 """
 
+import contextlib
 import csv
 import hashlib
 import io
@@ -656,10 +657,8 @@ class OfflineConversionService:
         value_str = get_value("conversion_value")
         conversion_value = 0.0
         if value_str:
-            try:
+            with contextlib.suppress(ValueError):
                 conversion_value = float(value_str.replace(",", "").replace("$", ""))
-            except ValueError:
-                pass
 
         return OfflineConversion(
             conversion_id=f"{platform}_{row_index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",

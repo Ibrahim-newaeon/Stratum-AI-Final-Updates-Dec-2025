@@ -474,7 +474,7 @@ class MetaEventsSender:
 
         url = f"{self.BASE_URL}/{self.pixel_id}/events"
 
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, timeout=30)
         response.raise_for_status()
         result = response.json()
 
@@ -566,7 +566,7 @@ class MetaEventsSender:
         url = f"{self.BASE_URL}/{self.pixel_id}/server_events_quality"
         params = {"access_token": self.access_token}
 
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=30)
         response.raise_for_status()
         return response.json()
 
@@ -596,7 +596,7 @@ class GoogleEventsSender:
 
         for event in events:
             payload = self._format_event(event)
-            response = requests.post(url, json=payload)
+            response = requests.post(url, json=payload, timeout=30)
 
             if response.status_code != 204:
                 logger.warning(
@@ -680,7 +680,7 @@ class TikTokEventsSender:
 
         headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
 
-        response = requests.post(self.BASE_URL, json=payload, headers=headers)
+        response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
         result = response.json()
 
@@ -763,7 +763,7 @@ class SnapchatEventsSender:
                 "Content-Type": "application/json",
             }
 
-            response = requests.post(self.BASE_URL, json=payload, headers=headers)
+            response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
             response.raise_for_status()
             results.append(response.json())
 

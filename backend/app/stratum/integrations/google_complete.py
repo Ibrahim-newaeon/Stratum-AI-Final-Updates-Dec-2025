@@ -555,7 +555,7 @@ class GA4MeasurementProtocol:
             payload["timestamp_micros"] = timestamp_micros
 
         try:
-            response = requests.post(url, json=payload)
+            response = requests.post(url, json=payload, timeout=30)
 
             # MP returns 204 on success, 200 with validation on debug
             if response.status_code == 204:

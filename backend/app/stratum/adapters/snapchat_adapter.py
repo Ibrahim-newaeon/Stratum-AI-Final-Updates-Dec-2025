@@ -225,7 +225,7 @@ class SnapchatAdapter(BaseAdapter):
             "refresh_token": self.refresh_token,
         }
 
-        response = requests.post(self.AUTH_URL, data=data)
+        response = requests.post(self.AUTH_URL, data=data, timeout=30)
         response.raise_for_status()
 
         token_data = response.json()

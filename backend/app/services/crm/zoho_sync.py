@@ -6,6 +6,7 @@ Synchronizes contacts and deals from Zoho CRM to Stratum AI.
 Supports scheduled syncs and incremental updates.
 """
 
+import contextlib
 from datetime import UTC, datetime
 from typing import Any, Optional
 from uuid import UUID
@@ -362,19 +363,15 @@ class ZohoSyncService:
         crm_created = None
         crm_updated = None
         if contact_data.get("Created_Time"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_created = datetime.fromisoformat(
                     contact_data["Created_Time"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
         if contact_data.get("Modified_Time"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_updated = datetime.fromisoformat(
                     contact_data["Modified_Time"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
 
         # Extract owner ID
         owner = contact_data.get("Owner")
@@ -558,32 +555,26 @@ class ZohoSyncService:
         # Parse close date
         close_date = None
         if deal_data.get("Closing_Date"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 close_date = datetime.fromisoformat(deal_data["Closing_Date"]).date()
-            except (ValueError, TypeError):
-                try:
-                    # Try parsing YYYY-MM-DD format
+            if close_date is None:
+                # Try parsing YYYY-MM-DD format
+                with contextlib.suppress(ValueError, TypeError):
                     close_date = datetime.strptime(deal_data["Closing_Date"], "%Y-%m-%d").date()
-                except (ValueError, TypeError):
-                    pass
 
         # Parse dates
         crm_created = None
         crm_updated = None
         if deal_data.get("Created_Time"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_created = datetime.fromisoformat(
                     deal_data["Created_Time"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
         if deal_data.get("Modified_Time"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_updated = datetime.fromisoformat(
                     deal_data["Modified_Time"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
 
         # Extract owner ID
         owner = deal_data.get("Owner")

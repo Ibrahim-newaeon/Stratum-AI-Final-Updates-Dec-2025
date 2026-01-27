@@ -6,6 +6,7 @@ Synchronizes contacts and deals from HubSpot to Stratum AI.
 Supports scheduled syncs and real-time webhook updates.
 """
 
+import contextlib
 from datetime import UTC, datetime
 from typing import Any, Optional
 from uuid import UUID
@@ -260,19 +261,15 @@ class HubSpotSyncService:
         crm_created = None
         crm_updated = None
         if properties.get("createdate"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_created = datetime.fromisoformat(
                     properties["createdate"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
         if properties.get("lastmodifieddate"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_updated = datetime.fromisoformat(
                     properties["lastmodifieddate"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
 
         contact_fields = {
             "crm_owner_id": properties.get("hubspot_owner_id"),
@@ -421,12 +418,10 @@ class HubSpotSyncService:
         # Parse close date
         close_date = None
         if properties.get("closedate"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 close_date = datetime.fromisoformat(
                     properties["closedate"].replace("Z", "+00:00")
                 ).date()
-            except (ValueError, TypeError):
-                pass
 
         # Parse won/closed flags
         is_won = str(properties.get("hs_is_closed_won", "")).lower() == "true"
@@ -436,19 +431,15 @@ class HubSpotSyncService:
         crm_created = None
         crm_updated = None
         if properties.get("createdate"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_created = datetime.fromisoformat(
                     properties["createdate"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
         if properties.get("hs_lastmodifieddate"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 crm_updated = datetime.fromisoformat(
                     properties["hs_lastmodifieddate"].replace("Z", "+00:00")
                 )
-            except (ValueError, TypeError):
-                pass
 
         deal_fields = {
             "crm_pipeline_id": properties.get("pipeline"),

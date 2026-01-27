@@ -257,7 +257,7 @@ class MetaConversionsAPI:
         url = f"{self.BASE_URL}/{self.pixel_id}/events"
 
         try:
-            response = requests.post(url, json=payload)
+            response = requests.post(url, json=payload, timeout=30)
             response.raise_for_status()
             result = response.json()
 
@@ -336,7 +336,7 @@ class MetaConversionsAPI:
         url = f"{self.BASE_URL}/{self.pixel_id}/server_events_quality"
         params = {"access_token": self.access_token}
 
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=30)
         response.raise_for_status()
 
         return response.json()
@@ -517,7 +517,7 @@ class TikTokEventsAPI:
         headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
 
         try:
-            response = requests.post(self.BASE_URL, json=payload, headers=headers)
+            response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
             response.raise_for_status()
             result = response.json()
 
@@ -623,7 +623,7 @@ class SnapchatConversionsAPI:
         }
 
         try:
-            response = requests.post(self.BASE_URL, json=payload, headers=headers)
+            response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
             response.raise_for_status()
 
             logger.info("Snapchat CAPI: Event sent successfully")

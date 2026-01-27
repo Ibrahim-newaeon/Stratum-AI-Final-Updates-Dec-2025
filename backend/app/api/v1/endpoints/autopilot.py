@@ -8,6 +8,7 @@ API endpoints for Autopilot features:
 - Action execution
 """
 
+import contextlib
 from datetime import UTC, date
 from typing import Any, Optional
 from uuid import UUID
@@ -474,10 +475,8 @@ async def dry_run_action(
     # Get EMQ from cards if available
     for card in signal_data.get("cards", []):
         if "EMQ" in card.get("title", ""):
-            try:
+            with contextlib.suppress(ValueError, AttributeError):
                 signal_score = float(card.get("value", "0").rstrip("%"))
-            except (ValueError, AttributeError):
-                pass
 
     # Evaluate trust gate
     gate_passed = True

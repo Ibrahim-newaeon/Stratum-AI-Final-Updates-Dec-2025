@@ -13,6 +13,7 @@ Handles:
 """
 
 import asyncio
+import contextlib
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -136,17 +137,13 @@ class WebSocketManager:
 
         if self._pubsub_task:
             self._pubsub_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._pubsub_task
-            except asyncio.CancelledError:
-                pass
 
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._heartbeat_task
-            except asyncio.CancelledError:
-                pass
 
         # Close all connections
         for client_id in list(self._connections.keys()):

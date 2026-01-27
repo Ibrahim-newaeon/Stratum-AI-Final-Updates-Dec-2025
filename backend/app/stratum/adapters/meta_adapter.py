@@ -607,7 +607,7 @@ class MetaAdapter(BaseAdapter):
                 # would handle pagination and more complex responses
                 import requests
 
-                response = requests.get(f"https://graph.facebook.com/v18.0{path}", params=params)
+                response = requests.get(f"https://graph.facebook.com/v18.0{path}", params=params, timeout=30)
 
                 if response.status_code == 200:
                     data = response.json()

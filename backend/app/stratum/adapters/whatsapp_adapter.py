@@ -50,6 +50,7 @@ Rate Limits
 - API calls: 80 calls/second for Cloud API
 """
 
+import contextlib
 import hashlib
 import hmac
 import json
@@ -594,7 +595,7 @@ class WhatsAppAdapter(BaseAdapter):
             url = f"{self.BASE_URL}/{self.phone_number_id}/media"
             headers = {"Authorization": f"Bearer {self.access_token}"}
 
-            response = requests.post(url, data=data, files=files, headers=headers)
+            response = requests.post(url, data=data, files=files, headers=headers, timeout=60)
             response.raise_for_status()
 
             return response.json().get("id", "")
@@ -906,7 +907,7 @@ class WhatsAppAdapter(BaseAdapter):
         params = {"access_token": self.access_token}
 
         try:
-            response = requests.post(url, params=params, json=capi_payload)
+            response = requests.post(url, params=params, json=capi_payload, timeout=30)
             response.raise_for_status()
             result = response.json()
 
@@ -1010,13 +1011,13 @@ class WhatsAppAdapter(BaseAdapter):
 
         try:
             if method == "GET":
-                response = requests.get(url, headers=headers, params=params)
+                response = requests.get(url, headers=headers, params=params, timeout=30)
             elif method == "POST":
-                response = requests.post(url, headers=headers, json=data, params=params)
+                response = requests.post(url, headers=headers, json=data, params=params, timeout=30)
             elif method == "DELETE":
-                response = requests.delete(url, headers=headers, params=params)
+                response = requests.delete(url, headers=headers, params=params, timeout=30)
             else:
-                response = requests.request(method, url, headers=headers, json=data)
+                response = requests.request(method, url, headers=headers, json=data, timeout=30)
 
             response.raise_for_status()
             return response.json()
@@ -1024,10 +1025,8 @@ class WhatsAppAdapter(BaseAdapter):
         except requests.RequestException as e:
             error_data = {}
             if hasattr(e, "response") and e.response is not None:
-                try:
+                with contextlib.suppress(json.JSONDecodeError, ValueError):
                     error_data = e.response.json()
-                except (json.JSONDecodeError, ValueError):
-                    pass
 
             error_msg = error_data.get("error", {}).get("message", str(e))
             raise PlatformError(f"WhatsApp API error: {error_msg}")
