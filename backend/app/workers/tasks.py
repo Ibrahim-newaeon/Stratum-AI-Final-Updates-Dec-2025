@@ -2346,10 +2346,11 @@ def _track_funnel_progress(events, steps, conversion_window, step_timeout) -> di
     # Find first matching event for step 1
     entered_at = None
     for event in events:
-        if event.event_name == first_step_event:
-            if _check_step_conditions(event, first_step.get("conditions", [])):
-                entered_at = event.event_time
-                break
+        if event.event_name == first_step_event and _check_step_conditions(
+            event, first_step.get("conditions", [])
+        ):
+            entered_at = event.event_time
+            break
 
     if not entered_at:
         return {"entered": False}
@@ -2378,14 +2379,13 @@ def _track_funnel_progress(events, steps, conversion_window, step_timeout) -> di
             if step_timeout and event.event_time > last_step_time + step_timeout:
                 break
 
-            if event.event_name == step_event:
-                if _check_step_conditions(event, step_conditions):
-                    step_timestamps[str(i)] = event.event_time.isoformat()
-                    current_step = i
-                    completed_steps = i
-                    last_step_time = event.event_time
-                    found = True
-                    break
+            if event.event_name == step_event and _check_step_conditions(event, step_conditions):
+                step_timestamps[str(i)] = event.event_time.isoformat()
+                current_step = i
+                completed_steps = i
+                last_step_time = event.event_time
+                found = True
+                break
 
         if not found:
             break

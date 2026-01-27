@@ -443,8 +443,11 @@ class AudienceInsightsService:
             )
 
         # Lookalike insights
-        if audience.audience_type == AudienceType.LOOKALIKE:
-            if audience.lookalike_percent and audience.lookalike_percent > 5:
+        if (
+            audience.audience_type == AudienceType.LOOKALIKE
+            and audience.lookalike_percent
+            and audience.lookalike_percent > 5
+        ):
                 insights.append(
                     AudienceInsight(
                         audience_id=audience_id,

@@ -352,8 +352,7 @@ class MockAdNetwork:
         # Video metrics (if applicable)
         video_views = None
         video_completions = None
-        if platform in [AdPlatform.META, AdPlatform.TIKTOK, AdPlatform.SNAPCHAT]:
-            if rng.random() < 0.6:  # 60% of campaigns have video
+        if platform in [AdPlatform.META, AdPlatform.TIKTOK, AdPlatform.SNAPCHAT] and rng.random() < 0.6:
                 video_views = int(impressions * rng.uniform(0.3, 0.7))
                 video_completions = int(video_views * rng.uniform(0.15, 0.45))
 

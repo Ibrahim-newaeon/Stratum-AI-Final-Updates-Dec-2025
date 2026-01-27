@@ -191,30 +191,29 @@ class RetrainingPipeline:
             return True, RetrainingTrigger.SCHEDULED, f"Model is {age_days} days old"
 
         # Check performance drift if predictions provided
-        if recent_predictions is not None and len(recent_predictions) > 100:
-            if (
-                "prediction" in recent_predictions.columns
-                and "actual" in recent_predictions.columns
-            ):
-                # Calculate recent performance
-                y_true = recent_predictions["actual"].values
-                y_pred = recent_predictions["prediction"].values
+        if recent_predictions is not None and len(recent_predictions) > 100 and (
+            "prediction" in recent_predictions.columns
+            and "actual" in recent_predictions.columns
+        ):
+            # Calculate recent performance
+            y_true = recent_predictions["actual"].values
+            y_pred = recent_predictions["prediction"].values
 
-                # R² score
-                ss_res = np.sum((y_true - y_pred) ** 2)
-                ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
-                current_r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+            # R² score
+            ss_res = np.sum((y_true - y_pred) ** 2)
+            ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
+            current_r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
-                # Compare to training R²
-                training_r2 = metadata.get("metrics", {}).get("r2", 0)
+            # Compare to training R²
+            training_r2 = metadata.get("metrics", {}).get("r2", 0)
 
-                degradation = training_r2 - current_r2
-                if degradation > self.config.max_r2_degradation:
-                    return (
-                        True,
-                        RetrainingTrigger.PERFORMANCE_DRIFT,
-                        f"R² degraded from {training_r2:.3f} to {current_r2:.3f}",
-                    )
+            degradation = training_r2 - current_r2
+            if degradation > self.config.max_r2_degradation:
+                return (
+                    True,
+                    RetrainingTrigger.PERFORMANCE_DRIFT,
+                    f"R² degraded from {training_r2:.3f} to {current_r2:.3f}",
+                )
 
         return False, RetrainingTrigger.MANUAL, "No retraining needed"
 

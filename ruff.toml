@@ -82,7 +82,6 @@ ignore = [
     "S110",   # try-except-pass (intentional robustness)
     "S112",   # try-except-continue (intentional)
     "S608",   # SQL injection (manual review needed - often false positive)
-    "SIM102", # Nested if statements (28 violations - readability)
     "T20",    # Print statements (allowed in scripts)
     "UP007",  # Use X | Y for Union (keep Optional for clarity)
     "UP038",  # Use X | Y in isinstance (legacy code)

@@ -458,8 +458,11 @@ class StatusManagementRule(AutopilotRule):
         triggered = False
 
         # Check for extremely poor ROAS
-        if context.min_roas and metrics.roas:
-            if metrics.roas < context.min_roas * self.min_roas_multiplier:
+        if (
+            context.min_roas
+            and metrics.roas
+            and metrics.roas < context.min_roas * self.min_roas_multiplier
+        ):
                 triggered = True
                 actions.append(
                     self._create_action(
@@ -476,8 +479,11 @@ class StatusManagementRule(AutopilotRule):
                 )
 
         # Check for extremely high CPA
-        if context.max_cpa and metrics.cpa:
-            if metrics.cpa > context.max_cpa * self.max_cpa_multiplier:
+        if (
+            context.max_cpa
+            and metrics.cpa
+            and metrics.cpa > context.max_cpa * self.max_cpa_multiplier
+        ):
                 triggered = True
                 actions.append(
                     self._create_action(
@@ -497,12 +503,16 @@ class StatusManagementRule(AutopilotRule):
         if len(context.historical_metrics) >= self.pause_after_days:
             poor_days = 0
             for hist_metrics in context.historical_metrics[-self.pause_after_days :]:
-                if context.target_roas and hist_metrics.roas:
-                    if hist_metrics.roas < context.target_roas * 0.7:
-                        poor_days += 1
-                elif context.target_cpa and hist_metrics.cpa:
-                    if hist_metrics.cpa > context.target_cpa * 1.5:
-                        poor_days += 1
+                if (
+                    context.target_roas
+                    and hist_metrics.roas
+                    and hist_metrics.roas < context.target_roas * 0.7
+                ) or (
+                    context.target_cpa
+                    and hist_metrics.cpa
+                    and hist_metrics.cpa > context.target_cpa * 1.5
+                ):
+                    poor_days += 1
 
             if poor_days >= self.pause_after_days:
                 triggered = True

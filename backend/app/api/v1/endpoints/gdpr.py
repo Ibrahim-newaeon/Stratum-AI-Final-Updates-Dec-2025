@@ -70,12 +70,13 @@ async def export_user_data(
     requesting_result = await db.execute(select(User).where(User.id == requesting_user_id))
     requesting_user = requesting_result.scalar_one_or_none()
 
-    if requesting_user_id != export_request.user_id:
-        if not requesting_user or requesting_user.role.value != "admin":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to export this user's data",
-            )
+    if requesting_user_id != export_request.user_id and (
+        not requesting_user or requesting_user.role.value != "admin"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to export this user's data",
+        )
 
     # Collect user data
     export_data = {
@@ -224,12 +225,13 @@ async def anonymize_user_data(
     requesting_result = await db.execute(select(User).where(User.id == requesting_user_id))
     requesting_user = requesting_result.scalar_one_or_none()
 
-    if requesting_user_id != anonymize_request.user_id:
-        if not requesting_user or requesting_user.role.value != "admin":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to anonymize this user's data",
-            )
+    if requesting_user_id != anonymize_request.user_id and (
+        not requesting_user or requesting_user.role.value != "admin"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to anonymize this user's data",
+        )
 
     tables_affected = []
     records_modified = 0

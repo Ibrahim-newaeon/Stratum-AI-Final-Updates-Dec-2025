@@ -343,10 +343,9 @@ class TrustGate:
                 recommendations.append("Check CDP event ingestion for missing identifiers")
             elif signal_health.cdp_emq_score < 85:
                 recommendations.append("Consider enhancing CDP identifier collection")
-        elif signal_health.has_cdp_data() is False:
+        elif signal_health.has_cdp_data() is False and decision != GateDecision.PASS:
             # No CDP data available - recommend integration
-            if decision != GateDecision.PASS:
-                recommendations.append("Consider integrating CDP for improved identity resolution")
+            recommendations.append("Consider integrating CDP for improved identity resolution")
 
         # Add issue-specific recommendations
         for issue in signal_health.issues:

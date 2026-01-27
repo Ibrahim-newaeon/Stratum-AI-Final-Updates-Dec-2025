@@ -104,12 +104,11 @@ class EmbedWidgetService:
             )
 
         # Validate custom branding (Enterprise only)
-        if data.custom_branding:
-            if not has_feature(tier, Feature.EMBED_WIDGETS_WHITELABEL):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Custom branding requires Enterprise tier",
-                )
+        if data.custom_branding and not has_feature(tier, Feature.EMBED_WIDGETS_WHITELABEL):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Custom branding requires Enterprise tier",
+            )
 
         # Determine branding level
         branding_level = self.get_branding_level_for_tier(tier)

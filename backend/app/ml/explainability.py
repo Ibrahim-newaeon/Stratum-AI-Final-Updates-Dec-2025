@@ -391,9 +391,8 @@ class ModelExplainer:
         # Check for extreme values
         extreme_penalty = 0
         for name, value in features.items():
-            if isinstance(value, (int, float)):
-                if value > 1000 or value < -1000:
-                    extreme_penalty += 0.05
+            if isinstance(value, (int, float)) and (value > 1000 or value < -1000):
+                extreme_penalty += 0.05
 
         confidence = max(0.0, min(1.0, coverage - extreme_penalty))
         return round(confidence, 2)

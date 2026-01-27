@@ -258,9 +258,11 @@ class ModelABTestingService:
         experiment.status = status
         experiment.completed_at = datetime.now(UTC)
 
-        if experiment.model_name in self._active_experiments:
-            if self._active_experiments[experiment.model_name] == experiment_id:
-                del self._active_experiments[experiment.model_name]
+        if (
+            experiment.model_name in self._active_experiments
+            and self._active_experiments[experiment.model_name] == experiment_id
+        ):
+            del self._active_experiments[experiment.model_name]
 
         logger.info(f"Stopped experiment: {experiment_id} with status {status}")
         return True

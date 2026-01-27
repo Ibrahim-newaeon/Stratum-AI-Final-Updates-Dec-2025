@@ -341,17 +341,16 @@ async def hubspot_webhook(
     body = await request.body()
 
     # Validate webhook signature (v3 preferred)
-    if settings.hubspot_client_secret:
-        if x_hubspot_signature_v3:
-            # V3 signature validation
-            expected = hmac.new(
-                settings.hubspot_client_secret.encode(),
-                body,
-                hashlib.sha256,
-            ).hexdigest()
-            if not hmac.compare_digest(expected, x_hubspot_signature_v3):
-                logger.warning("hubspot_webhook_invalid_signature")
-                raise HTTPException(status_code=401, detail="Invalid signature")
+    if settings.hubspot_client_secret and x_hubspot_signature_v3:
+        # V3 signature validation
+        expected = hmac.new(
+            settings.hubspot_client_secret.encode(),
+            body,
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(expected, x_hubspot_signature_v3):
+            logger.warning("hubspot_webhook_invalid_signature")
+            raise HTTPException(status_code=401, detail="Invalid signature")
 
     # Parse payload
     try:
