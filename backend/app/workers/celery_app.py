@@ -4,12 +4,118 @@
 """
 Celery application setup with Redis broker and result backend.
 Includes beat schedule for periodic tasks.
+
+Security: All beat-scheduled tasks use distributed locks to prevent
+duplicate execution across multiple workers.
 """
 
+import functools
+import logging
+from contextlib import contextmanager
+from typing import Any, Callable
+
+import redis
 from celery import Celery
 from celery.schedules import crontab
 
 from app.core.config import settings
+
+logger = logging.getLogger("stratum.workers.celery")
+
+
+# =============================================================================
+# Distributed Lock for Beat-Scheduled Tasks
+# =============================================================================
+
+
+class DistributedLock:
+    """
+    Redis-based distributed lock to prevent duplicate task execution.
+
+    When multiple Celery workers are running with beat scheduler,
+    this lock ensures only one worker executes a scheduled task.
+    """
+
+    def __init__(self, redis_url: str = None):
+        self.redis_url = redis_url or settings.redis_url
+        self._redis_client = None
+
+    @property
+    def redis_client(self) -> redis.Redis:
+        """Lazy initialization of Redis client."""
+        if self._redis_client is None:
+            self._redis_client = redis.from_url(self.redis_url)
+        return self._redis_client
+
+    @contextmanager
+    def acquire(self, lock_name: str, timeout: int = 3600, blocking: bool = False):
+        """
+        Acquire a distributed lock.
+
+        Args:
+            lock_name: Unique name for the lock (usually task name)
+            timeout: Lock expiration in seconds (default 1 hour)
+            blocking: Whether to wait for lock (default False - return immediately)
+
+        Yields:
+            bool: True if lock was acquired, False otherwise
+        """
+        lock_key = f"celery:lock:{lock_name}"
+        lock = self.redis_client.lock(lock_key, timeout=timeout, blocking=blocking)
+
+        acquired = False
+        try:
+            acquired = lock.acquire(blocking=blocking)
+            yield acquired
+        finally:
+            if acquired:
+                try:
+                    lock.release()
+                except redis.exceptions.LockNotOwnedError:
+                    # Lock expired or was released by another process
+                    logger.warning(f"Lock {lock_name} was not owned when releasing")
+
+
+# Global lock instance
+_distributed_lock = DistributedLock()
+
+
+def with_distributed_lock(
+    lock_name: str = None,
+    timeout: int = 3600,
+    skip_if_locked: bool = True
+) -> Callable:
+    """
+    Decorator to ensure only one instance of a task runs across all workers.
+
+    Args:
+        lock_name: Name of the lock (defaults to task name)
+        timeout: Lock timeout in seconds (default 1 hour)
+        skip_if_locked: If True, skip task silently when locked. If False, raise exception.
+
+    Usage:
+        @celery_app.task
+        @with_distributed_lock(timeout=1800)
+        def my_scheduled_task():
+            # Only one worker will execute this
+            pass
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            name = lock_name or f"{func.__module__}.{func.__name__}"
+            with _distributed_lock.acquire(name, timeout=timeout) as acquired:
+                if not acquired:
+                    if skip_if_locked:
+                        logger.info(
+                            f"Task {name} skipped - already running on another worker"
+                        )
+                        return {"status": "skipped", "reason": "lock_held"}
+                    else:
+                        raise RuntimeError(f"Could not acquire lock for task {name}")
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 # Create Celery app
 celery_app = Celery(

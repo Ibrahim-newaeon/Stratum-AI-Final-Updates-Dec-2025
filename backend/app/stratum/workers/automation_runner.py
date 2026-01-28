@@ -133,24 +133,28 @@ def async_task(func):
 @shared_task(bind=True, max_retries=3)
 @async_task
 async def execute_action(
-    self, action_data: dict[str, Any], credentials: dict[str, Any], force: bool = False
+    self, action_data: dict[str, Any], credentials: dict[str, Any]
 ) -> dict[str, Any]:
     """
     Execute a single automation action.
 
     This is the core execution task. It:
     1. Reconstructs the action from serialized data
-    2. Performs a final signal health check (unless forced)
+    2. Performs a final signal health check (ALWAYS - no bypass allowed)
     3. Executes via the appropriate platform adapter
     4. Records the result
 
     Args:
         action_data: Serialized AutomationAction
         credentials: Platform credentials
-        force: Skip signal health check (use with caution)
 
     Returns:
         Execution result with status and any errors
+
+    Security Note:
+        Signal health checks cannot be bypassed. All actions must pass
+        through the trust gate. Use emergency_stop or pause_all action
+        types for urgent situations - these are always allowed.
     """
     from app.stratum.adapters.registry import get_adapter
 
@@ -178,14 +182,20 @@ async def execute_action(
             signal_health_at_creation=action_data.get("signal_health_at_creation", 0),
         )
 
-        # Final signal health check (unless forced)
-        if not force:
-            current_health = action_data.get("current_signal_health", 70)
-            if current_health < 40:
-                result["status"] = "blocked"
-                result["reason"] = f"Signal health critical ({current_health}), action blocked"
-                logger.warning(f"Action {execution_id} blocked due to critical signal health")
-                return result
+        # Final signal health check (ALWAYS enforced - no bypass)
+        # Default to 0 (fail-safe) when signal health data is missing
+        current_health = action_data.get("current_signal_health")
+        if current_health is None:
+            result["status"] = "blocked"
+            result["reason"] = "Signal health data missing - cannot execute without health verification"
+            logger.warning(f"Action {execution_id} blocked: missing signal health data")
+            return result
+
+        if current_health < 40:
+            result["status"] = "blocked"
+            result["reason"] = f"Signal health critical ({current_health}), action blocked"
+            logger.warning(f"Action {execution_id} blocked due to critical signal health")
+            return result
 
         # Initialize adapter and execute
         adapter = await get_adapter(platform, credentials)

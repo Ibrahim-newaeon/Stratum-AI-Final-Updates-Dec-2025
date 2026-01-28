@@ -3,6 +3,9 @@
 # =============================================================================
 """
 Background tasks for automation rules evaluation and execution.
+
+Security: Beat-scheduled tasks use distributed locks to prevent
+duplicate execution across multiple Celery workers.
 """
 
 from datetime import UTC, datetime
@@ -20,6 +23,7 @@ from app.models import (
     RuleExecution,
     RuleStatus,
 )
+from app.workers.celery_app import with_distributed_lock
 from app.workers.tasks.helpers import publish_event
 
 logger = get_task_logger(__name__)
@@ -107,10 +111,13 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
 
 
 @shared_task
+@with_distributed_lock(timeout=900)  # 15 minute lock timeout
 def evaluate_all_rules():
     """
     Evaluate all active rules across all tenants.
     Scheduled by Celery beat (typically every 15 minutes).
+
+    Uses distributed lock to prevent duplicate execution across workers.
     """
     logger.info("Starting evaluation of all rules")
 

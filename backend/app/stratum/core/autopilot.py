@@ -567,7 +567,7 @@ class AutopilotEngine:
         # Execute approved actions
         for result in results:
             for action in result.actions:
-                if result.gate_result.decision == GateDecision.APPROVED:
+                if result.gate_result.decision == GateDecision.PASS:
                     await adapter.execute_action(action)
     """
 
@@ -698,7 +698,7 @@ class AutopilotEngine:
                         gate_results.append(gate_result)
 
                         # Execute if auto_execute is on and approved
-                        if self.auto_execute and gate_result.decision == GateDecision.APPROVED:
+                        if self.auto_execute and gate_result.decision == GateDecision.PASS:
                             # Record execution time for cooldown
                             self._execution_history[entity_key] = datetime.now(UTC)
 
@@ -789,6 +789,7 @@ class TrustGatedAutopilot:
         # Evaluate through trust gate
         result = self.trust_gate.evaluate(action, signal_health)
 
-        can_proceed = result.decision in [GateDecision.APPROVED, GateDecision.OVERRIDE]
+        # PASS means the trust gate approved execution based on signal health
+        can_proceed = result.decision == GateDecision.PASS
 
         return can_proceed, result

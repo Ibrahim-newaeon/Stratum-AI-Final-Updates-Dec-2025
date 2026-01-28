@@ -117,20 +117,45 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
 # =============================================================================
 
 
+def _get_pii_salt() -> bytes:
+    """
+    Get PII encryption salt from environment or derive from secret key.
+
+    Security: In production, set PII_ENCRYPTION_SALT environment variable
+    to a unique 32+ byte value per deployment. This prevents rainbow table
+    attacks if the encryption key is compromised.
+    """
+    import os
+
+    # Check for explicit salt in environment (recommended for production)
+    env_salt = os.getenv("PII_ENCRYPTION_SALT")
+    if env_salt and len(env_salt) >= 16:
+        return env_salt.encode()
+
+    # Derive salt from secret_key (fallback - still unique per deployment)
+    # This ensures different deployments have different salts
+    derived = hashlib.sha256(
+        f"stratum_pii_salt:{settings.secret_key}".encode()
+    ).digest()
+    return derived
+
+
 def _get_fernet_key() -> bytes:
     """
     Derive a Fernet-compatible key from the encryption key setting.
-    Uses PBKDF2 for key derivation.
+    Uses PBKDF2 for key derivation with environment-specific salt.
+
+    Security improvements:
+    - Salt is derived from deployment-specific secret key (or explicit env var)
+    - Iterations increased to 200,000 per OWASP 2024 recommendations
     """
-    # Use a fixed salt for deterministic key derivation
-    # In production, consider using a per-tenant salt stored securely
-    salt = b"stratum_ai_pii_salt_v1"
+    salt = _get_pii_salt()
 
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
         salt=salt,
-        iterations=100000,
+        iterations=200000,  # Increased from 100k per OWASP 2024 guidelines
     )
 
     key = base64.urlsafe_b64encode(kdf.derive(settings.pii_encryption_key.encode()))

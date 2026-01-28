@@ -3,6 +3,9 @@
 # =============================================================================
 """
 Background tasks for syncing campaign data from ad platforms.
+
+Security: Beat-scheduled tasks use distributed locks to prevent
+duplicate execution across multiple Celery workers.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -14,6 +17,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.db.session import SyncSessionLocal
 from app.models import Campaign, CampaignMetric, Tenant
+from app.workers.celery_app import with_distributed_lock
 from app.workers.tasks.helpers import publish_event
 
 logger = get_task_logger(__name__)
@@ -119,10 +123,13 @@ def sync_campaign_data(self, tenant_id: int, campaign_id: int):
 
 
 @shared_task
+@with_distributed_lock(timeout=3600)  # 1 hour lock timeout
 def sync_all_campaigns():
     """
     Sync all active campaigns across all tenants.
     Scheduled hourly by Celery beat.
+
+    Uses distributed lock to prevent duplicate execution across workers.
     """
     logger.info("Starting sync for all campaigns")
 

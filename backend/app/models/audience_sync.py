@@ -240,6 +240,10 @@ class AudienceSyncCredential(Base, TimestampMixin):
     """
     Stores platform-specific credentials for audience sync.
     Links to ad accounts for each platform.
+
+    Security: OAuth tokens are encrypted at rest using Fernet encryption.
+    Use the set_access_token() and get_access_token() methods to handle
+    encryption/decryption automatically.
     """
 
     __tablename__ = "audience_sync_credentials"
@@ -257,10 +261,62 @@ class AudienceSyncCredential(Base, TimestampMixin):
     ad_account_id = Column(String(255), nullable=False)
     ad_account_name = Column(String(255), nullable=True)
 
-    # Credentials (encrypted in production)
-    access_token = Column(Text, nullable=True)
-    refresh_token = Column(Text, nullable=True)
+    # Credentials (ENCRYPTED - never store plaintext tokens)
+    # Use set_access_token()/get_access_token() methods for encryption
+    _access_token_encrypted = Column("access_token", Text, nullable=True)
+    _refresh_token_encrypted = Column("refresh_token", Text, nullable=True)
     token_expires_at = Column(DateTime(timezone=True), nullable=True)
+
+    def set_access_token(self, token: str | None) -> None:
+        """Encrypt and store access token."""
+        if token is None:
+            self._access_token_encrypted = None
+        else:
+            from app.core.security import encrypt_pii
+            self._access_token_encrypted = encrypt_pii(token)
+
+    def get_access_token(self) -> str | None:
+        """Decrypt and return access token."""
+        if self._access_token_encrypted is None:
+            return None
+        from app.core.security import decrypt_pii
+        return decrypt_pii(self._access_token_encrypted)
+
+    def set_refresh_token(self, token: str | None) -> None:
+        """Encrypt and store refresh token."""
+        if token is None:
+            self._refresh_token_encrypted = None
+        else:
+            from app.core.security import encrypt_pii
+            self._refresh_token_encrypted = encrypt_pii(token)
+
+    def get_refresh_token(self) -> str | None:
+        """Decrypt and return refresh token."""
+        if self._refresh_token_encrypted is None:
+            return None
+        from app.core.security import decrypt_pii
+        return decrypt_pii(self._refresh_token_encrypted)
+
+    # Properties for backward compatibility
+    @property
+    def access_token(self) -> str | None:
+        """Get decrypted access token (backward compat)."""
+        return self.get_access_token()
+
+    @access_token.setter
+    def access_token(self, value: str | None) -> None:
+        """Set encrypted access token (backward compat)."""
+        self.set_access_token(value)
+
+    @property
+    def refresh_token(self) -> str | None:
+        """Get decrypted refresh token (backward compat)."""
+        return self.get_refresh_token()
+
+    @refresh_token.setter
+    def refresh_token(self, value: str | None) -> None:
+        """Set encrypted refresh token (backward compat)."""
+        self.set_refresh_token(value)
 
     # Platform-specific IDs
     business_id = Column(String(255), nullable=True)  # Meta Business Manager ID
