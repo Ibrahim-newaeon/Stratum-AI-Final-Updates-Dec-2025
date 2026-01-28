@@ -9,13 +9,13 @@ import {
   RocketLaunchIcon,
 } from '@heroicons/react/24/outline';
 
-// Apple Glass Dark theme
+// Stratum Gold Dark theme
 const theme = {
-  primary: '#0A84FF',
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
-  green: '#30D158',
+  gold: '#D4AF37',
+  goldLight: 'rgba(212, 175, 55, 0.15)',
+  green: '#22c55e', // Stratum Green
   orange: '#FF9F0A',
-  teal: '#64D2FF',
+  cyan: '#14F0C6',
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -32,8 +32,8 @@ export function HowItWorks() {
       description:
         'Link Meta, Google, TikTok, Snapchat, and GA4 in minutes. OAuth-secured, no code required.',
       icon: LinkIcon,
-      color: theme.teal,
-      bgColor: 'rgba(100, 210, 255, 0.1)',
+      color: theme.cyan,
+      bgColor: 'rgba(20, 240, 198, 0.1)',
     },
     {
       number: '02',
@@ -41,8 +41,8 @@ export function HowItWorks() {
       description:
         'Stratum calculates EMQ scores, detects anomalies, identifies scaling opportunities, and monitors signal health.',
       icon: CpuChipIcon,
-      color: theme.primary,
-      bgColor: theme.primaryLight,
+      color: theme.gold,
+      bgColor: theme.goldLight,
     },
     {
       number: '03',
@@ -71,17 +71,17 @@ export function HowItWorks() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: theme.primaryLight,
-                border: '1px solid rgba(10, 132, 255, 0.3)',
+                background: theme.goldLight,
+                border: '1px solid rgba(212, 175, 55, 0.3)',
               }}
             >
-              <span className="text-sm font-medium" style={{ color: theme.primary }}>
+              <span className="text-sm font-medium" style={{ color: theme.gold }}>
                 Simple Setup
               </span>
             </div>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 text-center">
-            How it <span style={{ color: theme.primary }}>works</span>
+            How it <span style={{ color: theme.gold }}>works</span>
           </h2>
           <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: theme.textMuted }}>
             From connection to optimization in three simple steps
@@ -94,7 +94,7 @@ export function HowItWorks() {
           <div
             className="hidden md:block absolute top-24 left-[16.67%] right-[16.67%] h-px"
             style={{
-              background: `linear-gradient(to right, ${theme.teal}40, ${theme.primary}40, ${theme.orange}40)`,
+              background: `linear-gradient(to right, ${theme.cyan}40, ${theme.gold}40, ${theme.orange}40)`,
             }}
           />
 
@@ -166,14 +166,14 @@ export function HowItWorks() {
             <div
               className="absolute inset-0"
               style={{
-                background: `linear-gradient(135deg, rgba(10, 132, 255, 0.05), rgba(100, 210, 255, 0.05))`,
+                background: `linear-gradient(135deg, rgba(212, 175, 55, 0.05), rgba(20, 240, 198, 0.05))`,
               }}
             />
 
             <div className="relative flex items-start gap-6">
               <div
                 className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(48, 209, 88, 0.1)' }}
+                style={{ background: 'rgba(34, 197, 94, 0.1)' }}
               >
                 <CheckCircleIcon className="w-6 h-6" style={{ color: theme.green }} />
               </div>

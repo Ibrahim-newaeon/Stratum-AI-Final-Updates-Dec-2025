@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
-// Apple Glass Dark theme
+// Stratum Gold Dark theme
 const theme = {
-  primary: '#0A84FF',
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
+  gold: '#D4AF37',
+  goldLight: 'rgba(212, 175, 55, 0.15)',
   orange: '#FF9F0A',
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
@@ -30,11 +30,11 @@ export function CTA() {
       <div className="absolute inset-0 overflow-hidden">
         <div
           className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(10, 132, 255, 0.1), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(212, 175, 55, 0.1), transparent 60%)' }}
         />
         <div
           className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(191, 90, 242, 0.06), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 60%)' }}
         />
       </div>
 
@@ -44,19 +44,19 @@ export function CTA() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
             style={{
-              background: theme.primaryLight,
-              border: `1px solid rgba(10, 132, 255, 0.3)`,
+              background: theme.goldLight,
+              border: `1px solid rgba(212, 175, 55, 0.3)`,
             }}
           >
-            <SparklesIcon className="w-4 h-4" style={{ color: theme.primary }} />
-            <span className="text-sm font-medium" style={{ color: theme.primary }}>14-day free trial</span>
+            <SparklesIcon className="w-4 h-4" style={{ color: theme.gold }} />
+            <span className="text-sm font-medium" style={{ color: theme.gold }}>14-day free trial</span>
           </div>
         </div>
 
         {/* Hero Message - Centered */}
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 text-center">
           Ready to transform your{' '}
-          <span style={{ color: theme.primary }}>
+          <span style={{ color: theme.gold }}>
             revenue operations?
           </span>
         </h2>
@@ -72,8 +72,8 @@ export function CTA() {
             className="group flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-base
                        transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              background: theme.primary,
-              boxShadow: '0 0 40px rgba(10, 132, 255, 0.3)',
+              background: theme.gold,
+              boxShadow: '0 0 40px rgba(212, 175, 55, 0.3)',
             }}
           >
             14 Day Free Trial

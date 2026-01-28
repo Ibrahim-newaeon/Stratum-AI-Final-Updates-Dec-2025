@@ -24,17 +24,17 @@ const iconMap: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>
   CheckBadgeIcon,
 };
 
-// Apple Glass Dark theme
+// Stratum Gold Dark theme
 const theme = {
-  primary: '#0A84FF',
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
-  green: '#30D158',
-  greenLight: 'rgba(48, 209, 88, 0.15)',
+  gold: '#D4AF37',
+  goldLight: 'rgba(212, 175, 55, 0.15)',
+  green: '#22c55e', // Stratum Green
+  greenLight: 'rgba(34, 197, 94, 0.15)',
   orange: '#FF9F0A',
   orangeLight: 'rgba(255, 159, 10, 0.15)',
-  purple: '#BF5AF2',
-  purpleLight: 'rgba(191, 90, 242, 0.15)',
-  teal: '#64D2FF',
+  purple: '#8b5cf6',
+  purpleLight: 'rgba(139, 92, 246, 0.15)',
+  cyan: '#14F0C6',
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -52,7 +52,7 @@ const fallbackLayers: FeatureLayer[] = [
     description: 'Know when to trust your data',
     color: theme.green,
     bgColor: theme.greenLight,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: 'rgba(34, 197, 94, 0.3)',
     iconName: 'ShieldCheckIcon',
     displayOrder: 0,
     features: [
@@ -83,9 +83,9 @@ const fallbackLayers: FeatureLayer[] = [
     id: 'intelligence',
     name: 'Intelligence Layer',
     description: 'AI that explains itself',
-    color: theme.primary,
-    bgColor: theme.primaryLight,
-    borderColor: 'rgba(10, 132, 255, 0.3)',
+    color: theme.gold,
+    bgColor: theme.goldLight,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
     iconName: 'SparklesIcon',
     displayOrder: 1,
     features: [
@@ -166,16 +166,16 @@ export function Features() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
             style={{
-              background: theme.primaryLight,
-              border: `1px solid rgba(10, 132, 255, 0.3)`,
+              background: theme.goldLight,
+              border: `1px solid rgba(212, 175, 55, 0.3)`,
             }}
           >
-            <SparklesIcon className="w-4 h-4" style={{ color: theme.primary }} />
-            <span className="text-sm" style={{ color: theme.primary }}>The USP Stack</span>
+            <SparklesIcon className="w-4 h-4" style={{ color: theme.gold }} />
+            <span className="text-sm" style={{ color: theme.gold }}>The USP Stack</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Three layers.{' '}
-            <span style={{ color: theme.primary }}>
+            <span style={{ color: theme.gold }}>
               One intelligent system.
             </span>
           </h2>

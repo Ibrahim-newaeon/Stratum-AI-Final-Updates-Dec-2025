@@ -139,7 +139,7 @@ export default function AIFeatures() {
   return (
     <section id="features" className="relative py-32 overflow-hidden">
       {/* Background accent */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(10, 132, 255, 0.08), transparent 60%)' }} />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(212, 175, 55, 0.08), transparent 60%)' }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
         {/* Section Header - Centered */}
@@ -154,19 +154,19 @@ export default function AIFeatures() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: 'rgba(10, 132, 255, 0.15)',
-                border: '1px solid rgba(10, 132, 255, 0.3)',
+                background: 'rgba(212, 175, 55, 0.15)',
+                border: '1px solid rgba(212, 175, 55, 0.3)',
               }}
             >
-              <SparklesIcon className="w-4 h-4" style={{ color: '#0A84FF' }} />
-              <span className="text-sm font-medium" style={{ color: '#0A84FF' }}>6 AI Models Built-In</span>
+              <SparklesIcon className="w-4 h-4" style={{ color: '#D4AF37' }} />
+              <span className="text-sm font-medium" style={{ color: '#D4AF37' }}>6 AI Models Built-In</span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Predictive Intelligence</span>
             <br />
-            <span style={{ color: '#0A84FF' }}>
+            <span style={{ color: '#D4AF37' }}>
               Not Just Analytics
             </span>
           </h2>

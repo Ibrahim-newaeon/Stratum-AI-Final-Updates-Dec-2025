@@ -91,11 +91,11 @@ const fallbackTrustBadges: TrustBadge[] = [
   { id: '5', icon: '💰', text: '30-Day Money Back', displayOrder: 4 },
 ];
 
-// Apple Glass Dark theme
+// Stratum Gold Dark theme
 const theme = {
-  primary: '#0A84FF',
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
-  green: '#30D158',
+  gold: '#D4AF37',
+  goldLight: 'rgba(212, 175, 55, 0.15)',
+  green: '#22c55e', // Stratum Green
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -127,8 +127,8 @@ export function Pricing() {
             variant="outline"
             className="mb-4 px-4 py-1 border-0"
             style={{
-              background: theme.primaryLight,
-              color: theme.primary,
+              background: theme.goldLight,
+              color: theme.gold,
             }}
           >
             Pricing
@@ -152,14 +152,14 @@ export function Pricing() {
               className="relative flex flex-col rounded-3xl border-0 transition-all duration-300 hover:-translate-y-1"
               style={{
                 background: plan.highlighted
-                  ? 'linear-gradient(to bottom, rgba(10, 132, 255, 0.1), rgba(255, 255, 255, 0.03))'
+                  ? 'linear-gradient(to bottom, rgba(212, 175, 55, 0.1), rgba(255, 255, 255, 0.03))'
                   : theme.bgCard,
                 backdropFilter: 'blur(40px)',
                 WebkitBackdropFilter: 'blur(40px)',
                 border: plan.highlighted
-                  ? '2px solid rgba(10, 132, 255, 0.3)'
+                  ? '2px solid rgba(212, 175, 55, 0.3)'
                   : `1px solid ${theme.border}`,
-                boxShadow: plan.highlighted ? '0 0 40px rgba(10, 132, 255, 0.15)' : 'none',
+                boxShadow: plan.highlighted ? '0 0 40px rgba(212, 175, 55, 0.15)' : 'none',
               }}
             >
               {/* Badge */}
@@ -167,7 +167,7 @@ export function Pricing() {
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                   <Badge
                     className="text-white border-0 px-4 py-1"
-                    style={{ background: theme.primary }}
+                    style={{ background: theme.gold }}
                   >
                     <SparklesIcon className="w-3 h-3 mr-1" />
                     {plan.badge}
@@ -212,9 +212,9 @@ export function Pricing() {
                   style={
                     plan.highlighted
                       ? {
-                          background: theme.primary,
+                          background: theme.gold,
                           color: '#FFFFFF',
-                          boxShadow: '0 0 30px rgba(10, 132, 255, 0.3)',
+                          boxShadow: '0 0 30px rgba(212, 175, 55, 0.3)',
                         }
                       : {
                           background: 'rgba(255, 255, 255, 0.05)',
@@ -273,9 +273,9 @@ export function Pricing() {
                 variant="outline"
                 className="rounded-xl border-0"
                 style={{
-                  background: theme.primaryLight,
-                  color: theme.primary,
-                  border: `1px solid rgba(10, 132, 255, 0.3)`,
+                  background: theme.goldLight,
+                  color: theme.gold,
+                  border: `1px solid rgba(212, 175, 55, 0.3)`,
                 }}
                 onClick={() => navigate('/contact')}
               >

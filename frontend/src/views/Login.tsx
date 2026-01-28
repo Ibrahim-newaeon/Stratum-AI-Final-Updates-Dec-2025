@@ -1,6 +1,6 @@
 /**
- * Login Page - Apple Glass Dark Theme
- * Pure black background (#000000) + frosted glass cards
+ * Login Page - Stratum HoloGlass Theme
+ * Deep black background (#0a0a0f) + gold accent frosted glass cards
  */
 
 import { useState } from 'react';
@@ -15,22 +15,23 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { pageSEO, SEO } from '@/components/common/SEO';
 
-// Apple Glass Dark Theme
+// Stratum HoloGlass Theme
 const theme = {
-  primary: '#0A84FF', // Apple Blue
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
-  green: '#30D158', // Apple Green
-  orange: '#FF9F0A', // Apple Orange
-  purple: '#BF5AF2', // Apple Purple
-  teal: '#64D2FF', // Apple Teal
-  bgBase: '#000000', // Pure black
+  primary: '#D4AF37', // Stratum Gold
+  primaryLight: 'rgba(212, 175, 55, 0.15)',
+  green: '#22c55e', // Status Success
+  orange: '#f59e0b', // Status Warning
+  purple: '#8b5cf6', // Accent Purple
+  cyan: '#14F0C6', // Accent Cyan
+  bgBase: '#0a0a0f', // Deep navy black
   bgCard: 'rgba(255, 255, 255, 0.03)', // Frosted glass
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
   border: 'rgba(255, 255, 255, 0.08)',
   borderHover: 'rgba(255, 255, 255, 0.15)',
-  success: '#30D158', // Apple Green
+  borderGold: 'rgba(212, 175, 55, 0.2)',
+  success: '#22c55e', // Status Success
 };
 
 export default function Login() {
@@ -102,9 +103,9 @@ export default function Login() {
         className="fixed inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(10, 132, 255, 0.08), transparent),
-            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(191, 90, 242, 0.06), transparent),
-            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(100, 210, 255, 0.05), transparent)
+            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(212, 175, 55, 0.08), transparent),
+            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
+            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(20, 240, 198, 0.05), transparent)
           `,
         }}
       />
@@ -367,20 +368,20 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-2xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
+                className="w-full py-3.5 rounded-2xl font-semibold text-black transition-all duration-200 disabled:opacity-50"
                 style={{
                   background: theme.primary,
-                  boxShadow: '0 0 30px rgba(10, 132, 255, 0.2)',
+                  boxShadow: '0 0 30px rgba(212, 175, 55, 0.2)',
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading) {
                     e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 0 40px rgba(10, 132, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 0 40px rgba(212, 175, 55, 0.3)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 0 30px rgba(10, 132, 255, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 0 30px rgba(212, 175, 55, 0.2)';
                 }}
               >
                 {isLoading ? (

@@ -1,7 +1,7 @@
-// Apple Glass Dark theme
+// Stratum Gold Dark theme
 const theme = {
-  primary: '#0A84FF',
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
+  gold: '#D4AF37',
+  goldLight: 'rgba(212, 175, 55, 0.15)',
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -47,17 +47,17 @@ export function Platforms() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: theme.primaryLight,
-                border: '1px solid rgba(10, 132, 255, 0.3)',
+                background: theme.goldLight,
+                border: '1px solid rgba(212, 175, 55, 0.3)',
               }}
             >
-              <span className="text-sm font-medium" style={{ color: theme.primary }}>
+              <span className="text-sm font-medium" style={{ color: theme.gold }}>
                 Platform Integrations
               </span>
             </div>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 text-center">
-            One source of truth. <span style={{ color: theme.primary }}>Every platform.</span>
+            One source of truth. <span style={{ color: theme.gold }}>Every platform.</span>
           </h2>
           <p className="text-lg text-center" style={{ color: theme.textMuted }}>
             Unified Across Your Entire Ad Stack

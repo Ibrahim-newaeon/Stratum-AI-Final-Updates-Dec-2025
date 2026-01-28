@@ -81,9 +81,9 @@ export function PageLayout({ children }: PageLayoutProps) {
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           background: `
-            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(10, 132, 255, 0.08), transparent),
-            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(191, 90, 242, 0.06), transparent),
-            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(100, 210, 255, 0.05), transparent)
+            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(212, 175, 55, 0.08), transparent),
+            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
+            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(20, 240, 198, 0.05), transparent)
           `,
         }}
       />
@@ -101,20 +101,20 @@ export function PageLayout({ children }: PageLayoutProps) {
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
           <nav className="flex items-center justify-between">
-            {/* Logo - Apple Blue */}
+            {/* Logo - Stratum Gold */}
             <Link to="/" className="flex items-center gap-3 group">
               <div
                 className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
                 style={{
-                  background: '#0A84FF',
-                  boxShadow: '0 0 30px rgba(10, 132, 255, 0.2)',
+                  background: '#D4AF37',
+                  boxShadow: '0 0 30px rgba(212, 175, 55, 0.2)',
                 }}
               >
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span
                 className="text-xl font-bold"
-                style={{ color: '#0A84FF' }}
+                style={{ color: '#D4AF37' }}
               >
                 Stratum AI
               </span>
@@ -139,7 +139,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     className={`nav-link-underline absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-200 ${
                       isActiveLink(link.href) ? 'w-full' : 'w-0'
                     }`}
-                    style={{ background: '#0A84FF' }}
+                    style={{ background: '#D4AF37' }}
                   />
                 </Link>
               ))}
@@ -210,8 +210,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                 to="/signup"
                 className="cta-button px-5 py-2.5 rounded-2xl text-sm font-semibold text-white transition-all duration-200"
                 style={{
-                  background: '#0A84FF',
-                  boxShadow: '0 0 30px rgba(10, 132, 255, 0.2)',
+                  background: '#D4AF37',
+                  boxShadow: '0 0 30px rgba(212, 175, 55, 0.2)',
                 }}
               >
                 Start Free Trial
@@ -281,11 +281,11 @@ export function PageLayout({ children }: PageLayoutProps) {
                       style={{
                         background:
                           currentLanguage === 'en'
-                            ? 'rgba(10, 132, 255, 0.15)'
+                            ? 'rgba(212, 175, 55, 0.15)'
                             : 'rgba(255, 255, 255, 0.03)',
                         border:
                           currentLanguage === 'en'
-                            ? '1px solid rgba(10, 132, 255, 0.3)'
+                            ? '1px solid rgba(212, 175, 55, 0.3)'
                             : '1px solid rgba(255, 255, 255, 0.08)',
                         color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                       }}
@@ -300,11 +300,11 @@ export function PageLayout({ children }: PageLayoutProps) {
                       style={{
                         background:
                           currentLanguage === 'ar'
-                            ? 'rgba(10, 132, 255, 0.15)'
+                            ? 'rgba(212, 175, 55, 0.15)'
                             : 'rgba(255, 255, 255, 0.03)',
                         border:
                           currentLanguage === 'ar'
-                            ? '1px solid rgba(10, 132, 255, 0.3)'
+                            ? '1px solid rgba(212, 175, 55, 0.3)'
                             : '1px solid rgba(255, 255, 255, 0.08)',
                         color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
                       }}
@@ -326,7 +326,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                 <Link
                   to="/signup"
                   className="py-3 px-4 rounded-2xl text-sm font-semibold text-white text-center"
-                  style={{ background: '#0A84FF' }}
+                  style={{ background: '#D4AF37' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Start Free Trial
@@ -352,13 +352,13 @@ export function PageLayout({ children }: PageLayoutProps) {
               <Link to="/" className="flex items-center gap-3 mb-4">
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center"
-                  style={{ background: '#0A84FF' }}
+                  style={{ background: '#D4AF37' }}
                 >
                   <span className="text-white font-bold text-lg">S</span>
                 </div>
                 <span
                   className="text-xl font-semibold"
-                  style={{ color: '#0A84FF' }}
+                  style={{ color: '#D4AF37' }}
                 >
                   Stratum AI
                 </span>
@@ -373,7 +373,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://x.com/stratumai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-[#0A84FF]"
+                  className="transition-colors hover:text-[#D4AF37]"
                   style={{ color: 'rgba(255, 255, 255, 0.5)' }}
                   aria-label="Follow us on X"
                 >
@@ -385,7 +385,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://linkedin.com/company/stratumai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-[#0A84FF]"
+                  className="transition-colors hover:text-[#D4AF37]"
                   style={{ color: 'rgba(255, 255, 255, 0.5)' }}
                   aria-label="Follow us on LinkedIn"
                 >
@@ -446,7 +446,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     <li key={link.name}>
                       <Link
                         to={link.href}
-                        className="text-sm transition-colors hover:text-[#0A84FF]"
+                        className="text-sm transition-colors hover:text-[#D4AF37]"
                         style={{ color: 'rgba(255, 255, 255, 0.5)' }}
                       >
                         {link.name}
@@ -480,7 +480,7 @@ export function PageLayout({ children }: PageLayoutProps) {
         </div>
       </footer>
 
-      {/* Apple Glass Dark CSS */}
+      {/* Stratum Gold Dark CSS */}
       <style>{`
         .nav-link:hover {
           color: #ffffff !important;
@@ -492,7 +492,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
         .cta-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 0 40px rgba(10, 132, 255, 0.3) !important;
+          box-shadow: 0 0 40px rgba(212, 175, 55, 0.3) !important;
         }
       `}</style>
     </div>

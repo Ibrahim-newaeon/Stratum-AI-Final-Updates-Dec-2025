@@ -29,6 +29,7 @@ import {
   CpuChipIcon,
   DocumentChartBarIcon,
   DocumentTextIcon,
+  EyeIcon,
   FolderIcon,
   FunnelIcon,
   GiftIcon,
@@ -58,25 +59,29 @@ import { useWhatsNew, WhatsNewModal } from '@/components/changelog/WhatsNew';
 import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { useAuth } from '@/contexts/AuthContext';
+import { NeuralNetworkBg } from '@/components/ui/NeuralNetworkBg';
+import { TrustGateIndicator } from '@/components/ui/TrustGateIndicator';
 
-// Apple Glass Dark Theme
+// Stratum AI Dashboard Theme - HoloGlass (Gold + Cyan)
 const theme = {
-  primary: '#0A84FF', // Apple Blue
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
-  green: '#30D158', // Apple Green
-  orange: '#FF9F0A', // Apple Orange
-  purple: '#BF5AF2', // Apple Purple
-  teal: '#64D2FF', // Apple Teal
-  bgBase: '#000000', // Pure black
-  bgCard: 'rgba(255, 255, 255, 0.03)', // Frosted glass
-  bgSurface: 'rgba(255, 255, 255, 0.02)', // Subtle glass
+  primary: '#D4AF37', // Stratum Gold
+  primaryLight: 'rgba(212, 175, 55, 0.15)',
+  green: '#22c55e', // Status Success
+  orange: '#f59e0b', // Status Warning
+  purple: '#8b5cf6', // Accent Purple
+  cyan: '#14F0C6', // Accent Cyan
+  bgBase: '#0a0a0f', // Deep navy black
+  bgCard: '#12121a', // Solid data card (NN/g compliant)
+  bgSurface: '#1a1a24', // Elevated surface
+  bgOverlay: 'rgba(18, 18, 26, 0.75)', // Glass overlay
   textPrimary: '#ffffff',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderHover: 'rgba(255, 255, 255, 0.15)',
-  success: '#30D158', // Apple Green
-  danger: '#FF453A', // Apple Red
+  border: 'rgba(255, 255, 255, 0.06)',
+  borderHover: 'rgba(255, 255, 255, 0.12)',
+  borderGold: 'rgba(212, 175, 55, 0.2)',
+  success: '#22c55e',
+  danger: '#ef4444',
 };
 
 const navigation = [
@@ -100,6 +105,12 @@ const navigation = [
     href: '/dashboard/benchmarks',
     icon: FolderIcon,
     tourId: 'nav-benchmarks',
+  },
+  {
+    name: 'Competitor Intelligence',
+    href: '/dashboard/competitors',
+    icon: EyeIcon,
+    tourId: 'nav-competitors',
   },
   { name: 'nav.assets', href: '/dashboard/assets', icon: PhotoIcon, tourId: 'nav-assets' },
   { name: 'nav.rules', href: '/dashboard/rules', icon: BoltIcon, tourId: 'nav-rules' },
@@ -188,6 +199,9 @@ export default function DashboardLayout() {
       className="flex flex-col h-screen overflow-hidden"
       style={{ background: theme.bgBase }}
     >
+      {/* Neural Network Background */}
+      <NeuralNetworkBg />
+
       <DemoBanner variant="top" />
 
       <div className="flex flex-1 overflow-hidden relative z-10">
@@ -216,9 +230,7 @@ export default function DashboardLayout() {
             sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64'
           )}
           style={{
-            background: theme.bgCard,
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
+            background: theme.bgCard, // Solid background (NN/g: persistent nav = solid)
             borderRight: `1px solid ${theme.border}`,
           }}
         >
@@ -706,6 +718,9 @@ export default function DashboardLayout() {
         />
         <WhatsNewModal isOpen={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
         <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
+        {/* Trust Gate Indicator - Fixed bottom-left */}
+        <TrustGateIndicator />
       </div>
     </div>
   );

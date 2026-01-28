@@ -49,17 +49,19 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // APPLE GLASS DARK THEME - Apple HIG Palette
-        apple: {
-          blue: '#0A84FF', // Primary
-          green: '#30D158',
-          orange: '#FF9F0A',
-          purple: '#BF5AF2',
-          pink: '#FF375F',
-          teal: '#64D2FF',
-          red: '#FF453A',
-          yellow: '#FFD60A',
-          indigo: '#5E5CE6',
+        // STRATUM AI HOLOGLASS THEME - Gold + Cyan + Purple
+        stratum: {
+          gold: '#D4AF37',        // Primary brand
+          'gold-bright': '#F4D03F',
+          'gold-muted': '#B8860B',
+          cyan: '#14F0C6',        // Secondary accent
+          'cyan-muted': '#0FB89A',
+          purple: '#8b5cf6',      // Tertiary accent
+          'purple-muted': '#7c3aed',
+          green: '#22c55e',       // Status success
+          orange: '#f59e0b',      // Status warning
+          red: '#ef4444',         // Status error
+          blue: '#0a84ff',        // Status info
         },
         // Glass surfaces
         glass: {
@@ -69,49 +71,54 @@ export default {
           borderHover: 'rgba(255, 255, 255, 0.15)',
           subtle: 'rgba(255, 255, 255, 0.02)',
         },
-        // Legacy support - mapped to apple theme
-        stratum: {
-          50: '#e6f2ff',
-          100: '#cce4ff',
-          200: '#99c9ff',
-          300: '#66aeff',
-          400: '#3393ff',
-          500: '#0A84FF', // Apple Blue
-          600: '#0066cc',
-          700: '#004d99',
-          800: '#003366',
-          900: '#001a33',
-          950: '#000d1a',
+        // Stratum Gold scale
+        gold: {
+          50: '#fdf9eb',
+          100: '#faf2d3',
+          200: '#f5e5a7',
+          300: '#efd872',
+          400: '#e8c84a',
+          500: '#D4AF37', // Stratum Gold - Primary
+          600: '#B8860B', // Gold muted
+          700: '#8c6508',
+          800: '#604507',
+          900: '#342504',
+          950: '#1a1202',
         },
         cyan: {
-          50: '#e6faff',
-          100: '#ccf5ff',
-          200: '#99ebff',
-          300: '#64D2FF', // Apple Teal
-          400: '#64D2FF',
-          500: '#64D2FF',
-          600: '#00a3cc',
-          700: '#007a99',
-          800: '#005266',
-          900: '#002933',
-          950: '#00141a',
+          50: '#e6fef8',
+          100: '#ccfdf2',
+          200: '#99fbe5',
+          300: '#4df7d1',
+          400: '#14F0C6', // Stratum Cyan - Secondary
+          500: '#14F0C6',
+          600: '#0FB89A',
+          700: '#0a8a73',
+          800: '#075c4d',
+          900: '#032e26',
+          950: '#011713',
         },
         meta: '#0866FF',
         google: '#4285F4',
         tiktok: '#00F2EA',
         snapchat: '#FFFC00',
         whatsapp: '#25D366',
-        success: '#30D158', // Apple green
-        warning: '#FF9F0A', // Apple orange
-        danger: '#FF453A', // Apple red
-        info: '#64D2FF', // Apple teal
-        insight: '#BF5AF2', // Apple purple
+        success: '#22c55e', // Stratum green
+        warning: '#f59e0b', // Stratum orange
+        danger: '#ef4444', // Stratum red
+        info: '#14F0C6', // Stratum cyan
+        insight: '#8b5cf6', // Stratum purple
         surface: {
           primary: '#000000', // Pure black
           secondary: '#000000', // Pure black
           tertiary: 'rgba(255, 255, 255, 0.03)', // Glass card
           elevated: 'rgba(255, 255, 255, 0.05)', // Elevated glass
         },
+        // Stratum Dashboard Theme Colors
+        'bg-primary': '#0a0a0f',
+        'bg-card': '#12121a',
+        'bg-card-hover': '#1a1a24',
+        'bg-elevated': '#1e1e28',
         'text-primary': '#FFFFFF',
         'text-secondary': 'rgba(255, 255, 255, 0.7)',
         'text-muted': 'rgba(255, 255, 255, 0.5)',
@@ -144,6 +151,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          'Inter',
           'SF Pro Display',
           '-apple-system',
           'BlinkMacSystemFont',
@@ -154,6 +162,7 @@ export default {
           'sans-serif',
         ],
         mono: [
+          'JetBrains Mono',
           'SF Mono',
           'SFMono-Regular',
           'ui-monospace',
@@ -162,7 +171,7 @@ export default {
           'Consolas',
           'monospace',
         ],
-        display: ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       fontSize: {
         micro: ['10px', { lineHeight: '1.4', fontWeight: '400' }],
@@ -183,31 +192,31 @@ export default {
         ],
       },
       boxShadow: {
-        // Apple Glass Dark - Soft colored glows
-        'apple-sm': '0 0 20px rgba(10, 132, 255, 0.1)',
-        apple: '0 0 40px rgba(10, 132, 255, 0.15)',
-        'apple-lg': '0 0 60px rgba(10, 132, 255, 0.2)',
-        'apple-xl': '0 0 100px rgba(10, 132, 255, 0.25)',
-        'apple-green': '0 0 40px rgba(48, 209, 88, 0.15)',
-        'apple-orange': '0 0 40px rgba(255, 159, 10, 0.15)',
-        'apple-purple': '0 0 40px rgba(191, 90, 242, 0.15)',
-        'apple-teal': '0 0 40px rgba(100, 210, 255, 0.15)',
-        // Glass effects - Apple style
+        // Stratum HoloGlass - Gold accent glows
+        'gold-sm': '0 0 20px rgba(212, 175, 55, 0.1)',
+        gold: '0 0 40px rgba(212, 175, 55, 0.15)',
+        'gold-lg': '0 0 60px rgba(212, 175, 55, 0.2)',
+        'gold-xl': '0 0 100px rgba(212, 175, 55, 0.25)',
+        'glow-green': '0 0 40px rgba(34, 197, 94, 0.15)',
+        'glow-orange': '0 0 40px rgba(245, 158, 11, 0.15)',
+        'glow-purple': '0 0 40px rgba(139, 92, 246, 0.15)',
+        'glow-cyan-accent': '0 0 40px rgba(20, 240, 198, 0.15)',
+        // Glass effects - HoloGlass style
         glass: '0 8px 32px rgba(0, 0, 0, 0.3)',
         'glass-lg': '0 25px 50px rgba(0, 0, 0, 0.4)',
-        'glass-glow': '0 0 40px rgba(10, 132, 255, 0.15), 0 25px 50px rgba(0, 0, 0, 0.4)',
-        // Legacy support - mapped to Apple blue
-        'glow-sm': '0 0 12px rgba(10, 132, 255, 0.15)',
-        glow: '0 0 20px rgba(10, 132, 255, 0.2)',
-        'glow-lg': '0 0 32px rgba(10, 132, 255, 0.25)',
-        'glow-insight': '0 0 20px rgba(191, 90, 242, 0.2)',
-        'glow-cyan': '0 0 20px rgba(100, 210, 255, 0.2)',
+        'glass-glow': '0 0 40px rgba(212, 175, 55, 0.15), 0 25px 50px rgba(0, 0, 0, 0.4)',
+        // Primary glow - Gold
+        'glow-sm': '0 0 12px rgba(212, 175, 55, 0.15)',
+        glow: '0 0 20px rgba(212, 175, 55, 0.2)',
+        'glow-lg': '0 0 32px rgba(212, 175, 55, 0.25)',
+        'glow-insight': '0 0 20px rgba(139, 92, 246, 0.2)',
+        'glow-cyan': '0 0 20px rgba(20, 240, 198, 0.2)',
         card: '0 4px 12px rgba(0, 0, 0, 0.15)',
         'card-hover': '0 10px 30px rgba(0, 0, 0, 0.25)',
         // Ambient orb shadows
-        'orb-blue': '0 0 120px 60px rgba(10, 132, 255, 0.08)',
-        'orb-purple': '0 0 100px 50px rgba(191, 90, 242, 0.06)',
-        'orb-teal': '0 0 80px 40px rgba(100, 210, 255, 0.05)',
+        'orb-gold': '0 0 120px 60px rgba(212, 175, 55, 0.08)',
+        'orb-purple': '0 0 100px 50px rgba(139, 92, 246, 0.06)',
+        'orb-cyan': '0 0 80px 40px rgba(20, 240, 198, 0.05)',
       },
       spacing: {
         1: '4px',
@@ -229,25 +238,42 @@ export default {
         'container-2xl': '1400px',
       },
       backgroundImage: {
-        // Apple Glass Dark Gradients
-        'gradient-apple': 'linear-gradient(135deg, #0A84FF 0%, #64D2FF 100%)',
-        'gradient-apple-warm': 'linear-gradient(135deg, #FF9F0A 0%, #FF375F 100%)',
-        'gradient-apple-cool': 'linear-gradient(135deg, #BF5AF2 0%, #64D2FF 100%)',
-        'gradient-apple-soft':
-          'linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(100, 210, 255, 0.05) 100%)',
+        // Stratum HoloGlass Gradients
+        'gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%)',
+        'gradient-gold-warm': 'linear-gradient(135deg, #D4AF37 0%, #f59e0b 100%)',
+        'gradient-gold-cool': 'linear-gradient(135deg, #D4AF37 0%, #14F0C6 100%)',
+        'gradient-gold-soft':
+          'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(20, 240, 198, 0.05) 100%)',
         // Ambient orbs for glass dark backgrounds
         'ambient-orbs': `
-          radial-gradient(ellipse 40% 40% at 20% 30%, rgba(10, 132, 255, 0.08), transparent),
-          radial-gradient(ellipse 30% 30% at 80% 70%, rgba(191, 90, 242, 0.06), transparent),
-          radial-gradient(ellipse 35% 35% at 60% 20%, rgba(100, 210, 255, 0.05), transparent)
+          radial-gradient(ellipse 40% 40% at 20% 30%, rgba(212, 175, 55, 0.08), transparent),
+          radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
+          radial-gradient(ellipse 35% 35% at 60% 20%, rgba(20, 240, 198, 0.05), transparent)
         `,
-        // Legacy - mapped to Apple style
+        // Stratum primary gradient
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-stratum': 'linear-gradient(135deg, #0A84FF 0%, #64D2FF 100%)',
+        'gradient-stratum': 'linear-gradient(135deg, #D4AF37 0%, #14F0C6 100%)',
         'gradient-stratum-soft':
-          'linear-gradient(135deg, rgba(10, 132, 255, 0.08) 0%, rgba(100, 210, 255, 0.05) 100%)',
+          'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 240, 198, 0.05) 100%)',
+      },
+      backdropBlur: {
+        '100': '100px',
+        '120': '120px',
       },
       keyframes: {
+        // Neural Network Animations
+        'node-pulse': {
+          '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+          '50%': { opacity: '0.8', transform: 'scale(1.1)' },
+        },
+        'line-pulse': {
+          '0%, 100%': { opacity: '0.1', strokeDashoffset: '0' },
+          '50%': { opacity: '0.3', strokeDashoffset: '20' },
+        },
+        'status-pulse': {
+          '0%, 100%': { boxShadow: '0 0 0 0 currentColor' },
+          '50%': { boxShadow: '0 0 0 4px transparent' },
+        },
         'accordion-down': {
           from: { height: '0' },
           to: { height: 'var(--radix-accordion-content-height)' },
@@ -399,6 +425,10 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        // Neural Network Animations
+        'node-pulse': 'node-pulse 3s ease-in-out infinite',
+        'line-pulse': 'line-pulse 4s ease-in-out infinite',
+        'status-pulse': 'status-pulse 2s ease-in-out infinite',
         // NEBULA AURORA ANIMATIONS
         'aurora-flow': 'aurora-flow 8s ease infinite',
         'nebula-pulse': 'nebula-pulse 4s ease-in-out infinite',

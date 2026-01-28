@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-// Apple Glass Dark theme
+// Stratum Gold Dark theme
 const theme = {
-  primary: '#0A84FF',
-  primaryLight: 'rgba(10, 132, 255, 0.15)',
-  green: '#30D158',
+  gold: '#D4AF37',
+  goldLight: 'rgba(212, 175, 55, 0.15)',
+  green: '#22c55e', // Stratum Green
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -90,13 +90,13 @@ export function Footer() {
             <Link to="/" className="flex items-center gap-3 mb-4">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: theme.primary }}
+                style={{ background: theme.gold }}
               >
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span
                 className="text-xl font-semibold"
-                style={{ color: theme.primary }}
+                style={{ color: theme.gold }}
               >
                 Stratum AI
               </span>
@@ -113,7 +113,7 @@ export function Footer() {
                   href="tel:+14807440840"
                   className="transition-colors"
                   style={{ color: theme.textMuted }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = theme.gold)}
                   onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 >
                   +1 (480) 744-0840
@@ -224,7 +224,7 @@ export function Footer() {
                   type="submit"
                   disabled={isSubmitting}
                   className="px-4 py-2 text-sm rounded-xl text-white transition-colors disabled:opacity-50"
-                  style={{ background: theme.primary }}
+                  style={{ background: theme.gold }}
                 >
                   {isSubmitting ? '...' : 'Subscribe'}
                 </button>

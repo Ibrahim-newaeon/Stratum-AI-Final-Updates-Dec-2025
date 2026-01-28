@@ -36,7 +36,7 @@ export default function AICTA() {
           }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(10, 132, 255, 0.15), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(212, 175, 55, 0.15), transparent 60%)' }}
         />
         <motion.div
           animate={{
@@ -45,7 +45,7 @@ export default function AICTA() {
           }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
           className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(191, 90, 242, 0.1), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent 60%)' }}
         />
       </div>
 
@@ -60,12 +60,12 @@ export default function AICTA() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
             style={{
-              background: 'rgba(10, 132, 255, 0.15)',
-              border: '1px solid rgba(10, 132, 255, 0.3)',
+              background: 'rgba(212, 175, 55, 0.15)',
+              border: '1px solid rgba(212, 175, 55, 0.3)',
             }}
           >
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#30D158' }} />
-            <span className="text-sm font-medium" style={{ color: '#0A84FF' }}>Ready to transform your revenue operations?</span>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
+            <span className="text-sm font-medium" style={{ color: '#D4AF37' }}>Ready to transform your revenue operations?</span>
           </div>
         </motion.div>
 
@@ -78,7 +78,7 @@ export default function AICTA() {
         >
           <span className="text-white">Stop Guessing.</span>
           <br />
-          <span style={{ color: '#0A84FF' }}>
+          <span style={{ color: '#D4AF37' }}>
             Start Predicting.
           </span>
         </motion.h2>
@@ -106,8 +106,8 @@ export default function AICTA() {
             href="/signup"
             className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all hover:scale-[1.02]"
             style={{
-              background: '#0A84FF',
-              boxShadow: '0 0 40px rgba(10, 132, 255, 0.3)',
+              background: '#D4AF37',
+              boxShadow: '0 0 40px rgba(212, 175, 55, 0.3)',
             }}
           >
             <span>Start Your Free Trial</span>
@@ -136,7 +136,7 @@ export default function AICTA() {
         >
           {benefits.map((benefit) => (
             <div key={benefit.text} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-              <benefit.icon className="w-4 h-4" style={{ color: '#0A84FF' }} />
+              <benefit.icon className="w-4 h-4" style={{ color: '#D4AF37' }} />
               <span>{benefit.text}</span>
             </div>
           ))}

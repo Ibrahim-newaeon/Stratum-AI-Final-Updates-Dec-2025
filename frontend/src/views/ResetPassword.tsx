@@ -1,6 +1,6 @@
 /**
- * Reset Password Page - APPLE STYLE LIGHT EDITION
- * Clean white + blue accent + professional
+ * Reset Password Page - Stratum HoloGlass Theme
+ * Deep black background (#0a0a0f) + gold accent
  */
 
 import { useState } from 'react';
@@ -19,20 +19,20 @@ import {
 } from '@heroicons/react/24/outline';
 import { useResetPassword } from '@/api/auth';
 
-// Apple Style Theme
+// Stratum HoloGlass Theme
 const theme = {
-  blue: '#007AFF',
-  blueHover: '#0056CC',
-  blueLight: '#E8F4FF',
-  bgBase: '#FFFFFF',
-  bgElevated: '#F5F5F7',
-  bgSurface: '#FFFFFF',
-  textPrimary: '#1D1D1F',
-  textSecondary: '#424245',
-  textMuted: '#86868B',
-  border: 'rgba(0, 0, 0, 0.08)',
-  success: '#34C759',
-  danger: '#FF3B30',
+  primary: '#D4AF37',
+  primaryHover: '#B8860B',
+  primaryLight: 'rgba(212, 175, 55, 0.15)',
+  bgBase: '#0a0a0f',
+  bgElevated: '#12121a',
+  bgSurface: 'rgba(255, 255, 255, 0.03)',
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textMuted: 'rgba(255, 255, 255, 0.5)',
+  border: 'rgba(255, 255, 255, 0.08)',
+  success: '#22c55e',
+  danger: '#ef4444',
 };
 
 const resetPasswordSchema = z
@@ -99,8 +99,8 @@ export default function ResetPassword() {
             </p>
             <Link
               to="/forgot-password"
-              className="block w-full py-3 rounded-xl text-white font-semibold text-center transition-all duration-200"
-              style={{ background: theme.blue }}
+              className="block w-full py-3 rounded-xl text-black font-semibold text-center transition-all duration-200"
+              style={{ background: theme.primary }}
             >
               Request new link
             </Link>
@@ -143,9 +143,9 @@ export default function ResetPassword() {
             </p>
             <button
               onClick={() => navigate('/login')}
-              className="w-full py-3 rounded-xl text-white font-semibold transition-all duration-200"
-              style={{ background: theme.blue }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = theme.blueHover)}
+              className="w-full py-3 rounded-xl text-black font-semibold transition-all duration-200"
+              style={{ background: theme.primary }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = theme.primaryHover)}
               onMouseLeave={(e) => (e.currentTarget.style.background = theme.blue)}
             >
               Sign in
@@ -174,7 +174,7 @@ export default function ResetPassword() {
         <Link to="/" className="flex items-center gap-3 mb-8">
           <div
             className="h-10 w-10 rounded-xl flex items-center justify-center"
-            style={{ background: theme.blue }}
+            style={{ background: theme.primary }}
           >
             <span className="text-white font-semibold text-lg">S</span>
           </div>
@@ -233,8 +233,8 @@ export default function ResetPassword() {
                     color: theme.textPrimary,
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = theme.blue;
-                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`;
+                    e.target.style.borderColor = theme.primary;
+                    e.target.style.boxShadow = `0 0 0 3px ${theme.primaryLight}`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = theme.border;
@@ -277,8 +277,8 @@ export default function ResetPassword() {
                     color: theme.textPrimary,
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = theme.blue;
-                    e.target.style.boxShadow = `0 0 0 3px ${theme.blueLight}`;
+                    e.target.style.borderColor = theme.primary;
+                    e.target.style.boxShadow = `0 0 0 3px ${theme.primaryLight}`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = theme.border;
@@ -306,10 +306,10 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
-              style={{ background: theme.blue }}
+              className="w-full py-3 rounded-xl font-semibold text-black transition-all duration-200 disabled:opacity-50"
+              style={{ background: theme.primary }}
               onMouseEnter={(e) => {
-                if (!isLoading) e.currentTarget.style.background = theme.blueHover;
+                if (!isLoading) e.currentTarget.style.background = theme.primaryHover;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = theme.blue;

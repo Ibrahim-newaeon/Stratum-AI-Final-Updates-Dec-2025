@@ -272,18 +272,18 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
       return (
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
-          style={{ background: 'rgba(48, 209, 88, 0.2)' }}
+          style={{ background: 'rgba(34, 197, 94, 0.2)' }}
         >
-          <CheckIcon className="w-4 h-4" style={{ color: '#30D158' }} />
+          <CheckIcon className="w-4 h-4" style={{ color: '#22c55e' }} />
         </div>
       );
     case 'no':
       return (
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
-          style={{ background: 'rgba(255, 69, 58, 0.2)' }}
+          style={{ background: 'rgba(239, 68, 68, 0.2)' }}
         >
-          <XMarkIcon className="w-4 h-4" style={{ color: '#FF453A' }} />
+          <XMarkIcon className="w-4 h-4" style={{ color: '#ef4444' }} />
         </div>
       );
     case 'partial':
@@ -300,11 +300,11 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
           style={{
-            background: 'rgba(10, 132, 255, 0.2)',
-            boxShadow: '0 0 0 2px rgba(10, 132, 255, 0.4)',
+            background: 'rgba(212, 175, 55, 0.2)',
+            boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.4)',
           }}
         >
-          <SparklesIcon className="w-4 h-4" style={{ color: '#0A84FF' }} />
+          <SparklesIcon className="w-4 h-4" style={{ color: '#D4AF37' }} />
         </div>
       );
   }
