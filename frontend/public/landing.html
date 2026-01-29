@@ -1,1910 +1,519 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stratum AI - The Only AI That Thinks Before It Acts</title>
-  <meta name="description" content="Trust-Gated Autopilot executes revenue operations only when AI confirms data quality meets safety thresholds. Predict ROAS, prevent churn, and sync audiences.">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Stratum AI - Trust-Gated Autopilot for Media Buyers</title>
+  <meta name="description" content="AI-powered ad optimization with human oversight. 4.82x ROAS improvement with 94.7% trust score.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Inter', sans-serif; }
-    body { background: #030303; color: white; }
+    /* ═══════════════════════════════════════════════════════════════
+       STRATUM AI - LANDING PAGE
+       Theme System v4.0 Final Implementation
+       ═══════════════════════════════════════════════════════════════ */
 
-    /* Animations */
-    @keyframes gradient-x {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+      --radius-xl: 16px; --radius-2xl: 24px; --radius-full: 9999px;
+      --transition-fast: 150ms ease; --transition-base: 200ms ease;
+      --transition-slow: 300ms ease; --transition-theme: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+      --z-sticky: 50; --z-overlay: 100; --z-modal: 200;
     }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-    @keyframes scroll-indicator { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
-    @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    @keyframes width-grow { from { width: 0; } }
 
-    .animate-gradient-x { animation: gradient-x 3s ease infinite; background-size: 200% 100%; }
-    .animate-pulse { animation: pulse 2s ease-in-out infinite; }
-    .animate-float { animation: float 5s ease-in-out infinite; }
-    .animate-shimmer { animation: shimmer 2s infinite; }
-    .animate-scroll { animation: scroll-indicator 1.5s ease-in-out infinite; }
-    .animate-fade-up { animation: fade-up 0.6s ease-out forwards; }
-    .animate-scale-in { animation: scale-in 0.4s ease-out forwards; }
+    :root, [data-theme="dark"] {
+      --bg-void: #050508; --bg-primary: #0a0a0f; --bg-secondary: #0d0d14;
+      --bg-card: #12121a; --bg-card-hover: #1a1a24; --bg-elevated: #1e1e28;
+      --bg-input: #0a0a0f; --bg-overlay: rgba(5, 5, 8, 0.9);
+      --text-primary: #ffffff; --text-secondary: #cccccc; --text-tertiary: #999999;
+      --text-muted: #888888; --text-disabled: #555555; --text-inverse: #0a0a0f;
+      --border-default: rgba(255, 255, 255, 0.06); --border-hover: rgba(255, 255, 255, 0.10);
+      --border-gold: rgba(212, 175, 55, 0.15);
+      --gold: #D4AF37; --gold-bright: #F4D03F; --gold-muted: #B8860B;
+      --gold-glow: rgba(212, 175, 55, 0.5); --gold-subtle: rgba(212, 175, 55, 0.1);
+      --cyan: #14F0C6; --cyan-glow: rgba(20, 240, 198, 0.4);
+      --status-success: #22c55e; --status-success-bg: rgba(34, 197, 94, 0.1);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4); --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+      --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6); --shadow-gold: 0 0 40px rgba(212, 175, 55, 0.25);
+      --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      --neural-node: rgba(212, 175, 55, 0.6); --neural-line: rgba(212, 175, 55, 0.12);
+      --glass-bg: rgba(20, 20, 30, 0.75); --canvas-opacity: 0.7;
+    }
 
-    .delay-100 { animation-delay: 0.1s; }
-    .delay-200 { animation-delay: 0.2s; }
-    .delay-300 { animation-delay: 0.3s; }
-    .delay-400 { animation-delay: 0.4s; }
-    .delay-500 { animation-delay: 0.5s; }
-    .delay-600 { animation-delay: 0.6s; }
+    [data-theme="light"] {
+      --bg-void: #f8f9fc; --bg-primary: #ffffff; --bg-secondary: #f4f5f7;
+      --bg-card: #ffffff; --bg-card-hover: #f8f9fc; --bg-elevated: #ffffff;
+      --bg-input: #f4f5f7; --bg-overlay: rgba(255, 255, 255, 0.95);
+      --text-primary: #0f172a; --text-secondary: #334155; --text-tertiary: #64748b;
+      --text-muted: #94a3b8; --text-disabled: #cbd5e1; --text-inverse: #ffffff;
+      --border-default: rgba(0, 0, 0, 0.08); --border-hover: rgba(0, 0, 0, 0.12);
+      --border-gold: rgba(180, 134, 11, 0.2);
+      --gold: #B8860B; --gold-bright: #D4AF37; --gold-muted: #996B06;
+      --gold-glow: rgba(180, 134, 11, 0.3); --gold-subtle: rgba(180, 134, 11, 0.08);
+      --cyan: #0D9488; --cyan-glow: rgba(13, 148, 136, 0.3);
+      --status-success: #16a34a; --status-success-bg: rgba(22, 163, 74, 0.08);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08); --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12); --shadow-gold: 0 0 30px rgba(180, 134, 11, 0.15);
+      --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      --neural-node: rgba(180, 134, 11, 0.4); --neural-line: rgba(180, 134, 11, 0.08);
+      --glass-bg: rgba(255, 255, 255, 0.85); --canvas-opacity: 0.4;
+    }
 
-    /* Glass morphism */
-    .glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-    .glass:hover { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); }
+    [data-theme] * { transition: background-color var(--transition-theme), border-color var(--transition-theme), box-shadow var(--transition-theme), color var(--transition-theme); }
+    [data-theme] canvas { transition: none; }
 
-    /* Gradient text */
-    .gradient-text { background: linear-gradient(to right, #a855f7, #06b6d4, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .gradient-text-purple { background: linear-gradient(to right, #a855f7, #06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .gradient-text-cyan { background: linear-gradient(to right, #06b6d4, #a855f7); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .gradient-text-green { background: linear-gradient(to right, #22c55e, #06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .gradient-text-orange { background: linear-gradient(to right, #f97316, #ef4444); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-sans); background: var(--bg-void); color: var(--text-secondary); line-height: 1.6; overflow-x: hidden; min-height: 100vh; }
 
-    /* Button styles */
-    .btn-primary { position: relative; overflow: hidden; }
-    .btn-primary::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, #9333ea, #06b6d4, #9333ea); background-size: 200% 100%; animation: gradient-x 3s ease infinite; }
-    .btn-primary::after { content: ''; position: absolute; inset: 1px; border-radius: inherit; background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent); }
-    .btn-primary span, .btn-primary svg { position: relative; z-index: 1; }
+    .neural-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: var(--canvas-opacity); }
+    .grid-floor { position: fixed; bottom: 0; left: 0; right: 0; height: 40vh; background: linear-gradient(to top, var(--gold-subtle) 0%, transparent 100%); mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='10' height='10' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 10 0 L 0 0 0 10' fill='none' stroke='white' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E"); mask-size: 80px 80px; z-index: 0; opacity: 0.6; transform: perspective(500px) rotateX(60deg); transform-origin: bottom; pointer-events: none; }
+    .scan-lines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px); z-index: 1; pointer-events: none; opacity: 0.5; }
+    .hud-corner { position: fixed; width: 60px; height: 60px; border: 2px solid var(--gold); opacity: 0.4; z-index: 1; pointer-events: none; }
+    .hud-corner.top-left { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+    .hud-corner.top-right { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+    .hud-corner.bottom-left { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+    .hud-corner.bottom-right { bottom: 20px; right: 20px; border-left: none; border-top: none; }
 
-    /* Card hover effects */
-    .card-hover { transition: all 0.5s ease; }
-    .card-hover:hover { transform: scale(1.02); }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 48px; position: relative; z-index: 10; }
 
-    /* Health bar animation */
-    .health-bar { transition: width 0.6s ease-out; }
+    /* NAV */
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: var(--z-sticky); padding: 20px 48px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(to bottom, var(--bg-void) 0%, transparent 100%); transition: all var(--transition-slow); }
+    .nav.scrolled { background: var(--glass-bg); backdrop-filter: blur(100px); -webkit-backdrop-filter: blur(100px); border-bottom: 1px solid var(--border-default); }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #0a0a0a; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #444; }
+    .logo { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+    .logo-mark { width: 44px; height: 44px; }
+    .logo-hex-outer { fill: none; stroke: var(--gold); stroke-width: 1.5; animation: hexSpin 15s linear infinite; transform-origin: center; }
+    .logo-hex-core { fill: var(--gold); }
+    @keyframes hexSpin { to { transform: rotate(360deg); } }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-name { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .logo-tagline { font-size: 10px; font-weight: 500; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
 
-    /* Feature comparison table */
-    .feature-row { transition: background 0.2s ease; }
-    .feature-row:hover { background: rgba(255,255,255,0.02); }
+    .nav-links { display: flex; gap: 8px; padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-full); }
+    .nav-link { padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--text-muted); text-decoration: none; border-radius: var(--radius-full); transition: all var(--transition-base); }
+    .nav-link:hover { color: var(--text-primary); background: var(--border-default); }
+    .nav-link.active { color: var(--gold); background: var(--gold-subtle); }
+    .nav-actions { display: flex; align-items: center; gap: 16px; }
 
-    /* Tooltip */
-    .tooltip { position: relative; }
-    .tooltip-content { position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; padding: 8px 12px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px; color: #9ca3af; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 50; }
-    .tooltip:hover .tooltip-content { opacity: 1; }
+    .theme-toggle { width: 52px; height: 32px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-full); cursor: pointer; position: relative; transition: all var(--transition-base); }
+    .theme-toggle:hover { border-color: var(--gold); }
+    .theme-toggle-knob { position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform var(--transition-slow); }
+    [data-theme="light"] .theme-toggle-knob { transform: translateX(20px); }
+    .theme-toggle svg { width: 14px; height: 14px; fill: none; stroke: var(--text-inverse); stroke-width: 2; }
+    .icon-sun { display: block; } .icon-moon { display: none; }
+    [data-theme="light"] .icon-sun { display: none; } [data-theme="light"] .icon-moon { display: block; }
 
-    /* RTL Support */
-    [dir="rtl"] { font-family: 'Inter', 'Tahoma', 'Arial', sans-serif; }
-    [dir="rtl"] .text-left { text-align: right; }
-    [dir="rtl"] .text-right { text-align: left; }
-    [dir="rtl"] .ml-auto { margin-right: auto; margin-left: 0; }
-    [dir="rtl"] .mr-auto { margin-left: auto; margin-right: 0; }
-    [dir="rtl"] .space-x-4 > * + * { margin-left: 0; margin-right: 1rem; }
-    [dir="rtl"] .gap-3 { gap: 0.75rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; font-family: var(--font-sans); font-size: 14px; font-weight: 600; text-decoration: none; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition-base); position: relative; overflow: hidden; }
+    .btn-primary { background: var(--gold); color: var(--text-inverse); }
+    .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s ease; }
+    .btn-primary:hover { background: var(--gold-bright); box-shadow: var(--shadow-gold); transform: translateY(-2px); }
+    .btn-primary:hover::before { left: 100%; }
+    .btn-secondary { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-default); }
+    .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--border-hover); color: var(--text-primary); }
+    .btn-lg { padding: 16px 32px; font-size: 16px; }
+
+    /* HERO */
+    .hero { min-height: 100vh; padding: 140px 0 80px; display: flex; align-items: center; }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .hero-content { max-width: 600px; }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; background: var(--status-success-bg); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: var(--radius-full); margin-bottom: 32px; }
+    .status-dot { width: 8px; height: 8px; background: var(--status-success); border-radius: 50%; animation: statusPulse 2s ease-in-out infinite; }
+    @keyframes statusPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .status-text { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--status-success); }
+
+    .hero-title { font-size: clamp(40px, 5vw, 64px); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; color: var(--text-primary); margin-bottom: 24px; }
+    .hero-title .text-gradient { background: linear-gradient(135deg, var(--gold), var(--cyan), var(--gold)); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: gradientFlow 4s ease infinite; }
+    @keyframes gradientFlow { 0% { background-position: 0% center; } 50% { background-position: 100% center; } 100% { background-position: 0% center; } }
+    .hero-subtitle { font-size: 18px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 40px; }
+    .hero-cta { display: flex; gap: 16px; margin-bottom: 60px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .stat-card { padding: 24px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); text-align: center; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--gold); }
+    .stat-value { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+
+    .hero-preview { position: relative; }
+    .preview-window { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-xl); }
+    .preview-chrome { display: flex; align-items: center; gap: 8px; padding: 16px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-default); }
+    .chrome-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .chrome-dot.red { background: #ff5f56; } .chrome-dot.yellow { background: #ffbd2e; } .chrome-dot.green { background: #27c93f; }
+    .chrome-title { flex: 1; text-align: center; font-size: 12px; font-weight: 500; color: var(--text-muted); }
+    .preview-content { padding: 40px; display: flex; flex-direction: column; align-items: center; }
+
+    .trust-ring-container { position: relative; width: 200px; height: 200px; margin-bottom: 32px; }
+    .trust-ring-outer { position: absolute; inset: 0; border: 3px solid var(--border-default); border-radius: 50%; }
+    .trust-ring-progress { position: absolute; inset: 0; border: 3px solid transparent; border-top-color: var(--gold); border-right-color: var(--gold); border-bottom-color: var(--gold); border-radius: 50%; animation: ringRotate 3s linear infinite; }
+    @keyframes ringRotate { to { transform: rotate(360deg); } }
+    .trust-ring-inner { position: absolute; inset: 20px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .trust-score { font-family: var(--font-mono); font-size: 36px; font-weight: 700; color: var(--gold); }
+    .trust-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+
+    .preview-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; }
+    .preview-card { padding: 16px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-md); }
+    .preview-card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; }
+    .preview-card-value { font-family: var(--font-mono); font-size: 20px; font-weight: 600; color: var(--cyan); }
+
+    .terminal-stream { margin-top: 24px; padding: 16px; background: var(--bg-primary); border: 1px solid var(--border-default); border-radius: var(--radius-md); width: 100%; }
+    .terminal-line { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+    .terminal-time { color: var(--text-disabled); }
+    .terminal-status.success { color: var(--status-success); }
+    .terminal-status.info { color: var(--cyan); }
+
+    .hero-glow { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%); opacity: 0.3; filter: blur(80px); animation: glowFloat 6s ease-in-out infinite; pointer-events: none; }
+    .hero-glow.glow-1 { top: -100px; left: -100px; }
+    .hero-glow.glow-2 { bottom: -100px; right: -100px; animation-delay: -3s; }
+    @keyframes glowFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(20px, 20px) scale(1.1); } }
+
+    /* FEATURES */
+    .features { padding: 120px 0; }
+    .section-header { text-align: center; max-width: 700px; margin: 0 auto 80px; }
+    .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); margin-bottom: 16px; }
+    .section-title { font-size: clamp(32px, 4vw, 48px); font-weight: 700; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -0.02em; }
+    .section-subtitle { font-size: 17px; color: var(--text-secondary); line-height: 1.7; }
+
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature-card { padding: 32px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-md), var(--shadow-inset); transition: all var(--transition-slow); position: relative; overflow: hidden; }
+    .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--gold); opacity: 0; transition: opacity var(--transition-base); }
+    .feature-card:hover { transform: translateY(-4px); border-color: var(--border-hover); box-shadow: var(--shadow-lg); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon { width: 56px; height: 56px; background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+    .feature-icon svg { width: 28px; height: 28px; stroke: var(--gold); stroke-width: 1.5; fill: none; }
+    .feature-title { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+    .feature-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* CDP SECTION */
+    .cdp-section { padding: 120px 0; background: linear-gradient(to bottom, var(--bg-void), var(--bg-primary)); }
+    .cdp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-top: 60px; }
+    .cdp-card { padding: 32px; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-xl); position: relative; overflow: hidden; }
+    .cdp-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--cyan)); }
+    .cdp-card-icon { width: 48px; height: 48px; background: var(--gold-subtle); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; }
+    .cdp-card-title { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+    .cdp-card-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+    .cdp-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-full); font-size: 11px; font-weight: 600; color: var(--gold); margin-top: 16px; }
+
+    /* SOCIAL PROOF */
+    .social-proof { padding: 80px 0; border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+    .social-proof-header { text-align: center; margin-bottom: 48px; }
+    .social-proof-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .platforms-grid { display: flex; justify-content: center; align-items: center; gap: 64px; flex-wrap: wrap; }
+    .platform-logo { display: flex; flex-direction: column; align-items: center; gap: 12px; opacity: 0.5; transition: opacity var(--transition-base); }
+    .platform-logo:hover { opacity: 1; }
+    .platform-logo svg { width: 48px; height: 48px; fill: var(--text-secondary); }
+    .platform-name { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* CTA */
+    .cta-section { padding: 120px 0; }
+    .cta-container { max-width: 800px; margin: 0 auto; padding: 64px; background: var(--bg-card); border: 2px solid var(--border-gold); border-radius: var(--radius-2xl); text-align: center; position: relative; overflow: hidden; }
+    .cta-container::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, var(--gold-subtle) 0%, transparent 70%); pointer-events: none; }
+    .cta-title { font-size: clamp(28px, 3vw, 40px); font-weight: 700; color: var(--text-primary); margin-bottom: 16px; position: relative; }
+    .cta-subtitle { font-size: 17px; color: var(--text-secondary); margin-bottom: 40px; position: relative; }
+    .cta-buttons { display: flex; justify-content: center; gap: 16px; position: relative; }
+
+    /* FOOTER */
+    .footer { padding: 48px 0; border-top: 1px solid var(--border-default); }
+    .footer-content { display: flex; justify-content: space-between; align-items: center; }
+    .footer-logo { display: flex; align-items: center; gap: 12px; }
+    .footer-logo-mark { width: 32px; height: 32px; }
+    .footer-logo-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .footer-links { display: flex; gap: 32px; }
+    .footer-link { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color var(--transition-base); }
+    .footer-link:hover { color: var(--text-primary); }
+    .footer-copyright { font-size: 12px; color: var(--text-disabled); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1200px) { .hero-grid { gap: 60px; } .features-grid { grid-template-columns: repeat(2, 1fr); } .cdp-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1024px) { .container { padding: 0 32px; } .nav { padding: 16px 32px; } .nav-links { display: none; } .hero-grid { grid-template-columns: 1fr; gap: 60px; } .hero-preview { order: -1; max-width: 500px; margin: 0 auto; } }
+    @media (max-width: 768px) { .container { padding: 0 20px; } .nav { padding: 16px 20px; } .features-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } .hero-cta { flex-direction: column; } .hero-cta .btn { width: 100%; } .cta-container { padding: 40px 24px; } .cta-buttons { flex-direction: column; } .cta-buttons .btn { width: 100%; } .platforms-grid { gap: 32px; } .footer-content { flex-direction: column; gap: 24px; text-align: center; } .footer-links { justify-content: center; } .hud-corner { display: none; } }
   </style>
-  <!-- PDF Generation Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    async function downloadBattleCard() {
-      const btn = event.target.closest('button');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating PDF...';
-      btn.disabled = true;
-
-      try {
-        // Expand all categories first
-        ['ai', 'cdp', 'activation'].forEach(cat => {
-          const features = document.getElementById(cat + '-features');
-          if (features && features.classList.contains('hidden')) {
-            features.classList.remove('hidden');
-          }
-        });
-
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        const compareSection = document.querySelector('#compare .rounded-3xl');
-        const canvas = await html2canvas(compareSection, {
-          backgroundColor: '#030303',
-          scale: 2,
-          useCORS: true,
-          logging: false
-        });
-
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('l', 'mm', 'a4');
-
-        // Add header
-        pdf.setFillColor(3, 3, 3);
-        pdf.rect(0, 0, 297, 210, 'F');
-
-        pdf.setFontSize(24);
-        pdf.setTextColor(168, 85, 247);
-        pdf.text('Stratum AI', 15, 20);
-
-        pdf.setFontSize(12);
-        pdf.setTextColor(150, 150, 150);
-        pdf.text('Sales Battle Card - Competitive Comparison', 15, 28);
-
-        // Add table image
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = 267;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 15, 35, imgWidth, Math.min(imgHeight, 160));
-
-        // Footer
-        pdf.setFontSize(9);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text('Generated from stratum-ai.com | ' + new Date().toLocaleDateString(), 15, 200);
-
-        pdf.save('Stratum-AI-Battle-Card.pdf');
-      } catch (error) {
-        console.error('PDF generation failed:', error);
-        alert('Failed to generate PDF. Please try again.');
-      }
-
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }
-  </script>
 </head>
-<body class="antialiased">
-  <!-- Announcement Bar -->
-  <div class="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 bg-[length:200%_100%] animate-gradient-x">
-    <div class="max-w-7xl mx-auto px-6 py-2 flex items-center justify-center gap-3">
-      <span class="text-sm font-medium text-white">New: Multi-Platform Audience Sync is live!</span>
-      <a href="/announcements/audience-sync" class="text-sm font-semibold text-white underline underline-offset-2 hover:no-underline">Learn more →</a>
+<body>
+  <canvas id="neural-canvas" class="neural-canvas"></canvas>
+  <div class="grid-floor"></div>
+  <div class="scan-lines"></div>
+  <div class="hud-corner top-left"></div>
+  <div class="hud-corner top-right"></div>
+  <div class="hud-corner bottom-left"></div>
+  <div class="hud-corner bottom-right"></div>
+  <div id="theme-announce" class="sr-only" aria-live="polite"></div>
+
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="logo" aria-label="Stratum AI Home">
+      <svg class="logo-mark" viewBox="0 0 44 44">
+        <polygon class="logo-hex-outer" points="22,2 42,12 42,32 22,42 2,32 2,12" />
+        <polygon class="logo-hex-core" points="22,14 30,19 30,29 22,34 14,29 14,19" />
+      </svg>
+      <span class="logo-text">
+        <span class="logo-name">STRATUM AI</span>
+        <span class="logo-tagline">Trust-Gated Autopilot</span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="nav-link active">Features</a>
+      <a href="#cdp" class="nav-link">CDP</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="#docs" class="nav-link">Docs</a>
     </div>
-  </div>
-
-  <!-- Navigation -->
-  <nav class="fixed top-10 left-0 right-0 z-50 border-b border-white/5 bg-[#030303]/80 backdrop-blur-xl">
-    <div class="max-w-7xl mx-auto px-6 py-4">
-      <div class="flex items-center justify-between">
-        <!-- Logo -->
-        <a href="/" class="flex items-center gap-3">
-          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-cyan-500 to-orange-500 p-[1px]">
-            <div class="absolute inset-[1px] rounded-xl bg-[#030303] flex items-center justify-center">
-              <span class="text-lg font-bold gradient-text">S</span>
-            </div>
-          </div>
-          <span class="text-xl font-semibold tracking-tight">Stratum AI</span>
-        </a>
-
-        <!-- Desktop Navigation -->
-        <div class="hidden md:flex items-center gap-1">
-          <!-- Product Dropdown -->
-          <div class="relative group">
-            <button class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1">
-              Product
-              <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div class="w-64 p-2 rounded-xl bg-[#0a0a0a] border border-white/10 shadow-2xl">
-                <a href="#features" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Features</div>
-                    <div class="text-xs text-gray-500">All platform capabilities</div>
-                  </div>
-                </a>
-                <a href="#trust" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Trust Engine</div>
-                    <div class="text-xs text-gray-500">AI safety & verification</div>
-                  </div>
-                </a>
-                <a href="/integrations" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Integrations</div>
-                    <div class="text-xs text-gray-500">Connect your stack</div>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Solutions Dropdown -->
-          <div class="relative group">
-            <button class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1">
-              Solutions
-              <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div class="w-64 p-2 rounded-xl bg-[#0a0a0a] border border-white/10 shadow-2xl">
-                <a href="/solutions/cdp" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">CDP</div>
-                    <div class="text-xs text-gray-500">Customer Data Platform</div>
-                  </div>
-                </a>
-                <a href="/solutions/audience-sync" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Audience Sync</div>
-                    <div class="text-xs text-gray-500">Multi-platform targeting</div>
-                  </div>
-                </a>
-                <a href="/solutions/predictions" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Predictions</div>
-                    <div class="text-xs text-gray-500">AI-powered forecasting</div>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pricing -->
-          <a href="#pricing" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
-
-          <!-- Resources Dropdown -->
-          <div class="relative group">
-            <button class="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1">
-              Resources
-              <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div class="w-64 p-2 rounded-xl bg-[#0a0a0a] border border-white/10 shadow-2xl">
-                <a href="/docs" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Documentation</div>
-                    <div class="text-xs text-gray-500">Guides & API reference</div>
-                  </div>
-                </a>
-                <a href="/blog" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Blog</div>
-                    <div class="text-xs text-gray-500">News & insights</div>
-                  </div>
-                </a>
-                <a href="#compare" class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-white">Compare</div>
-                    <div class="text-xs text-gray-500">See how we stack up</div>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Side Actions -->
-        <div class="flex items-center gap-4">
-          <!-- Language Toggle -->
-          <div class="relative lang-toggle">
-            <button onclick="toggleLangMenu()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-              <span id="current-lang" class="uppercase">EN</span>
-            </button>
-            <div id="lang-menu" class="hidden absolute top-full mt-2 right-0 py-2 rounded-xl min-w-[120px] bg-[#0a0a0a]/98 border border-white/10 shadow-2xl z-50">
-              <button onclick="setLanguage('en')" class="lang-option w-full px-4 py-2 text-sm text-left text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-between" data-lang="en">
-                <span>English</span>
-                <span class="lang-check w-2 h-2 rounded-full bg-green-500 hidden"></span>
-              </button>
-              <button onclick="setLanguage('ar')" class="lang-option w-full px-4 py-2 text-sm text-left text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-between" data-lang="ar">
-                <span>العربية</span>
-                <span class="lang-check w-2 h-2 rounded-full bg-green-500 hidden"></span>
-              </button>
-            </div>
-          </div>
-
-          <a href="/login" class="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block">Sign In</a>
-          <a href="/signup" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:shadow-lg hover:shadow-purple-500/25">
-            <span>Start Free Trial</span>
-          </a>
-
-          <!-- Mobile Menu Button -->
-          <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-400 hover:text-white">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-[#030303]">
-      <div class="px-6 py-4 space-y-4">
-        <a href="#features" class="block text-sm text-gray-400 hover:text-white py-2">Features</a>
-        <a href="#trust" class="block text-sm text-gray-400 hover:text-white py-2">Trust Engine</a>
-        <a href="#pricing" class="block text-sm text-gray-400 hover:text-white py-2">Pricing</a>
-        <a href="#compare" class="block text-sm text-gray-400 hover:text-white py-2">Compare</a>
-
-        <!-- Mobile Language Toggle -->
-        <div class="pt-4 border-t border-white/10">
-          <p class="text-xs text-gray-500 mb-2">Language</p>
-          <div class="flex gap-2">
-            <button onclick="setLanguage('en')" id="mobile-lang-en" class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-white/5 border border-white/10 text-gray-400">
-              English
-            </button>
-            <button onclick="setLanguage('ar')" id="mobile-lang-ar" class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-white/5 border border-white/10 text-gray-400">
-              العربية
-            </button>
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-white/10 space-y-3">
-          <a href="/login" class="block text-sm text-gray-400 hover:text-white py-2">Sign In</a>
-          <a href="/signup" class="block w-full text-center btn-primary px-5 py-2.5 rounded-xl text-sm font-medium">
-            <span>Start Free Trial</span>
-          </a>
-        </div>
-      </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle theme">
+        <span class="theme-toggle-knob">
+          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+      <a href="/login" class="btn btn-secondary">Sign In</a>
+      <a href="/signup" class="btn btn-primary">Get Started</a>
     </div>
   </nav>
 
-  <script>
-    // Mobile menu toggle
-    document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-      document.getElementById('mobile-menu').classList.toggle('hidden');
-    });
-
-    // Language Toggle Functions
-    let currentLanguage = localStorage.getItem('i18nextLng') || 'en';
-
-    function initLanguage() {
-      // Set initial state
-      updateLanguageUI(currentLanguage);
-      applyLanguageDirection(currentLanguage);
-    }
-
-    function toggleLangMenu() {
-      const menu = document.getElementById('lang-menu');
-      menu.classList.toggle('hidden');
-    }
-
-    function setLanguage(lang) {
-      currentLanguage = lang;
-      localStorage.setItem('i18nextLng', lang);
-      updateLanguageUI(lang);
-      applyLanguageDirection(lang);
-      document.getElementById('lang-menu').classList.add('hidden');
-    }
-
-    function updateLanguageUI(lang) {
-      // Update header display
-      document.getElementById('current-lang').textContent = lang.toUpperCase();
-
-      // Update desktop dropdown indicators
-      document.querySelectorAll('.lang-option').forEach(btn => {
-        const btnLang = btn.getAttribute('data-lang');
-        const check = btn.querySelector('.lang-check');
-        if (btnLang === lang) {
-          btn.classList.add('text-white');
-          btn.classList.remove('text-gray-400');
-          check.classList.remove('hidden');
-        } else {
-          btn.classList.remove('text-white');
-          btn.classList.add('text-gray-400');
-          check.classList.add('hidden');
-        }
-      });
-
-      // Update mobile buttons
-      const mobileEn = document.getElementById('mobile-lang-en');
-      const mobileAr = document.getElementById('mobile-lang-ar');
-      if (mobileEn && mobileAr) {
-        if (lang === 'en') {
-          mobileEn.style.background = 'rgba(168, 85, 247, 0.2)';
-          mobileEn.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-          mobileEn.style.color = '#ffffff';
-          mobileAr.style.background = 'rgba(255, 255, 255, 0.05)';
-          mobileAr.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-          mobileAr.style.color = 'rgb(156, 163, 175)';
-        } else {
-          mobileAr.style.background = 'rgba(168, 85, 247, 0.2)';
-          mobileAr.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-          mobileAr.style.color = '#ffffff';
-          mobileEn.style.background = 'rgba(255, 255, 255, 0.05)';
-          mobileEn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-          mobileEn.style.color = 'rgb(156, 163, 175)';
-        }
-      }
-    }
-
-    function applyLanguageDirection(lang) {
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      document.documentElement.lang = lang;
-    }
-
-    // Close language menu when clicking outside
-    document.addEventListener('click', function(e) {
-      const langToggle = e.target.closest('.lang-toggle');
-      if (!langToggle) {
-        document.getElementById('lang-menu').classList.add('hidden');
-      }
-    });
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initLanguage);
-  </script>
-
-  <!-- Hero Section -->
-  <section class="relative min-h-screen flex items-center justify-center pt-32 pb-12 overflow-hidden">
-    <!-- Neural Network Background -->
-    <div class="absolute inset-0 overflow-hidden opacity-[0.03]">
-      <svg class="absolute w-full h-full" viewBox="0 0 1000 1000">
-        <defs>
-          <pattern id="neural-grid" width="50" height="50" patternUnits="userSpaceOnUse">
-            <circle cx="25" cy="25" r="1" fill="currentColor" class="text-purple-500"/>
-          </pattern>
-          <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#a855f7"/>
-            <stop offset="100%" stop-color="#06b6d4"/>
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#neural-grid)"/>
-      </svg>
-    </div>
-
-    <div class="relative z-10 max-w-7xl mx-auto px-6">
-      <div class="text-center">
-        <!-- AI Badge -->
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 mb-8 animate-fade-up">
-          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-          <span class="text-sm font-medium gradient-text-purple">Powered by 6 AI Models</span>
-          <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            <span class="status-text">AI Engine Active</span>
+          </div>
+          <h1 class="hero-title"><span class="text-gradient">Trust-Gated</span><br>AI Autopilot for<br>Media Buyers</h1>
+          <p class="hero-subtitle">AI-powered ad optimization with human oversight. Our Trust Gate system ensures every decision is auditable, explainable, and reversible. Scale your campaigns while maintaining full control.</p>
+          <div class="hero-cta">
+            <a href="/signup" class="btn btn-primary btn-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Start Free Trial</a>
+            <a href="#demo" class="btn btn-secondary btn-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Watch Demo</a>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value">4.82x</div><div class="stat-label">ROAS Improvement</div></div>
+            <div class="stat-card"><div class="stat-value">$47K</div><div class="stat-label">Avg Monthly Savings</div></div>
+            <div class="stat-card"><div class="stat-value">94.7%</div><div class="stat-label">Trust Score</div></div>
+          </div>
         </div>
-
-        <!-- Main Headline -->
-        <h1 class="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6 animate-fade-up delay-100" style="opacity:0">
-          <span class="text-white">The Only AI That</span><br>
-          <span class="relative">
-            <span class="gradient-text">Thinks Before It Acts</span>
-                      </span>
-        </h1>
-
-        <!-- Subheadline -->
-        <p class="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed animate-fade-up delay-200" style="opacity:0">
-          Trust-Gated Autopilot executes revenue operations <span class="text-white font-medium">only when AI confirms data quality meets safety thresholds</span>.
-          Predict ROAS, prevent churn, and sync audiences across 4 platforms—automatically.
-        </p>
-
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 animate-fade-up delay-300" style="opacity:0">
-          <a href="/signup" class="btn-primary group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold">
-            <span class="text-white">Start Free Trial</span>
-            <svg class="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </a>
-          <a href="#demo" class="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold border border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.05] transition-all">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center">
-              <div class="w-0 h-0 border-l-[8px] border-l-white border-y-[5px] border-y-transparent ml-1"></div>
+        <div class="hero-preview">
+          <div class="hero-glow glow-1"></div>
+          <div class="hero-glow glow-2"></div>
+          <div class="preview-window">
+            <div class="preview-chrome">
+              <span class="chrome-dot red"></span><span class="chrome-dot yellow"></span><span class="chrome-dot green"></span>
+              <span class="chrome-title">stratum-trust-engine.ai</span>
             </div>
-            <span class="text-white">Watch Demo</span>
-          </a>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10 max-w-4xl mx-auto animate-fade-up delay-400" style="opacity:0">
-          <div class="group p-6 rounded-2xl bg-purple-500/10 backdrop-blur-xl border border-purple-500/20 shadow-lg shadow-purple-500/5 hover:bg-purple-500/15 transition-all card-hover">
-            <div class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent mb-1">6</div>
-            <div class="text-sm text-gray-400">AI Models</div>
-            <div class="text-xs text-gray-500">Built-in</div>
-          </div>
-          <div class="group p-6 rounded-2xl bg-green-500/10 backdrop-blur-xl border border-green-500/20 shadow-lg shadow-green-500/5 hover:bg-green-500/15 transition-all card-hover">
-            <div class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-1">99.7%</div>
-            <div class="text-sm text-gray-400">Uptime</div>
-            <div class="text-xs text-gray-500">SLA</div>
-          </div>
-          <div class="group p-6 rounded-2xl bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 shadow-lg shadow-cyan-500/5 hover:bg-cyan-500/15 transition-all card-hover">
-            <div class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-1">&lt;50ms</div>
-            <div class="text-sm text-gray-400">Predictions</div>
-            <div class="text-xs text-gray-500">Latency</div>
-          </div>
-          <div class="group p-6 rounded-2xl bg-orange-500/10 backdrop-blur-xl border border-orange-500/20 shadow-lg shadow-orange-500/5 hover:bg-orange-500/15 transition-all card-hover">
-            <div class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent mb-1">4</div>
-            <div class="text-sm text-gray-400">Ad Platforms</div>
-            <div class="text-xs text-gray-500">Synced</div>
-          </div>
-        </div>
-
-        <!-- Trust Badges -->
-        <div class="flex flex-wrap items-center justify-center gap-4 animate-fade-up delay-500" style="opacity:0">
-          <div class="flex items-center gap-2 px-4 py-2 rounded-full glass">
-            <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            <span class="text-sm text-gray-400">SOC 2 Type II</span>
-          </div>
-          <div class="flex items-center gap-2 px-4 py-2 rounded-full glass">
-            <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
-            <span class="text-sm text-gray-400">GDPR Compliant</span>
-          </div>
-          <div class="flex items-center gap-2 px-4 py-2 rounded-full glass">
-            <svg class="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span class="text-sm text-gray-400">Real-time Sync</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Dashboard Preview -->
-      <div class="relative mt-20 animate-fade-up delay-600" style="opacity:0">
-        <div class="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-cyan-500/20 to-orange-500/20 blur-3xl -z-10 scale-95"></div>
-        <div class="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-xl overflow-hidden">
-          <div class="flex items-center gap-2 px-6 py-4 border-b border-white/[0.05]">
-            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
-            <div class="flex-1 text-center text-sm text-gray-500">Stratum AI Dashboard</div>
-          </div>
-          <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Signal Health Card -->
-            <div class="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-sm text-gray-400">Signal Health</span>
-                <div class="flex items-center gap-1">
-                  <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span class="text-xs text-green-400">HEALTHY</span>
-                </div>
+            <div class="preview-content">
+              <div class="trust-ring-container">
+                <div class="trust-ring-outer"></div>
+                <div class="trust-ring-progress"></div>
+                <div class="trust-ring-inner"><span class="trust-score">94.7%</span><span class="trust-label">Trust Score</span></div>
               </div>
-              <div class="text-4xl font-bold text-white mb-2">87</div>
-              <div class="h-2 rounded-full bg-white/10 overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full health-bar" style="width: 87%"></div>
+              <div class="preview-cards">
+                <div class="preview-card"><div class="preview-card-label">Total Spend</div><div class="preview-card-value">$124.8K</div></div>
+                <div class="preview-card"><div class="preview-card-label">Conversions</div><div class="preview-card-value">1,847</div></div>
+              </div>
+              <div class="terminal-stream">
+                <div class="terminal-line"><span class="terminal-time">14:23:45</span><span class="terminal-status success">+</span><span>Budget reallocated: META +$2,400</span></div>
+                <div class="terminal-line"><span class="terminal-time">14:23:42</span><span class="terminal-status info">*</span><span>Trust gate approved: 94.7% confidence</span></div>
+                <div class="terminal-line"><span class="terminal-time">14:23:38</span><span class="terminal-status success">+</span><span>Creative A/B test concluded</span></div>
               </div>
             </div>
-            <!-- ROAS Prediction Card -->
-            <div class="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-sm text-gray-400">Predicted ROAS</span>
-                <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-              </div>
-              <div class="text-4xl font-bold text-white mb-2">3.2x</div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-green-400">+12%</span>
-                <span class="text-xs text-gray-500">vs last week</span>
-              </div>
-            </div>
-            <!-- Trust Gate Card -->
-            <div class="p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20">
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-sm text-gray-400">Trust Gate</span>
-                <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              </div>
-              <div class="text-2xl font-bold text-white mb-2">AUTOPILOT</div>
-              <div class="text-sm text-cyan-400">✓ All checks passed</div>
-            </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scroll Indicator -->
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
-      <div class="flex flex-col items-center gap-2 text-gray-500">
-        <span class="text-xs uppercase tracking-widest">Scroll to explore</span>
-        <div class="w-6 h-10 rounded-full border border-white/20 flex items-start justify-center p-2">
-          <div class="w-1 h-2 rounded-full bg-white/40 animate-scroll"></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Features Section -->
-  <section id="features" class="relative py-16 overflow-hidden">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-gradient-to-b from-purple-500/5 to-transparent rounded-full blur-3xl"></div>
-
-    <div class="relative z-10 max-w-7xl mx-auto px-6">
-      <!-- Section Header -->
-      <div class="text-center mb-20">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-          <span class="text-sm font-medium text-purple-400">6 AI Models Built-In</span>
-        </div>
-        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
-          <span class="text-white">Predictive Intelligence</span><br>
-          <span class="gradient-text">Not Just Analytics</span>
-                  </h2>
-        <p class="text-lg text-gray-400 max-w-2xl mx-auto">
-          Every model is trained on YOUR data. No generic predictions—tailored insights for your unique business patterns.
-        </p>
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">AI That Works With You, Not Around You</h2>
+        <p class="section-subtitle">Every optimization is explainable, every decision is auditable, and every action is reversible.</p>
       </div>
-
-      <!-- AI Models Bento Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        <!-- ROAS Predictor -->
-        <div class="group relative rounded-3xl bg-gradient-to-b from-green-500/10 to-emerald-500/5 border border-white/[0.05] hover:border-white/10 overflow-hidden card-hover">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 to-emerald-500 opacity-60"></div>
-          <div class="p-8">
-            <div class="inline-flex p-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 mb-6">
-              <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <h3 class="text-xl font-semibold text-white mb-1">ROAS Predictor</h3>
-            <p class="text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent mb-3">Know ROI Before You Spend</p>
-            <p class="text-gray-400 text-sm leading-relaxed mb-6">ML-powered predictions for Meta, Google, TikTok & Snapchat campaigns with platform-specific baselines.</p>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">94%</div><div class="text-xs text-gray-500 uppercase">accuracy</div></div>
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">23ms</div><div class="text-xs text-gray-500 uppercase">latency</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- LTV Predictor -->
-        <div class="group relative rounded-3xl bg-gradient-to-b from-purple-500/10 to-violet-500/5 border border-white/[0.05] hover:border-white/10 overflow-hidden card-hover">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-500 to-violet-500 opacity-60"></div>
-          <div class="p-8">
-            <div class="inline-flex p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-500 mb-6">
-              <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            </div>
-            <h3 class="text-xl font-semibold text-white mb-1">LTV Predictor</h3>
-            <p class="text-sm font-medium bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent mb-3">Target High-Value Customers</p>
-            <p class="text-gray-400 text-sm leading-relaxed mb-6">30/90/180/365-day + lifetime value predictions with customer segmentation.</p>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">5</div><div class="text-xs text-gray-500 uppercase">segments</div></div>
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">4</div><div class="text-xs text-gray-500 uppercase">timeframes</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Churn Predictor -->
-        <div class="group relative rounded-3xl bg-gradient-to-b from-red-500/10 to-orange-500/5 border border-white/[0.05] hover:border-white/10 overflow-hidden card-hover">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-500 to-orange-500 opacity-60"></div>
-          <div class="p-8">
-            <div class="inline-flex p-3 rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 mb-6">
-              <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            </div>
-            <h3 class="text-xl font-semibold text-white mb-1">Churn Predictor</h3>
-            <p class="text-sm font-medium bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent mb-3">Retain Revenue at Risk</p>
-            <p class="text-gray-400 text-sm leading-relaxed mb-6">Identify at-risk customers with contributing factors and recommended actions.</p>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">0.89</div><div class="text-xs text-gray-500 uppercase">rocAuc</div></div>
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">87%</div><div class="text-xs text-gray-500 uppercase">precision</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Conversion Predictor -->
-        <div class="group relative rounded-3xl bg-gradient-to-b from-cyan-500/10 to-blue-500/5 border border-white/[0.05] hover:border-white/10 overflow-hidden card-hover">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 to-blue-500 opacity-60"></div>
-          <div class="p-8">
-            <div class="inline-flex p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 mb-6">
-              <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-            </div>
-            <h3 class="text-xl font-semibold text-white mb-1">Conversion Predictor</h3>
-            <p class="text-sm font-medium bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent mb-3">Prioritize High-Intent Audiences</p>
-            <p class="text-gray-400 text-sm leading-relaxed mb-6">Predict conversion likelihood per campaign with platform-specific baselines.</p>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">91%</div><div class="text-xs text-gray-500 uppercase">accuracy</div></div>
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">12</div><div class="text-xs text-gray-500 uppercase">features</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Creative Lifecycle -->
-        <div class="group relative rounded-3xl bg-gradient-to-b from-orange-500/10 to-amber-500/5 border border-white/[0.05] hover:border-white/10 overflow-hidden card-hover">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 to-amber-500 opacity-60"></div>
-          <div class="p-8">
-            <div class="inline-flex p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 mb-6">
-              <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-            </div>
-            <h3 class="text-xl font-semibold text-white mb-1">Creative Lifecycle</h3>
-            <p class="text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent mb-3">Refresh Before Performance Drops</p>
-            <p class="text-gray-400 text-sm leading-relaxed mb-6">Predicts creative fatigue with lifecycle phases: Learning → Growth → Maturity → Decline.</p>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">5</div><div class="text-xs text-gray-500 uppercase">phases</div></div>
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">5</div><div class="text-xs text-gray-500 uppercase">urgencyLevels</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ROAS Forecaster -->
-        <div class="group relative rounded-3xl bg-gradient-to-b from-indigo-500/10 to-purple-500/5 border border-white/[0.05] hover:border-white/10 overflow-hidden card-hover">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 opacity-60"></div>
-          <div class="p-8">
-            <div class="inline-flex p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 mb-6">
-              <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            </div>
-            <h3 class="text-xl font-semibold text-white mb-1">ROAS Forecaster</h3>
-            <p class="text-sm font-medium bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent mb-3">Plan Budget Cycles</p>
-            <p class="text-gray-400 text-sm leading-relaxed mb-6">Time-series revenue forecasting with confidence intervals and baseline calculations.</p>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">3</div><div class="text-xs text-gray-500 uppercase">granularity</div></div>
-              <div class="flex items-center gap-2"><div class="text-lg font-bold text-white">90d</div><div class="text-xs text-gray-500 uppercase">horizon</div></div>
-            </div>
-          </div>
-        </div>
+      <div class="features-grid">
+        <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><h3 class="feature-title">Trust Gate System</h3><p class="feature-desc">Every AI recommendation passes through our proprietary trust gate. No black boxes - see exactly why each decision was made.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="feature-title">Human Override</h3><p class="feature-desc">One-click override on any AI decision. Your expertise always takes precedence. Rollback any action instantly.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><h3 class="feature-title">Real-Time Optimization</h3><p class="feature-desc">24/7 monitoring and adjustment. Budgets shift automatically to top performers while you sleep.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><h3 class="feature-title">Cross-Platform Unified</h3><p class="feature-desc">Meta, Google, TikTok, and Snapchat in one view. Unified attribution, unified optimization.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><h3 class="feature-title">Audit Trail</h3><p class="feature-desc">Complete history of every decision. Export compliance reports. SOC2 Type II certified infrastructure.</p></div>
+        <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><h3 class="feature-title">Predictive Analytics</h3><p class="feature-desc">See tomorrow's performance today. ML-powered forecasting with 92% accuracy on 7-day projections.</p></div>
       </div>
+    </div>
+  </section>
 
-      <!-- Additional Features -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="group p-6 rounded-2xl bg-purple-500/10 backdrop-blur-xl border border-purple-500/20 shadow-lg shadow-purple-500/5 hover:bg-purple-500/15 transition-all">
-          <svg class="w-5 h-5 text-purple-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-          <h4 class="text-sm font-medium text-white mb-1">A/B Testing Framework</h4>
-          <p class="text-xs text-gray-500">Champion/challenger model testing with auto-promotion</p>
-        </div>
-        <div class="group p-6 rounded-2xl bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 shadow-lg shadow-cyan-500/5 hover:bg-cyan-500/15 transition-all">
-          <svg class="w-5 h-5 text-cyan-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-          <h4 class="text-sm font-medium text-white mb-1">SHAP Explainability</h4>
-          <p class="text-xs text-gray-500">See why AI made each recommendation</p>
-        </div>
-        <div class="group p-6 rounded-2xl bg-orange-500/10 backdrop-blur-xl border border-orange-500/20 shadow-lg shadow-orange-500/5 hover:bg-orange-500/15 transition-all">
-          <svg class="w-5 h-5 text-orange-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"/></svg>
-          <h4 class="text-sm font-medium text-white mb-1">What-If Simulator</h4>
-          <p class="text-xs text-gray-500">Test budget scenarios before committing</p>
-        </div>
-        <div class="group p-6 rounded-2xl bg-green-500/10 backdrop-blur-xl border border-green-500/20 shadow-lg shadow-green-500/5 hover:bg-green-500/15 transition-all">
-          <svg class="w-5 h-5 text-green-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          <h4 class="text-sm font-medium text-white mb-1">RFM Segmentation</h4>
-          <p class="text-xs text-gray-500">11 behavioral segments automatically classified</p>
-        </div>
+  <section class="cdp-section" id="cdp">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Customer Data Platform</div>
+        <h2 class="section-title">Unified Profiles. Smart Segments. Instant Sync.</h2>
+        <p class="section-subtitle">Turn fragmented customer data into revenue with our built-in CDP. Push segments to all major ad platforms with one click.</p>
       </div>
-
-      <!-- AI Infrastructure Badge -->
-      <div class="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-        <div class="flex items-center gap-2">
-          <div class="w-2 h-2 rounded-full bg-green-500"></div>
-          <span>Hybrid Inference (Local + Cloud)</span>
+      <div class="cdp-grid">
+        <div class="cdp-card">
+          <div class="cdp-card-icon">*</div>
+          <h3 class="cdp-card-title">One-Click Audience Sync</h3>
+          <p class="cdp-card-desc">Push segments directly to Meta, Google, TikTok, and Snapchat. Auto-sync keeps your audiences fresh 24/7 with configurable intervals.</p>
+          <span class="cdp-badge">4 Platforms</span>
         </div>
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span>&lt;50ms average latency</span>
+        <div class="cdp-card">
+          <div class="cdp-card-icon">@</div>
+          <h3 class="cdp-card-title">360 Customer Profiles</h3>
+          <p class="cdp-card-desc">Unified view from anonymous visitor to loyal customer. Real-time enrichment from every interaction across all touchpoints.</p>
+          <span class="cdp-badge">Identity Resolution</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span>Powered by</span>
-          <span class="font-medium text-gray-400">scikit-learn + Vertex AI</span>
+        <div class="cdp-card">
+          <div class="cdp-card-icon">#</div>
+          <h3 class="cdp-card-title">Smart Segmentation</h3>
+          <p class="cdp-card-desc">Build segments with behavioral rules, RFM scores, and lifecycle stages. Preview audience size before you publish.</p>
+          <span class="cdp-badge">RFM Analysis</span>
+        </div>
+        <div class="cdp-card">
+          <div class="cdp-card-icon">~</div>
+          <h3 class="cdp-card-title">Identity Graph</h3>
+          <p class="cdp-card-desc">Connect the dots across devices and channels. Visual identity graph shows every connection with full merge history.</p>
+          <span class="cdp-badge">Cross-Device</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Trust Engine Section -->
-  <section id="trust" class="relative py-16 overflow-hidden bg-gradient-to-b from-transparent via-purple-500/[0.02] to-transparent">
-    <div class="absolute inset-0 opacity-[0.02]">
-      <svg class="w-full h-full">
-        <pattern id="trust-pattern" width="60" height="60" patternUnits="userSpaceOnUse">
-          <path d="M30 0v60M0 30h60" stroke="currentColor" stroke-width="0.5" fill="none" class="text-white"/>
-        </pattern>
-        <rect width="100%" height="100%" fill="url(#trust-pattern)"/>
-      </svg>
+  <section class="social-proof">
+    <div class="container">
+      <div class="social-proof-header"><span class="social-proof-label">Trusted by Teams Running Campaigns On</span></div>
+      <div class="platforms-grid">
+        <div class="platform-logo"><svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg><span class="platform-name">Meta</span></div>
+        <div class="platform-logo"><svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg><span class="platform-name">Google</span></div>
+        <div class="platform-logo"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg><span class="platform-name">TikTok</span></div>
+        <div class="platform-logo"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg><span class="platform-name">Snapchat</span></div>
+      </div>
     </div>
+  </section>
 
-    <div class="relative z-10 max-w-7xl mx-auto px-6">
-      <!-- Section Header -->
-      <div class="text-center mb-10">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
-          <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <span class="text-sm font-medium text-cyan-400">Unique to Stratum AI</span>
-        </div>
-        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
-          <span class="text-white">Trust-Gated</span><br>
-          <span class="gradient-text">Autopilot</span>
-                  </h2>
-        <p class="text-lg text-gray-400 max-w-2xl mx-auto">
-          The only platform that <span class="text-white font-medium">refuses to execute bad recommendations</span>.
-          Signal health is verified before every automated action.
-        </p>
-      </div>
-
-      <!-- State Selector -->
-      <div class="flex justify-center gap-4 mb-12" id="state-selector">
-        <button onclick="setTrustState('healthy')" class="state-btn active px-6 py-3 rounded-xl font-medium text-sm transition-all bg-green-500/10 border-2 border-green-500/30 text-green-400" data-state="healthy">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-            <span>Healthy</span>
-            <span class="text-xs opacity-60">(87)</span>
-          </div>
-        </button>
-        <button onclick="setTrustState('degraded')" class="state-btn px-6 py-3 rounded-xl font-medium text-sm transition-all bg-white/[0.02] border border-white/[0.05] text-gray-400 hover:bg-white/[0.05]" data-state="degraded">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-gray-600"></div>
-            <span>Degraded</span>
-            <span class="text-xs opacity-60">(52)</span>
-          </div>
-        </button>
-        <button onclick="setTrustState('unhealthy')" class="state-btn px-6 py-3 rounded-xl font-medium text-sm transition-all bg-white/[0.02] border border-white/[0.05] text-gray-400 hover:bg-white/[0.05]" data-state="unhealthy">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-gray-600"></div>
-            <span>Unhealthy</span>
-            <span class="text-xs opacity-60">(28)</span>
-          </div>
-        </button>
-      </div>
-
-      <!-- Flow Visualization -->
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
-        <!-- Step 1: Signal Sources -->
-        <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="p-2 rounded-xl bg-blue-500/10">
-              <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.348 14.651a3.75 3.75 0 010-5.303m5.304 0a3.75 3.75 0 010 5.303m-7.425 2.122a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.79M12 12h.008v.007H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-            </div>
-            <span class="text-sm font-medium text-white">Signal Sources</span>
-          </div>
-          <div class="space-y-2 text-xs text-gray-500">
-            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-white/60"></div><span>Meta Ads API</span></div>
-            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-white/60"></div><span>Google Ads API</span></div>
-            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-white/60"></div><span>TikTok Ads API</span></div>
-            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-white/60"></div><span>Snapchat Ads API</span></div>
-          </div>
-        </div>
-
-        <!-- Arrow -->
-        <div class="hidden lg:flex items-center justify-center">
-          <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
-
-        <!-- Step 2: Health Calculator -->
-        <div id="health-card" class="p-6 rounded-2xl bg-green-500/10 border border-green-500/30 animate-scale-in">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
-              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <span class="text-sm font-medium text-white">Signal Health</span>
-          </div>
-          <div class="text-center mb-4">
-            <div id="health-score" class="text-5xl font-bold text-green-400">87</div>
-            <div id="health-status" class="text-xs text-gray-500 uppercase mt-1">healthy</div>
-          </div>
-          <div class="h-2 rounded-full bg-white/10 overflow-hidden">
-            <div id="health-bar" class="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 health-bar" style="width: 87%"></div>
-          </div>
-        </div>
-
-        <!-- Arrow -->
-        <div class="hidden lg:flex items-center justify-center">
-          <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
-
-        <!-- Step 3: Trust Gate Decision -->
-        <div id="decision-card" class="p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/30 animate-scale-in">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="p-2 rounded-xl bg-purple-500/10">
-              <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            </div>
-            <span class="text-sm font-medium text-white">Trust Gate</span>
-          </div>
-          <div class="text-center">
-            <div id="decision-badge" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/30 mb-3">
-              <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span id="decision-text" class="font-bold text-green-400">PASS</span>
-            </div>
-            <div id="action-text" class="text-sm text-gray-400">AUTOPILOT EXECUTE</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Health Components -->
-      <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="p-5 rounded-xl glass">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-white">EMQ Score</span>
-            <span class="text-xs font-bold text-purple-400">40%</span>
-          </div>
-          <p class="text-xs text-gray-500">Event Match Quality from ad platforms</p>
-        </div>
-        <div class="p-5 rounded-xl glass">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-white">Freshness</span>
-            <span class="text-xs font-bold text-purple-400">25%</span>
-          </div>
-          <p class="text-xs text-gray-500">Data recency and completeness</p>
-        </div>
-        <div class="p-5 rounded-xl glass">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-white">Variance</span>
-            <span class="text-xs font-bold text-purple-400">20%</span>
-          </div>
-          <p class="text-xs text-gray-500">Metric consistency over time</p>
-        </div>
-        <div class="p-5 rounded-xl glass">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-white">Anomalies</span>
-            <span class="text-xs font-bold text-purple-400">15%</span>
-          </div>
-          <p class="text-xs text-gray-500">Unusual pattern detection</p>
-        </div>
-      </div>
-
-      <!-- Key Insight -->
-      <div class="mt-12 flex justify-center">
-        <div class="inline-flex items-start gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 max-w-2xl">
-          <svg class="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <p class="text-sm text-gray-300">
-            <span class="font-medium text-white">Never auto-execute when signal_health &lt; 70.</span>
-            This is the safety guarantee that no other platform provides. Your automation only runs when data quality is verified.
-          </p>
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-container">
+        <h2 class="cta-title">Ready to Transform Your Ad Operations?</h2>
+        <p class="cta-subtitle">Join 500+ media buyers who trust Stratum AI to optimize over $50M in monthly ad spend.</p>
+        <div class="cta-buttons">
+          <a href="/signup" class="btn btn-primary btn-lg">Start 14-Day Free Trial</a>
+          <a href="#demo" class="btn btn-secondary btn-lg">Schedule Demo</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Battle Card Section -->
-  <section id="compare" class="relative py-16 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/[0.02] to-transparent"></div>
-
-    <div class="relative z-10 max-w-7xl mx-auto px-6">
-      <!-- Section Header -->
-      <div class="text-center mb-10">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-6">
-          <svg class="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-          <span class="text-sm font-medium text-orange-400">Competitive Battle Card</span>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <svg class="footer-logo-mark" viewBox="0 0 44 44"><polygon style="fill:none;stroke:var(--gold);stroke-width:1.5;" points="22,2 42,12 42,32 22,42 2,32 2,12" /><polygon style="fill:var(--gold);" points="22,14 30,19 30,29 22,34 14,29 14,19" /></svg>
+          <span class="footer-logo-name">STRATUM AI</span>
         </div>
-        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
-          <span class="text-white">See How We</span><br>
-          <span class="gradient-text">Stack Up</span>
-                  </h2>
-        <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
-          The only platform with Trust-Gated execution, built-in AI predictions, and visual identity resolution.
-        </p>
-        <button onclick="downloadBattleCard()" class="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold border border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.05] transition-all text-white">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          </div>
-          <span>Download Sales Battle Card (PDF)</span>
-        </button>
-      </div>
-
-      <!-- Legend -->
-      <div class="flex flex-wrap items-center justify-center gap-6 mb-8 text-sm">
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-purple-500/20 ring-2 ring-purple-500/40 flex items-center justify-center"><svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg></div>
-          <span class="text-gray-400">Unique to Stratum</span>
+        <div class="footer-links">
+          <a href="#" class="footer-link">Privacy</a>
+          <a href="#" class="footer-link">Terms</a>
+          <a href="#" class="footer-link">Security</a>
+          <a href="#" class="footer-link">Status</a>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div>
-          <span class="text-gray-400">Full Support</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div>
-          <span class="text-gray-400">Partial/Limited</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div>
-          <span class="text-gray-400">Not Available</span>
-        </div>
-      </div>
-
-      <!-- Category Tabs -->
-      <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
-        <button onclick="switchCompetitorTab('cdp')" id="tab-cdp" class="competitor-tab active px-5 py-2.5 rounded-xl text-sm font-medium transition-all bg-purple-500/20 text-purple-400 border border-purple-500/30">
-          CDPs
-        </button>
-        <button onclick="switchCompetitorTab('marketing')" id="tab-marketing" class="competitor-tab px-5 py-2.5 rounded-xl text-sm font-medium transition-all bg-white/5 text-gray-400 border border-white/10 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/30">
-          Marketing Automation
-        </button>
-        <button onclick="switchCompetitorTab('adtech')" id="tab-adtech" class="competitor-tab px-5 py-2.5 rounded-xl text-sm font-medium transition-all bg-white/5 text-gray-400 border border-white/10 hover:bg-orange-500/10 hover:text-orange-400 hover:border-orange-500/30">
-          Ad Platforms
-        </button>
-      </div>
-
-      <!-- Comparison Table -->
-      <div id="compare" class="rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl overflow-hidden overflow-x-auto">
-        <!-- CDP Table -->
-        <div id="table-cdp" class="competitor-table">
-          <div class="grid grid-cols-7 gap-4 p-6 border-b border-white/[0.05] bg-white/[0.02] min-w-[900px]">
-            <div class="text-sm font-medium text-gray-400">Feature</div>
-            <div class="text-sm font-medium text-center text-purple-400">Stratum AI<div class="text-xs text-purple-500 mt-1">You are here</div></div>
-            <div class="text-sm font-medium text-center text-gray-400">Segment</div>
-            <div class="text-sm font-medium text-center text-gray-400">mParticle</div>
-            <div class="text-sm font-medium text-center text-gray-400">Tealium</div>
-            <div class="text-sm font-medium text-center text-gray-400">Treasure Data</div>
-            <div class="text-sm font-medium text-center text-gray-400">Bloomreach</div>
-          </div>
-        </div>
-
-        <!-- Marketing Automation Table -->
-        <div id="table-marketing" class="competitor-table hidden">
-          <div class="grid grid-cols-7 gap-4 p-6 border-b border-white/[0.05] bg-white/[0.02] min-w-[900px]">
-            <div class="text-sm font-medium text-gray-400">Feature</div>
-            <div class="text-sm font-medium text-center text-purple-400">Stratum AI<div class="text-xs text-purple-500 mt-1">You are here</div></div>
-            <div class="text-sm font-medium text-center text-gray-400">Braze</div>
-            <div class="text-sm font-medium text-center text-gray-400">Klaviyo</div>
-            <div class="text-sm font-medium text-center text-gray-400">Iterable</div>
-            <div class="text-sm font-medium text-center text-gray-400">Customer.io</div>
-            <div class="text-sm font-medium text-center text-gray-400">HubSpot</div>
-          </div>
-        </div>
-
-        <!-- Ad Tech Table -->
-        <div id="table-adtech" class="competitor-table hidden">
-          <div class="grid grid-cols-7 gap-4 p-6 border-b border-white/[0.05] bg-white/[0.02] min-w-[900px]">
-            <div class="text-sm font-medium text-gray-400">Feature</div>
-            <div class="text-sm font-medium text-center text-purple-400">Stratum AI<div class="text-xs text-purple-500 mt-1">You are here</div></div>
-            <div class="text-sm font-medium text-center text-gray-400">Smartly.io</div>
-            <div class="text-sm font-medium text-center text-gray-400">AdEspresso</div>
-            <div class="text-sm font-medium text-center text-gray-400">The Trade Desk</div>
-            <div class="text-sm font-medium text-center text-gray-400">LiveRamp</div>
-            <div class="text-sm font-medium text-center text-gray-400">Hightouch</div>
-          </div>
-        </div>
-
-        <!-- AI & Predictions Category -->
-        <button onclick="toggleCategory('ai')" class="w-full grid grid-cols-6 gap-4 p-4 border-b border-white/[0.05] bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
-          <div class="col-span-6 flex items-center gap-2">
-            <svg id="ai-arrow" class="w-4 h-4 text-gray-400 transition-transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <span class="text-sm font-semibold text-white">AI & Predictions</span>
-            <span class="text-xs text-gray-500">(6 features)</span>
-          </div>
-        </button>
-        <div id="ai-features" class="overflow-hidden">
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300 tooltip">Trust-Gated Execution<span class="tooltip-content">Only execute when signal health passes safety thresholds</span></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-purple-500/20 ring-2 ring-purple-500/40 flex items-center justify-center"><svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300">ROAS Prediction</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300">LTV Prediction</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300">Churn Prediction</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300 tooltip">Creative Fatigue Detection<span class="tooltip-content">Predict ad creative burnout before performance drops</span></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-purple-500/20 ring-2 ring-purple-500/40 flex items-center justify-center"><svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center feature-row">
-            <div class="text-sm text-gray-300">Model Explainability (SHAP)</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-          </div>
-        </div>
-
-        <!-- CDP & Data Category (collapsed by default) -->
-        <button onclick="toggleCategory('cdp')" class="w-full grid grid-cols-6 gap-4 p-4 border-b border-white/[0.05] bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
-          <div class="col-span-6 flex items-center gap-2">
-            <svg id="cdp-arrow" class="w-4 h-4 text-gray-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <span class="text-sm font-semibold text-white">CDP & Data</span>
-            <span class="text-xs text-gray-500">(5 features)</span>
-          </div>
-        </button>
-        <div id="cdp-features" class="overflow-hidden hidden">
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300">Identity Resolution</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300">Visual Identity Graph</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300">RFM Segmentation (Built-in)</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center border-b border-white/[0.03] feature-row">
-            <div class="text-sm text-gray-300">Real-time Event Processing</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg></div></div>
-          </div>
-          <div class="grid grid-cols-6 gap-4 p-4 items-center feature-row">
-            <div class="text-sm text-gray-300">Anomaly Detection</div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-            <div class="flex justify-center"><div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center"><svg class="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Winning Message Cards -->
-      <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="p-6 rounded-2xl bg-purple-500/10 backdrop-blur-xl border border-purple-500/20 shadow-lg shadow-purple-500/5">
-          <div class="inline-flex px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-violet-500/20 mb-4">
-            <span class="text-xs font-medium bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent">4 Unique Features</span>
-          </div>
-          <p class="text-sm text-gray-400">Trust-Gated execution, creative fatigue detection, signal health scoring, and visual identity graph</p>
-        </div>
-        <div class="p-6 rounded-2xl bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
-          <div class="inline-flex px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 mb-4">
-            <span class="text-xs font-medium bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">6 Built-in AI Models</span>
-          </div>
-          <p class="text-sm text-gray-400">ROAS, LTV, Churn, Conversion, Creative Lifecycle, and ROAS Forecaster—all included</p>
-        </div>
-        <div class="p-6 rounded-2xl bg-orange-500/10 backdrop-blur-xl border border-orange-500/20 shadow-lg shadow-orange-500/5">
-          <div class="inline-flex px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 mb-4">
-            <span class="text-xs font-medium bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">All-in-One Platform</span>
-          </div>
-          <p class="text-sm text-gray-400">CDP + Predictions + Activation in one system. No integrating 5 different tools</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pricing Section -->
-  <section id="pricing" class="relative py-16 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/[0.02] to-transparent"></div>
-
-    <div class="relative z-10 max-w-7xl mx-auto px-6">
-      <!-- Section Header -->
-      <div class="text-center mb-10">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-6">
-          <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-          <span class="text-sm font-medium text-green-400">AI-Powered Pricing</span>
-        </div>
-        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
-          <span class="text-white">Pay for the AI</span><br>
-          <span class="gradient-text">Power You Need</span>
-                  </h2>
-        <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
-          All plans include the core platform. Upgrade for advanced AI models and higher limits.
-        </p>
-
-        <!-- Billing Toggle -->
-        <div class="inline-flex items-center gap-4 p-1.5 rounded-full glass">
-          <button onclick="setBilling('monthly')" id="monthly-btn" class="px-6 py-2 rounded-full text-sm font-medium transition-all text-gray-400 hover:text-white">Monthly</button>
-          <button onclick="setBilling('annual')" id="annual-btn" class="px-6 py-2 rounded-full text-sm font-medium transition-all bg-gradient-to-r from-green-500 to-emerald-500 text-white">
-            Annual<span class="ml-2 text-xs bg-green-400/20 text-green-400 px-2 py-0.5 rounded-full">Save 20%</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Pricing Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <!-- Starter -->
-        <div class="relative rounded-3xl bg-gradient-to-b from-blue-500/5 to-cyan-500/5 border border-blue-500/20 backdrop-blur-xl overflow-hidden">
-          <div class="p-8">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
-                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>
-              </div>
-              <h3 class="text-xl font-semibold text-white">Starter</h3>
-            </div>
-            <p class="text-sm text-gray-400 mb-6">For growing teams getting started with AI-powered revenue ops</p>
-            <div class="mb-6">
-              <div class="flex items-baseline gap-2">
-                <span class="text-4xl font-bold text-white" id="starter-price">$249</span>
-                <span class="text-gray-500">/month</span>
-              </div>
-              <div class="text-xs text-gray-500 mt-1" id="starter-billing">Billed annually ($2,988/year)</div>
-            </div>
-            <a href="/signup" class="block w-full py-3 px-6 rounded-xl text-center font-medium bg-white/[0.05] border border-white/10 text-white hover:bg-white/10 transition-all">
-              Start Free Trial <svg class="inline-block w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-            </a>
-            <div class="mt-6 pt-6 border-t border-white/[0.05] grid grid-cols-2 gap-4">
-              <div><div class="text-lg font-semibold text-white">50K</div><div class="text-xs text-gray-500">Profiles</div></div>
-              <div><div class="text-lg font-semibold text-white">500K/mo</div><div class="text-xs text-gray-500">Events</div></div>
-              <div><div class="text-lg font-semibold text-white">2</div><div class="text-xs text-gray-500">Platforms</div></div>
-              <div><div class="text-lg font-semibold text-white">3</div><div class="text-xs text-gray-500">Users</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Professional (Most Popular) -->
-        <div class="relative rounded-3xl bg-gradient-to-b from-purple-500/10 to-violet-500/5 border border-purple-500/30 backdrop-blur-xl overflow-hidden ring-2 ring-purple-500/50 scale-[1.02]">
-          <div class="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-violet-500 text-center py-2">
-            <span class="text-xs font-semibold text-white uppercase tracking-wider">Most Popular</span>
-          </div>
-          <div class="p-8 pt-14">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500">
-                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-              </div>
-              <h3 class="text-xl font-semibold text-white">Professional</h3>
-            </div>
-            <p class="text-sm text-gray-400 mb-6">For scaling teams that need full AI capabilities</p>
-            <div class="mb-6">
-              <div class="flex items-baseline gap-2">
-                <span class="text-4xl font-bold text-white" id="pro-price">$649</span>
-                <span class="text-gray-500">/month</span>
-              </div>
-              <div class="text-xs text-gray-500 mt-1" id="pro-billing">Billed annually ($7,788/year)</div>
-            </div>
-            <a href="/signup" class="block w-full py-3 px-6 rounded-xl text-center font-medium bg-gradient-to-r from-purple-500 to-violet-500 text-white hover:opacity-90 transition-all">
-              Start Free Trial <svg class="inline-block w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-            </a>
-            <div class="mt-6 pt-6 border-t border-white/[0.05] grid grid-cols-2 gap-4">
-              <div><div class="text-lg font-semibold text-white">500K</div><div class="text-xs text-gray-500">Profiles</div></div>
-              <div><div class="text-lg font-semibold text-white">5M/mo</div><div class="text-xs text-gray-500">Events</div></div>
-              <div><div class="text-lg font-semibold text-white">4</div><div class="text-xs text-gray-500">Platforms</div></div>
-              <div><div class="text-lg font-semibold text-white">10</div><div class="text-xs text-gray-500">Users</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Enterprise -->
-        <div class="relative rounded-3xl bg-gradient-to-b from-orange-500/5 to-amber-500/5 border border-orange-500/20 backdrop-blur-xl overflow-hidden">
-          <div class="p-8">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500">
-                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-              </div>
-              <h3 class="text-xl font-semibold text-white">Enterprise</h3>
-            </div>
-            <p class="text-sm text-gray-400 mb-6">For large organizations with custom requirements</p>
-            <div class="mb-6">
-              <div class="text-2xl font-bold text-white">Custom Pricing</div>
-            </div>
-            <a href="/contact" class="block w-full py-3 px-6 rounded-xl text-center font-medium bg-white/[0.05] border border-white/10 text-white hover:bg-white/10 transition-all">Contact Sales</a>
-            <div class="mt-6 pt-6 border-t border-white/[0.05] grid grid-cols-2 gap-4">
-              <div><div class="text-lg font-semibold text-white">Unlimited</div><div class="text-xs text-gray-500">Profiles</div></div>
-              <div><div class="text-lg font-semibold text-white">Unlimited</div><div class="text-xs text-gray-500">Events</div></div>
-              <div><div class="text-lg font-semibold text-white">All</div><div class="text-xs text-gray-500">Platforms</div></div>
-              <div><div class="text-lg font-semibold text-white">Unlimited</div><div class="text-xs text-gray-500">Users</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Enterprise CTA -->
-      <div class="text-center">
-        <p class="text-gray-400 mb-4">Need custom integrations, dedicated support, or volume pricing?</p>
-        <a href="/contact" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium hover:opacity-90 transition-opacity">
-          Talk to Sales
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials Section -->
-  <section class="relative py-16 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/[0.02] to-transparent"></div>
-
-    <div class="relative z-10 max-w-7xl mx-auto px-6">
-      <!-- Section Header -->
-      <div class="text-center mb-10">
-        <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 relative inline-block">
-          <span class="text-white">Trusted by </span>
-          <span class="gradient-text">Revenue Teams</span>
-                  </h2>
-        <p class="text-lg text-gray-400 max-w-2xl mx-auto">
-          See what growth and marketing leaders say about switching to AI-powered revenue operations.
-        </p>
-      </div>
-
-      <!-- Testimonials Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <!-- Testimonial 1 -->
-        <div class="group relative p-8 rounded-3xl glass">
-          <div class="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500"></div>
-          <div class="relative">
-            <div class="flex gap-1 mb-4">
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            </div>
-            <blockquote class="text-gray-300 text-lg leading-relaxed mb-6">"Trust-Gated Autopilot is a game-changer. We've eliminated bad automation decisions completely. Our team finally sleeps at night knowing the AI won't act on degraded data."</blockquote>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center text-white font-semibold">SC</div>
-                <div>
-                  <div class="font-medium text-white">Sarah Chen</div>
-                  <div class="text-sm text-gray-500">VP of Growth, TechScale Inc.</div>
-                </div>
-              </div>
-              <div class="px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-violet-500/10">
-                <span class="text-sm font-bold bg-gradient-to-r from-purple-500 to-violet-500 bg-clip-text text-transparent">+47% ROAS</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Testimonial 2 -->
-        <div class="group relative p-8 rounded-3xl glass">
-          <div class="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500"></div>
-          <div class="relative">
-            <div class="flex gap-1 mb-4">
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            </div>
-            <blockquote class="text-gray-300 text-lg leading-relaxed mb-6">"The creative fatigue prediction alone saved us $200K in wasted ad spend last quarter. We refresh creatives before they burn out, not after."</blockquote>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-semibold">MJ</div>
-                <div>
-                  <div class="font-medium text-white">Marcus Johnson</div>
-                  <div class="text-sm text-gray-500">Performance Marketing Lead, E-Commerce Giant</div>
-                </div>
-              </div>
-              <div class="px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
-                <span class="text-sm font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">-34% CPA</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Testimonial 3 -->
-        <div class="group relative p-8 rounded-3xl glass">
-          <div class="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-orange-500 to-amber-500 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500"></div>
-          <div class="relative">
-            <div class="flex gap-1 mb-4">
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            </div>
-            <blockquote class="text-gray-300 text-lg leading-relaxed mb-6">"Finally, a CDP that doesn't just collect data but actually tells you what to do with it. The LTV predictions are scary accurate—we now focus on the right customers."</blockquote>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-semibold">ER</div>
-                <div>
-                  <div class="font-medium text-white">Emily Rodriguez</div>
-                  <div class="text-sm text-gray-500">Director of CRM, Subscription Box Co.</div>
-                </div>
-              </div>
-              <div class="px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/10">
-                <span class="text-sm font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">+62% LTV</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Testimonial 4 -->
-        <div class="group relative p-8 rounded-3xl glass">
-          <div class="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-green-500 to-emerald-500 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500"></div>
-          <div class="relative">
-            <div class="flex gap-1 mb-4">
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            </div>
-            <blockquote class="text-gray-300 text-lg leading-relaxed mb-6">"We replaced Segment + Looker + a custom ML pipeline with Stratum. One platform, 6 AI models built-in. Implementation took 2 days."</blockquote>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-semibold">DK</div>
-                <div>
-                  <div class="font-medium text-white">David Kim</div>
-                  <div class="text-sm text-gray-500">CTO, Growth Startup</div>
-                </div>
-              </div>
-              <div class="px-4 py-2 rounded-full bg-gradient-to-r from-green-500/10 to-emerald-500/10">
-                <span class="text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">10x faster</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Integration Logos -->
-      <div class="text-center">
-        <p class="text-sm text-gray-500 mb-8">Integrates with the platforms you already use</p>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-          <!-- Meta -->
-          <div class="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-gray-400">
-              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02Z"/>
-              </svg>
-            </div>
-            <span class="text-sm font-medium text-white mb-1">Meta</span>
-            <span class="text-xs text-gray-500 text-center">Custom Audiences API</span>
-          </div>
-          <!-- Google -->
-          <div class="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-gray-400">
-              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-            </div>
-            <span class="text-sm font-medium text-white mb-1">Google</span>
-            <span class="text-xs text-gray-500 text-center">Customer Match API</span>
-          </div>
-          <!-- TikTok -->
-          <div class="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-gray-400">
-              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-              </svg>
-            </div>
-            <span class="text-sm font-medium text-white mb-1">TikTok</span>
-            <span class="text-xs text-gray-500 text-center">DMP Custom Audience API</span>
-          </div>
-          <!-- Snapchat -->
-          <div class="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-gray-400">
-              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.17 2c3 0 5.42 1.96 5.77 5.05.04.39.06.77.06 1.15 0 .7-.1 1.37-.26 2a.5.5 0 0 0 .31.61c.5.17 1.03.35 1.5.62.26.15.4.4.4.67 0 .24-.1.45-.33.58-.9.5-1.87.64-2.22.68-.03.5-.17.98-.55 1.43-.4.47-1.12 1.01-2.33 1.59-.05.03-.1.08-.12.14l-.17.54c-.04.14-.02.22.03.3.04.07.1.1.15.12.51.12 1 .32 1.35.63.23.2.38.45.38.75 0 .46-.32.83-.76 1.06-.52.27-1.16.4-1.8.4-.5 0-.95-.08-1.27-.15-.4-.09-.9-.22-1.42-.22-.5 0-1.01.13-1.43.22-.32.07-.76.15-1.26.15-.64 0-1.28-.13-1.8-.4-.44-.23-.76-.6-.76-1.06 0-.3.15-.55.38-.75.35-.31.84-.51 1.35-.63.06-.02.11-.05.15-.12.05-.08.07-.16.03-.3l-.17-.54c-.02-.06-.07-.11-.12-.14-1.21-.58-1.93-1.12-2.33-1.59-.38-.45-.52-.92-.55-1.43-.35-.04-1.32-.18-2.22-.68a.7.7 0 0 1-.33-.58c0-.27.14-.52.4-.67.47-.27 1-.45 1.5-.62a.5.5 0 0 0 .31-.61 8.8 8.8 0 0 1-.26-2c0-.38.02-.76.06-1.15C6.58 3.96 9 2 12 2h.17z"/>
-              </svg>
-            </div>
-            <span class="text-sm font-medium text-white mb-1">Snapchat</span>
-            <span class="text-xs text-gray-500 text-center">Audience Match SAM API</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stats Bar -->
-      <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div class="text-center">
-          <div class="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-1">500+</div>
-          <div class="text-sm text-gray-500">Companies</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-1">$2.4B+</div>
-          <div class="text-sm text-gray-500">Revenue Optimized</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-1">99.7%</div>
-          <div class="text-sm text-gray-500">Uptime SLA</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-1">4.9/5</div>
-          <div class="text-sm text-gray-500">Customer Rating</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="relative py-16 overflow-hidden">
-    <div class="absolute inset-0">
-      <div class="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent"></div>
-      <div class="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl animate-float"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-cyan-500/15 blur-3xl animate-float" style="animation-delay: 1s"></div>
-      <div class="absolute top-1/2 right-1/3 w-48 h-48 rounded-full bg-orange-500/10 blur-3xl animate-float" style="animation-delay: 0.5s"></div>
-    </div>
-
-    <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
-      <!-- Main Headline -->
-      <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-4 relative inline-block">
-        <span class="text-white">Stop Guessing.</span><br>
-        <span class="gradient-text">Start Predicting.</span>
-      </h2>
-
-      <!-- Badge - Under Header -->
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6">
-        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-        <span class="text-sm text-gray-300">Ready to transform your revenue operations?</span>
-      </div>
-
-      <!-- Subheadline -->
-      <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
-        Join 500+ revenue teams using Stratum AI to predict outcomes, automate safely, and scale with confidence.
-      </p>
-
-      <!-- CTA Buttons -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-        <a href="/signup" class="btn-primary group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold">
-          <span class="text-white">Start Your Free Trial</span>
-          <svg class="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </a>
-        <a href="/demo" class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold border border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.05] text-white transition-all">Schedule a Demo</a>
-      </div>
-
-      <!-- Benefits Row -->
-      <div class="flex flex-wrap items-center justify-center gap-6">
-        <div class="flex items-center gap-2 text-sm text-gray-400">
-          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-          <span>6 AI models included</span>
-        </div>
-        <div class="flex items-center gap-2 text-sm text-gray-400">
-          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <span>Trust-gated safety</span>
-        </div>
-        <div class="flex items-center gap-2 text-sm text-gray-400">
-          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
-          <span>&lt;50ms predictions</span>
-        </div>
-        <div class="flex items-center gap-2 text-sm text-gray-400">
-          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          <span>14-day free trial</span>
-        </div>
-      </div>
-
-      <!-- Trust Statement -->
-      <div class="mt-10 pt-8 border-t border-white/[0.05]">
-        <p class="text-sm text-gray-500">No credit card required. SOC 2 Type II compliant. Your data never trains our models.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Newsletter Section -->
-  <section class="py-16 px-6 bg-gradient-to-b from-transparent to-purple-500/[0.03]">
-    <div class="max-w-4xl mx-auto">
-      <div class="p-8 md:p-12 rounded-3xl backdrop-blur-xl text-center" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%); border: 1px solid rgba(168, 85, 247, 0.2); box-shadow: 0 8px 32px rgba(168, 85, 247, 0.1);">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-          <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <span class="text-sm font-medium text-purple-400">Newsletter</span>
-        </div>
-        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Get Our Latest Updates</h2>
-        <p class="text-gray-400 mb-8 max-w-xl mx-auto">Stay ahead with AI-powered marketing insights, product updates, and exclusive tips delivered to your inbox.</p>
-
-        <form id="newsletter-form-main" class="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onsubmit="submitNewsletter(event, 'main')">
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            required
-            class="flex-1 px-6 py-4 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
-          />
-          <button
-            type="submit"
-            class="px-8 py-4 rounded-xl font-semibold text-white transition-all hover:scale-105"
-            style="background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%); box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);"
-          >
-            Subscribe
-          </button>
-        </form>
-        <p id="newsletter-message-main" class="mt-4 text-sm text-green-400 hidden"></p>
-        <p class="mt-4 text-xs text-gray-500">No spam, unsubscribe anytime. We respect your privacy.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="relative border-t border-white/[0.05] bg-[#030303]">
-    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
-
-    <div class="max-w-7xl mx-auto px-6 py-16">
-      <div class="grid grid-cols-2 md:grid-cols-6 gap-8">
-        <!-- Brand Column -->
-        <div class="col-span-2 md:col-span-1">
-          <a href="/" class="flex items-center gap-3 mb-6">
-            <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-cyan-500 to-orange-500 p-[1px]">
-              <div class="absolute inset-[1px] rounded-xl bg-[#030303] flex items-center justify-center">
-                <span class="text-lg font-bold gradient-text">S</span>
-              </div>
-            </div>
-            <span class="text-xl font-semibold text-white tracking-tight">Stratum AI</span>
-          </a>
-          <p class="text-sm text-gray-500 mb-4">AI-Powered Revenue Operating System with Trust-Gated Autopilot.</p>
-          <!-- Address & Phone -->
-          <div class="text-sm text-gray-500 mb-4">
-            <p>Arizona, Phoenix: 14001 N 7th ST STE F111</p>
-            <p class="mt-1"><a href="tel:+14807440840" class="hover:text-white transition-colors">+1 (480) 744-0840</a></p>
-          </div>
-          <div class="flex items-center gap-4">
-            <a href="https://instagram.com/stratumai" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white transition-colors" aria-label="Instagram">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-            </a>
-            <a href="https://tiktok.com/@stratumai" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white transition-colors" aria-label="TikTok">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>
-            </a>
-            <a href="https://youtube.com/@stratumai" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white transition-colors" aria-label="YouTube">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            </a>
-            <a href="https://linkedin.com/company/stratumai" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white transition-colors" aria-label="LinkedIn">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-            </a>
-            <a href="https://x.com/stratumai" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white transition-colors" aria-label="X">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
-          </div>
-
-          <!-- Footer Newsletter -->
-          <div class="mt-6">
-            <p class="text-sm text-white mb-3">Get updates</p>
-            <form id="newsletter-form-footer" class="flex gap-2" onsubmit="submitNewsletter(event, 'footer')">
-              <input
-                type="email"
-                name="email"
-                placeholder="Your email"
-                required
-                class="flex-1 px-3 py-2 text-sm rounded-lg bg-white/[0.05] border border-white/[0.1] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 transition-all"
-              />
-              <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors">
-                Subscribe
-              </button>
-            </form>
-            <p id="newsletter-message-footer" class="mt-2 text-xs text-green-400 hidden"></p>
-          </div>
-        </div>
-
-        <!-- Product -->
-        <div>
-          <h4 class="text-sm font-semibold text-white mb-4">Product</h4>
-          <ul class="space-y-3">
-            <li><a href="#features" class="text-sm text-gray-500 hover:text-white transition-colors">Features</a></li>
-            <li><a href="#pricing" class="text-sm text-gray-500 hover:text-white transition-colors">Pricing</a></li>
-            <li><a href="/integrations" class="text-sm text-gray-500 hover:text-white transition-colors">Integrations</a></li>
-            <li><a href="/api-docs" class="text-sm text-gray-500 hover:text-white transition-colors">API Docs</a></li>
-            <li><a href="/changelog" class="text-sm text-gray-500 hover:text-white transition-colors">Changelog</a></li>
-          </ul>
-        </div>
-
-        <!-- Solutions -->
-        <div>
-          <h4 class="text-sm font-semibold text-white mb-4">Solutions</h4>
-          <ul class="space-y-3">
-            <li><a href="/solutions/cdp" class="text-sm text-gray-500 hover:text-white transition-colors">CDP</a></li>
-            <li><a href="/solutions/audience-sync" class="text-sm text-gray-500 hover:text-white transition-colors">Audience Sync</a></li>
-            <li><a href="/solutions/predictions" class="text-sm text-gray-500 hover:text-white transition-colors">Predictions</a></li>
-            <li><a href="/solutions/trust-engine" class="text-sm text-gray-500 hover:text-white transition-colors">Trust Engine</a></li>
-          </ul>
-        </div>
-
-        <!-- Resources -->
-        <div>
-          <h4 class="text-sm font-semibold text-white mb-4">Resources</h4>
-          <ul class="space-y-3">
-            <li><a href="/docs" class="text-sm text-gray-500 hover:text-white transition-colors">Documentation</a></li>
-            <li><a href="/blog" class="text-sm text-gray-500 hover:text-white transition-colors">Blog</a></li>
-            <li><a href="/case-studies" class="text-sm text-gray-500 hover:text-white transition-colors">Case Studies</a></li>
-            <li><a href="/resources" class="text-sm text-gray-500 hover:text-white transition-colors">Resources</a></li>
-          </ul>
-        </div>
-
-        <!-- Company -->
-        <div>
-          <h4 class="text-sm font-semibold text-white mb-4">Company</h4>
-          <ul class="space-y-3">
-            <li><a href="/about" class="text-sm text-gray-500 hover:text-white transition-colors">About</a></li>
-            <li><a href="/careers" class="text-sm text-gray-500 hover:text-white transition-colors">Careers</a></li>
-            <li><a href="/contact" class="text-sm text-gray-500 hover:text-white transition-colors">Contact</a></li>
-            <li><a href="/faq" class="text-sm text-gray-500 hover:text-white transition-colors">FAQ</a></li>
-          </ul>
-        </div>
-
-        <!-- Legal -->
-        <div>
-          <h4 class="text-sm font-semibold text-white mb-4">Legal</h4>
-          <ul class="space-y-3">
-            <li><a href="/privacy" class="text-sm text-gray-500 hover:text-white transition-colors">Privacy</a></li>
-            <li><a href="/terms" class="text-sm text-gray-500 hover:text-white transition-colors">Terms</a></li>
-            <li><a href="/security" class="text-sm text-gray-500 hover:text-white transition-colors">Security</a></li>
-            <li><a href="/dpa" class="text-sm text-gray-500 hover:text-white transition-colors">DPA</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Bar -->
-    <div class="border-t border-white/[0.05]">
-      <div class="max-w-7xl mx-auto px-6 py-6">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-          <p class="text-sm text-gray-500">&copy; 2026 Stratum AI. All rights reserved. Developed and Prepared by Al-Ai-ai</p>
-          <div class="flex items-center gap-6">
-            <div class="flex items-center gap-2 text-xs text-gray-500">
-              <div class="px-2 py-1 rounded border border-white/10 bg-white/[0.02]">SOC 2</div>
-              <div class="px-2 py-1 rounded border border-white/10 bg-white/[0.02]">GDPR</div>
-              <div class="px-2 py-1 rounded border border-white/10 bg-white/[0.02]">CCPA</div>
-            </div>
-          </div>
-        </div>
+        <div class="footer-copyright">2026 Stratum AI. All rights reserved.</div>
       </div>
     </div>
   </footer>
 
-  <!-- JavaScript for Interactivity -->
   <script>
-    // Newsletter Subscription Handler
-    async function submitNewsletter(event, formId) {
-      event.preventDefault();
-      const form = event.target;
-      const email = form.email.value;
-      const messageEl = document.getElementById(`newsletter-message-${formId}`);
-      const submitBtn = form.querySelector('button[type="submit"]');
-
-      // Get UTM params from URL
-      const urlParams = new URLSearchParams(window.location.search);
-
-      // Disable button and show loading
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Subscribing...';
-
-      try {
-        const response = await fetch('/api/v1/landing-cms/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email,
-            source_page: 'landing_newsletter',
-            language: 'en',
-            utm_source: urlParams.get('utm_source'),
-            utm_medium: urlParams.get('utm_medium'),
-            utm_campaign: urlParams.get('utm_campaign'),
-            utm_term: urlParams.get('utm_term'),
-            utm_content: urlParams.get('utm_content'),
-            fbclid: urlParams.get('fbclid'),
-            gclid: urlParams.get('gclid'),
-            ttclid: urlParams.get('ttclid'),
-            sccid: urlParams.get('ScCid') || urlParams.get('sccid'),
-            landing_url: window.location.href,
-            referrer_url: document.referrer
-          })
+    const ThemeManager = {
+      init() {
+        const saved = localStorage.getItem('stratum-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        this.set(saved || (prefersDark ? 'dark' : 'light'));
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+          if (!localStorage.getItem('stratum-theme')) this.set(e.matches ? 'dark' : 'light');
         });
-
-        const data = await response.json();
-
-        if (data.success) {
-          messageEl.textContent = 'Thank you for subscribing! Check your email for updates.';
-          messageEl.className = 'mt-2 text-xs text-green-400';
-          messageEl.classList.remove('hidden');
-          form.reset();
-        } else {
-          throw new Error(data.message || 'Subscription failed');
-        }
-      } catch (error) {
-        messageEl.textContent = 'Thank you for your interest! We\'ll be in touch soon.';
-        messageEl.className = 'mt-2 text-xs text-green-400';
-        messageEl.classList.remove('hidden');
-        form.reset();
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Subscribe';
+      },
+      set(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('stratum-theme', theme);
+        window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+        const announce = document.getElementById('theme-announce');
+        if (announce) announce.textContent = 'Theme changed to ' + theme + ' mode';
+      },
+      toggle() {
+        const current = document.documentElement.getAttribute('data-theme');
+        this.set(current === 'dark' ? 'light' : 'dark');
       }
-    }
-
-    // Trust Engine State Selector
-    const trustStates = {
-      healthy: { score: 87, status: 'healthy', decision: 'PASS', action: 'AUTOPILOT EXECUTE', color: 'green' },
-      degraded: { score: 52, status: 'degraded', decision: 'HOLD', action: 'ALERT ONLY', color: 'yellow' },
-      unhealthy: { score: 28, status: 'unhealthy', decision: 'BLOCK', action: 'MANUAL REQUIRED', color: 'red' }
     };
 
-    function setTrustState(state) {
-      const data = trustStates[state];
-      const colors = {
-        green: { bg: 'bg-green-500/10', border: 'border-green-500/30', text: 'text-green-400', gradient: 'from-green-500 to-emerald-500' },
-        yellow: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400', gradient: 'from-yellow-500 to-amber-500' },
-        red: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400', gradient: 'from-red-500 to-rose-500' }
-      };
-      const c = colors[data.color];
-
-      // Update buttons
-      document.querySelectorAll('.state-btn').forEach(btn => {
-        const btnState = btn.dataset.state;
-        const btnData = trustStates[btnState];
-        const btnColors = colors[btnData.color];
-        if (btnState === state) {
-          btn.className = `state-btn active px-6 py-3 rounded-xl font-medium text-sm transition-all ${btnColors.bg} border-2 ${btnColors.border} ${btnColors.text}`;
-          btn.querySelector('.w-2').className = `w-2 h-2 rounded-full ${btnColors.bg.replace('/10', '')}`;
-        } else {
-          btn.className = 'state-btn px-6 py-3 rounded-xl font-medium text-sm transition-all bg-white/[0.02] border border-white/[0.05] text-gray-400 hover:bg-white/[0.05]';
-          btn.querySelector('.w-2').className = 'w-2 h-2 rounded-full bg-gray-600';
+    class NeuralCanvas {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.nodes = [];
+        this.nodeCount = 45;
+        this.maxDistance = 150;
+        this.init();
+      }
+      getColors() {
+        const style = getComputedStyle(document.documentElement);
+        return { node: style.getPropertyValue('--neural-node').trim() || 'rgba(212, 175, 55, 0.6)', line: style.getPropertyValue('--neural-line').trim() || 'rgba(212, 175, 55, 0.12)' };
+      }
+      init() {
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        window.addEventListener('themechange', () => this.colors = this.getColors());
+        this.colors = this.getColors();
+        this.createNodes();
+        this.animate();
+      }
+      resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; }
+      createNodes() {
+        this.nodes = [];
+        for (let i = 0; i < this.nodeCount; i++) {
+          this.nodes.push({ x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, radius: Math.random() * 2 + 1, pulse: Math.random() * Math.PI * 2 });
         }
-      });
-
-      // Update health card
-      document.getElementById('health-card').className = `p-6 rounded-2xl ${c.bg} ${c.border} border animate-scale-in`;
-      document.getElementById('health-score').className = `text-5xl font-bold ${c.text}`;
-      document.getElementById('health-score').textContent = data.score;
-      document.getElementById('health-status').textContent = data.status;
-      document.getElementById('health-bar').style.width = data.score + '%';
-      document.getElementById('health-bar').className = `h-full rounded-full bg-gradient-to-r ${c.gradient} health-bar`;
-
-      // Update decision card
-      document.getElementById('decision-card').className = `p-6 rounded-2xl bg-gradient-to-br ${c.bg} ${c.border} border animate-scale-in`;
-      document.getElementById('decision-badge').className = `inline-flex items-center gap-2 px-4 py-2 rounded-lg ${c.bg} ${c.border} border mb-3`;
-      document.getElementById('decision-text').className = `font-bold ${c.text}`;
-      document.getElementById('decision-text').textContent = data.decision;
-      document.getElementById('action-text').textContent = data.action;
-    }
-
-    // Battle Card Category Toggle
-    function toggleCategory(category) {
-      const features = document.getElementById(category + '-features');
-      const arrow = document.getElementById(category + '-arrow');
-      if (features.classList.contains('hidden')) {
-        features.classList.remove('hidden');
-        arrow.style.transform = 'rotate(90deg)';
-      } else {
-        features.classList.add('hidden');
-        arrow.style.transform = 'rotate(0deg)';
+      }
+      animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.nodes.forEach(node => {
+          node.x += node.vx; node.y += node.vy; node.pulse += 0.02;
+          if (node.x < 0 || node.x > this.canvas.width) node.vx *= -1;
+          if (node.y < 0 || node.y > this.canvas.height) node.vy *= -1;
+          const opacity = 0.3 + Math.sin(node.pulse) * 0.3;
+          this.ctx.beginPath();
+          this.ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+          this.ctx.fillStyle = this.colors.node.replace(/[\d.]+\)$/, opacity + ')');
+          this.ctx.fill();
+        });
+        this.nodes.forEach((nodeA, i) => {
+          this.nodes.slice(i + 1).forEach(nodeB => {
+            const dx = nodeA.x - nodeB.x, dy = nodeA.y - nodeB.y, dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < this.maxDistance) {
+              const opacity = 1 - dist / this.maxDistance;
+              this.ctx.beginPath();
+              this.ctx.moveTo(nodeA.x, nodeA.y);
+              this.ctx.lineTo(nodeB.x, nodeB.y);
+              this.ctx.strokeStyle = this.colors.line.replace(/[\d.]+\)$/, (opacity * 0.3) + ')');
+              this.ctx.stroke();
+            }
+          });
+        });
+        requestAnimationFrame(() => this.animate());
       }
     }
 
-    // Competitor Tab Switching with per-tab colors (purple, cyan, orange)
-    function switchCompetitorTab(tab) {
-      // Hide all tables
-      document.querySelectorAll('.competitor-table').forEach(t => t.classList.add('hidden'));
-      // Show selected table
-      document.getElementById('table-' + tab).classList.remove('hidden');
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('.nav');
+      if (window.scrollY > 50) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    });
 
-      // Color mapping for each tab (3 colors)
-      const colorMap = {
-        cdp: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
-        marketing: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' },
-        adtech: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30' }
-      };
-
-      // Reset all tabs to inactive state
-      document.querySelectorAll('.competitor-tab').forEach(t => {
-        t.classList.remove('active',
-          'bg-purple-500/20', 'text-purple-400', 'border-purple-500/30',
-          'bg-cyan-500/20', 'text-cyan-400', 'border-cyan-500/30',
-          'bg-orange-500/20', 'text-orange-400', 'border-orange-500/30'
-        );
-        t.classList.add('bg-white/5', 'text-gray-400', 'border-white/10');
-      });
-
-      // Apply active state with tab-specific color
-      const activeTab = document.getElementById('tab-' + tab);
-      const colors = colorMap[tab];
-      activeTab.classList.remove('bg-white/5', 'text-gray-400', 'border-white/10');
-      activeTab.classList.add('active', colors.bg, colors.text, colors.border);
-    }
-
-    // Pricing Billing Toggle
-    function setBilling(cycle) {
-      const isAnnual = cycle === 'annual';
-      document.getElementById('monthly-btn').className = `px-6 py-2 rounded-full text-sm font-medium transition-all ${isAnnual ? 'text-gray-400 hover:text-white' : 'bg-white/10 text-white'}`;
-      document.getElementById('annual-btn').className = `px-6 py-2 rounded-full text-sm font-medium transition-all ${isAnnual ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' : 'text-gray-400 hover:text-white'}`;
-      document.getElementById('annual-btn').innerHTML = isAnnual
-        ? 'Annual<span class="ml-2 text-xs bg-green-400/20 text-green-400 px-2 py-0.5 rounded-full">Save 20%</span>'
-        : 'Annual<span class="ml-2 text-xs bg-green-400/20 text-green-400 px-2 py-0.5 rounded-full">Save 20%</span>';
-
-      // Update prices
-      document.getElementById('starter-price').textContent = isAnnual ? '$249' : '$299';
-      document.getElementById('starter-billing').textContent = isAnnual ? 'Billed annually ($2,988/year)' : 'Billed monthly';
-      document.getElementById('pro-price').textContent = isAnnual ? '$649' : '$799';
-      document.getElementById('pro-billing').textContent = isAnnual ? 'Billed annually ($7,788/year)' : 'Billed monthly';
-    }
-
-    // Fade-in animations on scroll
-    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
-        }
-      });
-    }, observerOptions);
-
-    document.querySelectorAll('[style*="opacity:0"]').forEach(el => observer.observe(el));
+    document.addEventListener('DOMContentLoaded', () => {
+      ThemeManager.init();
+      new NeuralCanvas('neural-canvas');
+    });
   </script>
 </body>
 </html>

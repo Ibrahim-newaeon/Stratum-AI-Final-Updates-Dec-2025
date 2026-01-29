@@ -20,23 +20,50 @@ import {
 import { useSignup } from '@/api/auth';
 import { pageSEO, SEO } from '@/components/common/SEO';
 
-// Stratum HoloGlass Theme
+// Stratum Theme v4.0 - Trust-Gated Autopilot
 const theme = {
   primary: '#D4AF37', // Stratum Gold
   primaryLight: 'rgba(212, 175, 55, 0.15)',
+  primaryBright: '#F4D03F',
   green: '#22c55e', // Status Success
   orange: '#f59e0b', // Status Warning
   purple: '#8b5cf6', // Accent Purple
   cyan: '#14F0C6', // Accent Cyan
+  bgVoid: '#050508', // Deepest background
   bgBase: '#0a0a0f', // Deep navy black
-  bgCard: 'rgba(255, 255, 255, 0.03)', // Frosted glass
+  bgCard: 'rgba(18, 18, 26, 0.9)', // Card background
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderHover: 'rgba(255, 255, 255, 0.15)',
-  borderGold: 'rgba(212, 175, 55, 0.2)',
-  success: '#22c55e', // Status Success
+  border: 'rgba(255, 255, 255, 0.06)',
+  borderHover: 'rgba(255, 255, 255, 0.10)',
+  borderGold: 'rgba(212, 175, 55, 0.15)',
+  success: '#22c55e',
+  goldGlow: 'rgba(212, 175, 55, 0.5)',
+  goldSubtle: 'rgba(212, 175, 55, 0.1)',
+};
+
+// HUD Corner component for sci-fi styling
+const HUDCorner = ({ position }: { position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' }) => {
+  const styles: Record<string, React.CSSProperties> = {
+    'top-left': { top: 20, left: 20, borderRight: 'none', borderBottom: 'none' },
+    'top-right': { top: 20, right: 20, borderLeft: 'none', borderBottom: 'none' },
+    'bottom-left': { bottom: 20, left: 20, borderRight: 'none', borderTop: 'none' },
+    'bottom-right': { bottom: 20, right: 20, borderLeft: 'none', borderTop: 'none' },
+  };
+  return (
+    <div
+      className="hidden lg:block fixed pointer-events-none"
+      style={{
+        width: 60,
+        height: 60,
+        border: `2px solid ${theme.primary}`,
+        opacity: 0.4,
+        zIndex: 1,
+        ...styles[position],
+      }}
+    />
+  );
 };
 
 const signupSchema = z
@@ -88,15 +115,21 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background: theme.bgBase }}>
+    <div className="min-h-screen flex" style={{ background: theme.bgVoid }}>
       <SEO {...pageSEO.signup} url="https://stratum-ai.com/signup" />
+
+      {/* HUD Corners */}
+      <HUDCorner position="top-left" />
+      <HUDCorner position="top-right" />
+      <HUDCorner position="bottom-left" />
+      <HUDCorner position="bottom-right" />
 
       {/* Ambient orbs background */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(212, 175, 55, 0.08), transparent),
+            radial-gradient(ellipse 40% 40% at 20% 30%, ${theme.goldSubtle}, transparent),
             radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
             radial-gradient(ellipse 35% 35% at 60% 20%, rgba(20, 240, 198, 0.05), transparent)
           `,
@@ -104,7 +137,7 @@ export default function Signup() {
       />
 
       {/* LEFT PANEL - BRANDING */}
-      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgBase }}>
+      <div className="hidden lg:flex lg:w-1/2 relative" style={{ background: theme.bgVoid }}>
         <div className="absolute inset-y-0 right-0 w-px" style={{ background: theme.border }} />
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
