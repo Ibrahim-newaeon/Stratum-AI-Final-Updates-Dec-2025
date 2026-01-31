@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI - Client Onboarding Form</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a25;
+            --border-color: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-pink: #ec4899;
+            --snap-yellow: #FFFC00;
+            --tiktok-cyan: #00f2ea;
+            --google-blue: #4285f4;
+            --ga-orange: #f57c00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 30px;
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .section-client::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); }
+        .section-snap::before { background: var(--snap-yellow); }
+        .section-tiktok::before { background: linear-gradient(90deg, var(--tiktok-cyan), var(--accent-pink)); }
+        .section-google::before { background: var(--google-blue); }
+        .section-ga::before { background: var(--ga-orange); }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-client { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); }
+        .icon-snap { background: var(--snap-yellow); color: #000; }
+        .icon-tiktok { background: linear-gradient(135deg, var(--tiktok-cyan), var(--accent-pink)); }
+        .icon-google { background: var(--google-blue); }
+        .icon-ga { background: var(--ga-orange); }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .fields-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field-full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .required {
+            color: var(--accent-red);
+        }
+
+        .optional {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        input, select, textarea {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .field-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .output-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .output-section.visible {
+            display: block;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .output-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .output-content {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .copy-btn {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--accent-green);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .fields-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">⬡ Stratum AI</div>
+            <p class="subtitle">Client Onboarding - Platform Credentials Form</p>
+        </header>
+
+        <form id="onboardingForm" class="form-grid">
+            <!-- Client Information -->
+            <section class="section section-client">
+                <div class="section-header">
+                    <div class="section-icon icon-client">👤</div>
+                    <div>
+                        <h2 class="section-title">Client Information</h2>
+                        <p class="section-subtitle">Basic client/tenant details</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Client Name <span class="required">*</span></label>
+                        <input type="text" name="client_name" placeholder="e.g., Acme Corporation" required>
+                    </div>
+                    <div class="field">
+                        <label>Client ID <span class="optional">(auto-generated if empty)</span></label>
+                        <input type="text" name="client_id" placeholder="e.g., acme-corp-001">
+                    </div>
+                    <div class="field">
+                        <label>Contact Email <span class="required">*</span></label>
+                        <input type="email" name="contact_email" placeholder="e.g., admin@acme.com" required>
+                    </div>
+                    <div class="field">
+                        <label>Contact Phone</label>
+                        <input type="tel" name="contact_phone" placeholder="e.g., +1 234 567 8900">
+                    </div>
+                    <div class="field">
+                        <label>Timezone <span class="required">*</span></label>
+                        <select name="timezone" required>
+                            <option value="">Select timezone...</option>
+                            <option value="America/New_York">America/New_York (EST/EDT)</option>
+                            <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+                            <option value="America/Denver">America/Denver (MST/MDT)</option>
+                            <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+                            <option value="Europe/London">Europe/London (GMT/BST)</option>
+                            <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+                            <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+                            <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+                            <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                            <option value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Currency <span class="required">*</span></label>
+                        <select name="currency" required>
+                            <option value="">Select currency...</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="AED">AED - UAE Dirham</option>
+                            <option value="SAR">SAR - Saudi Riyal</option>
+                            <option value="SGD">SGD - Singapore Dollar</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                            <option value="JPY">JPY - Japanese Yen</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                        </select>
+                    </div>
+                    <div class="field field-full">
+                        <label>Notes</label>
+                        <textarea name="notes" placeholder="Any additional notes about this client..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Snapchat -->
+            <section class="section section-snap">
+                <div class="section-header">
+                    <div class="section-icon icon-snap">👻</div>
+                    <div>
+                        <h2 class="section-title">Snapchat Ads</h2>
+                        <p class="section-subtitle">Snapchat Marketing API & Conversions API credentials</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Access Token <span class="required">*</span></label>
+                        <input type="text" name="snap_access_token" placeholder="OAuth access token">
+                        <span class="field-hint">Long-lived access token from Snapchat Business</span>
+                    </div>
+                    <div class="field">
+                        <label>Refresh Token</label>
+                        <input type="text" name="snap_refresh_token" placeholder="OAuth refresh token">
+                        <span class="field-hint">For automatic token renewal</span>
+                    </div>
+                    <div class="field">
+                        <label>Pixel ID <span class="required">*</span></label>
+                        <input type="text" name="snap_pixel_id" placeholder="e.g., abc123-def456-...">
+                        <span class="field-hint">Snap Pixel ID from Events Manager</span>
+                    </div>
+                    <div class="field">
+                        <label>Ad Account ID <span class="required">*</span></label>
+                        <input type="text" name="snap_ad_account_id" placeholder="e.g., 12345678-abcd-...">
+                        <span class="field-hint">Snapchat Ad Account UUID</span>
+                    </div>
+                    <div class="field">
+                        <label>Organization ID</label>
+                        <input type="text" name="snap_organization_id" placeholder="e.g., org-12345678">
+                        <span class="field-hint">Required for org-level access</span>
+                    </div>
+                    <div class="field">
+                        <label>Conversions API Token</label>
+                        <input type="text" name="snap_capi_token" placeholder="CAPI access token (if different)">
+                        <span class="field-hint">Leave empty if same as Access Token</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TikTok -->
+            <section class="section section-tiktok">
+                <div class="section-header">
+                    <div class="section-icon icon-tiktok">🎵</div>
+                    <div>
+                        <h2 class="section-title">TikTok Ads</h2>
+                        <p class="section-subtitle">TikTok Marketing API & Events API credentials</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Access Token <span class="required">*</span></label>
+                        <input type="text" name="tiktok_access_token" placeholder="TikTok Marketing API token">
+                        <span class="field-hint">Long-lived token from TikTok for Business</span>
+                    </div>
+                    <div class="field">
+                        <label>Advertiser ID <span class="required">*</span></label>
+                        <input type="text" name="tiktok_advertiser_id" placeholder="e.g., 7123456789012345678">
+                        <span class="field-hint">TikTok Ad Account ID (numeric)</span>
+                    </div>
+                    <div class="field">
+                        <label>Pixel Code <span class="required">*</span></label>
+                        <input type="text" name="tiktok_pixel_code" placeholder="e.g., ABCD1234EFGH5678">
+                        <span class="field-hint">TikTok Pixel ID from Events Manager</span>
+                    </div>
+                    <div class="field">
+                        <label>Events API Access Token</label>
+                        <input type="text" name="tiktok_events_token" placeholder="Events API token (if different)">
+                        <span class="field-hint">Leave empty if same as Access Token</span>
+                    </div>
+                    <div class="field">
+                        <label>App ID</label>
+                        <input type="text" name="tiktok_app_id" placeholder="e.g., 1234567890123456">
+                        <span class="field-hint">Required for app event tracking</span>
+                    </div>
+                    <div class="field">
+                        <label>Business Center ID</label>
+                        <input type="text" name="tiktok_bc_id" placeholder="e.g., 7123456789012345678">
+                        <span class="field-hint">For Business Center level access</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Google Ads -->
+            <section class="section section-google">
+                <div class="section-header">
+                    <div class="section-icon icon-google">G</div>
+                    <div>
+                        <h2 class="section-title">Google Ads</h2>
+                        <p class="section-subtitle">Google Ads API & Conversion tracking credentials</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Developer Token <span class="required">*</span></label>
+                        <input type="text" name="google_developer_token" placeholder="Google Ads API developer token">
+                        <span class="field-hint">From Google Ads API Center</span>
+                    </div>
+                    <div class="field">
+                        <label>OAuth Client ID <span class="required">*</span></label>
+                        <input type="text" name="google_client_id" placeholder="e.g., 123456789-abc.apps.googleusercontent.com">
+                        <span class="field-hint">From Google Cloud Console</span>
+                    </div>
+                    <div class="field">
+                        <label>OAuth Client Secret <span class="required">*</span></label>
+                        <input type="text" name="google_client_secret" placeholder="OAuth client secret">
+                        <span class="field-hint">From Google Cloud Console</span>
+                    </div>
+                    <div class="field">
+                        <label>Refresh Token <span class="required">*</span></label>
+                        <input type="text" name="google_refresh_token" placeholder="OAuth refresh token">
+                        <span class="field-hint">For API authentication</span>
+                    </div>
+                    <div class="field">
+                        <label>Customer ID <span class="required">*</span></label>
+                        <input type="text" name="google_customer_id" placeholder="e.g., 123-456-7890">
+                        <span class="field-hint">Google Ads account ID (with dashes)</span>
+                    </div>
+                    <div class="field">
+                        <label>Login Customer ID</label>
+                        <input type="text" name="google_login_customer_id" placeholder="e.g., 123-456-7890">
+                        <span class="field-hint">MCC account ID (if using manager account)</span>
+                    </div>
+                    <div class="field">
+                        <label>Conversion Action ID</label>
+                        <input type="text" name="google_conversion_action_id" placeholder="e.g., 123456789">
+                        <span class="field-hint">Primary conversion action to track</span>
+                    </div>
+                    <div class="field">
+                        <label>Conversion Label</label>
+                        <input type="text" name="google_conversion_label" placeholder="e.g., AbCdEfGhIjKlMnOp">
+                        <span class="field-hint">For Google Ads conversion tag</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Google Analytics -->
+            <section class="section section-ga">
+                <div class="section-header">
+                    <div class="section-icon icon-ga">📊</div>
+                    <div>
+                        <h2 class="section-title">Google Analytics 4</h2>
+                        <p class="section-subtitle">GA4 Measurement Protocol & Data API credentials</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Property ID <span class="required">*</span></label>
+                        <input type="text" name="ga_property_id" placeholder="e.g., 123456789">
+                        <span class="field-hint">GA4 Property ID (numeric)</span>
+                    </div>
+                    <div class="field">
+                        <label>Measurement ID <span class="required">*</span></label>
+                        <input type="text" name="ga_measurement_id" placeholder="e.g., G-XXXXXXXXXX">
+                        <span class="field-hint">Format: G-XXXXXXXXXX</span>
+                    </div>
+                    <div class="field">
+                        <label>API Secret <span class="required">*</span></label>
+                        <input type="text" name="ga_api_secret" placeholder="Measurement Protocol API secret">
+                        <span class="field-hint">For server-side event tracking</span>
+                    </div>
+                    <div class="field">
+                        <label>Stream ID</label>
+                        <input type="text" name="ga_stream_id" placeholder="e.g., 1234567890">
+                        <span class="field-hint">Data Stream ID</span>
+                    </div>
+                    <div class="field">
+                        <label>Service Account JSON</label>
+                        <textarea name="ga_service_account" placeholder='Paste service account JSON here (for Data API access)...'></textarea>
+                        <span class="field-hint">Required for Google Analytics Data API</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Options -->
+            <section class="section section-client">
+                <div class="section-header">
+                    <div class="section-icon icon-client">⚙️</div>
+                    <div>
+                        <h2 class="section-title">Configuration</h2>
+                        <p class="section-subtitle">Sync settings and event tracking options</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Sync Frequency</label>
+                        <select name="sync_frequency">
+                            <option value="realtime">Real-time</option>
+                            <option value="hourly" selected>Hourly</option>
+                            <option value="daily">Daily</option>
+                            <option value="manual">Manual only</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Attribution Window</label>
+                        <select name="attribution_window">
+                            <option value="1">1 day</option>
+                            <option value="7" selected>7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="28">28 days</option>
+                        </select>
+                    </div>
+                    <div class="field field-full">
+                        <label>Events to Track</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="Purchase" checked> Purchase
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="AddToCart" checked> Add to Cart
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="Lead" checked> Lead
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="CompleteRegistration" checked> Complete Registration
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="ViewContent"> View Content
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="InitiateCheckout"> Initiate Checkout
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="Search"> Search
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="events" value="Subscribe"> Subscribe
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </form>
+
+        <div class="actions">
+            <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                🗑️ Clear Form
+            </button>
+            <button type="button" class="btn btn-primary" onclick="generateOutput()">
+                📋 Generate Config
+            </button>
+            <button type="button" class="btn btn-success" onclick="copyToClipboard()">
+                📋 Copy to Clipboard
+            </button>
+        </div>
+
+        <div id="outputSection" class="output-section">
+            <div class="output-header">
+                <h3 class="output-title">📄 Client Configuration Output</h3>
+                <button class="btn btn-secondary copy-btn" onclick="copyToClipboard()">Copy</button>
+            </div>
+            <pre id="outputContent" class="output-content"></pre>
+        </div>
+
+        <div id="toast" class="toast">✓ Copied to clipboard!</div>
+    </div>
+
+    <script>
+        function generateOutput() {
+            const form = document.getElementById('onboardingForm');
+            const formData = new FormData(form);
+
+            // Get selected events
+            const events = [];
+            document.querySelectorAll('input[name="events"]:checked').forEach(cb => {
+                events.push(cb.value);
+            });
+
+            const config = {
+                client: {
+                    name: formData.get('client_name') || '',
+                    id: formData.get('client_id') || generateClientId(formData.get('client_name')),
+                    contact_email: formData.get('contact_email') || '',
+                    contact_phone: formData.get('contact_phone') || '',
+                    timezone: formData.get('timezone') || '',
+                    currency: formData.get('currency') || '',
+                    notes: formData.get('notes') || ''
+                },
+                platforms: {
+                    snapchat: {
+                        enabled: !!(formData.get('snap_access_token') && formData.get('snap_pixel_id')),
+                        access_token: formData.get('snap_access_token') || '',
+                        refresh_token: formData.get('snap_refresh_token') || '',
+                        pixel_id: formData.get('snap_pixel_id') || '',
+                        ad_account_id: formData.get('snap_ad_account_id') || '',
+                        organization_id: formData.get('snap_organization_id') || '',
+                        capi_token: formData.get('snap_capi_token') || ''
+                    },
+                    tiktok: {
+                        enabled: !!(formData.get('tiktok_access_token') && formData.get('tiktok_pixel_code')),
+                        access_token: formData.get('tiktok_access_token') || '',
+                        advertiser_id: formData.get('tiktok_advertiser_id') || '',
+                        pixel_code: formData.get('tiktok_pixel_code') || '',
+                        events_token: formData.get('tiktok_events_token') || '',
+                        app_id: formData.get('tiktok_app_id') || '',
+                        business_center_id: formData.get('tiktok_bc_id') || ''
+                    },
+                    google_ads: {
+                        enabled: !!(formData.get('google_developer_token') && formData.get('google_customer_id')),
+                        developer_token: formData.get('google_developer_token') || '',
+                        client_id: formData.get('google_client_id') || '',
+                        client_secret: formData.get('google_client_secret') || '',
+                        refresh_token: formData.get('google_refresh_token') || '',
+                        customer_id: formData.get('google_customer_id') || '',
+                        login_customer_id: formData.get('google_login_customer_id') || '',
+                        conversion_action_id: formData.get('google_conversion_action_id') || '',
+                        conversion_label: formData.get('google_conversion_label') || ''
+                    },
+                    google_analytics: {
+                        enabled: !!(formData.get('ga_property_id') && formData.get('ga_measurement_id')),
+                        property_id: formData.get('ga_property_id') || '',
+                        measurement_id: formData.get('ga_measurement_id') || '',
+                        api_secret: formData.get('ga_api_secret') || '',
+                        stream_id: formData.get('ga_stream_id') || '',
+                        service_account: formData.get('ga_service_account') || ''
+                    }
+                },
+                config: {
+                    sync_frequency: formData.get('sync_frequency') || 'hourly',
+                    attribution_window: parseInt(formData.get('attribution_window')) || 7,
+                    events: events
+                },
+                metadata: {
+                    created_at: new Date().toISOString(),
+                    version: '1.0'
+                }
+            };
+
+            // Remove empty strings for cleaner output
+            const cleanConfig = JSON.parse(JSON.stringify(config, (key, value) => {
+                if (value === '') return undefined;
+                return value;
+            }));
+
+            const output = JSON.stringify(cleanConfig, null, 2);
+
+            document.getElementById('outputContent').textContent = output;
+            document.getElementById('outputSection').classList.add('visible');
+
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateClientId(name) {
+            if (!name) return 'client-' + Date.now();
+            return name.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36);
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('outputContent').textContent;
+            if (!output) {
+                generateOutput();
+            }
+
+            navigator.clipboard.writeText(document.getElementById('outputContent').textContent).then(() => {
+                showToast();
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function clearForm() {
+            if (confirm('Are you sure you want to clear all fields?')) {
+                document.getElementById('onboardingForm').reset();
+                document.getElementById('outputSection').classList.remove('visible');
+            }
+        }
+
+        // Auto-save to localStorage
+        function saveToLocalStorage() {
+            const form = document.getElementById('onboardingForm');
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+            localStorage.setItem('stratum_onboarding_draft', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('stratum_onboarding_draft');
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.keys(data).forEach(key => {
+                    const field = document.querySelector(`[name="${key}"]`);
+                    if (field) {
+                        if (field.type === 'checkbox') {
+                            field.checked = data[key] === 'on';
+                        } else {
+                            field.value = data[key];
+                        }
+                    }
+                });
+            }
+        }
+
+        // Auto-save on input
+        document.getElementById('onboardingForm').addEventListener('input', () => {
+            saveToLocalStorage();
+        });
+
+        // Load saved data on page load
+        window.addEventListener('load', () => {
+            loadFromLocalStorage();
+        });
+    </script>
+</body>
+</html>
