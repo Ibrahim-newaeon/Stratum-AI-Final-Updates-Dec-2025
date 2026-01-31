@@ -4,9 +4,12 @@
  */
 
 export default function Landing() {
+  // Cache-busting: append timestamp to prevent stale content
+  const cacheBuster = `?v=${Date.now()}`;
+
   return (
     <iframe
-      src="/landing.html"
+      src={`/landing.html${cacheBuster}`}
       title="Stratum AI - Revenue Intelligence + Trust Layer"
       style={{
         position: 'fixed',

@@ -291,21 +291,21 @@ export function Rules() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border bg-card">
+        <div className="metric-card info p-4">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.totalRules')}</p>
           <p className="text-2xl font-bold">{isLoading ? '...' : rules.length}</p>
         </div>
-        <div className="p-4 rounded-xl border bg-card">
+        <div className="metric-card success p-4">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.activeRules')}</p>
           <p className="text-2xl font-bold text-green-500">
             {isLoading ? '...' : rules.filter((r) => r.status === 'active').length}
           </p>
         </div>
-        <div className="p-4 rounded-xl border bg-card">
+        <div className="metric-card active p-4">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.triggersToday')}</p>
           <p className="text-2xl font-bold text-primary">23</p>
         </div>
-        <div className="p-4 rounded-xl border bg-card">
+        <div className="metric-card premium p-4">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.actionsExecuted')}</p>
           <p className="text-2xl font-bold">
             {isLoading ? '...' : rules.reduce((acc, r) => acc + r.triggerCount, 0)}

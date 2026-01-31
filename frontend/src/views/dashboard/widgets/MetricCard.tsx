@@ -60,7 +60,7 @@ export function MetricCard({
     return (
       <div
         className={cn(
-          'glass border border-white/10 rounded-xl flex items-center justify-center',
+          'metric-card info flex items-center justify-center',
           isSmall ? 'p-3' : 'p-5'
         )}
       >
@@ -72,9 +72,10 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'glass border border-white/10 rounded-xl transition-all card-3d',
+        'metric-card',
+        positive ? 'success' : 'info',
         isSmall ? 'p-3' : 'p-5',
-        highlight && 'ring-2 ring-primary/20 border-primary/50'
+        highlight && 'premium'
       )}
     >
       <div className="flex items-start justify-between">

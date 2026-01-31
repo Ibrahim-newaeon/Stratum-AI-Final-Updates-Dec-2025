@@ -11,6 +11,10 @@ const cardVariants = cva('rounded-xl text-card-foreground', {
       'glass-strong': 'glass-strong',
       '3d': 'border bg-card shadow card-3d',
       'glass-3d': 'glass card-3d',
+      // NN/g Compliant: Solid background for data-heavy content
+      data: 'data-card',
+      // NN/g Compliant: Glass effect for modals/tooltips/dropdowns
+      overlay: 'overlay-card',
     },
   },
   defaultVariants: {

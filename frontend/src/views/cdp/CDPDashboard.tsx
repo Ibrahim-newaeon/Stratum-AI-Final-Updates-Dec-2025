@@ -33,6 +33,7 @@ function StatCard({
   icon: Icon,
   href,
   loading,
+  variant = 'info',
 }: {
   title: string;
   value: string | number;
@@ -41,9 +42,10 @@ function StatCard({
   icon: React.ElementType;
   href?: string;
   loading?: boolean;
+  variant?: 'success' | 'warning' | 'error' | 'info' | 'premium' | 'active';
 }) {
   const content = (
-    <div className="bg-card rounded-xl border p-6 hover:shadow-lg transition-shadow">
+    <div className={cn('metric-card p-6', variant)}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -216,6 +218,7 @@ export default function CDPDashboard() {
           icon={UserGroupIcon}
           href="/dashboard/cdp/profiles"
           loading={profileLoading}
+          variant="success"
         />
         <StatCard
           title="Active Segments"
@@ -223,6 +226,7 @@ export default function CDPDashboard() {
           icon={TagIcon}
           href="/dashboard/cdp/segments"
           loading={segmentsLoading}
+          variant="premium"
         />
         <StatCard
           title="Events (30d)"
@@ -232,6 +236,7 @@ export default function CDPDashboard() {
           icon={ClockIcon}
           href="/dashboard/cdp/events"
           loading={eventLoading}
+          variant="active"
         />
         <StatCard
           title="Avg EMQ Score"
@@ -239,13 +244,14 @@ export default function CDPDashboard() {
           icon={ShareIcon}
           href="/dashboard/cdp/identity"
           loading={eventLoading}
+          variant="info"
         />
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lifecycle Distribution */}
-        <div className="bg-card rounded-xl border p-6">
+        <div className="metric-card info p-6">
           <h3 className="text-lg font-semibold mb-4">Profile Lifecycle</h3>
           {profileLoading ? (
             <div className="space-y-4">
@@ -271,7 +277,7 @@ export default function CDPDashboard() {
         </div>
 
         {/* Event Volume */}
-        <div className="bg-card rounded-xl border p-6 lg:col-span-2">
+        <div className="metric-card active p-6 lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Event Volume (Last 14 Days)</h3>
             <Link to="/dashboard/cdp/events" className="text-sm text-primary hover:underline">
@@ -307,7 +313,7 @@ export default function CDPDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Link
           to="/dashboard/cdp/profiles"
-          className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow flex items-center gap-4"
+          className="metric-card info p-4 flex items-center gap-4"
         >
           <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
             <UserGroupIcon className="h-5 w-5 text-blue-500" />
@@ -319,7 +325,7 @@ export default function CDPDashboard() {
         </Link>
         <Link
           to="/dashboard/cdp/segments"
-          className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow flex items-center gap-4"
+          className="metric-card premium p-4 flex items-center gap-4"
         >
           <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
             <TagIcon className="h-5 w-5 text-purple-500" />
@@ -331,7 +337,7 @@ export default function CDPDashboard() {
         </Link>
         <Link
           to="/dashboard/cdp/events"
-          className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow flex items-center gap-4"
+          className="metric-card success p-4 flex items-center gap-4"
         >
           <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
             <ClockIcon className="h-5 w-5 text-green-500" />
@@ -343,7 +349,7 @@ export default function CDPDashboard() {
         </Link>
         <Link
           to="/dashboard/cdp/identity"
-          className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow flex items-center gap-4"
+          className="metric-card warning p-4 flex items-center gap-4"
         >
           <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
             <ShareIcon className="h-5 w-5 text-orange-500" />
@@ -355,7 +361,7 @@ export default function CDPDashboard() {
         </Link>
         <Link
           to="/dashboard/cdp/audience-sync"
-          className="bg-card rounded-xl border p-4 hover:shadow-lg transition-shadow flex items-center gap-4"
+          className="metric-card active p-4 flex items-center gap-4"
         >
           <div className="h-10 w-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
             <ArrowUpOnSquareIcon className="h-5 w-5 text-pink-500" />

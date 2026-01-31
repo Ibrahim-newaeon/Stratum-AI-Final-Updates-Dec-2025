@@ -388,52 +388,50 @@ export default function Onboarding() {
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-12 px-4">
-          {STEPS.map((s, index) => {
-            const Icon = s.icon;
-            const isCompleted = index < currentStep;
-            const isCurrent = index === currentStep;
+        {/* Progress Steps - Onboarding Stepper */}
+        <div className="onboarding-stepper mb-12">
+          {/* Left side - Icon + Title + Progress */}
+          <div className="onboarding-header">
+            <div className="onboarding-icon">
+              <Zap />
+            </div>
+            <div>
+              <div className="onboarding-title">Getting Started</div>
+              <span className="onboarding-progress">{currentStep}/{STEPS.length}</span>
+            </div>
+          </div>
 
-            return (
-              <div key={s.id} className="flex items-center">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center transition-all',
-                      isCompleted
-                        ? 'bg-primary text-primary-foreground'
-                        : isCurrent
-                          ? 'bg-primary/20 text-primary ring-2 ring-primary ring-offset-2'
-                          : 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-                  </div>
-                  <span
-                    className={cn(
-                      'text-xs mt-2 font-medium hidden sm:block',
-                      isCurrent ? 'text-primary' : 'text-muted-foreground'
-                    )}
-                  >
-                    {s.title}
-                  </span>
-                </div>
-                {index < STEPS.length - 1 && (
-                  <div
-                    className={cn(
-                      'w-12 sm:w-20 h-0.5 mx-2',
-                      index < currentStep ? 'bg-primary' : 'bg-muted'
-                    )}
-                  />
-                )}
-              </div>
-            );
-          })}
+          {/* Right side - Step tabs */}
+          <div className="onboarding-steps">
+            {STEPS.map((s, index) => {
+              const Icon = s.icon;
+              const isCompleted = index < currentStep;
+              const isCurrent = index === currentStep;
+              const isLocked = index > currentStep;
+
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => isCompleted && setCurrentStep(index)}
+                  className={cn(
+                    'onboarding-step',
+                    isCompleted && 'completed',
+                    isCurrent && 'active',
+                    isLocked && 'locked'
+                  )}
+                  disabled={isLocked}
+                >
+                  {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                  <span className="hidden sm:inline">{s.title}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Step Content Card */}
-        <div className="bg-card rounded-2xl shadow-lg border p-8">
+        <div className="metric-card premium p-8 rounded-2xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <StepIcon className="w-6 h-6 text-primary" />

@@ -592,15 +592,7 @@ export function Overview() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(168, 85, 247, 0.1)',
-            border: '1px solid rgba(168, 85, 247, 0.2)',
-            boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card premium">
           <KPICard
             title="Total Spend"
             value={formatCurrency(kpis.totalSpend)}
@@ -616,15 +608,7 @@ export function Overview() {
           />
         </motion.div>
 
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.2)',
-            boxShadow: '0 8px 32px rgba(34, 197, 94, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card success">
           <KPICard
             title="Total Revenue"
             value={formatCurrency(kpis.totalRevenue)}
@@ -641,15 +625,7 @@ export function Overview() {
           />
         </motion.div>
 
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(217, 38, 101, 0.1)',
-            border: '1px solid rgba(217, 38, 101, 0.2)',
-            boxShadow: '0 8px 32px rgba(217, 38, 101, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card active">
           <KPICard
             title="ROAS"
             value={`${kpis.overallROAS.toFixed(2)}x`}
@@ -668,15 +644,7 @@ export function Overview() {
           />
         </motion.div>
 
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(249, 115, 22, 0.1)',
-            border: '1px solid rgba(249, 115, 22, 0.2)',
-            boxShadow: '0 8px 32px rgba(249, 115, 22, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card warning">
           <KPICard
             title="Total Conversions"
             value={kpis.totalConversions.toLocaleString('en-US')}
@@ -700,15 +668,7 @@ export function Overview() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(236, 72, 153, 0.1)',
-            border: '1px solid rgba(236, 72, 153, 0.2)',
-            boxShadow: '0 8px 32px rgba(236, 72, 153, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card error">
           <KPICard
             title="CPA"
             value={formatCurrency(kpis.overallCPA)}
@@ -721,15 +681,7 @@ export function Overview() {
           />
         </motion.div>
 
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.2)',
-            boxShadow: '0 8px 32px rgba(34, 197, 94, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card success">
           <KPICard
             title="CTR"
             value={`${kpis.avgCTR.toFixed(2)}%`}
@@ -742,15 +694,7 @@ export function Overview() {
           />
         </motion.div>
 
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(168, 85, 247, 0.1)',
-            border: '1px solid rgba(168, 85, 247, 0.2)',
-            boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card premium">
           <KPICard
             title="CPM"
             value={formatCurrency(kpis.avgCPM)}
@@ -763,15 +707,7 @@ export function Overview() {
           />
         </motion.div>
 
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(249, 115, 22, 0.1)',
-            border: '1px solid rgba(249, 115, 22, 0.2)',
-            boxShadow: '0 8px 32px rgba(249, 115, 22, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card info">
           <KPICard
             title="Impressions"
             value={formatCompactNumber(kpis.totalImpressions)}
@@ -782,15 +718,7 @@ export function Overview() {
           />
         </motion.div>
 
-        <motion.div
-          variants={listItem}
-          className="rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-          style={{
-            background: 'rgba(217, 38, 101, 0.1)',
-            border: '1px solid rgba(217, 38, 101, 0.2)',
-            boxShadow: '0 8px 32px rgba(217, 38, 101, 0.1)',
-          }}
-        >
+        <motion.div variants={listItem} className="metric-card active">
           <KPICard
             title="Clicks"
             value={formatCompactNumber(kpis.totalClicks)}
@@ -842,14 +770,7 @@ export function Overview() {
           {initialLoading ? (
             <TableSkeleton rows={5} columns={7} />
           ) : hasNoFilterResults ? (
-            <div
-              className="rounded-xl overflow-hidden backdrop-blur-xl"
-              style={{
-                background: 'rgba(168, 85, 247, 0.08)',
-                border: '1px solid rgba(168, 85, 247, 0.2)',
-                boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
-              }}
-            >
+            <div className="metric-card premium overflow-hidden">
               <div className="px-6 py-4 border-b border-purple-500/20">
                 <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
               </div>
@@ -859,14 +780,7 @@ export function Overview() {
               />
             </div>
           ) : (
-            <div
-              className="rounded-xl overflow-hidden backdrop-blur-xl"
-              style={{
-                background: 'rgba(168, 85, 247, 0.08)',
-                border: '1px solid rgba(168, 85, 247, 0.2)',
-                boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
-              }}
-            >
+            <div className="metric-card premium overflow-hidden">
               <div className="px-6 py-4 border-b border-purple-500/20">
                 <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
               </div>
@@ -904,14 +818,7 @@ export function Overview() {
       </div>
 
       {/* Alerts Section */}
-      <div
-        className="rounded-xl p-6 backdrop-blur-xl"
-        style={{
-          background: 'rgba(34, 197, 94, 0.08)',
-          border: '1px solid rgba(34, 197, 94, 0.2)',
-          boxShadow: '0 8px 32px rgba(34, 197, 94, 0.1)',
-        }}
-      >
+      <div className="metric-card success p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Bell className="w-5 h-5" />

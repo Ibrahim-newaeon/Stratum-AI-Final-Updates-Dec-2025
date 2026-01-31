@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -31,6 +30,7 @@ import {
 import { cn, formatCompactNumber, formatCurrency, formatPercent } from '@/lib/utils';
 import { SmartTooltip } from '@/components/guide/SmartTooltip';
 import { useCompetitors } from '@/api/hooks';
+import { AddCompetitorModal } from '@/components/competitors/AddCompetitorModal';
 
 // Colors for competitors in charts
 const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899'];
@@ -77,9 +77,10 @@ export function Benchmarks() {
   const { t } = useTranslation();
   const [selectedIndustry, setSelectedIndustry] = useState('ecommerce');
   const [selectedPlatform, setSelectedPlatform] = useState('all');
+  const [isAddCompetitorModalOpen, setIsAddCompetitorModalOpen] = useState(false);
 
   // Fetch competitors from API
-  const { data: competitorsData, isLoading: isLoadingCompetitors } = useCompetitors();
+  const { data: competitorsData, isLoading: isLoadingCompetitors, refetch: refetchCompetitors } = useCompetitors();
 
   // Generate Meta Ads Library URL
   const getMetaAdsLibraryUrl = (name: string, country: string = 'SA') => {
@@ -217,39 +218,13 @@ export function Benchmarks() {
             ? metric.yours < metric.industry
             : metric.yours > metric.industry;
           const diff = ((metric.yours - metric.industry) / metric.industry) * 100;
-          const colors = [
-            {
-              bg: 'rgba(168, 85, 247, 0.1)',
-              border: 'rgba(168, 85, 247, 0.2)',
-              shadow: 'rgba(168, 85, 247, 0.1)',
-            }, // Purple
-            {
-              bg: 'rgba(34, 197, 94, 0.1)',
-              border: 'rgba(34, 197, 94, 0.2)',
-              shadow: 'rgba(34, 197, 94, 0.1)',
-            }, // Green
-            {
-              bg: 'rgba(217, 38, 101, 0.1)',
-              border: 'rgba(217, 38, 101, 0.2)',
-              shadow: 'rgba(217, 38, 101, 0.1)',
-            }, // Magenta
-            {
-              bg: 'rgba(249, 115, 22, 0.1)',
-              border: 'rgba(249, 115, 22, 0.2)',
-              shadow: 'rgba(249, 115, 22, 0.1)',
-            }, // Orange
-          ];
-          const color = colors[index % colors.length];
+          const variants = ['premium', 'success', 'active', 'warning'];
+          const variant = variants[index % variants.length];
 
           return (
             <div
               key={metric.label}
-              className="p-4 rounded-xl backdrop-blur-xl transition-all hover:scale-[1.02]"
-              style={{
-                background: color.bg,
-                border: `1px solid ${color.border}`,
-                boxShadow: `0 8px 32px ${color.shadow}`,
-              }}
+              className={cn('metric-card p-4', variant)}
             >
               <div className="flex items-center justify-between mb-2">
                 <SmartTooltip content={metric.tooltip} position="top">
@@ -298,14 +273,7 @@ export function Benchmarks() {
       </div>
 
       {/* Your Competitors Section */}
-      <div
-        className="rounded-xl p-5 backdrop-blur-xl"
-        style={{
-          background: 'rgba(99, 102, 241, 0.08)',
-          border: '1px solid rgba(99, 102, 241, 0.2)',
-          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.1)',
-        }}
-      >
+      <div className="metric-card info p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
@@ -316,13 +284,13 @@ export function Benchmarks() {
               Click to view their ads in Meta Ads Library or Google Transparency
             </p>
           </div>
-          <Link
-            to="/app/1/competitors"
+          <button
+            onClick={() => setIsAddCompetitorModalOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Competitor
-          </Link>
+          </button>
         </div>
 
         {isLoadingCompetitors ? (
@@ -330,24 +298,20 @@ export function Benchmarks() {
         ) : !hasCompetitors ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-3">No competitors tracked yet</p>
-            <Link
-              to="/app/1/competitors"
+            <button
+              onClick={() => setIsAddCompetitorModalOpen(true)}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Your First Competitor
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {(competitorsData?.items || []).slice(0, 6).map((competitor) => (
               <div
                 key={competitor.id}
-                className="p-3 rounded-lg backdrop-blur-xl transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'rgba(234, 179, 8, 0.1)',
-                  border: '1px solid rgba(234, 179, 8, 0.2)',
-                }}
+                className="metric-card warning p-3"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -386,14 +350,7 @@ export function Benchmarks() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Competitor Comparison */}
-        <div
-          className="rounded-xl p-5 backdrop-blur-xl"
-          style={{
-            background: 'rgba(168, 85, 247, 0.08)',
-            border: '1px solid rgba(168, 85, 247, 0.2)',
-            boxShadow: '0 8px 32px rgba(168, 85, 247, 0.1)',
-          }}
-        >
+        <div className="metric-card premium p-5">
           <h3 className="font-semibold mb-4">{t('benchmarks.competitorComparison')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -424,14 +381,7 @@ export function Benchmarks() {
         </div>
 
         {/* Performance Radar */}
-        <div
-          className="rounded-xl p-5 backdrop-blur-xl"
-          style={{
-            background: 'rgba(217, 38, 101, 0.08)',
-            border: '1px solid rgba(217, 38, 101, 0.2)',
-            boxShadow: '0 8px 32px rgba(217, 38, 101, 0.1)',
-          }}
-        >
+        <div className="metric-card active p-5">
           <h3 className="font-semibold mb-4">{t('benchmarks.performanceRadar')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -471,14 +421,7 @@ export function Benchmarks() {
       </div>
 
       {/* Demographics Heatmap */}
-      <div
-        className="rounded-xl p-5 backdrop-blur-xl"
-        style={{
-          background: 'rgba(34, 197, 94, 0.08)',
-          border: '1px solid rgba(34, 197, 94, 0.2)',
-          boxShadow: '0 8px 32px rgba(34, 197, 94, 0.1)',
-        }}
-      >
+      <div className="metric-card success p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
@@ -534,14 +477,7 @@ export function Benchmarks() {
       </div>
 
       {/* Geographic Performance */}
-      <div
-        className="rounded-xl p-5 backdrop-blur-xl"
-        style={{
-          background: 'rgba(249, 115, 22, 0.08)',
-          border: '1px solid rgba(249, 115, 22, 0.2)',
-          boxShadow: '0 8px 32px rgba(249, 115, 22, 0.1)',
-        }}
-      >
+      <div className="metric-card warning p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
@@ -556,12 +492,7 @@ export function Benchmarks() {
           {mockGeoData.map((region) => (
             <div
               key={region.region}
-              className="p-4 rounded-lg backdrop-blur-xl transition-all hover:scale-[1.02]"
-              style={{
-                background: 'rgba(168, 85, 247, 0.1)',
-                border: '1px solid rgba(168, 85, 247, 0.2)',
-                boxShadow: '0 4px 16px rgba(168, 85, 247, 0.1)',
-              }}
+              className="metric-card premium p-4"
             >
               <p className="font-medium text-sm mb-2">{region.region}</p>
               <div className="space-y-1 text-sm">
@@ -582,6 +513,13 @@ export function Benchmarks() {
           ))}
         </div>
       </div>
+
+      {/* Add Competitor Modal */}
+      <AddCompetitorModal
+        isOpen={isAddCompetitorModalOpen}
+        onClose={() => setIsAddCompetitorModalOpen(false)}
+        onSuccess={() => refetchCompetitors()}
+      />
     </div>
   );
 }

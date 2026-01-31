@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,26 +9,69 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --purple: #a855f7;
-      --cyan: #06b6d4;
+    /* ============================================
+       STRATUM AI THEME SYSTEM v3.0
+    ============================================ */
+    :root, [data-theme="dark"] {
+      --bg-void: #050508;
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #0d0d14;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a24;
+      --bg-elevated: #1e1e28;
+      --text-primary: #ffffff;
+      --text-secondary: #cccccc;
+      --text-muted: #888888;
+      --text-inverse: #0a0a0f;
+      --border-default: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.10);
+      --border-gold: rgba(212, 175, 55, 0.15);
+      --gold: #D4AF37;
+      --gold-bright: #F4D03F;
+      --gold-glow: rgba(212, 175, 55, 0.5);
+      --gold-subtle: rgba(212, 175, 55, 0.1);
+      --cyan: #14F0C6;
+      --purple: #8b5cf6;
       --orange: #f97316;
       --green: #22c55e;
       --blue: #3b82f6;
       --pink: #ec4899;
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+      --shadow-gold: 0 0 40px rgba(212, 175, 55, 0.25);
+      --glass-bg: rgba(20, 20, 30, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --radius-md: 8px;
+      --radius-lg: 12px;
     }
-    * { font-family: 'Inter', -apple-system, sans-serif; }
-    body { background: #030303; color: #fff; overflow-x: hidden; }
 
-    /* 2026 Mesh Gradient Background */
+    [data-theme="light"] {
+      --bg-void: #f8f9fc;
+      --bg-primary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #94a3b8;
+      --text-inverse: #ffffff;
+      --border-default: rgba(0, 0, 0, 0.08);
+      --gold: #B8860B;
+      --gold-glow: rgba(180, 134, 11, 0.3);
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(0, 0, 0, 0.06);
+    }
+
+    * { font-family: 'Inter', -apple-system, sans-serif; }
+    body { background: var(--bg-void); color: var(--text-primary); overflow-x: hidden; }
+
+    /* Gold Mesh Gradient Background */
     .mesh-gradient {
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(168,85,247,0.12), transparent),
-        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(6,182,212,0.10), transparent),
-        radial-gradient(ellipse 50% 60% at 60% 80%, rgba(249,115,22,0.06), transparent),
-        radial-gradient(ellipse 40% 40% at 40% 60%, rgba(34,197,94,0.04), transparent);
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(212,175,55,0.10), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(20,240,198,0.08), transparent),
+        radial-gradient(ellipse 50% 60% at 60% 80%, rgba(139,92,246,0.05), transparent),
+        radial-gradient(ellipse 40% 40% at 40% 60%, rgba(34,197,94,0.03), transparent);
       pointer-events: none;
       z-index: -1;
     }
@@ -47,7 +90,8 @@
     @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes morph { 0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; } 50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; } }
-    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(168,85,247,0.3); } 50% { box-shadow: 0 0 30px rgba(168,85,247,0.5), 0 0 40px rgba(6,182,212,0.3); } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px var(--gold-glow); } 50% { box-shadow: 0 0 30px var(--gold-glow), 0 0 40px rgba(20,240,198,0.3); } }
+    @keyframes statusPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
     .animate-gradient { animation: gradient-shift 8s ease infinite; background-size: 200% 200%; }
     .animate-float { animation: float 6s ease-in-out infinite; }
@@ -59,25 +103,35 @@
     .delay-300 { animation-delay: 0.3s; }
     .delay-400 { animation-delay: 0.4s; }
 
-    /* Glass morphism 2026 */
+    /* Glass morphism - NN/g compliant */
     .glass {
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--glass-bg);
+      backdrop-filter: blur(100px);
+      -webkit-backdrop-filter: blur(100px);
+      border: 1px solid var(--glass-border);
     }
     .glass-strong {
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(40px);
+      background: rgba(20, 20, 30, 0.85);
+      backdrop-filter: blur(120px);
       border: 1px solid rgba(255,255,255,0.12);
     }
 
-    /* Text gradients */
-    .text-gradient { background: linear-gradient(135deg, #a855f7, #06b6d4, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-purple { background: linear-gradient(135deg, #a855f7, #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-cyan { background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-green { background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-orange { background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    /* Text gradients - Gold theme */
+    .text-gradient { background: linear-gradient(135deg, var(--gold), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-gold { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright, #F4D03F) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-purple { background: linear-gradient(135deg, var(--purple), #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-cyan { background: linear-gradient(135deg, var(--cyan), #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-green { background: linear-gradient(135deg, var(--green), #4ade80); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-orange { background: linear-gradient(135deg, var(--orange), #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    /* Scrollbar styling - Gold theme */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.5); }
+
+    /* Selection */
+    ::selection { background: var(--gold); color: var(--text-inverse); }
 
     /* Card styles */
     .term-card {
@@ -215,8 +269,8 @@
   <div class="noise"></div>
 
   <div class="fixed inset-0 pointer-events-none overflow-hidden">
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-morph"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-morph" style="animation-delay: -4s;"></div>
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-morph"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-morph" style="animation-delay: -4s;"></div>
   </div>
 
   <!-- Navigation -->
@@ -224,10 +278,10 @@
     <div class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <a href="/" class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center">
             <span class="text-lg font-black text-white">S</span>
           </div>
-          <span class="text-xl font-bold">Stratum<span class="text-purple-400 ml-1">AI</span></span>
+          <span class="text-xl font-bold">Stratum<span class="text-amber-400 ml-1">AI</span></span>
         </a>
         <div class="hidden md:flex items-center gap-8">
           <a href="#business" class="text-sm text-gray-400 hover:text-white">Business</a>
@@ -235,7 +289,7 @@
           <a href="#marketing" class="text-sm text-gray-400 hover:text-white">Marketing</a>
           <a href="#stratum" class="text-sm text-gray-400 hover:text-white">Stratum AI</a>
         </div>
-        <a href="/signup" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-600 to-cyan-500">Get Started</a>
+        <a href="/signup" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-600 to-yellow-500">Get Started</a>
       </div>
     </div>
   </nav>
@@ -244,7 +298,7 @@
   <section class="pt-32 pb-16">
     <div class="max-w-7xl mx-auto px-6 text-center">
       <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full glass mb-8 animate-fade-up">
-        <span class="text-xs font-medium text-purple-400">120+ TERMS WITH BENCHMARKS</span>
+        <span class="text-xs font-medium text-amber-400">120+ TERMS WITH BENCHMARKS</span>
         <span class="text-xs text-gray-500">January 2026</span>
       </div>
       <h1 class="text-5xl md:text-7xl font-black mb-6 animate-fade-up delay-100">
@@ -287,10 +341,10 @@
       <div class="flex items-center gap-2 py-4 overflow-x-auto">
         <button onclick="filterCategory('all')" class="category-tab active px-4 py-2 rounded-xl text-sm font-medium text-white glass" data-category="all">All</button>
         <button onclick="filterCategory('business')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="business">
-          <span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-2"></span>Business
+          <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Business
         </button>
         <button onclick="filterCategory('technical')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="technical">
-          <span class="inline-block w-2 h-2 rounded-full bg-cyan-500 mr-2"></span>Technical
+          <span class="inline-block w-2 h-2 rounded-full bg-teal-500 mr-2"></span>Technical
         </button>
         <button onclick="filterCategory('marketing')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="marketing">
           <span class="inline-block w-2 h-2 rounded-full bg-orange-500 mr-2"></span>Marketing
@@ -299,7 +353,7 @@
           <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>AI/ML
         </button>
         <button onclick="filterCategory('stratum')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="stratum">
-          <span class="inline-block w-2 h-2 rounded-full bg-violet-500 mr-2"></span>Stratum AI
+          <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>Stratum AI
         </button>
       </div>
     </div>
@@ -312,8 +366,8 @@
       <!-- BUSINESS TERMS -->
       <section id="business" class="mb-16 category-section" data-category="business">
         <div class="flex items-center gap-4 mb-8">
-          <div class="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">Business & Revenue</h2>
@@ -325,8 +379,8 @@
           <!-- ARR -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="arr">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">ARR</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">ARR</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -343,8 +397,8 @@
           <!-- MRR -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="mrr">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">MRR</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">MRR</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -361,8 +415,8 @@
           <!-- CAC -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="cac">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">CAC</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">CAC</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -379,8 +433,8 @@
           <!-- LTV -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="ltv">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">LTV</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">LTV</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -397,8 +451,8 @@
           <!-- Churn -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="churn">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">Churn</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">Churn</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -415,8 +469,8 @@
           <!-- NRR -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="nrr">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">NRR</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">NRR</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -433,8 +487,8 @@
           <!-- ARPU -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="arpu">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">ARPU</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">ARPU</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -451,8 +505,8 @@
           <!-- Payback -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="payback">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">Payback</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">Payback</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -469,8 +523,8 @@
           <!-- Gross Margin -->
           <div class="term-card p-6 rounded-2xl glass cat-business" data-term="grossmargin">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
-                <span class="text-sm font-bold text-purple-400">GM</span>
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">GM</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Business</span>
             </div>
@@ -664,8 +718,8 @@
       <!-- TECHNICAL TERMS -->
       <section id="technical" class="mb-16 category-section" data-category="technical">
         <div class="flex items-center gap-4 mb-8">
-          <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          <div class="w-12 h-12 rounded-2xl bg-teal-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">Technical & Platform</h2>
@@ -677,8 +731,8 @@
           <!-- API -->
           <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="api">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-                <span class="text-sm font-bold text-cyan-400">API</span>
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">API</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Technical</span>
             </div>
@@ -689,8 +743,8 @@
           <!-- Multi-tenancy -->
           <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="multitenancy">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-                <span class="text-sm font-bold text-cyan-400">Multi-tenant</span>
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">Multi-tenant</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Technical</span>
             </div>
@@ -701,8 +755,8 @@
           <!-- RLS -->
           <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="rls">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-                <span class="text-sm font-bold text-cyan-400">RLS</span>
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">RLS</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Technical</span>
             </div>
@@ -713,8 +767,8 @@
           <!-- Webhook -->
           <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="webhook">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-                <span class="text-sm font-bold text-cyan-400">Webhook</span>
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">Webhook</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Technical</span>
             </div>
@@ -725,8 +779,8 @@
           <!-- OAuth -->
           <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="oauth">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-                <span class="text-sm font-bold text-cyan-400">OAuth</span>
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">OAuth</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Technical</span>
             </div>
@@ -737,8 +791,8 @@
           <!-- JWT -->
           <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="jwt">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-                <span class="text-sm font-bold text-cyan-400">JWT</span>
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">JWT</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Technical</span>
             </div>
@@ -871,8 +925,8 @@
       <!-- STRATUM AI PLATFORM -->
       <section id="stratum" class="mb-16 category-section" data-category="stratum">
         <div class="flex items-center gap-4 mb-8">
-          <div class="w-12 h-12 rounded-2xl bg-violet-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <div class="w-12 h-12 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">Stratum AI Platform</h2>
@@ -884,8 +938,8 @@
           <!-- Signal Health -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="signalhealth">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">Signal Health</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Signal Health</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -902,8 +956,8 @@
           <!-- Trust Gate -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="trustgate">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">Trust Gate</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Trust Gate</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -919,8 +973,8 @@
           <!-- Autopilot -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="autopilot">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">Autopilot</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Autopilot</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -935,8 +989,8 @@
           <!-- EMQ -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="emq">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">EMQ</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">EMQ</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -953,8 +1007,8 @@
           <!-- RFM -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="rfm">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">RFM</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">RFM</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -971,8 +1025,8 @@
           <!-- SHAP -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="shap">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">SHAP</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">SHAP</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -986,8 +1040,8 @@
           <!-- A/B Test -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="abtest">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">A/B Test</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">A/B Test</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -1003,8 +1057,8 @@
           <!-- Anomaly Score -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="anomaly">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">Anomaly</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Anomaly</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -1021,8 +1075,8 @@
           <!-- Audience Sync -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="audiencesync">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">Audience Sync</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Audience Sync</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -1038,8 +1092,8 @@
           <!-- Identity Graph -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="identity">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">Identity</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Identity</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -1053,8 +1107,8 @@
           <!-- Creative Lifecycle -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="creativelifecycle">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">Creative LC</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Creative LC</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>
@@ -1070,8 +1124,8 @@
           <!-- LTV Prediction -->
           <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="ltvpred">
             <div class="flex items-start justify-between mb-4">
-              <div class="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30">
-                <span class="text-sm font-bold text-violet-400">LTV Pred</span>
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">LTV Pred</span>
               </div>
               <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
             </div>

@@ -57,3 +57,8 @@ export * from './background-effects';
 export * from './export-button';
 export * from './command-palette';
 export * from './keyboard-shortcuts';
+
+// Dashboard theme components
+export * from './NeuralNetworkBg';
+export * from './TrustGateIndicator';
+export * from './MetricCard';

@@ -3,15 +3,15 @@
 # =============================================================================
 
 # Development stage
-FROM node:25-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies (use legacy-peer-deps for React 19 compatibility)
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -25,12 +25,12 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 # =============================================================================
 # Production build stage
 # =============================================================================
-FROM node:25-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY . .
 RUN npm run build
