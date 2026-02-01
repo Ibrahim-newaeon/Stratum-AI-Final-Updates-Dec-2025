@@ -88,10 +88,13 @@
         }
 
         .section-client::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); }
+        .section-meta::before { background: linear-gradient(90deg, #1877f2, #42b72a); }
+        .section-whatsapp::before { background: #25D366; }
         .section-snap::before { background: var(--snap-yellow); }
         .section-tiktok::before { background: linear-gradient(90deg, var(--tiktok-cyan), var(--accent-pink)); }
         .section-google::before { background: var(--google-blue); }
         .section-ga::before { background: var(--ga-orange); }
+        .section-infra::before { background: linear-gradient(90deg, #336791, #e535ab); }
 
         .section-header {
             display: flex;
@@ -111,10 +114,13 @@
         }
 
         .icon-client { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); }
+        .icon-meta { background: linear-gradient(135deg, #1877f2, #42b72a); }
+        .icon-whatsapp { background: #25D366; }
         .icon-snap { background: var(--snap-yellow); color: #000; }
         .icon-tiktok { background: linear-gradient(135deg, var(--tiktok-cyan), var(--accent-pink)); }
         .icon-google { background: var(--google-blue); }
         .icon-ga { background: var(--ga-orange); }
+        .icon-infra { background: linear-gradient(135deg, #336791, #e535ab); }
 
         .section-title {
             font-size: 1.4rem;
@@ -424,6 +430,264 @@
                 </div>
             </section>
 
+            <!-- Meta (Facebook/Instagram) -->
+            <section class="section section-meta">
+                <div class="section-header">
+                    <div class="section-icon icon-meta">f</div>
+                    <div>
+                        <h2 class="section-title">Meta Ads</h2>
+                        <p class="section-subtitle">Facebook/Instagram Marketing API & Conversions API credentials</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Access Token <span class="required">*</span></label>
+                        <input type="text" name="meta_access_token" placeholder="System User or long-lived access token">
+                        <span class="field-hint">From Business Manager System Users or OAuth flow</span>
+                    </div>
+                    <div class="field">
+                        <label>Ad Account ID <span class="required">*</span></label>
+                        <input type="text" name="meta_ad_account_id" placeholder="e.g., act_123456789">
+                        <span class="field-hint">Format: act_XXXXXXXXX (with act_ prefix)</span>
+                    </div>
+                    <div class="field">
+                        <label>App ID</label>
+                        <input type="text" name="meta_app_id" placeholder="e.g., 123456789012345">
+                        <span class="field-hint">From developers.facebook.com</span>
+                    </div>
+                    <div class="field">
+                        <label>App Secret</label>
+                        <input type="text" name="meta_app_secret" placeholder="Meta App secret key">
+                        <span class="field-hint">Required for app-level authentication</span>
+                    </div>
+                    <div class="field">
+                        <label>Pixel ID <span class="required">*</span></label>
+                        <input type="text" name="meta_pixel_id" placeholder="e.g., 123456789012345">
+                        <span class="field-hint">Meta Pixel ID for conversion tracking (CAPI)</span>
+                    </div>
+                    <div class="field">
+                        <label>Business Manager ID</label>
+                        <input type="text" name="meta_business_id" placeholder="e.g., 123456789012345">
+                        <span class="field-hint">For multi-account/Business Manager access</span>
+                    </div>
+                    <div class="field">
+                        <label>Dataset ID</label>
+                        <input type="text" name="meta_dataset_id" placeholder="e.g., 123456789012345">
+                        <span class="field-hint">For Offline Conversions API (if different from Pixel)</span>
+                    </div>
+                    <div class="field">
+                        <label>Conversions API Token</label>
+                        <input type="text" name="meta_capi_token" placeholder="CAPI access token (if different)">
+                        <span class="field-hint">Leave empty if same as Access Token</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WhatsApp Business API -->
+            <section class="section section-whatsapp">
+                <div class="section-header">
+                    <div class="section-icon icon-whatsapp">💬</div>
+                    <div>
+                        <h2 class="section-title">WhatsApp Business API</h2>
+                        <p class="section-subtitle">WhatsApp Cloud API & Conversions integration</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Access Token <span class="required">*</span></label>
+                        <input type="text" name="whatsapp_access_token" placeholder="WhatsApp Cloud API access token">
+                        <span class="field-hint">From Meta Business Suite > WhatsApp</span>
+                    </div>
+                    <div class="field">
+                        <label>Phone Number ID <span class="required">*</span></label>
+                        <input type="text" name="whatsapp_phone_number_id" placeholder="e.g., 123456789012345">
+                        <span class="field-hint">WhatsApp Business Phone Number ID</span>
+                    </div>
+                    <div class="field">
+                        <label>Business Account ID <span class="required">*</span></label>
+                        <input type="text" name="whatsapp_business_account_id" placeholder="e.g., 123456789012345">
+                        <span class="field-hint">WhatsApp Business Account ID (WABA)</span>
+                    </div>
+                    <div class="field">
+                        <label>App Secret</label>
+                        <input type="text" name="whatsapp_app_secret" placeholder="Meta App secret for webhook verification">
+                        <span class="field-hint">Required for webhook signature verification</span>
+                    </div>
+                    <div class="field">
+                        <label>Verify Token</label>
+                        <input type="text" name="whatsapp_verify_token" placeholder="e.g., stratum-whatsapp-verify">
+                        <span class="field-hint">Custom token for webhook verification</span>
+                    </div>
+                    <div class="field">
+                        <label>API Version</label>
+                        <select name="whatsapp_api_version">
+                            <option value="v18.0">v18.0</option>
+                            <option value="v19.0" selected>v19.0</option>
+                            <option value="v20.0">v20.0</option>
+                        </select>
+                        <span class="field-hint">Meta Graph API version</span>
+                    </div>
+                    <div class="field">
+                        <label>Catalog ID</label>
+                        <input type="text" name="whatsapp_catalog_id" placeholder="e.g., 123456789012345">
+                        <span class="field-hint">For product messages (optional)</span>
+                    </div>
+                    <div class="field">
+                        <label>Default Template Language</label>
+                        <select name="whatsapp_template_language">
+                            <option value="en" selected>English (en)</option>
+                            <option value="en_US">English US (en_US)</option>
+                            <option value="ar">Arabic (ar)</option>
+                            <option value="es">Spanish (es)</option>
+                            <option value="fr">French (fr)</option>
+                            <option value="de">German (de)</option>
+                            <option value="pt_BR">Portuguese BR (pt_BR)</option>
+                            <option value="hi">Hindi (hi)</option>
+                            <option value="zh_CN">Chinese CN (zh_CN)</option>
+                        </select>
+                        <span class="field-hint">Default language for message templates</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WhatsApp Template Builder -->
+            <section class="section section-whatsapp">
+                <div class="section-header">
+                    <div class="section-icon icon-whatsapp">📝</div>
+                    <div>
+                        <h2 class="section-title">WhatsApp Template Builder</h2>
+                        <p class="section-subtitle">Create message templates for Meta Business Manager approval</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>Template Name <span class="required">*</span></label>
+                        <input type="text" name="wa_template_name" placeholder="e.g., order_confirmation" pattern="[a-z0-9_]+" title="Lowercase letters, numbers, and underscores only">
+                        <span class="field-hint">Lowercase, underscores only (e.g., order_update)</span>
+                    </div>
+                    <div class="field">
+                        <label>Category <span class="required">*</span></label>
+                        <select name="wa_template_category">
+                            <option value="">Select category...</option>
+                            <option value="MARKETING">Marketing - Promotions & offers</option>
+                            <option value="UTILITY">Utility - Order updates, alerts</option>
+                            <option value="AUTHENTICATION">Authentication - OTP, verification</option>
+                        </select>
+                        <span class="field-hint">Template category affects approval & pricing</span>
+                    </div>
+                    <div class="field">
+                        <label>Language <span class="required">*</span></label>
+                        <select name="wa_template_language">
+                            <option value="en">English (en)</option>
+                            <option value="en_US">English US (en_US)</option>
+                            <option value="ar">Arabic (ar)</option>
+                            <option value="es">Spanish (es)</option>
+                            <option value="fr">French (fr)</option>
+                            <option value="de">German (de)</option>
+                            <option value="pt_BR">Portuguese BR (pt_BR)</option>
+                            <option value="hi">Hindi (hi)</option>
+                            <option value="zh_CN">Chinese CN (zh_CN)</option>
+                        </select>
+                        <span class="field-hint">Template language code</span>
+                    </div>
+                    <div class="field">
+                        <label>Header Type</label>
+                        <select name="wa_template_header_type" onchange="toggleHeaderInput(this.value)">
+                            <option value="">None</option>
+                            <option value="TEXT">Text</option>
+                            <option value="IMAGE">Image</option>
+                            <option value="VIDEO">Video</option>
+                            <option value="DOCUMENT">Document</option>
+                        </select>
+                        <span class="field-hint">Optional header above message body</span>
+                    </div>
+                    <div class="field" id="headerTextField" style="display:none;">
+                        <label>Header Text</label>
+                        <input type="text" name="wa_template_header_text" placeholder="e.g., Order Update" maxlength="60">
+                        <span class="field-hint">Max 60 characters. Use {{1}} for variables</span>
+                    </div>
+                    <div class="field" id="headerMediaField" style="display:none;">
+                        <label>Header Media URL</label>
+                        <input type="url" name="wa_template_header_media" placeholder="https://example.com/image.jpg">
+                        <span class="field-hint">Sample media URL for template preview</span>
+                    </div>
+                    <div class="field field-full">
+                        <label>Body Text <span class="required">*</span></label>
+                        <textarea name="wa_template_body" placeholder="Hello {{1}}, your order #{{2}} has been shipped! Track at {{3}}" rows="4" maxlength="1024"></textarea>
+                        <span class="field-hint">Use {{1}}, {{2}}, {{3}} for variables. Max 1024 chars</span>
+                    </div>
+                    <div class="field field-full">
+                        <label>Footer Text</label>
+                        <input type="text" name="wa_template_footer" placeholder="e.g., Reply STOP to unsubscribe" maxlength="60">
+                        <span class="field-hint">Optional footer text. Max 60 characters</span>
+                    </div>
+                    <div class="field">
+                        <label>Button Type</label>
+                        <select name="wa_template_button_type" onchange="toggleButtonInputs(this.value)">
+                            <option value="">None</option>
+                            <option value="QUICK_REPLY">Quick Reply Buttons</option>
+                            <option value="CALL_TO_ACTION">Call to Action Buttons</option>
+                        </select>
+                        <span class="field-hint">Optional interactive buttons</span>
+                    </div>
+                    <div id="quickReplyButtons" style="display:none;" class="field field-full">
+                        <label>Quick Reply Buttons (up to 3)</label>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <input type="text" name="wa_qr_button_1" placeholder="Button 1 text" maxlength="25" style="flex:1; min-width:150px;">
+                            <input type="text" name="wa_qr_button_2" placeholder="Button 2 text" maxlength="25" style="flex:1; min-width:150px;">
+                            <input type="text" name="wa_qr_button_3" placeholder="Button 3 text" maxlength="25" style="flex:1; min-width:150px;">
+                        </div>
+                        <span class="field-hint">Max 25 chars each. User taps to reply with button text</span>
+                    </div>
+                    <div id="ctaButtons" style="display:none;" class="field field-full">
+                        <label>Call to Action Buttons</label>
+                        <div style="display:grid; gap:15px;">
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <select name="wa_cta_type_1" style="width:150px;">
+                                    <option value="">Type...</option>
+                                    <option value="URL">Visit Website</option>
+                                    <option value="PHONE_NUMBER">Call Phone</option>
+                                </select>
+                                <input type="text" name="wa_cta_text_1" placeholder="Button text" maxlength="25" style="width:150px;">
+                                <input type="text" name="wa_cta_value_1" placeholder="URL or phone number" style="flex:1; min-width:200px;">
+                            </div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <select name="wa_cta_type_2" style="width:150px;">
+                                    <option value="">Type...</option>
+                                    <option value="URL">Visit Website</option>
+                                    <option value="PHONE_NUMBER">Call Phone</option>
+                                </select>
+                                <input type="text" name="wa_cta_text_2" placeholder="Button text" maxlength="25" style="width:150px;">
+                                <input type="text" name="wa_cta_value_2" placeholder="URL or phone number" style="flex:1; min-width:200px;">
+                            </div>
+                        </div>
+                        <span class="field-hint">Max 2 CTA buttons. URL can use {{1}} for dynamic links</span>
+                    </div>
+                    <div class="field field-full">
+                        <label>Sample Variable Values (for approval)</label>
+                        <input type="text" name="wa_template_sample_values" placeholder='["John", "12345", "https://track.example.com/12345"]'>
+                        <span class="field-hint">JSON array of sample values for {{1}}, {{2}}, etc.</span>
+                    </div>
+                </div>
+                <div style="margin-top:20px; display:flex; gap:15px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="previewTemplate()">
+                        👁️ Preview Template
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="generateTemplatePayload()">
+                        📋 Generate API Payload
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="exportToMetaBusiness()">
+                        🚀 Export to Meta Business
+                    </button>
+                </div>
+                <div id="templatePreview" style="display:none; margin-top:20px; padding:20px; background:var(--bg-secondary); border-radius:12px; border:1px solid var(--border-color);">
+                    <h4 style="margin-bottom:15px; color:var(--accent-cyan);">Template Preview</h4>
+                    <div id="templatePreviewContent" style="background:#075e54; padding:15px; border-radius:12px; max-width:350px;">
+                        <!-- WhatsApp-style preview will be rendered here -->
+                    </div>
+                </div>
+            </section>
+
             <!-- Snapchat -->
             <section class="section section-snap">
                 <div class="section-header">
@@ -601,6 +865,99 @@
                 </div>
             </section>
 
+            <!-- Database & Infrastructure -->
+            <section class="section section-infra">
+                <div class="section-header">
+                    <div class="section-icon icon-infra">🗄️</div>
+                    <div>
+                        <h2 class="section-title">Database & Infrastructure</h2>
+                        <p class="section-subtitle">PostgreSQL, Redis, and application secrets</p>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field">
+                        <label>PostgreSQL Host <span class="required">*</span></label>
+                        <input type="text" name="postgres_host" placeholder="e.g., db.example.com or localhost">
+                        <span class="field-hint">Database server hostname</span>
+                    </div>
+                    <div class="field">
+                        <label>PostgreSQL Port</label>
+                        <input type="text" name="postgres_port" placeholder="5432" value="5432">
+                        <span class="field-hint">Default: 5432</span>
+                    </div>
+                    <div class="field">
+                        <label>Database Name <span class="required">*</span></label>
+                        <input type="text" name="postgres_db" placeholder="e.g., stratum_ai">
+                        <span class="field-hint">PostgreSQL database name</span>
+                    </div>
+                    <div class="field">
+                        <label>Database User <span class="required">*</span></label>
+                        <input type="text" name="postgres_user" placeholder="e.g., stratum">
+                        <span class="field-hint">PostgreSQL username</span>
+                    </div>
+                    <div class="field">
+                        <label>Database Password <span class="required">*</span></label>
+                        <input type="password" name="postgres_password" placeholder="Strong password (20+ chars)">
+                        <span class="field-hint">Use strong password with mixed chars</span>
+                    </div>
+                    <div class="field">
+                        <label>Database SSL Mode</label>
+                        <select name="postgres_ssl_mode">
+                            <option value="disable">Disable</option>
+                            <option value="prefer" selected>Prefer</option>
+                            <option value="require">Require</option>
+                            <option value="verify-full">Verify Full</option>
+                        </select>
+                        <span class="field-hint">SSL connection mode</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="field">
+                        <label>Redis Host</label>
+                        <input type="text" name="redis_host" placeholder="e.g., redis.example.com or localhost">
+                        <span class="field-hint">Redis server for caching/queues</span>
+                    </div>
+                    <div class="field">
+                        <label>Redis Port</label>
+                        <input type="text" name="redis_port" placeholder="6379" value="6379">
+                        <span class="field-hint">Default: 6379</span>
+                    </div>
+                    <div class="field">
+                        <label>Redis Password</label>
+                        <input type="password" name="redis_password" placeholder="Redis AUTH password (if required)">
+                        <span class="field-hint">Leave empty if no authentication</span>
+                    </div>
+                    <div class="field">
+                        <label>Redis SSL</label>
+                        <select name="redis_ssl">
+                            <option value="false" selected>Disabled</option>
+                            <option value="true">Enabled</option>
+                        </select>
+                        <span class="field-hint">Enable for cloud-hosted Redis</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="field">
+                        <label>Secret Key <span class="required">*</span></label>
+                        <input type="password" name="secret_key" placeholder="Min 32 random characters">
+                        <span class="field-hint">For session signing (generate with secrets.token_urlsafe(32))</span>
+                    </div>
+                    <div class="field">
+                        <label>JWT Secret Key <span class="required">*</span></label>
+                        <input type="password" name="jwt_secret_key" placeholder="Min 32 random characters">
+                        <span class="field-hint">For JWT token signing</span>
+                    </div>
+                    <div class="field">
+                        <label>PII Encryption Key <span class="required">*</span></label>
+                        <input type="password" name="pii_encryption_key" placeholder="Min 32 random characters">
+                        <span class="field-hint">For encrypting PII data at rest</span>
+                    </div>
+                    <div class="field">
+                        <label>Sentry DSN</label>
+                        <input type="text" name="sentry_dsn" placeholder="https://xxx@sentry.io/xxx">
+                        <span class="field-hint">Error tracking (optional)</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- Configuration Options -->
             <section class="section section-client">
                 <div class="section-header">
@@ -707,6 +1064,17 @@
                     notes: formData.get('notes') || ''
                 },
                 platforms: {
+                    meta: {
+                        enabled: !!(formData.get('meta_access_token') && formData.get('meta_pixel_id')),
+                        access_token: formData.get('meta_access_token') || '',
+                        ad_account_id: formData.get('meta_ad_account_id') || '',
+                        app_id: formData.get('meta_app_id') || '',
+                        app_secret: formData.get('meta_app_secret') || '',
+                        pixel_id: formData.get('meta_pixel_id') || '',
+                        business_id: formData.get('meta_business_id') || '',
+                        dataset_id: formData.get('meta_dataset_id') || '',
+                        capi_token: formData.get('meta_capi_token') || ''
+                    },
                     snapchat: {
                         enabled: !!(formData.get('snap_access_token') && formData.get('snap_pixel_id')),
                         access_token: formData.get('snap_access_token') || '',
@@ -743,6 +1111,43 @@
                         api_secret: formData.get('ga_api_secret') || '',
                         stream_id: formData.get('ga_stream_id') || '',
                         service_account: formData.get('ga_service_account') || ''
+                    },
+                    whatsapp: {
+                        enabled: !!(formData.get('whatsapp_access_token') && formData.get('whatsapp_phone_number_id')),
+                        access_token: formData.get('whatsapp_access_token') || '',
+                        phone_number_id: formData.get('whatsapp_phone_number_id') || '',
+                        business_account_id: formData.get('whatsapp_business_account_id') || '',
+                        app_secret: formData.get('whatsapp_app_secret') || '',
+                        verify_token: formData.get('whatsapp_verify_token') || '',
+                        api_version: formData.get('whatsapp_api_version') || 'v19.0',
+                        catalog_id: formData.get('whatsapp_catalog_id') || '',
+                        template_language: formData.get('whatsapp_template_language') || 'en'
+                    }
+                },
+                infrastructure: {
+                    database: {
+                        host: formData.get('postgres_host') || '',
+                        port: parseInt(formData.get('postgres_port')) || 5432,
+                        database: formData.get('postgres_db') || '',
+                        user: formData.get('postgres_user') || '',
+                        password: formData.get('postgres_password') || '',
+                        ssl_mode: formData.get('postgres_ssl_mode') || 'prefer',
+                        connection_url: formData.get('postgres_host') ?
+                            `postgresql+asyncpg://${formData.get('postgres_user')}:****@${formData.get('postgres_host')}:${formData.get('postgres_port') || 5432}/${formData.get('postgres_db')}` : ''
+                    },
+                    redis: {
+                        host: formData.get('redis_host') || '',
+                        port: parseInt(formData.get('redis_port')) || 6379,
+                        password: formData.get('redis_password') || '',
+                        ssl: formData.get('redis_ssl') === 'true',
+                        connection_url: formData.get('redis_host') ?
+                            `redis://${formData.get('redis_password') ? '****@' : ''}${formData.get('redis_host')}:${formData.get('redis_port') || 6379}/0` : ''
+                    },
+                    secrets: {
+                        secret_key: formData.get('secret_key') ? '[CONFIGURED]' : '',
+                        jwt_secret_key: formData.get('jwt_secret_key') ? '[CONFIGURED]' : '',
+                        pii_encryption_key: formData.get('pii_encryption_key') ? '[CONFIGURED]' : '',
+                        sentry_dsn: formData.get('sentry_dsn') || ''
                     }
                 },
                 config: {
@@ -841,6 +1246,283 @@
         window.addEventListener('load', () => {
             loadFromLocalStorage();
         });
+
+        // =====================================================================
+        // WhatsApp Template Builder Functions
+        // =====================================================================
+
+        function toggleHeaderInput(headerType) {
+            const textField = document.getElementById('headerTextField');
+            const mediaField = document.getElementById('headerMediaField');
+
+            textField.style.display = headerType === 'TEXT' ? 'flex' : 'none';
+            mediaField.style.display = ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerType) ? 'flex' : 'none';
+        }
+
+        function toggleButtonInputs(buttonType) {
+            document.getElementById('quickReplyButtons').style.display = buttonType === 'QUICK_REPLY' ? 'block' : 'none';
+            document.getElementById('ctaButtons').style.display = buttonType === 'CALL_TO_ACTION' ? 'block' : 'none';
+        }
+
+        function buildTemplateComponents() {
+            const form = document.getElementById('onboardingForm');
+            const formData = new FormData(form);
+            const components = [];
+
+            // Header component
+            const headerType = formData.get('wa_template_header_type');
+            if (headerType) {
+                const header = { type: 'HEADER', format: headerType };
+                if (headerType === 'TEXT') {
+                    header.text = formData.get('wa_template_header_text') || '';
+                } else {
+                    header.example = { header_handle: [formData.get('wa_template_header_media') || ''] };
+                }
+                components.push(header);
+            }
+
+            // Body component (required)
+            const bodyText = formData.get('wa_template_body');
+            if (bodyText) {
+                const body = { type: 'BODY', text: bodyText };
+                // Extract variables and add examples
+                const varMatches = bodyText.match(/\{\{\d+\}\}/g);
+                if (varMatches) {
+                    try {
+                        const sampleValues = JSON.parse(formData.get('wa_template_sample_values') || '[]');
+                        if (sampleValues.length > 0) {
+                            body.example = { body_text: [sampleValues] };
+                        }
+                    } catch (e) {
+                        console.warn('Invalid sample values JSON');
+                    }
+                }
+                components.push(body);
+            }
+
+            // Footer component
+            const footerText = formData.get('wa_template_footer');
+            if (footerText) {
+                components.push({ type: 'FOOTER', text: footerText });
+            }
+
+            // Button components
+            const buttonType = formData.get('wa_template_button_type');
+            if (buttonType === 'QUICK_REPLY') {
+                const buttons = [];
+                for (let i = 1; i <= 3; i++) {
+                    const btnText = formData.get(`wa_qr_button_${i}`);
+                    if (btnText) {
+                        buttons.push({ type: 'QUICK_REPLY', text: btnText });
+                    }
+                }
+                if (buttons.length > 0) {
+                    components.push({ type: 'BUTTONS', buttons });
+                }
+            } else if (buttonType === 'CALL_TO_ACTION') {
+                const buttons = [];
+                for (let i = 1; i <= 2; i++) {
+                    const ctaType = formData.get(`wa_cta_type_${i}`);
+                    const ctaText = formData.get(`wa_cta_text_${i}`);
+                    const ctaValue = formData.get(`wa_cta_value_${i}`);
+                    if (ctaType && ctaText && ctaValue) {
+                        if (ctaType === 'URL') {
+                            buttons.push({ type: 'URL', text: ctaText, url: ctaValue });
+                        } else if (ctaType === 'PHONE_NUMBER') {
+                            buttons.push({ type: 'PHONE_NUMBER', text: ctaText, phone_number: ctaValue });
+                        }
+                    }
+                }
+                if (buttons.length > 0) {
+                    components.push({ type: 'BUTTONS', buttons });
+                }
+            }
+
+            return components;
+        }
+
+        function previewTemplate() {
+            const form = document.getElementById('onboardingForm');
+            const formData = new FormData(form);
+
+            const previewDiv = document.getElementById('templatePreview');
+            const contentDiv = document.getElementById('templatePreviewContent');
+
+            let html = '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;">';
+
+            // Header
+            const headerType = formData.get('wa_template_header_type');
+            if (headerType === 'TEXT') {
+                const headerText = formData.get('wa_template_header_text') || '';
+                html += `<div style="font-weight:bold; color:#fff; margin-bottom:8px;">${escapeHtml(headerText)}</div>`;
+            } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerType)) {
+                const iconMap = { IMAGE: '🖼️', VIDEO: '🎬', DOCUMENT: '📄' };
+                html += `<div style="background:#128c7e; padding:30px; text-align:center; border-radius:8px; margin-bottom:8px; color:#fff;">${iconMap[headerType]} ${headerType}</div>`;
+            }
+
+            // Body
+            let bodyText = formData.get('wa_template_body') || '';
+            // Replace variables with sample values
+            try {
+                const samples = JSON.parse(formData.get('wa_template_sample_values') || '[]');
+                samples.forEach((val, idx) => {
+                    bodyText = bodyText.replace(`{{${idx + 1}}}`, `<span style="color:#25D366;">${escapeHtml(val)}</span>`);
+                });
+            } catch (e) {}
+            // Highlight any remaining variables
+            bodyText = bodyText.replace(/\{\{(\d+)\}\}/g, '<span style="color:#25D366;">{{$1}}</span>');
+            html += `<div style="color:#fff; margin-bottom:8px; white-space:pre-wrap;">${bodyText}</div>`;
+
+            // Footer
+            const footerText = formData.get('wa_template_footer');
+            if (footerText) {
+                html += `<div style="color:#8696a0; font-size:12px; margin-bottom:8px;">${escapeHtml(footerText)}</div>`;
+            }
+
+            // Buttons
+            const buttonType = formData.get('wa_template_button_type');
+            if (buttonType === 'QUICK_REPLY') {
+                html += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">';
+                for (let i = 1; i <= 3; i++) {
+                    const btnText = formData.get(`wa_qr_button_${i}`);
+                    if (btnText) {
+                        html += `<button style="background:transparent; border:1px solid #25D366; color:#25D366; padding:8px 16px; border-radius:20px; font-size:14px;">${escapeHtml(btnText)}</button>`;
+                    }
+                }
+                html += '</div>';
+            } else if (buttonType === 'CALL_TO_ACTION') {
+                html += '<div style="margin-top:10px; border-top:1px solid #2a5040; padding-top:10px;">';
+                for (let i = 1; i <= 2; i++) {
+                    const ctaType = formData.get(`wa_cta_type_${i}`);
+                    const ctaText = formData.get(`wa_cta_text_${i}`);
+                    if (ctaType && ctaText) {
+                        const icon = ctaType === 'URL' ? '🔗' : '📞';
+                        html += `<div style="color:#53bdeb; text-align:center; padding:8px; font-size:14px;">${icon} ${escapeHtml(ctaText)}</div>`;
+                    }
+                }
+                html += '</div>';
+            }
+
+            html += '</div>';
+
+            contentDiv.innerHTML = html;
+            previewDiv.style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function generateTemplatePayload() {
+            const form = document.getElementById('onboardingForm');
+            const formData = new FormData(form);
+
+            const templateName = formData.get('wa_template_name');
+            const category = formData.get('wa_template_category');
+            const language = formData.get('wa_template_language');
+
+            if (!templateName || !category || !formData.get('wa_template_body')) {
+                alert('Please fill in Template Name, Category, and Body Text');
+                return;
+            }
+
+            const payload = {
+                name: templateName.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+                category: category,
+                language: language,
+                components: buildTemplateComponents()
+            };
+
+            // Show in output section
+            document.getElementById('outputContent').textContent = JSON.stringify(payload, null, 2);
+            document.getElementById('outputSection').classList.add('visible');
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function exportToMetaBusiness() {
+            const form = document.getElementById('onboardingForm');
+            const formData = new FormData(form);
+
+            const accessToken = formData.get('whatsapp_access_token');
+            const businessAccountId = formData.get('whatsapp_business_account_id');
+            const templateName = formData.get('wa_template_name');
+            const category = formData.get('wa_template_category');
+            const language = formData.get('wa_template_language');
+
+            if (!accessToken || !businessAccountId) {
+                alert('Please fill in WhatsApp Access Token and Business Account ID first');
+                return;
+            }
+
+            if (!templateName || !category || !formData.get('wa_template_body')) {
+                alert('Please fill in Template Name, Category, and Body Text');
+                return;
+            }
+
+            const payload = {
+                name: templateName.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+                category: category,
+                language: language,
+                components: buildTemplateComponents()
+            };
+
+            const apiVersion = formData.get('whatsapp_api_version') || 'v19.0';
+            const url = `https://graph.facebook.com/${apiVersion}/${businessAccountId}/message_templates`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Template submitted successfully!\n\nTemplate ID: ${result.id}\nStatus: ${result.status || 'PENDING'}\n\nCheck Meta Business Manager for approval status.`);
+
+                    // Show result in output
+                    document.getElementById('outputContent').textContent = JSON.stringify({
+                        success: true,
+                        template_id: result.id,
+                        status: result.status || 'PENDING',
+                        message: 'Template submitted to Meta for approval',
+                        payload_sent: payload
+                    }, null, 2);
+                    document.getElementById('outputSection').classList.add('visible');
+                } else {
+                    const errorMsg = result.error?.message || 'Unknown error';
+                    alert(`❌ Failed to create template:\n\n${errorMsg}`);
+
+                    document.getElementById('outputContent').textContent = JSON.stringify({
+                        success: false,
+                        error: result.error,
+                        payload_sent: payload
+                    }, null, 2);
+                    document.getElementById('outputSection').classList.add('visible');
+                }
+            } catch (error) {
+                alert(`❌ Network error: ${error.message}\n\nNote: This may fail due to CORS. Use the API payload with your backend instead.`);
+
+                // Still show the payload for manual use
+                document.getElementById('outputContent').textContent = JSON.stringify({
+                    note: 'Direct browser request failed (CORS). Use this payload with your backend API.',
+                    endpoint: url,
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
+                        'Content-Type': 'application/json'
+                    },
+                    payload: payload
+                }, null, 2);
+                document.getElementById('outputSection').classList.add('visible');
+            }
+        }
     </script>
 </body>
 </html>

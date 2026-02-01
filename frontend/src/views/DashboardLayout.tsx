@@ -61,6 +61,7 @@ import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist
 import { useAuth } from '@/contexts/AuthContext';
 import { NeuralNetworkBg } from '@/components/ui/NeuralNetworkBg';
 import { TrustGateIndicator } from '@/components/ui/TrustGateIndicator';
+import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
 
 // Stratum AI Dashboard Theme - HoloGlass (Gold + Cyan)
 const theme = {
@@ -164,6 +165,7 @@ export default function DashboardLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [onboardingChatOpen, setOnboardingChatOpen] = useState(false);
   const { hasNewUpdates } = useWhatsNew();
 
   // Set dark theme
@@ -195,10 +197,7 @@ export default function DashboardLayout() {
   };
 
   return (
-    <div
-      className="flex flex-col h-screen overflow-hidden"
-      style={{ background: theme.bgBase }}
-    >
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: theme.bgBase }}>
       {/* Neural Network Background */}
       <NeuralNetworkBg />
 
@@ -252,10 +251,7 @@ export default function DashboardLayout() {
                 >
                   <span className="text-white font-bold text-sm">S</span>
                 </div>
-                <span
-                  className="text-lg font-bold"
-                  style={{ color: theme.primary }}
-                >
+                <span className="text-lg font-bold" style={{ color: theme.primary }}>
                   Stratum AI
                 </span>
               </div>
@@ -664,9 +660,7 @@ export default function DashboardLayout() {
                           className="flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1"
                           style={{ color: theme.textSecondary }}
                           onClick={() => setUserMenuOpen(false)}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = theme.bgSurface)
-                          }
+                          onMouseEnter={(e) => (e.currentTarget.style.background = theme.bgSurface)}
                           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
                           <CogIcon className="w-4 h-4" />
@@ -676,9 +670,7 @@ export default function DashboardLayout() {
                           onClick={handleLogout}
                           className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1"
                           style={{ color: theme.danger }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = theme.bgSurface)
-                          }
+                          onMouseEnter={(e) => (e.currentTarget.style.background = theme.bgSurface)}
                           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
                           <ArrowRightOnRectangleIcon className="w-4 h-4" />
@@ -721,6 +713,20 @@ export default function DashboardLayout() {
 
         {/* Trust Gate Indicator - Fixed bottom-left */}
         <TrustGateIndicator />
+
+        {/* Root Agent Onboarding Chat - For guided onboarding */}
+        {!onboardingChatOpen && (
+          <OnboardingChatButton onClick={() => setOnboardingChatOpen(true)} />
+        )}
+
+        <OnboardingChat
+          isOpen={onboardingChatOpen}
+          onClose={() => setOnboardingChatOpen(false)}
+          onComplete={() => navigate('/dashboard')}
+          initialName={user?.name}
+          initialEmail={user?.email}
+          language={i18n.language}
+        />
       </div>
     </div>
   );

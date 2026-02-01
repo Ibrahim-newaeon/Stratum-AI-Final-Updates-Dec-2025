@@ -41,6 +41,7 @@ from app.api.v1.endpoints import (
     notifications,
     oauth,
     onboarding,
+    onboarding_agent,
     pacing,
     payments,
     predictions,
@@ -82,6 +83,12 @@ api_router.include_router(
 api_router.include_router(
     onboarding.router,
     tags=["Onboarding"],
+)
+
+# Conversational Onboarding Agent
+api_router.include_router(
+    onboarding_agent.router,
+    tags=["Onboarding Agent"],
 )
 
 # Main Dashboard (Unified dashboard for frontend)

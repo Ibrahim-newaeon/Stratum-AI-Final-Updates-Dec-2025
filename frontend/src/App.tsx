@@ -41,7 +41,7 @@ const Assets = lazy(() => import('./views/Assets'));
 const Rules = lazy(() => import('./views/Rules'));
 const Competitors = lazy(() => import('./views/Competitors'));
 const Predictions = lazy(() => import('./views/Predictions'));
-const WhatsApp = lazy(() => import('./views/WhatsApp'));
+const WhatsApp = lazy(() => import('./views/whatsapp/WhatsAppManager'));
 const Settings = lazy(() => import('./views/Settings'));
 const Tenants = lazy(() => import('./views/Tenants'));
 const MLTraining = lazy(() => import('./views/MLTraining'));
