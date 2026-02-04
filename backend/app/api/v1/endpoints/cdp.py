@@ -750,53 +750,6 @@ def _build_profile_response(profile: CDPProfile) -> ProfileResponse:
 
 
 @router.get(
-    "/profiles/{profile_id}",
-    response_model=ProfileResponse,
-    summary="Get profile by ID",
-    description="Retrieve a profile by its UUID, including identifiers and metadata.",
-)
-async def get_profile(
-    profile_id: UUID,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user),
-    _rate_limit=Depends(check_profile_rate_limit),
-):
-    """Get profile by ID with caching."""
-    tenant_id = current_user.tenant_id
-    profile_id_str = str(profile_id)
-
-    # Check cache first
-    cached = _profile_cache.get(tenant_id, profile_id_str)
-    if cached is not None:
-        logger.debug("cdp_profile_cache_hit", profile_id=profile_id_str)
-        return cached
-
-    # Cache miss - fetch from database
-    result = await db.execute(
-        select(CDPProfile)
-        .where(
-            CDPProfile.id == profile_id,
-            CDPProfile.tenant_id == tenant_id,
-        )
-        .options(selectinload(CDPProfile.identifiers))
-    )
-    profile = result.scalar_one_or_none()
-
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found",
-        )
-
-    response = _build_profile_response(profile)
-
-    # Cache the response
-    _profile_cache.set(tenant_id, profile_id_str, response)
-
-    return response
-
-
-@router.get(
     "/profiles",
     response_model=ProfileResponse,
     summary="Lookup profile by identifier",
@@ -2815,6 +2768,60 @@ async def get_anomaly_summary(
         "avg_emq_score": round(float(avg_emq), 1) if avg_emq else None,
         "as_of": datetime.now(UTC).isoformat(),
     }
+
+
+# =============================================================================
+# Profile by ID Endpoint
+# NOTE: This route MUST come after /profiles/statistics, /profiles/search,
+# and /profiles/merge to avoid route conflicts with FastAPI's path matching.
+# =============================================================================
+
+
+@router.get(
+    "/profiles/{profile_id}",
+    response_model=ProfileResponse,
+    summary="Get profile by ID",
+    description="Retrieve a profile by its UUID, including identifiers and metadata.",
+)
+async def get_profile(
+    profile_id: UUID,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user),
+    _rate_limit=Depends(check_profile_rate_limit),
+):
+    """Get profile by ID with caching."""
+    tenant_id = current_user.tenant_id
+    profile_id_str = str(profile_id)
+
+    # Check cache first
+    cached = _profile_cache.get(tenant_id, profile_id_str)
+    if cached is not None:
+        logger.debug("cdp_profile_cache_hit", profile_id=profile_id_str)
+        return cached
+
+    # Cache miss - fetch from database
+    result = await db.execute(
+        select(CDPProfile)
+        .where(
+            CDPProfile.id == profile_id,
+            CDPProfile.tenant_id == tenant_id,
+        )
+        .options(selectinload(CDPProfile.identifiers))
+    )
+    profile = result.scalar_one_or_none()
+
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found",
+        )
+
+    response = _build_profile_response(profile)
+
+    # Cache the response
+    _profile_cache.set(tenant_id, profile_id_str, response)
+
+    return response
 
 
 # =============================================================================
