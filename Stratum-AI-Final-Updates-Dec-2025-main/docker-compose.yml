@@ -1,0 +1,229 @@
+services:
+  # ===========================================================================
+  # PostgreSQL 16 Database
+  # ===========================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: stratum_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stratum}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stratum_secure_password_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-stratum_ai}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stratum} -d ${POSTGRES_DB:-stratum_ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stratum_network
+
+  # ===========================================================================
+  # Redis (Caching & Celery Broker)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: stratum_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stratum_network
+
+  # ===========================================================================
+  # FastAPI Backend
+  # ===========================================================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_api
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DEBUG=${DEBUG:-true}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - ML_MODELS_PATH=/app/ml_service/models
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
+      - MARKET_INTEL_PROVIDER=${MARKET_INTEL_PROVIDER:-mock}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jwt-secret-dev}
+      - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:-dev-encryption-key-32bytes}
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      # Slack Integration
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - SLACK_CHANNEL=${SLACK_CHANNEL:-#stratum-alerts}
+    volumes:
+      - ./backend:/app
+      - ./ml_service/models:/app/ml_service/models:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - stratum_network
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # ===========================================================================
+  # Celery Worker (Background Tasks)
+  # ===========================================================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_worker
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - ML_MODELS_PATH=/app/ml_service/models
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Slack Integration (for background alerts)
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - SLACK_CHANNEL=${SLACK_CHANNEL:-#stratum-alerts}
+    volumes:
+      - ./backend:/app
+      - ./ml_service/models:/app/ml_service/models:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+
+  # ===========================================================================
+  # Celery Beat (Scheduler)
+  # ===========================================================================
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_scheduler
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - worker
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('celerybeat-schedule') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app beat --loglevel=info
+
+  # ===========================================================================
+  # React Frontend (Vite)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: stratum_frontend
+    restart: unless-stopped
+    environment:
+      - DOCKER_ENV=true
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
+      - VITE_DEFAULT_LOCALE=${VITE_DEFAULT_LOCALE:-en}
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    networks:
+      - stratum_network
+    command: npm run dev -- --host 0.0.0.0
+
+  # ===========================================================================
+  # Flower (Celery Monitoring) - Optional
+  # ===========================================================================
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_flower
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - FLOWER_PORT=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - worker
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app flower --port=5555
+    profiles:
+      - monitoring
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  stratum_network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+  redis_data:

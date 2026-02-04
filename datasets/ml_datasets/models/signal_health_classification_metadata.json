@@ -1,0 +1,47 @@
+{
+  "model_type": "gradient_boosting",
+  "classes": [
+    "critical",
+    "degraded",
+    "risk",
+    "healthy"
+  ],
+  "features": {
+    "numeric": [
+      "day_of_week",
+      "is_weekend",
+      "emq_score",
+      "event_volume",
+      "event_loss_rate",
+      "data_freshness_min",
+      "api_success_rate",
+      "api_latency_ms",
+      "api_errors_count",
+      "match_rate",
+      "has_incident",
+      "incident_severity"
+    ],
+    "categorical": [
+      "source"
+    ]
+  },
+  "training_samples": 1460,
+  "test_samples": 365,
+  "metrics": {
+    "accuracy": 0.9972602739726028,
+    "f1_weighted": 0.9974105597076258,
+    "precision_weighted": 0.9978082191780822,
+    "recall_weighted": 0.9972602739726028
+  },
+  "cv_accuracy_mean": 0.9967123287671233,
+  "cv_f1_mean": 0.996778914513612,
+  "sources": [
+    "meta_capi",
+    "google_analytics",
+    "segment",
+    "shopify",
+    "stripe"
+  ],
+  "saved_at": "2026-01-18T17:43:03.493943",
+  "model_path": "C:\\Users\\Vip\\OneDrive\\Desktop\\Stratum-AI-Final-Updates-Dec-2025-main\\datasets\\ml_datasets\\models\\signal_health_classification.joblib"
+}

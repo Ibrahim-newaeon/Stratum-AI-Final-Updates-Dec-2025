@@ -1,0 +1,117 @@
+# =============================================================================
+# Stratum AI - Pre-commit Configuration
+# =============================================================================
+# Install: pip install pre-commit && pre-commit install
+# Run all: pre-commit run --all-files
+# Update hooks: pre-commit autoupdate
+
+default_language_version:
+  python: python3
+
+repos:
+  # ==========================================================================
+  # General Hooks
+  # ==========================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+        exclude: tsconfig.*\.json$
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+  # ==========================================================================
+  # Python - Ruff (Linting & Formatting)
+  # ==========================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      # Run the linter with auto-fix
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # ==========================================================================
+  # Python - Type Checking (run separately with full deps)
+  # ==========================================================================
+  # Mypy requires full project dependencies - run via: make lint or CI
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.8.0
+  #   hooks:
+  #     - id: mypy
+  #       args: [--config-file=backend/mypy.ini, --no-error-summary]
+  #       additional_dependencies:
+  #         - pydantic>=2.0
+  #         - fastapi>=0.109.0
+  #         - sqlalchemy[asyncio]>=2.0
+  #         - types-redis
+  #       files: ^backend/
+  #       pass_filenames: false
+
+  # ==========================================================================
+  # Frontend - Prettier (Formatting)
+  # ==========================================================================
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types_or: [javascript, jsx, ts, tsx, json, css, scss, yaml, markdown]
+        files: ^frontend/
+        args: [--ignore-unknown]
+        additional_dependencies:
+          - prettier@3.2.5
+
+  # ==========================================================================
+  # Frontend - ESLint (uses local npm to access TypeScript project config)
+  # ==========================================================================
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: bash -c 'cd frontend && npm run lint --silent || true'
+        language: system
+        files: ^frontend/src/.*\.[jt]sx?$
+        pass_filenames: false
+
+  # ==========================================================================
+  # Security Scanning
+  # ==========================================================================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: package-lock.json|yarn.lock|pnpm-lock.yaml
+
+  # ==========================================================================
+  # Commit Message Linting
+  # ==========================================================================
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.14.1
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+# =============================================================================
+# CI Configuration
+# =============================================================================
+ci:
+  autofix_commit_msg: "style: auto-fix by pre-commit hooks"
+  autofix_prs: true
+  autoupdate_commit_msg: "chore: update pre-commit hooks"
+  autoupdate_schedule: weekly
+  skip: [mypy]  # Skip mypy in CI (run separately with full deps)

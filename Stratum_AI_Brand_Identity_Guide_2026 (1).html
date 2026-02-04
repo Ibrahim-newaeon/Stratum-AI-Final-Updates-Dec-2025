@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI | Brand Identity & Voice Guidelines 2026</title>
+    <style>
+        :root {
+            /* Typography */
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+            /* Colors */
+            --primary-dark: #0a0f1a;
+            --primary-blue: #1e3a5f;
+            --accent-cyan: #00d4ff;
+            --accent-teal: #00b4a0;
+            --accent-gold: #ffd700;
+            --text-primary: #f0f4f8;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --glass-bg: rgba(30, 58, 95, 0.15);
+            --glass-border: rgba(0, 212, 255, 0.2);
+            --gradient-primary: linear-gradient(135deg, #0a0f1a 0%, #1e3a5f 50%, #0d1929 100%);
+            --gradient-accent: linear-gradient(135deg, #00d4ff 0%, #00b4a0 100%);
+            --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--gradient-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Grid */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow-1 {
+            top: -200px;
+            right: -200px;
+            background: var(--accent-cyan);
+        }
+
+        .bg-glow-2 {
+            bottom: -200px;
+            left: -200px;
+            background: var(--accent-teal);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(10, 15, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .nav-version {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--glass-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 8rem 0;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-cyan);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero-title {
+            font-family: var(--font-sans);
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+
+        .hero-title span {
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 3rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .hero-meta-label {
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .hero-meta-value {
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 6rem 0;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .section-header {
+            margin-bottom: 4rem;
+        }
+
+        .section-number {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: var(--font-sans);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            max-width: 600px;
+            font-size: 1.125rem;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-accent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+            transform: translateY(-4px);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-desc {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        /* Color Palette */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .color-swatch {
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        .color-preview {
+            height: 120px;
+            position: relative;
+        }
+
+        .color-preview::after {
+            content: attr(data-hex);
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            background: rgba(0,0,0,0.5);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .color-info {
+            padding: 1.25rem;
+        }
+
+        .color-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .color-usage {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        /* Typography Showcase */
+        .type-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        .type-item {
+            padding: 2rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+
+        .type-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .type-sample-display {
+            font-family: var(--font-sans);
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .type-sample-body {
+            font-family: var(--font-sans);
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .type-sample-mono {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--accent-cyan);
+            background: rgba(0, 212, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        /* Voice Section */
+        .voice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .voice-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .voice-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .voice-card.do {
+            border-color: rgba(0, 180, 160, 0.3);
+        }
+
+        .voice-card.dont {
+            border-color: rgba(255, 100, 100, 0.3);
+        }
+
+        .voice-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .voice-card.do .voice-label {
+            background: rgba(0, 180, 160, 0.2);
+            color: var(--accent-teal);
+        }
+
+        .voice-card.dont .voice-label {
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+        }
+
+        .voice-example {
+            font-size: 1.125rem;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        /* Pillars */
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .pillars-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .pillars-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pillar {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .pillar-number {
+            font-family: var(--font-sans);
+            font-size: 4rem;
+            font-weight: 700;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0.3;
+            position: absolute;
+            top: 1rem;
+            left: 1.5rem;
+        }
+
+        .pillar-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .pillar-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .pillar-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Taglines */
+        .tagline-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .tagline-item {
+            padding: 2.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .tagline-item.featured {
+            border-color: var(--accent-gold);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, var(--glass-bg) 100%);
+        }
+
+        .tagline-badge {
+            position: absolute;
+            top: -12px;
+            left: 2rem;
+            background: var(--gradient-gold);
+            color: var(--primary-dark);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+        }
+
+        .tagline-text {
+            font-family: var(--font-sans);
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: 1rem;
+        }
+
+        .tagline-context {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Tone Matrix */
+        .tone-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tone-table th,
+        .tone-table td {
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .tone-table th {
+            background: rgba(0, 212, 255, 0.1);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .tone-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tone-table td:first-child {
+            font-weight: 600;
+        }
+
+        .tone-table td:nth-child(2) {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        /* Persona Section */
+        .persona-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .persona-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .persona-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .persona-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-cyan);
+            margin-bottom: 0.75rem;
+        }
+
+        .persona-role {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .persona-message {
+            font-size: 1.0625rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            padding: 1.25rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        /* Logo Section */
+        .logo-showcase {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .logo-showcase {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .logo-variant {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .logo-variant.dark {
+            background: var(--primary-dark);
+        }
+
+        .logo-variant.light {
+            background: #f0f4f8;
+        }
+
+        .logo-variant.gradient {
+            background: var(--gradient-accent);
+        }
+
+        .logo-mark {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            font-family: var(--font-sans);
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .logo-variant.dark .logo-mark {
+            background: var(--gradient-accent);
+            color: var(--primary-dark);
+        }
+
+        .logo-variant.light .logo-mark {
+            background: var(--primary-dark);
+            color: var(--text-primary);
+        }
+
+        .logo-variant.gradient .logo-mark {
+            background: white;
+            color: var(--primary-dark);
+        }
+
+        .logo-wordmark {
+            font-family: var(--font-sans);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-variant.dark .logo-wordmark {
+            color: var(--text-primary);
+        }
+
+        .logo-variant.light .logo-wordmark {
+            color: var(--primary-dark);
+        }
+
+        .logo-variant.gradient .logo-wordmark {
+            color: white;
+        }
+
+        .logo-label {
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .logo-variant.dark .logo-label,
+        .logo-variant.gradient .logo-label {
+            color: var(--text-muted);
+        }
+
+        .logo-variant.light .logo-label {
+            color: var(--primary-blue);
+        }
+
+        /* Arabic Section */
+        .arabic-showcase {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .arabic-text {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            direction: rtl;
+        }
+
+        .arabic-translation {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Do/Don't Table */
+        .do-dont-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .do-dont-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .do-dont-col h3 {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .do-dont-col.do h3 {
+            background: rgba(0, 180, 160, 0.2);
+            color: var(--accent-teal);
+        }
+
+        .do-dont-col.dont h3 {
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+        }
+
+        .do-dont-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .do-dont-list li {
+            padding: 1rem 1.25rem;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            font-size: 0.9375rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 4rem 0;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-family: var(--font-sans);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-meta {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Print Styles */
+        @media print {
+            .nav, .bg-grid, .bg-glow {
+                display: none;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+            .section {
+                break-inside: avoid;
+            }
+        }
+
+        /* Scroll Animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-logo">
+            <div class="nav-logo-icon">S</div>
+            <span>Stratum AI</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#brand-essence">Essence</a></li>
+            <li><a href="#visual-identity">Visual</a></li>
+            <li><a href="#voice">Voice</a></li>
+            <li><a href="#messaging">Messaging</a></li>
+            <li><a href="#usage">Usage</a></li>
+        </ul>
+        <div class="nav-version">v2026.1</div>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-badge">Official Brand Guidelines</div>
+            <h1 class="hero-title">
+                Stratum AI<br>
+                <span>Brand Identity</span>
+            </h1>
+            <p class="hero-subtitle">
+                A comprehensive guide to our visual identity, brand voice, and messaging framework.
+                Designed for consistency across all touchpoints in KSA, Gulf, and global markets.
+            </p>
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <span class="hero-meta-label">Version</span>
+                    <span class="hero-meta-value">2026.1</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="hero-meta-label">Last Updated</span>
+                    <span class="hero-meta-value">January 2026</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="hero-meta-label">Classification</span>
+                    <span class="hero-meta-value">Marketing Reference</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brand Essence -->
+        <section class="section" id="brand-essence">
+            <div class="section-header">
+                <div class="section-number">01 — Brand Essence</div>
+                <h2 class="section-title">Who We Are</h2>
+                <p class="section-desc">
+                    The foundational elements that define Stratum AI's identity and differentiation in the market.
+                </p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">🎯</div>
+                    <h3 class="card-title">Mission</h3>
+                    <p class="card-desc">
+                        To transform revenue operations with AI that earns trust through explainability,
+                        enabling teams to make faster, smarter decisions with complete confidence.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🌟</div>
+                    <h3 class="card-title">Vision</h3>
+                    <p class="card-desc">
+                        A world where every revenue decision is informed by intelligent,
+                        transparent AI that leaders can defend to any stakeholder.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💎</div>
+                    <h3 class="card-title">Core Promise</h3>
+                    <p class="card-desc">
+                        Trust-Gated Autopilot: AI-powered revenue intelligence with full explainability,
+                        audit trails, and governance built in from day one.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3 class="card-title">Differentiation</h3>
+                    <p class="card-desc">
+                        Unlike black-box AI tools, every Stratum recommendation shows its reasoning—
+                        making compliance, board reviews, and team alignment effortless.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brand Pillars -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">02 — Brand Pillars</div>
+                <h2 class="section-title">What We Stand For</h2>
+                <p class="section-desc">
+                    Four foundational principles that guide every decision, communication, and experience.
+                </p>
+            </div>
+
+            <div class="pillars-grid">
+                <div class="pillar">
+                    <span class="pillar-number">01</span>
+                    <div class="pillar-icon">🛡️</div>
+                    <h3 class="pillar-title">Trust First</h3>
+                    <p class="pillar-desc">
+                        Every feature, every message reinforces reliability and transparency.
+                    </p>
+                </div>
+                <div class="pillar">
+                    <span class="pillar-number">02</span>
+                    <div class="pillar-icon">🔍</div>
+                    <h3 class="pillar-title">Clarity Over Complexity</h3>
+                    <p class="pillar-desc">
+                        We simplify sophisticated concepts without dumbing them down.
+                    </p>
+                </div>
+                <div class="pillar">
+                    <span class="pillar-number">03</span>
+                    <div class="pillar-icon">📈</div>
+                    <h3 class="pillar-title">Outcome-Focused</h3>
+                    <p class="pillar-desc">
+                        Every communication ties back to measurable business results.
+                    </p>
+                </div>
+                <div class="pillar">
+                    <span class="pillar-number">04</span>
+                    <div class="pillar-icon">🤝</div>
+                    <h3 class="pillar-title">Human + AI</h3>
+                    <p class="pillar-desc">
+                        We augment human expertise; we never claim to replace it.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visual Identity -->
+        <section class="section" id="visual-identity">
+            <div class="section-header">
+                <div class="section-number">03 — Visual Identity</div>
+                <h2 class="section-title">Logo System</h2>
+                <p class="section-desc">
+                    The Stratum mark represents layered intelligence—stacked, transparent, and precisely engineered.
+                </p>
+            </div>
+
+            <div class="logo-showcase">
+                <div class="logo-variant dark">
+                    <div class="logo-mark">S</div>
+                    <div class="logo-wordmark">Stratum AI</div>
+                    <span class="logo-label">Primary — Dark Background</span>
+                </div>
+                <div class="logo-variant light">
+                    <div class="logo-mark">S</div>
+                    <div class="logo-wordmark">Stratum AI</div>
+                    <span class="logo-label">Secondary — Light Background</span>
+                </div>
+                <div class="logo-variant gradient">
+                    <div class="logo-mark">S</div>
+                    <div class="logo-wordmark">Stratum AI</div>
+                    <span class="logo-label">Accent — Feature Applications</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color Palette -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">04 — Color Palette</div>
+                <h2 class="section-title">Brand Colors</h2>
+                <p class="section-desc">
+                    A sophisticated palette that conveys trust, intelligence, and premium positioning.
+                </p>
+            </div>
+
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: #0a0f1a;" data-hex="#0A0F1A"></div>
+                    <div class="color-info">
+                        <div class="color-name">Deep Space</div>
+                        <div class="color-usage">Primary background, authority</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: #1e3a5f;" data-hex="#1E3A5F"></div>
+                    <div class="color-info">
+                        <div class="color-name">Stratum Blue</div>
+                        <div class="color-usage">Secondary, cards, depth</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: linear-gradient(135deg, #00d4ff, #00b4a0);" data-hex="#00D4FF"></div>
+                    <div class="color-info">
+                        <div class="color-name">Signal Cyan</div>
+                        <div class="color-usage">Primary accent, CTAs, highlights</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: #00b4a0;" data-hex="#00B4A0"></div>
+                    <div class="color-info">
+                        <div class="color-name">Trust Teal</div>
+                        <div class="color-usage">Success states, positive indicators</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: linear-gradient(135deg, #ffd700, #ff9500);" data-hex="#FFD700"></div>
+                    <div class="color-info">
+                        <div class="color-name">Premium Gold</div>
+                        <div class="color-usage">Premium features, awards, highlights</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-preview" style="background: #f0f4f8;" data-hex="#F0F4F8"></div>
+                    <div class="color-info">
+                        <div class="color-name">Cloud White</div>
+                        <div class="color-usage">Light mode, text on dark</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">05 — Typography</div>
+                <h2 class="section-title">Type System</h2>
+                <p class="section-desc">
+                    A refined typographic hierarchy that balances editorial elegance with technical precision.
+                </p>
+            </div>
+
+            <div class="type-showcase">
+                <div class="type-item">
+                    <div class="type-label">Display & Headlines — System Sans (Bold)</div>
+                    <div class="type-sample-display">Revenue Intelligence You Can Trust</div>
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">
+                        SF Pro Display, Inter, Segoe UI, or platform equivalent.
+                        Weights: 600 (SemiBold), 700 (Bold) for headlines and emphasis.
+                    </p>
+                </div>
+                <div class="type-item">
+                    <div class="type-label">Body Font — System Sans (Regular)</div>
+                    <div class="type-sample-body">
+                        Stratum AI transforms how enterprise teams approach revenue decisions.
+                        By unifying pricing, inventory, and expansion data into a single intelligent fabric,
+                        we enable faster decisions with complete audit trails.
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">
+                        SF Pro Text, Inter, Segoe UI, or platform equivalent.
+                        Weights: 400 (Regular), 500 (Medium), 600 (SemiBold)
+                    </p>
+                </div>
+                <div class="type-item">
+                    <div class="type-label">Mono Font — System Monospace</div>
+                    <div class="type-sample-mono">
+                        const recommendation = await stratum.analyze({<br>
+                        &nbsp;&nbsp;signal: "pricing_change",<br>
+                        &nbsp;&nbsp;explainability: true,<br>
+                        &nbsp;&nbsp;auditTrail: true<br>
+                        });
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
+                        SF Mono, Menlo, Consolas, or platform equivalent.
+                        Used for code, data, labels, and technical content.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brand Voice -->
+        <section class="section" id="voice">
+            <div class="section-header">
+                <div class="section-number">06 — Brand Voice</div>
+                <h2 class="section-title">The Control Tower</h2>
+                <p class="section-desc">
+                    Our voice archetype: Commanding, Precise, Trustworthy. We speak with
+                    the confidence of a flight control tower—calm, clear, and always in command.
+                </p>
+            </div>
+
+            <div class="card-grid" style="margin-bottom: 3rem;">
+                <div class="card">
+                    <h3 class="card-title">Commanding</h3>
+                    <p class="card-desc">
+                        We help teams take control of revenue chaos. Our language is decisive,
+                        action-oriented, and empowering without being aggressive.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Precise</h3>
+                    <p class="card-desc">
+                        We deal in specifics, not vague promises. Numbers, outcomes, and concrete
+                        benefits replace fluffy marketing speak.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Trustworthy</h3>
+                    <p class="card-desc">
+                        Every word reinforces our core promise: AI you can explain, defend,
+                        and rely on. We never overpromise or use hype.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Decisive</h3>
+                    <p class="card-desc">
+                        We enable faster decisions. Our language moves people to action
+                        with clarity and confidence.
+                    </p>
+                </div>
+            </div>
+
+            <h3 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Voice Examples</h3>
+            <div class="voice-grid">
+                <div class="voice-card do">
+                    <div class="voice-label">✓ Do Say</div>
+                    <p class="voice-example">
+                        "AI recommendations you can trace, audit, and trust."
+                    </p>
+                </div>
+                <div class="voice-card dont">
+                    <div class="voice-label">✗ Don't Say</div>
+                    <p class="voice-example">
+                        "Our AI makes better decisions than humans."
+                    </p>
+                </div>
+                <div class="voice-card do">
+                    <div class="voice-label">✓ Do Say</div>
+                    <p class="voice-example">
+                        "See exactly how each pricing decision impacts revenue."
+                    </p>
+                </div>
+                <div class="voice-card dont">
+                    <div class="voice-label">✗ Don't Say</div>
+                    <p class="voice-example">
+                        "Leverage our proprietary Signal Fabric Engine™ to optimize cross-functional synergies."
+                    </p>
+                </div>
+                <div class="voice-card do">
+                    <div class="voice-label">✓ Do Say</div>
+                    <p class="voice-example">
+                        "AI handles the analysis. You make the call."
+                    </p>
+                </div>
+                <div class="voice-card dont">
+                    <div class="voice-label">✗ Don't Say</div>
+                    <p class="voice-example">
+                        "Fully automated revenue management with no human intervention needed."
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tone by Context -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">07 — Tone Matrix</div>
+                <h2 class="section-title">Tone by Context</h2>
+                <p class="section-desc">
+                    How our voice adapts across different channels and touchpoints while maintaining brand consistency.
+                </p>
+            </div>
+
+            <table class="tone-table">
+                <thead>
+                    <tr>
+                        <th>Context</th>
+                        <th>Tone</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Website Hero</td>
+                        <td>Bold, aspirational</td>
+                        <td>"Revenue intelligence that earns board-level trust"</td>
+                    </tr>
+                    <tr>
+                        <td>Product Pages</td>
+                        <td>Clear, feature-focused</td>
+                        <td>"Every recommendation shows its reasoning"</td>
+                    </tr>
+                    <tr>
+                        <td>Blog / Thought Leadership</td>
+                        <td>Expert, educational</td>
+                        <td>"Why traditional pricing models fail in volatile markets"</td>
+                    </tr>
+                    <tr>
+                        <td>LinkedIn Ads</td>
+                        <td>Direct, value-driven</td>
+                        <td>"Stop guessing. Start knowing."</td>
+                    </tr>
+                    <tr>
+                        <td>Sales Emails</td>
+                        <td>Consultative, helpful</td>
+                        <td>"I noticed [Company] recently expanded into KSA..."</td>
+                    </tr>
+                    <tr>
+                        <td>Customer Success</td>
+                        <td>Warm, supportive</td>
+                        <td>"Let's make sure you're getting full value"</td>
+                    </tr>
+                    <tr>
+                        <td>Error Messages</td>
+                        <td>Calm, solution-focused</td>
+                        <td>"Something went wrong. Here's how to fix it."</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Messaging Framework -->
+        <section class="section" id="messaging">
+            <div class="section-header">
+                <div class="section-number">08 — Messaging Framework</div>
+                <h2 class="section-title">Taglines & Headlines</h2>
+                <p class="section-desc">
+                    Approved taglines and messaging hooks for use across marketing materials.
+                </p>
+            </div>
+
+            <div class="tagline-showcase">
+                <div class="tagline-item featured">
+                    <div class="tagline-badge">★ Primary Tagline</div>
+                    <div class="tagline-text">"Trust-gated. Board-ready. Revenue-focused."</div>
+                    <div class="tagline-context">
+                        Use as primary tagline across website, ads, and brand materials
+                    </div>
+                </div>
+                <div class="tagline-item">
+                    <div class="tagline-text">"Revenue intelligence you can trust"</div>
+                    <div class="tagline-context">
+                        Alternative tagline — emphasizes trust and intelligence
+                    </div>
+                </div>
+                <div class="tagline-item">
+                    <div class="tagline-text">"AI that explains itself"</div>
+                    <div class="tagline-context">
+                        Short-form — ideal for social media and ads
+                    </div>
+                </div>
+                <div class="tagline-item">
+                    <div class="tagline-text">"The command center for revenue operations"</div>
+                    <div class="tagline-context">
+                        Descriptive — great for product pages and sales materials
+                    </div>
+                </div>
+                <div class="tagline-item">
+                    <div class="tagline-text">"From insight to action in minutes"</div>
+                    <div class="tagline-context">
+                        Speed-focused — use when emphasizing efficiency
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Persona Messaging -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">09 — Persona Messaging</div>
+                <h2 class="section-title">Audience-Specific Copy</h2>
+                <p class="section-desc">
+                    Tailored messaging for each key decision-maker in our target accounts.
+                </p>
+            </div>
+
+            <div class="persona-grid">
+                <div class="persona-card">
+                    <div class="persona-title">For the</div>
+                    <div class="persona-role">Chief Financial Officer</div>
+                    <div class="persona-message">
+                        "Finally, AI recommendations you can defend to the board.
+                        Every decision documented, every assumption visible."
+                    </div>
+                </div>
+                <div class="persona-card">
+                    <div class="persona-title">For the</div>
+                    <div class="persona-role">Chief Revenue Officer</div>
+                    <div class="persona-message">
+                        "Unify your revenue signals. See what's working, what's leaking,
+                        and what to do next—without the spreadsheet chaos."
+                    </div>
+                </div>
+                <div class="persona-card">
+                    <div class="persona-title">For the</div>
+                    <div class="persona-role">RevOps Leader</div>
+                    <div class="persona-message">
+                        "Stop being the bottleneck. Automate the analysis,
+                        keep the control."
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Arabic / Gulf Market -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">10 — Gulf Market Adaptation</div>
+                <h2 class="section-title">Arabic Brand Elements</h2>
+                <p class="section-desc">
+                    Localized messaging for KSA, UAE, and Gulf markets. Use professional formal Arabic (فصحى) for credibility.
+                </p>
+            </div>
+
+            <div class="arabic-showcase" style="margin-bottom: 2rem;">
+                <div class="arabic-text">ذكاء الإيرادات الموثوق</div>
+                <div class="arabic-translation">Trusted Revenue Intelligence — Primary Arabic Tagline</div>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3 class="card-title">قرارات واضحة. نتائج موثوقة.</h3>
+                    <p class="card-desc">
+                        Clear decisions. Trusted results.<br>
+                        <em>Use for: Headlines, ads</em>
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">الذكاء الاصطناعي الذي يفسر نفسه</h3>
+                    <p class="card-desc">
+                        AI that explains itself.<br>
+                        <em>Use for: Product positioning</em>
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">جاهز للتدقيق من اليوم الأول</h3>
+                    <p class="card-desc">
+                        Audit-ready from day one.<br>
+                        <em>Use for: Enterprise messaging</em>
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">شريكك في التحول الرقمي</h3>
+                    <p class="card-desc">
+                        Your partner in digital transformation.<br>
+                        <em>Use for: Vision 2030 alignment</em>
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Gulf Market Considerations</h3>
+                <table class="tone-table">
+                    <thead>
+                        <tr>
+                            <th>Consideration</th>
+                            <th>Adaptation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Trust is paramount</td>
+                            <td>Emphasize governance, compliance, and explainability heavily</td>
+                        </tr>
+                        <tr>
+                            <td>Relationship-driven culture</td>
+                            <td>Use consultative tone, not transactional</td>
+                        </tr>
+                        <tr>
+                            <td>Vision 2030 alignment</td>
+                            <td>Frame as "digital transformation enabler"</td>
+                        </tr>
+                        <tr>
+                            <td>Local proof points</td>
+                            <td>Reference regional success stories when available</td>
+                        </tr>
+                        <tr>
+                            <td>Professional Arabic</td>
+                            <td>Use فصحى (formal Arabic) for credibility, not colloquial</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Usage Guidelines -->
+        <section class="section" id="usage">
+            <div class="section-header">
+                <div class="section-number">11 — Usage Guidelines</div>
+                <h2 class="section-title">Do's and Don'ts</h2>
+                <p class="section-desc">
+                    Quick reference for maintaining brand consistency across all communications.
+                </p>
+            </div>
+
+            <div class="do-dont-grid">
+                <div class="do-dont-col do">
+                    <h3>✓ We Are</h3>
+                    <ul class="do-dont-list">
+                        <li>Confident, not arrogant</li>
+                        <li>Technical, but accessible</li>
+                        <li>Transparent about AI capabilities</li>
+                        <li>Enterprise-grade and professional</li>
+                        <li>Trustworthy and reliable</li>
+                        <li>Action-oriented and decisive</li>
+                        <li>Outcome-focused with specifics</li>
+                        <li>Supportive of human expertise</li>
+                    </ul>
+                </div>
+                <div class="do-dont-col dont">
+                    <h3>✗ We Are NOT</h3>
+                    <ul class="do-dont-list">
+                        <li>Overpromising or hype-driven</li>
+                        <li>Jargon-heavy or exclusionary</li>
+                        <li>Black-box or mysterious</li>
+                        <li>Startup-casual or gimmicky</li>
+                        <li>Aggressive or salesy</li>
+                        <li>Passive or theoretical</li>
+                        <li>Vague with unsubstantiated claims</li>
+                        <li>Claiming to replace humans</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Writing Quick Reference</h3>
+                <table class="tone-table">
+                    <thead>
+                        <tr>
+                            <th>Element</th>
+                            <th>Guideline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sentence Length</td>
+                            <td>Short to medium. Punchy. Avoid run-on sentences.</td>
+                        </tr>
+                        <tr>
+                            <td>Vocabulary</td>
+                            <td>Business-grade, not academic. Clear over clever.</td>
+                        </tr>
+                        <tr>
+                            <td>Pronouns</td>
+                            <td>"You" focused, not "We" heavy. Make the reader the hero.</td>
+                        </tr>
+                        <tr>
+                            <td>Numbers</td>
+                            <td>Use specifics: "3x faster" not "much faster"</td>
+                        </tr>
+                        <tr>
+                            <td>CTAs</td>
+                            <td>Action verbs: "See how", "Get started", "Book a demo"</td>
+                        </tr>
+                        <tr>
+                            <td>Avoid</td>
+                            <td>Buzzwords: "synergy", "leverage", "paradigm shift", "disrupt"</td>
+                        </tr>
+                        <tr>
+                            <td>Embrace</td>
+                            <td>Concrete terms: "audit trail", "explainable", "governance"</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Elevator Pitch -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">12 — Core Message</div>
+                <h2 class="section-title">Elevator Pitch</h2>
+                <p class="section-desc">
+                    The definitive way to describe Stratum AI in 30 seconds or less.
+                </p>
+            </div>
+
+            <div class="tagline-item featured" style="max-width: 900px;">
+                <div class="tagline-badge">★ Official Elevator Pitch</div>
+                <div class="tagline-text" style="font-size: 1.5rem; line-height: 1.6;">
+                    "Stratum AI is the trust-gated revenue operating system that turns pricing,
+                    inventory, and expansion decisions into explainable, auditable actions—so
+                    your team moves faster and your leadership sleeps better."
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-logo">Stratum AI</div>
+            <p class="footer-text">
+                Brand Identity & Voice Guidelines<br>
+                For internal use and approved agency partners only.
+            </p>
+            <div class="footer-meta">
+                Version 2026.1 — Last updated January 2026<br>
+                © 2026 Stratum AI. All rights reserved.
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.card, .pillar, .color-swatch, .type-item, .voice-card, .tagline-item, .persona-card').forEach(el => {
+            el.classList.add('fade-in');
+            observer.observe(el);
+        });
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
