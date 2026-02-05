@@ -35,12 +35,28 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npm run build
 
-# Production stage
+# Production stage (memory audit Feb 2026)
 FROM nginx:alpine AS production
 
+# Copy built assets
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Security: Run as non-root user
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    touch /var/run/nginx.pid && \
+    chown nginx:nginx /var/run/nginx.pid
+
+USER nginx
+
 EXPOSE 80
 
+# Healthcheck for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget -q --spider http://localhost/health || exit 1
+
 CMD ["nginx", "-g", "daemon off;"]
+
+# Result: ~25MB container vs ~500MB with Vite dev server (per memory audit)

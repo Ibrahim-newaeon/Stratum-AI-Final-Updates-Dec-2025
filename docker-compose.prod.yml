@@ -6,7 +6,7 @@
 
 services:
   # ===========================================================================
-  # PostgreSQL - Production settings
+  # PostgreSQL - Production settings (tuned per memory audit Feb 2026)
   # ===========================================================================
   db:
     restart: always
@@ -14,15 +14,23 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-stratum_ai}
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c effective_cache_size=3GB
+      -c work_mem=16MB
+      -c maintenance_work_mem=256MB
+      -c max_connections=50
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 4G
+          cpus: '2.0'
         reservations:
-          memory: 512M
+          memory: 2G
 
   # ===========================================================================
-  # Redis - Production settings
+  # Redis - Production settings (memory audit Feb 2026)
   # ===========================================================================
   redis:
     restart: always
@@ -31,6 +39,14 @@ services:
       resources:
         limits:
           memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===========================================================================
   # FastAPI Backend - Production
@@ -59,6 +75,14 @@ services:
       resources:
         limits:
           memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===========================================================================
   # Celery Worker - Production
@@ -76,14 +100,22 @@ services:
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
       - ./ml_service/models:/app/ml_service/models:ro
-    command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=8
+    command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=2
     deploy:
       resources:
         limits:
           memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===========================================================================
-  # Celery Beat - Production
+  # Celery Beat - Production (memory audit Feb 2026)
   # ===========================================================================
   scheduler:
     restart: always
@@ -94,6 +126,18 @@ services:
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-}@redis:6379/2
     volumes: []
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('celerybeat-schedule') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===========================================================================
   # React Frontend - Production (Nginx)
@@ -118,7 +162,40 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+
+  # ===========================================================================
+  # PgBouncer - Connection Pooling (memory audit Feb 2026)
+  # ===========================================================================
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22
+    container_name: stratum_pgbouncer
+    restart: always
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 200
+      DEFAULT_POOL_SIZE: 25
+      MIN_POOL_SIZE: 5
+    ports:
+      - "6432:6432"
+    depends_on:
+      - db
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ===========================================================================
   # Flower - Disabled in production by default

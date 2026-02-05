@@ -157,8 +157,11 @@ celery_app.conf.update(
     # Worker settings
     worker_prefetch_multiplier=1,  # One task at a time for memory efficiency
     worker_concurrency=4,
+    # Memory safety guards (per memory audit Feb 2026)
+    worker_max_memory_per_child=400_000,  # 400MB - restart worker after this limit
+    worker_max_tasks_per_child=1000,  # Recycle worker after 1000 tasks to prevent fragmentation
     # Result settings
-    result_expires=86400,  # Results expire after 24 hours
+    result_expires=3600,  # Results expire after 1 hour (was 24h - reduced per memory audit)
     # Task routing (organized by domain module)
     task_routes={
         # Sync tasks

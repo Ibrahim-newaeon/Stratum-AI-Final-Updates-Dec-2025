@@ -18,13 +18,27 @@ Security features:
 """
 
 import hashlib
+import itertools
 import secrets
 import threading
 import time
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 from uuid import UUID
+
+# Memory optimization: chunk size for batch processing (per memory audit Feb 2026)
+CDP_BATCH_CHUNK_SIZE = 100
+
+
+def _batched(iterable: list, n: int) -> Iterator[list]:
+    """Batch an iterable into chunks of size n (memory-efficient processing)."""
+    it = iter(iterable)
+    while True:
+        batch = list(itertools.islice(it, n))
+        if not batch:
+            return
+        yield batch
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
@@ -564,7 +578,9 @@ async def ingest_events(
         source_id=str(source_id) if source_id else None,
     )
 
-    for event in batch.events:
+    # Process events in chunks to reduce memory spikes (memory audit Feb 2026)
+    for chunk_idx, event_chunk in enumerate(_batched(batch.events, CDP_BATCH_CHUNK_SIZE)):
+        for event in event_chunk:
         try:
             # Check for duplicate (idempotency)
             if event.idempotency_key:
@@ -677,20 +693,25 @@ async def ingest_events(
                 )
             )
 
-        except Exception as e:
-            logger.error(
-                "cdp_event_processing_error",
-                tenant_id=tenant_id,
-                event_name=event.event_name,
-                error=str(e),
-            )
-            rejected += 1
-            results.append(
-                EventIngestResult(
-                    status="rejected",
+            except Exception as e:
+                logger.error(
+                    "cdp_event_processing_error",
+                    tenant_id=tenant_id,
+                    event_name=event.event_name,
                     error=str(e),
                 )
-            )
+                rejected += 1
+                results.append(
+                    EventIngestResult(
+                        status="rejected",
+                        error=str(e),
+                    )
+                )
+
+        # Flush at end of each chunk to reduce memory pressure (memory audit Feb 2026)
+        await db.flush()
+        # Explicit cleanup to help garbage collection
+        del event_chunk
 
     await db.commit()
 

@@ -9,6 +9,8 @@ Service for Trust Layer operations:
 """
 
 import json
+import threading
+import time
 from datetime import UTC, date, datetime
 from typing import Any, Optional
 
@@ -21,6 +23,82 @@ from app.models.trust_layer import (
     FactSignalHealthDaily,
     SignalHealthStatus,
 )
+
+
+# =============================================================================
+# Signal Health Cache (Memory Audit Feb 2026)
+# =============================================================================
+
+
+class SignalHealthCache:
+    """
+    LRU-bounded cache for signal health data with TTL.
+
+    Reduces database load for repeated signal health queries.
+    Cache is bounded to prevent unbounded memory growth (per memory audit Feb 2026).
+    """
+
+    DEFAULT_TTL = 300  # 5 minutes - signal health doesn't change frequently
+    MAX_SIZE = 1024  # Maximum cache entries (matches audit recommendation)
+
+    def __init__(self, ttl_seconds: int = DEFAULT_TTL, max_size: int = MAX_SIZE):
+        self.ttl = ttl_seconds
+        self.max_size = max_size
+        self.cache: dict[str, tuple[float, Any]] = {}  # key -> (expiry_time, value)
+        self._lock = threading.Lock()
+
+    def _make_key(self, tenant_id: int, target_date: date) -> str:
+        """Create cache key from tenant_id and date."""
+        return f"signal_health:{tenant_id}:{target_date.isoformat()}"
+
+    def get(self, tenant_id: int, target_date: date) -> Optional[Any]:
+        """Get cached signal health if not expired."""
+        key = self._make_key(tenant_id, target_date)
+        with self._lock:
+            if key in self.cache:
+                expiry, value = self.cache[key]
+                if time.time() < expiry:
+                    return value
+                # Expired, remove it
+                del self.cache[key]
+        return None
+
+    def set(self, tenant_id: int, target_date: date, value: Any) -> None:
+        """Cache signal health response with LRU eviction."""
+        key = self._make_key(tenant_id, target_date)
+        with self._lock:
+            # Evict oldest entries if at capacity (LRU-style)
+            if len(self.cache) >= self.max_size:
+                self._evict_oldest()
+            self.cache[key] = (time.time() + self.ttl, value)
+
+    def invalidate(self, tenant_id: int, target_date: Optional[date] = None) -> None:
+        """Invalidate cache for a tenant (optionally specific date)."""
+        with self._lock:
+            if target_date:
+                key = self._make_key(tenant_id, target_date)
+                self.cache.pop(key, None)
+            else:
+                # Invalidate all dates for tenant
+                prefix = f"signal_health:{tenant_id}:"
+                keys_to_delete = [k for k in self.cache if k.startswith(prefix)]
+                for k in keys_to_delete:
+                    del self.cache[k]
+
+    def _evict_oldest(self) -> None:
+        """Remove oldest entries when cache is full. Must be called with lock held."""
+        if not self.cache:
+            return
+        # Find entries by expiry time (oldest first)
+        sorted_entries = sorted(self.cache.items(), key=lambda x: x[1][0])
+        # Remove oldest 10%
+        to_remove = max(1, len(sorted_entries) // 10)
+        for key, _ in sorted_entries[:to_remove]:
+            del self.cache[key]
+
+
+# Global cache instance (bounded per memory audit recommendation)
+_signal_health_cache = SignalHealthCache(ttl_seconds=300, max_size=1024)
 
 # =============================================================================
 # Signal Health Service
@@ -50,6 +128,11 @@ class SignalHealthService:
         """
         if target_date is None:
             target_date = datetime.now(UTC).date()
+
+        # Check cache first (memory optimization per audit Feb 2026)
+        cached = _signal_health_cache.get(tenant_id, target_date)
+        if cached is not None:
+            return cached
 
         # Get records for the date
         result = await self.db.execute(
@@ -106,7 +189,7 @@ class SignalHealthService:
         # Generate banners
         banners = self._generate_banners(overall_status, issues_list, actions_list)
 
-        return {
+        result = {
             "date": target_date.isoformat(),
             "status": overall_status.value,
             "automation_blocked": overall_status
@@ -117,6 +200,11 @@ class SignalHealthService:
             "issues": list(set(issues_list)),
             "actions": list(set(actions_list)),
         }
+
+        # Cache result (memory optimization per audit Feb 2026)
+        _signal_health_cache.set(tenant_id, target_date, result)
+
+        return result
 
     def _status_priority(self, status: SignalHealthStatus) -> int:
         """Get priority for status comparison."""
