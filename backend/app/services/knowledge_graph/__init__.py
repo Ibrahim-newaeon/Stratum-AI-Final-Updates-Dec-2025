@@ -36,10 +36,18 @@ from .models import (
 )
 from .queries import CypherQueryBuilder
 from .sync import KnowledgeGraphSyncService
+from .insights import (
+    KnowledgeGraphInsightsEngine,
+    Problem,
+    Solution,
+    ProblemSeverity,
+    ProblemCategory,
+)
 
 __all__ = [
     "KnowledgeGraphService",
     "KnowledgeGraphSyncService",
+    "KnowledgeGraphInsightsEngine",
     "CypherQueryBuilder",
     "GraphNode",
     "GraphEdge",
@@ -53,4 +61,8 @@ __all__ = [
     "SegmentNode",
     "ChannelNode",
     "TouchpointNode",
+    "Problem",
+    "Solution",
+    "ProblemSeverity",
+    "ProblemCategory",
 ]

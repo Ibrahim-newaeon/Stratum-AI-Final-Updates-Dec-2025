@@ -34,6 +34,7 @@ from app.api.v1.endpoints import (
     gdpr,
     insights,
     integrations,
+    knowledge_graph,
     landing_cms,
     meta_capi,
     mfa,
@@ -403,4 +404,11 @@ api_router.include_router(
 api_router.include_router(
     cms.router,
     tags=["CMS"],
+)
+
+# Knowledge Graph (Revenue attribution, Trust explainability, Insights)
+api_router.include_router(
+    knowledge_graph.router,
+    prefix="/knowledge-graph",
+    tags=["Knowledge Graph"],
 )
