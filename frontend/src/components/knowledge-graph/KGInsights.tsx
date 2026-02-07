@@ -24,7 +24,7 @@ import {
   Sparkles,
   RefreshCw,
 } from 'lucide-react';
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 
 // Types
 interface Solution {
