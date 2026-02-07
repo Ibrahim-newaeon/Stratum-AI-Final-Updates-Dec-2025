@@ -21,6 +21,9 @@ from app.workers.tasks.helpers import publish_event
 
 logger = get_task_logger(__name__)
 
+# Chunk size for paginated profile processing to limit memory usage
+CHUNK_SIZE = 500
+
 
 @shared_task(
     bind=True,
@@ -53,26 +56,36 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
             logger.warning(f"Segment {segment_id} not found")
             return {"status": "not_found"}
 
-        # Get all profiles for tenant
-        profiles = (
-            db.execute(
-                select(CDPProfile).where(
-                    CDPProfile.tenant_id == tenant_id,
-                    CDPProfile.is_deleted == False,
-                )
+        # Process profiles in chunks to limit memory usage
+        base_query = (
+            select(CDPProfile)
+            .where(
+                CDPProfile.tenant_id == tenant_id,
+                CDPProfile.is_deleted == False,
             )
-            .scalars()
-            .all()
+            .order_by(CDPProfile.id)
         )
 
-        # Evaluate segment rules against each profile
         matched_profiles = []
-        for profile in profiles:
-            result = _evaluate_segment_rules(profile, segment.rules)
-            if result["matched"]:
-                matched_profiles.append(profile.id)
+        offset = 0
+        while True:
+            chunk = db.execute(
+                base_query.offset(offset).limit(CHUNK_SIZE)
+            ).scalars().all()
+
+            if not chunk:
+                break
+
+            for profile in chunk:
+                result = _evaluate_segment_rules(profile, segment.rules)
+                if result["matched"]:
+                    matched_profiles.append(profile.id)
+
+            offset += CHUNK_SIZE
+            db.expire_all()  # Free ORM objects from identity map
 
         # Update segment membership
+        segment = db.merge(segment)
         segment.profile_ids = matched_profiles
         segment.profile_count = len(matched_profiles)
         segment.last_computed_at = datetime.now(UTC)
@@ -219,46 +232,60 @@ def compute_cdp_rfm(self, tenant_id: int, config: Optional[dict] = None):
     from app.models.cdp import CDPProfile
 
     with SyncSessionLocal() as db:
-        profiles = (
-            db.execute(
-                select(CDPProfile).where(
-                    CDPProfile.tenant_id == tenant_id,
-                    CDPProfile.is_deleted == False,
-                )
+        base_query = (
+            select(CDPProfile)
+            .where(
+                CDPProfile.tenant_id == tenant_id,
+                CDPProfile.is_deleted == False,
             )
-            .scalars()
-            .all()
+            .order_by(CDPProfile.id)
         )
 
-        if not profiles:
-            return {"status": "no_profiles"}
-
         segmenter = RFMSegmenter(tenant_id)
-        results = segmenter.compute_rfm_scores(profiles, config)
+        total_scored = 0
+        all_results: dict[str, Any] = {}
+        offset = 0
 
-        # Update profiles with RFM scores
-        for profile in profiles:
-            rfm = results.get(str(profile.id))
-            if rfm:
-                profile.rfm_recency = rfm["recency"]
-                profile.rfm_frequency = rfm["frequency"]
-                profile.rfm_monetary = rfm["monetary"]
-                profile.rfm_segment = rfm["segment"]
-                profile.rfm_score = rfm["score"]
+        while True:
+            chunk = db.execute(
+                base_query.offset(offset).limit(CHUNK_SIZE)
+            ).scalars().all()
 
-        db.commit()
+            if not chunk:
+                break
+
+            results = segmenter.compute_rfm_scores(chunk, config)
+
+            # Update profiles with RFM scores
+            for profile in chunk:
+                rfm = results.get(str(profile.id))
+                if rfm:
+                    profile.rfm_recency = rfm["recency"]
+                    profile.rfm_frequency = rfm["frequency"]
+                    profile.rfm_monetary = rfm["monetary"]
+                    profile.rfm_segment = rfm["segment"]
+                    profile.rfm_score = rfm["score"]
+                    total_scored += 1
+
+            all_results.update(results)
+            offset += CHUNK_SIZE
+            db.commit()
+            db.expire_all()  # Free ORM objects from identity map
+
+        if total_scored == 0:
+            return {"status": "no_profiles"}
 
         publish_event(
             tenant_id,
             "rfm_computed",
             {
-                "profiles_scored": len(results),
-                "segment_distribution": results.get("distribution", {}),
+                "profiles_scored": total_scored,
+                "segment_distribution": all_results.get("distribution", {}),
             },
         )
 
-    logger.info(f"Computed RFM for {len(results)} profiles")
-    return {"profiles_scored": len(results)}
+    logger.info(f"Computed RFM for {total_scored} profiles")
+    return {"profiles_scored": total_scored}
 
 
 @shared_task(
@@ -293,29 +320,38 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
         if not traits:
             return {"status": "no_traits"}
 
-        profiles = (
-            db.execute(
-                select(CDPProfile).where(
-                    CDPProfile.tenant_id == tenant_id,
-                    CDPProfile.is_deleted == False,
-                )
+        base_query = (
+            select(CDPProfile)
+            .where(
+                CDPProfile.tenant_id == tenant_id,
+                CDPProfile.is_deleted == False,
             )
-            .scalars()
-            .all()
+            .order_by(CDPProfile.id)
         )
 
         computed_count = 0
-        for profile in profiles:
-            for trait in traits:
-                try:
-                    value = _compute_trait_value(db, profile, trait)
-                    profile.computed_traits = profile.computed_traits or {}
-                    profile.computed_traits[trait.name] = value
-                    computed_count += 1
-                except Exception as e:
-                    logger.error(f"Trait {trait.name} failed for profile {profile.id}: {e}")
+        offset = 0
+        while True:
+            chunk = db.execute(
+                base_query.offset(offset).limit(CHUNK_SIZE)
+            ).scalars().all()
 
-        db.commit()
+            if not chunk:
+                break
+
+            for profile in chunk:
+                for trait in traits:
+                    try:
+                        value = _compute_trait_value(db, profile, trait)
+                        profile.computed_traits = profile.computed_traits or {}
+                        profile.computed_traits[trait.name] = value
+                        computed_count += 1
+                    except Exception as e:
+                        logger.error(f"Trait {trait.name} failed for profile {profile.id}: {e}")
+
+            offset += CHUNK_SIZE
+            db.commit()
+            db.expire_all()  # Free ORM objects from identity map
 
     logger.info(f"Computed {computed_count} trait values")
     return {"computed": computed_count}

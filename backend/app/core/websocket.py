@@ -213,6 +213,8 @@ class WebSocketManager:
         for channel in client.subscribed_channels:
             if channel in self._channel_subscriptions:
                 self._channel_subscriptions[channel].discard(client_id)
+                if not self._channel_subscriptions[channel]:
+                    del self._channel_subscriptions[channel]
 
         # Close the connection
         try:
@@ -255,6 +257,8 @@ class WebSocketManager:
 
         if channel in self._channel_subscriptions:
             self._channel_subscriptions[channel].discard(client_id)
+            if not self._channel_subscriptions[channel]:
+                del self._channel_subscriptions[channel]
 
     async def send_to_client(self, client_id: str, message: WebSocketMessage):
         """Send a message to a specific client."""

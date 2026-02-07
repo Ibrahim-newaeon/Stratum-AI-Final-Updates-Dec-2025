@@ -22,7 +22,7 @@ import itertools
 import secrets
 import threading
 import time
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from datetime import UTC, datetime, timedelta
 from typing import Any, Iterator, Optional
 from uuid import UUID
@@ -130,10 +130,13 @@ router = APIRouter(prefix="/cdp", tags=["CDP"])
 class RateLimiter:
     """Simple in-memory rate limiter for API protection."""
 
+    MAX_KEYS = 10_000  # Hard cap on tracked keys to prevent unbounded growth
+
     def __init__(self, requests_per_minute: int = 60):
         self.requests_per_minute = requests_per_minute
         self.requests: dict[str, list[float]] = defaultdict(list)
         self._lock = threading.Lock()
+        self._last_sweep: float = time.time()
 
     def is_allowed(self, key: str) -> bool:
         """Check if request is allowed under rate limit."""
@@ -141,14 +144,38 @@ class RateLimiter:
         window_start = now - 60  # 1 minute window
 
         with self._lock:
-            # Clean old entries
+            # Periodic full sweep every 5 minutes
+            if now - self._last_sweep > 300:
+                self._sweep(window_start)
+
+            # Clean old entries for this key
             self.requests[key] = [t for t in self.requests[key] if t > window_start]
+
+            # Delete empty key to prevent unbounded growth
+            if not self.requests[key]:
+                del self.requests[key]
+                # Key was empty, so definitely under limit — record and allow
+                self.requests[key].append(now)
+                return True
 
             if len(self.requests[key]) >= self.requests_per_minute:
                 return False
 
             self.requests[key].append(now)
+
+            # Hard cap safety valve
+            if len(self.requests) > self.MAX_KEYS:
+                self._sweep(window_start)
+
             return True
+
+    def _sweep(self, window_start: float) -> None:
+        """Remove all keys with no recent requests. Must hold lock."""
+        stale = [k for k, v in self.requests.items()
+                 if not v or all(t <= window_start for t in v)]
+        for k in stale:
+            del self.requests[k]
+        self._last_sweep = time.time()
 
 
 # Rate limiters for different operation types
@@ -165,19 +192,22 @@ _webhook_limiter = RateLimiter(requests_per_minute=30)  # Webhook ops: 30/min
 
 class ProfileCache:
     """
-    Simple in-memory cache for CDP profiles with TTL.
+    LRU cache for CDP profiles with TTL.
 
     Caches profile responses to reduce database load for repeated lookups.
     Cache is automatically cleared when profiles are updated through events.
+    Uses OrderedDict for O(1) LRU eviction when capacity is reached.
     """
 
     DEFAULT_TTL = 60  # 60 seconds
-    MAX_SIZE = 10000  # Maximum cache entries per tenant
+    MAX_SIZE = 2000  # Reduced from 10,000 to limit memory (~30 MB cap)
 
     def __init__(self, ttl_seconds: int = DEFAULT_TTL):
         self.ttl = ttl_seconds
-        self.cache: dict[str, tuple[float, Any]] = {}  # key -> (expiry_time, value)
+        self.cache: OrderedDict[str, tuple[float, Any]] = OrderedDict()
         self._lock = threading.Lock()
+        self._hits: int = 0
+        self._misses: int = 0
 
     def _make_key(self, tenant_id: int, profile_id: str) -> str:
         """Create cache key from tenant_id and profile_id."""
@@ -194,9 +224,12 @@ class ProfileCache:
             if key in self.cache:
                 expiry, value = self.cache[key]
                 if time.time() < expiry:
+                    self.cache.move_to_end(key)  # LRU touch
+                    self._hits += 1
                     return value
                 # Expired, remove it
                 del self.cache[key]
+            self._misses += 1
         return None
 
     def get_by_lookup(self, tenant_id: int, ident_type: str, ident_hash: str) -> Optional[Any]:
@@ -206,25 +239,31 @@ class ProfileCache:
             if key in self.cache:
                 expiry, value = self.cache[key]
                 if time.time() < expiry:
+                    self.cache.move_to_end(key)  # LRU touch
+                    self._hits += 1
                     return value
                 del self.cache[key]
+            self._misses += 1
         return None
 
     def set(self, tenant_id: int, profile_id: str, value: Any) -> None:
         """Cache a profile response."""
         key = self._make_key(tenant_id, profile_id)
         with self._lock:
-            # Clean expired entries if cache is getting large
-            if len(self.cache) > self.MAX_SIZE:
-                self._cleanup_expired()
+            if key in self.cache:
+                del self.cache[key]
+            elif len(self.cache) >= self.MAX_SIZE:
+                self._evict()
             self.cache[key] = (time.time() + self.ttl, value)
 
     def set_by_lookup(self, tenant_id: int, ident_type: str, ident_hash: str, value: Any) -> None:
         """Cache a profile for identifier lookup."""
         key = self._make_lookup_key(tenant_id, ident_type, ident_hash)
         with self._lock:
-            if len(self.cache) > self.MAX_SIZE:
-                self._cleanup_expired()
+            if key in self.cache:
+                del self.cache[key]
+            elif len(self.cache) >= self.MAX_SIZE:
+                self._evict()
             self.cache[key] = (time.time() + self.ttl, value)
 
     def invalidate(self, tenant_id: int, profile_id: str) -> None:
@@ -247,12 +286,31 @@ class ProfileCache:
             for k in keys_to_delete:
                 del self.cache[k]
 
+    def _evict(self) -> None:
+        """Remove expired first, then oldest 20% if still over capacity. Must hold lock."""
+        self._cleanup_expired()
+        if len(self.cache) >= self.MAX_SIZE:
+            to_remove = max(1, len(self.cache) // 5)
+            for _ in range(to_remove):
+                self.cache.popitem(last=False)  # Remove oldest
+
     def _cleanup_expired(self) -> None:
         """Remove expired entries. Must be called with lock held."""
         now = time.time()
         expired = [k for k, (exp, _) in self.cache.items() if now >= exp]
         for k in expired:
             del self.cache[k]
+
+    def stats(self) -> dict[str, Any]:
+        """Return cache statistics for observability."""
+        with self._lock:
+            return {
+                "size": len(self.cache),
+                "max_size": self.MAX_SIZE,
+                "hits": self._hits,
+                "misses": self._misses,
+                "hit_rate": self._hits / max(1, self._hits + self._misses),
+            }
 
 
 # Global profile cache instance

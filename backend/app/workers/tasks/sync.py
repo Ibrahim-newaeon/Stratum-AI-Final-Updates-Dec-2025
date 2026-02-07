@@ -134,27 +134,25 @@ def sync_all_campaigns():
     logger.info("Starting sync for all campaigns")
 
     with SyncSessionLocal() as db:
-        # Get all active tenants
-        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        # Select only IDs to avoid loading full ORM objects into memory
+        tenant_ids = db.execute(
+            select(Tenant.id).where(Tenant.is_deleted == False)
+        ).scalars().all()
 
         task_count = 0
-        for tenant in tenants:
-            # Get active campaigns for tenant
-            campaigns = (
-                db.execute(
-                    select(Campaign).where(
-                        Campaign.tenant_id == tenant.id,
-                        Campaign.is_deleted == False,
-                    )
+        for tid in tenant_ids:
+            campaign_ids = db.execute(
+                select(Campaign.id).where(
+                    Campaign.tenant_id == tid,
+                    Campaign.is_deleted == False,
                 )
-                .scalars()
-                .all()
-            )
+            ).scalars().all()
 
-            for campaign in campaigns:
-                # Queue individual sync task
-                sync_campaign_data.delay(tenant.id, campaign.id)
+            for cid in campaign_ids:
+                sync_campaign_data.delay(tid, cid)
                 task_count += 1
+
+            db.expire_all()
 
     logger.info(f"Queued {task_count} campaign sync tasks")
     return {"tasks_queued": task_count}
