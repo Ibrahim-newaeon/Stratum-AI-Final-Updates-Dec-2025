@@ -64,6 +64,9 @@ const CDPComputedTraits = lazy(() => import('./views/cdp/CDPComputedTraits'));
 const CDPConsent = lazy(() => import('./views/cdp/CDPConsent'));
 const CDPPredictiveChurn = lazy(() => import('./views/cdp/CDPPredictiveChurn'));
 
+// Knowledge Graph views
+const KnowledgeGraphInsights = lazy(() => import('./views/KnowledgeGraphInsights'));
+
 // Super Admin views
 const ControlTower = lazy(() => import('./views/superadmin/ControlTower'));
 const SuperAdminTenantsList = lazy(() => import('./views/superadmin/TenantsList'));
@@ -838,6 +841,24 @@ function App() {
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <CDPPredictiveChurn />
+                          </Suspense>
+                        }
+                      />
+
+                      {/* Knowledge Graph routes */}
+                      <Route
+                        path="knowledge-graph"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <KnowledgeGraphInsights />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="knowledge-graph/insights"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <KnowledgeGraphInsights />
                           </Suspense>
                         }
                       />
