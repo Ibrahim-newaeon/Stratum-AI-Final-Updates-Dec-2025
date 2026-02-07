@@ -639,117 +639,117 @@ async def ingest_events(
     # Process events in chunks to reduce memory spikes (memory audit Feb 2026)
     for chunk_idx, event_chunk in enumerate(_batched(batch.events, CDP_BATCH_CHUNK_SIZE)):
         for event in event_chunk:
-        try:
-            # Check for duplicate (idempotency)
-            if event.idempotency_key:
-                cutoff = datetime.now(UTC) - timedelta(hours=24)
-                result = await db.execute(
-                    select(CDPEvent.id).where(
-                        CDPEvent.tenant_id == tenant_id,
-                        CDPEvent.idempotency_key == event.idempotency_key,
-                        CDPEvent.received_at >= cutoff,
+            try:
+                # Check for duplicate (idempotency)
+                if event.idempotency_key:
+                    cutoff = datetime.now(UTC) - timedelta(hours=24)
+                    result = await db.execute(
+                        select(CDPEvent.id).where(
+                            CDPEvent.tenant_id == tenant_id,
+                            CDPEvent.idempotency_key == event.idempotency_key,
+                            CDPEvent.received_at >= cutoff,
+                        )
                     )
+                    if result.scalar_one_or_none():
+                        duplicates += 1
+                        results.append(
+                            EventIngestResult(
+                                status="duplicate",
+                                error="Event with same idempotency_key already exists",
+                            )
+                        )
+                        continue
+
+                # Find or create profile
+                profile, is_new = await find_or_create_profile(db, tenant_id, event.identifiers)
+
+                # Link identifiers to profile
+                await link_identifiers_to_profile(db, tenant_id, profile, event.identifiers)
+
+                # Calculate EMQ score
+                received_at = datetime.now(UTC)
+                latency = (received_at - event.event_time).total_seconds()
+                has_pii = any(i.type in ["email", "phone"] for i in event.identifiers)
+                emq_score = calculate_emq_score(
+                    {
+                        "identifiers": event.identifiers,
+                        "properties": event.properties,
+                        "context": event.context,
+                    },
+                    has_pii,
+                    latency,
                 )
-                if result.scalar_one_or_none():
-                    duplicates += 1
-                    results.append(
-                        EventIngestResult(
-                            status="duplicate",
-                            error="Event with same idempotency_key already exists",
-                        )
-                    )
-                    continue
 
-            # Find or create profile
-            profile, is_new = await find_or_create_profile(db, tenant_id, event.identifiers)
-
-            # Link identifiers to profile
-            await link_identifiers_to_profile(db, tenant_id, profile, event.identifiers)
-
-            # Calculate EMQ score
-            received_at = datetime.now(UTC)
-            latency = (received_at - event.event_time).total_seconds()
-            has_pii = any(i.type in ["email", "phone"] for i in event.identifiers)
-            emq_score = calculate_emq_score(
-                {
-                    "identifiers": event.identifiers,
-                    "properties": event.properties,
-                    "context": event.context,
-                },
-                has_pii,
-                latency,
-            )
-
-            # Create event
-            db_event = CDPEvent(
-                tenant_id=tenant_id,
-                profile_id=profile.id,
-                source_id=source_id,
-                event_name=event.event_name,
-                event_time=event.event_time,
-                received_at=received_at,
-                idempotency_key=event.idempotency_key,
-                properties=event.properties or {},
-                context=event.context.model_dump() if event.context else {},
-                identifiers=[i.model_dump() for i in event.identifiers],
-                emq_score=emq_score,
-            )
-            db.add(db_event)
-
-            # Update source metrics if source is provided
-            if source:
-                source.event_count += 1
-                source.last_event_at = received_at
-
-            # Update profile counters
-            profile.total_events += 1
-            profile.last_seen_at = received_at
-
-            # Invalidate cache for this profile
-            _profile_cache.invalidate(tenant_id, str(profile.id))
-
-            # Handle consent if provided
-            if event.consent:
-                for consent_type, granted in event.consent.model_dump(exclude_none=True).items():
-                    if granted is not None:
-                        # Upsert consent
-                        result = await db.execute(
-                            select(CDPConsent).where(
-                                CDPConsent.tenant_id == tenant_id,
-                                CDPConsent.profile_id == profile.id,
-                                CDPConsent.consent_type == consent_type,
-                            )
-                        )
-                        existing_consent = result.scalar_one_or_none()
-
-                        if existing_consent:
-                            existing_consent.granted = granted
-                            if granted:
-                                existing_consent.granted_at = received_at
-                                existing_consent.revoked_at = None
-                            else:
-                                existing_consent.revoked_at = received_at
-                        else:
-                            new_consent = CDPConsent(
-                                tenant_id=tenant_id,
-                                profile_id=profile.id,
-                                consent_type=consent_type,
-                                granted=granted,
-                                granted_at=received_at if granted else None,
-                                source="event_ingestion",
-                            )
-                            db.add(new_consent)
-
-            await db.flush()
-
-            accepted += 1
-            results.append(
-                EventIngestResult(
-                    event_id=db_event.id,
-                    status="accepted",
+                # Create event
+                db_event = CDPEvent(
+                    tenant_id=tenant_id,
                     profile_id=profile.id,
+                    source_id=source_id,
+                    event_name=event.event_name,
+                    event_time=event.event_time,
+                    received_at=received_at,
+                    idempotency_key=event.idempotency_key,
+                    properties=event.properties or {},
+                    context=event.context.model_dump() if event.context else {},
+                    identifiers=[i.model_dump() for i in event.identifiers],
+                    emq_score=emq_score,
                 )
-            )
+                db.add(db_event)
+
+                # Update source metrics if source is provided
+                if source:
+                    source.event_count += 1
+                    source.last_event_at = received_at
+
+                # Update profile counters
+                profile.total_events += 1
+                profile.last_seen_at = received_at
+
+                # Invalidate cache for this profile
+                _profile_cache.invalidate(tenant_id, str(profile.id))
+
+                # Handle consent if provided
+                if event.consent:
+                    for consent_type, granted in event.consent.model_dump(exclude_none=True).items():
+                        if granted is not None:
+                            # Upsert consent
+                            result = await db.execute(
+                                select(CDPConsent).where(
+                                    CDPConsent.tenant_id == tenant_id,
+                                    CDPConsent.profile_id == profile.id,
+                                    CDPConsent.consent_type == consent_type,
+                                )
+                            )
+                            existing_consent = result.scalar_one_or_none()
+
+                            if existing_consent:
+                                existing_consent.granted = granted
+                                if granted:
+                                    existing_consent.granted_at = received_at
+                                    existing_consent.revoked_at = None
+                                else:
+                                    existing_consent.revoked_at = received_at
+                            else:
+                                new_consent = CDPConsent(
+                                    tenant_id=tenant_id,
+                                    profile_id=profile.id,
+                                    consent_type=consent_type,
+                                    granted=granted,
+                                    granted_at=received_at if granted else None,
+                                    source="event_ingestion",
+                                )
+                                db.add(new_consent)
+
+                await db.flush()
+
+                accepted += 1
+                results.append(
+                    EventIngestResult(
+                        event_id=db_event.id,
+                        status="accepted",
+                        profile_id=profile.id,
+                    )
+                )
 
             except Exception as e:
                 logger.error(
