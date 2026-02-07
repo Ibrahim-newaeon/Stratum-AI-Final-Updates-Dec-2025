@@ -20,6 +20,8 @@ from fastapi.responses import JSONResponse, ORJSONResponse
 from sse_starlette.sse import EventSourceResponse
 
 from app.api.v1 import api_router
+from app.api.v1.endpoints.memory_debug import init_debug_endpoints
+from app.api.v1.endpoints.memory_debug import router as memory_debug_router
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 from app.core.metrics import setup_metrics
@@ -29,6 +31,8 @@ from app.middleware.audit import AuditMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
+from app.monitoring.memory_audit import MemoryAuditor
+from app.monitoring.middleware import MemoryProfilingMiddleware
 
 # Setup logging
 setup_logging()
@@ -87,10 +91,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     # Note: Prometheus metrics are initialized in create_application()
     logger.info("prometheus_metrics_ready", endpoint="/metrics")
 
+    # Start Memory Auditor (non-production or when explicitly enabled)
+    if not settings.is_production or settings.debug:
+        memory_auditor = app.state.memory_auditor
+        memory_auditor.start_tracking()
+        memory_auditor.take_snapshot(label="app_startup")
+        logger.info("memory_auditor_started", pid=memory_auditor.get_process_info().pid)
+
     yield
 
     # Shutdown
     logger.info("application_shutting_down")
+
+    # Stop memory tracking
+    if hasattr(app.state, "memory_auditor") and app.state.memory_auditor.is_tracking:
+        app.state.memory_auditor.take_snapshot(label="app_shutdown")
+        app.state.memory_auditor.stop_tracking()
+        logger.info("memory_auditor_stopped")
 
     # Stop WebSocket manager
     await ws_manager.stop()
@@ -244,6 +261,31 @@ def create_application() -> FastAPI:
                 "message": "Please contact support if this persists",
             },
         )
+
+    # -------------------------------------------------------------------------
+    # Memory Profiling (non-production or debug mode)
+    # -------------------------------------------------------------------------
+    if not settings.is_production or settings.debug:
+        auditor = MemoryAuditor()
+        app.state.memory_auditor = auditor
+
+        # Add memory profiling middleware (tracks per-endpoint RSS delta)
+        app.add_middleware(MemoryProfilingMiddleware, enabled=True)
+
+        # The middleware instance is accessible after add_middleware wraps the app.
+        # We create a standalone tracker to share with debug endpoints.
+        memory_profiling_tracker = MemoryProfilingMiddleware(app, enabled=True)
+        app.state.memory_profiling_tracker = memory_profiling_tracker
+
+        # Initialize debug endpoints with auditor + middleware references
+        init_debug_endpoints(
+            auditor=auditor,
+            middleware=memory_profiling_tracker,
+        )
+
+        # Mount debug routes (outside /api/v1 prefix for easy access)
+        app.include_router(memory_debug_router)
+        logger.info("memory_profiling_enabled", endpoints="/debug/memory/*")
 
     # -------------------------------------------------------------------------
     # Include Routers

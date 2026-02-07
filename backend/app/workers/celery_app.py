@@ -318,3 +318,13 @@ def idempotent_task(**kwargs):
     kwargs.setdefault("acks_late", True)
     kwargs.setdefault("reject_on_worker_lost", True)
     return celery_app.task(**kwargs)
+
+
+# =============================================================================
+# Memory Profiling Hooks (connects to task signals for per-task tracking)
+# =============================================================================
+
+from app.monitoring.celery_hooks import CeleryMemoryHooks
+
+celery_memory_hooks = CeleryMemoryHooks()
+celery_memory_hooks.connect(celery_app)
