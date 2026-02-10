@@ -36,8 +36,6 @@ class ClientCreate(BaseModel):
     notes: Optional[str] = None
     settings: Optional[dict] = Field(default_factory=dict)
 
-    model_config = ConfigDict(from_attributes=True)
-
     @field_validator("slug")
     @classmethod
     def validate_slug(cls, v: str) -> str:
@@ -67,8 +65,6 @@ class ClientUpdate(BaseModel):
     notes: Optional[str] = None
     settings: Optional[dict] = None
     is_active: Optional[bool] = None
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class ClientResponse(BaseModel):
@@ -157,8 +153,6 @@ class ClientAssignmentCreate(BaseModel):
     user_id: int
     is_primary: bool = False
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class ClientAssignmentResponse(BaseModel):
     """Schema for client assignment detail."""
@@ -187,5 +181,3 @@ class ClientPortalInvite(BaseModel):
     email: EmailStr
     full_name: str = Field(..., min_length=2, max_length=255)
     client_id: int
-
-    model_config = ConfigDict(from_attributes=True)

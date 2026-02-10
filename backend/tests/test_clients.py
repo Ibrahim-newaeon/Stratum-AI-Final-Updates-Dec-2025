@@ -10,7 +10,7 @@ Integration tests requiring DB fixtures belong in tests/integration/.
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from app.auth.permissions import (
     RBAC_MATRIX,
@@ -513,3 +513,175 @@ def test_permission_check_all_roles(role, resource, expected_min):
     assert level >= expected_min, (
         f"{role.value} should have at least {expected_min.name} on {resource}, got {level.name}"
     )
+
+
+# =============================================================================
+# Async Scope Enforcement Tests
+# =============================================================================
+
+
+class TestGetAccessibleClientIds:
+    """Test get_accessible_client_ids with mocked DB sessions."""
+
+    @pytest.mark.asyncio
+    async def test_superadmin_returns_none(self):
+        """SUPERADMIN should get None (unrestricted access)."""
+        db = AsyncMock()
+        result = await get_accessible_client_ids(
+            user_id=1, user_role=UserRole.SUPERADMIN, tenant_id=1, db=db
+        )
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_admin_returns_none(self):
+        """ADMIN should get None (unrestricted within tenant)."""
+        db = AsyncMock()
+        result = await get_accessible_client_ids(
+            user_id=1, user_role=UserRole.ADMIN, tenant_id=1, db=db
+        )
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_viewer_with_client_id_returns_list(self):
+        """VIEWER with explicit client_id should get [client_id]."""
+        db = AsyncMock()
+        result = await get_accessible_client_ids(
+            user_id=1, user_role=UserRole.VIEWER, tenant_id=1, db=db, client_id=42
+        )
+        assert result == [42]
+
+    @pytest.mark.asyncio
+    async def test_viewer_without_client_id_queries_db(self):
+        """VIEWER without client_id should query User.client_id from DB."""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = 99
+        db = AsyncMock()
+        db.execute.return_value = mock_result
+
+        result = await get_accessible_client_ids(
+            user_id=1, user_role=UserRole.VIEWER, tenant_id=1, db=db
+        )
+        assert result == [99]
+        db.execute.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_viewer_no_client_returns_empty(self):
+        """VIEWER with no client_id in DB should get empty list."""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        db = AsyncMock()
+        db.execute.return_value = mock_result
+
+        result = await get_accessible_client_ids(
+            user_id=1, user_role=UserRole.VIEWER, tenant_id=1, db=db
+        )
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_manager_queries_assignments(self):
+        """MANAGER should query client_assignments table."""
+        mock_scalars = MagicMock()
+        mock_scalars.all.return_value = [10, 20, 30]
+        mock_result = MagicMock()
+        mock_result.scalars.return_value = mock_scalars
+        db = AsyncMock()
+        db.execute.return_value = mock_result
+
+        result = await get_accessible_client_ids(
+            user_id=5, user_role=UserRole.MANAGER, tenant_id=1, db=db
+        )
+        assert result == [10, 20, 30]
+        db.execute.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_analyst_queries_assignments(self):
+        """ANALYST should also query client_assignments table."""
+        mock_scalars = MagicMock()
+        mock_scalars.all.return_value = [7]
+        mock_result = MagicMock()
+        mock_result.scalars.return_value = mock_scalars
+        db = AsyncMock()
+        db.execute.return_value = mock_result
+
+        result = await get_accessible_client_ids(
+            user_id=5, user_role=UserRole.ANALYST, tenant_id=1, db=db
+        )
+        assert result == [7]
+
+
+class TestEnforceClientAccess:
+    """Test enforce_client_access raises 403 when unauthorized."""
+
+    @pytest.mark.asyncio
+    async def test_admin_passes_without_check(self):
+        """ADMIN should pass — get_accessible_client_ids returns None."""
+        from app.auth.permissions import enforce_client_access
+
+        db = AsyncMock()
+        # Should not raise
+        await enforce_client_access(
+            user_id=1, user_role=UserRole.ADMIN, client_id=999,
+            tenant_id=1, db=db
+        )
+
+    @pytest.mark.asyncio
+    async def test_viewer_allowed_own_client(self):
+        """VIEWER accessing their own client should pass."""
+        from app.auth.permissions import enforce_client_access
+
+        db = AsyncMock()
+        await enforce_client_access(
+            user_id=1, user_role=UserRole.VIEWER, client_id=42,
+            tenant_id=1, db=db, user_client_id=42
+        )
+
+    @pytest.mark.asyncio
+    async def test_viewer_blocked_other_client(self):
+        """VIEWER accessing another client should get 403."""
+        from app.auth.permissions import enforce_client_access
+        from fastapi import HTTPException
+
+        db = AsyncMock()
+        with pytest.raises(HTTPException) as exc_info:
+            await enforce_client_access(
+                user_id=1, user_role=UserRole.VIEWER, client_id=999,
+                tenant_id=1, db=db, user_client_id=42
+            )
+        assert exc_info.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_manager_allowed_assigned_client(self):
+        """MANAGER accessing an assigned client should pass."""
+        from app.auth.permissions import enforce_client_access
+
+        mock_scalars = MagicMock()
+        mock_scalars.all.return_value = [10, 20]
+        mock_result = MagicMock()
+        mock_result.scalars.return_value = mock_scalars
+        db = AsyncMock()
+        db.execute.return_value = mock_result
+
+        await enforce_client_access(
+            user_id=5, user_role=UserRole.MANAGER, client_id=10,
+            tenant_id=1, db=db
+        )
+
+    @pytest.mark.asyncio
+    async def test_manager_blocked_unassigned_client(self):
+        """MANAGER accessing an unassigned client should get 403."""
+        from app.auth.permissions import enforce_client_access
+        from fastapi import HTTPException
+
+        mock_scalars = MagicMock()
+        mock_scalars.all.return_value = [10, 20]
+        mock_result = MagicMock()
+        mock_result.scalars.return_value = mock_scalars
+        db = AsyncMock()
+        db.execute.return_value = mock_result
+
+        with pytest.raises(HTTPException) as exc_info:
+            await enforce_client_access(
+                user_id=5, user_role=UserRole.MANAGER, client_id=999,
+                tenant_id=1, db=db
+            )
+        assert exc_info.value.status_code == 403

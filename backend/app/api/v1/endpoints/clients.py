@@ -10,15 +10,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.deps import (
-    VerifiedUserDep,
-    get_accessible_client_ids,
-)
+from app.auth.deps import VerifiedUserDep
 from app.auth.permissions import (
     PermLevel,
-    can_manage_role,
     enforce_client_access,
     get_accessible_client_ids as perm_get_accessible,
     require_permission,
@@ -81,7 +78,8 @@ async def list_clients(
             query = query.where(Client.id.in_(accessible_ids))
 
         if search:
-            query = query.where(Client.name.ilike(f"%{search}%"))
+            escaped = search.replace("%", "\\%").replace("_", "\\_")
+            query = query.where(Client.name.ilike(f"%{escaped}%"))
         if is_active is not None:
             query = query.where(Client.is_active == is_active)
         if industry:
@@ -98,26 +96,32 @@ async def list_clients(
         result = await db.execute(query)
         clients = result.scalars().all()
 
-        # Enrich with campaign counts
-        items = []
-        for c in clients:
-            camp_count = await db.execute(
-                select(func.count()).select_from(
-                    select(Campaign.id).where(
-                        Campaign.client_id == c.id,
-                        Campaign.is_deleted == False,
-                    ).subquery()
+        # Batch-fetch campaign stats for all clients in one query
+        client_ids = [c.id for c in clients]
+        stats_map: dict[int, tuple[int, int]] = {}
+        if client_ids:
+            stats_query = (
+                select(
+                    Campaign.client_id,
+                    func.count(Campaign.id),
+                    func.coalesce(func.sum(Campaign.total_spend_cents), 0),
                 )
-            )
-            spend_result = await db.execute(
-                select(func.coalesce(func.sum(Campaign.total_spend_cents), 0)).where(
-                    Campaign.client_id == c.id,
+                .where(
+                    Campaign.client_id.in_(client_ids),
                     Campaign.is_deleted == False,
                 )
+                .group_by(Campaign.client_id)
             )
+            stats_result = await db.execute(stats_query)
+            for row in stats_result.all():
+                stats_map[row[0]] = (row[1], row[2])
+
+        items = []
+        for c in clients:
             item = ClientListResponse.model_validate(c)
-            item.total_campaigns = camp_count.scalar() or 0
-            item.total_spend_cents = spend_result.scalar() or 0
+            camp_count, spend = stats_map.get(c.id, (0, 0))
+            item.total_campaigns = camp_count
+            item.total_spend_cents = spend
             items.append(item)
 
         total_pages = (total + page_size - 1) // page_size if total > 0 else 0
@@ -177,10 +181,17 @@ async def create_client(
 
         client = Client(
             tenant_id=tenant_id,
-            **payload.model_dump(exclude_unset=False),
+            **payload.model_dump(),
         )
         db.add(client)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Client with slug '{payload.slug}' already exists",
+            )
         await db.refresh(client)
 
         logger.info(f"Client created: {client.id} by user {current_user.id}")
@@ -334,7 +345,14 @@ async def update_client(
         for field, value in update_data.items():
             setattr(client, field, value)
 
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Client with slug '{update_data.get('slug', '')}' already exists",
+            )
         await db.refresh(client)
 
         logger.info(f"Client updated: {client_id} by user {current_user.id}")
@@ -554,6 +572,18 @@ async def list_assignments(
         )
         assignments = result.scalars().all()
 
+        # Batch-fetch all assigned users in one query
+        assigned_user_ids = [a.user_id for a in assignments]
+        user_map: dict[int, User] = {}
+        if assigned_user_ids:
+            users_result = await db.execute(
+                select(User).where(User.id.in_(assigned_user_ids))
+            )
+            for u in users_result.scalars().all():
+                user_map[u.id] = u
+
+        from app.core.security import decrypt_pii
+
         items = []
         for a in assignments:
             item = ClientAssignmentResponse(
@@ -564,15 +594,8 @@ async def list_assignments(
                 is_primary=a.is_primary,
                 created_at=a.created_at,
             )
-
-            # Enrich with user info
-            user_result = await db.execute(
-                select(User).where(User.id == a.user_id)
-            )
-            assigned_user = user_result.scalar_one_or_none()
+            assigned_user = user_map.get(a.user_id)
             if assigned_user:
-                from app.core.security import decrypt_pii
-
                 item.user_email = decrypt_pii(assigned_user.email)
                 item.user_name = decrypt_pii(assigned_user.full_name) if assigned_user.full_name else None
                 item.user_role = assigned_user.role.value
@@ -833,7 +856,7 @@ async def invite_portal_user(
             f"Portal user created: {portal_user.id} for client {client_id} by {current_user.id}"
         )
         return APIResponse(
-            message="Portal user invited successfully. They will receive an email to set their password.",
+            message="Portal user created successfully. Send them a password reset link to complete setup.",
         )
     except HTTPException:
         raise
