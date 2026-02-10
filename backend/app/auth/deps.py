@@ -11,7 +11,7 @@ from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -224,6 +224,112 @@ def generate_password_reset_token() -> str:
 
 
 # =============================================================================
+# Client Scope Dependencies
+# =============================================================================
+
+
+async def get_accessible_client_ids(
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    db: AsyncSession = Depends(get_async_session),
+) -> Optional[list[int]]:
+    """
+    Inject accessible client IDs based on user role.
+
+    Returns:
+        None  — user can see ALL clients (SUPERADMIN, ADMIN)
+        list  — filtered client IDs (MANAGER/ANALYST via assignments, VIEWER via user.client_id)
+    """
+    from app.auth.permissions import get_accessible_client_ids as _get_ids
+
+    user = current_user.user
+    return await _get_ids(
+        user_id=user.id,
+        user_role=user.role,
+        tenant_id=user.tenant_id,
+        db=db,
+        client_id=getattr(user, "client_id", None),
+    )
+
+
+async def check_tier_limit(
+    resource: str,
+    tenant_id: int,
+    db: AsyncSession,
+) -> None:
+    """
+    Raise 403 if tenant has exceeded tier limit for this resource.
+
+    Args:
+        resource: One of "users", "clients", "campaigns"
+        tenant_id: The tenant to check
+        db: Database session
+    """
+    from app.models import Campaign, Tenant, User
+
+    result = await db.execute(
+        select(Tenant).where(Tenant.id == tenant_id)
+    )
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tenant not found",
+        )
+
+    if resource == "users":
+        count_result = await db.execute(
+            select(func.count()).select_from(
+                select(User.id).where(
+                    User.tenant_id == tenant_id,
+                    User.is_deleted == False,
+                ).subquery()
+            )
+        )
+        current_count = count_result.scalar() or 0
+        if current_count >= tenant.max_users:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Tier limit reached: max {tenant.max_users} users",
+            )
+
+    elif resource == "campaigns":
+        count_result = await db.execute(
+            select(func.count()).select_from(
+                select(Campaign.id).where(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                ).subquery()
+            )
+        )
+        current_count = count_result.scalar() or 0
+        if current_count >= tenant.max_campaigns:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Tier limit reached: max {tenant.max_campaigns} campaigns",
+            )
+
+    elif resource == "clients":
+        # Client limit from tenant settings (default 50)
+        from app.models.client import Client
+
+        max_clients = tenant.settings.get("max_clients", 50) if tenant.settings else 50
+        count_result = await db.execute(
+            select(func.count()).select_from(
+                select(Client.id).where(
+                    Client.tenant_id == tenant_id,
+                    Client.is_deleted == False,
+                ).subquery()
+            )
+        )
+        current_count = count_result.scalar() or 0
+        if current_count >= max_clients:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Tier limit reached: max {max_clients} clients",
+            )
+
+
+# =============================================================================
 # Type Aliases for Dependency Injection
 # =============================================================================
 
@@ -232,3 +338,4 @@ CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
 ActiveUserDep = Annotated[CurrentUser, Depends(get_current_active_user)]
 VerifiedUserDep = Annotated[CurrentUser, Depends(get_current_verified_user)]
 OptionalUserDep = Annotated[Optional[CurrentUser], Depends(get_optional_user)]
+AccessibleClientIdsDep = Annotated[Optional[list[int]], Depends(get_accessible_client_ids)]

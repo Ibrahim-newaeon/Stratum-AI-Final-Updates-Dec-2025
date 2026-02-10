@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         TenantAdAccount,
         TenantPlatformConnection,
     )
+    from app.models.client import Client, ClientRequest
     from app.models.trust_layer import (
         FactActionsQueue,
         FactAttributionVarianceDaily,
@@ -255,6 +256,14 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     )
     permissions: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
+    # Client scope (for portal users — VIEWER role)
+    client_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
+    )
+    user_type: Mapped[str] = mapped_column(
+        String(20), default="agency", nullable=False
+    )  # "agency" or "portal"
+
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -296,12 +305,21 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")
     audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user")
+    client: Mapped[Optional["Client"]] = relationship(
+        "Client", back_populates="portal_users", foreign_keys=[client_id]
+    )
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "email_hash", name="uq_user_tenant_email"),
         Index("ix_users_email_hash", "email_hash"),
         Index("ix_users_tenant_active", "tenant_id", "is_active", "is_deleted"),
+        Index("ix_users_client", "client_id"),
     )
+
+    @property
+    def is_portal_user(self) -> bool:
+        """Return True if this user is a client portal user."""
+        return self.user_type == "portal"
 
 
 # =============================================================================
@@ -316,6 +334,11 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     __tablename__ = "campaigns"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Client scope (nullable — existing campaigns may not have a client)
+    client_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Platform Reference
     platform: Mapped[AdPlatform] = mapped_column(
@@ -382,6 +405,9 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="campaigns")
+    client: Mapped[Optional["Client"]] = relationship(
+        "Client", back_populates="campaigns", foreign_keys=[client_id]
+    )
     metrics: Mapped[list["CampaignMetric"]] = relationship(
         "CampaignMetric", back_populates="campaign", cascade="all, delete-orphan"
     )
@@ -395,6 +421,7 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         Index("ix_campaigns_platform", "tenant_id", "platform"),
         Index("ix_campaigns_date_range", "tenant_id", "start_date", "end_date"),
         Index("ix_campaigns_roas", "tenant_id", "roas"),
+        Index("ix_campaigns_client", "client_id"),
     )
 
     def calculate_metrics(self) -> None:

@@ -24,6 +24,8 @@ from app.api.v1.endpoints import (
     capi,
     cdp,
     changelog,
+    # Client Management (Agency model)
+    clients,
     # CMS (Content Management System)
     cms,
     competitors,
@@ -117,6 +119,13 @@ api_router.include_router(
     campaigns.router,
     prefix="/campaigns",
     tags=["Campaigns"],
+)
+
+# Client Management (Agency model)
+api_router.include_router(
+    clients.router,
+    prefix="/clients",
+    tags=["Clients"],
 )
 
 # Creative Assets / DAM (Module B)

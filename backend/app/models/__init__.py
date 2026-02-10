@@ -72,6 +72,15 @@ from app.models.autopilot import (
     ViolationType,
 )
 
+# Client Entity models (Agency model)
+from app.models.client import (
+    Client,
+    ClientAssignment,
+    ClientRequest,
+    ClientRequestStatus,
+    ClientRequestType,
+)
+
 # Campaign Builder models
 from app.models.campaign_builder import (
     CampaignDraft,
@@ -350,6 +359,12 @@ __all__ = [
     "ChangelogEntry",
     "ChangelogReadStatus",
     "SlackIntegration",
+    # Client Entity (Agency model)
+    "Client",
+    "ClientAssignment",
+    "ClientRequest",
+    "ClientRequestStatus",
+    "ClientRequestType",
     # CMS (Content Management System)
     "CMSPostStatus",
     "CMSContentType",
