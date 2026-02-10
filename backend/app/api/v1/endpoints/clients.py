@@ -524,6 +524,20 @@ async def list_assignments(
         tenant_id = current_user.tenant_id
         user = current_user.user
 
+        # Verify client belongs to this tenant
+        client_check = await db.execute(
+            select(Client.id).where(
+                Client.id == client_id,
+                Client.tenant_id == tenant_id,
+                Client.is_deleted == False,
+            )
+        )
+        if client_check.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found",
+            )
+
         await enforce_client_access(
             user_id=user.id,
             user_role=user.role,
@@ -688,6 +702,22 @@ async def delete_assignment(
 ):
     """Unassign a user from a client. Requires ADMIN+ role."""
     try:
+        tenant_id = current_user.tenant_id
+
+        # Verify client belongs to this tenant
+        client_check = await db.execute(
+            select(Client.id).where(
+                Client.id == client_id,
+                Client.tenant_id == tenant_id,
+                Client.is_deleted == False,
+            )
+        )
+        if client_check.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found",
+            )
+
         result = await db.execute(
             select(ClientAssignment).where(
                 ClientAssignment.user_id == user_id,
