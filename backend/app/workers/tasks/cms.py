@@ -184,21 +184,125 @@ def create_cms_post_version(
 
 
 def _invalidate_cdn_cache(post) -> None:
-    """Invalidate CDN cache for a published post."""
+    """Invalidate CDN cache for a published post.
+
+    Supports Cloudflare, CloudFront, and Fastly. Configured via
+    CDN_PROVIDER, CDN_API_KEY, CDN_ZONE_ID, and CDN_BASE_URL env vars.
+    Silently returns if no CDN provider is configured.
+    """
+    from app.core.config import settings
+
+    if not settings.cdn_provider:
+        return
+
+    paths = [
+        f"/blog/{post.slug}",
+        f"/api/v1/cms/posts/{post.slug}",
+        "/blog",
+        "/sitemap.xml",
+    ]
+
     try:
-        from app.core.config import settings
+        if settings.cdn_provider == "cloudflare":
+            _purge_cloudflare(paths, settings)
+        elif settings.cdn_provider == "cloudfront":
+            _purge_cloudfront(paths, settings)
+        elif settings.cdn_provider == "fastly":
+            _purge_fastly(paths, settings)
 
-        if not settings.cdn_api_key:
-            return
-
-        # Implementation would call CDN API to invalidate cache
-        # e.g., Cloudflare, CloudFront, Fastly
-        paths = [
-            f"/blog/{post.slug}",
-            f"/api/v1/cms/posts/{post.id}",
-        ]
-
-        logger.debug(f"CDN cache invalidation triggered for paths: {paths}")
-
+        logger.info(
+            "CDN cache invalidated for post '%s' via %s (%d paths)",
+            post.slug,
+            settings.cdn_provider,
+            len(paths),
+        )
     except Exception as e:
-        logger.warning(f"CDN cache invalidation failed: {e}")
+        # Cache invalidation is best-effort; never fail the publish
+        logger.warning("CDN cache invalidation failed for post '%s': %s", post.slug, e)
+
+
+def _purge_cloudflare(paths: list[str], settings) -> None:
+    """Purge cached files from Cloudflare by URL.
+
+    Uses the Cloudflare Zone Purge API:
+    POST /client/v4/zones/{zone_id}/purge_cache
+    """
+    import httpx
+
+    if not settings.cdn_api_key or not settings.cdn_zone_id:
+        logger.warning("Cloudflare purge skipped: CDN_API_KEY and CDN_ZONE_ID required")
+        return
+
+    base = (settings.cdn_base_url or "").rstrip("/")
+    files = [f"{base}{path}" for path in paths] if base else paths
+
+    url = f"https://api.cloudflare.com/client/v4/zones/{settings.cdn_zone_id}/purge_cache"
+    with httpx.Client(timeout=10.0) as client:
+        resp = client.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {settings.cdn_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={"files": files},
+        )
+        resp.raise_for_status()
+
+    body = resp.json()
+    if not body.get("success"):
+        errors = body.get("errors", [])
+        raise RuntimeError(f"Cloudflare purge failed: {errors}")
+
+
+def _purge_cloudfront(paths: list[str], settings) -> None:
+    """Create a CloudFront invalidation for the given paths.
+
+    Uses boto3 to call CreateInvalidation on the configured distribution.
+    """
+    import boto3
+
+    if not settings.cdn_zone_id:
+        logger.warning("CloudFront purge skipped: CDN_ZONE_ID (distribution ID) required")
+        return
+
+    client = boto3.client("cloudfront")
+    caller_ref = f"cms-{int(__import__('time').time())}"
+
+    client.create_invalidation(
+        DistributionId=settings.cdn_zone_id,
+        InvalidationBatch={
+            "Paths": {
+                "Quantity": len(paths),
+                "Items": paths,
+            },
+            "CallerReference": caller_ref,
+        },
+    )
+
+
+def _purge_fastly(paths: list[str], settings) -> None:
+    """Purge cached URLs from Fastly using their Purge API.
+
+    Sends one POST per path to the single-URL purge endpoint.
+    """
+    import httpx
+
+    if not settings.cdn_api_key:
+        logger.warning("Fastly purge skipped: CDN_API_KEY required")
+        return
+
+    base = (settings.cdn_base_url or "").rstrip("/")
+    if not base:
+        logger.warning("Fastly purge skipped: CDN_BASE_URL required for full purge URLs")
+        return
+
+    headers = {
+        "Fastly-Key": settings.cdn_api_key,
+        "Accept": "application/json",
+    }
+
+    with httpx.Client(timeout=10.0) as client:
+        for path in paths:
+            purge_url = f"{base}{path}"
+            resp = client.request("PURGE", purge_url, headers=headers)
+            resp.raise_for_status()

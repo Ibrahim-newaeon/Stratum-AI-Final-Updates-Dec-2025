@@ -268,6 +268,23 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # CDN Cache Invalidation
+    # -------------------------------------------------------------------------
+    cdn_provider: Optional[Literal["cloudflare", "cloudfront", "fastly"]] = Field(
+        default=None, description="CDN provider for cache invalidation (cloudflare, cloudfront, fastly)"
+    )
+    cdn_api_key: Optional[str] = Field(
+        default=None, description="CDN API token (Cloudflare API token or Fastly API token)"
+    )
+    cdn_zone_id: Optional[str] = Field(
+        default=None,
+        description="CDN zone/distribution ID (Cloudflare Zone ID or CloudFront Distribution ID)",
+    )
+    cdn_base_url: Optional[str] = Field(
+        default=None, description="Public base URL for full purge URLs (e.g. https://blog.stratum.ai)"
+    )
+
+    # -------------------------------------------------------------------------
     # Feature Flags
     # -------------------------------------------------------------------------
     feature_competitor_intel: bool = Field(default=True)
