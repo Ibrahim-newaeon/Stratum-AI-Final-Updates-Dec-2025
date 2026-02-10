@@ -38,7 +38,7 @@ const features = [
     icon: ChartBarIcon,
     title: 'Match Rate Tracking',
     description: 'Monitor match rates and optimize identifier coverage.',
-    color: '#22c55e',
+    color: '#34c759',
   },
   {
     icon: ShieldCheckIcon,

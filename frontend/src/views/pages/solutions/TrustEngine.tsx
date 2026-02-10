@@ -25,9 +25,9 @@ export default function TrustEngineSolution() {
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
                 style={{
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  color: '#22c55e',
+                  background: 'rgba(52, 199, 89, 0.1)',
+                  border: '1px solid rgba(52, 199, 89, 0.3)',
+                  color: '#34c759',
                 }}
               >
                 <ShieldCheckIcon className="w-4 h-4" />
@@ -66,9 +66,9 @@ export default function TrustEngineSolution() {
               {/* Trust Gate Visualization */}
               <div className="space-y-6">
                 <div className="text-center">
-                  <SignalIcon className="w-12 h-12 mx-auto mb-2" style={{ color: '#22c55e' }} />
+                  <SignalIcon className="w-12 h-12 mx-auto mb-2" style={{ color: '#34c759' }} />
                   <div className="text-3xl font-bold text-white">Signal Health</div>
-                  <div className="text-5xl font-bold mt-2" style={{ color: '#22c55e' }}>
+                  <div className="text-5xl font-bold mt-2" style={{ color: '#34c759' }}>
                     87
                   </div>
                 </div>
@@ -77,11 +77,11 @@ export default function TrustEngineSolution() {
                     <div
                       className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-2"
                       style={{
-                        background: 'rgba(34, 197, 94, 0.1)',
-                        border: '1px solid rgba(34, 197, 94, 0.3)',
+                        background: 'rgba(52, 199, 89, 0.1)',
+                        border: '1px solid rgba(52, 199, 89, 0.3)',
                       }}
                     >
-                      <CheckCircleIcon className="w-8 h-8" style={{ color: '#22c55e' }} />
+                      <CheckCircleIcon className="w-8 h-8" style={{ color: '#34c759' }} />
                     </div>
                     <div className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                       HEALTHY
@@ -192,9 +192,9 @@ export default function TrustEngineSolution() {
                 threshold: '≥70',
                 action: 'EXECUTE',
                 description: 'Automations run normally. Full autopilot mode enabled.',
-                color: '#22c55e',
-                bg: 'rgba(34, 197, 94, 0.1)',
-                border: 'rgba(34, 197, 94, 0.3)',
+                color: '#34c759',
+                bg: 'rgba(52, 199, 89, 0.1)',
+                border: 'rgba(52, 199, 89, 0.3)',
               },
               {
                 status: 'DEGRADED',
@@ -261,7 +261,7 @@ export default function TrustEngineSolution() {
               {
                 title: 'Reduce Manual Oversight',
                 desc: 'Automated safety checks 24/7',
-                color: '#22c55e',
+                color: '#34c759',
               },
               {
                 title: 'Audit Trail',
@@ -300,9 +300,9 @@ export default function TrustEngineSolution() {
             className="p-12 rounded-3xl backdrop-blur-xl"
             style={{
               background:
-                'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
-              boxShadow: '0 8px 32px rgba(34, 197, 94, 0.15), 0 8px 32px rgba(6, 182, 212, 0.15)',
+                'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
+              border: '1px solid rgba(52, 199, 89, 0.3)',
+              boxShadow: '0 8px 32px rgba(52, 199, 89, 0.15), 0 8px 32px rgba(6, 182, 212, 0.15)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Automate with Confidence</h2>

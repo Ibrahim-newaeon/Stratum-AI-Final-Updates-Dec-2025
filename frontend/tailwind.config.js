@@ -49,50 +49,65 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // STRATUM AI HOLOGLASS THEME - Gold + Cyan + Purple
+        // STRATUM AI MIDNIGHT TEAL THEME
         stratum: {
-          gold: '#D4AF37',        // Primary brand
-          'gold-bright': '#F4D03F',
-          'gold-muted': '#B8860B',
-          cyan: '#14F0C6',        // Secondary accent
-          'cyan-muted': '#0FB89A',
-          purple: '#8b5cf6',      // Tertiary accent
-          'purple-muted': '#7c3aed',
-          green: '#22c55e',       // Status success
+          gold: '#e2b347',        // CTA accent
+          'gold-bright': '#f0c95c',
+          'gold-muted': '#c49a2c',
+          cyan: '#00c7be',        // Primary teal
+          'cyan-muted': '#00a89f',
+          teal: '#00c7be',        // Alias
+          jade: '#34c759',
+          coral: '#ff6b6b',
+          violet: '#a78bfa',
+          purple: '#a78bfa',      // Tertiary accent
+          'purple-muted': '#8b5cf6',
+          green: '#34c759',       // Status success (jade)
           orange: '#f59e0b',      // Status warning
-          red: '#ef4444',         // Status error
+          red: '#ff6b6b',         // Status error (coral)
           blue: '#0a84ff',        // Status info
         },
+        // Convergence Design System tokens
+        'deep-space': '#0B0F1A',
+        'stratum-blue': '#12233D',
+        'signal-cyan': '#22D3EE',
+        'trust-teal': '#00c7be',
+        'premium-gold': '#e2b347',
+        'cloud-white': '#F8FAFC',
+        'conv-surface1': '#0F172A',
+        'conv-surface2': '#16223C',
+        'conv-surface3': '#1C2A47',
         // Glass surfaces
         glass: {
-          card: 'rgba(255, 255, 255, 0.03)',
-          cardHover: 'rgba(255, 255, 255, 0.05)',
+          card: 'rgba(255, 255, 255, 0.05)',
+          cardHover: 'rgba(255, 255, 255, 0.08)',
+          active: 'rgba(255, 255, 255, 0.12)',
           border: 'rgba(255, 255, 255, 0.08)',
           borderHover: 'rgba(255, 255, 255, 0.15)',
           subtle: 'rgba(255, 255, 255, 0.02)',
         },
-        // Stratum Gold scale
+        // Gold scale (CTA accent)
         gold: {
           50: '#fdf9eb',
           100: '#faf2d3',
           200: '#f5e5a7',
           300: '#efd872',
-          400: '#e8c84a',
-          500: '#D4AF37', // Stratum Gold - Primary
-          600: '#B8860B', // Gold muted
+          400: '#f0c95c',
+          500: '#e2b347', // CTA Gold
+          600: '#c49a2c', // Gold muted
           700: '#8c6508',
           800: '#604507',
           900: '#342504',
           950: '#1a1202',
         },
         cyan: {
-          50: '#e6fef8',
-          100: '#ccfdf2',
-          200: '#99fbe5',
-          300: '#4df7d1',
-          400: '#14F0C6', // Stratum Cyan - Secondary
-          500: '#14F0C6',
-          600: '#0FB89A',
+          50: '#e6fefb',
+          100: '#ccfdfa',
+          200: '#99fbf4',
+          300: '#4df7ea',
+          400: '#00c7be', // Primary Teal
+          500: '#00c7be',
+          600: '#00a89f',
           700: '#0a8a73',
           800: '#075c4d',
           900: '#032e26',
@@ -103,11 +118,11 @@ export default {
         tiktok: '#00F2EA',
         snapchat: '#FFFC00',
         whatsapp: '#25D366',
-        success: '#22c55e', // Stratum green
+        success: '#34c759', // Jade green
         warning: '#f59e0b', // Stratum orange
-        danger: '#ef4444', // Stratum red
-        info: '#14F0C6', // Stratum cyan
-        insight: '#8b5cf6', // Stratum purple
+        danger: '#ff6b6b', // Coral
+        info: '#00c7be', // Teal
+        insight: '#a78bfa', // Violet
         surface: {
           primary: '#000000', // Pure black
           secondary: '#000000', // Pure black
@@ -115,10 +130,10 @@ export default {
           elevated: 'rgba(255, 255, 255, 0.05)', // Elevated glass
         },
         // Stratum Dashboard Theme Colors
-        'bg-primary': '#0a0a0f',
-        'bg-card': '#12121a',
-        'bg-card-hover': '#1a1a24',
-        'bg-elevated': '#1e1e28',
+        'bg-primary': '#0b1215',
+        'bg-card': 'rgba(255, 255, 255, 0.05)',
+        'bg-card-hover': 'rgba(255, 255, 255, 0.08)',
+        'bg-elevated': 'rgba(255, 255, 255, 0.12)',
         'text-primary': '#FFFFFF',
         'text-secondary': 'rgba(255, 255, 255, 0.7)',
         'text-muted': 'rgba(255, 255, 255, 0.5)',
@@ -192,31 +207,37 @@ export default {
         ],
       },
       boxShadow: {
-        // Stratum HoloGlass - Gold accent glows
-        'gold-sm': '0 0 20px rgba(212, 175, 55, 0.1)',
-        gold: '0 0 40px rgba(212, 175, 55, 0.15)',
-        'gold-lg': '0 0 60px rgba(212, 175, 55, 0.2)',
-        'gold-xl': '0 0 100px rgba(212, 175, 55, 0.25)',
-        'glow-green': '0 0 40px rgba(34, 197, 94, 0.15)',
+        // Midnight Teal - Gold CTA accent glows
+        'gold-sm': '0 0 20px rgba(226, 179, 71, 0.1)',
+        gold: '0 0 40px rgba(226, 179, 71, 0.15)',
+        'gold-lg': '0 0 60px rgba(226, 179, 71, 0.2)',
+        'gold-xl': '0 0 100px rgba(226, 179, 71, 0.25)',
+        'glow-green': '0 0 40px rgba(52, 199, 89, 0.15)',
         'glow-orange': '0 0 40px rgba(245, 158, 11, 0.15)',
-        'glow-purple': '0 0 40px rgba(139, 92, 246, 0.15)',
-        'glow-cyan-accent': '0 0 40px rgba(20, 240, 198, 0.15)',
-        // Glass effects - HoloGlass style
-        glass: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        'glow-purple': '0 0 40px rgba(167, 139, 250, 0.15)',
+        'glow-cyan-accent': '0 0 40px rgba(0, 199, 190, 0.15)',
+        // Glass effects - Midnight Teal style
+        glass: '0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.12)',
         'glass-lg': '0 25px 50px rgba(0, 0, 0, 0.4)',
-        'glass-glow': '0 0 40px rgba(212, 175, 55, 0.15), 0 25px 50px rgba(0, 0, 0, 0.4)',
-        // Primary glow - Gold
-        'glow-sm': '0 0 12px rgba(212, 175, 55, 0.15)',
-        glow: '0 0 20px rgba(212, 175, 55, 0.2)',
-        'glow-lg': '0 0 32px rgba(212, 175, 55, 0.25)',
-        'glow-insight': '0 0 20px rgba(139, 92, 246, 0.2)',
-        'glow-cyan': '0 0 20px rgba(20, 240, 198, 0.2)',
+        'glass-glow': '0 0 40px rgba(0, 199, 190, 0.15), 0 25px 50px rgba(0, 0, 0, 0.4)',
+        // Primary glow - Teal
+        'glow-sm': '0 0 12px rgba(0, 199, 190, 0.15)',
+        glow: '0 0 20px rgba(0, 199, 190, 0.2)',
+        'glow-lg': '0 0 32px rgba(0, 199, 190, 0.25)',
+        'glow-insight': '0 0 20px rgba(167, 139, 250, 0.2)',
+        'glow-cyan': '0 0 20px rgba(0, 199, 190, 0.2)',
+        // Convergence Design System shadows
+        panel: '0 10px 30px rgba(0,0,0,0.35)',
+        lift: '0 14px 40px rgba(0,0,0,0.45)',
+        'glow-signal-cyan': '0 0 0 1px rgba(0,199,190,0.22), 0 10px 28px rgba(0,199,190,0.08)',
+        'glow-trust-teal': '0 0 0 1px rgba(0,199,190,0.22), 0 10px 28px rgba(0,199,190,0.08)',
+        'glow-premium-gold': '0 0 0 1px rgba(226,179,71,0.22), 0 10px 28px rgba(226,179,71,0.10)',
         card: '0 4px 12px rgba(0, 0, 0, 0.15)',
         'card-hover': '0 10px 30px rgba(0, 0, 0, 0.25)',
         // Ambient orb shadows
-        'orb-gold': '0 0 120px 60px rgba(212, 175, 55, 0.08)',
-        'orb-purple': '0 0 100px 50px rgba(139, 92, 246, 0.06)',
-        'orb-cyan': '0 0 80px 40px rgba(20, 240, 198, 0.05)',
+        'orb-gold': '0 0 120px 60px rgba(226, 179, 71, 0.08)',
+        'orb-purple': '0 0 100px 50px rgba(167, 139, 250, 0.06)',
+        'orb-cyan': '0 0 80px 40px rgba(0, 199, 190, 0.05)',
       },
       spacing: {
         1: '4px',
@@ -238,23 +259,23 @@ export default {
         'container-2xl': '1400px',
       },
       backgroundImage: {
-        // Stratum HoloGlass Gradients
-        'gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%)',
-        'gradient-gold-warm': 'linear-gradient(135deg, #D4AF37 0%, #f59e0b 100%)',
-        'gradient-gold-cool': 'linear-gradient(135deg, #D4AF37 0%, #14F0C6 100%)',
+        // Midnight Teal Gradients
+        'gradient-gold': 'linear-gradient(135deg, #e2b347 0%, #f0c95c 100%)',
+        'gradient-gold-warm': 'linear-gradient(135deg, #e2b347 0%, #f59e0b 100%)',
+        'gradient-gold-cool': 'linear-gradient(135deg, #e2b347 0%, #00c7be 100%)',
         'gradient-gold-soft':
-          'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(20, 240, 198, 0.05) 100%)',
+          'linear-gradient(135deg, rgba(226, 179, 71, 0.1) 0%, rgba(0, 199, 190, 0.05) 100%)',
         // Ambient orbs for glass dark backgrounds
         'ambient-orbs': `
-          radial-gradient(ellipse 40% 40% at 20% 30%, rgba(212, 175, 55, 0.08), transparent),
-          radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
-          radial-gradient(ellipse 35% 35% at 60% 20%, rgba(20, 240, 198, 0.05), transparent)
+          radial-gradient(ellipse 40% 40% at 20% 30%, rgba(0, 199, 190, 0.08), transparent),
+          radial-gradient(ellipse 30% 30% at 80% 70%, rgba(167, 139, 250, 0.06), transparent),
+          radial-gradient(ellipse 35% 35% at 60% 20%, rgba(226, 179, 71, 0.05), transparent)
         `,
         // Stratum primary gradient
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-stratum': 'linear-gradient(135deg, #D4AF37 0%, #14F0C6 100%)',
+        'gradient-stratum': 'linear-gradient(135deg, #00c7be 0%, #e2b347 100%)',
         'gradient-stratum-soft':
-          'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 240, 198, 0.05) 100%)',
+          'linear-gradient(135deg, rgba(0, 199, 190, 0.08) 0%, rgba(226, 179, 71, 0.05) 100%)',
       },
       backdropBlur: {
         '100': '100px',
@@ -421,6 +442,32 @@ export default {
           '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
           '50%': { transform: 'translateY(-20px) rotate(2deg)' },
         },
+        // Convergence Design System animations
+        convergence: {
+          '0%, 100%': { transform: 'translateY(0)', opacity: '0.85' },
+          '50%': { transform: 'translateY(-2px)', opacity: '1' },
+        },
+        'shimmer-conv': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '100%': { backgroundPosition: '100% 50%' },
+        },
+        // Command Center Animations
+        'terminal-blink': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
+        },
+        'scanline-sweep': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
+        'pulse-ring': {
+          '0%': { transform: 'scale(1)', opacity: '0.4' },
+          '100%': { transform: 'scale(2)', opacity: '0' },
+        },
+        'data-flow': {
+          '0%': { strokeDashoffset: '100' },
+          '100%': { strokeDashoffset: '0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -452,6 +499,14 @@ export default {
         morph: 'morph 8s ease-in-out infinite',
         'gradient-shift': 'gradient-shift 8s ease infinite',
         float: 'float 6s ease-in-out infinite',
+        // Convergence Design System
+        convergence: 'convergence 1.6s ease-in-out infinite',
+        'shimmer-conv': 'shimmer-conv 2.2s ease-in-out infinite',
+        // Command Center Animations
+        'terminal-blink': 'terminal-blink 1s step-end infinite',
+        'scanline-sweep': 'scanline-sweep 3s linear infinite',
+        'pulse-ring': 'pulse-ring 2s ease-out infinite',
+        'data-flow': 'data-flow 2s linear infinite',
       },
       transitionDuration: {
         fast: '150ms',
@@ -464,6 +519,7 @@ export default {
         enter: 'cubic-bezier(0.16, 1, 0.3, 1)',
         exit: 'cubic-bezier(0.7, 0, 0.84, 0)',
         bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        stratum: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
       },
       zIndex: {
         hide: '-1',

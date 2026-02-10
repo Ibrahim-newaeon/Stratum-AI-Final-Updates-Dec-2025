@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 // Stratum Gold Dark theme
 const theme = {
-  gold: '#D4AF37',
-  goldLight: 'rgba(212, 175, 55, 0.15)',
-  green: '#22c55e', // Stratum Green
+  gold: '#00c7be',
+  goldLight: 'rgba(0, 199, 190, 0.15)',
+  green: '#34c759', // Stratum Green
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',

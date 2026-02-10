@@ -142,9 +142,9 @@ export default function ApiDocs() {
                     style={{
                       background:
                         endpoint.method === 'GET'
-                          ? 'rgba(34, 197, 94, 0.2)'
+                          ? 'rgba(52, 199, 89, 0.2)'
                           : 'rgba(59, 130, 246, 0.2)',
-                      color: endpoint.method === 'GET' ? '#22c55e' : '#3b82f6',
+                      color: endpoint.method === 'GET' ? '#34c759' : '#3b82f6',
                     }}
                   >
                     {endpoint.method}
@@ -176,7 +176,7 @@ export default function ApiDocs() {
                 style={{
                   background: 'rgba(0, 0, 0, 0.4)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#22c55e',
+                  color: '#34c759',
                 }}
               >
                 npm install @stratum-ai/sdk

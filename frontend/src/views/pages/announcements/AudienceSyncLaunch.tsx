@@ -78,7 +78,7 @@ const features = [
     title: 'Smart Matching',
     description:
       'Hashed identifier matching for emails, phones, and MAIDs ensures privacy while maximizing match rates.',
-    color: '#22c55e',
+    color: '#34c759',
   },
   {
     icon: ChartBarIcon,
@@ -125,7 +125,7 @@ export default function AudienceSyncLaunch() {
           >
             <span
               className="w-2 h-2 rounded-full animate-pulse"
-              style={{ background: '#22c55e' }}
+              style={{ background: '#34c759' }}
             />
             <span style={{ color: '#a855f7' }}>New Feature</span>
           </div>

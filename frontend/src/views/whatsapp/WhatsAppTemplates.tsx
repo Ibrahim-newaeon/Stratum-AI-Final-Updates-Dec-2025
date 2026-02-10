@@ -171,7 +171,7 @@ export default function WhatsAppTemplates() {
                 'px-3 py-1.5 rounded-lg text-sm transition-colors',
                 categoryFilter === cat
                   ? 'bg-[#25D366] text-white'
-                  : 'bg-[#12121a] text-gray-400 hover:text-white'
+                  : 'bg-[rgba(255,_255,_255,_0.05)] text-gray-400 hover:text-white'
               )}
             >
               {cat === 'all' ? 'All' : categoryConfig[cat as keyof typeof categoryConfig]?.label}
@@ -188,7 +188,7 @@ export default function WhatsAppTemplates() {
                 'px-3 py-1.5 rounded-lg text-sm transition-colors',
                 statusFilter === status
                   ? 'bg-[#25D366] text-white'
-                  : 'bg-[#12121a] text-gray-400 hover:text-white'
+                  : 'bg-[rgba(255,_255,_255,_0.05)] text-gray-400 hover:text-white'
               )}
             >
               {status === 'all' ? 'All' : statusConfig[status as keyof typeof statusConfig]?.label}
@@ -210,7 +210,7 @@ export default function WhatsAppTemplates() {
               layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#12121a] rounded-2xl border border-white/5 p-5 hover:border-white/10 transition-colors"
+              className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-5 hover:border-white/10 transition-colors"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
@@ -396,7 +396,7 @@ function CreateTemplateModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-2xl bg-[#12121a] rounded-2xl border border-white/10 p-6 my-8"
+        className="w-full max-w-2xl bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/10 p-6 my-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -423,7 +423,7 @@ function CreateTemplateModal({
                     name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
                   })
                 }
-                className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
               <span className="text-xs text-gray-500">Lowercase, underscores only</span>
             </div>
@@ -435,7 +435,7 @@ function CreateTemplateModal({
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value as Template['category'] })
                 }
-                className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               >
                 <option value="UTILITY">Utility - Transactional</option>
                 <option value="MARKETING">Marketing - Promotional</option>
@@ -449,7 +449,7 @@ function CreateTemplateModal({
             <select
               value={formData.language}
               onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             >
               <option value="en">English</option>
               <option value="ar">Arabic</option>
@@ -497,7 +497,7 @@ function CreateTemplateModal({
                 maxLength={60}
                 value={formData.header_content}
                 onChange={(e) => setFormData({ ...formData, header_content: e.target.value })}
-                className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
             )}
             {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(formData.header_type) && (
@@ -506,7 +506,7 @@ function CreateTemplateModal({
                 placeholder="Media URL for preview"
                 value={formData.header_content}
                 onChange={(e) => setFormData({ ...formData, header_content: e.target.value })}
-                className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
             )}
           </div>
@@ -521,7 +521,7 @@ function CreateTemplateModal({
               placeholder="Hi {{1}}, your order #{{2}} has been confirmed..."
               value={formData.body_text}
               onChange={(e) => setFormData({ ...formData, body_text: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none resize-none"
             />
             <span className="text-xs text-gray-500">
               Use {'{{1}}'}, {'{{2}}'} for variables. {formData.body_text.length}/1024
@@ -539,7 +539,7 @@ function CreateTemplateModal({
               placeholder="e.g., Reply STOP to unsubscribe"
               value={formData.footer_text}
               onChange={(e) => setFormData({ ...formData, footer_text: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
 
@@ -557,7 +557,7 @@ function CreateTemplateModal({
                     maxLength={25}
                     value={btn.text}
                     onChange={(e) => updateButton(i, { text: e.target.value })}
-                    className="flex-1 px-3 py-2 bg-[#0a0a0f] border border-white/10 rounded-lg text-sm"
+                    className="flex-1 px-3 py-2 bg-[#0b1215] border border-white/10 rounded-lg text-sm"
                   />
                   {btn.type === 'URL' && (
                     <input
@@ -565,7 +565,7 @@ function CreateTemplateModal({
                       placeholder="URL"
                       value={btn.url}
                       onChange={(e) => updateButton(i, { url: e.target.value })}
-                      className="flex-1 px-3 py-2 bg-[#0a0a0f] border border-white/10 rounded-lg text-sm"
+                      className="flex-1 px-3 py-2 bg-[#0b1215] border border-white/10 rounded-lg text-sm"
                     />
                   )}
                   {btn.type === 'PHONE_NUMBER' && (
@@ -574,7 +574,7 @@ function CreateTemplateModal({
                       placeholder="Phone"
                       value={btn.phone}
                       onChange={(e) => updateButton(i, { phone: e.target.value })}
-                      className="flex-1 px-3 py-2 bg-[#0a0a0f] border border-white/10 rounded-lg text-sm"
+                      className="flex-1 px-3 py-2 bg-[#0b1215] border border-white/10 rounded-lg text-sm"
                     />
                   )}
                   <span className="text-xs text-gray-500 w-16">{btn.type}</span>
@@ -660,7 +660,7 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-lg bg-[#12121a] rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-lg bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -725,7 +725,7 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
                   setSampleValues(newValues);
                 }}
                 placeholder={`Value for variable ${num}`}
-                className="flex-1 px-3 py-2 bg-[#0a0a0f] border border-white/10 rounded-lg text-sm"
+                className="flex-1 px-3 py-2 bg-[#0b1215] border border-white/10 rounded-lg text-sm"
               />
             </div>
           ))}

@@ -14,9 +14,9 @@ export default function Privacy() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(34, 197, 94, 0.1)',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
-              color: '#22c55e',
+              background: 'rgba(52, 199, 89, 0.1)',
+              border: '1px solid rgba(52, 199, 89, 0.3)',
+              color: '#34c759',
             }}
           >
             <ShieldCheckIcon className="w-4 h-4" />

@@ -250,7 +250,7 @@ export default function FAQ() {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;
               const colorMap: Record<string, string> = {
-                'text-green-400': '#22c55e',
+                'text-green-400': '#34c759',
                 'text-purple-400': '#a855f7',
                 'text-cyan-400': '#06b6d4',
                 'text-orange-400': '#f97316',
@@ -300,7 +300,7 @@ export default function FAQ() {
                 const Icon = getCategoryIcon(faq.category);
                 const categoryData = categories.find((c) => c.id === faq.category);
                 const colorMap: Record<string, string> = {
-                  'text-green-400': '#22c55e',
+                  'text-green-400': '#34c759',
                   'text-purple-400': '#a855f7',
                   'text-cyan-400': '#06b6d4',
                   'text-orange-400': '#f97316',

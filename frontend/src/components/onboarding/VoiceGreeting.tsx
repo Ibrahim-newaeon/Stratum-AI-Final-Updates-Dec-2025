@@ -180,7 +180,7 @@ export default function VoiceGreeting({
           )}
           dir={language === 'ar' ? 'rtl' : 'ltr'}
         >
-          <div className="relative max-w-sm bg-[#0a0a0f] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="relative max-w-sm bg-[#0b1215] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
             {/* Gradient top border */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500" />
 
@@ -274,9 +274,9 @@ export default function VoiceGreeting({
             <motion.div
               animate={{
                 boxShadow: [
-                  '0 0 20px rgba(20, 240, 198, 0.1)',
+                  '0 0 20px rgba(0, 199, 190, 0.1)',
                   '0 0 40px rgba(139, 92, 246, 0.15)',
-                  '0 0 20px rgba(20, 240, 198, 0.1)',
+                  '0 0 20px rgba(0, 199, 190, 0.1)',
                 ],
               }}
               transition={{ repeat: Infinity, duration: 3 }}

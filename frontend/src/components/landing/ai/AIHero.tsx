@@ -88,15 +88,15 @@ export default function AIHero() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: 'rgba(212, 175, 55, 0.15)',
-                border: '1px solid rgba(212, 175, 55, 0.3)',
+                background: 'rgba(0, 199, 190, 0.15)',
+                border: '1px solid rgba(0, 199, 190, 0.3)',
               }}
             >
-              <SparklesIcon className="w-4 h-4" style={{ color: '#D4AF37' }} />
-              <span className="text-sm font-medium" style={{ color: '#D4AF37' }}>
+              <SparklesIcon className="w-4 h-4" style={{ color: '#00c7be' }} />
+              <span className="text-sm font-medium" style={{ color: '#00c7be' }}>
                 6 AI Models Built-In
               </span>
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#34c759' }} />
             </div>
           </motion.div>
 
@@ -111,13 +111,13 @@ export default function AIHero() {
             <span className="text-white">The Only AI That</span>
             <br />
             <span className="relative inline-block">
-              <span style={{ color: '#D4AF37' }}>
+              <span style={{ color: '#00c7be' }}>
                 Thinks Before It Acts
               </span>
               {/* Animated underline */}
               <motion.div
                 className="absolute -bottom-2 left-0 right-0 h-1 rounded-full"
-                style={{ background: '#D4AF37' }}
+                style={{ background: '#00c7be' }}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -152,8 +152,8 @@ export default function AIHero() {
               href="/signup"
               className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all hover:scale-[1.02]"
               style={{
-                background: '#D4AF37',
-                boxShadow: '0 0 40px rgba(212, 175, 55, 0.3)',
+                background: '#00c7be',
+                boxShadow: '0 0 40px rgba(0, 199, 190, 0.3)',
               }}
             >
               <span>Start Free Trial</span>
@@ -171,7 +171,7 @@ export default function AIHero() {
             >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(212, 175, 55, 0.15)' }}
+                style={{ background: 'rgba(0, 199, 190, 0.15)' }}
               >
                 <div className="w-0 h-0 border-l-[8px] border-l-white border-y-[5px] border-y-transparent ml-1" />
               </div>

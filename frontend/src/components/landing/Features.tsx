@@ -26,15 +26,15 @@ const iconMap: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>
 
 // Stratum Gold Dark theme
 const theme = {
-  gold: '#D4AF37',
-  goldLight: 'rgba(212, 175, 55, 0.15)',
-  green: '#22c55e', // Stratum Green
-  greenLight: 'rgba(34, 197, 94, 0.15)',
+  gold: '#00c7be',
+  goldLight: 'rgba(0, 199, 190, 0.15)',
+  green: '#34c759', // Stratum Green
+  greenLight: 'rgba(52, 199, 89, 0.15)',
   orange: '#FF9F0A',
   orangeLight: 'rgba(255, 159, 10, 0.15)',
   purple: '#8b5cf6',
   purpleLight: 'rgba(139, 92, 246, 0.15)',
-  cyan: '#14F0C6',
+  cyan: '#00c7be',
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -52,7 +52,7 @@ const fallbackLayers: FeatureLayer[] = [
     description: 'Know when to trust your data',
     color: theme.green,
     bgColor: theme.greenLight,
-    borderColor: 'rgba(34, 197, 94, 0.3)',
+    borderColor: 'rgba(52, 199, 89, 0.3)',
     iconName: 'ShieldCheckIcon',
     displayOrder: 0,
     features: [
@@ -85,7 +85,7 @@ const fallbackLayers: FeatureLayer[] = [
     description: 'AI that explains itself',
     color: theme.gold,
     bgColor: theme.goldLight,
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderColor: 'rgba(0, 199, 190, 0.3)',
     iconName: 'SparklesIcon',
     displayOrder: 1,
     features: [
@@ -167,7 +167,7 @@ export function Features() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
             style={{
               background: theme.goldLight,
-              border: `1px solid rgba(212, 175, 55, 0.3)`,
+              border: `1px solid rgba(0, 199, 190, 0.3)`,
             }}
           >
             <SparklesIcon className="w-4 h-4" style={{ color: theme.gold }} />

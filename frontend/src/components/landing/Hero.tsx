@@ -31,7 +31,7 @@ export function Hero() {
       <div className="absolute inset-0 overflow-hidden">
         <div
           className="absolute -top-1/4 -left-1/4 w-[800px] h-[800px] rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(212, 175, 55, 0.08), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.08), transparent 60%)' }}
         />
         <div
           className="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl"
@@ -60,11 +60,11 @@ export function Hero() {
             variant="outline"
             className="px-4 py-2 text-sm border-0"
             style={{
-              background: 'rgba(212, 175, 55, 0.15)',
-              color: '#D4AF37',
+              background: 'rgba(0, 199, 190, 0.15)',
+              color: '#00c7be',
             }}
           >
-            <span className="w-2 h-2 rounded-full animate-pulse mr-2 inline-block" style={{ background: '#D4AF37' }} />
+            <span className="w-2 h-2 rounded-full animate-pulse mr-2 inline-block" style={{ background: '#00c7be' }} />
             AI-Powered Marketing Intelligence
           </Badge>
         </div>
@@ -75,7 +75,7 @@ export function Hero() {
           style={{ animationDelay: '0.1s' }}
         >
           Stop Losing{' '}
-          <span style={{ color: '#D4AF37' }}>23% of Ad Spend</span>{' '}
+          <span style={{ color: '#00c7be' }}>23% of Ad Spend</span>{' '}
           to Bad Attribution
         </h1>
 
@@ -108,8 +108,8 @@ export function Hero() {
             size="lg"
             className="group text-white font-semibold px-8 py-6 text-lg transition-all hover:scale-[1.02] rounded-2xl"
             style={{
-              background: '#D4AF37',
-              boxShadow: '0 0 40px rgba(212, 175, 55, 0.25)',
+              background: '#00c7be',
+              boxShadow: '0 0 40px rgba(0, 199, 190, 0.25)',
             }}
           >
             14 Day Free Trial
@@ -142,7 +142,7 @@ export function Hero() {
               <Tooltip key={i}>
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-2 transition-colors cursor-default" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                    <CheckIcon className="w-4 h-4" style={{ color: '#22c55e' }} />
+                    <CheckIcon className="w-4 h-4" style={{ color: '#34c759' }} />
                     <span className="text-sm">{badge.text}</span>
                   </div>
                 </TooltipTrigger>
@@ -163,7 +163,7 @@ export function Hero() {
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              boxShadow: '0 0 60px rgba(212, 175, 55, 0.15)',
+              boxShadow: '0 0 60px rgba(0, 199, 190, 0.15)',
             }}
           >
             {/* Dashboard mockup */}
@@ -180,7 +180,7 @@ export function Hero() {
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full" style={{ background: '#ef4444' }} />
                     <div className="w-3 h-3 rounded-full" style={{ background: '#FFD60A' }} />
-                    <div className="w-3 h-3 rounded-full" style={{ background: '#22c55e' }} />
+                    <div className="w-3 h-3 rounded-full" style={{ background: '#34c759' }} />
                   </div>
                   <div className="flex-1 flex justify-center">
                     <div
@@ -220,7 +220,7 @@ export function Hero() {
                           ) : (
                             <div
                               className="text-xs mt-1"
-                              style={{ color: kpi.positive ? '#22c55e' : '#ef4444' }}
+                              style={{ color: kpi.positive ? '#34c759' : '#ef4444' }}
                             >
                               {kpi.delta}
                             </div>
@@ -246,7 +246,7 @@ export function Hero() {
                           className="flex-1 rounded-t transition-all"
                           style={{
                             height: `${h}%`,
-                            background: 'linear-gradient(to top, rgba(212, 175, 55, 0.4), rgba(212, 175, 55, 0.8))',
+                            background: 'linear-gradient(to top, rgba(0, 199, 190, 0.4), rgba(0, 199, 190, 0.8))',
                           }}
                         />
                       ))}

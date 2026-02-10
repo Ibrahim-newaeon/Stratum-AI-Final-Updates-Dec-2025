@@ -116,7 +116,7 @@ export default function TrustEngine() {
       </div>
 
       {/* Ambient orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(212, 175, 55, 0.06), transparent 60%)' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.06), transparent 60%)' }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
         {/* Section Header - Centered */}
@@ -131,19 +131,19 @@ export default function TrustEngine() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: 'rgba(34, 197, 94, 0.15)',
-                border: '1px solid rgba(34, 197, 94, 0.3)',
+                background: 'rgba(52, 199, 89, 0.15)',
+                border: '1px solid rgba(52, 199, 89, 0.3)',
               }}
             >
-              <ShieldCheckIcon className="w-4 h-4" style={{ color: '#22c55e' }} />
-              <span className="text-sm font-medium" style={{ color: '#22c55e' }}>Unique to Stratum AI</span>
+              <ShieldCheckIcon className="w-4 h-4" style={{ color: '#34c759' }} />
+              <span className="text-sm font-medium" style={{ color: '#34c759' }}>Unique to Stratum AI</span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Trust-Gated</span>
             <br />
-            <span style={{ color: '#D4AF37' }}>
+            <span style={{ color: '#00c7be' }}>
               Autopilot
             </span>
           </h2>
@@ -326,11 +326,11 @@ export default function TrustEngine() {
             <div
               className="inline-flex items-start gap-3 px-6 py-4 rounded-2xl max-w-2xl"
               style={{
-                background: 'rgba(212, 175, 55, 0.1)',
-                border: '1px solid rgba(212, 175, 55, 0.2)',
+                background: 'rgba(0, 199, 190, 0.1)',
+                border: '1px solid rgba(0, 199, 190, 0.2)',
               }}
             >
-              <InformationCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#D4AF37' }} />
+              <InformationCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#00c7be' }} />
               <div>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   <span className="font-medium text-white">

@@ -187,7 +187,7 @@ export default function WhatsAppContacts() {
             placeholder="Search by phone or name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[#12121a] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 bg-[rgba(255,_255,_255,_0.05)] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none transition-colors"
           />
         </div>
         <div className="flex gap-2">
@@ -199,7 +199,7 @@ export default function WhatsAppContacts() {
                 'px-4 py-2 rounded-xl transition-colors text-sm font-medium',
                 statusFilter === status
                   ? 'bg-[#25D366] text-white'
-                  : 'bg-[#12121a] text-gray-400 hover:text-white border border-white/10'
+                  : 'bg-[rgba(255,_255,_255,_0.05)] text-gray-400 hover:text-white border border-white/10'
               )}
             >
               {status === 'all' ? 'All' : statusConfig[status as keyof typeof statusConfig]?.label}
@@ -231,7 +231,7 @@ export default function WhatsAppContacts() {
       )}
 
       {/* Contacts Table */}
-      <div className="bg-[#12121a] rounded-2xl border border-white/5 overflow-hidden">
+      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -433,7 +433,7 @@ function AddContactModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-md bg-[#12121a] rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-md bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -452,7 +452,7 @@ function AddContactModal({
               placeholder="+1234567890"
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
           <div>
@@ -460,7 +460,7 @@ function AddContactModal({
             <select
               value={formData.country_code}
               onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             >
               <option value="US">United States (+1)</option>
               <option value="GB">United Kingdom (+44)</option>
@@ -477,7 +477,7 @@ function AddContactModal({
               placeholder="John Doe"
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
 
@@ -534,7 +534,7 @@ function ImportContactsModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-lg bg-[#12121a] rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-lg bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -583,7 +583,7 @@ function ImportContactsModal({
           )}
         </div>
 
-        <div className="mt-4 p-4 bg-[#0a0a0f] rounded-xl">
+        <div className="mt-4 p-4 bg-[#0b1215] rounded-xl">
           <h4 className="font-medium mb-2">CSV Format Required:</h4>
           <code className="text-sm text-gray-400">
             phone_number,country_code,display_name

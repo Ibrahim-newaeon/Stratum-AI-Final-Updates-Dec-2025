@@ -186,7 +186,7 @@ export default function WhatsAppBroadcast() {
       </div>
 
       {/* Broadcast History */}
-      <div className="bg-[#12121a] rounded-2xl border border-white/5 overflow-hidden">
+      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 overflow-hidden">
         <div className="p-5 border-b border-white/5">
           <h3 className="font-semibold">Broadcast History</h3>
         </div>
@@ -303,7 +303,7 @@ function StatCard({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="bg-[#12121a] rounded-2xl border border-white/5 p-5">
+    <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-5">
       <div className="flex items-center gap-3 mb-3">
         <div className="p-2 bg-[#25D366]/10 rounded-lg">
           <Icon className="w-5 h-5 text-[#25D366]" />
@@ -419,7 +419,7 @@ function CreateBroadcastModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-3xl bg-[#12121a] rounded-2xl border border-white/10 p-6 my-8"
+        className="w-full max-w-3xl bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/10 p-6 my-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -455,7 +455,7 @@ function CreateBroadcastModal({
               <input
                 type="text"
                 placeholder="Search templates..."
-                className="w-full pl-10 pr-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
@@ -467,7 +467,7 @@ function CreateBroadcastModal({
                     'p-4 rounded-xl border text-left transition-all',
                     selectedTemplate?.id === template.id
                       ? 'border-[#25D366] bg-[#25D366]/10'
-                      : 'border-white/10 hover:border-white/20 bg-[#0a0a0f]'
+                      : 'border-white/10 hover:border-white/20 bg-[#0b1215]'
                   )}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -502,7 +502,7 @@ function CreateBroadcastModal({
                     'w-full p-4 rounded-xl border text-left transition-all flex items-center gap-4',
                     selectedSegments.includes(segment.id)
                       ? 'border-[#25D366] bg-[#25D366]/10'
-                      : 'border-white/10 hover:border-white/20 bg-[#0a0a0f]'
+                      : 'border-white/10 hover:border-white/20 bg-[#0b1215]'
                   )}
                 >
                   <div
@@ -539,7 +539,7 @@ function CreateBroadcastModal({
           <div className="space-y-6">
             <div>
               <h4 className="font-medium mb-4">Template Variables</h4>
-              <div className="bg-[#0a0a0f] rounded-xl p-4 mb-4">
+              <div className="bg-[#0b1215] rounded-xl p-4 mb-4">
                 <p className="text-sm text-gray-400 mb-3">Preview:</p>
                 <p className="text-sm">
                   {selectedTemplate?.body_text.replace(/\{\{(\d+)\}\}/g, (_, n) => {
@@ -556,7 +556,7 @@ function CreateBroadcastModal({
                       placeholder={`Variable ${num}`}
                       value={variables[num] || ''}
                       onChange={(e) => setVariables({ ...variables, [num]: e.target.value })}
-                      className="w-full px-3 py-2 bg-[#0a0a0f] border border-white/10 rounded-lg text-sm"
+                      className="w-full px-3 py-2 bg-[#0b1215] border border-white/10 rounded-lg text-sm"
                     />
                   </div>
                 ))}
@@ -599,20 +599,20 @@ function CreateBroadcastModal({
                     type="date"
                     value={scheduledDate}
                     onChange={(e) => setScheduledDate(e.target.value)}
-                    className="px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl"
+                    className="px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl"
                   />
                   <input
                     type="time"
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
-                    className="px-4 py-3 bg-[#0a0a0f] border border-white/10 rounded-xl"
+                    className="px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl"
                   />
                 </div>
               )}
             </div>
 
             {/* Summary */}
-            <div className="bg-[#0a0a0f] rounded-xl p-4">
+            <div className="bg-[#0b1215] rounded-xl p-4">
               <h4 className="font-medium mb-3">Summary</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

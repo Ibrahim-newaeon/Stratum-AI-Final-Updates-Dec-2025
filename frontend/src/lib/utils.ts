@@ -59,6 +59,22 @@ export function getPlatformColor(platform: string): string {
     x: '#000000',
     youtube: '#FF0000',
     pinterest: '#E60023',
+    // Brands
+    mercedes: '#A0A0A0',
+    'mercedes-benz': '#A0A0A0',
+    bmw: '#0066B1',
+    nike: '#111111',
+    adidas: '#000000',
+    apple: '#A2AAAD',
+    samsung: '#1428A0',
+    amazon: '#FF9900',
+    netflix: '#E50914',
+    spotify: '#1DB954',
+    uber: '#000000',
+    airbnb: '#FF5A5F',
+    shopify: '#96BF48',
+    stripe: '#635BFF',
+    slack: '#4A154B',
   };
   return colors[platform.toLowerCase()] || '#6B7280';
 }

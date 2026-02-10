@@ -34,7 +34,7 @@ const features = [
     title: 'Smart Segmentation',
     description:
       'Build segments with behavioral rules, RFM scores, and lifecycle stages. Preview before you publish.',
-    color: '#22c55e',
+    color: '#34c759',
   },
   {
     icon: ArrowPathIcon,
@@ -218,21 +218,21 @@ export default function CDPSolution() {
                     <td className="p-4 text-white">{feature}</td>
                     <td className="p-4 text-center">
                       {stratum ? (
-                        <span style={{ color: '#22c55e' }}>✓</span>
+                        <span style={{ color: '#34c759' }}>✓</span>
                       ) : (
                         <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
                       )}
                     </td>
                     <td className="p-4 text-center">
                       {segment ? (
-                        <span style={{ color: '#22c55e' }}>✓</span>
+                        <span style={{ color: '#34c759' }}>✓</span>
                       ) : (
                         <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
                       )}
                     </td>
                     <td className="p-4 text-center">
                       {mparticle ? (
-                        <span style={{ color: '#22c55e' }}>✓</span>
+                        <span style={{ color: '#34c759' }}>✓</span>
                       ) : (
                         <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
                       )}

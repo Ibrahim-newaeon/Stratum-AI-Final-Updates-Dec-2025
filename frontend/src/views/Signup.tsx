@@ -1,6 +1,6 @@
 /**
  * Signup Page - Stratum HoloGlass Theme
- * Deep black background (#0a0a0f) + gold accent frosted glass cards
+ * Deep black background (#0b1215) + gold accent frosted glass cards
  */
 
 import { useState } from 'react';
@@ -22,25 +22,25 @@ import { pageSEO, SEO } from '@/components/common/SEO';
 
 // Stratum Theme v4.0 - Trust-Gated Autopilot
 const theme = {
-  primary: '#D4AF37', // Stratum Gold
-  primaryLight: 'rgba(212, 175, 55, 0.15)',
-  primaryBright: '#F4D03F',
-  green: '#22c55e', // Status Success
+  primary: '#00c7be', // Stratum Gold
+  primaryLight: 'rgba(0, 199, 190, 0.15)',
+  primaryBright: '#f0c95c',
+  green: '#34c759', // Status Success
   orange: '#f59e0b', // Status Warning
   purple: '#8b5cf6', // Accent Purple
-  cyan: '#14F0C6', // Accent Cyan
+  cyan: '#00c7be', // Accent Cyan
   bgVoid: '#050508', // Deepest background
-  bgBase: '#0a0a0f', // Deep navy black
+  bgBase: '#0b1215', // Deep navy black
   bgCard: 'rgba(18, 18, 26, 0.9)', // Card background
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
   border: 'rgba(255, 255, 255, 0.06)',
   borderHover: 'rgba(255, 255, 255, 0.10)',
-  borderGold: 'rgba(212, 175, 55, 0.15)',
-  success: '#22c55e',
-  goldGlow: 'rgba(212, 175, 55, 0.5)',
-  goldSubtle: 'rgba(212, 175, 55, 0.1)',
+  borderGold: 'rgba(0, 199, 190, 0.15)',
+  success: '#34c759',
+  goldGlow: 'rgba(0, 199, 190, 0.5)',
+  goldSubtle: 'rgba(0, 199, 190, 0.1)',
 };
 
 // HUD Corner component for sci-fi styling
@@ -131,7 +131,7 @@ export default function Signup() {
           background: `
             radial-gradient(ellipse 40% 40% at 20% 30%, ${theme.goldSubtle}, transparent),
             radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
-            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(20, 240, 198, 0.05), transparent)
+            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(0, 199, 190, 0.05), transparent)
           `,
         }}
       />
@@ -473,17 +473,17 @@ export default function Signup() {
                 className="w-full py-3.5 rounded-2xl font-semibold text-black transition-all duration-200 disabled:opacity-50 mt-2"
                 style={{
                   background: theme.primary,
-                  boxShadow: '0 0 30px rgba(212, 175, 55, 0.2)',
+                  boxShadow: '0 0 30px rgba(0, 199, 190, 0.2)',
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading) {
                     e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 0 40px rgba(212, 175, 55, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 0 40px rgba(0, 199, 190, 0.3)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 0 30px rgba(212, 175, 55, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 0 30px rgba(0, 199, 190, 0.2)';
                 }}
               >
                 {isLoading ? (

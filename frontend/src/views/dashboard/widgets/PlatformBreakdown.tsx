@@ -6,14 +6,56 @@ import { AlertTriangle, BarChart3, CheckCircle2, Loader2, XCircle } from 'lucide
 import { cn } from '@/lib/utils';
 import type { PlatformSummary } from '@/api/dashboard';
 
-// Platform icon components/colors
-const platformConfigs: Record<string, { color: string; bgColor: string }> = {
-  google: { color: 'text-[#4285F4]', bgColor: 'bg-[#4285F4]/10' },
-  meta: { color: 'text-[#0668E1]', bgColor: 'bg-[#0668E1]/10' },
-  facebook: { color: 'text-[#1877F2]', bgColor: 'bg-[#1877F2]/10' },
-  tiktok: { color: 'text-[#000000] dark:text-white', bgColor: 'bg-black/10 dark:bg-white/10' },
-  snapchat: { color: 'text-[#FFFC00]', bgColor: 'bg-[#FFFC00]/10' },
-  default: { color: 'text-muted-foreground', bgColor: 'bg-muted' },
+// Platform icon components/colors with brand-dominant styling
+const platformConfigs: Record<string, {
+  color: string;
+  bgColor: string;
+  brandHex: string;
+  borderColor: string;
+  gradientBg: string;
+}> = {
+  google: {
+    color: 'text-[#4285F4]', bgColor: 'bg-[#4285F4]/10',
+    brandHex: '#4285F4',
+    borderColor: 'border-[#4285F4]/25',
+    gradientBg: 'linear-gradient(135deg, rgba(66,133,244,0.08), rgba(66,133,244,0.02))',
+  },
+  meta: {
+    color: 'text-[#0866FF]', bgColor: 'bg-[#0866FF]/10',
+    brandHex: '#0866FF',
+    borderColor: 'border-[#0866FF]/25',
+    gradientBg: 'linear-gradient(135deg, rgba(8,102,255,0.08), rgba(8,102,255,0.02))',
+  },
+  facebook: {
+    color: 'text-[#1877F2]', bgColor: 'bg-[#1877F2]/10',
+    brandHex: '#1877F2',
+    borderColor: 'border-[#1877F2]/25',
+    gradientBg: 'linear-gradient(135deg, rgba(24,119,242,0.08), rgba(24,119,242,0.02))',
+  },
+  tiktok: {
+    color: 'text-[#00F2EA]', bgColor: 'bg-[#00F2EA]/10',
+    brandHex: '#00F2EA',
+    borderColor: 'border-[#00F2EA]/25',
+    gradientBg: 'linear-gradient(135deg, rgba(0,242,234,0.08), rgba(0,242,234,0.02))',
+  },
+  snapchat: {
+    color: 'text-[#FFFC00]', bgColor: 'bg-[#FFFC00]/10',
+    brandHex: '#FFFC00',
+    borderColor: 'border-[#FFFC00]/25',
+    gradientBg: 'linear-gradient(135deg, rgba(255,252,0,0.08), rgba(255,252,0,0.02))',
+  },
+  mercedes: {
+    color: 'text-[#A0A0A0]', bgColor: 'bg-[#A0A0A0]/10',
+    brandHex: '#A0A0A0',
+    borderColor: 'border-[#A0A0A0]/25',
+    gradientBg: 'linear-gradient(135deg, rgba(160,160,160,0.08), rgba(160,160,160,0.02))',
+  },
+  default: {
+    color: 'text-muted-foreground', bgColor: 'bg-muted',
+    brandHex: '#6B7280',
+    borderColor: 'border-white/10',
+    gradientBg: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+  },
 };
 
 interface PlatformBreakdownProps {
@@ -45,11 +87,11 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
   const getStatusIcon = (status: PlatformSummary['status']) => {
     switch (status) {
       case 'connected':
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+        return <CheckCircle2 className="w-4 h-4 text-[#00c7be]" />;
       case 'error':
         return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'disconnected':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <XCircle className="w-4 h-4 text-[#ff6b6b]" />;
       default:
         return null;
     }
@@ -80,7 +122,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
         <h3 className="font-semibold">Platform Performance</h3>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>Total: {formatCurrency(totalSpend)} spend</span>
-          <span className="text-green-500">{formatCurrency(totalRevenue)} revenue</span>
+          <span className="text-[#00c7be]">{formatCurrency(totalRevenue)} revenue</span>
         </div>
       </div>
 
@@ -93,8 +135,21 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
             return (
               <div
                 key={platform.platform}
-                className="bg-background border rounded-lg p-4 relative overflow-hidden"
+                className={cn(
+                  'rounded-lg p-4 relative overflow-hidden backdrop-blur-md',
+                  'border transition-all duration-200',
+                  config.borderColor
+                )}
+                style={{
+                  background: config.gradientBg,
+                  boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), 0 2px 12px rgba(0,0,0,0.15)',
+                }}
               >
+                {/* Brand accent top bar */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-[3px] rounded-t-lg"
+                  style={{ background: config.brandHex }}
+                />
                 {/* Spend bar indicator */}
                 <div
                   className={cn('absolute bottom-0 left-0 h-1 transition-all', config.bgColor)}
@@ -124,7 +179,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Revenue</span>
-                    <span className="font-medium text-green-500">
+                    <span className="font-medium text-[#00c7be]">
                       {formatCurrency(platform.revenue)}
                     </span>
                   </div>
@@ -134,7 +189,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                       className={cn(
                         'font-medium',
                         platform.roas !== null && platform.roas >= 3
-                          ? 'text-green-500'
+                          ? 'text-[#00c7be]'
                           : platform.roas !== null && platform.roas >= 1
                             ? 'text-yellow-500'
                             : 'text-muted-foreground'

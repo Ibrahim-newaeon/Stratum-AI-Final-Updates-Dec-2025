@@ -3,8 +3,8 @@ import { ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 // Stratum Gold Dark theme
 const theme = {
-  gold: '#D4AF37',
-  goldLight: 'rgba(212, 175, 55, 0.15)',
+  gold: '#00c7be',
+  goldLight: 'rgba(0, 199, 190, 0.15)',
   orange: '#FF9F0A',
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
@@ -30,7 +30,7 @@ export function CTA() {
       <div className="absolute inset-0 overflow-hidden">
         <div
           className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(212, 175, 55, 0.1), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.1), transparent 60%)' }}
         />
         <div
           className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-3xl"
@@ -45,7 +45,7 @@ export function CTA() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
             style={{
               background: theme.goldLight,
-              border: `1px solid rgba(212, 175, 55, 0.3)`,
+              border: `1px solid rgba(0, 199, 190, 0.3)`,
             }}
           >
             <SparklesIcon className="w-4 h-4" style={{ color: theme.gold }} />
@@ -73,7 +73,7 @@ export function CTA() {
                        transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             style={{
               background: theme.gold,
-              boxShadow: '0 0 40px rgba(212, 175, 55, 0.3)',
+              boxShadow: '0 0 40px rgba(0, 199, 190, 0.3)',
             }}
           >
             14 Day Free Trial

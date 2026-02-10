@@ -97,11 +97,11 @@ export default function AIFooter() {
             <a href="/" className="flex items-center gap-3 mb-6">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: '#D4AF37' }}
+                style={{ background: '#00c7be' }}
               >
                 <span className="text-lg font-bold text-white">S</span>
               </div>
-              <span className="text-xl font-semibold tracking-tight" style={{ color: '#D4AF37' }}>Stratum AI</span>
+              <span className="text-xl font-semibold tracking-tight" style={{ color: '#00c7be' }}>Stratum AI</span>
             </a>
             <p className="text-sm text-gray-500 mb-6">
               AI-Powered Revenue Operating System with Trust-Gated Autopilot.
@@ -164,7 +164,7 @@ export default function AIFooter() {
       </div>
 
       {/* Subtle gradient overlay at top */}
-      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(212, 175, 55, 0.5), transparent)' }} />
+      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(0, 199, 190, 0.5), transparent)' }} />
     </footer>
   );
 }

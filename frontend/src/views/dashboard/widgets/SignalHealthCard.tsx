@@ -44,8 +44,8 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
     switch (status) {
       case 'healthy':
         return {
-          color: 'text-green-500',
-          bgColor: 'bg-green-500/10',
+          color: 'text-[#00c7be]',
+          bgColor: 'bg-[#00c7be]/10',
           icon: CheckCircle2,
           label: 'Healthy',
         };
@@ -58,8 +58,8 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
         };
       case 'critical':
         return {
-          color: 'text-red-500',
-          bgColor: 'bg-red-500/10',
+          color: 'text-[#ff6b6b]',
+          bgColor: 'bg-[#ff6b6b]/10',
           icon: XCircle,
           label: 'Critical',
         };
@@ -77,9 +77,9 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
   const StatusIcon = statusConfig.icon;
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return 'text-green-500';
+    if (score >= 70) return 'text-[#00c7be]';
     if (score >= 40) return 'text-yellow-500';
-    return 'text-red-500';
+    return 'text-[#ff6b6b]';
   };
 
   const formatFreshness = (minutes: number | null) => {
@@ -128,10 +128,10 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
             className={cn(
               'h-full rounded-full transition-all duration-500',
               signalHealth.overall_score >= 70
-                ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                ? 'bg-gradient-to-r from-[#00c7be] to-[#34c759]'
                 : signalHealth.overall_score >= 40
                   ? 'bg-gradient-to-r from-yellow-500 to-amber-400'
-                  : 'bg-gradient-to-r from-red-500 to-red-400'
+                  : 'bg-gradient-to-r from-[#ff6b6b] to-[#ff8a8a]'
             )}
             style={{ width: `${signalHealth.overall_score}%` }}
           />
@@ -170,7 +170,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           <span
             className={cn(
               'font-medium',
-              signalHealth.api_health ? 'text-green-500' : 'text-red-500'
+              signalHealth.api_health ? 'text-[#00c7be]' : 'text-[#ff6b6b]'
             )}
           >
             {signalHealth.api_health ? 'Online' : 'Offline'}
@@ -185,7 +185,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           <span
             className={cn(
               'font-medium',
-              signalHealth.autopilot_enabled ? 'text-green-500' : 'text-muted-foreground'
+              signalHealth.autopilot_enabled ? 'text-[#00c7be]' : 'text-muted-foreground'
             )}
           >
             {signalHealth.autopilot_enabled ? 'Enabled' : 'Disabled'}

@@ -54,9 +54,9 @@ export default function Security() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(34, 197, 94, 0.1)',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
-              color: '#22c55e',
+              background: 'rgba(52, 199, 89, 0.1)',
+              border: '1px solid rgba(52, 199, 89, 0.3)',
+              color: '#34c759',
             }}
           >
             <ShieldCheckIcon className="w-4 h-4" />
@@ -101,7 +101,7 @@ export default function Security() {
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                 }}
               >
-                <feature.icon className="w-10 h-10 mb-4" style={{ color: '#22c55e' }} />
+                <feature.icon className="w-10 h-10 mb-4" style={{ color: '#34c759' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                   {feature.description}
@@ -177,9 +177,9 @@ export default function Security() {
                 key={cert}
                 className="px-6 py-3 rounded-xl"
                 style={{
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  color: '#22c55e',
+                  background: 'rgba(52, 199, 89, 0.1)',
+                  border: '1px solid rgba(52, 199, 89, 0.3)',
+                  color: '#34c759',
                 }}
               >
                 {cert}
@@ -196,7 +196,7 @@ export default function Security() {
             className="p-12 rounded-3xl"
             style={{
               background:
-                'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                'linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >

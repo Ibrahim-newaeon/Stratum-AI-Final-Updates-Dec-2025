@@ -47,7 +47,7 @@ const features = [
     title: 'Multi-Platform Audience Sync',
     description:
       'Push segments to Meta, Google, TikTok & Snapchat with one click. Auto-sync keeps audiences fresh.',
-    color: '#22c55e',
+    color: '#34c759',
   },
   {
     icon: ChartBarIcon,
@@ -74,7 +74,7 @@ const features = [
     icon: ChartPieIcon,
     title: 'RFM Analysis',
     description: 'Built-in Recency, Frequency, Monetary analysis for customer value segmentation.',
-    color: '#14b8a6',
+    color: '#00c7be',
   },
   {
     icon: CloudArrowUpIcon,

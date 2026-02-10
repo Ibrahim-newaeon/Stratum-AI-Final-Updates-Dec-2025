@@ -10,7 +10,7 @@ const categoryColors: Record<string, string> = {
   'Ad Platforms': '#f97316',
   'Analytics & Attribution': '#06b6d4',
   'CRM & Sales': '#a855f7',
-  'E-commerce': '#22c55e',
+  'E-commerce': '#34c759',
   Communication: '#3b82f6',
 };
 

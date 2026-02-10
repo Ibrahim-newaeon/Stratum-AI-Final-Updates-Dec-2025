@@ -72,9 +72,9 @@ export default function Careers() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(34, 197, 94, 0.1)',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
-              color: '#22c55e',
+              background: 'rgba(52, 199, 89, 0.1)',
+              border: '1px solid rgba(52, 199, 89, 0.3)',
+              color: '#34c759',
             }}
           >
             <BriefcaseIcon className="w-4 h-4" />
@@ -193,7 +193,7 @@ export default function Careers() {
             className="p-12 rounded-3xl"
             style={{
               background:
-                'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                'linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >

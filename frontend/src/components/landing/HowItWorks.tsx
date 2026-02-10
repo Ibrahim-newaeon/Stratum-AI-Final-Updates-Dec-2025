@@ -11,11 +11,11 @@ import {
 
 // Stratum Gold Dark theme
 const theme = {
-  gold: '#D4AF37',
-  goldLight: 'rgba(212, 175, 55, 0.15)',
-  green: '#22c55e', // Stratum Green
+  gold: '#00c7be',
+  goldLight: 'rgba(0, 199, 190, 0.15)',
+  green: '#34c759', // Stratum Green
   orange: '#FF9F0A',
-  cyan: '#14F0C6',
+  cyan: '#00c7be',
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -72,7 +72,7 @@ export function HowItWorks() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
                 background: theme.goldLight,
-                border: '1px solid rgba(212, 175, 55, 0.3)',
+                border: '1px solid rgba(0, 199, 190, 0.3)',
               }}
             >
               <span className="text-sm font-medium" style={{ color: theme.gold }}>
@@ -166,14 +166,14 @@ export function HowItWorks() {
             <div
               className="absolute inset-0"
               style={{
-                background: `linear-gradient(135deg, rgba(212, 175, 55, 0.05), rgba(20, 240, 198, 0.05))`,
+                background: `linear-gradient(135deg, rgba(0, 199, 190, 0.05), rgba(20, 240, 198, 0.05))`,
               }}
             />
 
             <div className="relative flex items-start gap-6">
               <div
                 className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(34, 197, 94, 0.1)' }}
+                style={{ background: 'rgba(52, 199, 89, 0.1)' }}
               >
                 <CheckCircleIcon className="w-6 h-6" style={{ color: theme.green }} />
               </div>

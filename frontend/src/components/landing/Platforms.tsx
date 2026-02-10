@@ -1,9 +1,11 @@
-// Stratum Gold Dark theme
+// Midnight Teal theme
 const theme = {
-  gold: '#D4AF37',
-  goldLight: 'rgba(212, 175, 55, 0.15)',
-  bgBase: '#000000',
-  bgCard: 'rgba(255, 255, 255, 0.03)',
+  primary: '#00c7be',
+  primaryLight: 'rgba(0, 199, 190, 0.15)',
+  gold: '#e2b347',
+  goldLight: 'rgba(226, 179, 71, 0.15)',
+  bgBase: '#0b1215',
+  bgCard: 'rgba(255, 255, 255, 0.05)',
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
@@ -17,24 +19,32 @@ export function Platforms() {
       api: 'Custom Audiences API',
       icon: MetaIcon,
       iconColor: 'rgba(255, 255, 255, 0.7)',
+      brandHex: '#0866FF',
+      gradientBg: 'linear-gradient(135deg, rgba(8,102,255,0.08), rgba(8,102,255,0.02))',
     },
     {
       name: 'Google',
       api: 'Customer Match API',
       icon: GoogleIcon,
       iconColor: 'rgba(255, 255, 255, 0.7)',
+      brandHex: '#4285F4',
+      gradientBg: 'linear-gradient(135deg, rgba(66,133,244,0.08), rgba(66,133,244,0.02))',
     },
     {
       name: 'TikTok',
       api: 'DMP Custom Audience API',
       icon: TikTokIcon,
       iconColor: 'rgba(255, 255, 255, 0.7)',
+      brandHex: '#00F2EA',
+      gradientBg: 'linear-gradient(135deg, rgba(0,242,234,0.08), rgba(0,242,234,0.02))',
     },
     {
       name: 'Snapchat',
       api: 'Audience Match SAM API',
       icon: SnapchatIcon,
       iconColor: 'rgba(255, 255, 255, 0.5)',
+      brandHex: '#FFFC00',
+      gradientBg: 'linear-gradient(135deg, rgba(255,252,0,0.08), rgba(255,252,0,0.02))',
     },
   ];
 
@@ -47,17 +57,17 @@ export function Platforms() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: theme.goldLight,
-                border: '1px solid rgba(212, 175, 55, 0.3)',
+                background: theme.primaryLight,
+                border: '1px solid rgba(0, 199, 190, 0.3)',
               }}
             >
-              <span className="text-sm font-medium" style={{ color: theme.gold }}>
+              <span className="text-sm font-medium" style={{ color: theme.primary }}>
                 Platform Integrations
               </span>
             </div>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 text-center">
-            One source of truth. <span style={{ color: theme.gold }}>Every platform.</span>
+            One source of truth. <span style={{ color: theme.primary }}>Every platform.</span>
           </h2>
           <p className="text-lg text-center" style={{ color: theme.textMuted }}>
             Unified Across Your Entire Ad Stack
@@ -69,14 +79,21 @@ export function Platforms() {
           {platforms.map((platform) => (
             <div
               key={platform.name}
-              className="group flex flex-col items-center justify-center p-8 rounded-2xl transition-all duration-300 hover:-translate-y-1"
+              className="group flex flex-col items-center justify-center p-8 rounded-2xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden"
               style={{
-                background: theme.bgCard,
+                background: platform.gradientBg,
                 backdropFilter: 'blur(40px)',
                 WebkitBackdropFilter: 'blur(40px)',
-                border: `1px solid ${theme.border}`,
+                border: `1px solid rgba(255,255,255,0.08)`,
+                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), 0 2px 12px rgba(0,0,0,0.15)',
               }}
             >
+              {/* Brand accent top bar */}
+              <div
+                className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl"
+                style={{ background: platform.brandHex }}
+              />
+
               {/* Icon Container */}
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"

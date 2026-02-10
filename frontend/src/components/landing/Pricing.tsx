@@ -93,9 +93,9 @@ const fallbackTrustBadges: TrustBadge[] = [
 
 // Stratum Gold Dark theme
 const theme = {
-  gold: '#D4AF37',
-  goldLight: 'rgba(212, 175, 55, 0.15)',
-  green: '#22c55e', // Stratum Green
+  gold: '#00c7be',
+  goldLight: 'rgba(0, 199, 190, 0.15)',
+  green: '#34c759', // Stratum Green
   bgBase: '#000000',
   bgCard: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
@@ -152,14 +152,14 @@ export function Pricing() {
               className="relative flex flex-col rounded-3xl border-0 transition-all duration-300 hover:-translate-y-1"
               style={{
                 background: plan.highlighted
-                  ? 'linear-gradient(to bottom, rgba(212, 175, 55, 0.1), rgba(255, 255, 255, 0.03))'
+                  ? 'linear-gradient(to bottom, rgba(0, 199, 190, 0.1), rgba(255, 255, 255, 0.03))'
                   : theme.bgCard,
                 backdropFilter: 'blur(40px)',
                 WebkitBackdropFilter: 'blur(40px)',
                 border: plan.highlighted
-                  ? '2px solid rgba(212, 175, 55, 0.3)'
+                  ? '2px solid rgba(0, 199, 190, 0.3)'
                   : `1px solid ${theme.border}`,
-                boxShadow: plan.highlighted ? '0 0 40px rgba(212, 175, 55, 0.15)' : 'none',
+                boxShadow: plan.highlighted ? '0 0 40px rgba(0, 199, 190, 0.15)' : 'none',
               }}
             >
               {/* Badge */}
@@ -214,7 +214,7 @@ export function Pricing() {
                       ? {
                           background: theme.gold,
                           color: '#FFFFFF',
-                          boxShadow: '0 0 30px rgba(212, 175, 55, 0.3)',
+                          boxShadow: '0 0 30px rgba(0, 199, 190, 0.3)',
                         }
                       : {
                           background: 'rgba(255, 255, 255, 0.05)',
@@ -275,7 +275,7 @@ export function Pricing() {
                 style={{
                   background: theme.goldLight,
                   color: theme.gold,
-                  border: `1px solid rgba(212, 175, 55, 0.3)`,
+                  border: `1px solid rgba(0, 199, 190, 0.3)`,
                 }}
                 onClick={() => navigate('/contact')}
               >

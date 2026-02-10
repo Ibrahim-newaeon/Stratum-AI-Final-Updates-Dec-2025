@@ -67,26 +67,27 @@ import { NeuralNetworkBg } from '@/components/ui/NeuralNetworkBg';
 import { TrustGateIndicator } from '@/components/ui/TrustGateIndicator';
 import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
 
-// Stratum AI Dashboard Theme - HoloGlass (Gold + Cyan)
+// Stratum AI Dashboard Theme - Midnight Teal Glass
 const theme = {
-  primary: '#D4AF37', // Stratum Gold
-  primaryLight: 'rgba(212, 175, 55, 0.15)',
-  green: '#22c55e', // Status Success
-  orange: '#f59e0b', // Status Warning
-  purple: '#8b5cf6', // Accent Purple
-  cyan: '#14F0C6', // Accent Cyan
-  bgBase: '#0a0a0f', // Deep navy black
-  bgCard: '#12121a', // Solid data card (NN/g compliant)
-  bgSurface: '#1a1a24', // Elevated surface
-  bgOverlay: 'rgba(18, 18, 26, 0.75)', // Glass overlay
-  textPrimary: '#ffffff',
-  textSecondary: 'rgba(255, 255, 255, 0.7)',
-  textMuted: 'rgba(255, 255, 255, 0.5)',
-  border: 'rgba(255, 255, 255, 0.06)',
-  borderHover: 'rgba(255, 255, 255, 0.12)',
-  borderGold: 'rgba(212, 175, 55, 0.2)',
-  success: '#22c55e',
-  danger: '#ef4444',
+  primary: '#00c7be',                     // Midnight Teal
+  primaryLight: 'rgba(0, 199, 190, 0.15)',
+  gold: '#e2b347',                        // CTA accent
+  green: '#34c759',                       // Jade
+  orange: '#f59e0b',
+  purple: '#a78bfa',
+  cyan: '#00c7be',
+  bgBase: '#0b1215',                      // Midnight Ocean
+  bgCard: 'rgba(255, 255, 255, 0.05)',    // Glass surface
+  bgSurface: 'rgba(255, 255, 255, 0.08)',
+  bgOverlay: 'rgba(11, 18, 21, 0.75)',
+  textPrimary: 'rgba(245, 245, 247, 0.92)',
+  textSecondary: 'rgba(245, 245, 247, 0.6)',
+  textMuted: 'rgba(245, 245, 247, 0.35)',
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderHover: 'rgba(255, 255, 255, 0.15)',
+  borderGold: 'rgba(226, 179, 71, 0.2)',
+  success: '#34c759',
+  danger: '#ff6b6b',
 };
 
 const navigation = [
@@ -241,7 +242,9 @@ export default function DashboardLayout() {
             sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64'
           )}
           style={{
-            background: theme.bgCard, // Solid background (NN/g: persistent nav = solid)
+            background: theme.bgBase,
+            backdropFilter: 'blur(40px) saturate(1.8)',
+            WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
             borderRight: `1px solid ${theme.border}`,
           }}
         >

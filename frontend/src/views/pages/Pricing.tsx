@@ -146,7 +146,7 @@ export default function Pricing() {
                     <li key={feature} className="flex items-start gap-3">
                       <CheckIcon
                         className="w-5 h-5 flex-shrink-0 mt-0.5"
-                        style={{ color: '#22c55e' }}
+                        style={{ color: '#34c759' }}
                       />
                       <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                         {feature}

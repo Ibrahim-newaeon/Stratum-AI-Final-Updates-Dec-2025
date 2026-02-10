@@ -48,7 +48,7 @@ export const NeuralNetworkBg = memo(function NeuralNetworkBg() {
       <div
         className="absolute top-0 left-0 w-[600px] h-[600px]"
         style={{
-          background: 'radial-gradient(ellipse at 0% 0%, rgba(212, 175, 55, 0.08), transparent 70%)',
+          background: 'radial-gradient(ellipse at 0% 0%, rgba(0, 199, 190, 0.08), transparent 70%)',
         }}
       />
       <div
@@ -60,7 +60,7 @@ export const NeuralNetworkBg = memo(function NeuralNetworkBg() {
       <div
         className="absolute top-1/2 right-0 w-[400px] h-[400px] -translate-y-1/2"
         style={{
-          background: 'radial-gradient(ellipse at 100% 50%, rgba(34, 197, 94, 0.04), transparent 70%)',
+          background: 'radial-gradient(ellipse at 100% 50%, rgba(52, 199, 89, 0.04), transparent 70%)',
         }}
       />
     </div>

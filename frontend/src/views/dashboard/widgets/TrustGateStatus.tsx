@@ -52,11 +52,11 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
   const gateConfigs = {
     PASS: {
       icon: ShieldCheck,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500',
-      bgLight: 'bg-green-500/10',
-      borderColor: 'border-green-500/30',
-      ringColor: 'ring-green-500/20',
+      color: 'text-[#00c7be]',
+      bgColor: 'bg-[#00c7be]',
+      bgLight: 'bg-[#00c7be]/10',
+      borderColor: 'border-[#00c7be]/30',
+      ringColor: 'ring-[#00c7be]/20',
       label: 'PASS',
       description: 'Autopilot Enabled',
       detail: 'Signal health is strong. Automations will execute automatically.',
@@ -78,11 +78,11 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
     },
     BLOCK: {
       icon: ShieldOff,
-      color: 'text-red-500',
-      bgColor: 'bg-red-500',
-      bgLight: 'bg-red-500/10',
-      borderColor: 'border-red-500/30',
-      ringColor: 'ring-red-500/20',
+      color: 'text-[#ff6b6b]',
+      bgColor: 'bg-[#ff6b6b]',
+      bgLight: 'bg-[#ff6b6b]/10',
+      borderColor: 'border-[#ff6b6b]/30',
+      ringColor: 'ring-[#ff6b6b]/20',
       label: 'BLOCK',
       description: 'Manual Required',
       detail: 'Signal health is critical. All automations blocked, manual action required.',
@@ -170,7 +170,7 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div className="h-full flex">
             <div
-              className="bg-red-500 transition-all duration-500"
+              className="bg-[#ff6b6b] transition-all duration-500"
               style={{
                 width: `${Math.min(DEGRADED_THRESHOLD, signalHealth?.overall_score ?? 0)}%`,
               }}
@@ -182,7 +182,7 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
               }}
             />
             <div
-              className="bg-green-500 transition-all duration-500"
+              className="bg-[#00c7be] transition-all duration-500"
               style={{
                 width: `${Math.max(0, (signalHealth?.overall_score ?? 0) - HEALTHY_THRESHOLD)}%`,
               }}
@@ -193,11 +193,11 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
         {/* Threshold markers */}
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>0</span>
-          <span className="text-red-500">Block (&lt;{DEGRADED_THRESHOLD})</span>
+          <span className="text-[#ff6b6b]">Block (&lt;{DEGRADED_THRESHOLD})</span>
           <span className="text-yellow-500">
             Hold ({DEGRADED_THRESHOLD}-{HEALTHY_THRESHOLD - 1})
           </span>
-          <span className="text-green-500">Pass (&gt;={HEALTHY_THRESHOLD})</span>
+          <span className="text-[#00c7be]">Pass (&gt;={HEALTHY_THRESHOLD})</span>
         </div>
       </div>
 
@@ -210,7 +210,7 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
           <span className="text-sm font-medium">{config.actionLabel}</span>
         </div>
         {signalHealth?.autopilot_enabled && gateStatus === 'PASS' && (
-          <span className="text-xs px-2 py-1 bg-green-500/10 text-green-500 rounded-full font-medium">
+          <span className="text-xs px-2 py-1 bg-[#00c7be]/10 text-[#00c7be] rounded-full font-medium">
             Active
           </span>
         )}

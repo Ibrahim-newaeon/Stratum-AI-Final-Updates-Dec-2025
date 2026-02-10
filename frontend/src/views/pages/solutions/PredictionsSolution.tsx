@@ -29,7 +29,7 @@ const predictions = [
     description:
       'Predict customer lifetime value at acquisition. Optimize acquisition spend accordingly.',
     accuracy: '91%',
-    color: '#22c55e',
+    color: '#34c759',
   },
   {
     icon: ArrowTrendingUpIcon,
@@ -121,20 +121,20 @@ export default function PredictionsSolution() {
                 <div
                   className="p-4 rounded-xl"
                   style={{
-                    background: 'rgba(34, 197, 94, 0.1)',
-                    border: '1px solid rgba(34, 197, 94, 0.2)',
+                    background: 'rgba(52, 199, 89, 0.1)',
+                    border: '1px solid rgba(52, 199, 89, 0.2)',
                   }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-white">High LTV Potential</span>
-                    <span className="text-sm font-bold" style={{ color: '#22c55e' }}>
+                    <span className="text-sm font-bold" style={{ color: '#34c759' }}>
                       2,341 customers
                     </span>
                   </div>
                   <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
                     <div
                       className="h-full rounded-full"
-                      style={{ width: '67%', background: '#22c55e' }}
+                      style={{ width: '67%', background: '#34c759' }}
                     />
                   </div>
                 </div>
@@ -200,8 +200,8 @@ export default function PredictionsSolution() {
                       <span
                         className="text-sm font-bold px-2 py-1 rounded"
                         style={{
-                          background: 'rgba(34, 197, 94, 0.1)',
-                          color: '#22c55e',
+                          background: 'rgba(52, 199, 89, 0.1)',
+                          color: '#34c759',
                         }}
                       >
                         {pred.accuracy} accuracy

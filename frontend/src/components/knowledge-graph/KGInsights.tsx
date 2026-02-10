@@ -114,7 +114,7 @@ function HealthScoreRing({ score, status }: { score: number; status: string }) {
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   const statusColors = {
-    healthy: '#22c55e',
+    healthy: '#34c759',
     degraded: '#f59e0b',
     critical: '#ef4444',
   };
@@ -393,7 +393,7 @@ export function KGInsights() {
       </div>
 
       {/* Health Summary Card */}
-      <div className="bg-[#12121a] rounded-xl border border-white/10 p-6">
+      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-white/10 p-6">
         <div className="flex items-center gap-8">
           {healthLoading ? (
             <div className="w-32 h-32 rounded-full bg-white/5 animate-pulse" />
@@ -471,7 +471,7 @@ export function KGInsights() {
             ))}
           </div>
         ) : problems.length === 0 ? (
-          <div className="text-center py-12 bg-[#12121a] rounded-xl border border-white/10">
+          <div className="text-center py-12 bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-white/10">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">All Systems Healthy</h3>
             <p className="text-gray-400">No problems detected in the last 7 days.</p>

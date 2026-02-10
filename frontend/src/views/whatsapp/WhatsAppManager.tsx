@@ -97,7 +97,7 @@ export default function WhatsAppManager() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
+    <div className="min-h-screen bg-[#0b1215] text-white p-6">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -122,7 +122,7 @@ export default function WhatsAppManager() {
                 'flex items-center gap-2 px-4 py-3 rounded-xl transition-all whitespace-nowrap',
                 isActive
                   ? 'bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/20'
-                  : 'bg-[#12121a] text-gray-400 hover:text-white hover:bg-[#1a1a24] border border-white/5'
+                  : 'bg-[rgba(255,_255,_255,_0.05)] text-gray-400 hover:text-white hover:bg-[#1a1a24] border border-white/5'
               )}
             >
               <Icon className="w-5 h-5" />
@@ -221,7 +221,7 @@ function OverviewDashboard({
       </div>
 
       {/* Message Stats */}
-      <div className="bg-[#12121a] rounded-2xl border border-white/5 p-6">
+      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-6">
         <h3 className="text-lg font-semibold mb-4">Message Delivery Performance</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
@@ -264,7 +264,7 @@ function OverviewDashboard({
       </div>
 
       {/* Template Status */}
-      <div className="bg-[#12121a] rounded-2xl border border-white/5 p-6">
+      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-6">
         <h3 className="text-lg font-semibold mb-4">Template Status</h3>
         <div className="space-y-3">
           <StatusRow
@@ -363,7 +363,7 @@ function QuickActionCard({
     <button
       onClick={onClick}
       className={cn(
-        'group bg-[#12121a] rounded-2xl border border-white/5 p-6 text-left transition-all hover:bg-[#1a1a24]',
+        'group bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-6 text-left transition-all hover:bg-[#1a1a24]',
         colorClasses[color]
       )}
     >

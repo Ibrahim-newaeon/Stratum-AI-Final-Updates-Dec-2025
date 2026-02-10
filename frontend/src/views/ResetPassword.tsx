@@ -1,6 +1,6 @@
 /**
  * Reset Password Page - Stratum HoloGlass Theme
- * Deep black background (#0a0a0f) + gold accent
+ * Deep black background (#0b1215) + gold accent
  */
 
 import { useState } from 'react';
@@ -21,17 +21,17 @@ import { useResetPassword } from '@/api/auth';
 
 // Stratum HoloGlass Theme
 const theme = {
-  primary: '#D4AF37',
-  primaryHover: '#B8860B',
-  primaryLight: 'rgba(212, 175, 55, 0.15)',
-  bgBase: '#0a0a0f',
-  bgElevated: '#12121a',
+  primary: '#00c7be',
+  primaryHover: '#c49a2c',
+  primaryLight: 'rgba(0, 199, 190, 0.15)',
+  bgBase: '#0b1215',
+  bgElevated: 'rgba(255, 255, 255, 0.05)',
   bgSurface: 'rgba(255, 255, 255, 0.03)',
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
   border: 'rgba(255, 255, 255, 0.08)',
-  success: '#22c55e',
+  success: '#34c759',
   danger: '#ef4444',
 };
 

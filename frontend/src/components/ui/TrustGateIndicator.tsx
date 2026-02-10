@@ -25,26 +25,29 @@ interface TrustState {
 }
 
 function getTrustState(score: number): TrustState {
+  const root = document.documentElement;
+  const style = getComputedStyle(root);
+
   if (score >= HEALTHY_THRESHOLD) {
     return {
       score,
       status: 'PASS',
-      color: '#22c55e', // status-success
-      bgColor: 'rgba(34, 197, 94, 0.15)',
+      color: style.getPropertyValue('--teal').trim() || '#00c7be',
+      bgColor: style.getPropertyValue('--teal-light').trim() || 'rgba(0, 199, 190, 0.15)',
     };
   } else if (score >= DEGRADED_THRESHOLD) {
     return {
       score,
       status: 'HOLD',
-      color: '#f59e0b', // status-warning
-      bgColor: 'rgba(245, 158, 11, 0.15)',
+      color: style.getPropertyValue('--status-warning').trim() || '#f59e0b',
+      bgColor: style.getPropertyValue('--status-warning-bg').trim() || 'rgba(245, 158, 11, 0.15)',
     };
   } else {
     return {
       score,
       status: 'BLOCK',
-      color: '#ef4444', // status-error
-      bgColor: 'rgba(239, 68, 68, 0.15)',
+      color: style.getPropertyValue('--coral').trim() || '#ff6b6b',
+      bgColor: 'rgba(255, 107, 107, 0.15)',
     };
   }
 }
@@ -81,9 +84,9 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
         className
       )}
       style={{
-        background: '#12121a',
-        border: `2px solid #D4AF37`,
-        boxShadow: '0 0 20px rgba(212, 175, 55, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3)',
+        background: 'var(--bg-primary)',
+        border: '2px solid var(--teal)',
+        boxShadow: '0 0 20px var(--teal-glow), 0 8px 32px rgba(0, 0, 0, 0.3)',
       }}
       role="status"
       aria-label={`Trust Gate: ${state.status}, Signal Health: ${state.score}%`}

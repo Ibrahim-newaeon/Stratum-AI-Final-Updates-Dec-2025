@@ -53,7 +53,7 @@ export default function Contact() {
           <div className="max-w-xl mx-auto text-center">
             <div
               className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
-              style={{ background: 'rgba(34, 197, 94, 0.1)' }}
+              style={{ background: 'rgba(52, 199, 89, 0.1)' }}
             >
               <CheckCircleIcon className="w-10 h-10 text-green-500" />
             </div>

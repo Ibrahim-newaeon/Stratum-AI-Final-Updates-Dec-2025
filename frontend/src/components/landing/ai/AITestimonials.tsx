@@ -99,7 +99,7 @@ export default function AITestimonials() {
   return (
     <section className="relative py-32 overflow-hidden" style={{ background: '#000000' }}>
       {/* Ambient orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(212, 175, 55, 0.05), transparent 60%)' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.05), transparent 60%)' }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
         {/* Section Header - Centered */}
@@ -111,7 +111,7 @@ export default function AITestimonials() {
         >
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Trusted by</span>{' '}
-            <span style={{ color: '#D4AF37' }}>
+            <span style={{ color: '#00c7be' }}>
               Revenue Teams
             </span>
           </h2>

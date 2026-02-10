@@ -114,7 +114,7 @@ export async function generateClientReport(data: ReportData): Promise<void> {
   y += 2;
 
   // EMQ Score badge
-  const emqColor = data.emqScore >= 80 ? '#22c55e' : data.emqScore >= 60 ? '#eab308' : '#ef4444';
+  const emqColor = data.emqScore >= 80 ? '#34c759' : data.emqScore >= 60 ? '#eab308' : '#ef4444';
   pdf.setFillColor(emqColor);
   pdf.roundedRect(margin, y, 30, 15, 3, 3, 'F');
   pdf.setTextColor('#ffffff');
@@ -124,7 +124,7 @@ export async function generateClientReport(data: ReportData): Promise<void> {
 
   // Confidence band
   const bandColors: Record<string, string> = {
-    reliable: '#22c55e',
+    reliable: '#34c759',
     directional: '#eab308',
     unsafe: '#ef4444',
   };
@@ -168,7 +168,7 @@ export async function generateClientReport(data: ReportData): Promise<void> {
 
     // Trend
     if (kpi.trend !== undefined) {
-      const trendColor = kpi.trend >= 0 ? '#22c55e' : '#ef4444';
+      const trendColor = kpi.trend >= 0 ? '#34c759' : '#ef4444';
       const trendText = `${kpi.trend >= 0 ? '+' : ''}${kpi.trend}%`;
       pdf.setTextColor(trendColor);
       pdf.setFontSize(8);

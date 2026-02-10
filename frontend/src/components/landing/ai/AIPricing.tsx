@@ -243,19 +243,19 @@ export default function AIPricing() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: 'rgba(34, 197, 94, 0.15)',
-                border: '1px solid rgba(34, 197, 94, 0.3)',
+                background: 'rgba(52, 199, 89, 0.15)',
+                border: '1px solid rgba(52, 199, 89, 0.3)',
               }}
             >
-              <SparklesIcon className="w-4 h-4" style={{ color: '#22c55e' }} />
-              <span className="text-sm font-medium" style={{ color: '#22c55e' }}>AI-Powered Pricing</span>
+              <SparklesIcon className="w-4 h-4" style={{ color: '#34c759' }} />
+              <span className="text-sm font-medium" style={{ color: '#34c759' }}>AI-Powered Pricing</span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Pay for the AI</span>
             <br />
-            <span style={{ color: '#22c55e' }}>
+            <span style={{ color: '#34c759' }}>
               Power You Need
             </span>
           </h2>

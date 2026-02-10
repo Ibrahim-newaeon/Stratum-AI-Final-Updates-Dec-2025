@@ -272,9 +272,9 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
       return (
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
-          style={{ background: 'rgba(34, 197, 94, 0.2)' }}
+          style={{ background: 'rgba(52, 199, 89, 0.2)' }}
         >
-          <CheckIcon className="w-4 h-4" style={{ color: '#22c55e' }} />
+          <CheckIcon className="w-4 h-4" style={{ color: '#34c759' }} />
         </div>
       );
     case 'no':
@@ -300,11 +300,11 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
           style={{
-            background: 'rgba(212, 175, 55, 0.2)',
-            boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.4)',
+            background: 'rgba(0, 199, 190, 0.2)',
+            boxShadow: '0 0 0 2px rgba(0, 199, 190, 0.4)',
           }}
         >
-          <SparklesIcon className="w-4 h-4" style={{ color: '#D4AF37' }} />
+          <SparklesIcon className="w-4 h-4" style={{ color: '#00c7be' }} />
         </div>
       );
   }
