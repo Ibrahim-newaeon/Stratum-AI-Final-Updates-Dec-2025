@@ -83,8 +83,7 @@ jobs:
 
       - name: Type check with mypy
         run: |
-          mypy app --ignore-missing-imports --no-error-summary || true
-        continue-on-error: true  # Remove this once type errors are fixed
+          mypy app --ignore-missing-imports --no-error-summary
 
       - name: Run unit tests
         env:
@@ -109,7 +108,6 @@ jobs:
           APP_ENV: test
         run: |
           pytest tests/integration -v --tb=short -m "integration"
-        continue-on-error: true  # Remove once integration tests are stable
 
       - name: Generate coverage report
         env:
@@ -121,8 +119,7 @@ jobs:
           PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
           APP_ENV: test
         run: |
-          pytest tests/unit --cov=app --cov-config=.coveragerc --cov-report=xml --cov-report=term-missing --cov-fail-under=70 -m "unit or not integration"
-        continue-on-error: true  # Remove once coverage target is met
+          pytest tests/unit --cov=app --cov-config=.coveragerc --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -m "unit or not integration"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -171,7 +168,6 @@ jobs:
 
       - name: Run unit tests with coverage
         run: npm run test:coverage -- --reporter=verbose
-        continue-on-error: true  # Remove once tests are stable
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

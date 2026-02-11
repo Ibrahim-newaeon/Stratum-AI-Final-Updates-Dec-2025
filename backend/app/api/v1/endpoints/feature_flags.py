@@ -19,6 +19,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.features.flags import (
     FEATURE_CATEGORIES,
@@ -27,6 +28,8 @@ from app.features.flags import (
 )
 from app.features.service import FeatureFlagsService
 from app.schemas.response import APIResponse
+
+logger = get_logger(__name__)
 
 # =============================================================================
 # Tenant Routes
@@ -145,7 +148,12 @@ async def superadmin_update_tenant_features(
     service = FeatureFlagsService(db)
     features = await service.update_tenant_features(tenant_id, updates, user_id)
 
-    # TODO: Log to audit_log
+    logger.info(
+        "feature_flags_updated",
+        tenant_id=tenant_id,
+        user_id=user_id,
+        features_changed=list(updates.model_dump(exclude_unset=True).keys()),
+    )
 
     return APIResponse(
         success=True,

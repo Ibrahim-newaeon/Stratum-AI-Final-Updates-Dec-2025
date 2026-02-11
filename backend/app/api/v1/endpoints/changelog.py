@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
+from app.models import UserRole
 from app.models.settings import (
     ChangelogEntry,
     ChangelogReadStatus,
@@ -29,6 +30,17 @@ from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/changelog", tags=["Changelog"])
 logger = get_logger(__name__)
+
+
+def _require_admin(request: Request) -> int:
+    """Verify user has admin or superadmin role. Returns user_id."""
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    user_role = getattr(request.state, "role", None)
+    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return user_id
 
 
 # =============================================================================
@@ -111,7 +123,12 @@ async def list_changelog_entries(
 
     conditions = []
 
-    # Only show published entries unless admin requests unpublished
+    # Only admins may view unpublished entries
+    if include_unpublished:
+        user_role = getattr(request.state, "role", None)
+        if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value):
+            include_unpublished = False
+
     if not include_unpublished:
         conditions.append(ChangelogEntry.is_published == True)
 
@@ -377,13 +394,7 @@ async def create_changelog_entry(
     """
     Create a new changelog entry (admin only).
     """
-    # TODO: Add admin role check
-    user_id = getattr(request.state, "user_id", None)
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-        )
+    user_id = _require_admin(request)
 
     try:
         entry_type = ChangelogType(body.type)
@@ -439,13 +450,7 @@ async def update_changelog_entry(
     """
     Update a changelog entry (admin only).
     """
-    # TODO: Add admin role check
-    user_id = getattr(request.state, "user_id", None)
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-        )
+    user_id = _require_admin(request)
 
     result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
     entry = result.scalar_one_or_none()
@@ -513,13 +518,7 @@ async def delete_changelog_entry(
     """
     Delete a changelog entry (admin only).
     """
-    # TODO: Add admin role check
-    user_id = getattr(request.state, "user_id", None)
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-        )
+    user_id = _require_admin(request)
 
     result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
     entry = result.scalar_one_or_none()

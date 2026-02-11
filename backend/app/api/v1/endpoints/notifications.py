@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
+from app.models import UserRole
 from app.models.settings import (
     Notification,
     NotificationCategory,
@@ -306,7 +307,12 @@ async def create_notification(
             detail="Not authenticated",
         )
 
-    # TODO: Add admin role check here if needed
+    user_role = getattr(request.state, "role", None)
+    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required to create notifications",
+        )
 
     try:
         notif_type = NotificationType(body.type)
