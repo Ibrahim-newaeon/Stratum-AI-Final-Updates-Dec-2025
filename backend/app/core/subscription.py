@@ -250,6 +250,19 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
             restriction_reason=restriction_reason,
         )
 
+    # Fallback if session yields nothing
+    return SubscriptionInfo(
+        tenant_id=tenant_id,
+        plan="unknown",
+        tier=SubscriptionTier.STARTER,
+        status=SubscriptionStatus.EXPIRED,
+        expires_at=None,
+        days_until_expiry=None,
+        days_in_grace=None,
+        is_access_restricted=True,
+        restriction_reason="Could not retrieve subscription info",
+    )
+
 
 async def check_subscription_valid(
     tenant_id: int, raise_on_invalid: bool = True

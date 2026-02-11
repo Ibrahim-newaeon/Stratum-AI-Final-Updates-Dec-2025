@@ -6,6 +6,8 @@ Security middleware that adds protective HTTP headers to all responses.
 Implements OWASP security header recommendations.
 """
 
+from collections.abc import Awaitable, Callable
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -29,7 +31,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     - Cache-Control: Prevents caching of sensitive data
     """
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         response = await call_next(request)
 
         # Skip security headers for health check endpoints (performance)

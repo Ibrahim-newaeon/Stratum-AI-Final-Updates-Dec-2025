@@ -6,6 +6,8 @@ Last-resort middleware that catches any unhandled exception escaping the
 middleware stack and returns a structured JSON error response.
 """
 
+from collections.abc import Awaitable, Callable
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -18,7 +20,7 @@ logger = get_logger(__name__)
 class ErrorHandlerMiddleware(BaseHTTPMiddleware):
     """Catch unhandled exceptions and return a structured JSON 500 response."""
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         try:
             return await call_next(request)
         except Exception as exc:

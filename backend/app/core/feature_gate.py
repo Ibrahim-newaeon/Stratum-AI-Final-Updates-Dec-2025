@@ -129,6 +129,8 @@ async def get_tenant_tier(tenant_id: int) -> SubscriptionTier:
 
         return SubscriptionTier.STARTER
 
+    return SubscriptionTier.STARTER  # fallback if session yields nothing
+
 
 def get_tier_from_request(request: Request) -> SubscriptionTier:
     """
@@ -328,7 +330,7 @@ class LimitChecker:
         }
 
 
-def require_feature(feature: Feature):
+def require_feature(feature: Feature) -> Callable:
     """
     Decorator for gating endpoints by feature.
 
@@ -379,7 +381,7 @@ def require_feature(feature: Feature):
     return decorator
 
 
-def require_tier(minimum_tier: SubscriptionTier):
+def require_tier(minimum_tier: SubscriptionTier) -> Callable:
     """
     Decorator for gating endpoints by minimum tier.
 

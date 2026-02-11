@@ -200,7 +200,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
             if any(field in key.lower() for field in sensitive_fields):
                 sanitized[key] = "[REDACTED]"
             elif isinstance(value, dict):
-                sanitized[key] = self._sanitize_for_audit(value)
+                sanitized[key] = self._sanitize_for_audit(value)  # type: ignore[assignment]
             else:
                 sanitized[key] = value
 

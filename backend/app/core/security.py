@@ -249,7 +249,7 @@ def hash_api_key(api_key: str) -> str:
 # =============================================================================
 
 
-def require_permission(permission: str):
+def require_permission(permission: str) -> Any:
     """
     Dependency factory that checks if the current user has the required permission.
 
@@ -261,7 +261,7 @@ def require_permission(permission: str):
     """
     from fastapi import Depends, HTTPException, Request
 
-    async def permission_checker(request: Request):
+    async def permission_checker(request: Request) -> bool:
         # Get user permissions from request state (set by auth middleware)
         user_permissions = getattr(request.state, "permissions", [])
         user_role = getattr(request.state, "role", None)

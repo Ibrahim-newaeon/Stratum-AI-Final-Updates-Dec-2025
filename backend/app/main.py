@@ -71,7 +71,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             # Additional integrations
             integrations=[],
             # Filter out health check endpoints from traces
-            traces_sampler=lambda ctx: 0.0
+            traces_sampler=lambda ctx: 0.0  # type: ignore[arg-type, return-value]
             if ctx.get("wsgi_environ", {}).get("PATH_INFO", "").startswith("/health")
             else None,
         )

@@ -336,7 +336,7 @@ async def get_accessible_client_ids(
             ClientAssignment.user_id == user_id
         )
     )
-    return list(result.scalars().all())
+    return list(result.scalars().all())  # type: ignore[arg-type]
 
 
 async def enforce_client_access(
@@ -563,10 +563,10 @@ def require_client_access(client_id_param: str = "client_id") -> Callable:
 # =============================================================================
 # Permission Decorator for Service Functions (legacy)
 # =============================================================================
-def check_permission(permission: Permission):
+def check_permission(permission: Permission) -> Callable:
     """Decorator for service functions that need permission checking."""
 
-    def decorator(func: Callable):
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
             role = kwargs.get("role")

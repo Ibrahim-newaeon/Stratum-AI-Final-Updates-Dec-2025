@@ -7,7 +7,7 @@ Provides get_current_user and related dependencies for protected routes.
 """
 
 import secrets
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -176,7 +176,7 @@ async def get_optional_user(
         return None
 
 
-def require_role(*roles: UserRole):
+def require_role(*roles: UserRole) -> Any:
     """
     Dependency factory that requires the user to have one of the specified roles.
 

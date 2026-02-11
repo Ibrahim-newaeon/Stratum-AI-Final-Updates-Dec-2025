@@ -8,6 +8,7 @@ and emits structured log lines for every HTTP request.
 
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 
 import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -33,7 +34,7 @@ _SKIP_PATHS: set[str] = {
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Add request ID, timing headers, and structured access logs."""
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         # Prefer a client-supplied request ID; fall back to a short UUID4
         request_id = request.headers.get(
             "X-Request-ID", uuid.uuid4().hex[:12]
