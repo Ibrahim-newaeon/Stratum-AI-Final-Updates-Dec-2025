@@ -64,11 +64,15 @@ class Settings(BaseSettings):
     db_pool_size: int = Field(default=10)
     db_max_overflow: int = Field(default=20)
     db_pool_recycle: int = Field(default=3600)
+    postgres_user: str = Field(default="postgres", description="PostgreSQL user (used by migrations/scripts)")
+    postgres_password: str = Field(default="", description="PostgreSQL password (used by migrations/scripts)")
+    postgres_db: str = Field(default="stratum_ai", description="PostgreSQL database name")
 
     # -------------------------------------------------------------------------
     # Redis Configuration
     # -------------------------------------------------------------------------
     redis_url: str = Field(default="redis://localhost:6379/0")
+    redis_password: Optional[str] = Field(default=None, description="Redis password for authenticated connections")
     celery_broker_url: str = Field(default="redis://localhost:6379/1")
     celery_result_backend: str = Field(default="redis://localhost:6379/2")
 
@@ -80,6 +84,7 @@ class Settings(BaseSettings):
         description="ML inference provider: 'local' for scikit-learn or 'vertex' for Google Vertex AI",
     )
     ml_models_path: str = Field(default="./ml_models")
+    mlflow_tracking_uri: Optional[str] = Field(default=None, description="MLflow tracking server URI")
     google_cloud_project: Optional[str] = Field(default=None)
     vertex_ai_endpoint: Optional[str] = Field(default=None)
     google_application_credentials: Optional[str] = Field(default=None)
@@ -222,6 +227,12 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # Slack Integration
+    # -------------------------------------------------------------------------
+    slack_webhook_url: Optional[str] = Field(default=None, description="Slack incoming webhook URL")
+    slack_bot_token: Optional[str] = Field(default=None, description="Slack Bot OAuth token")
+
+    # -------------------------------------------------------------------------
     # CORS Configuration
     # -------------------------------------------------------------------------
     cors_origins: str = Field(default="http://localhost:3000,http://localhost:5173")
@@ -238,6 +249,7 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(default="INFO")
     log_format: Literal["json", "console"] = Field(default="json")
     sentry_dsn: Optional[str] = Field(default=None)
+    prometheus_enabled: bool = Field(default=True, description="Enable Prometheus metrics endpoint")
 
     # -------------------------------------------------------------------------
     # Rate Limiting
@@ -291,6 +303,15 @@ class Settings(BaseSettings):
     feature_what_if_simulator: bool = Field(default=True)
     feature_automation_rules: bool = Field(default=True)
     feature_gdpr_compliance: bool = Field(default=True)
+
+    # -------------------------------------------------------------------------
+    # File Storage (S3 / Local)
+    # -------------------------------------------------------------------------
+    storage_backend: str = Field(default="local", description="File storage backend (local, s3)")
+    aws_access_key_id: Optional[str] = Field(default=None, description="AWS access key ID")
+    aws_secret_access_key: Optional[str] = Field(default=None, description="AWS secret access key")
+    aws_region: str = Field(default="us-east-1", description="AWS region")
+    aws_s3_bucket: Optional[str] = Field(default=None, description="S3 bucket name for file storage")
 
     @property
     def is_development(self) -> bool:

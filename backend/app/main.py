@@ -6,13 +6,11 @@ Main FastAPI application entry point.
 Configures routers, middleware, and application lifecycle events.
 """
 
-import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Optional
 
 import sentry_sdk
-import structlog
 from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -23,12 +21,15 @@ from app.api.v1 import api_router
 from app.api.v1.endpoints.memory_debug import init_debug_endpoints
 from app.api.v1.endpoints.memory_debug import router as memory_debug_router
 from app.core.config import settings
+from app.core.exceptions import AppException
 from app.core.logging import get_logger, setup_logging
 from app.core.metrics import setup_metrics
 from app.core.websocket import ws_manager
 from app.db.session import async_engine, check_database_health
 from app.middleware.audit import AuditMiddleware
+from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.request_logging import RequestLoggingMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
 from app.monitoring.memory_audit import MemoryAuditor
@@ -184,36 +185,32 @@ def create_application() -> FastAPI:
     # Security headers middleware (OWASP recommendations)
     app.add_middleware(SecurityHeadersMiddleware)
 
-    # Request timing middleware
-    @app.middleware("http")
-    async def add_timing_header(request: Request, call_next):
-        """Add request timing and request ID headers."""
-        import uuid
+    # Error handler middleware (catches unhandled exceptions from middleware stack)
+    app.add_middleware(ErrorHandlerMiddleware)
 
-        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-        structlog.contextvars.bind_contextvars(request_id=request_id)
-
-        start_time = time.perf_counter()
-        response = await call_next(request)
-        process_time = (time.perf_counter() - start_time) * 1000
-
-        response.headers["X-Request-ID"] = request_id
-        response.headers["X-Process-Time-Ms"] = f"{process_time:.2f}"
-
-        # Log request completion
-        logger.info(
-            "request_completed",
-            method=request.method,
-            path=request.url.path,
-            status_code=response.status_code,
-            duration_ms=round(process_time, 2),
-        )
-
-        return response
+    # Request logging middleware (request ID, timing, structured access logs)
+    app.add_middleware(RequestLoggingMiddleware)
 
     # -------------------------------------------------------------------------
     # Exception Handlers
     # -------------------------------------------------------------------------
+    @app.exception_handler(AppException)
+    async def app_exception_handler(request: Request, exc: AppException):
+        """Handle structured application exceptions."""
+        request_id = getattr(request.state, "request_id", None)
+        logger.warning(
+            "app_exception",
+            error_code=exc.error_code,
+            status_code=exc.status_code,
+            message=exc.message,
+            path=request.url.path,
+            request_id=request_id,
+        )
+        payload = exc.to_dict()
+        if request_id:
+            payload["request_id"] = request_id
+        return JSONResponse(status_code=exc.status_code, content=payload)
+
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         """Global exception handler for unhandled errors."""
