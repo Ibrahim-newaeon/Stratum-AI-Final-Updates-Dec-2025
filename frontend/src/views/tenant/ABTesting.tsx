@@ -4,14 +4,16 @@
  * Comprehensive A/B testing framework with power analysis, LTV impact, and statistical results.
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ABTest,
+  CreateTestParams,
   TestStatus,
   TestType,
   useABTest,
   useABTestResults,
   useABTests,
+  useCreateABTest,
   useLTVImpact,
   usePauseABTest,
   usePowerAnalysis,
@@ -25,14 +27,18 @@ import {
   ChartBarIcon,
   CheckCircleIcon,
   LightBulbIcon,
+  MinusCircleIcon,
   PauseIcon,
   PlayIcon,
+  PlusCircleIcon,
   PlusIcon,
   SparklesIcon,
   StopIcon,
   XCircleIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 type TabType = 'active' | 'completed' | 'drafts' | 'power-analysis';
 
@@ -53,27 +59,102 @@ const testTypeLabels: Record<TestType, string> = {
 };
 
 export default function ABTesting() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-  const [_showNewTestModal, setShowNewTestModal] = useState(false);
+  const [showNewTestModal, setShowNewTestModal] = useState(false);
   const [powerAnalysisParams, setPowerAnalysisParams] = useState({
     baselineConversionRate: 2.5,
     minimumDetectableEffect: 10,
     confidenceLevel: 0.95 as 0.9 | 0.95 | 0.99,
     dailyTraffic: 10000,
   });
+  const [newTestForm, setNewTestForm] = useState({
+    name: '',
+    hypothesis: '',
+    testType: 'campaign' as TestType,
+    primaryMetric: 'conversion_rate',
+    confidenceLevel: 0.95 as 0.9 | 0.95 | 0.99,
+    variants: [
+      { name: 'Control', description: '', isControl: true, trafficAllocation: 50 },
+      { name: 'Variant B', description: '', isControl: false, trafficAllocation: 50 },
+    ],
+  });
 
   const { data: activeTests } = useABTests({ status: 'running' });
   const { data: completedTests } = useABTests({ status: 'completed' });
   const { data: draftTests } = useABTests({ status: 'draft' });
-  const { data: _selectedTest } = useABTest(selectedTestId || '');
+  const { data: selectedTest } = useABTest(selectedTestId || '');
   const { data: testResults } = useABTestResults(selectedTestId || '');
   const { data: ltvImpact } = useLTVImpact(selectedTestId || '');
 
+  const createTest = useCreateABTest();
   const startTest = useStartABTest();
   const pauseTest = usePauseABTest();
   const stopTest = useStopABTest();
   const powerAnalysis = usePowerAnalysis();
+
+  const resetNewTestForm = useCallback(() => {
+    setNewTestForm({
+      name: '',
+      hypothesis: '',
+      testType: 'campaign',
+      primaryMetric: 'conversion_rate',
+      confidenceLevel: 0.95,
+      variants: [
+        { name: 'Control', description: '', isControl: true, trafficAllocation: 50 },
+        { name: 'Variant B', description: '', isControl: false, trafficAllocation: 50 },
+      ],
+    });
+  }, []);
+
+  const handleCreateTest = useCallback(async () => {
+    if (!newTestForm.name.trim() || !newTestForm.hypothesis.trim()) return;
+
+    const params: CreateTestParams = {
+      name: newTestForm.name,
+      testType: newTestForm.testType,
+      hypothesis: newTestForm.hypothesis,
+      primaryMetric: newTestForm.primaryMetric,
+      confidenceLevel: newTestForm.confidenceLevel,
+      variants: newTestForm.variants,
+    };
+
+    try {
+      await createTest.mutateAsync(params);
+      toast({ title: 'Test created', description: `"${newTestForm.name}" has been created as a draft.` });
+      setShowNewTestModal(false);
+      resetNewTestForm();
+      setActiveTab('drafts');
+    } catch {
+      toast({ title: 'Error', description: 'Failed to create test.', variant: 'destructive' });
+    }
+  }, [newTestForm, createTest, toast, resetNewTestForm]);
+
+  const addVariant = useCallback(() => {
+    const count = newTestForm.variants.length;
+    const letters = 'BCDEFGHIJ';
+    const allocation = Math.floor(100 / (count + 1));
+    setNewTestForm(f => ({
+      ...f,
+      variants: [
+        ...f.variants.map(v => ({ ...v, trafficAllocation: allocation })),
+        { name: `Variant ${letters[count - 1] || count + 1}`, description: '', isControl: false, trafficAllocation: allocation },
+      ],
+    }));
+  }, [newTestForm.variants.length]);
+
+  const removeVariant = useCallback((index: number) => {
+    if (newTestForm.variants.length <= 2) return;
+    setNewTestForm(f => {
+      const updated = f.variants.filter((_, i) => i !== index);
+      const allocation = Math.floor(100 / updated.length);
+      return { ...f, variants: updated.map(v => ({ ...v, trafficAllocation: allocation })) };
+    });
+  }, [newTestForm.variants.length]);
+
+  // Suppress unused variable warning
+  void selectedTest;
 
   const tabs = [
     { id: 'active' as TabType, label: 'Active Tests', count: activeTests?.length || 0 },
@@ -562,6 +643,182 @@ export default function ABTesting() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* New Test Modal */}
+      {showNewTestModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-xl w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background p-6 pb-4 border-b flex items-center justify-between">
+              <h2 className="text-xl font-bold">Create New A/B Test</h2>
+              <button
+                onClick={() => { setShowNewTestModal(false); resetNewTestForm(); }}
+                className="p-2 rounded-lg hover:bg-muted"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium mb-1">Test Name</label>
+                <input
+                  type="text"
+                  value={newTestForm.name}
+                  onChange={(e) => setNewTestForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border bg-background"
+                  placeholder="e.g., Holiday Campaign Creative Test"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Hypothesis</label>
+                <textarea
+                  value={newTestForm.hypothesis}
+                  onChange={(e) => setNewTestForm(f => ({ ...f, hypothesis: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border bg-background"
+                  rows={2}
+                  placeholder="e.g., Using video creatives will increase conversion rate by at least 15%"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Test Type</label>
+                  <select
+                    value={newTestForm.testType}
+                    onChange={(e) => setNewTestForm(f => ({ ...f, testType: e.target.value as TestType }))}
+                    className="w-full px-3 py-2 rounded-lg border bg-background"
+                  >
+                    {Object.entries(testTypeLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Primary Metric</label>
+                  <select
+                    value={newTestForm.primaryMetric}
+                    onChange={(e) => setNewTestForm(f => ({ ...f, primaryMetric: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border bg-background"
+                  >
+                    <option value="conversion_rate">Conversion Rate</option>
+                    <option value="ctr">Click-Through Rate</option>
+                    <option value="cpa">Cost Per Acquisition</option>
+                    <option value="roas">ROAS</option>
+                    <option value="revenue">Revenue</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Confidence Level</label>
+                <select
+                  value={newTestForm.confidenceLevel}
+                  onChange={(e) => setNewTestForm(f => ({ ...f, confidenceLevel: parseFloat(e.target.value) as 0.9 | 0.95 | 0.99 }))}
+                  className="w-full px-3 py-2 rounded-lg border bg-background"
+                >
+                  <option value={0.9}>90%</option>
+                  <option value={0.95}>95% (Recommended)</option>
+                  <option value={0.99}>99%</option>
+                </select>
+              </div>
+
+              {/* Variants */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium">Variants</label>
+                  <button
+                    onClick={addVariant}
+                    disabled={newTestForm.variants.length >= 5}
+                    className="flex items-center gap-1 text-sm text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                  >
+                    <PlusCircleIcon className="h-4 w-4" />
+                    Add Variant
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {newTestForm.variants.map((variant, idx) => (
+                    <div key={idx} className="rounded-lg border p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{variant.isControl ? 'Control' : `Variant ${idx}`}</span>
+                          {variant.isControl && (
+                            <span className="px-2 py-0.5 text-xs rounded bg-muted">Control</span>
+                          )}
+                        </div>
+                        {!variant.isControl && newTestForm.variants.length > 2 && (
+                          <button
+                            onClick={() => removeVariant(idx)}
+                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-500"
+                          >
+                            <MinusCircleIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            value={variant.name}
+                            onChange={(e) => {
+                              const updated = [...newTestForm.variants];
+                              updated[idx] = { ...updated[idx], name: e.target.value };
+                              setNewTestForm(f => ({ ...f, variants: updated }));
+                            }}
+                            className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+                            placeholder="Variant name"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={variant.trafficAllocation}
+                              onChange={(e) => {
+                                const updated = [...newTestForm.variants];
+                                updated[idx] = { ...updated[idx], trafficAllocation: parseInt(e.target.value) || 0 };
+                                setNewTestForm(f => ({ ...f, variants: updated }));
+                              }}
+                              className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+                              min={1}
+                              max={99}
+                            />
+                            <span className="text-sm text-muted-foreground">%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {newTestForm.variants.reduce((sum, v) => sum + v.trafficAllocation, 0) !== 100 && (
+                  <p className="text-xs text-amber-500 mt-2">
+                    Traffic allocation should sum to 100% (currently {newTestForm.variants.reduce((sum, v) => sum + v.trafficAllocation, 0)}%)
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-background p-6 pt-4 border-t flex justify-end gap-3">
+              <button
+                onClick={() => { setShowNewTestModal(false); resetNewTestForm(); }}
+                className="px-4 py-2 rounded-lg border hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateTest}
+                disabled={createTest.isPending || !newTestForm.name.trim() || !newTestForm.hypothesis.trim()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {createTest.isPending && (
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
+                Create Test
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

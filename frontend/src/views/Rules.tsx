@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Bell,
@@ -10,17 +10,19 @@ import {
   Edit,
   Loader2,
   MessageCircle,
-  MoreHorizontal,
   Pause,
   Play,
   Plus,
   Search,
   Settings,
   Tag,
+  Trash2,
+  X,
   Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useRules, useToggleRule } from '@/api/hooks';
+import { useRules, useToggleRule, useCreateRule, useUpdateRule, useDeleteRule } from '@/api/hooks';
+import { useToast } from '@/components/ui/use-toast';
 
 type RuleStatus = 'active' | 'paused' | 'draft';
 type RuleAction =
@@ -163,9 +165,119 @@ export function Rules() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  const { toast } = useToast();
+
+  // Modal state
+  const [editingRule, setEditingRule] = useState<Rule | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<Rule | null>(null);
+  const [ruleForm, setRuleForm] = useState({
+    name: '',
+    description: '',
+    conditionField: 'roas',
+    conditionOperator: 'less_than',
+    conditionValue: '',
+    actionType: 'send_alert' as RuleAction,
+    cooldownHours: 24,
+  });
+
   // Fetch rules from API
   const { data: rulesData, isLoading } = useRules();
   const toggleRule = useToggleRule();
+  const createRule = useCreateRule();
+  const updateRule = useUpdateRule();
+  const deleteRule = useDeleteRule();
+
+  const resetForm = useCallback(() => {
+    setRuleForm({
+      name: '',
+      description: '',
+      conditionField: 'roas',
+      conditionOperator: 'less_than',
+      conditionValue: '',
+      actionType: 'send_alert',
+      cooldownHours: 24,
+    });
+    setEditingRule(null);
+  }, []);
+
+  const openCreateModal = useCallback(() => {
+    resetForm();
+    setShowCreateModal(true);
+  }, [resetForm]);
+
+  const openEditModal = useCallback((rule: Rule) => {
+    setEditingRule(rule);
+    setRuleForm({
+      name: rule.name,
+      description: rule.description,
+      conditionField: rule.condition.field,
+      conditionOperator: rule.condition.operator,
+      conditionValue: rule.condition.value,
+      actionType: rule.action.type,
+      cooldownHours: rule.cooldownHours,
+    });
+    setShowCreateModal(true);
+  }, []);
+
+  const handleDuplicate = useCallback(async (rule: Rule) => {
+    try {
+      await createRule.mutateAsync({
+        name: `${rule.name} (Copy)`,
+        description: rule.description,
+        conditions: [{ field: rule.condition.field, operator: rule.condition.operator as any, value: rule.condition.value }],
+        actions: [{ type: rule.action.type as any, config: rule.action.config }],
+        trigger: 'metric_threshold',
+        status: 'draft',
+      } as any);
+      toast({ title: 'Rule duplicated', description: `"${rule.name}" has been duplicated as a draft.` });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to duplicate rule.', variant: 'destructive' });
+    }
+  }, [createRule, toast]);
+
+  const handleSaveRule = useCallback(async () => {
+    if (!ruleForm.name.trim() || !ruleForm.conditionValue.trim()) return;
+
+    const payload = {
+      name: ruleForm.name,
+      description: ruleForm.description,
+      conditions: [{
+        field: ruleForm.conditionField,
+        operator: ruleForm.conditionOperator as any,
+        value: ruleForm.conditionValue,
+      }],
+      actions: [{
+        type: ruleForm.actionType as any,
+        config: {},
+      }],
+      trigger: 'metric_threshold' as const,
+      cooldown_hours: ruleForm.cooldownHours,
+    };
+
+    try {
+      if (editingRule) {
+        await updateRule.mutateAsync({ id: editingRule.id.toString(), data: payload as any });
+        toast({ title: 'Rule updated', description: `"${ruleForm.name}" has been updated.` });
+      } else {
+        await createRule.mutateAsync(payload as any);
+        toast({ title: 'Rule created', description: `"${ruleForm.name}" has been created.` });
+      }
+      setShowCreateModal(false);
+      resetForm();
+    } catch {
+      toast({ title: 'Error', description: `Failed to ${editingRule ? 'update' : 'create'} rule.`, variant: 'destructive' });
+    }
+  }, [ruleForm, editingRule, createRule, updateRule, toast, resetForm]);
+
+  const handleDeleteRule = useCallback(async (rule: Rule) => {
+    try {
+      await deleteRule.mutateAsync(rule.id.toString());
+      toast({ title: 'Rule deleted', description: `"${rule.name}" has been deleted.` });
+      setShowDeleteConfirm(null);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to delete rule.', variant: 'destructive' });
+    }
+  }, [deleteRule, toast]);
 
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
@@ -281,7 +393,7 @@ export function Rules() {
         </div>
 
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={openCreateModal}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -387,17 +499,27 @@ export function Rules() {
                     )}
                   </button>
                 )}
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Edit">
+                <button
+                  onClick={() => openEditModal(rule)}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  title="Edit"
+                >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
-                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  onClick={() => handleDuplicate(rule)}
+                  disabled={createRule.isPending}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                   title="Duplicate"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors">
-                  <MoreHorizontal className="w-4 h-4" />
+                <button
+                  onClick={() => setShowDeleteConfirm(rule)}
+                  className="p-2 rounded-lg hover:bg-muted hover:text-red-500 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -452,7 +574,7 @@ export function Rules() {
           <Zap className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">{t('rules.noRules')}</p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={openCreateModal}
             className="mt-4 text-primary hover:underline"
           >
             {t('rules.createFirst')}
@@ -460,17 +582,29 @@ export function Rules() {
         </div>
       )}
 
-      {/* Create Rule Modal Placeholder */}
+      {/* Create/Edit Rule Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background rounded-xl p-6 w-full max-w-2xl mx-4">
-            <h2 className="text-xl font-bold mb-4">{t('rules.createRule')}</h2>
+          <div className="bg-background rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">
+                {editingRule ? 'Edit Rule' : t('rules.createRule')}
+              </h2>
+              <button
+                onClick={() => { setShowCreateModal(false); resetForm(); }}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-1 block">{t('rules.ruleName')}</label>
                 <input
                   type="text"
+                  value={ruleForm.name}
+                  onChange={(e) => setRuleForm(f => ({ ...f, name: e.target.value }))}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
                   placeholder="e.g., Pause Low Performers"
                 />
@@ -479,6 +613,8 @@ export function Rules() {
               <div>
                 <label className="text-sm font-medium mb-1 block">{t('rules.description')}</label>
                 <textarea
+                  value={ruleForm.description}
+                  onChange={(e) => setRuleForm(f => ({ ...f, description: e.target.value }))}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
                   rows={2}
                   placeholder="Describe what this rule does..."
@@ -488,14 +624,22 @@ export function Rules() {
               <div className="p-4 rounded-lg bg-muted/50">
                 <p className="text-sm font-medium mb-3">{t('rules.condition')}</p>
                 <div className="flex gap-2">
-                  <select className="flex-1 px-3 py-2 rounded-lg border bg-background">
+                  <select
+                    value={ruleForm.conditionField}
+                    onChange={(e) => setRuleForm(f => ({ ...f, conditionField: e.target.value }))}
+                    className="flex-1 px-3 py-2 rounded-lg border bg-background"
+                  >
                     {fields.map((field) => (
                       <option key={field} value={field}>
                         {field.toUpperCase()}
                       </option>
                     ))}
                   </select>
-                  <select className="w-24 px-3 py-2 rounded-lg border bg-background">
+                  <select
+                    value={ruleForm.conditionOperator}
+                    onChange={(e) => setRuleForm(f => ({ ...f, conditionOperator: e.target.value }))}
+                    className="w-24 px-3 py-2 rounded-lg border bg-background"
+                  >
                     {operators.map((op) => (
                       <option key={op.value} value={op.value}>
                         {op.label}
@@ -504,6 +648,8 @@ export function Rules() {
                   </select>
                   <input
                     type="text"
+                    value={ruleForm.conditionValue}
+                    onChange={(e) => setRuleForm(f => ({ ...f, conditionValue: e.target.value }))}
                     className="w-32 px-3 py-2 rounded-lg border bg-background"
                     placeholder="Value"
                   />
@@ -512,7 +658,11 @@ export function Rules() {
 
               <div className="p-4 rounded-lg bg-muted/50">
                 <p className="text-sm font-medium mb-3">{t('rules.action')}</p>
-                <select className="w-full px-3 py-2 rounded-lg border bg-background">
+                <select
+                  value={ruleForm.actionType}
+                  onChange={(e) => setRuleForm(f => ({ ...f, actionType: e.target.value as RuleAction }))}
+                  className="w-full px-3 py-2 rounded-lg border bg-background"
+                >
                   <option value="apply_label">Apply Label</option>
                   <option value="send_alert">Send Alert</option>
                   <option value="pause_campaign">Pause Campaign</option>
@@ -521,17 +671,63 @@ export function Rules() {
                   <option value="notify_whatsapp">Notify WhatsApp</option>
                 </select>
               </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Cooldown (hours)</label>
+                <input
+                  type="number"
+                  value={ruleForm.cooldownHours}
+                  onChange={(e) => setRuleForm(f => ({ ...f, cooldownHours: parseInt(e.target.value) || 1 }))}
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  min={1}
+                  max={168}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Minimum time between rule triggers</p>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => { setShowCreateModal(false); resetForm(); }}
                 className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
               >
                 {t('common.cancel')}
               </button>
-              <button className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                {t('rules.createRule')}
+              <button
+                onClick={handleSaveRule}
+                disabled={createRule.isPending || updateRule.isPending || !ruleForm.name.trim() || !ruleForm.conditionValue.trim()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {(createRule.isPending || updateRule.isPending) && <Loader2 className="w-4 h-4 animate-spin" />}
+                {editingRule ? 'Update Rule' : t('rules.createRule')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-lg font-bold mb-2">Delete Rule</h2>
+            <p className="text-muted-foreground mb-4">
+              Are you sure you want to delete &quot;{showDeleteConfirm.name}&quot;? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteRule(showDeleteConfirm)}
+                disabled={deleteRule.isPending}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleteRule.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Delete
               </button>
             </div>
           </div>

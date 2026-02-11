@@ -5,7 +5,7 @@
  * Shows "what changed", timeline, blocked actions, and fix playbook
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -261,13 +261,73 @@ export default function TenantNarrative() {
     { id: 'playbook' as const, label: 'Fix Playbook' },
   ];
 
-  const handleExportPDF = () => {
-    console.log('Exporting client-safe narrative PDF...');
-  };
+  const handleExportPDF = useCallback(() => {
+    const lines: string[] = [];
+    lines.push('CLIENT NARRATIVE REPORT');
+    lines.push(`Generated: ${new Date().toLocaleDateString()}`);
+    lines.push('');
+    lines.push(`Client: ${tenant.name}`);
+    lines.push(`Industry: ${tenant.industry}`);
+    lines.push(`Plan: ${tenant.plan}`);
+    lines.push(`Primary Contact: ${tenant.primaryContact.name} (${tenant.primaryContact.email})`);
+    lines.push('');
 
-  const handleScheduleCall = () => {
-    console.log('Opening calendar...');
-  };
+    lines.push('--- TRUST STATUS ---');
+    lines.push(`EMQ Score: ${emqScore}/100`);
+    lines.push(`Autopilot Mode: ${autopilotMode}`);
+    lines.push(`Budget at Risk: $${budgetAtRisk.toLocaleString()}`);
+    lines.push('');
+
+    lines.push('--- KEY PERFORMANCE INDICATORS ---');
+    kpis.forEach((kpi) => {
+      const val = typeof kpi.value === 'number' ? kpi.value : parseFloat(kpi.value) || 0;
+      const prev = kpi.previousValue ?? 0;
+      const change = prev ? (((val - prev) / prev) * 100).toFixed(1) : 'N/A';
+      const prefix = kpi.format === 'currency' ? '$' : '';
+      const suffix = kpi.format === 'multiplier' ? 'x' : '';
+      lines.push(`${kpi.label}: ${prefix}${val.toLocaleString()}${suffix} (${change}% vs prior)`);
+    });
+    lines.push('');
+
+    lines.push('--- RECOVERY METRICS ---');
+    recoveryMetrics.forEach((m) => {
+      lines.push(`${m.label}: ${m.value >= 0 ? '+' : ''}${m.value}${m.unit}`);
+    });
+    lines.push('');
+
+    lines.push('--- BLOCKED ACTIONS ---');
+    blockedActions.forEach((a) => {
+      lines.push(`[${a.type.toUpperCase()}] ${a.title}`);
+      lines.push(`  Reason: ${a.reason}`);
+      lines.push(`  Estimated Impact: ${a.estimatedImpact}`);
+    });
+    lines.push('');
+
+    lines.push('--- FIX PLAYBOOK ---');
+    playbook.forEach((item) => {
+      lines.push(`[${item.priority.toUpperCase()}] ${item.title} - ${item.status}`);
+      lines.push(`  ${item.description}`);
+      lines.push(`  Owner: ${item.owner || 'Unassigned'} | Est. Impact: +${item.estimatedImpact} EMQ pts | Time: ${item.estimatedTime}`);
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `narrative-${tenant.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [tenant, emqScore, autopilotMode, budgetAtRisk, kpis, recoveryMetrics, blockedActions, playbook]);
+
+  const handleScheduleCall = useCallback(() => {
+    const subject = encodeURIComponent(`Stratum AI - ${tenant.name} Account Review`);
+    const body = encodeURIComponent(
+      `Hi ${tenant.primaryContact.name},\n\nI'd like to schedule a call to review your account performance.\n\nKey topics:\n- EMQ Score: ${emqScore}/100\n- ${blockedActions.length} blocked actions to discuss\n- Recovery playbook status\n\nPlease let me know your availability.\n\nBest regards`
+    );
+    window.open(`mailto:${tenant.primaryContact.email}?subject=${subject}&body=${body}`, '_blank');
+  }, [tenant, emqScore, blockedActions.length]);
 
   return (
     <div data-tour="tenant-narrative" className="space-y-6">
