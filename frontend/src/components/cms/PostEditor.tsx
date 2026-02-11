@@ -27,6 +27,7 @@ interface PostEditorProps {
   onSave: (data: PostCreate | PostUpdate) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  inline?: boolean;
 }
 
 const statusOptions: { value: PostStatus; label: string }[] = [
@@ -52,6 +53,7 @@ export function PostEditor({
   onSave,
   onCancel,
   isLoading = false,
+  inline = false,
 }: PostEditorProps) {
   const [formData, setFormData] = useState<PostCreate>({
     title: '',
@@ -141,9 +143,16 @@ export function PostEditor({
     onSave(formData);
   };
 
+  const wrapperClass = inline
+    ? ''
+    : 'fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4';
+  const containerClass = inline
+    ? 'bg-neutral-900 border border-neutral-800 rounded-xl w-full overflow-hidden flex flex-col'
+    : 'bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col';
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className={wrapperClass}>
+      <div className={containerClass}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-800">
           <h2 className="text-lg font-semibold text-white">

@@ -3,20 +3,17 @@
  * Main overview page for the Content Management System
  */
 
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowTrendingUpIcon,
   DocumentTextIcon,
   EnvelopeIcon,
   EyeIcon,
   PencilSquareIcon,
   PlusIcon,
-  RectangleStackIcon,
   TagIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useAdminAuthors, useAdminContacts, useCategories, usePosts } from '@/api/cms';
+import { useAdminAuthors, useAdminContacts, useAdminCategories, useAdminPosts } from '@/api/cms';
 
 interface StatCard {
   name: string;
@@ -28,45 +25,50 @@ interface StatCard {
 }
 
 export default function CMSDashboard() {
-  const { data: posts, isLoading: postsLoading } = usePosts();
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
-  const { data: authors, isLoading: authorsLoading } = useAdminAuthors();
-  const { data: contacts, isLoading: contactsLoading } = useAdminContacts();
+  const { data: postsData, isLoading: postsLoading } = useAdminPosts();
+  const { data: categoriesData, isLoading: categoriesLoading } = useAdminCategories();
+  const { data: authorsData, isLoading: authorsLoading } = useAdminAuthors();
+  const { data: contactsData, isLoading: contactsLoading } = useAdminContacts();
 
   const isLoading = postsLoading || categoriesLoading || authorsLoading || contactsLoading;
 
+  const postsList = postsData?.posts || [];
+  const categoriesList = categoriesData?.categories || [];
+  const authorsList = authorsData?.authors || [];
+  const contactsList = contactsData?.contacts || [];
+
   // Count published vs draft posts
-  const publishedPosts = posts?.filter((p) => p.status === 'published').length || 0;
-  const draftPosts = posts?.filter((p) => p.status === 'draft').length || 0;
+  const publishedPosts = postsList.filter((p) => p.status === 'published').length;
+  const draftPosts = postsList.filter((p) => p.status === 'draft').length;
 
   // Count unread contact submissions
-  const unreadContacts = contacts?.filter((c) => !c.read).length || 0;
+  const unreadContacts = contactsList.filter((c) => !c.is_read).length;
 
   const stats: StatCard[] = [
     {
       name: 'Total Posts',
-      value: posts?.length || 0,
+      value: postsData?.total || postsList.length,
       icon: DocumentTextIcon,
       href: '/cms/posts',
       color: 'from-purple-500 to-purple-600',
     },
     {
       name: 'Categories',
-      value: categories?.length || 0,
+      value: categoriesData?.total || categoriesList.length,
       icon: TagIcon,
       href: '/cms/categories',
       color: 'from-cyan-500 to-cyan-600',
     },
     {
       name: 'Authors',
-      value: authors?.length || 0,
+      value: authorsData?.total || authorsList.length,
       icon: UserCircleIcon,
       href: '/cms/authors',
       color: 'from-orange-500 to-orange-600',
     },
     {
       name: 'Contact Messages',
-      value: contacts?.length || 0,
+      value: contactsData?.total || contactsList.length,
       icon: EnvelopeIcon,
       href: '/cms/contacts',
       color: 'from-green-500 to-green-600',
@@ -75,13 +77,13 @@ export default function CMSDashboard() {
 
   const quickActions = [
     { name: 'New Post', href: '/cms/posts/new', icon: PlusIcon },
-    { name: 'New Category', href: '/cms/categories/new', icon: TagIcon },
+    { name: 'New Category', href: '/cms/categories', icon: TagIcon },
     { name: 'View Blog', href: '/blog', icon: EyeIcon, external: true },
     { name: 'Edit Features', href: '/cms/landing/features', icon: PencilSquareIcon },
   ];
 
   // Get recent posts for activity feed
-  const recentPosts = posts?.slice(0, 5) || [];
+  const recentPosts = postsList.slice(0, 5);
 
   return (
     <div className="space-y-8">
@@ -156,14 +158,14 @@ export default function CMSDashboard() {
             <div className="flex justify-between text-sm mb-2">
               <span className="text-white/60">Published vs Draft</span>
               <span className="text-white/60">
-                {posts?.length ? Math.round((publishedPosts / posts.length) * 100) : 0}% published
+                {postsList.length ? Math.round((publishedPosts / postsList.length) * 100) : 0}% published
               </span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all"
                 style={{
-                  width: posts?.length ? `${(publishedPosts / posts.length) * 100}%` : '0%',
+                  width: postsList.length ? `${(publishedPosts / postsList.length) * 100}%` : '0%',
                 }}
               />
             </div>
@@ -216,7 +218,7 @@ export default function CMSDashboard() {
                     <p className="text-white font-medium truncate">{post.title}</p>
                     <p className="text-sm text-white/50">
                       {post.author?.name || 'Unknown'} &middot;{' '}
-                      {new Date(post.updatedAt || post.createdAt).toLocaleDateString()}
+                      {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Draft'}
                     </p>
                   </div>
                 </div>

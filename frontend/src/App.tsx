@@ -23,9 +23,12 @@ function DocumentDirectionHandler() {
 }
 
 // Lazy load pages for code splitting
+const UnifiedLanding = lazy(() => import('./views/UnifiedLanding'));
 const Landing = lazy(() => import('./views/Landing'));
 const LandingAr = lazy(() => import('./views/LandingAr'));
 const AILanding = lazy(() => import('./views/AILanding'));
+const CommandCenterLanding = lazy(() => import('./views/CommandCenterLanding'));
+const CommandCenterLandingAr = lazy(() => import('./views/CommandCenterLandingAr'));
 const Login = lazy(() => import('./views/Login'));
 const Signup = lazy(() => import('./views/Signup'));
 const ForgotPassword = lazy(() => import('./views/ForgotPassword'));
@@ -82,6 +85,16 @@ const SuperAdminUsers = lazy(() => import('./views/superadmin/Users'));
 const CMSLogin = lazy(() => import('./views/CMSLogin'));
 const CMSLayout = lazy(() => import('./views/CMSLayout'));
 const CMSDashboard = lazy(() => import('./views/cms/CMSDashboard'));
+const CMSPosts = lazy(() => import('./views/cms/CMSPosts'));
+const CMSPostEditor = lazy(() => import('./views/cms/CMSPostEditor'));
+const CMSPages = lazy(() => import('./views/cms/CMSPages'));
+const CMSCategories = lazy(() => import('./views/cms/CMSCategories'));
+const CMSAuthors = lazy(() => import('./views/cms/CMSAuthors'));
+const CMSContacts = lazy(() => import('./views/cms/CMSContacts'));
+const CMSLandingFeatures = lazy(() => import('./views/cms/CMSLandingFeatures'));
+const CMSLandingFAQ = lazy(() => import('./views/cms/CMSLandingFAQ'));
+const CMSLandingPricing = lazy(() => import('./views/cms/CMSLandingPricing'));
+const CMSSettingsView = lazy(() => import('./views/cms/CMSSettings'));
 
 // Tenant-scoped views (Campaign Builder)
 const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'));
@@ -180,12 +193,12 @@ function App() {
                 <SkipToContent />
                 <div className="min-h-screen bg-background" id="main-content" role="main">
                   <Routes>
-                    {/* Public routes */}
+                    {/* Public routes — Unified Landing (replaces iframe) */}
                     <Route
                       path="/"
                       element={
                         <Suspense fallback={<LoadingSpinner />}>
-                          <Landing />
+                          <UnifiedLanding />
                         </Suspense>
                       }
                     />
@@ -197,12 +210,38 @@ function App() {
                         </Suspense>
                       }
                     />
-                    {/* AI-Focused Landing Page - Marketing & Sales Kit */}
+                    {/* Deprecated: AI Landing — kept temporarily */}
                     <Route
                       path="/ai"
                       element={
                         <Suspense fallback={<LoadingSpinner />}>
                           <AILanding />
+                        </Suspense>
+                      }
+                    />
+                    {/* Deprecated: Command Center Landing — kept temporarily */}
+                    <Route
+                      path="/command"
+                      element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <CommandCenterLanding />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/command/ar"
+                      element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <CommandCenterLandingAr />
+                        </Suspense>
+                      }
+                    />
+                    {/* Legacy landing kept for reference */}
+                    <Route
+                      path="/legacy"
+                      element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <Landing />
                         </Suspense>
                       }
                     />
@@ -281,7 +320,25 @@ function App() {
                         path="posts"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSPosts />
+                          </Suspense>
+                        }
+                      />
+                      {/* Post Create */}
+                      <Route
+                        path="posts/new"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CMSPostEditor />
+                          </Suspense>
+                        }
+                      />
+                      {/* Post Edit */}
+                      <Route
+                        path="posts/:id"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CMSPostEditor />
                           </Suspense>
                         }
                       />
@@ -290,7 +347,7 @@ function App() {
                         path="categories"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSCategories />
                           </Suspense>
                         }
                       />
@@ -299,7 +356,7 @@ function App() {
                         path="authors"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSAuthors />
                           </Suspense>
                         }
                       />
@@ -308,7 +365,7 @@ function App() {
                         path="contacts"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSContacts />
                           </Suspense>
                         }
                       />
@@ -317,7 +374,7 @@ function App() {
                         path="pages"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSPages />
                           </Suspense>
                         }
                       />
@@ -326,7 +383,7 @@ function App() {
                         path="landing/features"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSLandingFeatures />
                           </Suspense>
                         }
                       />
@@ -335,7 +392,7 @@ function App() {
                         path="landing/faq"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSLandingFAQ />
                           </Suspense>
                         }
                       />
@@ -344,7 +401,7 @@ function App() {
                         path="landing/pricing"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSLandingPricing />
                           </Suspense>
                         }
                       />
@@ -353,7 +410,7 @@ function App() {
                         path="settings"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
-                            <SuperAdminCMS />
+                            <CMSSettingsView />
                           </Suspense>
                         }
                       />
