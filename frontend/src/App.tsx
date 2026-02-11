@@ -69,6 +69,8 @@ const CDPPredictiveChurn = lazy(() => import('./views/cdp/CDPPredictiveChurn'));
 
 // Knowledge Graph views
 const KnowledgeGraphInsights = lazy(() => import('./views/KnowledgeGraphInsights'));
+const KGProblemDetection = lazy(() => import('./views/knowledge-graph/KGProblemDetection'));
+const KGRevenueAttribution = lazy(() => import('./views/knowledge-graph/KGRevenueAttribution'));
 
 // Super Admin views
 const ControlTower = lazy(() => import('./views/superadmin/ControlTower'));
@@ -106,6 +108,8 @@ const TenantOverview = lazy(() => import('./views/tenant/TenantOverview'));
 const TenantCampaigns = lazy(() => import('./views/tenant/TenantCampaigns'));
 const TenantSettings = lazy(() => import('./views/tenant/TenantSettings'));
 const TeamManagement = lazy(() => import('./views/tenant/TeamManagement'));
+const TenantInsights = lazy(() => import('./views/tenant/Insights'));
+const TenantAuditLog = lazy(() => import('./views/tenant/AuditLog'));
 
 // Role-based tenant views
 const TenantAdminOverview = lazy(() => import('./views/tenant/Overview'));
@@ -919,6 +923,22 @@ function App() {
                           </Suspense>
                         }
                       />
+                      <Route
+                        path="knowledge-graph/problems"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <KGProblemDetection />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="knowledge-graph/revenue"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <KGRevenueAttribution />
+                          </Suspense>
+                        }
+                      />
 
                       {/* Enterprise feature routes */}
                       <Route
@@ -1190,6 +1210,26 @@ function App() {
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <TeamManagement />
+                          </Suspense>
+                        }
+                      />
+
+                      {/* Tenant Insights */}
+                      <Route
+                        path="insights"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <TenantInsights />
+                          </Suspense>
+                        }
+                      />
+
+                      {/* Tenant Audit Log */}
+                      <Route
+                        path="audit-log"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <TenantAuditLog />
                           </Suspense>
                         }
                       />

@@ -11,6 +11,7 @@ import {
   Download,
   Eye,
   EyeOff,
+  Gauge,
   Link2,
   Loader2,
   Palette,
@@ -32,7 +33,8 @@ type SettingsTab =
   | 'integrations'
   | 'preferences'
   | 'billing'
-  | 'gdpr';
+  | 'gdpr'
+  | 'trust-engine';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -49,6 +51,7 @@ export function Settings() {
     { id: 'preferences', label: t('settings.preferences'), icon: Palette },
     { id: 'billing', label: t('settings.billing'), icon: CreditCard },
     { id: 'gdpr', label: t('settings.gdpr'), icon: Download },
+    { id: 'trust-engine', label: 'Trust Engine', icon: Gauge },
   ] as const;
 
   const handleSave = () => {
@@ -77,6 +80,8 @@ export function Settings() {
         return <BillingSettings />;
       case 'gdpr':
         return <GDPRSettings />;
+      case 'trust-engine':
+        return <TrustEngineSettings />;
       default:
         return null;
     }
@@ -1333,6 +1338,147 @@ function GDPRSettings() {
           )}
           {t('settings.deleteAccountButton')}
         </button>
+      </div>
+    </div>
+  );
+}
+
+function TrustEngineSettings() {
+  const [healthyThreshold, setHealthyThreshold] = useState(70);
+  const [degradedThreshold, setDegradedThreshold] = useState(40);
+  const [autopilotEnabled, setAutopilotEnabled] = useState(true);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-lg font-semibold">Trust Engine Configuration</h2>
+      <p className="text-sm text-muted-foreground">
+        Configure signal health thresholds that control when automations can execute.
+        The Trust Engine ensures automations only run when signal quality meets safety requirements.
+      </p>
+
+      <div className="space-y-6">
+        {/* Healthy Threshold */}
+        <div className="p-4 rounded-xl border border-green-500/20 bg-green-500/5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <label className="font-medium text-green-400">Healthy Threshold</label>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Signal health at or above this value enables autopilot execution
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={healthyThreshold}
+                onChange={(e) => setHealthyThreshold(Number(e.target.value))}
+                className="w-20 px-3 py-2 rounded-lg border border-white/10 bg-transparent text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-green-500/30"
+              />
+              <span className="text-muted-foreground text-sm">/100</span>
+            </div>
+          </div>
+          <div className="w-full bg-white/10 rounded-full h-2">
+            <div
+              className="bg-green-500 rounded-full h-2 transition-all"
+              style={{ width: `${healthyThreshold}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Degraded Threshold */}
+        <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <label className="font-medium text-amber-400">Degraded Threshold</label>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Below healthy but above this value triggers alerts and holds execution
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={degradedThreshold}
+                onChange={(e) => setDegradedThreshold(Number(e.target.value))}
+                className="w-20 px-3 py-2 rounded-lg border border-white/10 bg-transparent text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+              />
+              <span className="text-muted-foreground text-sm">/100</span>
+            </div>
+          </div>
+          <div className="w-full bg-white/10 rounded-full h-2">
+            <div
+              className="bg-amber-500 rounded-full h-2 transition-all"
+              style={{ width: `${degradedThreshold}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Below Degraded Info */}
+        <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5">
+          <div>
+            <label className="font-medium text-red-400">Unhealthy Zone</label>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Below {degradedThreshold}: All automations blocked. Manual action required.
+            </p>
+          </div>
+        </div>
+
+        {/* Autopilot Toggle */}
+        <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="font-medium">Autopilot Mode</label>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                When enabled, automations execute automatically when signal health is above the
+                healthy threshold ({healthyThreshold})
+              </p>
+            </div>
+            <button
+              onClick={() => setAutopilotEnabled(!autopilotEnabled)}
+              className={cn(
+                'relative w-12 h-6 rounded-full transition-colors',
+                autopilotEnabled ? 'bg-primary' : 'bg-muted'
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                  autopilotEnabled ? 'translate-x-7' : 'translate-x-1'
+                )}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Visual summary */}
+        <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+          <h3 className="font-medium mb-3">Trust Gate Logic</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-green-500" />
+              <span>
+                Score {'>='} {healthyThreshold}: <strong className="text-green-400">PASS</strong> -
+                Autopilot {autopilotEnabled ? 'executes' : 'disabled (manual only)'}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-amber-500" />
+              <span>
+                Score {degradedThreshold}-{healthyThreshold - 1}:{' '}
+                <strong className="text-amber-400">HOLD</strong> - Alert only, no auto-execution
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-red-500" />
+              <span>
+                Score {'<'} {degradedThreshold}: <strong className="text-red-400">BLOCK</strong> -
+                Manual action required
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

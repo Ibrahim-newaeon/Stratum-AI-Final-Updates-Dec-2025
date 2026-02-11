@@ -38,10 +38,13 @@ const ROLES = [
   { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
 ];
 
+type TeamTab = 'members' | 'roles';
+
 export default function TeamManagement() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<TeamTab>('members');
 
   const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0;
 
@@ -202,6 +205,35 @@ export default function TeamManagement() {
         </button>
       </div>
 
+      {/* Tab Switcher */}
+      <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/10 w-fit">
+        <button
+          onClick={() => setActiveTab('members')}
+          className={cn(
+            'px-4 py-2 text-sm rounded-md transition-colors',
+            activeTab === 'members'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          Team Members
+        </button>
+        <button
+          onClick={() => setActiveTab('roles')}
+          className={cn(
+            'px-4 py-2 text-sm rounded-md transition-colors',
+            activeTab === 'roles'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          Roles & Permissions
+        </button>
+      </div>
+
+      {activeTab === 'roles' && <RBACRolesTab />}
+
+      {activeTab === 'members' && <>
       {/* Search */}
       <div className="relative">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -345,6 +377,7 @@ export default function TeamManagement() {
           ))}
         </div>
       </div>
+      </>}
 
       {/* Invite Modal */}
       {showInviteModal && (
@@ -471,6 +504,96 @@ export default function TeamManagement() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// RBAC Roles & Permissions Tab
+function RBACRolesTab() {
+  const rbacRoles = [
+    {
+      name: 'Administrator',
+      description: 'Full platform access including billing and team management',
+      userCount: 2,
+      permissions: ['read', 'write', 'delete', 'admin'],
+      color: 'border-red-500/30 bg-red-500/5',
+      badgeColor: 'bg-red-500/10 text-red-400',
+    },
+    {
+      name: 'Manager',
+      description: 'Manage campaigns, budgets, and view all reports',
+      userCount: 3,
+      permissions: ['read', 'write', 'delete'],
+      color: 'border-blue-500/30 bg-blue-500/5',
+      badgeColor: 'bg-blue-500/10 text-blue-400',
+    },
+    {
+      name: 'Analyst',
+      description: 'View reports, analytics, and export data',
+      userCount: 4,
+      permissions: ['read', 'write'],
+      color: 'border-green-500/30 bg-green-500/5',
+      badgeColor: 'bg-green-500/10 text-green-400',
+    },
+    {
+      name: 'Viewer',
+      description: 'Read-only access to dashboards and reports',
+      userCount: 6,
+      permissions: ['read'],
+      color: 'border-gray-500/30 bg-gray-500/5',
+      badgeColor: 'bg-gray-500/10 text-gray-400',
+    },
+  ];
+
+  const permissionLabels: Record<string, { label: string; color: string }> = {
+    read: { label: 'Read', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
+    write: { label: 'Write', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    delete: { label: 'Delete', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+    admin: { label: 'Admin', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Define what each role can do within your organization. Assign roles to team members in the
+        Members tab.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {rbacRoles.map((role) => (
+          <div
+            key={role.name}
+            className={cn('rounded-xl border p-5 transition-all', role.color)}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="font-semibold text-lg">{role.name}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
+              </div>
+              <span className={cn('px-2.5 py-1 rounded-full text-xs font-medium', role.badgeColor)}>
+                {role.userCount} user{role.userCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mt-4">
+              {role.permissions.map((perm) => {
+                const pl = permissionLabels[perm];
+                return (
+                  <span
+                    key={perm}
+                    className={cn(
+                      'px-2.5 py-1 rounded-full text-xs font-medium border',
+                      pl.color
+                    )}
+                  >
+                    {pl.label}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

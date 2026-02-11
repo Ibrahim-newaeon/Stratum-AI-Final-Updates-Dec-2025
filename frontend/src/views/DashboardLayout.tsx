@@ -156,9 +156,9 @@ const cdpNavigation = [
 
 const kgNavigation = [
   { name: 'Insights', href: '/dashboard/knowledge-graph/insights', icon: SparklesIcon },
-  { name: 'Problem Detection', href: '/dashboard/knowledge-graph', icon: ExclamationTriangleIcon },
-  { name: 'Revenue Attribution', href: '/dashboard/knowledge-graph', icon: CurrencyDollarIcon },
-  { name: 'Journey Explorer', href: '/dashboard/knowledge-graph', icon: MapIcon },
+  { name: 'Problem Detection', href: '/dashboard/knowledge-graph/problems', icon: ExclamationTriangleIcon },
+  { name: 'Revenue Attribution', href: '/dashboard/knowledge-graph/revenue', icon: CurrencyDollarIcon },
+  { name: 'Journey Explorer', href: '/dashboard/knowledge-graph/journeys', icon: MapIcon },
 ];
 
 export default function DashboardLayout() {
