@@ -130,6 +130,22 @@ export default function CMS() {
   const [editingPost, setEditingPost] = useState<CMSPost | undefined>();
   const [page, setPage] = useState(1);
 
+  // Page editor state
+  const [showPageEditor, setShowPageEditor] = useState(false);
+  const [editingPage, setEditingPage] = useState<CMSPage | null>(null);
+  const [pageForm, setPageForm] = useState({
+    title: '',
+    slug: '',
+    content: '',
+    status: 'draft' as 'draft' | 'published',
+    template: 'default',
+    meta_title: '',
+    meta_description: '',
+    show_in_navigation: false,
+    navigation_label: '',
+    navigation_order: 0,
+  });
+
   // 2026 Workflow state
   const [selectedPostForWorkflow, setSelectedPostForWorkflow] = useState<CMSPost | null>(null);
   const [showWorkflowHistory, setShowWorkflowHistory] = useState(false);
@@ -297,6 +313,67 @@ export default function CMS() {
 
   const handleMarkSpam = async (id: string, isSpam: boolean) => {
     await markContactSpam.mutateAsync({ id, isSpam });
+  };
+
+  // Page editor handlers
+  const openPageEditor = (page?: CMSPage) => {
+    if (page) {
+      setEditingPage(page);
+      setPageForm({
+        title: page.title,
+        slug: page.slug,
+        content: page.content || '',
+        status: page.status === 'published' ? 'published' : 'draft',
+        template: page.template || 'default',
+        meta_title: page.meta_title || '',
+        meta_description: page.meta_description || '',
+        show_in_navigation: page.show_in_navigation,
+        navigation_label: page.navigation_label || '',
+        navigation_order: page.navigation_order,
+      });
+    } else {
+      setEditingPage(null);
+      setPageForm({
+        title: '',
+        slug: '',
+        content: '',
+        status: 'draft',
+        template: 'default',
+        meta_title: '',
+        meta_description: '',
+        show_in_navigation: false,
+        navigation_label: '',
+        navigation_order: 0,
+      });
+    }
+    setShowPageEditor(true);
+  };
+
+  const handleSavePage = async () => {
+    try {
+      const data = {
+        title: pageForm.title,
+        slug: pageForm.slug || undefined,
+        content: pageForm.content || undefined,
+        status: pageForm.status as 'draft' | 'published',
+        template: pageForm.template,
+        meta_title: pageForm.meta_title || undefined,
+        meta_description: pageForm.meta_description || undefined,
+        show_in_navigation: pageForm.show_in_navigation,
+        navigation_label: pageForm.navigation_label || undefined,
+        navigation_order: pageForm.navigation_order,
+      };
+
+      if (editingPage) {
+        await updatePage.mutateAsync({ id: editingPage.id, data });
+      } else {
+        await createPage.mutateAsync(data);
+      }
+      setShowPageEditor(false);
+      setEditingPage(null);
+    } catch (error) {
+      console.error('Failed to save page:', error);
+    }
   };
 
   // 2026 Workflow handlers
@@ -897,9 +974,7 @@ export default function CMS() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-white">Static Pages</h3>
               <button
-                onClick={() => {
-                  /* TODO: Page editor */
-                }}
+                onClick={() => openPageEditor()}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
@@ -964,6 +1039,7 @@ export default function CMS() {
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              onClick={() => openPageEditor(page)}
                               className="p-2 text-neutral-400 hover:text-white transition-colors"
                               title="Edit"
                             >
@@ -1134,6 +1210,177 @@ export default function CMS() {
           }}
           isLoading={createPost.isPending || updatePost.isPending}
         />
+      )}
+
+      {/* Page Editor Modal */}
+      {showPageEditor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-800 sticky top-0 bg-neutral-900 z-10">
+              <h3 className="text-lg font-semibold text-white">
+                {editingPage ? 'Edit Page' : 'New Page'}
+              </h3>
+              <button
+                onClick={() => setShowPageEditor(false)}
+                className="p-2 text-neutral-400 hover:text-white"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1.5">Title *</label>
+                <input
+                  type="text"
+                  value={pageForm.title}
+                  onChange={(e) => setPageForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500/50"
+                  placeholder="Page title"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1.5">Slug</label>
+                <input
+                  type="text"
+                  value={pageForm.slug}
+                  onChange={(e) => setPageForm((f) => ({ ...f, slug: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500/50"
+                  placeholder="page-url-slug (auto-generated if empty)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1.5">Content</label>
+                <textarea
+                  value={pageForm.content}
+                  onChange={(e) => setPageForm((f) => ({ ...f, content: e.target.value }))}
+                  rows={8}
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500/50 resize-none font-mono text-sm"
+                  placeholder="Page content (HTML supported)"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Status</label>
+                  <select
+                    value={pageForm.status}
+                    onChange={(e) => setPageForm((f) => ({ ...f, status: e.target.value as 'draft' | 'published' }))}
+                    className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-blue-500/50"
+                  >
+                    <option value="draft" className="bg-neutral-900">Draft</option>
+                    <option value="published" className="bg-neutral-900">Published</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Template</label>
+                  <select
+                    value={pageForm.template}
+                    onChange={(e) => setPageForm((f) => ({ ...f, template: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-blue-500/50"
+                  >
+                    <option value="default" className="bg-neutral-900">Default</option>
+                    <option value="full-width" className="bg-neutral-900">Full Width</option>
+                    <option value="sidebar" className="bg-neutral-900">With Sidebar</option>
+                    <option value="landing" className="bg-neutral-900">Landing</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* SEO Fields */}
+              <div className="border-t border-neutral-800 pt-5">
+                <h4 className="text-sm font-medium text-white mb-3">SEO</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-400 mb-1.5">Meta Title</label>
+                    <input
+                      type="text"
+                      value={pageForm.meta_title}
+                      onChange={(e) => setPageForm((f) => ({ ...f, meta_title: e.target.value }))}
+                      className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500/50"
+                      placeholder="SEO title"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-400 mb-1.5">Meta Description</label>
+                    <textarea
+                      value={pageForm.meta_description}
+                      onChange={(e) => setPageForm((f) => ({ ...f, meta_description: e.target.value }))}
+                      rows={2}
+                      className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500/50 resize-none"
+                      placeholder="SEO description"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <div className="border-t border-neutral-800 pt-5">
+                <h4 className="text-sm font-medium text-white mb-3">Navigation</h4>
+                <div className="space-y-4">
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span className="text-sm text-neutral-300">Show in navigation</span>
+                    <div
+                      className={cn(
+                        'relative w-10 h-5 rounded-full transition-colors cursor-pointer',
+                        pageForm.show_in_navigation ? 'bg-blue-600' : 'bg-neutral-700'
+                      )}
+                      onClick={() => setPageForm((f) => ({ ...f, show_in_navigation: !f.show_in_navigation }))}
+                    >
+                      <div
+                        className={cn(
+                          'absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform',
+                          pageForm.show_in_navigation ? 'translate-x-5' : 'translate-x-0.5'
+                        )}
+                      />
+                    </div>
+                  </label>
+                  {pageForm.show_in_navigation && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-400 mb-1.5">Nav Label</label>
+                        <input
+                          type="text"
+                          value={pageForm.navigation_label}
+                          onChange={(e) => setPageForm((f) => ({ ...f, navigation_label: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500/50"
+                          placeholder="Label in nav"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-400 mb-1.5">Nav Order</label>
+                        <input
+                          type="number"
+                          value={pageForm.navigation_order}
+                          onChange={(e) => setPageForm((f) => ({ ...f, navigation_order: Number(e.target.value) }))}
+                          className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-blue-500/50"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 p-4 border-t border-neutral-800 sticky bottom-0 bg-neutral-900">
+              <button
+                onClick={() => setShowPageEditor(false)}
+                className="px-4 py-2 text-neutral-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSavePage}
+                disabled={!pageForm.title || createPage.isPending || updatePage.isPending}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+              >
+                {createPage.isPending || updatePage.isPending ? 'Saving...' : editingPage ? 'Update Page' : 'Create Page'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Schedule Modal */}

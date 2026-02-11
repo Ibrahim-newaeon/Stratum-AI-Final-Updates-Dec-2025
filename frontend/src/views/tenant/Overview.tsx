@@ -5,7 +5,7 @@
  * Shows EMQ + Confidence + Autopilot Mode + Budget at Risk
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   type Action,
@@ -29,13 +29,27 @@ import {
 import { useTenantOverview, useTenantRecommendations } from '@/api/hooks';
 import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopilot';
 import { useToast } from '@/components/ui/use-toast';
-import { CalendarIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
+import {
+  CalendarIcon,
+  DocumentArrowDownIcon,
+  XMarkIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 
 export default function TenantOverview() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const tid = parseInt(tenantId || '1', 10);
+
+  // Assignment modal state
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assigningItem, setAssigningItem] = useState<PlaybookItem | null>(null);
+  const [assignee, setAssignee] = useState('');
+  const [assignNotes, setAssignNotes] = useState('');
+
+  // Export state
+  const [isExporting, setIsExporting] = useState(false);
 
   // Date range state
   const [dateRange, setDateRange] = useState({
@@ -233,12 +247,34 @@ export default function TenantOverview() {
 
   // Handler: Assign playbook item
   const handlePlaybookAssign = (item: PlaybookItem) => {
-    // TODO: Implement full assignment modal/flow
-    toast({
-      title: 'Assignment',
-      description: `Assigning "${item.title}" to team. Full assignment workflow coming soon.`,
-    });
+    setAssigningItem(item);
+    setAssignee(item.owner || '');
+    setAssignNotes('');
+    setShowAssignModal(true);
   };
+
+  // Handler: Confirm assignment
+  const handleConfirmAssign = useCallback(async () => {
+    if (!assigningItem || !assignee.trim()) return;
+    try {
+      await updatePlaybookItem.mutateAsync({
+        itemId: assigningItem.id,
+        updates: { owner: assignee.trim(), status: 'in_progress' },
+      });
+      toast({
+        title: 'Assigned',
+        description: `"${assigningItem.title}" assigned to ${assignee.trim()}.`,
+      });
+      setShowAssignModal(false);
+      setAssigningItem(null);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to assign item',
+        variant: 'destructive',
+      });
+    }
+  }, [assigningItem, assignee, updatePlaybookItem, toast]);
 
   // Handler: Apply playbook fix
   const handlePlaybookApply = async (item: PlaybookItem) => {
@@ -342,13 +378,91 @@ export default function TenantOverview() {
   };
 
   // Handler: Export report
-  const handleExportReport = () => {
-    // TODO: Implement full export functionality
-    toast({
-      title: 'Export Started',
-      description: 'Generating report for download. This feature is coming soon.',
-    });
-  };
+  const handleExportReport = useCallback(() => {
+    setIsExporting(true);
+    try {
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        dateRange,
+        emqScore,
+        autopilotMode,
+        budgetAtRisk,
+        kpis: kpis.map((k) => ({ label: k.label, value: k.value, confidence: k.confidence })),
+        playbook: playbook.map((p) => ({
+          title: p.title,
+          priority: p.priority,
+          owner: p.owner || 'Unassigned',
+          status: p.status,
+          estimatedImpact: p.estimatedImpact,
+          platform: p.platform || '-',
+        })),
+        actions: actions.map((a) => ({
+          title: a.title,
+          type: a.type,
+          platform: a.platform || '-',
+          confidence: a.confidence,
+          status: a.status,
+          impact: `${a.estimatedImpact.value}${a.estimatedImpact.unit} ${a.estimatedImpact.metric}`,
+        })),
+      };
+
+      // Build CSV
+      const lines: string[] = [];
+      lines.push('Stratum AI - Overview Report');
+      lines.push(`Generated: ${new Date().toLocaleString()}`);
+      lines.push(`Date Range: ${dateRange.start} to ${dateRange.end}`);
+      lines.push('');
+      lines.push(`EMQ Score: ${emqScore}`);
+      lines.push(`Autopilot Mode: ${autopilotMode}`);
+      lines.push(`Budget at Risk: $${budgetAtRisk.toLocaleString()}`);
+      lines.push('');
+
+      // KPIs
+      lines.push('--- KPIs ---');
+      lines.push('Metric,Value,Confidence');
+      reportData.kpis.forEach((k) => lines.push(`${k.label},${k.value},${k.confidence}%`));
+      lines.push('');
+
+      // Playbook
+      lines.push('--- Fix Playbook ---');
+      lines.push('Title,Priority,Owner,Status,EMQ Impact,Platform');
+      reportData.playbook.forEach((p) =>
+        lines.push(`"${p.title}",${p.priority},${p.owner},${p.status},+${p.estimatedImpact},${p.platform}`)
+      );
+      lines.push('');
+
+      // Actions
+      lines.push('--- Actions ---');
+      lines.push('Title,Type,Platform,Confidence,Status,Impact');
+      reportData.actions.forEach((a) =>
+        lines.push(`"${a.title}",${a.type},${a.platform},${a.confidence}%,${a.status},${a.impact}`)
+      );
+
+      const csvContent = lines.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `stratum-overview-report-${dateRange.start}-to-${dateRange.end}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Report Exported',
+        description: 'CSV report downloaded successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: error instanceof Error ? error.message : 'Could not generate report',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [dateRange, emqScore, autopilotMode, budgetAtRisk, kpis, playbook, actions, toast]);
 
   return (
     <div className="space-y-6">
@@ -368,10 +482,11 @@ export default function TenantOverview() {
           </button>
           <button
             onClick={handleExportReport}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white font-medium hover:shadow-glow transition-all"
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white font-medium hover:shadow-glow transition-all disabled:opacity-50"
           >
             <DocumentArrowDownIcon className="w-4 h-4" />
-            Export Report
+            {isExporting ? 'Exporting...' : 'Export Report'}
           </button>
         </div>
       </div>
@@ -427,6 +542,89 @@ export default function TenantOverview() {
           <EmqTimeline events={timeline} maxEvents={5} />
         </div>
       </div>
+
+      {/* Assignment Modal */}
+      {showAssignModal && assigningItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="text-lg font-semibold text-white">Assign Task</h3>
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="p-2 text-white/40 hover:text-white"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Item being assigned */}
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-white font-medium text-sm">{assigningItem.title}</p>
+                <div className="flex items-center gap-3 mt-1.5 text-xs text-white/50">
+                  <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                    assigningItem.priority === 'critical' ? 'bg-red-500/20 text-red-400' :
+                    assigningItem.priority === 'high' ? 'bg-orange-500/20 text-orange-400' :
+                    'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {assigningItem.priority}
+                  </span>
+                  {assigningItem.platform && <span>{assigningItem.platform}</span>}
+                  {assigningItem.estimatedTime && <span>{assigningItem.estimatedTime}</span>}
+                </div>
+              </div>
+
+              {/* Assignee */}
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  <UserIcon className="w-4 h-4 inline mr-1" />
+                  Assign to *
+                </label>
+                <select
+                  value={assignee}
+                  onChange={(e) => setAssignee(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500/50"
+                >
+                  <option value="" className="bg-neutral-900">Select team member...</option>
+                  <option value="Data Team" className="bg-neutral-900">Data Team</option>
+                  <option value="Engineering" className="bg-neutral-900">Engineering</option>
+                  <option value="Marketing Ops" className="bg-neutral-900">Marketing Ops</option>
+                  <option value="Platform Lead" className="bg-neutral-900">Platform Lead</option>
+                  <option value="Analytics Team" className="bg-neutral-900">Analytics Team</option>
+                </select>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Notes (optional)</label>
+                <textarea
+                  value={assignNotes}
+                  onChange={(e) => setAssignNotes(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 resize-none"
+                  placeholder="Additional context or instructions..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 p-4 border-t border-white/10">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="px-4 py-2 text-white/60 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAssign}
+                disabled={!assignee.trim() || updatePlaybookItem.isPending}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+              >
+                {updatePlaybookItem.isPending ? 'Assigning...' : 'Assign'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
