@@ -23,12 +23,9 @@ function DocumentDirectionHandler() {
 }
 
 // Lazy load pages for code splitting
-const UnifiedLanding = lazy(() => import('./views/UnifiedLanding'));
 const Landing = lazy(() => import('./views/Landing'));
 const LandingAr = lazy(() => import('./views/LandingAr'));
 const AILanding = lazy(() => import('./views/AILanding'));
-const CommandCenterLanding = lazy(() => import('./views/CommandCenterLanding'));
-const CommandCenterLandingAr = lazy(() => import('./views/CommandCenterLandingAr'));
 const Login = lazy(() => import('./views/Login'));
 const Signup = lazy(() => import('./views/Signup'));
 const ForgotPassword = lazy(() => import('./views/ForgotPassword'));
@@ -197,12 +194,12 @@ function App() {
                 <SkipToContent />
                 <div className="min-h-screen bg-background" id="main-content" role="main">
                   <Routes>
-                    {/* Public routes — Unified Landing (replaces iframe) */}
+                    {/* Public routes — Landing */}
                     <Route
                       path="/"
                       element={
                         <Suspense fallback={<LoadingSpinner />}>
-                          <UnifiedLanding />
+                          <Landing />
                         </Suspense>
                       }
                     />
@@ -220,23 +217,6 @@ function App() {
                       element={
                         <Suspense fallback={<LoadingSpinner />}>
                           <AILanding />
-                        </Suspense>
-                      }
-                    />
-                    {/* Deprecated: Command Center Landing — kept temporarily */}
-                    <Route
-                      path="/command"
-                      element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <CommandCenterLanding />
-                        </Suspense>
-                      }
-                    />
-                    <Route
-                      path="/command/ar"
-                      element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <CommandCenterLandingAr />
                         </Suspense>
                       }
                     />
