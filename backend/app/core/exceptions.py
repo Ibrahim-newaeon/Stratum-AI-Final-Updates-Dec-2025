@@ -19,7 +19,7 @@ Usage:
 from typing import Any, Optional
 
 
-class AppException(Exception):
+class AppException(Exception):  # noqa: N818 — intentional base class name
     """Base exception for all Stratum AI application errors."""
 
     status_code: int = 500

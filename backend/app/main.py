@@ -18,8 +18,7 @@ from fastapi.responses import JSONResponse, ORJSONResponse
 from sse_starlette.sse import EventSourceResponse
 
 from app.api.v1 import api_router
-from app.api.v1.endpoints.memory_debug import init_debug_endpoints
-from app.api.v1.endpoints.memory_debug import router as memory_debug_router
+from app.api.v1.endpoints.memory_debug import init_debug_endpoints, router as memory_debug_router
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import get_logger, setup_logging

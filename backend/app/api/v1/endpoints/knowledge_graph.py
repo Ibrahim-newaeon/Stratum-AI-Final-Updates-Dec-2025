@@ -4,22 +4,21 @@ Knowledge Graph API Endpoints
 Provides REST API for Knowledge Graph analytics, insights, and problem detection.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db
 from app.base_models import User
 from app.services.knowledge_graph import (
-    KnowledgeGraphService,
     KnowledgeGraphInsightsEngine,
-    ProblemSeverity,
+    KnowledgeGraphService,
     ProblemCategory,
+    ProblemSeverity,
 )
+from app.tenancy.deps import get_current_user, get_db
 
 router = APIRouter()
 
@@ -355,5 +354,5 @@ async def health_check(
     return {
         "status": "healthy" if is_healthy else "unhealthy",
         "graph_name": kg.GRAPH_NAME,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
