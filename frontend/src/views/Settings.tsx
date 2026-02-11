@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
@@ -24,6 +24,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useExportData, useRequestDeletion } from '@/api/hooks';
+import { useCurrentUser, useUpdatePreferences } from '@/api/auth';
+import { useToast } from '@/components/ui/use-toast';
 
 type SettingsTab =
   | 'profile'
@@ -470,20 +472,93 @@ function OrganizationSettings() {
   );
 }
 
+const NOTIFICATION_DEFAULTS = {
+  emailAlerts: true,
+  pushNotifications: true,
+  weeklyDigest: true,
+  campaignAlerts: true,
+  budgetAlerts: true,
+  performanceAlerts: false,
+};
+
 function NotificationSettings() {
   const { t } = useTranslation();
+  const { data: user } = useCurrentUser();
+  const updatePreferences = useUpdatePreferences();
+  const { toast } = useToast();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const savedNotifications = (user?.preferences as Record<string, unknown>)?.notifications as
+    | Record<string, boolean>
+    | undefined;
+
   const [notifications, setNotifications] = useState({
-    emailAlerts: true,
-    pushNotifications: true,
-    weeklyDigest: true,
-    campaignAlerts: true,
-    budgetAlerts: true,
-    performanceAlerts: false,
+    ...NOTIFICATION_DEFAULTS,
+    ...savedNotifications,
   });
+
+  // Sync state when user data loads or changes
+  useEffect(() => {
+    if (savedNotifications) {
+      setNotifications((prev) => ({ ...prev, ...savedNotifications }));
+    }
+  }, [JSON.stringify(savedNotifications)]);
+
+  const persistNotifications = useCallback(
+    (updated: Record<string, boolean>) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        setSaveStatus('saving');
+        const existingPrefs = (user?.preferences as Record<string, unknown>) ?? {};
+        updatePreferences.mutate(
+          { ...existingPrefs, notifications: updated },
+          {
+            onSuccess: () => {
+              setSaveStatus('saved');
+              setTimeout(() => setSaveStatus('idle'), 2000);
+            },
+            onError: () => {
+              setSaveStatus('idle');
+              toast({
+                title: 'Error',
+                description: 'Failed to save notification preferences.',
+                variant: 'destructive',
+              });
+            },
+          }
+        );
+      }, 500);
+    },
+    [user?.preferences, updatePreferences, toast]
+  );
+
+  const handleToggle = (key: string) => {
+    const updated = { ...notifications, [key]: !notifications[key as keyof typeof notifications] };
+    setNotifications(updated);
+    persistNotifications(updated);
+  };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">{t('settings.notificationSettings')}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{t('settings.notificationSettings')}</h2>
+        {saveStatus !== 'idle' && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            {saveStatus === 'saving' ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Check className="w-3 h-3 text-green-500" />
+                Saved
+              </>
+            )}
+          </span>
+        )}
+      </div>
 
       <div className="space-y-4">
         {Object.entries(notifications).map(([key, value]) => (
@@ -493,7 +568,7 @@ function NotificationSettings() {
               <p className="text-sm text-muted-foreground">{t(`settings.${key}Desc`)}</p>
             </div>
             <button
-              onClick={() => setNotifications((prev) => ({ ...prev, [key]: !value }))}
+              onClick={() => handleToggle(key)}
               className={cn(
                 'relative w-12 h-6 rounded-full transition-colors',
                 value ? 'bg-primary' : 'bg-muted'

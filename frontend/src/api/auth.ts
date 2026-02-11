@@ -17,6 +17,7 @@ export interface User {
   tenant_id: number | null;
   is_active: boolean;
   is_verified: boolean;
+  preferences?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -212,6 +213,14 @@ export const authApi = {
   },
 
   /**
+   * Update current user preferences
+   */
+  updatePreferences: async (preferences: Record<string, unknown>): Promise<User> => {
+    const response = await apiClient.patch<ApiResponse<User>>('/users/me', { preferences });
+    return response.data.data;
+  },
+
+  /**
    * Refresh access token
    */
   refreshToken: async (refreshToken: string): Promise<AuthTokens> => {
@@ -316,6 +325,20 @@ export function useCurrentUser(enabled = true) {
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
+  });
+}
+
+/**
+ * Hook for updating user notification preferences
+ */
+export function useUpdatePreferences() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.updatePreferences,
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(['auth', 'user'], updatedUser);
+    },
   });
 }
 
