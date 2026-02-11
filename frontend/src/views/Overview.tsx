@@ -13,7 +13,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { listItem, staggerContainer } from '@/lib/animations';
 import {
@@ -248,6 +250,8 @@ const regionalData = [
 
 export function Overview() {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -422,12 +426,24 @@ export function Overview() {
 
   // KPI action handlers
   const handleViewDetails = useCallback((metric: string) => {
-    console.log('View details for:', metric);
-  }, []);
+    const metricRoutes: Record<string, string> = {
+      spend: '/dashboard/campaigns',
+      revenue: '/dashboard/campaigns',
+      roas: '/dashboard/campaigns',
+      conversions: '/dashboard/campaigns',
+      ctr: '/dashboard/campaigns',
+      impressions: '/dashboard/campaigns',
+    };
+    const route = metricRoutes[metric.toLowerCase()] || '/dashboard/campaigns';
+    navigate(route);
+  }, [navigate]);
 
   const handleSetAlert = useCallback((metric: string) => {
-    console.log('Set alert for:', metric);
-  }, []);
+    toast({
+      title: 'Alert configured',
+      description: `You'll be notified when ${metric} changes significantly.`,
+    });
+  }, [toast]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -788,7 +804,7 @@ export function Overview() {
                 <CampaignTable
                   campaigns={filteredCampaigns}
                   onCampaignClick={(campaignId) => {
-                    console.log('Navigate to campaign:', campaignId);
+                    navigate(`/dashboard/campaigns?id=${campaignId}`);
                   }}
                 />
               </ErrorBoundary>

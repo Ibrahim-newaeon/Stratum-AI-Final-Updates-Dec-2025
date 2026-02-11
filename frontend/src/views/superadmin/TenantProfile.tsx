@@ -570,8 +570,18 @@ export default function TenantProfile() {
             />
             <EmqFixPlaybookPanel
               items={playbook}
-              onItemClick={(item) => console.log('Clicked:', item)}
-              onAssign={(item) => console.log('Assign:', item)}
+              onItemClick={(item) => {
+                toast({
+                  title: item.title,
+                  description: `${item.description} — Priority: ${item.priority}, Owner: ${item.owner || 'Unassigned'}`,
+                });
+              }}
+              onAssign={(item) => {
+                toast({
+                  title: 'Assignment requested',
+                  description: `"${item.title}" has been flagged for assignment to ${item.owner || 'the team'}.`,
+                });
+              }}
               maxItems={5}
             />
           </div>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/components/ui/use-toast';
 import {
   Area,
   AreaChart,
@@ -1472,6 +1473,7 @@ function AlertConfigurationModal({
 
 export function Stratum() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d');
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null);
   const [appliedInsights, setAppliedInsights] = useState<number[]>([]);
@@ -1568,16 +1570,13 @@ export function Stratum() {
   // Handle alert rule save
   const handleSaveAlertRule = (rule: AlertRule, isEdit: boolean) => {
     if (isEdit && rule.id) {
-      // Update existing alert
       setCreatedAlerts((prev) => prev.map((alert) => (alert.id === rule.id ? rule : alert)));
-      console.log('Alert rule updated:', rule);
+      toast({ title: 'Alert updated', description: `Alert rule "${rule.name}" has been updated.` });
     } else {
-      // Create new alert
       const ruleWithId = { ...rule, id: `alert-${Date.now()}` };
       setCreatedAlerts((prev) => [...prev, ruleWithId]);
-      console.log('Alert rule created:', ruleWithId);
+      toast({ title: 'Alert created', description: `Alert rule "${rule.name}" has been created.` });
     }
-    // Close modal and reset state
     setAlertConfigAnomaly(null);
     setEditingAlert(null);
     setAlertModalMode('create');

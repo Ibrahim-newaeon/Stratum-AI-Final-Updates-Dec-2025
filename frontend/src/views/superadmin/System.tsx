@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useSystemHealth } from '@/api/hooks';
+import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowPathIcon,
   BoltIcon,
@@ -55,6 +56,7 @@ interface PlatformConnector {
 }
 
 export default function System() {
+  const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [queueStates, setQueueStates] = useState<Record<string, QueueStatus>>({});
@@ -125,12 +127,12 @@ export default function System() {
 
       if (type === 'pause') {
         setQueueStates((prev) => ({ ...prev, [queueId]: 'paused' }));
-        console.log(`Queue "${queueName}" paused successfully`);
+        toast({ title: 'Queue paused', description: `"${queueName}" has been paused.` });
       } else if (type === 'resume') {
         setQueueStates((prev) => ({ ...prev, [queueId]: 'running' }));
-        console.log(`Queue "${queueName}" resumed successfully`);
+        toast({ title: 'Queue resumed', description: `"${queueName}" is now running.` });
       } else if (type === 'retry') {
-        console.log(`Retrying failed jobs in queue "${queueName}"`);
+        toast({ title: 'Retrying failed jobs', description: `Retrying failed jobs in "${queueName}".` });
         // Trigger refetch to get updated queue status
         await refetch();
       }

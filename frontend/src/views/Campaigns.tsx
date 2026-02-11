@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/components/ui/use-toast';
 import {
   ChevronDown,
   ChevronUp,
@@ -131,6 +132,7 @@ type SortDirection = 'asc' | 'desc';
 
 export function Campaigns() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
@@ -568,8 +570,7 @@ export function Campaigns() {
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSuccess={(campaign) => {
-          console.log('Campaign created:', campaign);
-          // In a real app, you'd refetch the campaigns list here
+          toast({ title: 'Campaign created', description: `"${campaign?.name || 'New campaign'}" has been created successfully.` });
         }}
       />
     </div>

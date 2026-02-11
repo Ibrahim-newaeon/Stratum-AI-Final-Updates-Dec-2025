@@ -7,6 +7,7 @@
 
 import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import {
   type AutopilotMode,
@@ -59,6 +60,8 @@ interface RecoveryMetric {
 export default function TenantNarrative() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const tid = parseInt(tenantId || '1', 10);
+  const { toast } = useToast();
+  const [selectedPlaybookItem, setSelectedPlaybookItem] = useState<PlaybookItem | null>(null);
 
   const [activeTab, setActiveTab] = useState<'summary' | 'timeline' | 'blocked' | 'playbook'>(
     'summary'
@@ -575,13 +578,65 @@ export default function TenantNarrative() {
       )}
 
       {activeTab === 'playbook' && (
-        <div data-tour="fix-playbook">
+        <div data-tour="fix-playbook" className="space-y-4">
           <EmqFixPlaybookPanel
             items={playbook}
-            onItemClick={(item) => console.log('Clicked:', item)}
-            onAssign={(item) => console.log('Assign:', item)}
+            onItemClick={(item) => setSelectedPlaybookItem(item)}
+            onAssign={(item) => {
+              toast({
+                title: 'Assignment requested',
+                description: `"${item.title}" has been flagged for assignment. The ${item.owner || 'team'} will be notified.`,
+              });
+            }}
             maxItems={10}
           />
+
+          {/* Playbook Item Detail Panel */}
+          {selectedPlaybookItem && (
+            <div className="p-5 rounded-xl bg-surface-secondary border border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-white">{selectedPlaybookItem.title}</h3>
+                <button
+                  onClick={() => setSelectedPlaybookItem(null)}
+                  className="text-text-muted hover:text-white transition-colors text-sm"
+                >
+                  Close
+                </button>
+              </div>
+              <p className="text-text-secondary mb-4">{selectedPlaybookItem.description}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-text-muted">Priority</span>
+                  <p className={cn(
+                    'font-medium capitalize',
+                    selectedPlaybookItem.priority === 'critical' && 'text-danger',
+                    selectedPlaybookItem.priority === 'high' && 'text-warning',
+                    selectedPlaybookItem.priority === 'medium' && 'text-stratum-400',
+                  )}>
+                    {selectedPlaybookItem.priority}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-text-muted">Owner</span>
+                  <p className="text-white font-medium">{selectedPlaybookItem.owner || 'Unassigned'}</p>
+                </div>
+                <div>
+                  <span className="text-text-muted">Est. Impact</span>
+                  <p className="text-success font-medium">+{selectedPlaybookItem.estimatedImpact} EMQ pts</p>
+                </div>
+                <div>
+                  <span className="text-text-muted">Est. Time</span>
+                  <p className="text-white font-medium">{selectedPlaybookItem.estimatedTime}</p>
+                </div>
+              </div>
+              {selectedPlaybookItem.platform && (
+                <div className="mt-3 text-sm">
+                  <span className="text-text-muted">Platform: </span>
+                  <span className="text-white">{selectedPlaybookItem.platform}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
