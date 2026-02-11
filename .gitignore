@@ -53,7 +53,11 @@ sample_training_data.csv
 # Claude Code
 CLAUDE.local.md
 .claude/state/
+.claude/settings.local.json
 tmpclaude-*
+
+# Variates / scratch
+VARIATES/
 
 # SSL certificates (server-side only)
 /etc/letsencrypt/
