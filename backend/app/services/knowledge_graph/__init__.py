@@ -19,30 +19,30 @@ Usage:
     path = kg.trace_automation_decision(automation_id)
 """
 
-from .service import KnowledgeGraphService
-from .models import (
-    GraphNode,
-    GraphEdge,
-    ProfileNode,
-    EventNode,
-    SignalNode,
-    TrustGateNode,
-    AutomationNode,
-    RevenueNode,
-    CampaignNode,
-    SegmentNode,
-    ChannelNode,
-    TouchpointNode,
-)
-from .queries import CypherQueryBuilder
-from .sync import KnowledgeGraphSyncService
 from .insights import (
     KnowledgeGraphInsightsEngine,
     Problem,
-    Solution,
-    ProblemSeverity,
     ProblemCategory,
+    ProblemSeverity,
+    Solution,
 )
+from .models import (
+    AutomationNode,
+    CampaignNode,
+    ChannelNode,
+    EventNode,
+    GraphEdge,
+    GraphNode,
+    ProfileNode,
+    RevenueNode,
+    SegmentNode,
+    SignalNode,
+    TouchpointNode,
+    TrustGateNode,
+)
+from .queries import CypherQueryBuilder
+from .service import KnowledgeGraphService
+from .sync import KnowledgeGraphSyncService
 
 __all__ = [
     "KnowledgeGraphService",

@@ -22,15 +22,15 @@ from __future__ import annotations
 
 import base64
 import io
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 import matplotlib
+
 matplotlib.use("Agg")  # Non-interactive backend for server
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
-
 
 # =============================================================================
 # Color Palette (matches Stratum AI brand)
@@ -144,7 +144,7 @@ def chart_top_allocations(allocations: list[dict[str, Any]], title: str = "Top M
     ax.invert_yaxis()
 
     # Value labels on bars
-    for bar, size in zip(bars, sizes):
+    for bar, size in zip(bars, sizes, strict=False):
         ax.text(
             bar.get_width() + max(sizes) * 0.01,
             bar.get_y() + bar.get_height() / 2,
@@ -188,7 +188,7 @@ def chart_top_files(files: list[dict[str, Any]]) -> str:
     ax.set_xlabel("Size (KB)", color=COLORS["text_muted"], fontsize=10)
     ax.invert_yaxis()
 
-    for bar, size in zip(bars, sizes):
+    for bar, size in zip(bars, sizes, strict=False):
         ax.text(
             bar.get_width() + max(sizes) * 0.01,
             bar.get_y() + bar.get_height() / 2,
@@ -264,7 +264,7 @@ def chart_endpoint_memory(endpoint_stats: list[dict[str, Any]]) -> str:
 
     labels = [f"{d['method']} {d['path']}" for d in data]
     # Truncate long labels
-    labels = [l[:60] + "..." if len(l) > 60 else l for l in labels]
+    labels = [lbl[:60] + "..." if len(lbl) > 60 else lbl for lbl in labels]
     values = [d["avg_rss_delta_kb"] for d in data]
     counts = [d["call_count"] for d in data]
     y_pos = np.arange(len(labels))
@@ -287,7 +287,7 @@ def chart_endpoint_memory(endpoint_stats: list[dict[str, Any]]) -> str:
     ax.invert_yaxis()
     ax.axvline(x=0, color=COLORS["grid"], linewidth=0.8)
 
-    for bar, val, count in zip(bars, values, counts):
+    for bar, val, count in zip(bars, values, counts, strict=False):
         ax.text(
             bar.get_width() + abs(max(values)) * 0.02 if val >= 0 else bar.get_width() - abs(max(values)) * 0.02,
             bar.get_y() + bar.get_height() / 2,
@@ -410,7 +410,7 @@ def chart_snapshot_diff(diff_data: Optional[dict[str, Any]]) -> str:
     ax1.set_xlabel("Delta (MB)", color=COLORS["text_muted"], fontsize=10)
     ax1.axvline(x=0, color=COLORS["text_muted"], linewidth=0.8)
 
-    for bar, val in zip(bars, values):
+    for bar, val in zip(bars, values, strict=False):
         ax1.text(
             bar.get_width() + 0.1 if val >= 0 else bar.get_width() - 0.1,
             bar.get_y() + bar.get_height() / 2,
@@ -433,7 +433,7 @@ def chart_snapshot_diff(diff_data: Optional[dict[str, Any]]) -> str:
         ax2.set_xlabel("Count Increase", color=COLORS["text_muted"], fontsize=10)
         ax2.invert_yaxis()
 
-        for i, (bar_val, g) in enumerate(zip(deltas, grown)):
+        for i, (bar_val, g) in enumerate(zip(deltas, grown, strict=False)):
             pct = g.get("growth_pct", 0)
             ax2.text(
                 bar_val + max(deltas) * 0.02,
@@ -527,7 +527,7 @@ def chart_child_processes(children: list[dict[str, Any]]) -> str:
     ax.axvline(x=400, color=COLORS["danger"], linestyle="--", alpha=0.7, label="Worker limit (400 MB)")
     ax.legend(facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"], labelcolor=COLORS["text"], fontsize=8)
 
-    for bar, r in zip(bars, rss):
+    for bar, r in zip(bars, rss, strict=False):
         ax.text(
             bar.get_width() + max(rss) * 0.01,
             bar.get_y() + bar.get_height() / 2,
@@ -715,7 +715,7 @@ def _analyze_audit(
     if ref_cycles:
         gc_score = max(gc_score - 3, 0)
         cat["findings"].append(f"{len(ref_cycles)} reference cycles found in `gc.garbage`. These objects will never be freed.")
-        cycle_types = set(c["type"] for c in ref_cycles)
+        cycle_types = {c["type"] for c in ref_cycles}
         cat["recommendations"].append(f"Reference cycle types: {', '.join(cycle_types)}. Break cycles with `weakref` or redesign ownership.")
 
     # Check Gen2 pressure (indicates long-lived objects accumulating)
@@ -919,7 +919,7 @@ def generate_html_report(
     Returns:
         Complete HTML string ready to serve or save as file.
     """
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     process = audit_data.get("process", {})
     system_mem = audit_data.get("system_memory", {})
 

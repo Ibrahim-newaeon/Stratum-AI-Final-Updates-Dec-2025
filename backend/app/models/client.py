@@ -13,7 +13,7 @@ Models:
 - ClientRequest: Portal request workflow (v2 placeholder)
 """
 
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING, Optional
 
@@ -35,7 +35,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin
 
 if TYPE_CHECKING:
-    from app.base_models import Campaign, Tenant, User
+    from app.base_models import Campaign, User
 
 
 # =============================================================================

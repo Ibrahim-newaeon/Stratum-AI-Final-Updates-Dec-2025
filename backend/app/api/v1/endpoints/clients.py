@@ -830,9 +830,9 @@ async def invite_portal_user(
             )
 
         # Create portal user
-        from app.core.security import get_password_hash
-
         import secrets
+
+        from app.core.security import get_password_hash
 
         temp_password = secrets.token_urlsafe(16)
 

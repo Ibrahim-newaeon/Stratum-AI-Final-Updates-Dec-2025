@@ -72,15 +72,6 @@ from app.models.autopilot import (
     ViolationType,
 )
 
-# Client Entity models (Agency model)
-from app.models.client import (
-    Client,
-    ClientAssignment,
-    ClientRequest,
-    ClientRequestStatus,
-    ClientRequestType,
-)
-
 # Campaign Builder models
 from app.models.campaign_builder import (
     CampaignDraft,
@@ -103,6 +94,15 @@ from app.models.cdp import (
     IdentifierType,
     LifecycleStage,
     SourceType,
+)
+
+# Client Entity models (Agency model)
+from app.models.client import (
+    Client,
+    ClientAssignment,
+    ClientRequest,
+    ClientRequestStatus,
+    ClientRequestType,
 )
 
 # CMS (Content Management System) models

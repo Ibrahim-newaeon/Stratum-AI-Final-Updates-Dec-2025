@@ -168,7 +168,7 @@ RBAC_MATRIX: dict[str, dict[UserRole, PermLevel]] = {
 # Legacy Role → Permission Mapping (backwards compatible)
 # =============================================================================
 ROLE_PERMISSIONS: dict[str, set[Permission]] = {
-    "superadmin": {p for p in Permission},
+    "superadmin": set(Permission),
     "admin": {
         Permission.TENANT_READ, Permission.TENANT_WRITE, Permission.TENANT_SETTINGS,
         Permission.USER_READ, Permission.USER_WRITE, Permission.USER_DELETE, Permission.USER_ROLE_ASSIGN,

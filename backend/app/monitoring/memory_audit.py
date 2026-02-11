@@ -22,11 +22,10 @@ import time
 import tracemalloc
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Optional
 
 import psutil
-
 
 # =============================================================================
 # Data Classes
@@ -421,7 +420,7 @@ class MemoryAuditor:
                 break
 
         snapshot = MemorySnapshot(
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             rss_mb=process_info.rss_mb,
             vms_mb=process_info.vms_mb,
             tracemalloc_current_kb=tm_stats.get("current_kb", 0),
@@ -502,7 +501,7 @@ class MemoryAuditor:
                     ),
                 })
 
-        grown_types.sort(key=lambda x: x["delta"], reverse=True)
+        grown_types.sort(key=lambda x: x["delta"], reverse=True)  # type: ignore[arg-type, return-value]
 
         return SnapshotDiff(
             timestamp_start=start.timestamp,
@@ -539,7 +538,7 @@ class MemoryAuditor:
             elapsed = round(time.monotonic() - self._start_time, 2)
 
         self._timeline.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "elapsed_seconds": elapsed,
             "label": label,
             "rss_mb": round(mem.rss / (1024 * 1024), 2),
@@ -611,7 +610,7 @@ class MemoryAuditor:
             diff = self.diff_snapshots()
 
         return {
-            "audit_timestamp": datetime.now(timezone.utc).isoformat(),
+            "audit_timestamp": datetime.now(UTC).isoformat(),
             "python_version": sys.version,
             "platform": sys.platform,
             "process": {

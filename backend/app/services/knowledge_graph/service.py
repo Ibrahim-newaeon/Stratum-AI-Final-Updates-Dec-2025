@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timedelta
 from typing import Any, Optional
 from uuid import UUID
 
@@ -17,22 +16,10 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
-    NodeLabel,
     EdgeLabel,
-    GraphNode,
     GraphEdge,
-    ProfileNode,
-    EventNode,
-    SignalNode,
-    TrustGateNode,
-    AutomationNode,
-    RevenueNode,
-    CampaignNode,
-    SegmentNode,
-    ChannelNode,
-    GateDecision,
-    SignalStatus,
-    Platform,
+    GraphNode,
+    NodeLabel,
 )
 from .queries import CypherQueryBuilder, RevenueAnalyticsQueries
 

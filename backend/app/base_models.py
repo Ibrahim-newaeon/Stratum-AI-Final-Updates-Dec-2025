@@ -26,7 +26,7 @@ if TYPE_CHECKING:
         TenantAdAccount,
         TenantPlatformConnection,
     )
-    from app.models.client import Client, ClientRequest
+    from app.models.client import Client
     from app.models.trust_layer import (
         FactActionsQueue,
         FactAttributionVarianceDaily,

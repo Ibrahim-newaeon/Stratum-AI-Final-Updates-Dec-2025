@@ -8,37 +8,34 @@ Provides real-time and batch sync capabilities.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
-    NodeLabel,
-    EdgeLabel,
-    ProfileNode,
-    EventNode,
-    SignalNode,
-    TrustGateNode,
     AutomationNode,
-    RevenueNode,
-    CampaignNode,
-    SegmentNode,
-    ChannelNode,
-    LifecycleStage,
-    SignalStatus,
-    GateDecision,
     AutomationStatus,
-    Platform,
     BelongsToEdge,
-    PerformedEdge,
-    GeneratedEdge,
-    EvaluatedByEdge,
-    TriggeredEdge,
     BlockedEdge,
-    AttributedToEdge,
+    CampaignNode,
+    EdgeLabel,
+    EventNode,
+    GateDecision,
+    GeneratedEdge,
+    LifecycleStage,
+    NodeLabel,
+    PerformedEdge,
+    Platform,
+    ProfileNode,
+    RevenueNode,
+    SegmentNode,
+    SignalNode,
+    SignalStatus,
+    TriggeredEdge,
+    TrustGateNode,
 )
 from .service import KnowledgeGraphService
 
@@ -672,7 +669,7 @@ class KnowledgeGraphSyncService:
             threshold_used=70.0,  # Default threshold
             action_type=action_type,
             reason=reason,
-            evaluated_at=datetime.utcnow(),
+            evaluated_at=datetime.now(tz=UTC),
         )
         await self.kg.merge_node(node)
 
@@ -720,7 +717,7 @@ class KnowledgeGraphSyncService:
             end_node_id="",
             label=EdgeLabel.MERGED_INTO,
             tenant_id=tenant_id,
-            properties={"merged_at": datetime.utcnow().isoformat()},
+            properties={"merged_at": datetime.now(tz=UTC).isoformat()},
         )
         await self.kg.create_edge(
             edge,

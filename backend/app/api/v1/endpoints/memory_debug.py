@@ -25,10 +25,10 @@ Endpoints:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 
 router = APIRouter(prefix="/debug/memory", tags=["Memory Debug"])
 

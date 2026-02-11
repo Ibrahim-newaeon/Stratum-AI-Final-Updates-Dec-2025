@@ -11,8 +11,9 @@ duplicate execution across multiple workers.
 
 import functools
 import logging
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, Callable
+from typing import Any
 
 import redis
 from celery import Celery

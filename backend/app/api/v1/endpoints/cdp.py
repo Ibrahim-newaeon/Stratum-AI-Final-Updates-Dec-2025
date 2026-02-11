@@ -23,8 +23,9 @@ import secrets
 import threading
 import time
 from collections import OrderedDict, defaultdict
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
-from typing import Any, Iterator, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 # Memory optimization: chunk size for batch processing (per memory audit Feb 2026)

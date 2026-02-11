@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Optional
 from uuid import UUID
@@ -19,7 +19,6 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .service import KnowledgeGraphService
-from .models import NodeLabel, EdgeLabel, SignalStatus, GateDecision
 
 logger = logging.getLogger(__name__)
 
@@ -216,12 +215,12 @@ class KnowledgeGraphInsightsEngine:
                 root_cause = await self._trace_revenue_decline_cause(tenant_id, days)
 
                 return Problem(
-                    id=f"rev_decline_{tenant_id}_{datetime.utcnow().strftime('%Y%m%d')}",
+                    id=f"rev_decline_{tenant_id}_{datetime.now(tz=UTC).strftime('%Y%m%d')}",
                     category=ProblemCategory.REVENUE_DECLINE,
                     severity=ProblemSeverity.CRITICAL if change_pct < -0.30 else ProblemSeverity.HIGH,
                     title=f"Revenue Declined {abs(change_pct)*100:.1f}% This Week",
                     description=f"Revenue dropped from ${data.get('previous_total', 0)/100:,.0f} to ${data.get('recent_total', 0)/100:,.0f} compared to the previous period.",
-                    detected_at=datetime.utcnow(),
+                    detected_at=datetime.now(tz=UTC),
                     root_cause_path=root_cause.get("path", []),
                     affected_nodes=root_cause.get("affected", []),
                     metrics={
@@ -427,12 +426,12 @@ class KnowledgeGraphInsightsEngine:
                 details = await self.kg.execute_cypher(detail_query)
 
                 return Problem(
-                    id=f"block_rate_{tenant_id}_{datetime.utcnow().strftime('%Y%m%d')}",
+                    id=f"block_rate_{tenant_id}_{datetime.now(tz=UTC).strftime('%Y%m%d')}",
                     category=ProblemCategory.AUTOMATION_BLOCKED,
                     severity=ProblemSeverity.HIGH if block_rate > 0.50 else ProblemSeverity.MEDIUM,
                     title=f"{block_rate*100:.0f}% of Automations Being Blocked",
                     description=f"{data.get('blocked', 0)} out of {data.get('total', 0)} automation attempts were blocked by Trust Gate.",
-                    detected_at=datetime.utcnow(),
+                    detected_at=datetime.now(tz=UTC),
                     affected_nodes=details or [],
                     metrics={
                         "blocked_count": data.get("blocked", 0),
@@ -507,7 +506,7 @@ class KnowledgeGraphInsightsEngine:
                     severity=severity,
                     title=f"Signal Degraded: {signal.get('source', 'Unknown')}",
                     description=f"Average health score is {signal.get('avg_score', 0):.1f}%, below the {self.SIGNAL_HEALTH_THRESHOLD}% threshold.",
-                    detected_at=datetime.utcnow(),
+                    detected_at=datetime.now(tz=UTC),
                     metrics={
                         "source": signal.get("source"),
                         "platform": signal.get("platform"),
@@ -602,7 +601,7 @@ class KnowledgeGraphInsightsEngine:
                             severity=ProblemSeverity.MEDIUM,
                             title=f"Segment Underperforming: {segment.get('segment', 'Unknown')}",
                             description=f"Conversion rate ({conv_rate*100:.1f}%) is less than half the average ({avg_conversion*100:.1f}%).",
-                            detected_at=datetime.utcnow(),
+                            detected_at=datetime.now(tz=UTC),
                             metrics={
                                 "segment_name": segment.get("segment"),
                                 "total_profiles": segment.get("total_profiles"),
@@ -673,7 +672,7 @@ class KnowledgeGraphInsightsEngine:
                     severity=ProblemSeverity.MEDIUM,
                     title=f"Trust Gate Bottleneck: {top_blocked.get('action_type', 'Unknown')}",
                     description=f"'{top_blocked.get('action_type')}' action blocked {top_blocked.get('blocked_count')} times at avg health {top_blocked.get('avg_health_at_block', 0):.1f}%.",
-                    detected_at=datetime.utcnow(),
+                    detected_at=datetime.now(tz=UTC),
                     affected_nodes=results,
                     metrics={
                         "action_type": top_blocked.get("action_type"),
@@ -736,7 +735,7 @@ class KnowledgeGraphInsightsEngine:
                             severity=ProblemSeverity.MEDIUM,
                             title=f"Channel Inefficiency: {channel.get('channel', 'Unknown')}",
                             description=f"This channel has {share*100:.0f}% of revenue but avg order value is {avg_order/100:.0f} vs overall {overall_avg/100:.0f}.",
-                            detected_at=datetime.utcnow(),
+                            detected_at=datetime.now(tz=UTC),
                             metrics={
                                 "channel": channel.get("channel"),
                                 "revenue_share": share * 100,

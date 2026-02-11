@@ -8,12 +8,12 @@ and revenue-focused analytics patterns.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, Optional
 from uuid import UUID
 
-from .models import NodeLabel, EdgeLabel, GateDecision, SignalStatus
+from .models import EdgeLabel, GateDecision, NodeLabel
 
 
 class AggregateFunction(str, Enum):
@@ -171,7 +171,7 @@ class CypherQueryBuilder:
 
     def where_last_n_days(self, field: str, days: int) -> CypherQueryBuilder:
         """Filter to last N days."""
-        start = datetime.utcnow() - timedelta(days=days)
+        start = datetime.now(tz=UTC) - timedelta(days=days)
         return self.where(field, ">=", start.isoformat())
 
     def with_clause(self, *fields: str) -> CypherQueryBuilder:
@@ -341,7 +341,7 @@ class CypherQueryBuilder:
         elif isinstance(value, datetime):
             return f"'{value.isoformat()}'"
         elif isinstance(value, UUID):
-            return f"'{str(value)}'"
+            return f"'{value!s}'"
         elif isinstance(value, Enum):
             return f"'{value.value}'"
         elif isinstance(value, (list, tuple)):
@@ -351,7 +351,7 @@ class CypherQueryBuilder:
             parts = [f"{k}: {CypherQueryBuilder._format_value(v)}" for k, v in value.items()]
             return "{" + ", ".join(parts) + "}"
         else:
-            return f"'{str(value)}'"
+            return f"'{value!s}'"
 
     @staticmethod
     def _format_properties(properties: Optional[dict[str, Any]]) -> str:
