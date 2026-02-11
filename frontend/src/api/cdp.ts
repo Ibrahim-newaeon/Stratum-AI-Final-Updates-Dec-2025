@@ -721,6 +721,8 @@ export interface AudienceExportParams {
   include_computed_traits?: boolean;
   include_identifiers?: boolean;
   include_rfm?: boolean;
+  include_traits?: boolean;
+  include_events?: boolean;
 }
 
 export interface AudienceExportResponse {

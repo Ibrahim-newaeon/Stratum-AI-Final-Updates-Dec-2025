@@ -111,10 +111,6 @@ export function OTPInput({
     }
   };
 
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.select();
-  };
-
   return (
     <div className={cn('flex gap-2 sm:gap-3 justify-center', className)}>
       {digits.map((digit, index) => (

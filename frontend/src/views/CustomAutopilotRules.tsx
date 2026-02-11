@@ -7,14 +7,10 @@
 
 import { useState } from 'react';
 import {
-  AlertTriangle,
   CheckCircle2,
   Clock,
   Copy,
   Edit,
-  Filter,
-  Loader2,
-  MoreHorizontal,
   Pause,
   Play,
   Plus,
@@ -26,8 +22,56 @@ import {
 import { cn } from '@/lib/utils';
 import { CustomAutopilotRulesBuilder } from '@/components/autopilot/CustomAutopilotRulesBuilder';
 
+type RuleStatus = 'active' | 'paused' | 'draft';
+
+interface AutopilotRule {
+  id: string;
+  name: string;
+  description: string;
+  status: RuleStatus;
+  conditionGroups: {
+    id: string;
+    logic: 'AND' | 'OR';
+    conditions: {
+      id: string;
+      field: string;
+      operator: string;
+      value: string;
+      valueType: 'number' | 'percentage' | 'currency';
+    }[];
+  }[];
+  conditionLogic: 'AND' | 'OR';
+  actions: {
+    id: string;
+    type: string;
+    config: Record<string, any>;
+    priority: number;
+  }[];
+  targeting: {
+    platforms: string[];
+    campaignTypes: string[];
+    specificCampaigns: string[];
+  };
+  schedule: {
+    enabled: boolean;
+    frequency: 'hourly' | 'daily' | 'weekly' | 'custom';
+    timezone: string;
+  };
+  trustGate: {
+    enabled: boolean;
+    minSignalHealth: number;
+    requireApproval: boolean;
+    dryRunFirst: boolean;
+  };
+  cooldownHours: number;
+  maxExecutionsPerDay: number;
+  triggerCount: number;
+  lastTriggered: string | null;
+  createdAt: string;
+}
+
 // Mock data for existing rules
-const mockRules = [
+const mockRules: AutopilotRule[] = [
   {
     id: '1',
     name: 'Scale High ROAS Campaigns',
@@ -145,7 +189,7 @@ export default function CustomAutopilotRules() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showBuilder, setShowBuilder] = useState(false);
-  const [editingRule, setEditingRule] = useState<(typeof mockRules)[0] | null>(null);
+  const [editingRule, setEditingRule] = useState<AutopilotRule | null>(null);
   const [rules, setRules] = useState(mockRules);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -183,7 +227,7 @@ export default function CustomAutopilotRules() {
   const handleToggleRule = (ruleId: string) => {
     setRules((prev) =>
       prev.map((r) =>
-        r.id === ruleId ? { ...r, status: r.status === 'active' ? 'paused' : 'active' } : r
+        r.id === ruleId ? { ...r, status: (r.status === 'active' ? 'paused' : 'active') as RuleStatus } : r
       )
     );
   };
@@ -194,16 +238,16 @@ export default function CustomAutopilotRules() {
     }
   };
 
-  const handleDuplicateRule = (rule: (typeof mockRules)[0]) => {
+  const handleDuplicateRule = (rule: AutopilotRule) => {
     setRules((prev) => [
       ...prev,
       {
         ...rule,
         id: crypto.randomUUID(),
         name: `${rule.name} (Copy)`,
-        status: 'draft',
+        status: 'draft' as const,
         triggerCount: 0,
-        lastTriggered: null,
+        lastTriggered: null as any,
         createdAt: new Date().toISOString().split('T')[0],
       },
     ]);
@@ -466,8 +510,8 @@ export default function CustomAutopilotRules() {
                     className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs"
                   >
                     {action.type.replace('_', ' ')}
-                    {action.config.amount &&
-                      ` ${action.config.direction === 'decrease' ? '-' : '+'}${action.config.amount}%`}
+                    {(action.config as any).amount &&
+                      ` ${(action.config as any).direction === 'decrease' ? '-' : '+'}${(action.config as any).amount}%`}
                   </code>
                 ))}
               </div>

@@ -67,7 +67,6 @@ export default function VoiceGreeting({
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasTriggered, setHasTriggered] = useState(alreadyShown);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const texts = GREETINGS[language];
   const displayMessage = message || texts.message;

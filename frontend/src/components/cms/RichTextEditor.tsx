@@ -297,7 +297,6 @@ export function RichTextEditor({
       {editable && (
         <BubbleMenu
           editor={editor}
-          tippyOptions={{ duration: 100 }}
           className="flex items-center gap-1 p-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg"
         >
           <MenuButton

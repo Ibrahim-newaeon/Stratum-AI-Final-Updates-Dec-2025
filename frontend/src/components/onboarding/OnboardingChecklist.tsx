@@ -20,7 +20,6 @@ import {
   Link2,
   PartyPopper,
   Rocket,
-  Sparkles,
   Target,
   Users,
   X,
@@ -109,7 +108,7 @@ interface OnboardingChecklistProps {
 }
 
 export function OnboardingChecklist({
-  tenantId,
+  tenantId: _tenantId,
   variant = 'sidebar',
   onComplete,
 }: OnboardingChecklistProps) {
@@ -156,8 +155,6 @@ export function OnboardingChecklist({
 
   const completedCount = checklist.filter((item) => item.completed).length;
   const totalCount = checklist.length;
-  const requiredCompleted = checklist.filter((item) => item.required && item.completed).length;
-  const requiredTotal = checklist.filter((item) => item.required).length;
   const progress = Math.round((completedCount / totalCount) * 100);
 
   const markComplete = (id: string) => {
@@ -282,7 +279,7 @@ export function OnboardingChecklist({
 
           {/* Horizontal steps */}
           <div className="flex-1 flex items-center gap-2 overflow-x-auto">
-            {checklist.slice(0, 4).map((item, index) => {
+            {checklist.slice(0, 4).map((item) => {
               const Icon = item.icon;
               return (
                 <button

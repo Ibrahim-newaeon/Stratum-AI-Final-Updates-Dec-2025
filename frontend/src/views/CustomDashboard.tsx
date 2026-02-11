@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import GridLayout, { Layout } from 'react-grid-layout';
+import GridLayout from 'react-grid-layout';
 import {
   GripVertical,
   LayoutDashboard,
@@ -51,11 +51,11 @@ export function CustomDashboard() {
   }, []);
 
   const handleLayoutChange = useCallback(
-    (layout: Layout[]) => {
+    (layout: any) => {
       if (!isEditing) return;
       setWidgets((prev) =>
         prev.map((widget) => {
-          const layoutItem = layout.find((l) => l.i === widget.id);
+          const layoutItem = layout.find((l: any) => l.i === widget.id) as any;
           if (layoutItem) {
             return {
               ...widget,
@@ -140,7 +140,7 @@ export function CustomDashboard() {
     }
   };
 
-  const layout: Layout[] = widgets.map((widget) => ({
+  const layout = widgets.map((widget) => ({
     i: widget.id,
     x: widget.x,
     y: widget.y,
@@ -150,7 +150,7 @@ export function CustomDashboard() {
     minH: widget.minH || 2,
     maxW: widget.maxW,
     maxH: widget.maxH,
-  }));
+  })) as any;
 
   return (
     <div className="space-y-4">
@@ -218,17 +218,19 @@ export function CustomDashboard() {
       {/* Grid Layout */}
       <div ref={containerRef} className="w-full">
         <GridLayout
-          className="layout"
-          layout={layout}
-          cols={GRID_COLS}
-          rowHeight={ROW_HEIGHT}
-          width={containerWidth}
-          isDraggable={isEditing}
-          isResizable={isEditing}
-          onLayoutChange={handleLayoutChange}
-          draggableHandle=".widget-drag-handle"
-          compactType="vertical"
-          preventCollision={false}
+          {...{
+            className: "layout",
+            layout,
+            cols: GRID_COLS,
+            rowHeight: ROW_HEIGHT,
+            width: containerWidth,
+            isDraggable: isEditing,
+            isResizable: isEditing,
+            onLayoutChange: handleLayoutChange,
+            draggableHandle: ".widget-drag-handle",
+            compactType: "vertical",
+            preventCollision: false,
+          } as any}
         >
           {widgets.map((widget) => (
             <div

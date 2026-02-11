@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   CDPComputedTrait,
   ComputedTraitCreate,
+  TraitType,
   useComputedTraits,
   useCreateComputedTrait,
   useDeleteComputedTrait,
@@ -75,7 +76,7 @@ export function ComputedTraitBuilder() {
       name: formData.name.toLowerCase().replace(/\s+/g, '_'),
       display_name: formData.display_name,
       description: formData.description || undefined,
-      trait_type: formData.trait_type,
+      trait_type: formData.trait_type as TraitType,
       output_type: formData.output_type,
       source_config: {
         event_name: formData.event_name || undefined,
@@ -348,14 +349,14 @@ export function ComputedTraitBuilder() {
                   <span className="px-2 py-1 rounded-full text-xs bg-muted">
                     Output: {trait.output_type}
                   </span>
-                  {trait.source_config?.event_name && (
+                  {!!trait.source_config?.event_name && (
                     <span className="px-2 py-1 rounded-full text-xs bg-muted">
-                      Event: {trait.source_config.event_name}
+                      Event: {String(trait.source_config.event_name)}
                     </span>
                   )}
-                  {trait.source_config?.time_window_days && (
+                  {!!trait.source_config?.time_window_days && (
                     <span className="px-2 py-1 rounded-full text-xs bg-muted">
-                      Window: {trait.source_config.time_window_days}d
+                      Window: {String(trait.source_config.time_window_days)}d
                     </span>
                   )}
                   <span

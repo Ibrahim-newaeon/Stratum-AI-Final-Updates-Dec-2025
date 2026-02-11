@@ -16,21 +16,6 @@ import {
 
 type FeatureStatus = 'yes' | 'no' | 'partial' | 'unique';
 
-interface CompetitorFeature {
-  stratum: FeatureStatus;
-  segment: FeatureStatus;
-  mparticle: FeatureStatus;
-  hightouch: FeatureStatus;
-  hubspot: FeatureStatus;
-}
-
-interface FeatureRow {
-  feature: string;
-  category: string;
-  tooltip?: string;
-  competitors: CompetitorFeature;
-}
-
 const competitors = [
   { id: 'stratum', name: 'Stratum AI', highlight: true },
   { id: 'segment', name: 'Segment' },
@@ -477,19 +462,19 @@ export default function BattleCard() {
                       )}
                     </div>
                     <div className="flex justify-center">
-                      <StatusIcon status={row.competitors.stratum} />
+                      <StatusIcon status={row.competitors.stratum as FeatureStatus} />
                     </div>
                     <div className="flex justify-center">
-                      <StatusIcon status={row.competitors.segment} />
+                      <StatusIcon status={row.competitors.segment as FeatureStatus} />
                     </div>
                     <div className="flex justify-center">
-                      <StatusIcon status={row.competitors.mparticle} />
+                      <StatusIcon status={row.competitors.mparticle as FeatureStatus} />
                     </div>
                     <div className="flex justify-center">
-                      <StatusIcon status={row.competitors.hightouch} />
+                      <StatusIcon status={row.competitors.hightouch as FeatureStatus} />
                     </div>
                     <div className="flex justify-center">
-                      <StatusIcon status={row.competitors.hubspot} />
+                      <StatusIcon status={row.competitors.hubspot as FeatureStatus} />
                     </div>
                   </div>
                 ))}

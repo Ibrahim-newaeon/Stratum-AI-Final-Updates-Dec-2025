@@ -86,7 +86,6 @@ function calculateROI(inputs: CalculatorInputs): CalculatorOutputs {
 export function CDPROICalculator({
   className,
   currency = 'USD',
-  locale = 'en-US',
 }: CDPROICalculatorProps) {
   const [inputs, setInputs] = useState<CalculatorInputs>(defaultInputs);
 
@@ -98,8 +97,8 @@ export function CDPROICalculator({
 
   // Memoized currency formatter using locale/currency props
   const format = useCallback(
-    (value: number) => formatCurrency(value, currency, locale),
-    [currency, locale]
+    (value: number) => formatCurrency(value, currency),
+    [currency]
   );
 
   return (

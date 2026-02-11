@@ -30,7 +30,6 @@ export function PageLayout({ children }: PageLayoutProps) {
   const { i18n } = useTranslation();
 
   const currentLanguage = i18n.language || 'en';
-  const isRTL = currentLanguage === 'ar';
 
   const toggleLanguage = (lang: string) => {
     i18n.changeLanguage(lang);

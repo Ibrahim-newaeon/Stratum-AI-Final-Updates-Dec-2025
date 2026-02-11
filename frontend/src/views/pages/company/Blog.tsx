@@ -11,18 +11,18 @@ import { useCategories, usePosts } from '@/api/cms';
 
 export default function Blog() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
 
   const { data: postsData, isLoading: postsLoading } = usePosts({
-    category: selectedCategory,
+    category_slug: selectedCategory,
     search: searchQuery || undefined,
-    limit: 12,
+    page_size: 12,
   });
 
   const { data: categoriesData } = useCategories();
 
-  const posts = postsData?.items || [];
-  const categories = categoriesData || [];
+  const posts = postsData?.posts || [];
+  const categories = categoriesData?.categories || [];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -194,7 +194,7 @@ export default function Blog() {
                       )}
                       <span className="flex items-center gap-1">
                         <CalendarIcon className="w-3 h-3" />
-                        {formatDate(post.published_at || post.created_at)}
+                        {formatDate(post.published_at || '')}
                       </span>
                     </div>
                   </article>

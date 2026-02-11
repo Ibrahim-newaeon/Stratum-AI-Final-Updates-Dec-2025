@@ -8,13 +8,10 @@
 
 import { useState } from 'react';
 import {
-  AlertTriangle,
   Bell,
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
   Clock,
-  Copy,
   DollarSign,
   Info,
   Loader2,
@@ -28,7 +25,6 @@ import {
   Tag,
   Target,
   Trash2,
-  TrendingDown,
   TrendingUp,
   X,
   Zap,
@@ -668,9 +664,6 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
             </div>
 
             {formData.actions.map((action, index) => {
-              const actionType = ACTION_TYPES.find((a) => a.value === action.type);
-              const ActionIcon = actionType?.icon || Zap;
-
               return (
                 <div key={action.id} className="rounded-lg border p-4">
                   <div className="flex items-start gap-4">
