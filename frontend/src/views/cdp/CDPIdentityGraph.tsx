@@ -2,7 +2,7 @@
  * CDP Identity Graph - Identity resolution visualization
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   ArrowPathIcon,
@@ -22,10 +22,8 @@ import {
   type IdentifierType,
   type IdentityGraphEdge,
   type IdentityGraphNode,
-  type ProfileMerge,
   useCDPProfile,
   useIdentityGraph,
-  useMergeProfiles,
   useProfileMergeHistory,
 } from '@/api/cdp';
 

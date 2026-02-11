@@ -8,7 +8,6 @@ import { PageLayout } from '@/components/landing/PageLayout';
 import {
   AcademicCapIcon,
   ArrowRightIcon,
-  ArrowTrendingUpIcon,
   BuildingOffice2Icon,
   BuildingStorefrontIcon,
   GlobeAltIcon,

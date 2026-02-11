@@ -49,7 +49,7 @@ function ErrorFallback({ error }: { error: Error }) {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ErrorBoundary fallback={({ error }) => <ErrorFallback error={error} />}>
+    <ErrorBoundary fallback={({ error }) => <ErrorFallback error={error as Error} />}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <App />

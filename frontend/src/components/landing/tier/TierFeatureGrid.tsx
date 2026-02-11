@@ -200,7 +200,7 @@ export function TierFeatureGrid({ content }: TierFeatureGridProps) {
 
         {/* Feature Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featureCategories.map((category, index) => (
+          {featureCategories.map((category) => (
             <CategoryCard
               key={category.name}
               category={category}

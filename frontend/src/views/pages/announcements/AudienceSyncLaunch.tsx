@@ -9,7 +9,6 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ChartBarIcon,
-  CheckCircleIcon,
   ClockIcon,
   CloudArrowUpIcon,
   ShieldCheckIcon,

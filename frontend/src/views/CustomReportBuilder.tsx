@@ -3,22 +3,15 @@
 // =============================================================================
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  ArrowDownTrayIcon,
   ArrowsPointingOutIcon,
-  CalendarIcon,
   ChartBarIcon,
   ChartPieIcon,
-  CheckIcon,
   ClockIcon,
-  Cog6ToothIcon,
   DocumentChartBarIcon,
   DocumentDuplicateIcon,
   EyeIcon,
-  FunnelIcon,
   PencilIcon,
-  PlayIcon,
   PlusIcon,
   SparklesIcon,
   TableCellsIcon,
@@ -1067,7 +1060,6 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
 // =============================================================================
 
 export default function CustomReportBuilder() {
-  const navigate = useNavigate();
   const [reports, setReports] = useState<CustomReport[]>(MOCK_REPORTS);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<CustomReport | null>(null);

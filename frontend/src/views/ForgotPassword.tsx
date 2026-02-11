@@ -96,7 +96,7 @@ export default function ForgotPassword() {
               className="block w-full py-3 rounded-xl text-black font-semibold text-center transition-all duration-200"
               style={{ background: theme.primary }}
               onMouseEnter={(e) => (e.currentTarget.style.background = theme.primaryHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = theme.blue)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = theme.primary)}
             >
               Back to Login
             </Link>
@@ -211,7 +211,7 @@ export default function ForgotPassword() {
                 if (!isLoading) e.currentTarget.style.background = theme.primaryHover;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.blue;
+                e.currentTarget.style.background = theme.primary;
               }}
             >
               {isLoading ? (

@@ -21,7 +21,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import {
-  type CDPProfile,
   type IdentifierType,
   type LifecycleStage,
   useCDPProfile,
@@ -222,18 +221,20 @@ function ProfileDetailModal({ profileId, onClose }: { profileId: string; onClose
 }
 
 // Filter Panel
+type ProfileFilters = {
+  lifecycle_stages?: LifecycleStage[];
+  has_email?: boolean;
+  has_phone?: boolean;
+  is_customer?: boolean;
+};
+
 function FilterPanel({
   filters,
   onFilterChange,
   onClose,
 }: {
-  filters: {
-    lifecycle_stages?: LifecycleStage[];
-    has_email?: boolean;
-    has_phone?: boolean;
-    is_customer?: boolean;
-  };
-  onFilterChange: (filters: typeof filters) => void;
+  filters: ProfileFilters;
+  onFilterChange: (filters: ProfileFilters) => void;
   onClose: () => void;
 }) {
   const lifecycleOptions: LifecycleStage[] = ['anonymous', 'known', 'customer', 'churned'];

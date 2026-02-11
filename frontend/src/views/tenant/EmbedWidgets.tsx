@@ -46,7 +46,6 @@ import { Separator } from '@/components/ui/separator';
 import {
   BrandingLevel,
   DomainWhitelist,
-  EmbedToken,
   EmbedWidget,
   WIDGET_DIMENSIONS,
   WIDGET_TYPE_INFO,

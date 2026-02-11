@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from './dialog';
 import { cn } from '@/lib/utils';
 import {
   Activity,
   ArrowRight,
   BarChart3,
-  Bell,
   Brain,
   Command,
   Database,
@@ -50,7 +49,6 @@ export function CommandPalette({ tenantId }: CommandPaletteProps) {
   const [search, setSearch] = React.useState('');
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const navigate = useNavigate();
-  const location = useLocation();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
 

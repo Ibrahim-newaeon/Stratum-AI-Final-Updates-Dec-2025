@@ -19,7 +19,7 @@ interface TierHeroProps {
 
 export function TierHero({ content }: TierHeroProps) {
   const navigate = useNavigate();
-  const { hero, visuals, name } = content;
+  const { hero, visuals, name: _name } = content;
 
   const gradientClass = `${visuals.gradientFrom} ${visuals.gradientTo}`;
 

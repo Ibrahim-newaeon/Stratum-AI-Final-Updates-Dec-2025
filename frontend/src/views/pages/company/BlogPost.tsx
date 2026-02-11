@@ -156,9 +156,9 @@ export default function BlogPost() {
                 )}
                 <div>
                   <p className="text-white font-medium">{post.author.name}</p>
-                  {post.author.title && (
+                  {post.author.job_title && (
                     <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                      {post.author.title}
+                      {post.author.job_title}
                     </p>
                   )}
                 </div>
@@ -166,7 +166,7 @@ export default function BlogPost() {
             )}
             <span className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" />
-              {formatDate(post.published_at || post.created_at)}
+              {formatDate(post.published_at || '')}
             </span>
           </div>
 
@@ -183,7 +183,7 @@ export default function BlogPost() {
             style={{
               color: 'rgba(255, 255, 255, 0.8)',
             }}
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: post.content || '' }}
           />
 
           {/* Tags */}
@@ -239,9 +239,9 @@ export default function BlogPost() {
                   <h3 className="text-lg font-semibold text-white mb-1">
                     About {post.author.name}
                   </h3>
-                  {post.author.title && (
+                  {post.author.job_title && (
                     <p className="text-sm mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                      {post.author.title}
+                      {post.author.job_title}
                     </p>
                   )}
                   <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>{post.author.bio}</p>

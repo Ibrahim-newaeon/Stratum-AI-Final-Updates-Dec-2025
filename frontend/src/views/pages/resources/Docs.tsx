@@ -12,12 +12,9 @@ import {
   BookOpenIcon,
   CloudIcon,
   CodeBracketIcon,
-  CommandLineIcon,
   CpuChipIcon,
-  DocumentTextIcon,
   MagnifyingGlassIcon,
   PlayIcon,
-  ServerIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 

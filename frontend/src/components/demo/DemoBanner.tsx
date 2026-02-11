@@ -5,12 +5,10 @@
  * with CTA to sign up for a real account.
  */
 
-import * as React from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play, Sparkles, X } from 'lucide-react';
 import { useDemo } from '@/contexts/DemoContext';
-import { cn } from '@/lib/utils';
 
 interface DemoBannerProps {
   variant?: 'top' | 'floating';

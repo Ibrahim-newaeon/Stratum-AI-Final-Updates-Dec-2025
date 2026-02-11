@@ -7,11 +7,6 @@
 
 import { useCallback, useState } from 'react';
 
-// Dynamic imports for PDF libraries - reduces initial bundle size
-// jspdf: ~280KB, html2canvas: ~200KB
-type JsPDF = typeof import('jspdf').default;
-type Html2Canvas = typeof import('html2canvas').default;
-
 export interface PdfExportOptions {
   filename?: string;
   title?: string;

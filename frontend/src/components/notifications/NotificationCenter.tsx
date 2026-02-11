@@ -5,7 +5,6 @@
  * with filtering, marking as read, and quick actions.
  */
 
-import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -15,7 +14,6 @@ import {
   Check,
   CheckCheck,
   Clock,
-  Filter,
   Settings,
   Shield,
   Trash2,

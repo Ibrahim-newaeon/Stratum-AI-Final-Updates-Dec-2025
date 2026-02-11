@@ -213,6 +213,7 @@ export interface CMSPost {
   category?: CMSCategory;
   author?: CMSAuthor;
   tags: CMSTag[];
+  meta?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

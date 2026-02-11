@@ -6,7 +6,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  DocumentTextIcon,
   PlusIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -345,8 +344,6 @@ function CreateTemplateModal({
     footer_text: '',
     buttons: [] as Template['buttons'],
   });
-
-  const [buttonType, setButtonType] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -15,7 +15,6 @@ import {
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
   EyeIcon,
-  LightBulbIcon,
   SparklesIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -184,7 +183,7 @@ export default function AIFeatures() {
           animate={isInView ? 'visible' : 'hidden'}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
         >
-          {aiModels.map((model, index) => (
+          {aiModels.map((model) => (
             <motion.div
               key={model.id}
               variants={itemVariants}

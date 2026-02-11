@@ -14,9 +14,7 @@ import {
   CheckCircle,
   Clock,
   Edit2,
-  Eye,
   FileText,
-  Filter,
   FolderOpen,
   GitBranch,
   History,
@@ -49,12 +47,10 @@ import {
   useUpdatePost,
   useDeletePost,
   useCreateCategory,
-  useUpdateCategory,
   useDeleteCategory,
   useCreateTag,
   useDeleteTag,
   useCreateAuthor,
-  useUpdateAuthor,
   useDeleteAuthor,
   useCreatePage,
   useUpdatePage,
@@ -73,14 +69,8 @@ import {
   useWorkflowHistory,
   useVersionHistory,
   useRestoreVersion,
-  WORKFLOW_STATUS_CONFIG,
-  getStatusConfig,
   CMSPost,
-  CMSCategory,
-  CMSTag,
-  CMSAuthor,
   CMSPage,
-  CMSContact,
   PostStatus,
 } from '@/api/cms';
 import { PostEditor } from '@/components/cms/PostEditor';
@@ -161,7 +151,6 @@ export default function CMS() {
   const {
     data: postsData,
     isLoading: postsLoading,
-    refetch: refetchPosts,
   } = useAdminPosts({
     page,
     page_size: 20,
@@ -171,15 +160,14 @@ export default function CMS() {
   const {
     data: categoriesData,
     isLoading: categoriesLoading,
-    refetch: refetchCategories,
   } = useAdminCategories();
-  const { data: tagsData, isLoading: tagsLoading, refetch: refetchTags } = useAdminTags();
+  const { data: tagsData, isLoading: tagsLoading } = useAdminTags();
   const {
     data: authorsData,
     isLoading: authorsLoading,
     refetch: refetchAuthors,
   } = useAdminAuthors();
-  const { data: pagesData, isLoading: pagesLoading, refetch: refetchPages } = useAdminPages();
+  const { data: pagesData, isLoading: pagesLoading } = useAdminPages();
   const {
     data: contactsData,
     isLoading: contactsLoading,
@@ -194,12 +182,10 @@ export default function CMS() {
   const updatePost = useUpdatePost();
   const deletePost = useDeletePost();
   const createCategory = useCreateCategory();
-  const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
   const createTag = useCreateTag();
   const deleteTag = useDeleteTag();
   const createAuthor = useCreateAuthor();
-  const updateAuthor = useUpdateAuthor();
   const deleteAuthor = useDeleteAuthor();
   const createPage = useCreatePage();
   const updatePage = useUpdatePage();
@@ -1184,9 +1170,9 @@ export default function CMS() {
             {tab.icon}
             {tab.label}
             {tab.id === 'contacts' &&
-              contactsData?.contacts.filter((c) => !c.is_read).length > 0 && (
+              contactsData?.contacts?.filter((c) => !c.is_read).length! > 0 && (
                 <span className="px-1.5 py-0.5 text-xs bg-blue-500 text-white rounded-full">
-                  {contactsData?.contacts.filter((c) => !c.is_read).length}
+                  {contactsData?.contacts?.filter((c) => !c.is_read).length}
                 </span>
               )}
           </button>

@@ -9,9 +9,9 @@
  *   if (hasFeature('predictive_churn')) { ... }
  */
 
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import api from '@/api/axios';
+import api from '@/api/client';
 
 // =============================================================================
 // Types
@@ -242,7 +242,7 @@ interface UpgradePromptProps {
   className?: string;
 }
 
-export function UpgradePrompt({ feature, requiredTier, className = '' }: UpgradePromptProps) {
+export function UpgradePrompt({ feature: _feature, requiredTier, className = '' }: UpgradePromptProps) {
   return (
     <div
       className={`p-6 bg-gray-800/50 border border-orange-500/30 rounded-lg text-center ${className}`}

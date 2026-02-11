@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowUpRight,
@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Clock,
   Download,
-  ExternalLink,
   FileJson,
   FileSpreadsheet,
   History,
@@ -22,7 +21,6 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Settings2,
   Trash2,
   Users,
   X,
@@ -34,7 +32,6 @@ import {
   AudienceExportParams,
   CDPSegment,
   PlatformAudience,
-  SyncJob,
   SyncPlatform,
   SyncStatus,
   useConnectedPlatforms,
@@ -524,7 +521,7 @@ function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalP
     try {
       const params: AudienceExportParams = {
         format,
-        segment_ids: segmentId ? [segmentId] : undefined,
+        segment_id: segmentId || undefined,
         include_traits: includeTraits,
         include_events: includeEvents,
       };

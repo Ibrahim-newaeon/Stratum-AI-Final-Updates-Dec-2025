@@ -187,7 +187,7 @@ export default function AIHero() {
             variants={fadeUpVariants}
             className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 max-w-4xl mx-auto"
           >
-            {stats.map((stat, index) => (
+            {stats.map((stat) => (
               <div
                 key={stat.label}
                 className="group relative p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 backdrop-blur-sm transition-all hover:bg-white/[0.04]"

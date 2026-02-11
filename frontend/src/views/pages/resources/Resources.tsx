@@ -16,7 +16,6 @@ import {
   NewspaperIcon,
   PlayIcon,
   PresentationChartBarIcon,
-  VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 const resourceCategories = [

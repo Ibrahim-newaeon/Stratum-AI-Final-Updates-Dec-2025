@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Calendar, Eye, Image as ImageIcon, Link2, Save, X } from 'lucide-react';
+import { Image as ImageIcon, Link2, Save, X } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import {
   CMSAuthor,

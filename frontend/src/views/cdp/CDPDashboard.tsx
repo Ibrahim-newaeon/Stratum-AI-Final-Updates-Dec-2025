@@ -179,7 +179,7 @@ function EventVolumeChart({ data }: { data: Array<{ date: string; count: number 
 }
 
 export default function CDPDashboard() {
-  const { data: health, isLoading: healthLoading } = useCDPHealth();
+  const { data: health, isLoading: _healthLoading } = useCDPHealth();
   const { data: profileStats, isLoading: profileLoading } = useProfileStatistics();
   const { data: eventStats, isLoading: eventLoading } = useEventStatistics(30);
   const { data: segments, isLoading: segmentsLoading } = useSegments();

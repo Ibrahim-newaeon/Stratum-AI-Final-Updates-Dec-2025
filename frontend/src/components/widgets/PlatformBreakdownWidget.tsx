@@ -36,7 +36,7 @@ export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetPr
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
-            formatter={(value: number) => [`${value}%`, 'Share']}
+            formatter={((value: number) => [`${value}%`, 'Share']) as any}
           />
           <Legend
             verticalAlign="bottom"

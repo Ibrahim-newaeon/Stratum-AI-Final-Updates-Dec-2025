@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Command, Keyboard, X } from 'lucide-react';
 import { cn } from '@/lib/utils';

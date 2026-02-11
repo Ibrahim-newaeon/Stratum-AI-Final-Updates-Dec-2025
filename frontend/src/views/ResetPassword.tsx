@@ -146,7 +146,7 @@ export default function ResetPassword() {
               className="w-full py-3 rounded-xl text-black font-semibold transition-all duration-200"
               style={{ background: theme.primary }}
               onMouseEnter={(e) => (e.currentTarget.style.background = theme.primaryHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = theme.blue)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = theme.primary)}
             >
               Sign in
             </button>
@@ -312,7 +312,7 @@ export default function ResetPassword() {
                 if (!isLoading) e.currentTarget.style.background = theme.primaryHover;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.blue;
+                e.currentTarget.style.background = theme.primary;
               }}
             >
               {isLoading ? (

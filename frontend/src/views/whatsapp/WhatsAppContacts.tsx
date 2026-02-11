@@ -6,7 +6,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  UserGroupIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   ArrowUpTrayIcon,
@@ -385,7 +384,7 @@ export default function WhatsAppContacts() {
         {showImportModal && (
           <ImportContactsModal
             onClose={() => setShowImportModal(false)}
-            onImport={(count) => {
+            onImport={(_count) => {
               // Mock import
               setShowImportModal(false);
             }}

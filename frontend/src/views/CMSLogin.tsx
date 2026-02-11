@@ -46,12 +46,11 @@ export default function CMSLogin() {
 
       if (result.success) {
         // Check if user has CMS access (superadmin or admin)
-        const userRole = result.user?.role;
+        const userRole = (result as any).user?.role;
         if (userRole === 'superadmin' || userRole === 'admin') {
           navigate('/cms');
         } else {
           setError('Access denied. CMS requires admin privileges.');
-          // Logout the user since they don\'t have CMS access
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           localStorage.removeItem('user');

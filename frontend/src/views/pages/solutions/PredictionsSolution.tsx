@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowTrendingUpIcon,
-  ChartBarIcon,
   CurrencyDollarIcon,
   LightBulbIcon,
   SparklesIcon,

@@ -17,14 +17,6 @@ import {
 
 type BillingCycle = 'monthly' | 'annual';
 
-interface PricingFeature {
-  name: string;
-  starter: boolean | string;
-  professional: boolean | string;
-  enterprise: boolean | string;
-  tooltip?: string;
-}
-
 const pricingTiers = [
   {
     id: 'starter',
@@ -451,11 +443,11 @@ export default function AIPricing() {
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-300">{feature.name}</span>
-                      {feature.tooltip && (
+                      {(feature as any).tooltip && (
                         <div className="group relative">
                           <InformationCircleIcon className="w-4 h-4 text-gray-500 cursor-help" />
                           <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 border border-white/10 rounded-lg text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                            {feature.tooltip}
+                            {(feature as any).tooltip}
                           </div>
                         </div>
                       )}

@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/api/client';
 
 // Consent types
 const CONSENT_TYPES = [

@@ -221,7 +221,7 @@ function ProblemCard({ problem, isExpanded, onToggle }: {
                       <span className="text-cyan-400 font-medium">{String(cause.node)}</span>
                       <span className="text-gray-400 mx-2">→</span>
                       <span className="text-white">{String(cause.finding)}</span>
-                      {cause.detail && (
+                      {!!cause.detail && (
                         <p className="text-gray-500 text-xs mt-0.5">{String(cause.detail)}</p>
                       )}
                     </div>
@@ -347,7 +347,7 @@ export function KGInsights() {
     queryKey: ['kg-health'],
     queryFn: async () => {
       const res = await api.get('/knowledge-graph/insights/health');
-      return res.data;
+      return res.data as any;
     },
     refetchInterval: 60000, // Refresh every minute
   });
@@ -359,7 +359,7 @@ export function KGInsights() {
       const params = new URLSearchParams();
       if (severityFilter) params.set('severity', severityFilter);
       const res = await api.get(`/knowledge-graph/insights/problems?${params}`);
-      return res.data;
+      return res.data as any;
     },
     refetchInterval: 60000,
   });
@@ -369,7 +369,7 @@ export function KGInsights() {
     refetchProblems();
   };
 
-  const problems = problemsData?.problems || [];
+  const problems = (problemsData as any)?.problems || [];
 
   return (
     <div className="space-y-6">
@@ -398,13 +398,13 @@ export function KGInsights() {
           {healthLoading ? (
             <div className="w-32 h-32 rounded-full bg-white/5 animate-pulse" />
           ) : health ? (
-            <HealthScoreRing score={health.health_score} status={health.status} />
+            <HealthScoreRing score={(health as any).health_score} status={(health as any).status} />
           ) : null}
 
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-white mb-4">System Health Overview</h3>
             <div className="grid grid-cols-4 gap-4">
-              {Object.entries(health?.problem_counts || {}).map(([severity, count]) => {
+              {Object.entries((health as any)?.problem_counts || {}).map(([severity, count]) => {
                 const config = severityConfig[severity as keyof typeof severityConfig];
                 return (
                   <button
@@ -417,7 +417,7 @@ export function KGInsights() {
                     }`}
                   >
                     <div className={`text-2xl font-bold ${config?.color || 'text-white'}`}>
-                      {count}
+                      {String(count)}
                     </div>
                     <div className="text-xs text-gray-400 capitalize">{severity}</div>
                   </button>
@@ -427,17 +427,17 @@ export function KGInsights() {
           </div>
 
           {/* Top Problem Preview */}
-          {health?.top_problem && (
+          {(health as any)?.top_problem && (
             <div className="w-80 bg-white/5 rounded-lg p-4 border border-white/10">
               <div className="text-xs text-gray-500 mb-2">Top Priority</div>
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5" />
                 <div>
                   <div className="text-sm font-medium text-white line-clamp-1">
-                    {health.top_problem.title}
+                    {(health as any).top_problem.title}
                   </div>
                   <div className="text-xs text-gray-400 mt-1 line-clamp-2">
-                    {health.top_problem.solutions[0]?.title || 'View solutions'}
+                    {(health as any).top_problem.solutions[0]?.title || 'View solutions'}
                   </div>
                 </div>
               </div>
@@ -477,7 +477,7 @@ export function KGInsights() {
             <p className="text-gray-400">No problems detected in the last 7 days.</p>
           </div>
         ) : (
-          problems.map((problem) => (
+          problems.map((problem: any) => (
             <ProblemCard
               key={problem.id}
               problem={problem}

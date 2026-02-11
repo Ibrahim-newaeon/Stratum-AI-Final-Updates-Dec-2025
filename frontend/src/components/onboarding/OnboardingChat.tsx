@@ -320,7 +320,7 @@ export default function OnboardingChat({
                     className="mt-3 w-full py-2 px-4 bg-[#00c7be] hover:bg-[#f0c95c] text-[#0b1215] text-sm font-semibold rounded-lg transition-all hover:shadow-lg"
                     style={{ boxShadow: '0 0 20px rgba(0, 199, 190, 0.3)' }}
                   >
-                    Connect {message.actionData?.platform}
+                    Connect {String(message.actionData?.platform)}
                   </button>
                 )}
               </div>

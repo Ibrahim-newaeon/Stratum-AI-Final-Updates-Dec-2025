@@ -130,7 +130,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="transition-colors"
                 style={{ color: theme.textMuted }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.gold)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on Instagram"
               >
@@ -145,7 +145,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="transition-colors"
                 style={{ color: theme.textMuted }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.gold)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on TikTok"
               >
@@ -160,7 +160,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="transition-colors"
                 style={{ color: theme.textMuted }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.gold)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Subscribe on YouTube"
               >
@@ -175,7 +175,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="transition-colors"
                 style={{ color: theme.textMuted }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.gold)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on LinkedIn"
               >
@@ -194,7 +194,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="transition-colors"
                 style={{ color: theme.textMuted }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                onMouseEnter={(e) => (e.currentTarget.style.color = theme.gold)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                 aria-label="Follow us on X"
               >
@@ -244,7 +244,7 @@ export function Footer() {
                       to={item.href}
                       className="text-sm transition-colors"
                       style={{ color: theme.textMuted }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = theme.gold)}
                       onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
                     >
                       {item.name}

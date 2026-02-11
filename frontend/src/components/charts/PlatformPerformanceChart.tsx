@@ -77,12 +77,12 @@ function PlatformPerformanceChartInner({
             />
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
-              formatter={(value: number, name: string) => [
+              formatter={((value: number, name: string) => [
                 name === 'spend' || name === 'revenue'
                   ? chartFormatters.currency(value)
                   : value.toLocaleString(),
                 name.charAt(0).toUpperCase() + name.slice(1),
-              ]}
+              ]) as any}
               cursor={{ fill: 'hsl(var(--primary) / 0.05)' }}
             />
             <Legend wrapperStyle={chartTheme.legend.wrapperStyle} iconType="circle" />

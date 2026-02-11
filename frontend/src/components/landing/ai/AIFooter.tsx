@@ -3,8 +3,6 @@
  * 2026 Design: Clean, minimal with gradient accents
  */
 
-import { motion } from 'framer-motion';
-
 const footerLinks = {
   product: {
     title: 'Product',

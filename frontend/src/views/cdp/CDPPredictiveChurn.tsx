@@ -4,29 +4,22 @@
 
 import { useMemo, useState } from 'react';
 import {
-  AdjustmentsHorizontalIcon,
   ArrowDownTrayIcon,
   ArrowPathIcon,
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
   BellAlertIcon,
   BoltIcon,
-  CalendarIcon,
-  ChartBarIcon,
   CheckCircleIcon,
-  ClockIcon,
   CpuChipIcon,
   CurrencyDollarIcon,
   DocumentChartBarIcon,
   ExclamationTriangleIcon,
-  FunnelIcon,
-  InformationCircleIcon,
   PauseIcon,
   PlayIcon,
   SparklesIcon,
   UserGroupIcon,
   UserMinusIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 

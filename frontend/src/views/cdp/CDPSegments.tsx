@@ -6,10 +6,8 @@ import { useState } from 'react';
 import {
   ArrowPathIcon,
   CheckIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
   MagnifyingGlassIcon,
-  PauseIcon,
   PencilIcon,
   PlayIcon,
   PlusIcon,
@@ -199,7 +197,7 @@ function SegmentBuilderModal({
   const [description, setDescription] = useState(segment?.description || '');
   const [logic, setLogic] = useState<'and' | 'or'>('and');
   const [conditions, setConditions] = useState<SegmentCondition[]>(
-    (segment?.rules as SegmentRules)?.conditions || [
+    (segment?.rules as unknown as SegmentRules)?.conditions || [
       { field: 'lifecycle_stage', operator: 'eq', value: '' },
     ]
   );
@@ -544,7 +542,7 @@ export default function CDPSegments() {
     try {
       await updateMutation.mutateAsync({
         segmentId: editingSegment.id,
-        ...segmentData,
+        update: segmentData,
       });
       setEditingSegment(undefined);
       refetch();

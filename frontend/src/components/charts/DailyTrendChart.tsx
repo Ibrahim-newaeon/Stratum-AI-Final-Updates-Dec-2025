@@ -104,10 +104,10 @@ function DailyTrendChartInner({
             />
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
-              formatter={(value: number, name: string) => {
+              formatter={((value: number, name: string) => {
                 if (name === 'Conversions') return [value.toLocaleString(), name];
                 return [chartFormatters.currency(value), name];
-              }}
+              }) as any}
               cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
             />
             <Legend wrapperStyle={chartTheme.legend.wrapperStyle} iconType="circle" />

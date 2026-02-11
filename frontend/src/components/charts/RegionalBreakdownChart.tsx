@@ -95,7 +95,7 @@ function RegionalBreakdownChartInner({
             </Pie>
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
-              formatter={(value: number) => [`${value}%`, 'Share']}
+              formatter={((value: number) => [`${value}%`, 'Share']) as any}
             />
             <Legend content={<CustomLegend />} verticalAlign="bottom" />
           </PieChart>

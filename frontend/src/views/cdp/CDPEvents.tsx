@@ -5,16 +5,11 @@
 import { useMemo, useState } from 'react';
 import {
   ArrowDownTrayIcon,
-  CalendarIcon,
   ChartBarIcon,
   CheckCircleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import {
@@ -201,7 +196,7 @@ export default function CDPEvents() {
       startDate.setDate(startDate.getDate() - periodDays);
       await exportMutation.mutateAsync({
         format: 'csv',
-        start_date: startDate.toISOString().split('T')[0],
+        first_seen_after: startDate.toISOString().split('T')[0],
         limit: 10000,
       });
     } catch (error) {

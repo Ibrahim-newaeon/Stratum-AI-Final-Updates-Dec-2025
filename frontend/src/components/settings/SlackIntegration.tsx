@@ -5,13 +5,11 @@
  * for Trust Gate alerts and reports.
  */
 
-import * as React from 'react';
 import { useState } from 'react';
 import {
   Activity,
   AlertTriangle,
   BarChart3,
-  Bell,
   CheckCircle2,
   Clock,
   ExternalLink,

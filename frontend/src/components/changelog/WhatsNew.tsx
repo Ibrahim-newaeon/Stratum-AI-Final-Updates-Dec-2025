@@ -5,7 +5,6 @@
  * to keep users informed about platform changes.
  */
 
-import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {

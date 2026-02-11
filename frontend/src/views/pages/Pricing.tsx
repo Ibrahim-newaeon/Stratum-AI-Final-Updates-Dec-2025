@@ -115,7 +115,6 @@ export default function Pricing() {
                     ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)'
                     : 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  ringColor: tier.highlighted ? '#a855f7' : undefined,
                 }}
               >
                 {tier.highlighted && (

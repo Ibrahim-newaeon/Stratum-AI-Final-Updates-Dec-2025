@@ -7,7 +7,6 @@ import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
 import {
   ArrowRightIcon,
-  BoltIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
@@ -302,7 +301,7 @@ export default function TrustEngine() {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           >
-            {healthComponents.map((component, index) => (
+            {healthComponents.map((component) => (
               <div
                 key={component.name}
                 className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all"

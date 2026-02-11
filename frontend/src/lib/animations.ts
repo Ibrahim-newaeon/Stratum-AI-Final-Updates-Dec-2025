@@ -641,16 +641,16 @@ export const createFadeIn = (
     hidden: {
       opacity: 0,
       [axis]: value,
-    },
+    } as any,
     visible: {
       opacity: 1,
       [axis]: 0,
       transition: transitions.smooth,
-    },
+    } as any,
     exit: {
       opacity: 0,
       [axis]: -value / 2,
       transition: transitions.fast,
-    },
+    } as any,
   };
 };

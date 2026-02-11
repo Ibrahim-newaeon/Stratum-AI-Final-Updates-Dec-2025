@@ -5,7 +5,6 @@
  * prospects to explore the platform's capabilities.
  */
 
-import * as React from 'react';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 // Demo tenant data

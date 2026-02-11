@@ -153,7 +153,7 @@ const messageTypeIcons = {
 };
 
 export default function WhatsAppMessages() {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [messages] = useState<Message[]>(mockMessages);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [directionFilter, setDirectionFilter] = useState<string>('all');
