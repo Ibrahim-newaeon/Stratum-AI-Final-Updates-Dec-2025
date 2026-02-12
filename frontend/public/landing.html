@@ -395,6 +395,18 @@
     .roi-result-value { font-family: 'Inter', -apple-system, sans-serif; font-size: 32px; font-weight: 700; color: var(--cyan); margin-bottom: 4px; }
     .roi-result-label { color: var(--text-muted); font-size: 13px; }
 
+    /* Interactive Visual Cues */
+    .roi-interactive-cue { text-align: center; margin-bottom: 20px; padding: 12px; background: linear-gradient(135deg, rgba(0, 199, 190, 0.1), rgba(20, 240, 198, 0.1)); border: 1px dashed var(--cyan); border-radius: var(--radius-lg); animation: roi-pulse 2s ease-in-out infinite; }
+    .roi-cue-text { color: var(--cyan); font-size: 13px; font-weight: 600; }
+    .roi-hand-icon { width: 20px; height: 20px; color: var(--cyan); display: inline-block; vertical-align: middle; margin-right: 8px; animation: roi-bounce 1s ease-in-out infinite; }
+    @keyframes roi-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.85; transform: scale(0.98); } }
+    @keyframes roi-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+    /* Input Pulse Animation on Load */
+    .roi-input { cursor: pointer; animation: roi-input-pulse 3s ease-in-out 3; }
+    @keyframes roi-input-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 199, 190, 0); } 50% { box-shadow: 0 0 0 4px rgba(0, 199, 190, 0.2); } }
+    @keyframes roi-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
     /* EARLY ACCESS / COUNTDOWN */
     .early-access-section { padding: 80px 0; }
     .launch-banner { background: linear-gradient(135deg, rgba(0, 199, 190, 0.15) 0%, rgba(20, 240, 198, 0.15) 100%); border: 2px solid var(--cyan); border-radius: var(--radius-2xl); padding: 48px; text-align: center; position: relative; overflow: hidden; }
@@ -552,8 +564,16 @@
 
         <!-- Right: Calculator -->
         <div class="roi-calculator-card">
-          <h3 style="color: var(--text-primary); font-size: 20px; font-weight: 600; margin-bottom: 24px; text-align: center;">See Your Potential Returns</h3>
-          <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 24px;">Enter your current metrics to estimate Stratum AI's impact.</p>
+          <h3 style="color: var(--text-primary); font-size: 20px; font-weight: 600; margin-bottom: 16px; text-align: center;">See Your Potential Returns</h3>
+          <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 8px;">Enter your current metrics to estimate Stratum AI's impact.</p>
+
+          <!-- Interactive Call-to-Action -->
+          <div class="roi-interactive-cue">
+            <svg class="roi-hand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"/>
+            </svg>
+            <span class="roi-cue-text">👆 Try it now - Click & edit the values</span>
+          </div>
 
           <div class="roi-grid">
             <div class="roi-input-group">
@@ -1166,6 +1186,41 @@
     // Initialize ROI Calculator on load
     if (document.getElementById('adSpend')) {
       calculateROI();
+
+      // Make inputs select all text on click for easy editing
+      const roiInputs = document.querySelectorAll('.roi-input');
+      roiInputs.forEach(input => {
+        input.addEventListener('click', function() {
+          this.select();
+        });
+        input.addEventListener('focus', function() {
+          this.select();
+        });
+      });
+
+      // Intersection Observer to trigger attention when calculator comes into view
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Briefly focus the first input to show it's interactive
+            setTimeout(() => {
+              const firstInput = document.getElementById('adSpend');
+              if (firstInput && document.activeElement !== firstInput) {
+                firstInput.style.animation = 'roi-shake 0.5s ease-in-out';
+                setTimeout(() => {
+                  firstInput.style.animation = '';
+                }, 500);
+              }
+            }, 500);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
+
+      const calculatorCard = document.querySelector('.roi-calculator-card');
+      if (calculatorCard) {
+        observer.observe(calculatorCard);
+      }
     }
 
     // Countdown Timer for Launch
