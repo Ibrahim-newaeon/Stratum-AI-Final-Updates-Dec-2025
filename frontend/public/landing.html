@@ -6,8 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Stratum AI - The First and Only AI that Reasons Before It Executes</title>
-  <meta name="description" content="The first AI platform that reasons through every decision before execution. 4.82x ROAS improvement with 94.7% trust score.">
+  <title>Stratum AI - The First & Only AI that Reasons Before It Executes</title>
+  <meta name="description" content="The first & only AI platform that reasons through every decision before execution. 4.82x ROAS improvement with 94.7% trust score.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -137,9 +137,9 @@
     .hero-cta { display: flex; gap: 16px; margin-bottom: 60px; }
 
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .stat-card { padding: 24px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); text-align: center; position: relative; overflow: hidden; }
+    .stat-card { padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); text-align: center; position: relative; overflow: hidden; }
     .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--gold); }
-    .stat-value { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+    .stat-value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
     .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
 
     .hero-preview { position: relative; }
@@ -244,6 +244,28 @@
 
     @media (max-width: 1024px) { .kg-content { grid-template-columns: 1fr; gap: 48px; } .kg-visual { order: -1; } }
 
+    /* PRICING */
+    .pricing-section { padding: 120px 0; background: linear-gradient(to bottom, var(--bg-void), var(--bg-primary)); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 60px; max-width: 1200px; margin-left: auto; margin-right: auto; }
+    .pricing-card { padding: 40px 32px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-xl); position: relative; transition: all var(--transition-slow); display: flex; flex-direction: column; }
+    .pricing-card:hover { transform: translateY(-8px); border-color: var(--border-gold); box-shadow: var(--shadow-lg); }
+    .pricing-card.recommended { border: 2px solid var(--gold); background: linear-gradient(135deg, var(--bg-card), rgba(212, 175, 55, 0.05)); box-shadow: var(--shadow-gold); }
+    .pricing-card.recommended::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-bright), var(--gold)); }
+    .pricing-badge { position: absolute; top: -12px; right: 32px; padding: 6px 16px; background: var(--gold); color: var(--text-inverse); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: var(--radius-full); box-shadow: var(--shadow-gold); }
+    .pricing-tier { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 12px; }
+    .pricing-name { font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+    .pricing-price { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+    .pricing-amount { font-family: var(--font-mono); font-size: 48px; font-weight: 700; color: var(--gold); }
+    .pricing-period { font-size: 16px; color: var(--text-muted); }
+    .pricing-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border-default); }
+    .pricing-features { flex: 1; display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+    .pricing-feature { display: flex; align-items: flex-start; gap: 12px; }
+    .pricing-feature-icon { width: 20px; height: 20px; background: var(--gold-subtle); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .pricing-feature-icon svg { width: 12px; height: 12px; stroke: var(--gold); stroke-width: 2.5; }
+    .pricing-feature-text { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+    .pricing-cta { width: 100%; }
+    @media (max-width: 1024px) { .pricing-grid { grid-template-columns: 1fr; max-width: 500px; } }
+
     /* SOCIAL PROOF */
     .social-proof { padding: 80px 0; border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
     .social-proof-header { text-align: center; margin-bottom: 48px; }
@@ -299,7 +321,7 @@
       </svg>
       <span class="logo-text">
         <span class="logo-name">STRATUM AI</span>
-        <span class="logo-tagline">The First and Only AI that Reasons Before It Executes</span>
+        <span class="logo-tagline">The First & Only AI that Reasons Before It Executes</span>
       </span>
     </a>
     <div class="nav-links">
@@ -328,7 +350,7 @@
             <span class="status-dot"></span>
             <span class="status-text">AI Engine Active</span>
           </div>
-          <h1 class="hero-title">The First and Only AI that<br><span class="text-gradient">Reasons Before It Executes</span></h1>
+          <h1 class="hero-title">The First & Only AI that<br><span class="text-gradient">Reasons Before It Executes</span></h1>
           <p class="hero-subtitle">AI-powered ad optimization with human oversight. Our Trust Gate system ensures every decision is auditable, explainable, and reversible. Scale your campaigns while maintaining full control.</p>
           <div class="hero-cta">
             <a href="/signup" class="btn btn-primary btn-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Start Free Trial</a>
@@ -565,6 +587,131 @@
     </div>
   </section>
 
+  <section class="pricing-section" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Pricing</div>
+        <h2 class="section-title">Scale Your Revenue, Not Your Costs</h2>
+        <p class="section-subtitle">Transparent pricing that grows with you. No hidden fees, no surprise charges. All plans include our Trust Gate system.</p>
+      </div>
+      <div class="pricing-grid">
+        <!-- Starter Plan -->
+        <div class="pricing-card">
+          <div class="pricing-tier">Starter</div>
+          <h3 class="pricing-name">Growth</h3>
+          <div class="pricing-price">
+            <span class="pricing-amount">$499</span>
+            <span class="pricing-period">/month</span>
+          </div>
+          <p class="pricing-desc">Perfect for growing teams managing $25K-$100K monthly ad spend.</p>
+          <div class="pricing-features">
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Up to $100K monthly ad spend</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">3 connected ad accounts</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Trust Gate automation</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Basic CDP (10K profiles)</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Email support</span>
+            </div>
+          </div>
+          <a href="/signup?plan=starter" class="btn btn-secondary btn-lg pricing-cta">Start Free Trial</a>
+        </div>
+
+        <!-- Professional Plan (Recommended) -->
+        <div class="pricing-card recommended">
+          <span class="pricing-badge">Recommended</span>
+          <div class="pricing-tier">Professional</div>
+          <h3 class="pricing-name">Scale</h3>
+          <div class="pricing-price">
+            <span class="pricing-amount">$1,499</span>
+            <span class="pricing-period">/month</span>
+          </div>
+          <p class="pricing-desc">For teams scaling to 7-figures with advanced automation and multi-platform sync.</p>
+          <div class="pricing-features">
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Up to $500K monthly ad spend</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">10 connected ad accounts</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Advanced Trust Gate + AI reasoning</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Full CDP (100K profiles) + Audience Sync</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Knowledge Graph analytics</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Priority support + Slack channel</span>
+            </div>
+          </div>
+          <a href="/signup?plan=professional" class="btn btn-primary btn-lg pricing-cta">Start Free Trial</a>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card">
+          <div class="pricing-tier">Enterprise</div>
+          <h3 class="pricing-name">Custom</h3>
+          <div class="pricing-price">
+            <span class="pricing-amount">Custom</span>
+          </div>
+          <p class="pricing-desc">For agencies and brands managing $1M+ monthly spend with custom needs.</p>
+          <div class="pricing-features">
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Unlimited ad spend</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Unlimited ad accounts</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Custom Trust Gate rules</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Unlimited CDP profiles</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">White-label options</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Dedicated account manager</span>
+            </div>
+            <div class="pricing-feature">
+              <div class="pricing-feature-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span class="pricing-feature-text">Custom integrations & SLA</span>
+            </div>
+          </div>
+          <a href="/contact?plan=enterprise" class="btn btn-secondary btn-lg pricing-cta">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="cta-section">
     <div class="container">
       <div class="cta-container">
@@ -624,8 +771,8 @@
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.nodes = [];
-        this.nodeCount = 45;
-        this.maxDistance = 150;
+        this.nodeCount = 120;
+        this.maxDistance = 180;
         this.init();
       }
       getColors() {
@@ -644,7 +791,7 @@
       createNodes() {
         this.nodes = [];
         for (let i = 0; i < this.nodeCount; i++) {
-          this.nodes.push({ x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, radius: Math.random() * 2 + 1, pulse: Math.random() * Math.PI * 2 });
+          this.nodes.push({ x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height, vx: (Math.random() - 0.5) * 0.8, vy: (Math.random() - 0.5) * 0.8, radius: Math.random() * 2 + 1, pulse: Math.random() * Math.PI * 2 });
         }
       }
       animate() {

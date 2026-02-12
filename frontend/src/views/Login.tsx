@@ -17,25 +17,25 @@ import { pageSEO, SEO } from '@/components/common/SEO';
 
 // Stratum Theme v4.0 - Trust-Gated Autopilot
 const theme = {
-  primary: '#00c7be', // Stratum Gold
-  primaryLight: 'rgba(0, 199, 190, 0.15)',
-  primaryBright: '#f0c95c',
+  primary: '#D4AF37', // Stratum Gold
+  primaryLight: 'rgba(212, 175, 55, 0.15)',
+  primaryBright: '#F4D03F',
   green: '#34c759', // Status Success
   orange: '#f59e0b', // Status Warning
   purple: '#8b5cf6', // Accent Purple
-  cyan: '#00c7be', // Accent Cyan
+  cyan: '#14F0C6', // Accent Cyan
   bgVoid: '#050508', // Deepest background
-  bgBase: '#0b1215', // Deep navy black
+  bgBase: '#0a0a0f', // Deep navy black
   bgCard: 'rgba(18, 18, 26, 0.9)', // Card background
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
   border: 'rgba(255, 255, 255, 0.06)',
   borderHover: 'rgba(255, 255, 255, 0.10)',
-  borderGold: 'rgba(0, 199, 190, 0.15)',
+  borderGold: 'rgba(212, 175, 55, 0.15)',
   success: '#34c759',
-  goldGlow: 'rgba(0, 199, 190, 0.5)',
-  goldSubtle: 'rgba(0, 199, 190, 0.1)',
+  goldGlow: 'rgba(212, 175, 55, 0.5)',
+  goldSubtle: 'rgba(212, 175, 55, 0.1)',
 };
 
 // HUD Corner component for sci-fi styling
