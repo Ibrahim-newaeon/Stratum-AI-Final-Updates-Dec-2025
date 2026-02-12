@@ -106,7 +106,7 @@ export function Hero() {
           <Button
             onClick={() => navigate('/signup')}
             size="lg"
-            className="group text-white font-semibold px-8 py-6 text-lg transition-all hover:scale-[1.02] rounded-2xl"
+            className="group text-white font-semibold px-8 py-6 text-lg transition-all hover:scale-[1.02] hover:brightness-110 rounded-lg"
             style={{
               background: '#00c7be',
               boxShadow: '0 0 40px rgba(0, 199, 190, 0.25)',
@@ -119,7 +119,7 @@ export function Hero() {
           <Button
             variant="outline"
             size="lg"
-            className="group px-8 py-6 text-lg rounded-2xl"
+            className="group px-8 py-6 text-lg rounded-lg hover:bg-white/10"
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               backdropFilter: 'blur(40px)',

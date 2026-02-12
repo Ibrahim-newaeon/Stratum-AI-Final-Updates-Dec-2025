@@ -350,7 +350,7 @@ export default function BattleCard() {
           {/* Download Button */}
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all text-sm font-medium text-white"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all text-sm font-medium text-white"
           >
             <ArrowDownTrayIcon className="w-4 h-4" />
             Download Sales Battle Card (PDF)

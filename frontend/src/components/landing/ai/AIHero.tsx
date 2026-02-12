@@ -150,7 +150,7 @@ export default function AIHero() {
           >
             <a
               href="/signup"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all hover:scale-[1.02]"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-all hover:scale-[1.02] hover:brightness-110"
               style={{
                 background: '#00c7be',
                 boxShadow: '0 0 40px rgba(0, 199, 190, 0.3)',
@@ -162,7 +162,7 @@ export default function AIHero() {
 
             <a
               href="#demo"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-white transition-all"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-all hover:bg-white/10"
               style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 backdropFilter: 'blur(40px)',

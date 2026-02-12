@@ -69,8 +69,8 @@ export function CTA() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => navigate('/signup')}
-            className="group flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-base
-                       transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="group flex items-center gap-2 px-8 py-4 rounded-lg text-white font-semibold text-base
+                       transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
             style={{
               background: theme.gold,
               boxShadow: '0 0 40px rgba(0, 199, 190, 0.3)',
@@ -82,7 +82,7 @@ export function CTA() {
 
           <button
             onClick={() => navigate('/login')}
-            className="px-8 py-4 rounded-2xl font-medium text-base transition-colors"
+            className="px-8 py-4 rounded-lg font-medium text-base transition-all duration-200 hover:text-white hover:bg-white/5"
             style={{ color: theme.textMuted }}
           >
             Already have an account? Sign in

@@ -223,7 +223,7 @@ export function Footer() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm rounded-xl text-white transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm rounded-lg text-white transition-all duration-200 hover:brightness-110 disabled:opacity-50"
                   style={{ background: theme.gold }}
                 >
                   {isSubmitting ? '...' : 'Subscribe'}

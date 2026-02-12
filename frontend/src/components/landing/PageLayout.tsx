@@ -207,7 +207,7 @@ export function PageLayout({ children }: PageLayoutProps) {
               </Link>
               <Link
                 to="/signup"
-                className="cta-button px-5 py-2.5 rounded-2xl text-sm font-semibold text-white transition-all duration-200"
+                className="cta-button px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:brightness-110"
                 style={{
                   background: '#00c7be',
                   boxShadow: '0 0 30px rgba(0, 199, 190, 0.2)',
@@ -324,7 +324,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                 </Link>
                 <Link
                   to="/signup"
-                  className="py-3 px-4 rounded-2xl text-sm font-semibold text-white text-center"
+                  className="py-3 px-4 rounded-lg text-sm font-semibold text-white text-center hover:brightness-110 transition-all"
                   style={{ background: '#00c7be' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

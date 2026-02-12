@@ -346,7 +346,7 @@ export default function AIPricing() {
                   {/* CTA Button */}
                   <a
                     href={tier.id === 'enterprise' ? '/contact' : '/signup'}
-                    className={`block w-full py-3 px-6 rounded-xl text-center font-medium transition-all ${
+                    className={`block w-full py-3 px-6 rounded-lg text-center font-medium transition-all ${
                       tier.popular
                         ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white hover:opacity-90'
                         : 'bg-white/[0.05] border border-white/10 text-white hover:bg-white/10'
@@ -474,7 +474,7 @@ export default function AIPricing() {
           </p>
           <a
             href="/contact"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium hover:brightness-110 transition-all"
           >
             Talk to Sales
             <ArrowRightIcon className="w-4 h-4" />

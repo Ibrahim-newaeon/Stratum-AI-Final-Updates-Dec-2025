@@ -208,7 +208,7 @@ export function Pricing() {
                   onClick={() =>
                     navigate(plan.ctaLink || (plan.name === 'Enterprise' ? '/contact' : '/signup'))
                   }
-                  className="w-full py-6 text-base font-semibold rounded-2xl transition-all"
+                  className="w-full py-6 text-base font-semibold rounded-lg transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5"
                   style={
                     plan.highlighted
                       ? {
@@ -271,7 +271,7 @@ export function Pricing() {
               </div>
               <Button
                 variant="outline"
-                className="rounded-xl border-0"
+                className="rounded-lg border-0 transition-all duration-200 hover:brightness-110"
                 style={{
                   background: theme.goldLight,
                   color: theme.gold,
