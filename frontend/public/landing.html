@@ -191,15 +191,80 @@
     .feature-title { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
     .feature-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 
-    /* CDP SECTION */
+    /* CDP CAROUSEL SECTION */
     .cdp-section { padding: 80px 0; background: linear-gradient(to bottom, var(--bg-void), var(--bg-primary)); }
-    .cdp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-top: 60px; }
-    .cdp-card { padding: 32px; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-xl); position: relative; overflow: hidden; }
-    .cdp-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--cyan)); }
-    .cdp-card-icon { width: 48px; height: 48px; background: var(--gold-subtle); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; }
-    .cdp-card-title { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
-    .cdp-card-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
-    .cdp-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-full); font-size: 11px; font-weight: 600; color: var(--gold); margin-top: 16px; }
+
+    .cdp-carousel-wrapper { max-width: 1400px; margin: 0 auto; position: relative; }
+    .cdp-carousel-container { min-height: 920px; overflow: hidden; position: relative; }
+
+    .cdp-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out; }
+    .cdp-slide.active { opacity: 1; visibility: visible; z-index: 1; }
+
+    .cdp-slide-content { display: grid; grid-template-columns: 56% 44%; gap: 60px; align-items: center; height: 100%; padding: 80px; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-2xl); box-shadow: 0 0 40px rgba(244, 208, 63, 0.15); }
+
+    /* Text Column */
+    .cdp-text-column { padding-right: 40px; }
+    .cdp-kicker { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cyan); margin-bottom: 20px; }
+    .cdp-headline { font-size: 60px; font-weight: 800; line-height: 1.1; color: var(--text-primary); margin-bottom: 24px; letter-spacing: -0.02em; }
+    .cdp-subtext { font-size: 18px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 32px; }
+    .cdp-bullets { list-style: none; padding: 0; margin: 0 0 40px 0; }
+    .cdp-bullets li { font-size: 16px; line-height: 2; color: var(--text-secondary); padding-left: 28px; position: relative; }
+    .cdp-bullets li::before { content: '✓'; position: absolute; left: 0; color: var(--cyan); font-weight: 700; }
+    .cdp-ctas { display: flex; gap: 16px; align-items: center; }
+    .cdp-ctas .btn-primary { height: 48px; padding: 0 32px; }
+    .cdp-ctas .btn-secondary { height: 48px; padding: 0 32px; }
+
+    /* Visual Column */
+    .cdp-visual-column { display: flex; align-items: center; justify-content: center; }
+    .cdp-visual { width: 100%; max-width: 520px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-default); border-radius: var(--radius-xl); padding: 40px; }
+
+    /* Visual: Flow (Slide 1) */
+    .cdp-visual-flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+    .flow-step { padding: 16px 24px; background: var(--cyan-subtle); border: 1px solid var(--border-cyan); border-radius: var(--radius-lg); color: var(--cyan); font-weight: 600; font-size: 14px; }
+    .flow-arrow { color: var(--gold); font-size: 24px; font-weight: 700; }
+
+    /* Visual: Profile (Slide 2) */
+    .cdp-visual-profile .profile-card { background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: 24px; }
+    .profile-header { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-default); }
+    .profile-timeline { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .timeline-event { padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); font-size: 14px; color: var(--text-secondary); }
+    .profile-graph { padding: 12px; background: var(--cyan-subtle); border: 1px solid var(--border-cyan); border-radius: var(--radius-md); color: var(--cyan); font-size: 13px; text-align: center; }
+
+    /* Visual: Segment (Slide 3) */
+    .cdp-visual-segment .segment-builder { background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: 24px; }
+    .segment-header { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
+    .segment-condition { padding: 12px 16px; background: rgba(255, 255, 255, 0.03); border-left: 3px solid var(--cyan); margin-bottom: 10px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); }
+    .segment-result { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; }
+    .segment-reach { font-size: 14px; color: var(--text-secondary); }
+    .segment-badge { padding: 4px 12px; background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-full); font-size: 11px; font-weight: 600; color: var(--gold); }
+
+    /* Visual: Sync (Slide 4) */
+    .cdp-visual-sync .sync-flow { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .sync-segment { padding: 16px 32px; background: var(--cyan-subtle); border: 2px solid var(--border-cyan); border-radius: var(--radius-lg); color: var(--cyan); font-weight: 600; font-size: 16px; }
+    .sync-arrows { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .sync-arrow { padding: 12px 20px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-default); border-radius: var(--radius-md); font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; }
+    .sync-pulse { padding: 12px 24px; background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-lg); color: var(--gold); font-weight: 600; animation: pulse 2s ease-in-out infinite; }
+
+    /* Visual: Outcomes (Slide 5) */
+    .cdp-visual-outcomes .outcomes-chart { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .chart-trend { font-size: 64px; margin-bottom: 10px; }
+    .outcome-metric { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 16px 24px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-lg); }
+    .metric-label { font-size: 14px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-value { font-size: 24px; font-weight: 700; }
+    .metric-value.positive { color: var(--cyan); }
+
+    /* Carousel Controls */
+    .cdp-carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 56px; height: 56px; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; color: var(--gold); }
+    .cdp-carousel-btn:hover { background: var(--gold); color: var(--bg-void); box-shadow: 0 0 20px rgba(244, 208, 63, 0.4); }
+    .cdp-carousel-btn svg { width: 24px; height: 24px; }
+    .cdp-prev { left: -80px; }
+    .cdp-next { right: -80px; }
+
+    /* Carousel Indicators */
+    .cdp-carousel-indicators { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
+    .cdp-indicator { width: 12px; height: 12px; background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; }
+    .cdp-indicator:hover { background: rgba(255, 255, 255, 0.4); }
+    .cdp-indicator.active { background: var(--gold); width: 32px; border-radius: 6px; }
 
     /* KNOWLEDGE GRAPH SECTION */
     .kg-section { padding: 80px 0; background: linear-gradient(to bottom, var(--bg-primary), var(--bg-void)); position: relative; overflow: hidden; }
@@ -432,9 +497,9 @@
     .benefit-text { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
     /* RESPONSIVE */
-    @media (max-width: 1200px) { .hero-grid { gap: 60px; } .features-grid { grid-template-columns: repeat(2, 1fr); } .cdp-grid { grid-template-columns: 1fr; } .roi-wrapper { grid-template-columns: 1fr; gap: 40px; } .roi-calculator-card { max-width: 100%; } .roi-trust-content { padding-right: 0; } .roi-grid { grid-template-columns: 1fr; } .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 1200px) { .hero-grid { gap: 60px; } .features-grid { grid-template-columns: repeat(2, 1fr); } .cdp-slide-content { grid-template-columns: 1fr; gap: 40px; padding: 60px; } .cdp-carousel-container { min-height: auto; } .cdp-text-column { padding-right: 0; } .cdp-headline { font-size: 48px; } .cdp-prev { left: 10px; } .cdp-next { right: 10px; } .roi-wrapper { grid-template-columns: 1fr; gap: 40px; } .roi-calculator-card { max-width: 100%; } .roi-trust-content { padding-right: 0; } .roi-grid { grid-template-columns: 1fr; } .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 1024px) { .container { padding: 0 32px; } .nav { padding: 16px 32px; } .nav-links { display: none; } .hero-grid { grid-template-columns: 1fr; gap: 60px; } .hero-preview { order: -1; max-width: 500px; margin: 0 auto; } }
-    @media (max-width: 768px) { .container { padding: 0 20px; } .nav { padding: 16px 20px; } .features-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } .hero-cta { flex-direction: column; } .hero-cta .btn { width: 100%; } .cta-container { padding: 40px 24px; } .cta-buttons { flex-direction: column; } .cta-buttons .btn { width: 100%; } .platforms-grid { gap: 16px; } .footer-content { flex-direction: column; gap: 24px; text-align: center; } .footer-links { justify-content: center; } .hud-corner { display: none; } .roi-grid { grid-template-columns: 1fr; } .roi-results { grid-template-columns: 1fr; } .countdown { gap: 16px; } .countdown-value { font-size: 36px; } .subscribe-form { flex-direction: column; } .pricing-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .container { padding: 0 20px; } .nav { padding: 16px 20px; } .features-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } .hero-cta { flex-direction: column; } .hero-cta .btn { width: 100%; } .cta-container { padding: 40px 24px; } .cta-buttons { flex-direction: column; } .cta-buttons .btn { width: 100%; } .platforms-grid { gap: 16px; } .footer-content { flex-direction: column; gap: 24px; text-align: center; } .footer-links { justify-content: center; } .hud-corner { display: none; } .cdp-slide-content { padding: 40px 24px; } .cdp-headline { font-size: 36px; } .cdp-subtext { font-size: 16px; } .cdp-bullets li { font-size: 14px; } .cdp-ctas { flex-direction: column; width: 100%; } .cdp-ctas .btn-primary, .cdp-ctas .btn-secondary { width: 100%; } .cdp-carousel-btn { width: 44px; height: 44px; } .cdp-prev { left: 5px; } .cdp-next { right: 5px; } .roi-grid { grid-template-columns: 1fr; } .roi-results { grid-template-columns: 1fr; } .countdown { gap: 16px; } .countdown-value { font-size: 36px; } .subscribe-form { flex-direction: column; } .pricing-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -629,35 +694,193 @@
 
   <section class="cdp-section" id="cdp">
     <div class="container">
-      <div class="section-header">
-        <div class="section-label">Customer Data Platform</div>
-        <h2 class="section-title">Unified Profiles. Smart Segments. Instant Sync.</h2>
-        <p class="section-subtitle">Turn fragmented customer data into revenue with our built-in CDP. Push segments to all major ad platforms with one click.</p>
-      </div>
-      <div class="cdp-grid">
-        <div class="cdp-card">
-          <div class="cdp-card-icon">*</div>
-          <h3 class="cdp-card-title">One-Click Audience Sync</h3>
-          <p class="cdp-card-desc"><strong>Push segments directly</strong> to Meta, Google, TikTok, and Snapchat. <strong style="color: var(--cyan);">Auto-sync</strong> keeps your audiences fresh <span style="color: var(--cyan);">24/7</span> with configurable intervals.</p>
-          <span class="cdp-badge">4 Platforms</span>
+      <!-- CDP Carousel -->
+      <div class="cdp-carousel-wrapper">
+        <div class="cdp-carousel-container">
+
+          <!-- Slide 1: Overview -->
+          <div class="cdp-slide active">
+            <div class="cdp-slide-content">
+              <div class="cdp-text-column">
+                <div class="cdp-kicker">CUSTOMER DATA PLATFORM</div>
+                <h2 class="cdp-headline">Unified Profiles. Smart Segments. Instant Sync.</h2>
+                <p class="cdp-subtext">Turn fragmented customer data into revenue. Build audiences and push to ad platforms in one click.</p>
+                <ul class="cdp-bullets">
+                  <li>Resolve identity across channels</li>
+                  <li>Segment with rules + scoring</li>
+                  <li>Sync with logs + match signals</li>
+                </ul>
+                <div class="cdp-ctas">
+                  <a href="#" class="btn-primary">Explore CDP</a>
+                  <a href="#" class="btn-secondary">Watch Demo</a>
+                </div>
+              </div>
+              <div class="cdp-visual-column">
+                <div class="cdp-visual cdp-visual-flow">
+                  <div class="flow-step">Sources</div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">Profile</div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">Segment</div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">Platforms</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 2: Unified Profiles -->
+          <div class="cdp-slide">
+            <div class="cdp-slide-content">
+              <div class="cdp-text-column">
+                <div class="cdp-kicker">STEP 1 — PROFILES</div>
+                <h2 class="cdp-headline">One Customer. One Truth.</h2>
+                <p class="cdp-subtext">Merge web, CRM, and commerce events into a clean profile—deduped and enriched.</p>
+                <ul class="cdp-bullets">
+                  <li>Identity stitching (email/phone/device)</li>
+                  <li>Event timeline + attributes</li>
+                  <li>Consent-ready + tenant-safe</li>
+                </ul>
+                <div class="cdp-ctas">
+                  <a href="#" class="btn-primary">View Profiles</a>
+                </div>
+              </div>
+              <div class="cdp-visual-column">
+                <div class="cdp-visual cdp-visual-profile">
+                  <div class="profile-card">
+                    <div class="profile-header">👤 Customer Profile</div>
+                    <div class="profile-timeline">
+                      <div class="timeline-event">🌐 Web Visit</div>
+                      <div class="timeline-event">📧 Email Opened</div>
+                      <div class="timeline-event">🛒 Purchase</div>
+                    </div>
+                    <div class="profile-graph">Identity Graph →</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 3: Smart Segments -->
+          <div class="cdp-slide">
+            <div class="cdp-slide-content">
+              <div class="cdp-text-column">
+                <div class="cdp-kicker">STEP 2 — SEGMENTS</div>
+                <h2 class="cdp-headline">Build Audiences That Convert.</h2>
+                <p class="cdp-subtext">Create segments using funnels, RFM, and conditions—auto-refreshing as data changes.</p>
+                <ul class="cdp-bullets">
+                  <li>Segment builder (AND/OR, filters)</li>
+                  <li>RFM + intent scoring</li>
+                  <li>Always up to date</li>
+                </ul>
+                <div class="cdp-ctas">
+                  <a href="#" class="btn-primary">Build a Segment</a>
+                </div>
+              </div>
+              <div class="cdp-visual-column">
+                <div class="cdp-visual cdp-visual-segment">
+                  <div class="segment-builder">
+                    <div class="segment-header">Segment Builder</div>
+                    <div class="segment-condition">IF user.behavior = high_intent</div>
+                    <div class="segment-condition">AND user.rfm_score > 70</div>
+                    <div class="segment-result">
+                      <span class="segment-reach">Estimated reach: 12,500</span>
+                      <span class="segment-badge">High Intent</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 4: Instant Sync -->
+          <div class="cdp-slide">
+            <div class="cdp-slide-content">
+              <div class="cdp-text-column">
+                <div class="cdp-kicker">STEP 3 — SYNC</div>
+                <h2 class="cdp-headline">One Click to Every Platform.</h2>
+                <p class="cdp-subtext">Push segments to Meta, Google, TikTok, and more—no CSVs, no waiting.</p>
+                <ul class="cdp-bullets">
+                  <li>Dedupe-safe syncing</li>
+                  <li>Match quality indicators</li>
+                  <li>Full audit + retries</li>
+                </ul>
+                <div class="cdp-ctas">
+                  <a href="#" class="btn-primary">Connect Destinations</a>
+                </div>
+              </div>
+              <div class="cdp-visual-column">
+                <div class="cdp-visual cdp-visual-sync">
+                  <div class="sync-flow">
+                    <div class="sync-segment">Segment</div>
+                    <div class="sync-arrows">
+                      <div class="sync-arrow">→ Meta ✅</div>
+                      <div class="sync-arrow">→ Google ✅</div>
+                      <div class="sync-arrow">→ TikTok ✅</div>
+                      <div class="sync-arrow">→ Snapchat ✅</div>
+                    </div>
+                    <div class="sync-pulse">Synced</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 5: Outcomes -->
+          <div class="cdp-slide">
+            <div class="cdp-slide-content">
+              <div class="cdp-text-column">
+                <div class="cdp-kicker">RESULTS</div>
+                <h2 class="cdp-headline">Better Data. Better ROAS.</h2>
+                <p class="cdp-subtext">Cleaner targeting, faster tests, and confident scaling—powered by your CDP inside Stratum.</p>
+                <ul class="cdp-bullets">
+                  <li>Higher ROAS, lower CPA</li>
+                  <li>Faster experimentation</li>
+                  <li>Reliable reporting</li>
+                </ul>
+                <div class="cdp-ctas">
+                  <a href="#" class="btn-primary">Start Syncing</a>
+                </div>
+              </div>
+              <div class="cdp-visual-column">
+                <div class="cdp-visual cdp-visual-outcomes">
+                  <div class="outcomes-chart">
+                    <div class="chart-trend">📈</div>
+                    <div class="outcome-metric">
+                      <span class="metric-label">ROAS</span>
+                      <span class="metric-value positive">+42%</span>
+                    </div>
+                    <div class="outcome-metric">
+                      <span class="metric-label">CPA</span>
+                      <span class="metric-value positive">-28%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
-        <div class="cdp-card">
-          <div class="cdp-card-icon">@</div>
-          <h3 class="cdp-card-title">360 Customer Profiles</h3>
-          <p class="cdp-card-desc"><strong><span style="color: var(--cyan);">Unified view</span></strong> from anonymous visitor to loyal customer. <strong>Real-time enrichment</strong> from every interaction across all touchpoints.</p>
-          <span class="cdp-badge">Identity Resolution</span>
-        </div>
-        <div class="cdp-card">
-          <div class="cdp-card-icon">#</div>
-          <h3 class="cdp-card-title">Smart Segmentation</h3>
-          <p class="cdp-card-desc"><strong>Build segments</strong> with behavioral rules, <span style="color: var(--cyan);">RFM scores</span>, and lifecycle stages. <strong>Preview audience size</strong> before you publish.</p>
-          <span class="cdp-badge">RFM Analysis</span>
-        </div>
-        <div class="cdp-card">
-          <div class="cdp-card-icon">~</div>
-          <h3 class="cdp-card-title">Identity Graph</h3>
-          <p class="cdp-card-desc"><strong><span style="color: var(--cyan);">Connect the dots</span></strong> across devices and channels. <strong>Visual identity graph</strong> shows every connection with full merge history.</p>
-          <span class="cdp-badge">Cross-Device</span>
+
+        <!-- Carousel Controls -->
+        <button class="cdp-carousel-btn cdp-prev" onclick="cdpPrevSlide()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <button class="cdp-carousel-btn cdp-next" onclick="cdpNextSlide()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+
+        <!-- Carousel Indicators -->
+        <div class="cdp-carousel-indicators">
+          <button class="cdp-indicator active" onclick="cdpGoToSlide(0)"></button>
+          <button class="cdp-indicator" onclick="cdpGoToSlide(1)"></button>
+          <button class="cdp-indicator" onclick="cdpGoToSlide(2)"></button>
+          <button class="cdp-indicator" onclick="cdpGoToSlide(3)"></button>
+          <button class="cdp-indicator" onclick="cdpGoToSlide(4)"></button>
         </div>
       </div>
     </div>
@@ -1369,6 +1592,77 @@
       ThemeManager.init();
       new NeuralCanvas('neural-canvas');
     });
+
+    // CDP Carousel
+    let cdpCurrentSlide = 0;
+    let cdpAutoplayInterval = null;
+
+    function cdpShowSlide(index) {
+      const slides = document.querySelectorAll('.cdp-slide');
+      const indicators = document.querySelectorAll('.cdp-indicator');
+
+      if (index >= slides.length) cdpCurrentSlide = 0;
+      else if (index < 0) cdpCurrentSlide = slides.length - 1;
+      else cdpCurrentSlide = index;
+
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === cdpCurrentSlide);
+      });
+
+      indicators.forEach((indicator, i) => {
+        indicator.classList.toggle('active', i === cdpCurrentSlide);
+      });
+    }
+
+    function cdpNextSlide() {
+      cdpShowSlide(cdpCurrentSlide + 1);
+      cdpResetAutoplay();
+    }
+
+    function cdpPrevSlide() {
+      cdpShowSlide(cdpCurrentSlide - 1);
+      cdpResetAutoplay();
+    }
+
+    function cdpGoToSlide(index) {
+      cdpShowSlide(index);
+      cdpResetAutoplay();
+    }
+
+    function cdpStartAutoplay() {
+      cdpAutoplayInterval = setInterval(() => {
+        cdpNextSlide();
+      }, 6000); // Auto-advance every 6 seconds
+    }
+
+    function cdpStopAutoplay() {
+      if (cdpAutoplayInterval) {
+        clearInterval(cdpAutoplayInterval);
+        cdpAutoplayInterval = null;
+      }
+    }
+
+    function cdpResetAutoplay() {
+      cdpStopAutoplay();
+      cdpStartAutoplay();
+    }
+
+    // Initialize carousel on load
+    if (document.querySelector('.cdp-carousel-wrapper')) {
+      cdpShowSlide(0);
+      cdpStartAutoplay();
+
+      // Pause autoplay on hover
+      const carouselWrapper = document.querySelector('.cdp-carousel-wrapper');
+      carouselWrapper.addEventListener('mouseenter', cdpStopAutoplay);
+      carouselWrapper.addEventListener('mouseleave', cdpStartAutoplay);
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') cdpPrevSlide();
+        if (e.key === 'ArrowRight') cdpNextSlide();
+      });
+    }
   </script>
 </body>
 </html>
