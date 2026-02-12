@@ -15,15 +15,15 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { pageSEO, SEO } from '@/components/common/SEO';
 
-// Stratum Theme v4.0 - Trust-Gated Autopilot
+// Stratum Theme v4.0 - Trust-Gated Autopilot (Landing Page Colors)
 const theme = {
-  primary: '#D4AF37', // Stratum Gold
-  primaryLight: 'rgba(212, 175, 55, 0.15)',
-  primaryBright: '#F4D03F',
+  primary: '#00c7be', // Stratum Cyan (matching landing)
+  primaryLight: 'rgba(0, 199, 190, 0.15)',
+  primaryBright: '#14F0C6',
+  orange: '#FF6B35', // Orange Accent
   green: '#34c759', // Status Success
-  orange: '#f59e0b', // Status Warning
   purple: '#8b5cf6', // Accent Purple
-  cyan: '#14F0C6', // Accent Cyan
+  gold: '#F4D03F', // Gold Accent
   bgVoid: '#050508', // Deepest background
   bgBase: '#0a0a0f', // Deep navy black
   bgCard: 'rgba(18, 18, 26, 0.9)', // Card background
@@ -32,10 +32,10 @@ const theme = {
   textMuted: 'rgba(255, 255, 255, 0.5)',
   border: 'rgba(255, 255, 255, 0.06)',
   borderHover: 'rgba(255, 255, 255, 0.10)',
-  borderGold: 'rgba(212, 175, 55, 0.15)',
+  borderCyan: 'rgba(0, 199, 190, 0.2)',
   success: '#34c759',
-  goldGlow: 'rgba(212, 175, 55, 0.5)',
-  goldSubtle: 'rgba(212, 175, 55, 0.1)',
+  cyanGlow: 'rgba(0, 199, 190, 0.5)',
+  cyanSubtle: 'rgba(0, 199, 190, 0.1)',
 };
 
 // HUD Corner component for sci-fi styling
@@ -96,7 +96,7 @@ export default function Login() {
 
   const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'user') => {
     const credentials = {
-      superadmin: { email: 'superadmin@stratum.ai', password: 'Admin123!' },
+      superadmin: { email: 'ibrahim@new-aeon.com', password: 'Newaeon@2025' },
       admin: { email: 'demo@stratum.ai', password: 'demo1234' },
       user: { email: 'demo@stratum.ai', password: 'demo1234' },
     };
@@ -136,9 +136,9 @@ export default function Login() {
         className="fixed inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(ellipse 40% 40% at 20% 30%, ${theme.goldSubtle}, transparent),
-            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
-            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(0, 199, 190, 0.05), transparent)
+            radial-gradient(ellipse 40% 40% at 20% 30%, ${theme.cyanSubtle}, transparent),
+            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(255, 107, 53, 0.06), transparent),
+            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(0, 199, 190, 0.08), transparent)
           `,
         }}
       />
@@ -401,20 +401,20 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-2xl font-semibold text-black transition-all duration-200 disabled:opacity-50"
+                className="w-full py-3.5 rounded-2xl font-semibold text-white transition-all duration-200 disabled:opacity-50"
                 style={{
-                  background: theme.primary,
-                  boxShadow: '0 0 30px rgba(0, 199, 190, 0.2)',
+                  background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryBright})`,
+                  boxShadow: `0 0 30px ${theme.cyanGlow}`,
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading) {
                     e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 0 40px rgba(0, 199, 190, 0.3)';
+                    e.currentTarget.style.boxShadow = `0 0 40px ${theme.cyanGlow}`;
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 0 30px rgba(0, 199, 190, 0.2)';
+                  e.currentTarget.style.boxShadow = `0 0 30px ${theme.cyanGlow}`;
                 }}
               >
                 {isLoading ? (
