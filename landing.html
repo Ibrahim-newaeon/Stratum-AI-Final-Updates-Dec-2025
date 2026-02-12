@@ -40,6 +40,7 @@
       --gold: #00c7be; --gold-bright: #14F0C6; --gold-muted: #0891B2;
       --gold-glow: rgba(0, 199, 190, 0.5); --gold-subtle: rgba(0, 199, 190, 0.1);
       --cyan: #14F0C6; --cyan-glow: rgba(20, 240, 198, 0.4);
+      --cyan-subtle: rgba(20, 240, 198, 0.1); --border-cyan: rgba(20, 240, 198, 0.15);
       --status-success: #22c55e; --status-success-bg: rgba(34, 197, 94, 0.1);
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4); --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
       --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6); --shadow-gold: 0 0 40px rgba(0, 199, 190, 0.25);
@@ -59,6 +60,7 @@
       --gold: #0891B2; --gold-bright: #00c7be; --gold-muted: #996B06;
       --gold-glow: rgba(180, 134, 11, 0.3); --gold-subtle: rgba(180, 134, 11, 0.08);
       --cyan: #0D9488; --cyan-glow: rgba(13, 148, 136, 0.3);
+      --cyan-subtle: rgba(13, 148, 136, 0.08); --border-cyan: rgba(13, 148, 136, 0.15);
       --status-success: #16a34a; --status-success-bg: rgba(22, 163, 74, 0.08);
       --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08); --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
       --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12); --shadow-gold: 0 0 30px rgba(180, 134, 11, 0.15);
@@ -194,18 +196,18 @@
     /* CDP CAROUSEL SECTION */
     .cdp-section { padding: 80px 0; background: linear-gradient(to bottom, var(--bg-void), var(--bg-primary)); }
 
-    .cdp-carousel-wrapper { max-width: 1400px; margin: 0 auto; position: relative; }
-    .cdp-carousel-container { min-height: 920px; overflow: hidden; position: relative; }
+    .cdp-carousel-wrapper { max-width: 1060px; margin: 0 auto; position: relative; }
+    .cdp-carousel-container { min-height: 820px; overflow: hidden; position: relative; }
 
     .cdp-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out; }
     .cdp-slide.active { opacity: 1; visibility: visible; z-index: 1; }
 
-    .cdp-slide-content { display: grid; grid-template-columns: 56% 44%; gap: 60px; align-items: center; height: 100%; padding: 80px; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-2xl); box-shadow: 0 0 40px rgba(244, 208, 63, 0.15); }
+    .cdp-slide-content { display: grid; grid-template-columns: 56% 44%; gap: 40px; align-items: center; height: 100%; padding: 56px; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-2xl); box-shadow: 0 0 40px rgba(244, 208, 63, 0.15); }
 
     /* Text Column */
-    .cdp-text-column { padding-right: 40px; }
+    .cdp-text-column { padding-right: 16px; }
     .cdp-kicker { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cyan); margin-bottom: 20px; }
-    .cdp-headline { font-size: 60px; font-weight: 800; line-height: 1.1; color: var(--text-primary); margin-bottom: 24px; letter-spacing: -0.02em; }
+    .cdp-headline { font-size: 44px; font-weight: 800; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -0.02em; }
     .cdp-subtext { font-size: 18px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 32px; }
     .cdp-bullets { list-style: none; padding: 0; margin: 0 0 40px 0; }
     .cdp-bullets li { font-size: 16px; line-height: 2; color: var(--text-secondary); padding-left: 28px; position: relative; }
@@ -216,7 +218,7 @@
 
     /* Visual Column */
     .cdp-visual-column { display: flex; align-items: center; justify-content: center; }
-    .cdp-visual { width: 100%; max-width: 520px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-default); border-radius: var(--radius-xl); padding: 40px; }
+    .cdp-visual { width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-default); border-radius: var(--radius-xl); padding: 32px; }
 
     /* Visual: Flow (Slide 1) */
     .cdp-visual-flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
@@ -257,8 +259,8 @@
     .cdp-carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 56px; height: 56px; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; color: var(--gold); }
     .cdp-carousel-btn:hover { background: var(--gold); color: var(--bg-void); box-shadow: 0 0 20px rgba(244, 208, 63, 0.4); }
     .cdp-carousel-btn svg { width: 24px; height: 24px; }
-    .cdp-prev { left: -80px; }
-    .cdp-next { right: -80px; }
+    .cdp-prev { left: -70px; }
+    .cdp-next { right: -70px; }
 
     /* Carousel Indicators */
     .cdp-carousel-indicators { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
@@ -269,7 +271,7 @@
     /* KNOWLEDGE GRAPH SECTION */
     .kg-section { padding: 80px 0; background: linear-gradient(to bottom, var(--bg-primary), var(--bg-void)); position: relative; overflow: hidden; }
     .kg-section::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 800px; background: radial-gradient(circle, var(--gold-subtle) 0%, transparent 70%); pointer-events: none; opacity: 0.5; }
-    .kg-content { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .kg-content { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: stretch; }
     .kg-text { position: relative; z-index: 1; }
     .kg-visual { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
     .kg-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: linear-gradient(135deg, var(--gold-subtle), rgba(20, 240, 198, 0.1)); border: 1px solid var(--border-gold); border-radius: var(--radius-full); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 24px; }
@@ -338,7 +340,7 @@
     .platforms-grid { display: flex; justify-content: center; align-items: center; gap: 64px; flex-wrap: wrap; }
     .platform-logo { display: flex; flex-direction: column; align-items: center; gap: 12px; opacity: 0.5; transition: opacity var(--transition-base); }
     .platform-logo:hover { opacity: 1; }
-    .platform-logo svg { width: 48px; height: 48px; fill: var(--text-secondary); }
+    .platform-logo svg { width: 48px; height: 48px; }
     .platform-name { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* CTA */
@@ -380,24 +382,7 @@
     .modal-input { padding: 14px 18px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: var(--radius-md); color: var(--text-primary); font-size: 15px; transition: all 0.2s; }
     .modal-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0, 199, 190, 0.1); }
     .modal-submit { padding: 14px 24px; background: var(--cyan); color: var(--bg-primary); border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; }
-    .modal-submit:hover { background: var(--cyan); transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 199, 190, 0.3); }
-
-    /* ROI CALCULATOR */
-    .roi-section { padding: 80px 0; }
-    .roi-container { max-width: 1000px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-2xl); padding: 48px; position: relative; overflow: hidden; transition: all 0.3s ease; }
-    .roi-container:hover { box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4); }
-    .roi-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--cyan), #14F0C6); }
-    .roi-header { text-align: center; margin-bottom: 40px; }
-    .roi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
-    .roi-input-group { text-align: center; }
-    .roi-input-group label { display: block; color: var(--text-secondary); margin-bottom: 12px; font-size: 14px; font-weight: 500; }
-    .roi-input { width: 100%; padding: 14px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: var(--radius-lg); color: var(--text-primary); font-size: 20px; font-weight: 600; text-align: center; font-family: var(--font-mono); transition: all 0.3s ease; }
-    .roi-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(0, 199, 190, 0.2); transform: scale(1.02); }
-    .roi-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; padding-top: 24px; border-top: 1px solid var(--border-default); }
-    .roi-result { text-align: center; padding: 24px; background: var(--bg-hover); border-radius: var(--radius-lg); transition: all 0.3s ease; }
-    .roi-result:hover { transform: scale(1.05); }
-    .roi-result-value { font-family: var(--font-mono); font-size: 40px; font-weight: 700; color: var(--cyan); margin-bottom: 8px; }
-    .roi-result-label { color: var(--text-muted); font-size: 13px; }
+    .modal-submit:hover { background: #00dfd6; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 199, 190, 0.3); }
 
     /* EARLY ACCESS / COUNTDOWN */
     .launch-section { padding: 80px 0; }
@@ -414,7 +399,7 @@
     .subscribe-input { flex: 1; padding: 14px 20px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: var(--radius-md); color: var(--text-primary); font-size: 15px; }
     .subscribe-input:focus { outline: none; border-color: var(--cyan); }
     .subscribe-btn { padding: 14px 28px; background: var(--cyan); color: var(--bg-primary); border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-    .subscribe-btn:hover { background: #14F0C6; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 199, 190, 0.3); }
+    .subscribe-btn:hover { background: #00dfd6; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 199, 190, 0.3); }
     .subscribe-note { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
     .early-benefits { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
     .benefit-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -429,7 +414,7 @@
     .platforms-grid { display: flex; align-items: center; gap: 32px; animation: scroll-logos-ltr 15s linear infinite; width: max-content; }
     .platforms-grid:hover { animation-play-state: paused; }
     @keyframes scroll-logos-ltr { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
-    .platform-logo { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-default); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; padding: 16px; flex-shrink: 0; }
+    .platform-logo { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-default); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; padding: 16px; flex-shrink: 0; opacity: 1; }
     .platform-logo:hover { border-color: var(--cyan); transform: translateY(-4px) scale(1.1); box-shadow: 0 12px 24px rgba(0, 199, 190, 0.3); animation-play-state: paused; }
     .platform-logo svg, .platform-logo img { width: 48px; height: 48px; object-fit: contain; filter: brightness(1.1); }
 
@@ -497,7 +482,7 @@
     .benefit-text { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
     /* RESPONSIVE */
-    @media (max-width: 1200px) { .hero-grid { gap: 60px; } .features-grid { grid-template-columns: repeat(2, 1fr); } .cdp-slide-content { grid-template-columns: 1fr; gap: 40px; padding: 60px; } .cdp-carousel-container { min-height: auto; } .cdp-text-column { padding-right: 0; } .cdp-headline { font-size: 48px; } .cdp-prev { left: 10px; } .cdp-next { right: 10px; } .roi-wrapper { grid-template-columns: 1fr; gap: 40px; } .roi-calculator-card { max-width: 100%; } .roi-trust-content { padding-right: 0; } .roi-grid { grid-template-columns: 1fr; } .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 1200px) { .hero-grid { gap: 60px; } .features-grid { grid-template-columns: repeat(2, 1fr); } .cdp-slide-content { grid-template-columns: 1fr; gap: 32px; padding: 48px; } .cdp-carousel-container { min-height: auto; } .cdp-text-column { padding-right: 0; } .cdp-headline { font-size: 38px; } .cdp-prev { left: 10px; } .cdp-next { right: 10px; } .roi-wrapper { grid-template-columns: 1fr; gap: 40px; } .roi-calculator-card { max-width: 100%; } .roi-trust-content { padding-right: 0; } .roi-grid { grid-template-columns: 1fr; } .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 1024px) { .container { padding: 0 32px; } .nav { padding: 16px 32px; } .nav-links { display: none; } .hero-grid { grid-template-columns: 1fr; gap: 60px; } .hero-preview { order: -1; max-width: 500px; margin: 0 auto; } }
     @media (max-width: 768px) { .container { padding: 0 20px; } .nav { padding: 16px 20px; } .features-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } .hero-cta { flex-direction: column; } .hero-cta .btn { width: 100%; } .cta-container { padding: 40px 24px; } .cta-buttons { flex-direction: column; } .cta-buttons .btn { width: 100%; } .platforms-grid { gap: 16px; } .footer-content { flex-direction: column; gap: 24px; text-align: center; } .footer-links { justify-content: center; } .hud-corner { display: none; } .cdp-slide-content { padding: 40px 24px; } .cdp-headline { font-size: 36px; } .cdp-subtext { font-size: 16px; } .cdp-bullets li { font-size: 14px; } .cdp-ctas { flex-direction: column; width: 100%; } .cdp-ctas .btn-primary, .cdp-ctas .btn-secondary { width: 100%; } .cdp-carousel-btn { width: 44px; height: 44px; } .cdp-prev { left: 5px; } .cdp-next { right: 5px; } .roi-grid { grid-template-columns: 1fr; } .roi-results { grid-template-columns: 1fr; } .countdown { gap: 16px; } .countdown-value { font-size: 36px; } .subscribe-form { flex-direction: column; } .pricing-grid { grid-template-columns: 1fr; } }
   </style>
@@ -711,8 +696,8 @@
                   <li>Sync with logs + match signals</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Explore CDP</a>
-                  <a href="#" class="btn-secondary">Watch Demo</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Explore CDP</a>
+                  <a href="#demo" class="btn-secondary">Watch Demo</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -742,7 +727,7 @@
                   <li>Consent-ready + tenant-safe</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">View Profiles</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">View Profiles</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -774,7 +759,7 @@
                   <li>Always up to date</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Build a Segment</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Build a Segment</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -806,7 +791,7 @@
                   <li>Full audit + retries</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Connect Destinations</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Connect Destinations</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -839,7 +824,7 @@
                   <li>Reliable reporting</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Start Syncing</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Start Syncing</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -1435,42 +1420,6 @@
       }
     }
 
-    // Countdown Timer for Launch
-    (function initCountdown() {
-      // Set launch date to 14 days from now
-      const launchDate = new Date();
-      launchDate.setDate(launchDate.getDate() + 14);
-      launchDate.setHours(9, 0, 0, 0); // 9 AM launch
-
-      function updateCountdown() {
-        const now = new Date();
-        const diff = launchDate - now;
-
-        if (diff <= 0) {
-          document.getElementById('days').textContent = '00';
-          document.getElementById('hours').textContent = '00';
-          document.getElementById('minutes').textContent = '00';
-          document.getElementById('seconds').textContent = '00';
-          return;
-        }
-
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        document.getElementById('days').textContent = days.toString().padStart(2, '0');
-        document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-      }
-
-      if (document.getElementById('launchCountdown')) {
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-      }
-    })();
-
     // Subscribe Form Handler
     const subscribeForm = document.getElementById('subscribeForm');
     if (subscribeForm) {
@@ -1494,7 +1443,7 @@
           emailInput.value = '';
 
           setTimeout(() => {
-            submitBtn.textContent = 'Get Early Access →';
+            submitBtn.textContent = 'Start Free Trial →';
             submitBtn.style.background = '';
           }, 3000);
         }
