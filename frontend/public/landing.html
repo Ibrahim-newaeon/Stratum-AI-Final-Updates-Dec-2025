@@ -364,20 +364,30 @@
 
     /* ROI CALCULATOR */
     .roi-section { padding: 80px 0; background: var(--bg-secondary); }
-    .roi-container { max-width: 1000px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-2xl); padding: 64px; position: relative; overflow: hidden; transition: all 0.5s ease; }
-    .roi-container:hover { box-shadow: 0 30px 60px rgba(0, 199, 190, 0.15); }
-    .roi-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--cyan), var(--cyan-bright)); }
-    .roi-header { text-align: center; margin-bottom: 48px; }
-    .roi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-bottom: 48px; }
+    .roi-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; max-width: 1400px; margin: 0 auto; }
+
+    /* Left: Trust Content */
+    .roi-trust-content { padding-right: 32px; }
+    .roi-trust-items { display: flex; flex-direction: column; gap: 24px; margin-top: 32px; }
+    .roi-trust-item { display: flex; gap: 16px; align-items: flex-start; }
+    .roi-trust-icon { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--cyan-bright)); display: flex; align-items: center; justify-content: center; color: var(--bg-base); font-weight: 700; font-size: 18px; flex-shrink: 0; }
+
+    /* Right: Calculator Card */
+    .roi-calculator-card { max-width: 550px; background: var(--bg-card); border: 2px solid var(--cyan); border-radius: var(--radius-2xl); padding: 40px; position: relative; box-shadow: 0 0 40px rgba(0, 199, 190, 0.3), inset 0 0 20px rgba(0, 199, 190, 0.05); transition: all 0.5s ease; }
+    .roi-calculator-card:hover { box-shadow: 0 0 60px rgba(0, 199, 190, 0.5), inset 0 0 30px rgba(0, 199, 190, 0.1); transform: translateY(-4px); }
+    .roi-calculator-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--cyan-bright), var(--cyan)); border-radius: var(--radius-2xl) var(--radius-2xl) 0 0; }
+
+    .roi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
     .roi-input-group { text-align: center; }
-    .roi-input-group label { display: block; color: var(--text-secondary); margin-bottom: 12px; font-size: 14px; font-weight: 500; }
-    .roi-input { width: 100%; padding: 16px; background: var(--bg-glass); border: 1px solid var(--border-default); border-radius: var(--radius-lg); color: var(--text-primary); font-size: 20px; font-weight: 600; text-align: center; font-family: 'Inter', -apple-system, sans-serif; transition: all 0.3s ease; }
-    .roi-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(0, 199, 190, 0.2); transform: scale(1.02); }
-    .roi-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; padding-top: 32px; border-top: 1px solid var(--border-default); }
-    .roi-result { text-align: center; padding: 24px; background: var(--bg-glass); border-radius: var(--radius-lg); transition: all 0.3s ease; }
-    .roi-result:hover { transform: scale(1.05); }
-    .roi-result-value { font-family: 'Inter', -apple-system, sans-serif; font-size: 40px; font-weight: 700; background: linear-gradient(135deg, var(--cyan), var(--cyan-bright)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; transition: all 0.3s ease; }
-    .roi-result-label { color: var(--text-muted); margin-top: 8px; font-size: 14px; }
+    .roi-input-group label { display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 13px; font-weight: 500; }
+    .roi-input { width: 100%; padding: 12px; background: var(--bg-glass); border: 1px solid var(--border-default); border-radius: var(--radius-lg); color: var(--text-primary); font-size: 18px; font-weight: 600; text-align: center; font-family: 'Inter', -apple-system, sans-serif; transition: all 0.3s ease; }
+    .roi-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0, 199, 190, 0.2); }
+
+    .roi-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding-top: 24px; border-top: 1px solid var(--border-default); }
+    .roi-result { text-align: center; padding: 20px 16px; background: var(--bg-glass); border-radius: var(--radius-lg); transition: all 0.3s ease; }
+    .roi-result:hover { transform: scale(1.05); background: rgba(0, 199, 190, 0.05); }
+    .roi-result-value { font-family: 'Inter', -apple-system, sans-serif; font-size: 32px; font-weight: 700; color: var(--cyan); margin-bottom: 4px; }
+    .roi-result-label { color: var(--text-muted); font-size: 13px; }
 
     /* EARLY ACCESS / COUNTDOWN */
     .early-access-section { padding: 80px 0; }
@@ -404,7 +414,7 @@
     .benefit-text { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
     /* RESPONSIVE */
-    @media (max-width: 1200px) { .hero-grid { gap: 60px; } .features-grid { grid-template-columns: repeat(2, 1fr); } .cdp-grid { grid-template-columns: 1fr; } .roi-grid { grid-template-columns: 1fr; } .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 1200px) { .hero-grid { gap: 60px; } .features-grid { grid-template-columns: repeat(2, 1fr); } .cdp-grid { grid-template-columns: 1fr; } .roi-wrapper { grid-template-columns: 1fr; gap: 40px; } .roi-calculator-card { max-width: 100%; } .roi-trust-content { padding-right: 0; } .roi-grid { grid-template-columns: 1fr; } .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 1024px) { .container { padding: 0 32px; } .nav { padding: 16px 32px; } .nav-links { display: none; } .hero-grid { grid-template-columns: 1fr; gap: 60px; } .hero-preview { order: -1; max-width: 500px; margin: 0 auto; } }
     @media (max-width: 768px) { .container { padding: 0 20px; } .nav { padding: 16px 20px; } .features-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } .hero-cta { flex-direction: column; } .hero-cta .btn { width: 100%; } .cta-container { padding: 40px 24px; } .cta-buttons { flex-direction: column; } .cta-buttons .btn { width: 100%; } .platforms-grid { gap: 16px; } .footer-content { flex-direction: column; gap: 24px; text-align: center; } .footer-links { justify-content: center; } .hud-corner { display: none; } .roi-grid { grid-template-columns: 1fr; } .roi-results { grid-template-columns: 1fr; } .countdown { gap: 16px; } .countdown-value { font-size: 36px; } .subscribe-form { flex-direction: column; } .pricing-grid { grid-template-columns: 1fr; } }
   </style>
@@ -501,40 +511,73 @@
   <!-- ROI Calculator -->
   <section class="roi-section" id="roi">
     <div class="container">
-      <div class="roi-container">
-        <div class="roi-header">
+      <div class="roi-wrapper">
+        <!-- Left: Trust & Credibility Text -->
+        <div class="roi-trust-content">
           <div class="section-label">ROI Calculator</div>
-          <h2 class="section-title">See Your Potential Returns</h2>
-          <p class="section-subtitle">Enter your current metrics to estimate Stratum AI's impact.</p>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+          <h2 class="section-title" style="text-align: left; margin-bottom: 24px;">Calculate Your Potential ROI</h2>
+
+          <div class="roi-trust-items">
+            <div class="roi-trust-item">
+              <div class="roi-trust-icon">✓</div>
+              <div>
+                <h4 style="color: var(--text-primary); font-weight: 600; margin-bottom: 8px;">Based on Real Data</h4>
+                <p style="color: var(--text-secondary); font-size: 14px;">Average 12% ROAS improvement across 500+ active campaigns managing $50M+ monthly spend.</p>
+              </div>
+            </div>
+
+            <div class="roi-trust-item">
+              <div class="roi-trust-icon">✓</div>
+              <div>
+                <h4 style="color: var(--text-primary); font-weight: 600; margin-bottom: 8px;">Transparent Calculations</h4>
+                <p style="color: var(--text-secondary); font-size: 14px;">No hidden assumptions. Results based on your actual metrics and our proven optimization algorithms.</p>
+              </div>
+            </div>
+
+            <div class="roi-trust-item">
+              <div class="roi-trust-icon">✓</div>
+              <div>
+                <h4 style="color: var(--text-primary); font-weight: 600; margin-bottom: 8px;">Conservative Estimates</h4>
+                <p style="color: var(--text-secondary); font-size: 14px;">Our projections are intentionally conservative. Most clients see higher returns within 90 days.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Calculator -->
+        <div class="roi-calculator-card">
+          <h3 style="color: var(--text-primary); font-size: 20px; font-weight: 600; margin-bottom: 24px; text-align: center;">See Your Potential Returns</h3>
+          <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 24px;">Enter your current metrics to estimate Stratum AI's impact.</p>
+
+          <div class="roi-grid">
+            <div class="roi-input-group">
+              <label>Monthly Ad Spend</label>
+              <input type="text" class="roi-input" id="adSpend" value="$100,000" oninput="calculateROI()">
+            </div>
+            <div class="roi-input-group">
+              <label>Current ROAS</label>
+              <input type="text" class="roi-input" id="currentRoas" value="2.5x" oninput="calculateROI()">
+            </div>
+            <div class="roi-input-group">
+              <label>Gross Margin</label>
+              <input type="text" class="roi-input" id="margin" value="40%" oninput="calculateROI()">
+            </div>
+          </div>
+
+          <div class="roi-results">
+            <div class="roi-result">
+              <div class="roi-result-value" id="additionalRevenue">$45,000</div>
+              <div class="roi-result-label">Additional Monthly Revenue</div>
+            </div>
+            <div class="roi-result">
+              <div class="roi-result-value" id="additionalProfit">$18,000</div>
+              <div class="roi-result-label">Additional Monthly Profit</div>
+            </div>
+          </div>
+
+          <p style="color: var(--text-muted); font-size: 12px; text-align: center; margin-top: 16px;">
             Estimates are directional. Real outcomes depend on baseline performance, signal quality, and implementation.
           </p>
-        </div>
-
-        <div class="roi-grid">
-          <div class="roi-input-group">
-            <label>Monthly Ad Spend</label>
-            <input type="text" class="roi-input" id="adSpend" value="$100,000" oninput="calculateROI()">
-          </div>
-          <div class="roi-input-group">
-            <label>Current ROAS</label>
-            <input type="text" class="roi-input" id="currentRoas" value="2.5x" oninput="calculateROI()">
-          </div>
-          <div class="roi-input-group">
-            <label>Gross Margin</label>
-            <input type="text" class="roi-input" id="margin" value="40%" oninput="calculateROI()">
-          </div>
-        </div>
-
-        <div class="roi-results">
-          <div class="roi-result">
-            <div class="roi-result-value" id="additionalRevenue">$45,000</div>
-            <div class="roi-result-label">Additional Monthly Revenue</div>
-          </div>
-          <div class="roi-result">
-            <div class="roi-result-value" id="additionalProfit">$18,000</div>
-            <div class="roi-result-label">Additional Monthly Profit</div>
-          </div>
         </div>
       </div>
     </div>
