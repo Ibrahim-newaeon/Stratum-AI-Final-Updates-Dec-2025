@@ -47,7 +47,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 // =============================================================================
 // Types
@@ -184,21 +184,21 @@ export default function SuperadminDashboard() {
     try {
       const [revenueRes, tenantsRes, healthRes, churnRes, plansRes, invoicesRes, auditRes] =
         await Promise.allSettled([
-          axios.get(`${API_BASE_URL}/api/v1/superadmin/revenue`, { headers: getAuthHeaders() }),
-          axios.get(`${API_BASE_URL}/api/v1/superadmin/tenants/portfolio`, {
+          axios.get(`${API_BASE_URL}/superadmin/revenue`, { headers: getAuthHeaders() }),
+          axios.get(`${API_BASE_URL}/superadmin/tenants/portfolio`, {
             headers: getAuthHeaders(),
           }),
-          axios.get(`${API_BASE_URL}/api/v1/superadmin/system/health`, {
+          axios.get(`${API_BASE_URL}/superadmin/system/health`, {
             headers: getAuthHeaders(),
           }),
-          axios.get(`${API_BASE_URL}/api/v1/superadmin/churn/risks`, { headers: getAuthHeaders() }),
-          axios.get(`${API_BASE_URL}/api/v1/superadmin/billing/plans`, {
+          axios.get(`${API_BASE_URL}/superadmin/churn/risks`, { headers: getAuthHeaders() }),
+          axios.get(`${API_BASE_URL}/superadmin/billing/plans`, {
             headers: getAuthHeaders(),
           }),
-          axios.get(`${API_BASE_URL}/api/v1/superadmin/billing/invoices`, {
+          axios.get(`${API_BASE_URL}/superadmin/billing/invoices`, {
             headers: getAuthHeaders(),
           }),
-          axios.get(`${API_BASE_URL}/api/v1/superadmin/audit?limit=100`, {
+          axios.get(`${API_BASE_URL}/superadmin/audit?limit=100`, {
             headers: getAuthHeaders(),
           }),
         ]);

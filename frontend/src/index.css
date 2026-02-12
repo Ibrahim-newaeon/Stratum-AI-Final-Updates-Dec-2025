@@ -686,10 +686,10 @@
 
 /* A) Page & Section Entrance */
 .motion-enter {
-  animation: fadeUp var(--dur-slow) var(--ease-enter) both;
+  animation: fade-up var(--dur-slow) var(--ease-enter) both;
 }
 
-@keyframes fadeUp {
+@keyframes fade-up {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -721,10 +721,10 @@
   box-shadow:
     0 0 0 2px #000,
     0 0 0 4px rgba(0, 199, 190, 0.5);
-  animation: glowPulse var(--dur-subtle) var(--ease-enter) both;
+  animation: glow-pulse var(--dur-subtle) var(--ease-enter) both;
 }
 
-@keyframes glowPulse {
+@keyframes glow-pulse {
   0% {
     box-shadow:
       0 0 0 2px #000,
@@ -745,10 +745,10 @@
 
 /* D) 2026 KPI Delta Pop - Dynamic Layer */
 .motion-delta {
-  animation: deltaPop var(--dur-dynamic) var(--ease-enter) both;
+  animation: delta-pop var(--dur-dynamic) var(--ease-enter) both;
 }
 
-@keyframes deltaPop {
+@keyframes delta-pop {
   0% {
     transform: scale(0.95);
     opacity: 0;
@@ -781,10 +781,10 @@
 
 /* F) 2026 Insight Badge - Coral Glow */
 .motion-insight {
-  animation: emberGlow var(--dur-dynamic) var(--ease-enter) both;
+  animation: ember-glow var(--dur-dynamic) var(--ease-enter) both;
 }
 
-@keyframes emberGlow {
+@keyframes ember-glow {
   0% {
     box-shadow: 0 0 0 rgba(255, 107, 107, 0);
   }
@@ -798,10 +798,10 @@
 
 /* G) 2026 Alert Shake - Subtle Layer */
 .motion-critical {
-  animation: microShake 150ms var(--ease-standard) both;
+  animation: micro-shake 150ms var(--ease-standard) both;
 }
 
-@keyframes microShake {
+@keyframes micro-shake {
   0%,
   100% {
     transform: translateX(0);
