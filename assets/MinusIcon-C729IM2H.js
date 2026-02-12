@@ -1,0 +1,2 @@
+import{r as e}from"./vendor-react-Dz7uKsMg.js";function a({title:r,titleId:t,...o},n){return e.createElement("svg",Object.assign({xmlns:"http://www.w3.org/2000/svg",fill:"none",viewBox:"0 0 24 24",strokeWidth:1.5,stroke:"currentColor","aria-hidden":"true","data-slot":"icon",ref:n,"aria-labelledby":t},o),r?e.createElement("title",{id:t},r):null,e.createElement("path",{strokeLinecap:"round",strokeLinejoin:"round",d:"M5 12h14"}))}const i=e.forwardRef(a);export{i as F};
+//# sourceMappingURL=MinusIcon-C729IM2H.js.map
