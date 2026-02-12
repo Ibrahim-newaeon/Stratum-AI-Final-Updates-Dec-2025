@@ -40,6 +40,7 @@
       --gold: #00c7be; --gold-bright: #14F0C6; --gold-muted: #0891B2;
       --gold-glow: rgba(0, 199, 190, 0.5); --gold-subtle: rgba(0, 199, 190, 0.1);
       --cyan: #14F0C6; --cyan-glow: rgba(20, 240, 198, 0.4);
+      --cyan-subtle: rgba(20, 240, 198, 0.1); --border-cyan: rgba(20, 240, 198, 0.15);
       --status-success: #22c55e; --status-success-bg: rgba(34, 197, 94, 0.1);
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4); --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
       --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6); --shadow-gold: 0 0 40px rgba(0, 199, 190, 0.25);
@@ -59,6 +60,7 @@
       --gold: #0891B2; --gold-bright: #00c7be; --gold-muted: #996B06;
       --gold-glow: rgba(180, 134, 11, 0.3); --gold-subtle: rgba(180, 134, 11, 0.08);
       --cyan: #0D9488; --cyan-glow: rgba(13, 148, 136, 0.3);
+      --cyan-subtle: rgba(13, 148, 136, 0.08); --border-cyan: rgba(13, 148, 136, 0.15);
       --status-success: #16a34a; --status-success-bg: rgba(22, 163, 74, 0.08);
       --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08); --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
       --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12); --shadow-gold: 0 0 30px rgba(180, 134, 11, 0.15);
@@ -382,23 +384,6 @@
     .modal-submit { padding: 14px 24px; background: var(--cyan); color: var(--bg-primary); border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; }
     .modal-submit:hover { background: var(--cyan); transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 199, 190, 0.3); }
 
-    /* ROI CALCULATOR */
-    .roi-section { padding: 80px 0; }
-    .roi-container { max-width: 1000px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-2xl); padding: 48px; position: relative; overflow: hidden; transition: all 0.3s ease; }
-    .roi-container:hover { box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4); }
-    .roi-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--cyan), #14F0C6); }
-    .roi-header { text-align: center; margin-bottom: 40px; }
-    .roi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
-    .roi-input-group { text-align: center; }
-    .roi-input-group label { display: block; color: var(--text-secondary); margin-bottom: 12px; font-size: 14px; font-weight: 500; }
-    .roi-input { width: 100%; padding: 14px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: var(--radius-lg); color: var(--text-primary); font-size: 20px; font-weight: 600; text-align: center; font-family: var(--font-mono); transition: all 0.3s ease; }
-    .roi-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(0, 199, 190, 0.2); transform: scale(1.02); }
-    .roi-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; padding-top: 24px; border-top: 1px solid var(--border-default); }
-    .roi-result { text-align: center; padding: 24px; background: var(--bg-hover); border-radius: var(--radius-lg); transition: all 0.3s ease; }
-    .roi-result:hover { transform: scale(1.05); }
-    .roi-result-value { font-family: var(--font-mono); font-size: 40px; font-weight: 700; color: var(--cyan); margin-bottom: 8px; }
-    .roi-result-label { color: var(--text-muted); font-size: 13px; }
-
     /* EARLY ACCESS / COUNTDOWN */
     .launch-section { padding: 80px 0; }
     .launch-banner { max-width: 900px; margin: 0 auto; padding: 48px; background: linear-gradient(135deg, var(--bg-card), rgba(0, 199, 190, 0.03)); border: 2px solid var(--cyan); border-radius: var(--radius-2xl); text-align: center; position: relative; overflow: hidden; }
@@ -711,8 +696,8 @@
                   <li>Sync with logs + match signals</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Explore CDP</a>
-                  <a href="#" class="btn-secondary">Watch Demo</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Explore CDP</a>
+                  <a href="#demo" class="btn-secondary">Watch Demo</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -742,7 +727,7 @@
                   <li>Consent-ready + tenant-safe</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">View Profiles</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">View Profiles</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -774,7 +759,7 @@
                   <li>Always up to date</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Build a Segment</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Build a Segment</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -806,7 +791,7 @@
                   <li>Full audit + retries</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Connect Destinations</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Connect Destinations</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -839,7 +824,7 @@
                   <li>Reliable reporting</li>
                 </ul>
                 <div class="cdp-ctas">
-                  <a href="#" class="btn-primary">Start Syncing</a>
+                  <a href="javascript:void(0)" onclick="openTrialModal()" class="btn-primary">Start Syncing</a>
                 </div>
               </div>
               <div class="cdp-visual-column">
@@ -1435,42 +1420,6 @@
       }
     }
 
-    // Countdown Timer for Launch
-    (function initCountdown() {
-      // Set launch date to 14 days from now
-      const launchDate = new Date();
-      launchDate.setDate(launchDate.getDate() + 14);
-      launchDate.setHours(9, 0, 0, 0); // 9 AM launch
-
-      function updateCountdown() {
-        const now = new Date();
-        const diff = launchDate - now;
-
-        if (diff <= 0) {
-          document.getElementById('days').textContent = '00';
-          document.getElementById('hours').textContent = '00';
-          document.getElementById('minutes').textContent = '00';
-          document.getElementById('seconds').textContent = '00';
-          return;
-        }
-
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        document.getElementById('days').textContent = days.toString().padStart(2, '0');
-        document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-      }
-
-      if (document.getElementById('launchCountdown')) {
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-      }
-    })();
-
     // Subscribe Form Handler
     const subscribeForm = document.getElementById('subscribeForm');
     if (subscribeForm) {
@@ -1494,7 +1443,7 @@
           emailInput.value = '';
 
           setTimeout(() => {
-            submitBtn.textContent = 'Get Early Access →';
+            submitBtn.textContent = 'Start Free Trial →';
             submitBtn.style.background = '';
           }, 3000);
         }
