@@ -269,23 +269,23 @@
     /* KNOWLEDGE GRAPH SECTION */
     .kg-section { padding: 80px 0; background: linear-gradient(to bottom, var(--bg-primary), var(--bg-void)); position: relative; overflow: hidden; }
     .kg-section::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 800px; background: radial-gradient(circle, var(--gold-subtle) 0%, transparent 70%); pointer-events: none; opacity: 0.5; }
-    .kg-content { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .kg-content { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
     .kg-text { position: relative; z-index: 1; }
-    .kg-visual { position: relative; z-index: 1; }
+    .kg-visual { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
     .kg-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: linear-gradient(135deg, var(--gold-subtle), rgba(20, 240, 198, 0.1)); border: 1px solid var(--border-gold); border-radius: var(--radius-full); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 24px; }
     .kg-badge svg { width: 16px; height: 16px; stroke: var(--gold); fill: none; }
     .kg-title { font-size: clamp(32px, 4vw, 48px); font-weight: 700; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -0.02em; }
     .kg-title .highlight { color: var(--cyan); }
     .kg-subtitle { font-size: 17px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 40px; }
-    .kg-features { display: flex; flex-direction: column; gap: 20px; }
-    .kg-feature { display: flex; gap: 16px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); transition: all var(--transition-base); }
+    .kg-features { display: flex; flex-direction: column; gap: 24px; }
+    .kg-feature { display: flex; gap: 16px; padding: 22px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); transition: all var(--transition-base); flex: 1; }
     .kg-feature:hover { border-color: var(--border-gold); transform: translateX(8px); }
     .kg-feature-icon { width: 44px; height: 44px; background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .kg-feature-icon svg { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 1.5; }
     .kg-feature-content h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
     .kg-feature-content p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 
-    .kg-graph-container { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-xl); padding: 32px; box-shadow: var(--shadow-xl); }
+    .kg-graph-container { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-xl); padding: 32px; box-shadow: var(--shadow-xl); height: 100%; display: flex; flex-direction: column; }
     .kg-graph-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-default); }
     .kg-graph-title { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
     .kg-graph-title::before { content: ''; width: 8px; height: 8px; background: var(--status-success); border-radius: 50%; animation: statusPulse 2s ease-in-out infinite; }
@@ -295,7 +295,7 @@
     .kg-legend-dot.actor { background: #6366f1; }
     .kg-legend-dot.control { background: #14F0C6; }
     .kg-legend-dot.outcome { background: var(--gold); }
-    .kg-graph-svg { width: 100%; height: 300px; }
+    .kg-graph-svg { width: 100%; height: auto; flex: 1; min-height: 350px; }
     .kg-node { cursor: pointer; transition: all var(--transition-fast); }
     .kg-node:hover { filter: brightness(1.3); }
     .kg-node-circle { stroke-width: 2; stroke: var(--border-default); }
