@@ -70,3 +70,8 @@ backup_*/
 celerybeat-schedule
 celerybeat-schedule.db
 celerybeat.pid
+
+# Session exports
+session-*-export.*
+SESSION-INDEX.md
+convert_session.py
