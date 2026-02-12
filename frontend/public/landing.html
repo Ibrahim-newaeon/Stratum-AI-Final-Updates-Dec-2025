@@ -271,7 +271,7 @@
     /* KNOWLEDGE GRAPH SECTION */
     .kg-section { padding: 80px 0; background: linear-gradient(to bottom, var(--bg-primary), var(--bg-void)); position: relative; overflow: hidden; }
     .kg-section::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 800px; background: radial-gradient(circle, var(--gold-subtle) 0%, transparent 70%); pointer-events: none; opacity: 0.5; }
-    .kg-content { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .kg-content { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: stretch; }
     .kg-text { position: relative; z-index: 1; }
     .kg-visual { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
     .kg-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: linear-gradient(135deg, var(--gold-subtle), rgba(20, 240, 198, 0.1)); border: 1px solid var(--border-gold); border-radius: var(--radius-full); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 24px; }
@@ -340,7 +340,7 @@
     .platforms-grid { display: flex; justify-content: center; align-items: center; gap: 64px; flex-wrap: wrap; }
     .platform-logo { display: flex; flex-direction: column; align-items: center; gap: 12px; opacity: 0.5; transition: opacity var(--transition-base); }
     .platform-logo:hover { opacity: 1; }
-    .platform-logo svg { width: 48px; height: 48px; fill: var(--text-secondary); }
+    .platform-logo svg { width: 48px; height: 48px; }
     .platform-name { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* CTA */
@@ -414,7 +414,7 @@
     .platforms-grid { display: flex; align-items: center; gap: 32px; animation: scroll-logos-ltr 15s linear infinite; width: max-content; }
     .platforms-grid:hover { animation-play-state: paused; }
     @keyframes scroll-logos-ltr { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
-    .platform-logo { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-default); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; padding: 16px; flex-shrink: 0; }
+    .platform-logo { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-default); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; padding: 16px; flex-shrink: 0; opacity: 1; }
     .platform-logo:hover { border-color: var(--cyan); transform: translateY(-4px) scale(1.1); box-shadow: 0 12px 24px rgba(0, 199, 190, 0.3); animation-play-state: paused; }
     .platform-logo svg, .platform-logo img { width: 48px; height: 48px; object-fit: contain; filter: brightness(1.1); }
 
