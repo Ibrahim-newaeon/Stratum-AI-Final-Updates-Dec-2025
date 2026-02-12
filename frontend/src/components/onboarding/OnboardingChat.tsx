@@ -432,12 +432,15 @@ export function OnboardingChatButton({
     <button
       onClick={onClick}
       className={cn(
-        'fixed bottom-4 right-4 w-14 h-14 rounded-full bg-[#00c7be] hover:bg-[#f0c95c] text-[#0b1215] shadow-lg hover:shadow-xl transition-all z-40 flex items-center justify-center',
+        'fixed bottom-4 right-4 w-14 h-14 rounded-full text-white shadow-lg hover:shadow-xl transition-all z-40 flex items-center justify-center',
         pulse && 'animate-pulse'
       )}
-      style={{ boxShadow: '0 0 30px rgba(0, 199, 190, 0.4)' }}
+      style={{
+        background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
+        boxShadow: '0 0 30px rgba(139, 92, 246, 0.4)'
+      }}
     >
-      <ChatBubbleLeftRightIcon className="w-6 h-6" />
+      <SparklesIcon className="w-6 h-6" />
     </button>
   );
 }
