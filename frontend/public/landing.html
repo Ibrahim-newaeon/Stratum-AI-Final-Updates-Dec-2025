@@ -36,15 +36,15 @@
       --text-primary: #ffffff; --text-secondary: #cccccc; --text-tertiary: #999999;
       --text-muted: #888888; --text-disabled: #555555; --text-inverse: #0a0a0f;
       --border-default: rgba(255, 255, 255, 0.06); --border-hover: rgba(255, 255, 255, 0.10);
-      --border-gold: rgba(212, 175, 55, 0.15);
-      --gold: #D4AF37; --gold-bright: #F4D03F; --gold-muted: #B8860B;
-      --gold-glow: rgba(212, 175, 55, 0.5); --gold-subtle: rgba(212, 175, 55, 0.1);
+      --border-gold: rgba(0, 199, 190, 0.15);
+      --gold: #00c7be; --gold-bright: #14F0C6; --gold-muted: #0891B2;
+      --gold-glow: rgba(0, 199, 190, 0.5); --gold-subtle: rgba(0, 199, 190, 0.1);
       --cyan: #14F0C6; --cyan-glow: rgba(20, 240, 198, 0.4);
       --status-success: #22c55e; --status-success-bg: rgba(34, 197, 94, 0.1);
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4); --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-      --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6); --shadow-gold: 0 0 40px rgba(212, 175, 55, 0.25);
+      --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6); --shadow-gold: 0 0 40px rgba(0, 199, 190, 0.25);
       --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      --neural-node: rgba(212, 175, 55, 0.6); --neural-line: rgba(212, 175, 55, 0.12);
+      --neural-node: rgba(0, 199, 190, 0.6); --neural-line: rgba(0, 199, 190, 0.12);
       --glass-bg: rgba(20, 20, 30, 0.75); --canvas-opacity: 0.7;
     }
 
@@ -56,7 +56,7 @@
       --text-muted: #94a3b8; --text-disabled: #cbd5e1; --text-inverse: #ffffff;
       --border-default: rgba(0, 0, 0, 0.08); --border-hover: rgba(0, 0, 0, 0.12);
       --border-gold: rgba(180, 134, 11, 0.2);
-      --gold: #B8860B; --gold-bright: #D4AF37; --gold-muted: #996B06;
+      --gold: #0891B2; --gold-bright: #00c7be; --gold-muted: #996B06;
       --gold-glow: rgba(180, 134, 11, 0.3); --gold-subtle: rgba(180, 134, 11, 0.08);
       --cyan: #0D9488; --cyan-glow: rgba(13, 148, 136, 0.3);
       --status-success: #16a34a; --status-success-bg: rgba(22, 163, 74, 0.08);
@@ -249,7 +249,7 @@
     .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 60px; max-width: 1200px; margin-left: auto; margin-right: auto; }
     .pricing-card { padding: 40px 32px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-xl); position: relative; transition: all var(--transition-slow); display: flex; flex-direction: column; }
     .pricing-card:hover { transform: translateY(-8px); border-color: var(--border-gold); box-shadow: var(--shadow-lg); }
-    .pricing-card.recommended { border: 2px solid var(--gold); background: linear-gradient(135deg, var(--bg-card), rgba(212, 175, 55, 0.05)); box-shadow: var(--shadow-gold); }
+    .pricing-card.recommended { border: 2px solid var(--gold); background: linear-gradient(135deg, var(--bg-card), rgba(0, 199, 190, 0.05)); box-shadow: var(--shadow-gold); }
     .pricing-card.recommended::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-bright), var(--gold)); }
     .pricing-badge { position: absolute; top: -12px; right: 32px; padding: 6px 16px; background: var(--gold); color: var(--text-inverse); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: var(--radius-full); box-shadow: var(--shadow-gold); }
     .pricing-tier { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 12px; }
@@ -511,8 +511,8 @@
                   <stop offset="100%" style="stop-color:#14F0C6"/>
                 </linearGradient>
                 <linearGradient id="kg-grad-outcome" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:#D4AF37"/>
-                  <stop offset="100%" style="stop-color:#F4D03F"/>
+                  <stop offset="0%" style="stop-color:#00c7be"/>
+                  <stop offset="100%" style="stop-color:#14F0C6"/>
                 </linearGradient>
               </defs>
               <!-- Edges -->
@@ -771,13 +771,13 @@
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.nodes = [];
-        this.nodeCount = 120;
+        this.nodeCount = 150;
         this.maxDistance = 180;
         this.init();
       }
       getColors() {
         const style = getComputedStyle(document.documentElement);
-        return { node: style.getPropertyValue('--neural-node').trim() || 'rgba(212, 175, 55, 0.6)', line: style.getPropertyValue('--neural-line').trim() || 'rgba(212, 175, 55, 0.12)' };
+        return { node: style.getPropertyValue('--neural-node').trim() || 'rgba(0, 199, 190, 0.6)', line: style.getPropertyValue('--neural-line').trim() || 'rgba(0, 199, 190, 0.12)' };
       }
       init() {
         this.resize();
