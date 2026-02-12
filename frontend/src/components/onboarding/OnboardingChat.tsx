@@ -222,31 +222,31 @@ export default function OnboardingChat({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="fixed bottom-4 right-4 w-[400px] h-[600px] bg-[#0a0a0f] border border-[#D4AF37]/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50"
-        style={{ boxShadow: '0 0 40px rgba(212, 175, 55, 0.25)' }}
+        className="fixed bottom-4 right-4 w-[400px] h-[600px] bg-[#0b1215] border border-[#00c7be]/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50"
+        style={{ boxShadow: '0 0 40px rgba(0, 199, 190, 0.15)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/10 to-[#D4AF37]/5">
+        <div className="flex items-center justify-between p-4 border-b border-[#00c7be]/20 bg-gradient-to-r from-[#00c7be]/10 to-[#00c7be]/5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg" style={{ boxShadow: '0 0 20px rgba(212, 175, 55, 0.5)' }}>
-              <SparklesIcon className="w-5 h-5 text-[#0a0a0f]" />
+            <div className="w-10 h-10 rounded-full bg-[#00c7be] flex items-center justify-center shadow-lg" style={{ boxShadow: '0 0 20px rgba(0, 199, 190, 0.4)' }}>
+              <SparklesIcon className="w-5 h-5 text-[#0b1215]" />
             </div>
             <div>
               <h3 className="font-semibold text-white">Stratum AI Assistant</h3>
-              <p className="text-xs text-[#D4AF37]">Trust-Gated Onboarding</p>
+              <p className="text-xs text-[#00c7be]">Trust-Gated Onboarding</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={resetConversation}
-              className="p-2 rounded-lg hover:bg-[#D4AF37]/10 text-gray-400 hover:text-[#D4AF37] transition-colors"
+              className="p-2 rounded-lg hover:bg-[#00c7be]/10 text-gray-400 hover:text-[#00c7be] transition-colors"
               title="Start Over"
             >
               <ArrowPathIcon className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-[#D4AF37]/10 text-gray-400 hover:text-white transition-colors"
+              className="p-2 rounded-lg hover:bg-[#00c7be]/10 text-gray-400 hover:text-white transition-colors"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -256,7 +256,7 @@ export default function OnboardingChat({
         {/* Progress Bar */}
         <div className="h-1 bg-[rgba(255,_255,_255,_0.05)]">
           <motion.div
-            className="h-full bg-gradient-to-r from-[#D4AF37] to-[#F4D03F]"
+            className="h-full bg-gradient-to-r from-[#00c7be] to-[#F4D03F]"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5 }}
@@ -276,8 +276,8 @@ export default function OnboardingChat({
                 className={cn(
                   'max-w-[85%] rounded-2xl px-4 py-3',
                   message.role === 'user'
-                    ? 'bg-[#D4AF37] text-[#0a0a0f] font-medium'
-                    : 'bg-[#12121a] border border-[#D4AF37]/10 text-gray-200'
+                    ? 'bg-[#00c7be] text-[#0b1215] font-medium'
+                    : 'bg-[rgba(255, 255, 255, 0.05)] border border-[#00c7be]/10 text-gray-200'
                 )}
               >
                 {/* Message content with markdown-like formatting */}
@@ -299,13 +299,13 @@ export default function OnboardingChat({
                 {message.role === 'assistant' &&
                   message.quickReplies &&
                   message.quickReplies.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[#D4AF37]/10">
+                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[#00c7be]/10">
                       {message.quickReplies.map((reply, index) => (
                         <button
                           key={index}
                           onClick={() => handleQuickReply(reply)}
                           disabled={isLoading}
-                          className="px-3 py-1.5 text-xs font-medium bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/20 rounded-full text-[#D4AF37] hover:text-[#f0c95c] transition-colors disabled:opacity-50"
+                          className="px-3 py-1.5 text-xs font-medium bg-[#00c7be]/10 hover:bg-[#00c7be]/20 border border-[#00c7be]/20 rounded-full text-[#00c7be] hover:text-[#f0c95c] transition-colors disabled:opacity-50"
                         >
                           {reply}
                         </button>
@@ -317,7 +317,7 @@ export default function OnboardingChat({
                 {message.requiresAction && message.actionType === 'oauth_redirect' && (
                   <button
                     onClick={() => handleOAuthRedirect(message.actionData?.platform as string)}
-                    className="mt-3 w-full py-2 px-4 bg-[#D4AF37] hover:bg-[#f0c95c] text-[#0a0a0f] text-sm font-semibold rounded-lg transition-all hover:shadow-lg"
+                    className="mt-3 w-full py-2 px-4 bg-[#00c7be] hover:bg-[#f0c95c] text-[#0b1215] text-sm font-semibold rounded-lg transition-all hover:shadow-lg"
                     style={{ boxShadow: '0 0 20px rgba(0, 199, 190, 0.3)' }}
                   >
                     Connect {String(message.actionData?.platform)}
@@ -334,18 +334,18 @@ export default function OnboardingChat({
               animate={{ opacity: 1 }}
               className="flex justify-start"
             >
-              <div className="bg-[rgba(255,_255,_255,_0.05)] border border-[#D4AF37]/10 rounded-2xl px-4 py-3">
+              <div className="bg-[rgba(255,_255,_255,_0.05)] border border-[#00c7be]/10 rounded-2xl px-4 py-3">
                 <div className="flex gap-1">
                   <span
-                    className="w-2 h-2 bg-[#D4AF37] rounded-full animate-bounce"
+                    className="w-2 h-2 bg-[#00c7be] rounded-full animate-bounce"
                     style={{ animationDelay: '0ms' }}
                   />
                   <span
-                    className="w-2 h-2 bg-[#D4AF37] rounded-full animate-bounce"
+                    className="w-2 h-2 bg-[#00c7be] rounded-full animate-bounce"
                     style={{ animationDelay: '150ms' }}
                   />
                   <span
-                    className="w-2 h-2 bg-[#D4AF37] rounded-full animate-bounce"
+                    className="w-2 h-2 bg-[#00c7be] rounded-full animate-bounce"
                     style={{ animationDelay: '300ms' }}
                   />
                 </div>
@@ -372,18 +372,18 @@ export default function OnboardingChat({
 
         {/* Progress Indicator */}
         {progress > 0 && progress < 100 && (
-          <div className="px-4 py-2 border-t border-[#D4AF37]/10 bg-[rgba(255,_255,_255,_0.025)]">
+          <div className="px-4 py-2 border-t border-[#00c7be]/10 bg-[rgba(255,_255,_255,_0.025)]">
             <div className="flex items-center justify-between text-xs text-gray-400">
               <span>Setup Progress</span>
-              <span className="text-[#D4AF37] font-semibold">{progress}%</span>
+              <span className="text-[#00c7be] font-semibold">{progress}%</span>
             </div>
           </div>
         )}
 
         {/* Completed State */}
         {progress === 100 && (
-          <div className="px-4 py-3 border-t border-[#D4AF37]/20 bg-[#D4AF37]/10">
-            <div className="flex items-center gap-2 text-[#D4AF37] text-sm font-medium">
+          <div className="px-4 py-3 border-t border-[#00c7be]/20 bg-[#00c7be]/10">
+            <div className="flex items-center gap-2 text-[#00c7be] text-sm font-medium">
               <CheckCircleIcon className="w-5 h-5" />
               <span>Onboarding Complete!</span>
             </div>
@@ -391,7 +391,7 @@ export default function OnboardingChat({
         )}
 
         {/* Input */}
-        <div className="p-4 border-t border-[#D4AF37]/20 bg-[#0a0a0f]">
+        <div className="p-4 border-t border-[#00c7be]/20 bg-[#0b1215]">
           <div className="flex items-center gap-2">
             <input
               ref={inputRef}
@@ -401,12 +401,12 @@ export default function OnboardingChat({
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
               disabled={isLoading || progress === 100}
-              className="flex-1 bg-[rgba(255,_255,_255,_0.05)] border border-[#D4AF37]/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#D4AF37]/50 disabled:opacity-50 transition-colors"
+              className="flex-1 bg-[rgba(255,_255,_255,_0.05)] border border-[#00c7be]/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#00c7be]/50 disabled:opacity-50 transition-colors"
             />
             <button
               onClick={() => sendMessage(inputValue)}
               disabled={!inputValue.trim() || isLoading || progress === 100}
-              className="p-3 bg-[#D4AF37] hover:bg-[#f0c95c] rounded-xl text-[#0a0a0f] transition-all disabled:opacity-50 disabled:hover:bg-[#D4AF37]"
+              className="p-3 bg-[#00c7be] hover:bg-[#f0c95c] rounded-xl text-[#0b1215] transition-all disabled:opacity-50 disabled:hover:bg-[#00c7be]"
               style={{ boxShadow: '0 0 15px rgba(0, 199, 190, 0.3)' }}
             >
               <PaperAirplaneIcon className="w-5 h-5" />
@@ -432,7 +432,7 @@ export function OnboardingChatButton({
     <button
       onClick={onClick}
       className={cn(
-        'fixed bottom-4 right-4 w-14 h-14 rounded-full bg-[#D4AF37] hover:bg-[#f0c95c] text-[#0a0a0f] shadow-lg hover:shadow-xl transition-all z-40 flex items-center justify-center',
+        'fixed bottom-4 right-4 w-14 h-14 rounded-full bg-[#00c7be] hover:bg-[#f0c95c] text-[#0b1215] shadow-lg hover:shadow-xl transition-all z-40 flex items-center justify-center',
         pulse && 'animate-pulse'
       )}
       style={{ boxShadow: '0 0 30px rgba(0, 199, 190, 0.4)' }}
