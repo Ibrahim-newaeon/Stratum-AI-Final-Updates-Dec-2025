@@ -5,6 +5,10 @@
 ### Codebase Status: READY FOR DEPLOYMENT
 All frontend polishing is complete. The codebase is production-ready.
 
+### Domain: `stratumai.app` (owned)
+- `stratumai.app` → Frontend (React app)
+- `api.stratumai.app` → Backend (FastAPI)
+
 ### Recent Updates (Feb 2026)
 - Landing page CSS bugs, dead JS, and broken links fixed
 - CDP section width tightened
@@ -20,144 +24,110 @@ All frontend polishing is complete. The codebase is production-ready.
 ### Repository
 - **GitHub**: https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025
 - **Main Branch**: `main` (all latest code)
-- **GitHub Pages Branch**: `gh-pages` (OUTDATED - needs re-sync, see Action Items)
+- **GitHub Pages Branch**: `gh-pages` (synced Feb 12, 2026)
 
 ---
 
-## IMMEDIATE ACTION ITEMS
+## COMPLETED
 
-### 1. Re-sync GitHub Pages Landing Page
-The `gh-pages` branch is behind `main` and missing all recent fixes (buttons, logos, KG alignment).
-
-```bash
-# Switch to gh-pages branch
-git checkout gh-pages
-
-# Copy latest landing.html as index.html
-git checkout main -- frontend/public/landing.html
-cp frontend/public/landing.html index.html
-
-# Commit and push
-git add index.html
-git commit -m "sync: update landing page with latest fixes"
-git push origin gh-pages
-
-# Switch back to main
-git checkout main
-```
-
-### 2. Enable GitHub Pages (if not already done)
-- Go to: https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025/settings/pages
-- Source: Deploy from a branch
-- Branch: `gh-pages` / `/ (root)`
-- Save
+### GitHub Pages (Landing Page)
+- **Status**: LIVE
+- **URL**: https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/
+- **Branch**: `gh-pages` (synced with latest main)
+- **Cost**: FREE
 
 ---
 
-## Deployment Options
+## Railway Full Stack Deployment (FASTEST)
 
-### Option 1: Railway (Full Stack) - RECOMMENDED
-
-**Best for:** Complete production deployment with all services.
-
-**What gets deployed:**
-- Frontend (React + Vite, served via Nginx)
-- Backend (FastAPI + Python 3.14)
-- PostgreSQL 16 Database
-- Redis 7 Cache/Broker
-- Celery Worker + Beat Scheduler
-
-**Steps:**
+### Step 1: Create Project on Railway (2 min)
 1. Go to https://railway.app and sign in with GitHub
-2. New Project > Deploy from GitHub Repo
+2. Click **New Project** > **Deploy from GitHub Repo**
 3. Select: `Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025`
-4. Railway detects `docker-compose.yml` - add services:
-   - **PostgreSQL** - Add from Railway marketplace
-   - **Redis** - Add from Railway marketplace
-   - **API** - From `backend/` directory
-   - **Frontend** - From `frontend/` directory
-5. Set environment variables (see Environment Variables section below)
-6. Deploy all services
 
-**Post-Deploy:**
-```bash
-# Run database migrations
-railway run --service api alembic upgrade head
+### Step 2: Add Database & Cache (2 min)
+1. Click **+ New** > **Database** > **PostgreSQL** (add to project)
+2. Click **+ New** > **Database** > **Redis** (add to project)
+3. Railway auto-provisions both and provides connection URLs
 
-# Create superadmin user
-railway run --service api python scripts/seed_superadmin.py
-```
+### Step 3: Configure Backend Service (3 min)
+1. Add a service from the repo, set **Root Directory**: `backend`
+2. Railway will use `backend/Dockerfile` automatically
+3. Add these environment variables:
 
-**Cost:** $5-20/month (usage-based)
-**Time:** 10-15 minutes
-
----
-
-### Option 2: Vercel (Frontend) + Render (Backend)
-
-**Best for:** Free-tier frontend hosting with separated backend.
-
-**Frontend on Vercel:**
-```bash
-cd frontend
-npx vercel
-```
-- Project name: `stratum-ai`
-- Framework: Vite
-- Build command: `npm run build`
-- Output directory: `dist`
-- Environment variable: `VITE_API_URL=https://stratum-api.onrender.com/api/v1`
-- Deploy: `npx vercel --prod`
-
-**Backend on Render:**
-1. Go to https://render.com > New > Web Service
-2. Connect GitHub repo
-3. Settings:
-   - Root Directory: `backend`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Add PostgreSQL (Render Starter: $7/month)
-5. Add Redis (Render Starter: $0-7/month)
-6. Set environment variables (see below)
-
-**Cost:** Vercel FREE + Render $14-21/month
-**Time:** 15-20 minutes
-
----
-
-### Option 3: GitHub Pages (Landing Page Only) - DONE
-
-**Status:** Deployed (needs re-sync with latest fixes)
-**URL:** https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/
-**Branch:** `gh-pages`
-**What's deployed:** Static landing page only (no React app, no backend)
-**Cost:** FREE
-
----
-
-## Environment Variables
-
-### Required for Production
 ```env
-# Application
+# App Settings
 APP_ENV=production
+APP_NAME=stratum-ai
+APP_VERSION=1.0.0
 DEBUG=false
-SECRET_KEY=<openssl rand -hex 32>
-JWT_SECRET_KEY=<openssl rand -hex 32>
-PII_ENCRYPTION_KEY=<openssl rand -base64 32>
-CORS_ORIGINS=https://your-frontend-domain.com
 
-# Database (provided by Railway/Render)
-DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/stratum_ai
-DATABASE_URL_SYNC=postgresql://user:pass@host:5432/stratum_ai
+# Security Keys (from your stratum-ai.env file)
+SECRET_KEY=<copy from stratum-ai.env>
+JWT_SECRET_KEY=<copy from stratum-ai.env>
+PII_ENCRYPTION_KEY=<copy from stratum-ai.env>
 
-# Redis (provided by Railway/Render)
-REDIS_URL=redis://host:6379/0
-CELERY_BROKER_URL=redis://host:6379/1
+# Database (use Railway reference variables)
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+DATABASE_URL_SYNC=${{Postgres.DATABASE_URL}}
+POSTGRES_USER=${{Postgres.PGUSER}}
+POSTGRES_PASSWORD=${{Postgres.PGPASSWORD}}
+POSTGRES_DB=${{Postgres.PGDATABASE}}
 
-# ML / Mock Data (start with mock, switch to real later)
+# Redis (use Railway reference variables)
+REDIS_URL=${{Redis.REDIS_URL}}
+CELERY_BROKER_URL=${{Redis.REDIS_URL}}
+CELERY_RESULT_BACKEND=${{Redis.REDIS_URL}}
+
+# CORS & Frontend
+CORS_ORIGINS=https://stratumai.app
+
+# Ad Platforms - Meta
+USE_MOCK_AD_DATA=false
+META_APP_ID=<copy from stratum-ai.env>
+META_APP_SECRET=<copy from stratum-ai.env>
+META_ACCESS_TOKEN=<copy from stratum-ai.env>
+META_AD_ACCOUNT_IDS=<copy from stratum-ai.env>
+META_CAPI_ACCESS_TOKEN=<copy from stratum-ai.env>
+META_PIXEL_ID=<copy from stratum-ai.env>
+
+# Ad Platforms - Google
+GOOGLE_ADS_DEVELOPER_TOKEN=<copy from stratum-ai.env>
+GOOGLE_ADS_CLIENT_ID=<copy from stratum-ai.env>
+GOOGLE_ADS_CLIENT_SECRET=<copy from stratum-ai.env>
+GOOGLE_ADS_REFRESH_TOKEN=<copy from stratum-ai.env>
+GOOGLE_ADS_ACCESS_TOKEN=<copy from stratum-ai.env>
+GOOGLE_ADS_CUSTOMER_ID=<copy from stratum-ai.env>
+GOOGLE_ADS_MCC_ID=<copy from stratum-ai.env>
+
+# Ad Platforms - TikTok
+TIKTOK_APP_ID=<copy from stratum-ai.env>
+TIKTOK_ACCESS_TOKEN=<copy from stratum-ai.env>
+TIKTOK_AD_ACCOUNT_ID=<copy from stratum-ai.env>
+TIKTOK_ADVERTISER_ID=<copy from stratum-ai.env>
+TIKTOK_PIXEL_ID=<copy from stratum-ai.env>
+TIKTOK_CAPI_TOKEN=<copy from stratum-ai.env>
+
+# Ad Platforms - Snapchat
+SNAPCHAT_APP_ID=<copy from stratum-ai.env>
+SNAPCHAT_SECRET=<copy from stratum-ai.env>
+SNAPCHAT_CAPI_TOKEN=<copy from stratum-ai.env>
+SNAPCHAT_AD_ACCOUNT_ID=<copy from stratum-ai.env>
+SNAPCHAT_PIXEL_ID=<copy from stratum-ai.env>
+
+# Google Analytics / GTM
+MIDAS_GTM_SERVER_CONTAINER=<copy from stratum-ai.env>
+MIDAS_GTM_WEB_CONTAINER=<copy from stratum-ai.env>
+MIDAS_GA4_MEASUREMENT_ID=<copy from stratum-ai.env>
+MIDAS_GA4_TAG_ID=<copy from stratum-ai.env>
+MIDAS_GOOGLE_ADS_ID=<copy from stratum-ai.env>
+
+# Subscription & Gateway
+SUBSCRIPTION_TIER=starter
+GATEWAY_API_KEY=<copy from stratum-ai.env>
+
+# ML
 ML_PROVIDER=local
-USE_MOCK_AD_DATA=true
 MARKET_INTEL_PROVIDER=mock
 
 # Logging
@@ -165,108 +135,131 @@ LOG_LEVEL=INFO
 LOG_FORMAT=json
 ```
 
-### Optional Integrations (add when ready)
+**Note:** Railway reference variables like `${{Postgres.DATABASE_URL}}` auto-fill from the PostgreSQL service you added. No need to hardcode DB credentials.
+
+### Step 4: Configure Frontend Service (2 min)
+1. Add another service from the same repo, set **Root Directory**: `frontend`
+2. Railway will use `frontend/Dockerfile` automatically
+3. Add this environment variable:
+
 ```env
-# Stripe Payments
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Email (SendGrid)
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_USER=apikey
-SMTP_PASSWORD=<sendgrid-api-key>
-SMTP_FROM_EMAIL=noreply@stratum.ai
-
-# Ad Platform OAuth (for production audience sync)
-META_APP_ID=<your-app-id>
-META_APP_SECRET=<your-app-secret>
-GOOGLE_CLIENT_ID=<your-client-id>
-GOOGLE_CLIENT_SECRET=<your-client-secret>
-TIKTOK_APP_ID=<your-app-id>
-TIKTOK_APP_SECRET=<your-app-secret>
-
-# Error Tracking
-SENTRY_DSN=<your-sentry-dsn>
-
-# Slack Alerts
-SLACK_WEBHOOK_URL=<your-webhook-url>
-SLACK_CHANNEL=#stratum-alerts
+VITE_API_BASE_URL=https://api.stratumai.app/api/v1
 ```
 
-### Frontend Environment Variable
-```env
-# Set this on Vercel or in frontend/.env.production
-VITE_API_URL=https://your-api-domain.com/api/v1
+### Step 5: Add Custom Domain (3 min)
+1. In Railway, click on the **Frontend** service > **Settings** > **Networking** > **Custom Domain**
+   - Add: `stratumai.app`
+   - Railway gives you a CNAME target (e.g., `xxx.up.railway.app`)
+
+2. Click on the **Backend** service > **Settings** > **Networking** > **Custom Domain**
+   - Add: `api.stratumai.app`
+   - Railway gives you a CNAME target
+
+3. Go to your domain registrar (where you bought stratumai.app) and add DNS records:
+
+```
+Type    Name    Value                           TTL
+CNAME   @       <railway-frontend-target>       300
+CNAME   api     <railway-backend-target>        300
+```
+
+If your registrar doesn't support CNAME on root (`@`), use:
+```
+Type    Name    Value                           TTL
+A       @       <railway-provided-IP>           300
+CNAME   api     <railway-backend-target>        300
+```
+
+Railway provides SSL/HTTPS automatically once DNS propagates.
+
+### Step 6: Run Database Migrations (2 min)
+Open the **Backend** service terminal in Railway dashboard:
+
+```bash
+alembic upgrade head
+python scripts/seed_superadmin.py
+```
+
+### Step 7: Verify (2 min)
+```
+https://api.stratumai.app/health        → Should return OK
+https://stratumai.app                    → Should load the React app
+https://stratumai.app/login              → Should show login page
 ```
 
 ---
 
-## Docker Architecture
+## Total Time: ~15 minutes
+
+| Step | Action | Time |
+|------|--------|------|
+| 1 | Create Railway project | 2 min |
+| 2 | Add PostgreSQL + Redis | 2 min |
+| 3 | Configure backend + env vars | 3 min |
+| 4 | Configure frontend | 2 min |
+| 5 | Custom domain + DNS | 3 min |
+| 6 | Run migrations | 2 min |
+| 7 | Verify everything works | 1 min |
+| **Total** | | **~15 min** |
+
+**Cost:** $5-20/month (Railway usage-based pricing)
+
+---
+
+## Environment File Reference
+
+All production values are stored in:
+```
+C:\Users\Vip\OneDrive\Desktop\stratum-ai.env
+```
+This file contains all real API keys and credentials. Copy values from there into Railway's environment variable settings. **Never commit this file to git.**
+
+---
+
+## Docker Architecture on Railway
 
 ```
-                    Load Balancer / Nginx
-                         |
-              +----------+----------+
-              |                     |
-        Frontend:80          API:8000
-        (Nginx+React)       (FastAPI)
-                                |
-              +---------+-------+---------+
-              |         |                 |
-         PostgreSQL   Redis      Celery Worker
-           :5432      :6379      + Beat Scheduler
+        stratumai.app              api.stratumai.app
+             |                            |
+      +------+------+             +------+------+
+      |  Frontend   |             |   Backend   |
+      | (Nginx+React|             |  (FastAPI)  |
+      |  Port 80)   |             |  Port 8000) |
+      +-------------+             +------+------+
+                                         |
+                          +--------------++--------------+
+                          |               |              |
+                   +------+------+ +------+------+ +-----+-------+
+                   | PostgreSQL  | |    Redis    | |   Celery    |
+                   |   (Railway) | |  (Railway)  | |   Worker    |
+                   +-------------+ +-------------+ +-------------+
 ```
-
-**Docker files available:**
-- `docker-compose.yml` - Development (all services)
-- `docker-compose.prod.yml` - Production (resource limits, replicas)
-- `docker-compose.dev.yml` - Dev overrides
-- `docker-compose.monitoring.yml` - Prometheus + Grafana
-- `backend/Dockerfile` - Python 3.14, non-root user, healthcheck
-- `frontend/Dockerfile` - Multi-stage build (dev/build/production), ~25MB final image
 
 ---
 
 ## Post-Deployment Checklist
 
-### Verify Services
-- [ ] Frontend loads at the public URL
+### Services
+- [ ] `https://api.stratumai.app/health` returns OK
+- [ ] `https://stratumai.app` loads React app
 - [ ] Landing page (iframe) displays correctly
-- [ ] API health check passes: `GET /health`
 - [ ] Login/signup works
 - [ ] Dashboard loads after login
 
-### Verify Features
+### Features
 - [ ] CDP profiles, segments, events pages load
 - [ ] Knowledge Graph visualization renders
 - [ ] Audience Sync shows platform connections
 - [ ] Trust Engine dashboard shows signal health
 - [ ] Campaign management works
+- [ ] Ad platform data pulls from Meta, Google, TikTok, Snapchat
 
 ### Security
-- [ ] HTTPS/SSL configured
-- [ ] CORS restricted to frontend domain only
+- [ ] HTTPS/SSL active (Railway auto-provisions)
+- [ ] CORS restricted to `https://stratumai.app` only
 - [ ] No credentials in version control
 - [ ] Rate limiting active on auth endpoints
 - [ ] PII encryption key set
-
----
-
-## Recommended Strategy
-
-| Goal | Option | Cost | Time |
-|------|--------|------|------|
-| Quick demo / portfolio | GitHub Pages (landing) | FREE | Done |
-| Full app demo | Railway (all-in-one) | $5-20/mo | 15 min |
-| Production split | Vercel + Render | $14-21/mo | 20 min |
-| Enterprise | Docker + AWS/GCP | $50+/mo | 1-2 hrs |
-
-**Recommended path:**
-1. Re-sync GitHub Pages landing (5 min)
-2. Deploy full stack on Railway for live demo (15 min)
-3. Migrate to Vercel + Render when ready for custom domain
 
 ---
 
@@ -274,12 +267,12 @@ VITE_API_URL=https://your-api-domain.com/api/v1
 
 | Environment | URL | Status |
 |-------------|-----|--------|
-| Landing (GitHub Pages) | https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/ | Deployed (needs re-sync) |
-| Full Stack (Railway) | TBD | Not yet deployed |
-| Frontend (Vercel) | TBD | Not yet deployed |
-| Backend (Render) | TBD | Not yet deployed |
+| Landing (GitHub Pages) | https://ibrahim-newaeon.github.io/Stratum-AI-Final-Updates-Dec-2025/ | LIVE |
+| Frontend (Production) | https://stratumai.app | Pending Railway deploy |
+| Backend API (Production) | https://api.stratumai.app | Pending Railway deploy |
+| API Health Check | https://api.stratumai.app/health | Pending Railway deploy |
 
 ---
 
 **Last Updated:** 2026-02-12
-**Status:** Landing page deployed (outdated), full stack pending deployment
+**Status:** Landing page LIVE, full stack ready to deploy on Railway
