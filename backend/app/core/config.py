@@ -313,6 +313,40 @@ class Settings(BaseSettings):
     aws_region: str = Field(default="us-east-1", description="AWS region")
     aws_s3_bucket: Optional[str] = Field(default=None, description="S3 bucket name for file storage")
 
+    @model_validator(mode="after")
+    def normalize_database_urls(self) -> "Settings":
+        """
+        Ensure DATABASE_URL uses asyncpg driver and DATABASE_URL_SYNC uses psycopg2.
+        Railway provides postgresql:// which defaults to psycopg2 - we need asyncpg for async.
+        """
+        # Fix async URL: must use postgresql+asyncpg://
+        if self.database_url.startswith("postgresql://"):
+            self.database_url = self.database_url.replace(
+                "postgresql://", "postgresql+asyncpg://", 1
+            )
+        elif self.database_url.startswith("postgres://"):
+            self.database_url = self.database_url.replace(
+                "postgres://", "postgresql+asyncpg://", 1
+            )
+
+        # Fix sync URL: must use postgresql:// (psycopg2)
+        if self.database_url_sync.startswith("postgresql+asyncpg://"):
+            self.database_url_sync = self.database_url_sync.replace(
+                "postgresql+asyncpg://", "postgresql://", 1
+            )
+        elif self.database_url_sync.startswith("postgres://"):
+            self.database_url_sync = self.database_url_sync.replace(
+                "postgres://", "postgresql://", 1
+            )
+
+        # If DATABASE_URL_SYNC wasn't explicitly set, derive from DATABASE_URL
+        if "changeme" in self.database_url_sync and "changeme" not in self.database_url:
+            self.database_url_sync = self.database_url.replace(
+                "postgresql+asyncpg://", "postgresql://", 1
+            )
+
+        return self
+
     @property
     def is_development(self) -> bool:
         """Check if running in development mode."""
