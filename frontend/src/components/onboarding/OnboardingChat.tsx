@@ -58,6 +58,21 @@ export default function OnboardingChat({
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear redirect timeout on unmount or when chat closes
+  useEffect(() => {
+    if (!isOpen && redirectTimeoutRef.current) {
+      clearTimeout(redirectTimeoutRef.current);
+      redirectTimeoutRef.current = null;
+    }
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    };
+  }, [isOpen]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -174,8 +189,9 @@ export default function OnboardingChat({
 
       // Handle special actions
       if (data.action_type === 'redirect' && data.action_data?.url) {
-        // Onboarding complete - redirect to dashboard
-        setTimeout(() => {
+        // Onboarding complete - redirect to dashboard (cancellable)
+        redirectTimeoutRef.current = setTimeout(() => {
+          redirectTimeoutRef.current = null;
           onComplete?.();
           window.location.href = data.action_data.url;
         }, 2000);
@@ -215,11 +231,11 @@ export default function OnboardingChat({
     startConversation();
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
+      {isOpen && (
       <motion.div
+        key="onboarding-chat"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -415,6 +431,7 @@ export default function OnboardingChat({
           </div>
         </div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }
