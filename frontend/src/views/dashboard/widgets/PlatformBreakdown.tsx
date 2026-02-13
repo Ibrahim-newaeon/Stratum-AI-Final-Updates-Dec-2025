@@ -2,9 +2,10 @@
  * PlatformBreakdown - Platform performance breakdown display
  */
 
-import { AlertTriangle, BarChart3, CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import { AlertTriangle, BarChart3, CheckCircle2, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PlatformSummary } from '@/api/dashboard';
+import { useSyncPlatform } from '@/api/dashboard';
 
 // Platform icon components/colors with brand-dominant styling
 const platformConfigs: Record<string, {
@@ -64,6 +65,8 @@ interface PlatformBreakdownProps {
 }
 
 export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakdownProps) {
+  const syncPlatform = useSyncPlatform();
+
   if (loading) {
     return (
       <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[120px]">
@@ -204,11 +207,27 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                   </div>
                 </div>
 
-                {platform.last_synced_at && (
-                  <div className="mt-3 pt-2 border-t text-xs text-muted-foreground">
-                    Synced {new Date(platform.last_synced_at).toLocaleTimeString()}
-                  </div>
-                )}
+                <div className="mt-3 pt-2 border-t flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {platform.last_synced_at
+                      ? `Synced ${new Date(platform.last_synced_at).toLocaleTimeString()}`
+                      : 'Not synced'}
+                  </span>
+                  {platform.status === 'connected' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        syncPlatform.mutate({ platform: platform.platform });
+                      }}
+                      disabled={syncPlatform.isPending}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+                      title={`Sync ${platform.platform} campaigns`}
+                    >
+                      <RefreshCw className={cn('w-3 h-3', syncPlatform.isPending && 'animate-spin')} />
+                      Sync
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}

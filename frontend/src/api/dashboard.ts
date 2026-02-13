@@ -134,6 +134,19 @@ export interface DashboardOverviewResponse {
   active_campaigns: number;
   pending_recommendations: number;
   active_alerts: number;
+  hidden_metrics: string[];
+}
+
+// Metric visibility types
+export interface MetricVisibilityResponse {
+  hidden_metrics: string[];
+  available_metrics: string[];
+}
+
+// Sync response
+export interface SyncTriggerResponse {
+  status: string;
+  platform: string;
 }
 
 export interface CampaignPerformanceResponse {
@@ -300,6 +313,39 @@ export const dashboardApi = {
     });
     return response.data;
   },
+
+  /**
+   * Trigger a platform sync (Meta, TikTok, etc.)
+   */
+  syncPlatform: async (platform: string, daysBack = 30): Promise<SyncTriggerResponse> => {
+    const response = await apiClient.post<ApiResponse<SyncTriggerResponse>>(
+      `/campaigns/sync/${platform}`,
+      null,
+      { params: { days_back: daysBack } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get metric visibility settings
+   */
+  getMetricVisibility: async (): Promise<MetricVisibilityResponse> => {
+    const response = await apiClient.get<ApiResponse<MetricVisibilityResponse>>(
+      '/dashboard/settings/metric-visibility'
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Update metric visibility settings
+   */
+  updateMetricVisibility: async (hiddenMetrics: string[]): Promise<MetricVisibilityResponse> => {
+    const response = await apiClient.patch<ApiResponse<MetricVisibilityResponse>>(
+      '/dashboard/settings/metric-visibility',
+      { hidden_metrics: hiddenMetrics }
+    );
+    return response.data.data;
+  },
 };
 
 // =============================================================================
@@ -425,6 +471,49 @@ export function useExportDashboard() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       return blob;
+    },
+  });
+}
+
+/**
+ * Trigger platform sync
+ */
+export function useSyncPlatform() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ platform, daysBack }: { platform: string; daysBack?: number }) =>
+      dashboardApi.syncPlatform(platform, daysBack),
+    onSuccess: () => {
+      // Invalidate dashboard data after sync triggers
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+/**
+ * Get metric visibility settings
+ */
+export function useMetricVisibility(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'metric-visibility'],
+    queryFn: dashboardApi.getMetricVisibility,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Update metric visibility settings
+ */
+export function useUpdateMetricVisibility() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (hiddenMetrics: string[]) => dashboardApi.updateMetricVisibility(hiddenMetrics),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'metric-visibility'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'overview'] });
     },
   });
 }

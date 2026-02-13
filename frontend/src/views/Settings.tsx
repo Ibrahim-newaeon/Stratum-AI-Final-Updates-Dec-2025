@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useExportData, useRequestDeletion } from '@/api/hooks';
 import { useCurrentUser, useUpdatePreferences } from '@/api/auth';
+import { useMetricVisibility, useUpdateMetricVisibility } from '@/api/dashboard';
 import { useToast } from '@/components/ui/use-toast';
 
 type SettingsTab =
@@ -1240,6 +1241,123 @@ function PreferenceSettings() {
           <option value="DD/MM/YYYY">DD/MM/YYYY</option>
           <option value="YYYY-MM-DD">YYYY-MM-DD</option>
         </select>
+      </div>
+
+      {/* Metric Visibility */}
+      <MetricVisibilitySettings />
+    </div>
+  );
+}
+
+const METRIC_LABELS: Record<string, string> = {
+  cpc: 'Cost per Click (CPC)',
+  cpm: 'Cost per Mille (CPM)',
+  cpv: 'Cost per View (CPV)',
+  cpa: 'Cost per Acquisition (CPA)',
+  spend: 'Total Spend',
+  roas: 'Return on Ad Spend (ROAS)',
+  ctr: 'Click-Through Rate (CTR)',
+  impressions: 'Impressions',
+  clicks: 'Clicks',
+  conversions: 'Conversions',
+  revenue: 'Revenue',
+};
+
+function MetricVisibilitySettings() {
+  const { data: visibility, isLoading } = useMetricVisibility();
+  const updateVisibility = useUpdateMetricVisibility();
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const hiddenMetrics = visibility?.hidden_metrics || [];
+  const availableMetrics = visibility?.available_metrics || Object.keys(METRIC_LABELS);
+
+  const handleToggle = (metric: string) => {
+    const updated = hiddenMetrics.includes(metric)
+      ? hiddenMetrics.filter((m) => m !== metric)
+      : [...hiddenMetrics, metric];
+
+    setSaveStatus('saving');
+    updateVisibility.mutate(updated, {
+      onSuccess: () => {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      },
+      onError: () => setSaveStatus('idle'),
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="border-t pt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Eye className="w-5 h-5 text-muted-foreground" />
+          <h3 className="font-medium">Metric Visibility</h3>
+        </div>
+        <div className="flex items-center justify-center p-4">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t pt-6">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Eye className="w-5 h-5 text-muted-foreground" />
+          <h3 className="font-medium">Metric Visibility</h3>
+        </div>
+        {saveStatus !== 'idle' && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            {saveStatus === 'saving' ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Check className="w-3 h-3 text-green-500" />
+                Saved
+              </>
+            )}
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">
+        Choose which metrics to show on the dashboard. Hidden metrics will not appear in cards or tables.
+      </p>
+      <div className="space-y-2">
+        {availableMetrics.map((metric) => {
+          const isHidden = hiddenMetrics.includes(metric);
+          return (
+            <div key={metric} className="flex items-center justify-between p-3 rounded-lg border">
+              <div className="flex items-center gap-2">
+                {isHidden ? (
+                  <EyeOff className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="w-4 h-4 text-primary" />
+                )}
+                <span className={cn('text-sm', isHidden && 'text-muted-foreground')}>
+                  {METRIC_LABELS[metric] || metric}
+                </span>
+              </div>
+              <button
+                onClick={() => handleToggle(metric)}
+                className={cn(
+                  'relative w-10 h-5 rounded-full transition-colors',
+                  !isHidden ? 'bg-primary' : 'bg-muted'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform',
+                    !isHidden ? 'translate-x-5' : 'translate-x-0.5'
+                  )}
+                />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

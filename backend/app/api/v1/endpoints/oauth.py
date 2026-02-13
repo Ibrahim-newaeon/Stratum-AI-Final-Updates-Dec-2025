@@ -327,6 +327,22 @@ async def oauth_callback(
             user_id=oauth_state.user_id,
         )
 
+        # Auto-sync campaigns from the newly connected platform (fire-and-forget)
+        try:
+            import asyncio
+
+            asyncio.create_task(
+                _auto_sync_after_oauth(oauth_state.tenant_id, platform)
+            )
+            logger.info(
+                "auto_sync_triggered",
+                platform=platform.value,
+                tenant_id=oauth_state.tenant_id,
+            )
+        except Exception as sync_err:
+            # Non-blocking — don't fail the OAuth flow if sync scheduling fails
+            logger.warning("auto_sync_trigger_failed", error=str(sync_err))
+
     except Exception as e:
         logger.error(
             "oauth_storage_failed",
@@ -862,3 +878,35 @@ async def disconnect_platform(
         success=True,
         data={"message": f"Disconnected from {platform.value}"},
     )
+
+
+# =============================================================================
+# Auto-sync helper (fire-and-forget after OAuth)
+# =============================================================================
+
+
+async def _auto_sync_after_oauth(tenant_id: int, platform: AdPlatform) -> None:
+    """Run a campaign sync right after OAuth succeeds. Non-blocking."""
+    from app.db.session import AsyncSessionLocal
+
+    try:
+        async with AsyncSessionLocal() as db:
+            from app.services.sync.orchestrator import PlatformSyncOrchestrator
+
+            orchestrator = PlatformSyncOrchestrator(db)
+            result = await orchestrator.sync_platform(tenant_id, platform, days_back=30)
+            logger.info(
+                "auto_sync_completed",
+                platform=platform.value,
+                tenant=tenant_id,
+                campaigns=result.campaigns_synced,
+                metrics=result.metrics_upserted,
+                errors=len(result.errors),
+            )
+    except Exception as e:
+        logger.error(
+            "auto_sync_failed",
+            platform=platform.value,
+            tenant=tenant_id,
+            error=str(e),
+        )

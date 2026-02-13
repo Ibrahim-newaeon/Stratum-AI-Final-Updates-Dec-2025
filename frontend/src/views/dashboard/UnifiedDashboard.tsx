@@ -217,80 +217,134 @@ export default function UnifiedDashboard() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Spend"
-          value={overview?.metrics.spend.formatted || '$0'}
-          change={overview?.metrics.spend.change_percent}
-          trend={overview?.metrics.spend.trend}
-          icon={<DollarSign className="w-5 h-5" />}
-          loading={overviewLoading}
-        />
-        <MetricCard
-          title="Revenue"
-          value={overview?.metrics.revenue.formatted || '$0'}
-          change={overview?.metrics.revenue.change_percent}
-          trend={overview?.metrics.revenue.trend}
-          icon={<TrendingUp className="w-5 h-5" />}
-          loading={overviewLoading}
-          positive
-        />
-        <MetricCard
-          title="ROAS"
-          value={overview?.metrics.roas.formatted || '0x'}
-          change={overview?.metrics.roas.change_percent}
-          trend={overview?.metrics.roas.trend}
-          icon={<Target className="w-5 h-5" />}
-          loading={overviewLoading}
-          highlight={(overview?.metrics.roas.value ?? 0) >= 3}
-          positive
-        />
-        <MetricCard
-          title="Conversions"
-          value={overview?.metrics.conversions.formatted || '0'}
-          change={overview?.metrics.conversions.change_percent}
-          trend={overview?.metrics.conversions.trend}
-          icon={<MousePointerClick className="w-5 h-5" />}
-          loading={overviewLoading}
-          positive
-        />
-      </div>
+      {(() => {
+        const hidden = overview?.hidden_metrics || [];
+        const primaryCards = [
+          !hidden.includes('spend') && (
+            <MetricCard
+              key="spend"
+              title="Total Spend"
+              value={overview?.metrics.spend.formatted || '$0'}
+              change={overview?.metrics.spend.change_percent}
+              trend={overview?.metrics.spend.trend}
+              icon={<DollarSign className="w-5 h-5" />}
+              loading={overviewLoading}
+            />
+          ),
+          !hidden.includes('revenue') && (
+            <MetricCard
+              key="revenue"
+              title="Revenue"
+              value={overview?.metrics.revenue.formatted || '$0'}
+              change={overview?.metrics.revenue.change_percent}
+              trend={overview?.metrics.revenue.trend}
+              icon={<TrendingUp className="w-5 h-5" />}
+              loading={overviewLoading}
+              positive
+            />
+          ),
+          !hidden.includes('roas') && (
+            <MetricCard
+              key="roas"
+              title="ROAS"
+              value={overview?.metrics.roas.formatted || '0x'}
+              change={overview?.metrics.roas.change_percent}
+              trend={overview?.metrics.roas.trend}
+              icon={<Target className="w-5 h-5" />}
+              loading={overviewLoading}
+              highlight={(overview?.metrics.roas.value ?? 0) >= 3}
+              positive
+            />
+          ),
+          !hidden.includes('conversions') && (
+            <MetricCard
+              key="conversions"
+              title="Conversions"
+              value={overview?.metrics.conversions.formatted || '0'}
+              change={overview?.metrics.conversions.change_percent}
+              trend={overview?.metrics.conversions.trend}
+              icon={<MousePointerClick className="w-5 h-5" />}
+              loading={overviewLoading}
+              positive
+            />
+          ),
+        ].filter(Boolean);
+
+        return primaryCards.length > 0 ? (
+          <div className={cn(
+            'grid gap-4',
+            primaryCards.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+            primaryCards.length === 3 ? 'grid-cols-1 sm:grid-cols-3' :
+            primaryCards.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
+            'grid-cols-1'
+          )}>
+            {primaryCards}
+          </div>
+        ) : null;
+      })()}
 
       {/* Secondary Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <MetricCard
-          title="CPA"
-          value={overview?.metrics.cpa.formatted || '$0'}
-          change={overview?.metrics.cpa.change_percent}
-          trend={overview?.metrics.cpa.trend}
-          icon={<DollarSign className="w-4 h-4" />}
-          size="small"
-          loading={overviewLoading}
-        />
-        <MetricCard
-          title="CTR"
-          value={overview?.metrics.ctr.formatted || '0%'}
-          change={overview?.metrics.ctr.change_percent}
-          trend={overview?.metrics.ctr.trend}
-          icon={<MousePointerClick className="w-4 h-4" />}
-          size="small"
-          loading={overviewLoading}
-        />
-        <MetricCard
-          title="Impressions"
-          value={overview?.metrics.impressions.formatted || '0'}
-          icon={<BarChart3 className="w-4 h-4" />}
-          size="small"
-          loading={overviewLoading}
-        />
-        <MetricCard
-          title="Clicks"
-          value={overview?.metrics.clicks.formatted || '0'}
-          icon={<MousePointerClick className="w-4 h-4" />}
-          size="small"
-          loading={overviewLoading}
-        />
-      </div>
+      {(() => {
+        const hidden = overview?.hidden_metrics || [];
+        const secondaryCards = [
+          !hidden.includes('cpa') && (
+            <MetricCard
+              key="cpa"
+              title="CPA"
+              value={overview?.metrics.cpa.formatted || '$0'}
+              change={overview?.metrics.cpa.change_percent}
+              trend={overview?.metrics.cpa.trend}
+              icon={<DollarSign className="w-4 h-4" />}
+              size="small"
+              loading={overviewLoading}
+            />
+          ),
+          !hidden.includes('ctr') && (
+            <MetricCard
+              key="ctr"
+              title="CTR"
+              value={overview?.metrics.ctr.formatted || '0%'}
+              change={overview?.metrics.ctr.change_percent}
+              trend={overview?.metrics.ctr.trend}
+              icon={<MousePointerClick className="w-4 h-4" />}
+              size="small"
+              loading={overviewLoading}
+            />
+          ),
+          !hidden.includes('impressions') && (
+            <MetricCard
+              key="impressions"
+              title="Impressions"
+              value={overview?.metrics.impressions.formatted || '0'}
+              icon={<BarChart3 className="w-4 h-4" />}
+              size="small"
+              loading={overviewLoading}
+            />
+          ),
+          !hidden.includes('clicks') && (
+            <MetricCard
+              key="clicks"
+              title="Clicks"
+              value={overview?.metrics.clicks.formatted || '0'}
+              icon={<MousePointerClick className="w-4 h-4" />}
+              size="small"
+              loading={overviewLoading}
+            />
+          ),
+        ].filter(Boolean);
+
+        return secondaryCards.length > 0 ? (
+          <div className={cn(
+            'grid gap-4',
+            secondaryCards.length === 4 ? 'grid-cols-2 sm:grid-cols-4' :
+            secondaryCards.length === 3 ? 'grid-cols-3' :
+            secondaryCards.length === 2 ? 'grid-cols-2' :
+            'grid-cols-1'
+          )}>
+            {secondaryCards}
+          </div>
+        ) : null;
+      })()}
 
       {/* Platform Breakdown */}
       <PlatformBreakdown platforms={overview?.platforms || []} loading={overviewLoading} />

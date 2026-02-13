@@ -37,6 +37,7 @@ from app.models import (
     AuditLog,
     Campaign,
     CampaignStatus,
+    Tenant,
 )
 from app.models.campaign_builder import ConnectionStatus, TenantPlatformConnection
 from app.models.onboarding import OnboardingStatus, TenantOnboarding
@@ -224,6 +225,9 @@ class DashboardOverviewResponse(BaseModel):
     active_campaigns: int = 0
     pending_recommendations: int = 0
     active_alerts: int = 0
+
+    # Metric visibility settings
+    hidden_metrics: list[str] = []
 
 
 class CampaignPerformanceResponse(BaseModel):
@@ -492,6 +496,11 @@ async def get_dashboard_overview(
     # Campaign stats
     active_campaigns = len([c for c in campaigns if c.status == CampaignStatus.ACTIVE])
 
+    # Load tenant's hidden_metrics setting
+    tenant_result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = tenant_result.scalar_one_or_none()
+    hidden_metrics = (tenant.settings or {}).get("hidden_metrics", []) if tenant else []
+
     # Period label
     period_labels = {
         TimePeriod.TODAY: "Today",
@@ -522,6 +531,7 @@ async def get_dashboard_overview(
             active_campaigns=active_campaigns,
             pending_recommendations=3 if has_campaigns else 0,  # Mock
             active_alerts=1 if has_campaigns else 0,  # Mock
+            hidden_metrics=hidden_metrics,
         ),
     )
 
@@ -1232,3 +1242,112 @@ async def export_dashboard(
             media_type="application/json",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
+
+
+# =============================================================================
+# Metric Visibility Settings
+# =============================================================================
+
+
+class MetricVisibilityRequest(BaseModel):
+    """Request to update metric visibility."""
+
+    hidden_metrics: list[str] = Field(
+        ...,
+        description="List of metric keys to hide (e.g. ['cpc', 'cpm', 'cpv'])",
+    )
+
+
+class MetricVisibilityResponse(BaseModel):
+    """Current metric visibility settings."""
+
+    hidden_metrics: list[str] = []
+    available_metrics: list[dict[str, str]] = []
+
+
+AVAILABLE_METRICS = [
+    {"key": "cpc", "label": "Cost per Click (CPC)"},
+    {"key": "cpm", "label": "Cost per 1K Impressions (CPM)"},
+    {"key": "cpv", "label": "Cost per View (CPV)"},
+    {"key": "cpa", "label": "Cost per Acquisition (CPA)"},
+    {"key": "spend", "label": "Total Spend"},
+    {"key": "roas", "label": "Return on Ad Spend (ROAS)"},
+    {"key": "ctr", "label": "Click-Through Rate (CTR)"},
+    {"key": "impressions", "label": "Impressions"},
+    {"key": "clicks", "label": "Clicks"},
+    {"key": "conversions", "label": "Conversions"},
+    {"key": "revenue", "label": "Revenue"},
+]
+
+
+@router.get("/settings/metric-visibility", response_model=APIResponse[MetricVisibilityResponse])
+async def get_metric_visibility(
+    current_user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Get current metric visibility settings for the tenant."""
+    tenant_result = await db.execute(
+        select(Tenant).where(Tenant.id == current_user.tenant_id)
+    )
+    tenant = tenant_result.scalar_one_or_none()
+
+    hidden = (tenant.settings or {}).get("hidden_metrics", []) if tenant else []
+
+    return APIResponse(
+        success=True,
+        data=MetricVisibilityResponse(
+            hidden_metrics=hidden,
+            available_metrics=AVAILABLE_METRICS,
+        ),
+    )
+
+
+@router.patch("/settings/metric-visibility", response_model=APIResponse[MetricVisibilityResponse])
+async def update_metric_visibility(
+    request_data: MetricVisibilityRequest,
+    current_user: VerifiedUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Update which metrics are hidden on the dashboard.
+
+    Accepts a list of metric keys to hide. Pass an empty list to show all.
+    Valid keys: cpc, cpm, cpv, cpa, spend, roas, ctr, impressions, clicks, conversions, revenue
+    """
+    tenant_result = await db.execute(
+        select(Tenant).where(Tenant.id == current_user.tenant_id)
+    )
+    tenant = tenant_result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+    # Validate metric keys
+    valid_keys = {m["key"] for m in AVAILABLE_METRICS}
+    invalid = [k for k in request_data.hidden_metrics if k not in valid_keys]
+    if invalid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid metric keys: {invalid}",
+        )
+
+    # Update tenant settings JSONB
+    current_settings = dict(tenant.settings or {})
+    current_settings["hidden_metrics"] = request_data.hidden_metrics
+    tenant.settings = current_settings
+
+    await db.commit()
+
+    logger.info(
+        "metric_visibility_updated",
+        tenant_id=current_user.tenant_id,
+        hidden=request_data.hidden_metrics,
+    )
+
+    return APIResponse(
+        success=True,
+        data=MetricVisibilityResponse(
+            hidden_metrics=request_data.hidden_metrics,
+            available_metrics=AVAILABLE_METRICS,
+        ),
+        message="Metric visibility updated",
+    )
