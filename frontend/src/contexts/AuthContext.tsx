@@ -5,6 +5,8 @@
 
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
 export interface User {
   id: string;
   email: string;
@@ -55,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       // Call the actual backend API
-      const response = await fetch('/api/v1/auth/login', {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Fetch user profile
-      const userResponse = await fetch('/api/v1/auth/me', {
+      const userResponse = await fetch(`${API_BASE}/auth/me`, {
         headers: {
           Authorization: `Bearer ${data.data.access_token}`,
         },
