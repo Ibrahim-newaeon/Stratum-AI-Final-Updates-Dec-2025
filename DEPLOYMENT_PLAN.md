@@ -21,6 +21,13 @@ All frontend polishing is complete. The codebase is production-ready.
 - WhatsNew modal centered on all screen sizes
 - Main index.html with HoloGlass theme
 
+### Railway Deploy Fixes (Feb 13, 2026)
+- **Fixed**: Frontend Dockerfile now uses `nginx.railway.conf` (no API proxy) instead of `nginx.conf` which tried to proxy to `http://api:8000` (doesn't exist on Railway)
+- **Fixed**: Nginx conf.d directory ownership for PORT substitution
+- **Fixed**: Dynamic PORT handling via `sed` in CMD for both frontend (nginx) and backend (uvicorn)
+- **Fixed**: Backend `railway.toml` removed conflicting `startCommand` (Dockerfile CMD handles PORT)
+- **Added**: `frontend/railway.toml` for Railway frontend service configuration
+
 ### Repository
 - **GitHub**: https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025
 - **Main Branch**: `main` (all latest code)
@@ -52,7 +59,8 @@ All frontend polishing is complete. The codebase is production-ready.
 
 ### Step 3: Configure Backend Service (3 min)
 1. Add a service from the repo, set **Root Directory**: `backend`
-2. Railway will use `backend/Dockerfile` automatically
+2. Railway will use `backend/Dockerfile` automatically (via `backend/railway.toml`)
+3. The backend listens on Railway's `PORT` env var (defaults to 8080)
 3. Add these environment variables:
 
 ```env
@@ -139,8 +147,10 @@ LOG_FORMAT=json
 
 ### Step 4: Configure Frontend Service (2 min)
 1. Add another service from the same repo, set **Root Directory**: `frontend`
-2. Railway will use `frontend/Dockerfile` automatically
-3. Add this environment variable:
+2. Railway will use `frontend/Dockerfile` automatically (via `frontend/railway.toml`)
+3. The Dockerfile uses `nginx.railway.conf` (pure SPA serving, no API proxy)
+4. Nginx dynamically binds to Railway's `PORT` env var at startup
+5. Add this environment variable (IMPORTANT - must be set BEFORE the build):
 
 ```env
 VITE_API_BASE_URL=https://api.stratumai.app/api/v1
@@ -224,7 +234,7 @@ This file contains all real API keys and credentials. Copy values from there int
       +------+------+             +------+------+
       |  Frontend   |             |   Backend   |
       | (Nginx+React|             |  (FastAPI)  |
-      |  Port 80)   |             |  Port 8000) |
+      |  Port 80)   |             |  Port 8080) |
       +-------------+             +------+------+
                                          |
                           +--------------++--------------+
@@ -274,5 +284,5 @@ This file contains all real API keys and credentials. Copy values from there int
 
 ---
 
-**Last Updated:** 2026-02-12
-**Status:** Landing page LIVE, full stack ready to deploy on Railway
+**Last Updated:** 2026-02-13
+**Status:** Landing page LIVE, Railway deploy fixes applied (nginx config, PORT handling)
