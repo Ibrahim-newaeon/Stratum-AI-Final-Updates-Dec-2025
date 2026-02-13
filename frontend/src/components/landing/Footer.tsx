@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
 // Stratum Gold Dark theme
 const theme = {
   gold: '#00c7be',
@@ -27,7 +30,7 @@ export function Footer() {
     const urlParams = new URLSearchParams(window.location.search);
 
     try {
-      const response = await fetch('/api/v1/landing-cms/subscribe', {
+      const response = await fetch(`${API_BASE}/landing-cms/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

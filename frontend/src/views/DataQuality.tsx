@@ -8,6 +8,10 @@ import {
   Activity,
   AlertTriangle,
   ArrowUpRight,
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
   CheckCircle,
   ChevronRight,
   Lightbulb,
@@ -116,7 +120,7 @@ export function DataQuality() {
   const fetchReport = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch('/api/v1/capi/quality/report');
+      const response = await fetch(`${API_BASE}/capi/quality/report`);
       const data = await response.json();
 
       if (data.success && data.data) {

@@ -18,6 +18,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
 // Helper to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem('access_token');
@@ -75,7 +78,7 @@ export default function SuperAdminUsers() {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['superadmin-users'],
     queryFn: async () => {
-      const response = await fetch('/api/v1/users', {
+      const response = await fetch(`${API_BASE}/users`, {
         headers: getAuthHeaders(),
       });
       if (!response.ok) throw new Error('Failed to fetch users');
@@ -86,7 +89,7 @@ export default function SuperAdminUsers() {
   // Invite user mutation
   const inviteUser = useMutation({
     mutationFn: async (data: { email: string; role: string; full_name?: string }) => {
-      const response = await fetch('/api/v1/users/invite', {
+      const response = await fetch(`${API_BASE}/users/invite`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
@@ -112,7 +115,7 @@ export default function SuperAdminUsers() {
       userId: number;
       data: { role?: string; is_active?: boolean };
     }) => {
-      const response = await fetch(`/api/v1/users/${userId}`, {
+      const response = await fetch(`${API_BASE}/users/${userId}`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
@@ -130,7 +133,7 @@ export default function SuperAdminUsers() {
   // Delete user mutation
   const deleteUser = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await fetch(`/api/v1/users/${userId}`, {
+      const response = await fetch(`${API_BASE}/users/${userId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });

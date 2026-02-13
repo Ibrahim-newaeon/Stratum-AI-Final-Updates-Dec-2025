@@ -8,6 +8,10 @@ import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
   Bookmark,
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
   Check,
   ChevronLeft,
   ChevronRight,
@@ -333,7 +337,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
         saved_audiences: formData.saved_audiences.length > 0 ? formData.saved_audiences : null,
       };
 
-      const response = await fetch('/api/v1/campaigns', {
+      const response = await fetch(`${API_BASE}/campaigns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

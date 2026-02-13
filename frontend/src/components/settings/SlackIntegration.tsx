@@ -8,6 +8,10 @@
 import { useState } from 'react';
 import {
   Activity,
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
   AlertTriangle,
   BarChart3,
   CheckCircle2,
@@ -80,7 +84,7 @@ export function SlackIntegration({ initialConfig, onSave }: SlackIntegrationProp
 
     try {
       // In production, this would call your backend API
-      const response = await fetch('/api/v1/integrations/slack/test', {
+      const response = await fetch(`${API_BASE}/integrations/slack/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ webhook_url: config.webhookUrl }),

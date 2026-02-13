@@ -8,6 +8,10 @@ import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
   AlertTriangle,
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
   ArrowRight,
   Bell,
   CheckCircle,
@@ -86,7 +90,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
   const fetchAlerts = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch('/api/v1/predictions/alerts');
+      const response = await fetch(`${API_BASE}/predictions/alerts`);
       const data = await response.json();
 
       if (data.success && data.data?.alerts) {
