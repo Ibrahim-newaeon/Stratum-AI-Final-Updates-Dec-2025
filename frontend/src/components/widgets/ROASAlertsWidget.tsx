@@ -8,10 +8,6 @@ import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
   AlertTriangle,
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
-
   ArrowRight,
   Bell,
   CheckCircle,
@@ -20,6 +16,9 @@ const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta
   TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
 interface PredictionAlert {
   campaign_id: number;

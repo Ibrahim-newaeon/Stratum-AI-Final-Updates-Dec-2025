@@ -8,10 +8,6 @@ import {
   Activity,
   AlertTriangle,
   ArrowUpRight,
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
-
   CheckCircle,
   ChevronRight,
   Lightbulb,
@@ -22,6 +18,9 @@ const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
 interface DataGap {
   field: string;

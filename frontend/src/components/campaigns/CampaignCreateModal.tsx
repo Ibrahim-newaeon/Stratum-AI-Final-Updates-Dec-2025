@@ -8,10 +8,6 @@ import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
   Bookmark,
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
-
   Check,
   ChevronLeft,
   ChevronRight,
@@ -27,6 +23,9 @@ const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta
 import { cn } from '@/lib/utils';
 import { Platform, useAdAccounts } from '@/api/campaignBuilder';
 import { useAuth } from '@/contexts/AuthContext';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
 interface CampaignCreateModalProps {
   open: boolean;

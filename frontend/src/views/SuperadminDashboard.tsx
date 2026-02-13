@@ -47,7 +47,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE_URL = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 // =============================================================================
 // Types
