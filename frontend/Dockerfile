@@ -66,4 +66,4 @@ RUN echo '{"cleanUrls": false}' > dist/serve.json
 # At startup, generate runtime config from env vars
 # (VITE_* vars aren't available at Docker build time on Railway)
 # Then start serve in SPA mode
-CMD ["sh", "-c", "echo \"window.__RUNTIME_CONFIG__ = { VITE_API_URL: \\\"${VITE_API_URL:-}\\\", VITE_WS_URL: \\\"${VITE_WS_URL:-}\\\", VITE_DEFAULT_LOCALE: \\\"${VITE_DEFAULT_LOCALE:-en}\\\" };\" > dist/env-config.js && cat dist/env-config.js && exec serve -s dist -l ${PORT:-3000}"]
+CMD ["sh", "-c", "echo '=== All VITE_ env vars ===' && env | grep -i vite && echo '=== Generating env-config.js ===' && echo \"window.__RUNTIME_CONFIG__ = { VITE_API_URL: \\\"${VITE_API_URL:-}\\\", VITE_WS_URL: \\\"${VITE_WS_URL:-}\\\", VITE_DEFAULT_LOCALE: \\\"${VITE_DEFAULT_LOCALE:-en}\\\" };\" > dist/env-config.js && cat dist/env-config.js && exec serve -s dist -l ${PORT:-3000}"]
