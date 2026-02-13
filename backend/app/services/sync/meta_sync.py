@@ -72,7 +72,6 @@ class MetaInsightRow:
     clicks: int = 0
     conversions: int = 0
     revenue_cents: int = 0
-    video_views: int = 0
 
 
 class MetaCampaignSyncService:
@@ -141,7 +140,7 @@ class MetaCampaignSyncService:
         url: Optional[str] = self._graph_url(f"{campaign_id}/insights")
         params: dict[str, Any] = {
             "access_token": access_token,
-            "fields": "spend,impressions,clicks,actions,action_values,video_views",
+            "fields": "spend,impressions,clicks,actions,action_values",
             "time_range": f'{{"since":"{date_start.isoformat()}","until":"{date_end.isoformat()}"}}',
             "time_increment": 1,
             "limit": 500,
@@ -232,7 +231,6 @@ class MetaCampaignSyncService:
             clicks=int(raw.get("clicks", "0")),
             conversions=conversions,
             revenue_cents=revenue_cents,
-            video_views=int(raw.get("video_views", "0") or "0"),
         )
 
     # ------------------------------------------------------------------

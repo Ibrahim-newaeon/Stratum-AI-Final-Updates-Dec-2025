@@ -271,7 +271,6 @@ class PlatformSyncOrchestrator:
                         clicks=row.clicks,
                         conversions=row.conversions,
                         revenue_cents=row.revenue_cents,
-                        video_views=row.video_views,
                     )
                     metrics_upserted += 1
             except Exception as e:
