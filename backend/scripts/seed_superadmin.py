@@ -46,10 +46,28 @@ async def create_superadmin():
         echo=False,
     )
 
+    # Step 1: Add 'superadmin' to userrole enum if missing (requires AUTOCOMMIT)
+    # ALTER TYPE ADD VALUE cannot run inside a transaction block
+    async with engine.connect() as conn:
+        await conn.execution_options(isolation_level="AUTOCOMMIT")
+        try:
+            result = await conn.execute(text(
+                "SELECT 1 FROM pg_enum WHERE enumtypid = 'userrole'::regtype AND enumlabel = 'superadmin'"
+            ))
+            if not result.fetchone():
+                await conn.execute(text("ALTER TYPE userrole ADD VALUE 'superadmin'"))
+                print("Added 'superadmin' to userrole enum")
+        except Exception as e:
+            print(f"Note: enum check skipped ({e})")
+
+    # Step 2: Create tenant and user in a transaction
     async with engine.begin() as conn:
         try:
-            # Set superadmin context to bypass RLS policies
-            await conn.execute(text("SELECT set_tenant_context(1, true)"))
+            # Set superadmin context to bypass RLS policies (may not exist yet)
+            try:
+                await conn.execute(text("SELECT set_tenant_context(1, true)"))
+            except Exception:
+                pass  # RLS function not yet created, that's OK
 
             # Prepare values
             email_hash = hash_pii_for_lookup(SUPERADMIN_EMAIL.lower())
