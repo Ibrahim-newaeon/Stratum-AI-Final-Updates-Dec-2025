@@ -17,6 +17,7 @@ All data is scoped to the authenticated user's tenant.
 
 import csv
 import json
+import os
 from datetime import UTC, date, datetime, timedelta
 from enum import Enum
 from io import StringIO
@@ -402,7 +403,9 @@ async def get_dashboard_overview(
         )
     )
     connected_platforms = platforms_result.scalars().all()
-    has_connected_platforms = len(connected_platforms) > 0
+    # Also check env-var credentials as fallback
+    has_env_creds = bool(os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN"))
+    has_connected_platforms = len(connected_platforms) > 0 or has_env_creds
 
     # Get campaigns and aggregate metrics
     campaigns_result = await db.execute(
@@ -904,7 +907,7 @@ async def get_quick_actions(
                 id="complete_onboarding",
                 label="Complete Setup",
                 icon="settings",
-                action="/onboarding",
+                action="/dashboard/onboarding",
             )
         )
 
@@ -919,13 +922,14 @@ async def get_quick_actions(
     )
     connected = platforms_result.scalars().all()
 
-    if len(connected) == 0:
+    has_env_platform = bool(os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN"))
+    if len(connected) == 0 and not has_env_platform:
         actions.append(
             QuickAction(
                 id="connect_platform",
                 label="Connect Platform",
                 icon="link",
-                action="/connect",
+                action="/dashboard/campaigns/connect",
             )
         )
 
@@ -946,7 +950,7 @@ async def get_quick_actions(
                 id="sync_campaigns",
                 label="Sync Campaigns",
                 icon="refresh",
-                action="/campaigns/sync",
+                action="/dashboard/campaigns",
             )
         )
 
@@ -957,19 +961,19 @@ async def get_quick_actions(
                 id="create_campaign",
                 label="New Campaign",
                 icon="plus",
-                action="/campaigns/new",
+                action="/dashboard/campaigns",
             ),
             QuickAction(
                 id="view_reports",
                 label="Reports",
                 icon="chart",
-                action="/reports",
+                action="/dashboard/custom-reports",
             ),
             QuickAction(
                 id="manage_rules",
                 label="Automation",
                 icon="zap",
-                action="/automation",
+                action="/dashboard/rules",
             ),
         ]
     )
@@ -1010,8 +1014,19 @@ async def get_signal_health(
     )
     connected_count = platforms_result.scalar() or 0
 
+    # Check if platforms are available via env vars (fallback)
+    has_env_credentials = bool(os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN"))
+
+    # Also check if campaigns exist (synced via env credentials)
+    campaign_count_result = await db.execute(
+        select(func.count()).where(
+            and_(Campaign.tenant_id == tenant_id, Campaign.is_deleted == False)
+        )
+    )
+    has_campaigns = (campaign_count_result.scalar() or 0) > 0
+
     # Mock signal health (in production, query FactSignalHealthDaily)
-    if connected_count == 0:
+    if connected_count == 0 and not has_env_credentials and not has_campaigns:
         return APIResponse(
             success=True,
             data=SignalHealthSummary(
