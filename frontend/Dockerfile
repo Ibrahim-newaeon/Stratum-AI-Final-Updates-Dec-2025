@@ -41,26 +41,22 @@ FROM nginx:alpine AS production
 # Copy built assets
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Use Railway-compatible nginx config (no API proxy - frontend talks to API directly via VITE_API_BASE_URL)
-COPY nginx.railway.conf /etc/nginx/conf.d/default.conf
+# Use nginx template mechanism for dynamic PORT substitution
+# The official nginx image auto-processes /etc/nginx/templates/*.template files
+# with envsubst and outputs to /etc/nginx/conf.d/
+COPY nginx.railway.conf /etc/nginx/templates/default.conf.template
 
-# Security: Run as non-root user, ensure writable dirs for PORT substitution
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown nginx:nginx /var/run/nginx.pid
+# Remove the default config (template output will create default.conf)
+RUN rm -f /etc/nginx/conf.d/default.conf
 
-USER nginx
+# Default PORT (Railway overrides this at runtime)
+ENV PORT=80
 
 EXPOSE 80
 
-# Healthcheck for container orchestration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -q --spider http://localhost/health || exit 1
+    CMD wget -q --spider http://localhost:${PORT}/health || exit 1
 
-# Substitute PORT env var (Railway sets this), default to 80
-CMD ["sh", "-c", "sed -i \"s/listen 80;/listen ${PORT:-80};/\" /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+CMD ["nginx", "-g", "daemon off;"]
 
 # Result: ~25MB container vs ~500MB with Vite dev server (per memory audit)
