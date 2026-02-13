@@ -47,9 +47,9 @@ USER appuser
 # Expose port (Railway sets PORT env var)
 EXPOSE 8080
 
-# Health check using PORT env var
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
+# Health check using liveness endpoint (no dependency checks)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5 \
+    CMD curl -f http://localhost:${PORT:-8080}/health/live || exit 1
 
 # Default command - use PORT env var set by Railway (defaults to 8080)
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

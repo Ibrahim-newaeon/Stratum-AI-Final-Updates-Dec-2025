@@ -84,9 +84,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     else:
         logger.info("database_connected")
 
-    # Start WebSocket manager
-    await ws_manager.start()
-    logger.info("websocket_manager_started")
+    # Start WebSocket manager (graceful - don't crash if Redis unavailable)
+    try:
+        await ws_manager.start()
+        logger.info("websocket_manager_started")
+    except Exception as e:
+        logger.error("websocket_manager_failed", error=str(e))
+        logger.warning("websocket_features_disabled_redis_unavailable")
 
     # Note: Prometheus metrics are initialized in create_application()
     logger.info("prometheus_metrics_ready", endpoint="/metrics")
