@@ -17,6 +17,7 @@ Respects settings.use_mock_ad_data — skips real API calls when True.
 
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
@@ -81,69 +82,82 @@ class PlatformSyncOrchestrator:
             logger.info("sync_skipped_mock_mode", tenant=tenant_id, platform=platform.value)
             return result
 
-        # 1. Load connection
+        # 1. Load connection (or fall back to env vars)
         conn = await self._load_connection(tenant_id, platform)
-        if not conn:
-            result.errors.append(f"No active connection for {platform.value}")
-            return result
 
-        # 2. Decrypt + refresh token
-        access_token = await self._get_valid_token(conn, platform)
-        if not access_token:
-            result.errors.append("Failed to obtain valid access token")
-            return result
+        access_token: Optional[str] = None
+        account_ids: list[str] = []
 
-        # 3. Load enabled ad accounts
-        accounts = await self._load_ad_accounts(conn)
-        if not accounts:
-            result.errors.append("No enabled ad accounts")
+        if conn:
+            # 2a. Decrypt + refresh token from DB
+            access_token = await self._get_valid_token(conn, platform)
+            if not access_token:
+                result.errors.append("Failed to obtain valid access token")
+                return result
+            # 3a. Load enabled ad accounts from DB
+            accounts = await self._load_ad_accounts(conn)
+            account_ids = [a.platform_account_id for a in accounts]
+        else:
+            # 2b. Fall back to environment variable tokens
+            access_token, account_ids = self._get_env_credentials(platform)
+            if not access_token:
+                result.errors.append(f"No active connection or env credentials for {platform.value}")
+                return result
+            logger.info("sync_using_env_credentials", platform=platform.value, accounts=len(account_ids))
+
+        if not account_ids:
+            result.errors.append("No ad accounts configured")
             return result
 
         # 4. Sync each account
         date_end = datetime.now(UTC).date()
         date_start = date_end - timedelta(days=days_back)
 
-        for account in accounts:
+        for acct_id in account_ids:
             try:
-                synced, metrics = await self._sync_account(
-                    tenant_id=tenant_id,
-                    platform=platform,
-                    access_token=access_token,
-                    account=account,
-                    date_start=date_start,
-                    date_end=date_end,
-                )
+                if platform == AdPlatform.META:
+                    synced, metrics = await self._sync_meta_account(
+                        tenant_id, access_token, acct_id, date_start, date_end
+                    )
+                elif platform == AdPlatform.TIKTOK:
+                    synced, metrics = await self._sync_tiktok_account(
+                        tenant_id, access_token, acct_id, date_start, date_end
+                    )
+                else:
+                    continue
                 result.campaigns_synced += synced
                 result.metrics_upserted += metrics
             except TokenExpiredError:
-                # Try refresh once
-                access_token = await self._refresh_token(conn, platform)
-                if not access_token:
-                    result.errors.append("Token expired and refresh failed")
+                if conn:
+                    access_token = await self._refresh_token(conn, platform)
+                    if not access_token:
+                        result.errors.append("Token expired and refresh failed")
+                        break
+                    try:
+                        if platform == AdPlatform.META:
+                            synced, metrics = await self._sync_meta_account(
+                                tenant_id, access_token, acct_id, date_start, date_end
+                            )
+                        elif platform == AdPlatform.TIKTOK:
+                            synced, metrics = await self._sync_tiktok_account(
+                                tenant_id, access_token, acct_id, date_start, date_end
+                            )
+                        else:
+                            continue
+                        result.campaigns_synced += synced
+                        result.metrics_upserted += metrics
+                    except Exception as e:
+                        result.errors.append(f"Account {acct_id}: {e}")
+                else:
+                    result.errors.append(f"Token expired for {acct_id} and no DB connection to refresh")
                     break
-                try:
-                    synced, metrics = await self._sync_account(
-                        tenant_id=tenant_id,
-                        platform=platform,
-                        access_token=access_token,
-                        account=account,
-                        date_start=date_start,
-                        date_end=date_end,
-                    )
-                    result.campaigns_synced += synced
-                    result.metrics_upserted += metrics
-                except Exception as e:
-                    result.errors.append(f"Account {account.platform_account_id}: {e}")
             except Exception as e:
-                logger.error(
-                    "sync_account_error",
-                    account=account.platform_account_id,
-                    error=str(e),
-                )
-                result.errors.append(f"Account {account.platform_account_id}: {e}")
+                logger.error("sync_account_error", account=acct_id, error=str(e))
+                result.errors.append(f"Account {acct_id}: {e}")
 
         # 5. Update connection last sync time
-        conn.last_refreshed_at = datetime.now(UTC)
+        if conn:
+            conn.last_refreshed_at = datetime.now(UTC)
         await self.db.commit()
 
         result.duration_seconds = round(time.monotonic() - t0, 2)
@@ -157,6 +171,28 @@ class PlatformSyncOrchestrator:
             duration=result.duration_seconds,
         )
         return result
+
+    # ------------------------------------------------------------------
+    # Environment variable fallback
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _get_env_credentials(platform: AdPlatform) -> tuple[Optional[str], list[str]]:
+        """Get access token and account IDs from environment variables."""
+        if platform == AdPlatform.META:
+            token = os.getenv("META_ACCESS_TOKEN")
+            accounts_str = os.getenv("META_AD_ACCOUNT_IDS", "")
+            account_ids = [a.strip() for a in accounts_str.split(",") if a.strip()]
+            # Meta API expects act_ prefix
+            account_ids = [f"act_{a}" if not a.startswith("act_") else a for a in account_ids]
+            return token, account_ids
+        elif platform == AdPlatform.TIKTOK:
+            token = os.getenv("TIKTOK_ACCESS_TOKEN")
+            # TikTok uses advertiser_id
+            advertiser_id = os.getenv("TIKTOK_ADVERTISER_ID", "")
+            account_ids = [advertiser_id] if advertiser_id else []
+            return token, account_ids
+        return None, []
 
     # ------------------------------------------------------------------
     # Account-level sync
