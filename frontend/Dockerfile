@@ -59,6 +59,10 @@ RUN echo "=== Production dist ===" && ls -la dist/ && \
     echo "=== landing.html ===" && (test -f dist/landing.html && echo "FOUND" || echo "MISSING") && \
     du -sh dist/
 
+# Disable serve's "clean URLs" feature which strips .html extensions
+# (redirects /landing.html → /landing which breaks iframe loading)
+RUN echo '{"cleanUrls": false}' > dist/serve.json
+
 # Railway sets PORT at runtime (typically 8080)
 # serve -s enables SPA mode (all routes serve index.html)
-CMD ["sh", "-c", "echo Starting serve on port ${PORT:-3000} && ls -la dist/landing.html && exec serve -s dist -l ${PORT:-3000}"]
+CMD ["sh", "-c", "exec serve -s dist -l ${PORT:-3000}"]
