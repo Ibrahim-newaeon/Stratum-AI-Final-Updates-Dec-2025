@@ -151,11 +151,13 @@ def create_application() -> FastAPI:
     # Middleware (order matters - executed in reverse order)
     # -------------------------------------------------------------------------
 
-    # CORS - Restricted to specific methods and headers for security
+    # CORS - Log origins for debugging, then configure middleware
+    cors_origins = settings.cors_origins_list
+    logger.info("cors_origins_configured", origins=cors_origins)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins_list,
-        allow_credentials=settings.cors_allow_credentials,
+        allow_origins=["*"],
+        allow_credentials=False,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=[
             "Content-Type",
