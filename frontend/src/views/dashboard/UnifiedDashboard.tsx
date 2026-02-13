@@ -12,6 +12,7 @@
 
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowRight,
   BarChart3,
@@ -60,6 +61,7 @@ const periodOptions: { value: TimePeriod; label: string }[] = [
 
 export default function UnifiedDashboard() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [period, setPeriod] = useState<TimePeriod>('7d');
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
 
@@ -95,8 +97,8 @@ export default function UnifiedDashboard() {
 
   // Handlers
   const handleRefresh = useCallback(() => {
-    refetchOverview();
-  }, [refetchOverview]);
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+  }, [queryClient]);
 
   const handlePeriodChange = useCallback((newPeriod: TimePeriod) => {
     setPeriod(newPeriod);

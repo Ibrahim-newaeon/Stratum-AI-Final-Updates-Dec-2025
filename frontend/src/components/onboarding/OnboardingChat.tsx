@@ -188,12 +188,11 @@ export default function OnboardingChat({
       setMessages((prev) => [...prev, assistantMessage]);
 
       // Handle special actions
-      if (data.action_type === 'redirect' && data.action_data?.url) {
-        // Onboarding complete - redirect to dashboard (cancellable)
+      if (data.action_type === 'redirect') {
+        // Onboarding complete - use React Router navigation (no hard reload)
         redirectTimeoutRef.current = setTimeout(() => {
           redirectTimeoutRef.current = null;
           onComplete?.();
-          window.location.href = data.action_data.url;
         }, 2000);
       } else if (data.action_type === 'oauth_redirect' && data.action_data?.platform) {
         // Handle OAuth flow
