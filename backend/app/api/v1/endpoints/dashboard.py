@@ -484,10 +484,17 @@ async def get_dashboard_overview(
         platform_spend = sum(c.total_spend_cents or 0 for c in platform_campaigns) / 100
         platform_revenue = sum(c.revenue_cents or 0 for c in platform_campaigns) / 100
 
+        # Check env-var credentials for platform status
+        env_connected = False
+        if platform == AdPlatform.META and os.getenv("META_ACCESS_TOKEN"):
+            env_connected = True
+        elif platform == AdPlatform.TIKTOK and os.getenv("TIKTOK_ACCESS_TOKEN"):
+            env_connected = True
+
         platforms_summary.append(
             PlatformSummary(
                 platform=platform.value,
-                status="connected" if connection else "disconnected",
+                status="connected" if (connection or env_connected) else "disconnected",
                 spend=platform_spend,
                 revenue=platform_revenue,
                 roas=platform_revenue / platform_spend if platform_spend > 0 else None,
@@ -1059,7 +1066,7 @@ async def get_signal_health(
     else:
         status = "healthy"
 
-    autopilot_enabled = (
+    autopilot_enabled = bool(
         onboarding
         and onboarding.automation_mode == "autopilot"
         and overall_score >= autopilot_threshold
