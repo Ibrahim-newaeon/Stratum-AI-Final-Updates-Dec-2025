@@ -151,7 +151,7 @@ def create_application() -> FastAPI:
     # Middleware (order matters - executed in reverse order)
     # -------------------------------------------------------------------------
 
-    # CORS - Log origins for debugging, then configure middleware
+    # CORS - Must be outermost (first added) so CORS headers are always present
     cors_origins = settings.cors_origins_list
     logger.info("cors_origins_configured", origins=cors_origins)
     app.add_middleware(
@@ -171,8 +171,15 @@ def create_application() -> FastAPI:
         expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
     )
 
+    # Error handler - second outermost so ALL middleware exceptions are caught
+    # and error responses still pass through CORS (getting proper headers)
+    app.add_middleware(ErrorHandlerMiddleware)
+
     # Gzip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    # Request logging middleware (request ID, timing, structured access logs)
+    app.add_middleware(RequestLoggingMiddleware)
 
     # Rate limiting
     app.add_middleware(
@@ -189,12 +196,6 @@ def create_application() -> FastAPI:
 
     # Security headers middleware (OWASP recommendations)
     app.add_middleware(SecurityHeadersMiddleware)
-
-    # Error handler middleware (catches unhandled exceptions from middleware stack)
-    app.add_middleware(ErrorHandlerMiddleware)
-
-    # Request logging middleware (request ID, timing, structured access logs)
-    app.add_middleware(RequestLoggingMiddleware)
 
     # -------------------------------------------------------------------------
     # Exception Handlers
