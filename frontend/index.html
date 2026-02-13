@@ -253,6 +253,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Runtime config injected by Docker at startup (env vars not available at build time) -->
+    <script src="/env-config.js"></script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       // Initialize theme - HoloGlass is always dark

@@ -63,6 +63,7 @@ RUN echo "=== Production dist ===" && ls -la dist/ && \
 # (redirects /landing.html → /landing which breaks iframe loading)
 RUN echo '{"cleanUrls": false}' > dist/serve.json
 
-# Railway sets PORT at runtime (typically 8080)
-# serve -s enables SPA mode (all routes serve index.html)
-CMD ["sh", "-c", "exec serve -s dist -l ${PORT:-3000}"]
+# At startup, generate runtime config from env vars
+# (VITE_* vars aren't available at Docker build time on Railway)
+# Then start serve in SPA mode
+CMD ["sh", "-c", "echo \"window.__RUNTIME_CONFIG__ = { VITE_API_URL: \\\"${VITE_API_URL:-}\\\", VITE_WS_URL: \\\"${VITE_WS_URL:-}\\\", VITE_DEFAULT_LOCALE: \\\"${VITE_DEFAULT_LOCALE:-en}\\\" };\" > dist/env-config.js && cat dist/env-config.js && exec serve -s dist -l ${PORT:-3000}"]

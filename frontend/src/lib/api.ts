@@ -2,7 +2,7 @@
  * API utility module for making HTTP requests
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api';
 
 interface ApiResponse<T> {
   data: T;
