@@ -35,7 +35,7 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npm run build
 
-# Production stage - use serve for Railway compatibility (auto-reads PORT env var)
+# Production stage - use serve for Railway compatibility
 FROM node:25-alpine AS production
 
 WORKDIR /app
@@ -46,12 +46,6 @@ RUN npm install -g serve@14
 # Copy built assets from build stage
 COPY --from=build /app/dist ./dist
 
-# Railway sets PORT automatically, serve reads it
-ENV PORT=8080
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -q --spider http://localhost:${PORT}/health || exit 1
-
 # serve -s enables SPA mode (all routes serve index.html)
-# serve auto-reads PORT env var from Railway
-CMD ["serve", "-s", "dist"]
+# -l flag explicitly binds to PORT (Railway sets this at runtime)
+CMD ["sh", "-c", "exec serve -s dist -l ${PORT:-3000}"]
