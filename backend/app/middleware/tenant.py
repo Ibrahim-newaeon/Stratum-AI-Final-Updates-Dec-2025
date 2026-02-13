@@ -53,6 +53,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Extract and validate tenant context."""
 
+        # Always pass through OPTIONS preflight requests (handled by CORSMiddleware)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         # Skip public endpoints
         if self._is_public_endpoint(request.url.path):
             return await call_next(request)

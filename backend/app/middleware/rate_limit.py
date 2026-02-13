@@ -95,6 +95,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Apply rate limiting to the request."""
 
+        # Skip OPTIONS preflight requests (handled by CORSMiddleware)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         # Get client identifier
         client_id = self._get_client_identifier(request)
 

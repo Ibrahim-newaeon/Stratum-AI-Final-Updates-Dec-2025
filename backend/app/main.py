@@ -148,10 +148,38 @@ def create_application() -> FastAPI:
     logger.info("prometheus_instrumentator_initialized")
 
     # -------------------------------------------------------------------------
-    # Middleware (order matters - executed in reverse order)
+    # Middleware (Starlette add_middleware PREPENDS — last added = outermost)
+    # Execution order: CORS → ErrorHandler → GZip → RequestLogging →
+    #                  RateLimit → Tenant → Audit → SecurityHeaders → Router
     # -------------------------------------------------------------------------
 
-    # CORS - Must be outermost (first added) so CORS headers are always present
+    # Innermost middleware (added first, closest to the router)
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # Audit logging for state-changing requests
+    app.add_middleware(AuditMiddleware)
+
+    # Tenant extraction and validation
+    app.add_middleware(TenantMiddleware)
+
+    # Rate limiting
+    app.add_middleware(
+        RateLimitMiddleware,
+        requests_per_minute=settings.rate_limit_per_minute,
+        burst_size=settings.rate_limit_burst,
+    )
+
+    # Request logging middleware (request ID, timing, structured access logs)
+    app.add_middleware(RequestLoggingMiddleware)
+
+    # Gzip compression
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    # Error handler - catches exceptions from inner middleware
+    app.add_middleware(ErrorHandlerMiddleware)
+
+    # CORS - MUST be outermost (added LAST) so it handles OPTIONS preflight
+    # before any other middleware can reject the request
     cors_origins = settings.cors_origins_list
     logger.info("cors_origins_configured", origins=cors_origins)
     app.add_middleware(
@@ -170,32 +198,6 @@ def create_application() -> FastAPI:
         ],
         expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
     )
-
-    # Error handler - second outermost so ALL middleware exceptions are caught
-    # and error responses still pass through CORS (getting proper headers)
-    app.add_middleware(ErrorHandlerMiddleware)
-
-    # Gzip compression
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-    # Request logging middleware (request ID, timing, structured access logs)
-    app.add_middleware(RequestLoggingMiddleware)
-
-    # Rate limiting
-    app.add_middleware(
-        RateLimitMiddleware,
-        requests_per_minute=settings.rate_limit_per_minute,
-        burst_size=settings.rate_limit_burst,
-    )
-
-    # Tenant extraction and validation
-    app.add_middleware(TenantMiddleware)
-
-    # Audit logging for state-changing requests
-    app.add_middleware(AuditMiddleware)
-
-    # Security headers middleware (OWASP recommendations)
-    app.add_middleware(SecurityHeadersMiddleware)
 
     # -------------------------------------------------------------------------
     # Exception Handlers
@@ -291,11 +293,9 @@ def create_application() -> FastAPI:
         auditor = MemoryAuditor()
         app.state.memory_auditor = auditor
 
-        # Add memory profiling middleware (tracks per-endpoint RSS delta)
-        app.add_middleware(MemoryProfilingMiddleware, enabled=True)
-
-        # The middleware instance is accessible after add_middleware wraps the app.
-        # We create a standalone tracker to share with debug endpoints.
+        # NOTE: MemoryProfilingMiddleware is NOT added via add_middleware here
+        # because that would place it OUTSIDE CORSMiddleware (breaking CORS).
+        # Instead we only create a standalone tracker for debug endpoints.
         memory_profiling_tracker = MemoryProfilingMiddleware(app, enabled=True)
         app.state.memory_profiling_tracker = memory_profiling_tracker
 
