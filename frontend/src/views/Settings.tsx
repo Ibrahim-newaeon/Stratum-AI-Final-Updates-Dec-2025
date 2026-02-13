@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
@@ -781,6 +782,7 @@ function SecuritySettings({
 
 function IntegrationSettings() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [webhooks, setWebhooks] = useState([
     {
       id: '1',
@@ -968,9 +970,11 @@ function IntegrationSettings() {
   const IntegrationCard = ({
     integration,
     showDescription = false,
+    onConnect,
   }: {
     integration: any;
     showDescription?: boolean;
+    onConnect?: () => void;
   }) => (
     <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d">
       <div className="flex items-center gap-4">
@@ -996,6 +1000,7 @@ function IntegrationSettings() {
           </span>
         )}
         <button
+          onClick={onConnect}
           className={cn(
             'px-4 py-2 rounded-xl text-sm font-medium transition-colors',
             integration.connected
@@ -1131,10 +1136,18 @@ function IntegrationSettings() {
 
       {/* Ad Platforms */}
       <div>
-        <h3 className="font-medium mb-3">Ad Platforms</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-medium">Ad Platforms</h3>
+          <button
+            onClick={() => navigate('/dashboard/campaigns/connect')}
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Manage Connections
+          </button>
+        </div>
         <div className="space-y-3">
           {adPlatforms.map((integration) => (
-            <IntegrationCard key={integration.id} integration={integration} />
+            <IntegrationCard key={integration.id} integration={integration} onConnect={() => navigate('/dashboard/campaigns/connect')} />
           ))}
         </div>
       </div>
