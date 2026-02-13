@@ -35,20 +35,23 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npm run build
 
-# Production stage (memory audit Feb 2026)
-FROM nginx:alpine AS production
+# Production stage - use serve for Railway compatibility (auto-reads PORT env var)
+FROM node:25-alpine AS production
 
-# Copy built assets
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Copy nginx config directly (no template, no dynamic port)
-COPY nginx.railway.conf /etc/nginx/conf.d/default.conf
+# Install serve - lightweight static file server
+RUN npm install -g serve@14
 
-EXPOSE 80
+# Copy built assets from build stage
+COPY --from=build /app/dist ./dist
+
+# Railway sets PORT automatically, serve reads it
+ENV PORT=8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -q --spider http://localhost:80/health || exit 1
+    CMD wget -q --spider http://localhost:${PORT}/health || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
-
-# Result: ~25MB container vs ~500MB with Vite dev server (per memory audit)
+# serve -s enables SPA mode (all routes serve index.html)
+# serve auto-reads PORT env var from Railway
+CMD ["serve", "-s", "dist"]
