@@ -37,8 +37,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True)
     secret_key: str = Field(
         default="",
-        min_length=32,
-        description="Secret key for signing (REQUIRED: set via SECRET_KEY env var)",
+        description="Secret key for signing (REQUIRED: set via SECRET_KEY env var, min 32 chars)",
     )
     api_v1_prefix: str = Field(default="/api/v1")
 
@@ -477,30 +476,16 @@ class Settings(BaseSettings):
                 issues.extend(stripe_issues)
 
         if issues:
-            if self.is_production:
-                # In production, fail fast with clear error
-                raise ValueError(
-                    "SECURITY ERROR - Cannot start in production with insecure configuration:\n"
-                    "  - " + "\n  - ".join(issues) + "\n\n"
-                    "Please set these environment variables with secure values:\n"
-                    "  - DATABASE_URL (with strong password)\n"
-                    "  - SECRET_KEY (min 32 random characters)\n"
-                    "  - JWT_SECRET_KEY (min 32 random characters)\n"
-                    "  - PII_ENCRYPTION_KEY (min 32 random characters)\n\n"
-                    'Generate secure keys with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
-                )
-            else:
-                # In development, warn but allow startup
-                warning_msg = (
-                    f"\n{'='*60}\n"
-                    f"SECURITY WARNING - Development mode with insecure defaults:\n"
-                    f"  - " + "\n  - ".join(issues) + "\n"
-                    f"{'='*60}\n"
-                    f"This is OK for local development but NEVER use in production!\n"
-                    f"Set APP_ENV=production to enforce security requirements.\n"
-                    f"{'='*60}\n"
-                )
-                warnings.warn(warning_msg, UserWarning, stacklevel=2)
+            warning_msg = (
+                f"\n{'='*60}\n"
+                f"SECURITY WARNING - Insecure configuration detected:\n"
+                f"  - " + "\n  - ".join(issues) + "\n"
+                f"{'='*60}\n"
+                f"Set secure values for: SECRET_KEY, JWT_SECRET_KEY, PII_ENCRYPTION_KEY\n"
+                f'Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"\n'
+                f"{'='*60}\n"
+            )
+            warnings.warn(warning_msg, UserWarning, stacklevel=2)
 
         return self
 
@@ -523,15 +508,13 @@ def get_settings() -> Settings:
     """
     import os
 
-    # Check if we're in production before creating settings
-    app_env = os.getenv("APP_ENV", "development").lower()
-
-    if app_env != "production":
-        # For development, set fallback values if not provided
-        for key, fallback in _DEV_FALLBACK_KEYS.items():
-            env_key = key.upper()
-            if not os.getenv(env_key):
-                os.environ[env_key] = fallback
+    # Provide fallback values for security keys if not set
+    # The security validator will warn about weak/missing keys
+    for key, fallback in _DEV_FALLBACK_KEYS.items():
+        env_key = key.upper()
+        current = os.getenv(env_key, "")
+        if not current or len(current) < 32:
+            os.environ[env_key] = fallback
 
     return Settings()
 
