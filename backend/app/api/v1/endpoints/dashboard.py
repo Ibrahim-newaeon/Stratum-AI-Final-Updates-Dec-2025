@@ -390,7 +390,7 @@ async def get_dashboard_overview(
         select(TenantOnboarding).where(TenantOnboarding.tenant_id == tenant_id)
     )
     onboarding = onboarding_result.scalar_one_or_none()
-    onboarding_complete = onboarding and onboarding.status == OnboardingStatus.COMPLETED
+    onboarding_complete = bool(onboarding and onboarding.status == OnboardingStatus.COMPLETED)
 
     # Get connected platforms
     platforms_result = await db.execute(
