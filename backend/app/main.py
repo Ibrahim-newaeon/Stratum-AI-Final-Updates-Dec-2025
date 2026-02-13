@@ -200,6 +200,17 @@ def create_application() -> FastAPI:
     # -------------------------------------------------------------------------
     # Exception Handlers
     # -------------------------------------------------------------------------
+    def _cors_headers(request: Request) -> dict:
+        """Build CORS headers for error responses so browsers can read them."""
+        origin = request.headers.get("origin", "")
+        if origin:
+            return {
+                "access-control-allow-origin": "*",
+                "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Tenant-ID",
+            }
+        return {}
+
     @app.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException):
         """Handle structured application exceptions."""
@@ -215,7 +226,11 @@ def create_application() -> FastAPI:
         payload = exc.to_dict()
         if request_id:
             payload["request_id"] = request_id
-        return JSONResponse(status_code=exc.status_code, content=payload)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=payload,
+            headers=_cors_headers(request),
+        )
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
@@ -243,6 +258,8 @@ def create_application() -> FastAPI:
                 )
                 sentry_sdk.capture_exception(exc)
 
+        headers = _cors_headers(request)
+
         if settings.is_development:
             import traceback
 
@@ -254,6 +271,7 @@ def create_application() -> FastAPI:
                     "error_type": type(exc).__name__,
                     "traceback": traceback.format_exc(),
                 },
+                headers=headers,
             )
 
         return JSONResponse(
@@ -263,6 +281,7 @@ def create_application() -> FastAPI:
                 "error": "An unexpected error occurred",
                 "message": "Please contact support if this persists",
             },
+            headers=headers,
         )
 
     # -------------------------------------------------------------------------
