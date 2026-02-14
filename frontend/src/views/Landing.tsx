@@ -1,33 +1,16 @@
 /**
  * Landing Page
  * Renders the static landing page HTML in a full-page iframe
- * Includes Voice Greeting and Chat Widget for visitor engagement
+ * Includes Chat Widget for visitor engagement (click-to-open only)
  */
 
-import { useState, useEffect } from 'react';
-import { OnboardingChat, OnboardingChatButton, VoiceGreeting } from '@/components/onboarding';
+import { useState } from 'react';
+import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
 
 export default function Landing() {
   // Cache-busting: append timestamp to prevent stale content
   const cacheBuster = `?v=${Date.now()}`;
   const [chatOpen, setChatOpen] = useState(false);
-  const [greetingDismissed, setGreetingDismissed] = useState(false);
-  const [greetingShown, setGreetingShown] = useState(false);
-
-  // Check if greeting was already shown this session
-  useEffect(() => {
-    const wasShown = sessionStorage.getItem('stratum_greeting_shown') === 'true';
-    setGreetingShown(wasShown);
-  }, []);
-
-  const handleStartChat = () => {
-    setGreetingDismissed(true);
-    setChatOpen(true);
-  };
-
-  const handleDismissGreeting = () => {
-    setGreetingDismissed(true);
-  };
 
   return (
     <>
@@ -47,21 +30,8 @@ export default function Landing() {
         }}
       />
 
-      {/* Voice Greeting - Auto-triggers after 4s or 50% scroll */}
-      {!chatOpen && !greetingDismissed && (
-        <VoiceGreeting
-          triggerDelay={4000}
-          triggerScrollPercent={50}
-          audioSrc="/audio/greeting-en.mp3"
-          language="en"
-          onStartChat={handleStartChat}
-          onDismiss={handleDismissGreeting}
-          alreadyShown={greetingShown}
-        />
-      )}
-
-      {/* Chat Button - Show after greeting is dismissed */}
-      {!chatOpen && greetingDismissed && (
+      {/* Chat Button - Always visible, opens chat on click */}
+      {!chatOpen && (
         <OnboardingChatButton onClick={() => setChatOpen(true)} pulse={true} />
       )}
 
