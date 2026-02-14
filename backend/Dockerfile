@@ -48,9 +48,9 @@ USER appuser
 EXPOSE 8080
 
 # Health check using liveness endpoint (no dependency checks)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
     CMD curl -f http://localhost:${PORT:-8080}/health/live || exit 1
 
 # Default command - run migrations, seed admin, then start server
 # Migrations use sync driver (psycopg2) and are idempotent (safe to run every deploy)
-CMD ["sh", "-c", "echo '=== Running database migrations ===' && alembic upgrade head && echo '=== Migrations complete, seeding admin ===' && python scripts/seed_superadmin.py && echo '=== Startup complete ===' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "echo '=== Running database migrations ===' && alembic upgrade head && echo '=== Migrations complete ===' && (python scripts/seed_superadmin.py || echo '=== Seed script skipped (non-fatal) ===') && echo '=== Starting server ===' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
