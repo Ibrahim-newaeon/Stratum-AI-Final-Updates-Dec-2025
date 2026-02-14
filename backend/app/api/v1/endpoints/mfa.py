@@ -353,7 +353,9 @@ async def validate_mfa_code(
     # Check if user is locked
     is_locked, lockout_until = await is_user_locked(db, request.user_id)
     if is_locked:
-        remaining = (lockout_until.timestamp() - __import__("time").time()) // 60
+        import time as _time
+
+        remaining = (lockout_until.timestamp() - _time.time()) // 60
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Account locked due to too many failed attempts. Try again in {int(remaining)} minutes.",

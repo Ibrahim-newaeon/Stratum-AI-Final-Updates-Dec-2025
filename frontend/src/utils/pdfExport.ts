@@ -30,7 +30,7 @@ export async function exportViewToPDF(
 ): Promise<void> {
   const element = document.getElementById(elementId);
   if (!element) {
-    console.error('Element not found:', elementId);
+    // Element not found
     return;
   }
 
@@ -52,7 +52,7 @@ export async function exportViewToPDF(
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
     pdf.save(filename);
   } catch (error) {
-    console.error('Failed to export PDF:', error);
+    // Error re-thrown below
     throw error;
   }
 }
@@ -239,7 +239,7 @@ export async function generateClientReport(data: ReportData): Promise<void> {
 export async function exportDashboardPDF(tenantName: string): Promise<void> {
   const mainContent = document.querySelector('main');
   if (!mainContent) {
-    console.error('Main content not found');
+    // Main content not found
     return;
   }
 
@@ -283,7 +283,7 @@ export async function exportDashboardPDF(tenantName: string): Promise<void> {
     const filename = `${tenantName.replace(/\s+/g, '_')}_Dashboard_${new Date().toISOString().split('T')[0]}.pdf`;
     pdf.save(filename);
   } catch (error) {
-    console.error('Failed to export dashboard:', error);
+    // Error re-thrown below
     throw error;
   }
 }

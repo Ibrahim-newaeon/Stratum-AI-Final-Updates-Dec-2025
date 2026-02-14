@@ -5,12 +5,13 @@
  * Enterprise tier only.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CheckCircle2,
   Clock,
   Copy,
   Edit,
+  Loader2,
   Pause,
   Play,
   Plus,
@@ -21,6 +22,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CustomAutopilotRulesBuilder } from '@/components/autopilot/CustomAutopilotRulesBuilder';
+import {
+  useRules,
+  useDeleteRule,
+  useToggleRule,
+  useCreateRule,
+  useUpdateRule,
+  type Rule,
+  type RuleStatus as ApiRuleStatus,
+} from '@/api/rules';
 
 type RuleStatus = 'active' | 'paused' | 'draft';
 
@@ -70,130 +80,79 @@ interface AutopilotRule {
   createdAt: string;
 }
 
-// Mock data for existing rules
-const mockRules: AutopilotRule[] = [
-  {
-    id: '1',
-    name: 'Scale High ROAS Campaigns',
-    description: 'Automatically increase budget by 20% when ROAS exceeds 4x for 3 consecutive days',
-    status: 'active' as const,
+/** Map an API Rule to the component's AutopilotRule shape */
+function mapApiRuleToAutopilot(r: Rule): AutopilotRule {
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description ?? '',
+    status: r.status as RuleStatus,
     conditionGroups: [
       {
-        id: '1',
-        logic: 'AND' as const,
-        conditions: [
-          { id: '1', field: 'roas', operator: 'gt', value: '4.0', valueType: 'number' as const },
-          {
-            id: '2',
-            field: 'days_running',
-            operator: 'gte',
-            value: '3',
-            valueType: 'number' as const,
-          },
-        ],
+        id: 'g1',
+        logic: (r.conditionLogic?.toUpperCase() ?? 'AND') as 'AND' | 'OR',
+        conditions: (r.conditions ?? []).map((c, i) => ({
+          id: `c${i}`,
+          field: c.metric,
+          operator: c.operator,
+          value: String(Array.isArray(c.value) ? c.value.join('-') : c.value),
+          valueType: 'number' as const,
+        })),
       },
     ],
-    conditionLogic: 'AND' as const,
-    actions: [
-      {
-        id: '1',
-        type: 'scale_budget',
-        config: { direction: 'increase', amount: '20' },
-        priority: 1,
-      },
-    ],
-    targeting: { platforms: ['meta', 'google'], campaignTypes: [], specificCampaigns: [] },
-    schedule: { enabled: false, frequency: 'hourly' as const, timezone: 'UTC' },
-    trustGate: { enabled: true, minSignalHealth: 70, requireApproval: false, dryRunFirst: true },
-    cooldownHours: 48,
-    maxExecutionsPerDay: 5,
-    triggerCount: 23,
-    lastTriggered: '2024-12-10T14:30:00Z',
-    createdAt: '2024-11-01',
-  },
-  {
-    id: '2',
-    name: 'Pause Underperformers',
-    description: 'Pause campaigns with CPA > $50 and less than 10 conversions after 7 days',
-    status: 'active' as const,
-    conditionGroups: [
-      {
-        id: '1',
-        logic: 'AND' as const,
-        conditions: [
-          { id: '1', field: 'cpa', operator: 'gt', value: '50', valueType: 'currency' as const },
-          {
-            id: '2',
-            field: 'conversions',
-            operator: 'lt',
-            value: '10',
-            valueType: 'number' as const,
-          },
-          {
-            id: '3',
-            field: 'days_running',
-            operator: 'gte',
-            value: '7',
-            valueType: 'number' as const,
-          },
-        ],
-      },
-    ],
-    conditionLogic: 'AND' as const,
-    actions: [{ id: '1', type: 'pause_campaign', config: {}, priority: 1 }],
-    targeting: { platforms: [], campaignTypes: ['prospecting'], specificCampaigns: [] },
-    schedule: { enabled: false, frequency: 'hourly' as const, timezone: 'UTC' },
-    trustGate: { enabled: true, minSignalHealth: 70, requireApproval: true, dryRunFirst: false },
-    cooldownHours: 24,
+    conditionLogic: (r.conditionLogic?.toUpperCase() ?? 'AND') as 'AND' | 'OR',
+    actions: (r.actions ?? []).map((a, i) => ({
+      id: `a${i}`,
+      type: a.type,
+      config: a.params ?? {},
+      priority: i,
+    })),
+    targeting: {
+      platforms: r.platforms ?? [],
+      campaignTypes: [],
+      specificCampaigns: r.campaignIds ?? [],
+    },
+    schedule: {
+      enabled: !!r.schedule,
+      frequency: 'daily',
+      timezone: r.schedule?.timezone ?? 'UTC',
+    },
+    trustGate: {
+      enabled: true,
+      minSignalHealth: 70,
+      requireApproval: false,
+      dryRunFirst: false,
+    },
+    cooldownHours: 4,
     maxExecutionsPerDay: 10,
-    triggerCount: 8,
-    lastTriggered: '2024-12-08T09:15:00Z',
-    createdAt: '2024-10-15',
-  },
-  {
-    id: '3',
-    name: 'Creative Fatigue Alert',
-    description: 'Send Slack notification when creative fatigue score exceeds 70%',
-    status: 'paused' as const,
-    conditionGroups: [
-      {
-        id: '1',
-        logic: 'AND' as const,
-        conditions: [
-          {
-            id: '1',
-            field: 'fatigue_score',
-            operator: 'gt',
-            value: '70',
-            valueType: 'percentage' as const,
-          },
-        ],
-      },
-    ],
-    conditionLogic: 'AND' as const,
-    actions: [
-      { id: '1', type: 'notify_slack', config: { channel: '#creative-alerts' }, priority: 1 },
-    ],
-    targeting: { platforms: ['meta'], campaignTypes: [], specificCampaigns: [] },
-    schedule: { enabled: true, frequency: 'daily' as const, timezone: 'America/New_York' },
-    trustGate: { enabled: false, minSignalHealth: 0, requireApproval: false, dryRunFirst: false },
-    cooldownHours: 24,
-    maxExecutionsPerDay: 3,
-    triggerCount: 15,
-    lastTriggered: '2024-12-05T10:00:00Z',
-    createdAt: '2024-09-20',
-  },
-];
+    triggerCount: r.runCount ?? 0,
+    lastTriggered: r.lastRunAt,
+    createdAt: r.createdAt,
+  };
+}
 
 export default function CustomAutopilotRules() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingRule, setEditingRule] = useState<AutopilotRule | null>(null);
-  const [rules, setRules] = useState(mockRules);
-  const [isSaving, setIsSaving] = useState(false);
 
-  const filteredRules = rules.filter((rule) => {
+  // API hooks
+  const { data: rulesData, isLoading } = useRules();
+  const toggleRule = useToggleRule();
+  const deleteRule = useDeleteRule();
+  const createRule = useCreateRule();
+  const updateRule = useUpdateRule();
+
+  const isSaving = createRule.isPending || updateRule.isPending;
+
+  // Map API rules to component shape
+  const rules: AutopilotRule[] = useMemo(() => {
+    const items = rulesData?.items ?? (Array.isArray(rulesData) ? rulesData : []);
+    return items.map(mapApiRuleToAutopilot);
+  }, [rulesData]);
+
+  const filteredRules = useMemo(() => rules.filter((rule) => {
     if (searchQuery && !rule.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
@@ -201,56 +160,101 @@ export default function CustomAutopilotRules() {
       return false;
     }
     return true;
-  });
+  }), [rules, searchQuery, statusFilter]);
 
   const handleSaveRule = async (rule: any) => {
-    setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (editingRule) {
-      setRules((prev) =>
-        prev.map((r) => (r.id === editingRule.id ? { ...rule, id: editingRule.id } : r))
-      );
-    } else {
-      setRules((prev) => [
-        ...prev,
-        { ...rule, id: crypto.randomUUID(), triggerCount: 0, lastTriggered: null },
-      ]);
+    try {
+      if (editingRule) {
+        await updateRule.mutateAsync({
+          id: editingRule.id,
+          data: {
+            name: rule.name,
+            description: rule.description,
+            status: rule.status as ApiRuleStatus,
+            conditions: rule.conditionGroups?.flatMap((g: any) =>
+              g.conditions.map((c: any) => ({
+                metric: c.field,
+                operator: c.operator,
+                value: Number(c.value) || 0,
+              }))
+            ) ?? [],
+            actions: rule.actions?.map((a: any) => ({
+              type: a.type,
+              params: a.config ?? {},
+            })) ?? [],
+            platforms: rule.targeting?.platforms,
+            campaignIds: rule.targeting?.specificCampaigns,
+          },
+        });
+      } else {
+        await createRule.mutateAsync({
+          name: rule.name,
+          description: rule.description,
+          trigger: 'metric_threshold',
+          conditions: rule.conditionGroups?.flatMap((g: any) =>
+            g.conditions.map((c: any) => ({
+              metric: c.field,
+              operator: c.operator,
+              value: Number(c.value) || 0,
+            }))
+          ) ?? [],
+          actions: rule.actions?.map((a: any) => ({
+            type: a.type,
+            params: a.config ?? {},
+          })) ?? [],
+          platforms: rule.targeting?.platforms,
+          campaignIds: rule.targeting?.specificCampaigns,
+        });
+      }
+    } catch (error) {
+      // Error handled by mutation
     }
 
-    setIsSaving(false);
     setShowBuilder(false);
     setEditingRule(null);
   };
 
-  const handleToggleRule = (ruleId: string) => {
-    setRules((prev) =>
-      prev.map((r) =>
-        r.id === ruleId ? { ...r, status: (r.status === 'active' ? 'paused' : 'active') as RuleStatus } : r
-      )
-    );
-  };
-
-  const handleDeleteRule = (ruleId: string) => {
-    if (confirm('Are you sure you want to delete this rule?')) {
-      setRules((prev) => prev.filter((r) => r.id !== ruleId));
+  const handleToggleRule = async (ruleId: string) => {
+    try {
+      await toggleRule.mutateAsync(ruleId);
+    } catch (error) {
+      // Error handled by mutation
     }
   };
 
-  const handleDuplicateRule = (rule: AutopilotRule) => {
-    setRules((prev) => [
-      ...prev,
-      {
-        ...rule,
-        id: crypto.randomUUID(),
+  const handleDeleteRule = async (ruleId: string) => {
+    if (confirm('Are you sure you want to delete this rule?')) {
+      try {
+        await deleteRule.mutateAsync(ruleId);
+      } catch (error) {
+        // Error handled by mutation
+      }
+    }
+  };
+
+  const handleDuplicateRule = async (rule: AutopilotRule) => {
+    try {
+      await createRule.mutateAsync({
         name: `${rule.name} (Copy)`,
-        status: 'draft' as const,
-        triggerCount: 0,
-        lastTriggered: null as any,
-        createdAt: new Date().toISOString().split('T')[0],
-      },
-    ]);
+        description: rule.description,
+        trigger: 'metric_threshold',
+        conditions: rule.conditionGroups.flatMap((g) =>
+          g.conditions.map((c) => ({
+            metric: c.field,
+            operator: c.operator as any,
+            value: Number(c.value) || 0,
+          }))
+        ),
+        actions: rule.actions.map((a) => ({
+          type: a.type as any,
+          params: a.config,
+        })),
+        platforms: rule.targeting.platforms,
+        campaignIds: rule.targeting.specificCampaigns,
+      });
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -297,6 +301,17 @@ export default function CustomAutopilotRules() {
           }}
           isLoading={isSaving}
         />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Loading rules…</span>
+        </div>
       </div>
     );
   }

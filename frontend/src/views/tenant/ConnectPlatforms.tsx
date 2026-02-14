@@ -187,7 +187,7 @@ export default function ConnectPlatforms() {
         window.location.href = result.oauth_url;
       }
     } catch (error) {
-      console.error('Failed to start connection:', error);
+      // Error - falling back to demo mode
       // Fallback for demo mode
       alert(`OAuth flow would start for ${platformId}`);
     } finally {
@@ -200,7 +200,7 @@ export default function ConnectPlatforms() {
       try {
         await disconnectPlatform.mutateAsync(platformId as Platform);
       } catch (error) {
-        console.error('Failed to disconnect:', error);
+        // Error - falling back to demo mode
         alert(`Disconnected ${platformId} (demo mode)`);
       }
     }
@@ -211,7 +211,7 @@ export default function ConnectPlatforms() {
       await refreshToken.mutateAsync(platformId as Platform);
       alert('Token refreshed successfully');
     } catch (error) {
-      console.error('Failed to refresh token:', error);
+      // Error - falling back to demo mode
       alert(`Refreshing token for ${platformId} (demo mode)`);
     }
   };

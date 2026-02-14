@@ -145,12 +145,24 @@ async def get_revenue_metrics(
     # Calculate ARPA
     arpa = total_mrr / max(active_count, 1)
 
-    # Placeholder metrics (would be calculated from historical data)
-    mrr_growth = 8.5  # 8.5% month-over-month
-    gross_margin = 72.0  # 72% gross margin
-    nrr = 105.0  # 105% net revenue retention
-    logo_churn = 3.2  # 3.2% logo churn
-    revenue_churn = 2.1  # 2.1% revenue churn
+    # Calculate trial conversion rate from real data
+    converted_count = len(
+        [t for t in tenants if getattr(t, "plan", "") not in ("trial", "") and
+         getattr(t, "status", "") != "trialing"]
+    )
+    trial_conversion_rate = (
+        round((converted_count / (converted_count + trial_count)) * 100, 1)
+        if (converted_count + trial_count) > 0
+        else 0.0
+    )
+
+    # These metrics require historical subscription data to compute accurately.
+    # Set to 0 until billing history tracking is implemented.
+    mrr_growth = 0.0
+    gross_margin = 0.0
+    nrr = 0.0
+    logo_churn = 0.0
+    revenue_churn = 0.0
 
     return APIResponse(
         success=True,
@@ -166,7 +178,7 @@ async def get_revenue_metrics(
             "active_tenants": active_count,
             "trial_tenants": trial_count,
             "total_tenants": len(tenants),
-            "trial_conversion_rate": 45.0,  # Placeholder
+            "trial_conversion_rate": trial_conversion_rate,
         },
     )
 
@@ -319,41 +331,41 @@ async def get_system_health(
     """
     require_superadmin(request)
 
-    # These would come from system_health_hourly table and real metrics
-    # Using placeholders for now
+    import psutil
+
+    # Real system resource metrics
+    cpu_percent = psutil.cpu_percent(interval=0.1)
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage("/")
+
     return APIResponse(
         success=True,
         data={
             "pipeline": {
-                "success_rate_24h": 99.2,
-                "success_rate_7d": 99.5,
-                "jobs_total_24h": 1250,
-                "jobs_failed_24h": 10,
+                "success_rate_24h": None,
+                "success_rate_7d": None,
+                "jobs_total_24h": None,
+                "jobs_failed_24h": None,
             },
             "api": {
-                "requests_24h": 45000,
-                "error_rate": 0.3,
-                "latency_p50_ms": 45,
-                "latency_p99_ms": 320,
+                "requests_24h": None,
+                "error_rate": None,
+                "latency_p50_ms": None,
+                "latency_p99_ms": None,
             },
             "queue": {
-                "depth": 12,
-                "latency_ms": 150,
+                "depth": None,
+                "latency_ms": None,
             },
-            "platforms": {
-                "meta": {"status": "healthy", "success_rate": 99.8, "rate_limit_remaining": 85},
-                "google": {"status": "healthy", "success_rate": 99.5, "rate_limit_remaining": 90},
-                "tiktok": {"status": "healthy", "success_rate": 98.9, "rate_limit_remaining": 78},
-                "snap": {"status": "risk", "success_rate": 95.2, "rate_limit_remaining": 45},
-            },
+            "platforms": {},
             "resources": {
-                "cpu_percent": 35,
-                "memory_percent": 62,
-                "disk_percent": 48,
+                "cpu_percent": round(cpu_percent, 1),
+                "memory_percent": round(memory.percent, 1),
+                "disk_percent": round(disk.percent, 1),
             },
             "warehouse": {
-                "cost_daily_usd": 45.50,
-                "storage_gb": 125,
+                "cost_daily_usd": None,
+                "storage_gb": None,
             },
         },
     )
@@ -791,6 +803,12 @@ async def update_subscription_plan(
 
         from sqlalchemy import text
 
+        # Allowlist of updatable columns — defense-in-depth against SQL injection
+        ALLOWED_COLUMNS = frozenset({
+            "price_cents", "max_users", "max_campaigns",
+            "max_connectors", "features", "is_active",
+        })
+
         updates = []
         params = {"plan_id": plan_id}
 
@@ -812,6 +830,12 @@ async def update_subscription_plan(
         if update.is_active is not None:
             updates.append("is_active = :is_active")
             params["is_active"] = update.is_active
+
+        # Verify all column names are in the allowlist
+        for clause in updates:
+            col_name = clause.split(" = ")[0].strip()
+            if col_name not in ALLOWED_COLUMNS:
+                raise HTTPException(status_code=400, detail=f"Invalid column: {col_name}")
 
         if updates:
             updates.append("updated_at = NOW()")

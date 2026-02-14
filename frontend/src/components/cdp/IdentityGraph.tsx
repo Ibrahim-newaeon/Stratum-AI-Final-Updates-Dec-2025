@@ -510,7 +510,7 @@ export function IdentityGraph() {
       setTargetProfileId('');
       setShowMergeForm(false);
     } catch (error) {
-      console.error('Merge failed:', error);
+      // Error handled by mutation
     }
   };
 

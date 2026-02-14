@@ -66,7 +66,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
         setError(null);
       }
     } catch (err) {
-      console.error('Failed to fetch optimization:', err);
+      // Error displayed via setError below
       setError('Failed to load optimization data');
     } finally {
       setLoading(false);

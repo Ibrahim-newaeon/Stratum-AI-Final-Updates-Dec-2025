@@ -25,7 +25,6 @@ function DocumentDirectionHandler() {
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./views/Landing'));
 const LandingAr = lazy(() => import('./views/LandingAr'));
-const AILanding = lazy(() => import('./views/AILanding'));
 const Login = lazy(() => import('./views/Login'));
 const Signup = lazy(() => import('./views/Signup'));
 const ForgotPassword = lazy(() => import('./views/ForgotPassword'));
@@ -144,8 +143,6 @@ const FeaturesPage = lazy(() => import('./views/pages/Features'));
 const PricingPage = lazy(() => import('./views/pages/Pricing'));
 const IntegrationsPage = lazy(() => import('./views/pages/Integrations'));
 const ApiDocsPage = lazy(() => import('./views/pages/ApiDocs'));
-// Direct import (not lazy) for testing
-import TestPage from './views/pages/TestPage';
 
 // Public pages (Solutions)
 const CDPSolutionPage = lazy(() => import('./views/pages/solutions/CDP'));
@@ -208,24 +205,6 @@ function App() {
                       element={
                         <Suspense fallback={<LoadingSpinner />}>
                           <LandingAr />
-                        </Suspense>
-                      }
-                    />
-                    {/* Deprecated: AI Landing — kept temporarily */}
-                    <Route
-                      path="/ai"
-                      element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <AILanding />
-                        </Suspense>
-                      }
-                    />
-                    {/* Legacy landing kept for reference */}
-                    <Route
-                      path="/legacy"
-                      element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <Landing />
                         </Suspense>
                       }
                     />
@@ -419,9 +398,6 @@ function App() {
                         </Suspense>
                       }
                     />
-
-                    {/* Test page (public) - for debugging routing */}
-                    <Route path="/test-page" element={<TestPage />} />
 
                     {/* Product pages (public) */}
                     <Route

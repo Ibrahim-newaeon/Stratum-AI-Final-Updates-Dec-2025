@@ -26,6 +26,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePriceMetrics } from '@/hooks/usePriceMetrics';
 import {
   TimePeriod,
   useApproveRecommendation,
@@ -64,12 +65,12 @@ export default function UnifiedDashboard() {
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState<TimePeriod>('7d');
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
+  const { showPriceMetrics } = usePriceMetrics();
 
   // Fetch all dashboard data
   const {
     data: overview,
     isLoading: overviewLoading,
-    refetch: refetchOverview,
   } = useDashboardOverview(period);
 
   const { data: campaigns, isLoading: campaignsLoading } = useDashboardCampaigns({
@@ -221,8 +222,10 @@ export default function UnifiedDashboard() {
       {/* Key Metrics */}
       {(() => {
         const hidden = overview?.hidden_metrics || [];
+        const priceHidden = !showPriceMetrics ? ['spend', 'revenue', 'roas', 'cpa'] : [];
+        const allHidden = [...hidden, ...priceHidden];
         const primaryCards = [
-          !hidden.includes('spend') && (
+          !allHidden.includes('spend') && (
             <MetricCard
               key="spend"
               title="Total Spend"
@@ -233,7 +236,7 @@ export default function UnifiedDashboard() {
               loading={overviewLoading}
             />
           ),
-          !hidden.includes('revenue') && (
+          !allHidden.includes('revenue') && (
             <MetricCard
               key="revenue"
               title="Revenue"
@@ -245,7 +248,7 @@ export default function UnifiedDashboard() {
               positive
             />
           ),
-          !hidden.includes('roas') && (
+          !allHidden.includes('roas') && (
             <MetricCard
               key="roas"
               title="ROAS"
@@ -258,7 +261,7 @@ export default function UnifiedDashboard() {
               positive
             />
           ),
-          !hidden.includes('conversions') && (
+          !allHidden.includes('conversions') && (
             <MetricCard
               key="conversions"
               title="Conversions"
@@ -288,8 +291,10 @@ export default function UnifiedDashboard() {
       {/* Secondary Metrics Row */}
       {(() => {
         const hidden = overview?.hidden_metrics || [];
+        const priceHidden2 = !showPriceMetrics ? ['spend', 'revenue', 'roas', 'cpa'] : [];
+        const allHidden2 = [...hidden, ...priceHidden2];
         const secondaryCards = [
-          !hidden.includes('cpa') && (
+          !allHidden2.includes('cpa') && (
             <MetricCard
               key="cpa"
               title="CPA"
@@ -301,7 +306,7 @@ export default function UnifiedDashboard() {
               loading={overviewLoading}
             />
           ),
-          !hidden.includes('ctr') && (
+          !allHidden2.includes('ctr') && (
             <MetricCard
               key="ctr"
               title="CTR"
@@ -313,7 +318,7 @@ export default function UnifiedDashboard() {
               loading={overviewLoading}
             />
           ),
-          !hidden.includes('impressions') && (
+          !allHidden2.includes('impressions') && (
             <MetricCard
               key="impressions"
               title="Impressions"
@@ -323,7 +328,7 @@ export default function UnifiedDashboard() {
               loading={overviewLoading}
             />
           ),
-          !hidden.includes('clicks') && (
+          !allHidden2.includes('clicks') && (
             <MetricCard
               key="clicks"
               title="Clicks"

@@ -54,6 +54,17 @@ DEFAULT_SCOPES = [
 ]
 
 
+def _escape_soql(value: str) -> str:
+    """Escape a string value for safe use in SOQL queries.
+
+    Prevents SOQL injection by escaping special characters.
+    See: https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql_select_quotedstringescapes.htm
+    """
+    import re
+
+    return re.sub(r"([\\'\"\n\r\t])", r"\\\1", value)
+
+
 def hash_email(email: str) -> str:
     """Hash email for identity matching."""
     return hashlib.sha256(email.lower().strip().encode()).hexdigest()
@@ -603,7 +614,8 @@ class SalesforceClient:
         opportunity_id: str,
     ) -> Optional[dict[str, Any]]:
         """Get contact roles for an opportunity."""
-        query = f"SELECT Id, ContactId, Role, IsPrimary FROM OpportunityContactRole WHERE OpportunityId = '{opportunity_id}'"
+        safe_id = _escape_soql(opportunity_id)
+        query = f"SELECT Id, ContactId, Role, IsPrimary FROM OpportunityContactRole WHERE OpportunityId = '{safe_id}'"
         return await self._make_request("GET", "/query", params={"q": query})
 
     # =========================================================================
@@ -775,10 +787,11 @@ class SalesforceClient:
         limit: int = 100,
     ) -> Optional[dict[str, Any]]:
         """Get members of a campaign."""
+        safe_id = _escape_soql(campaign_id)
         query = f"""
             SELECT Id, ContactId, LeadId, Status, FirstRespondedDate
             FROM CampaignMember
-            WHERE CampaignId = '{campaign_id}'
+            WHERE CampaignId = '{safe_id}'
             LIMIT {limit}
         """
         return await self._make_request("GET", "/query", params={"q": query})

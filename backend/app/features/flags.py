@@ -56,6 +56,7 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "max_campaigns": 5,
         "max_users": 2,
         "data_retention_days": 30,
+        "show_price_metrics": True,
     },
     PlanTier.STARTER: {
         "signal_health": True,
@@ -90,6 +91,7 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "dashboard_export": True,
         "dashboard_customization": False,
         "custom_reports": False,
+        "show_price_metrics": True,
     },
     PlanTier.PROFESSIONAL: {
         "signal_health": True,
@@ -124,6 +126,7 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "dashboard_export": True,
         "dashboard_customization": False,
         "custom_reports": False,
+        "show_price_metrics": True,
     },
     PlanTier.ENTERPRISE: {
         "signal_health": True,
@@ -158,6 +161,7 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "dashboard_export": True,
         "dashboard_customization": True,
         "custom_reports": True,
+        "show_price_metrics": True,
     },
     PlanTier.CUSTOM: {
         # Custom plans inherit enterprise defaults, overridden per tenant
@@ -193,6 +197,7 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "dashboard_export": True,
         "dashboard_customization": True,
         "custom_reports": True,
+        "show_price_metrics": True,
     },
 }
 
@@ -252,6 +257,7 @@ class FeatureFlags(BaseModel):
     dashboard_export: bool = Field(default=False, description="Dashboard export functionality")
     dashboard_customization: bool = Field(default=False, description="Dashboard customization")
     custom_reports: bool = Field(default=False, description="Custom report builder")
+    show_price_metrics: bool = Field(default=True, description="Show price metrics (spend, revenue, ROAS, CPA) in dashboard")
 
     class Config:
         use_enum_values = True
@@ -292,6 +298,7 @@ class FeatureFlagsUpdate(BaseModel):
     dashboard_export: Optional[bool] = None
     dashboard_customization: Optional[bool] = None
     custom_reports: Optional[bool] = None
+    show_price_metrics: Optional[bool] = None
 
 
 # =============================================================================
@@ -498,7 +505,7 @@ FEATURE_CATEGORIES = {
     "dashboard": {
         "name": "Dashboard & Reports",
         "description": "Dashboard customization and reporting",
-        "features": ["dashboard_export", "dashboard_customization", "custom_reports"],
+        "features": ["dashboard_export", "dashboard_customization", "custom_reports", "show_price_metrics"],
     },
     "platform": {
         "name": "Platform Features",
@@ -546,4 +553,5 @@ FEATURE_DESCRIPTIONS = {
     "dashboard_export": "Export dashboard data to CSV/JSON",
     "dashboard_customization": "Customize dashboard layout and widgets",
     "custom_reports": "Build custom reports with drag-and-drop",
+    "show_price_metrics": "Toggle visibility of spend, revenue, ROAS, and CPA across dashboard views",
 }

@@ -184,8 +184,8 @@ def create_application() -> FastAPI:
     logger.info("cors_origins_configured", origins=cors_origins)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
+        allow_origins=cors_origins,
+        allow_credentials=settings.cors_allow_credentials,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=[
             "Content-Type",
@@ -205,9 +205,9 @@ def create_application() -> FastAPI:
     def _cors_headers(request: Request) -> dict:
         """Build CORS headers for error responses so browsers can read them."""
         origin = request.headers.get("origin", "")
-        if origin:
+        if origin and origin in cors_origins:
             return {
-                "access-control-allow-origin": "*",
+                "access-control-allow-origin": origin,
                 "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
                 "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Tenant-ID",
             }

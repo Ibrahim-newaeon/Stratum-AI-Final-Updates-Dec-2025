@@ -204,7 +204,7 @@ export function CAPISetup() {
         setPlatformStatuses(statuses);
       }
     } catch (err: any) {
-      console.error('Failed to fetch statuses:', err);
+      // Silenced - platforms may not be connected yet
       // Don't show error on initial load - platforms just aren't connected yet
     } finally {
       setIsLoading(false);
@@ -260,7 +260,7 @@ export function CAPISetup() {
         setSuccess(`Disconnected from ${PLATFORMS.find((p) => p.id === platform)?.name}`);
       }
     } catch (err: any) {
-      console.error('Failed to disconnect:', err);
+      // Error displayed via setError below
       setError(err.response?.data?.detail || 'Failed to disconnect');
     }
   };

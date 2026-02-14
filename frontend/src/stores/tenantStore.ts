@@ -15,6 +15,7 @@ import { devtools } from 'zustand/middleware';
 export type UserRole =
   | 'superadmin'
   | 'admin'
+  | 'user'
   | 'manager'
   | 'media_buyer'
   | 'analyst'

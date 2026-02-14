@@ -95,7 +95,7 @@ export function Competitors() {
       await deleteCompetitor.mutateAsync(id);
       refetchCompetitors();
     } catch (error) {
-      console.error('Failed to delete competitor:', error);
+      // Error handled by mutation
     }
   };
 

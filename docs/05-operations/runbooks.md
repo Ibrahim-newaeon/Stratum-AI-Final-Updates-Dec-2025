@@ -476,6 +476,130 @@ aws rds describe-db-instances \
 
 ---
 
+---
+
+## Docker Compose Deployment (Development / Staging)
+
+### Deploy with Docker Compose
+
+```bash
+# 1. Ensure .env file is configured
+cp .env.example .env
+# Edit .env with production values
+
+# 2. Build and start all services
+docker compose build --no-cache
+docker compose up -d
+
+# 3. Wait for health checks
+docker compose ps  # All services should show "healthy"
+
+# 4. Run smoke tests
+BASE_URL=http://localhost:8000 ./scripts/smoke_test.sh
+
+# 5. Verify frontend
+curl -f http://localhost:5173
+```
+
+### Docker Compose Rollback
+
+```bash
+# 1. Stop current deployment
+docker compose down
+
+# 2. Roll back to previous image
+docker compose up -d --force-recreate
+
+# 3. Roll back database migration if needed
+docker compose exec api alembic downgrade -1
+
+# 4. Verify health
+docker compose ps
+BASE_URL=http://localhost:8000 ./scripts/smoke_test.sh
+```
+
+---
+
+## ECS Deployment (Production)
+
+### Deploy to ECS
+
+```bash
+# 1. Build and push Docker image
+VERSION=$(git rev-parse --short HEAD)
+docker build -t stratum-api:${VERSION} ./backend
+docker tag stratum-api:${VERSION} ${ECR_REPO}:${VERSION}
+docker tag stratum-api:${VERSION} ${ECR_REPO}:latest
+aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO}
+docker push ${ECR_REPO}:${VERSION}
+docker push ${ECR_REPO}:latest
+
+# 2. Update ECS task definition
+aws ecs register-task-definition \
+  --cli-input-json file://ecs/task-definition.json
+
+# 3. Update service (rolling deployment)
+aws ecs update-service \
+  --cluster stratum-prod \
+  --service stratum-api \
+  --task-definition stratum-api:latest \
+  --deployment-configuration "minimumHealthyPercent=50,maximumPercent=200"
+
+# 4. Wait for deployment
+aws ecs wait services-stable --cluster stratum-prod --services stratum-api
+
+# 5. Run smoke tests against production
+BASE_URL=https://api.stratum.ai ./scripts/smoke_test.sh
+
+# 6. Monitor for 15 minutes
+watch -n 10 'aws ecs describe-services --cluster stratum-prod --services stratum-api --query "services[0].deployments"'
+```
+
+### ECS Rollback
+
+```bash
+# 1. Get previous task definition revision
+PREV_TD=$(aws ecs describe-services \
+  --cluster stratum-prod --services stratum-api \
+  --query 'services[0].taskDefinition' --output text | sed 's/:.*/:/')
+
+# 2. Roll back service
+aws ecs update-service \
+  --cluster stratum-prod \
+  --service stratum-api \
+  --task-definition ${PREV_TD}
+
+# 3. Wait for stability
+aws ecs wait services-stable --cluster stratum-prod --services stratum-api
+
+# 4. Roll back database if needed
+# Connect to ECS task and run:
+alembic downgrade -1
+
+# 5. Verify
+BASE_URL=https://api.stratum.ai ./scripts/smoke_test.sh
+```
+
+---
+
+## Pre-Deploy Checklist
+
+- [ ] CI Release Gate passed (all jobs green)
+- [ ] Smoke tests passed on staging
+- [ ] Database migration tested (if applicable)
+- [ ] Environment variables verified (no defaults in production)
+- [ ] CORS_ORIGINS set to production domain
+- [ ] SECRET_KEY, JWT_SECRET_KEY, PII_ENCRYPTION_KEY are unique 32+ char secrets
+- [ ] EMBED_SIGNING_KEY configured (if embed widgets enabled)
+- [ ] WHATSAPP_APP_SECRET configured (if WhatsApp enabled)
+- [ ] Sentry DSN configured
+- [ ] Prometheus scraper can reach /metrics
+- [ ] Health check endpoints responding: /health, /health/ready, /health/live
+- [ ] Rollback plan documented and tested
+- [ ] On-call engineer notified
+
+---
+
 ## Related Documentation
 
 - [Monitoring](./monitoring.md) - Metrics and alerting

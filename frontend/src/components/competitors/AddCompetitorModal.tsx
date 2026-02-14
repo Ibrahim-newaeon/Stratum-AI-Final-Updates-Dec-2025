@@ -96,7 +96,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Failed to add competitor:', error);
+      // Error handled by mutation
     } finally {
       setIsSubmitting(false);
     }

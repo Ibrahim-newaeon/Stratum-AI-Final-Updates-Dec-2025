@@ -44,8 +44,12 @@ class EmbedTokenService:
 
     def __init__(self, db: Session):
         self.db = db
-        # Secret key for HMAC signatures (should be in settings)
-        self._signing_key = getattr(settings, "EMBED_SIGNING_KEY", "stratum-embed-secret-key")
+        if not settings.embed_signing_key or len(settings.embed_signing_key) < 32:
+            raise ValueError(
+                "EMBED_SIGNING_KEY must be set via environment variable (min 32 chars). "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+        self._signing_key = settings.embed_signing_key
 
     # =========================================================================
     # Token Generation

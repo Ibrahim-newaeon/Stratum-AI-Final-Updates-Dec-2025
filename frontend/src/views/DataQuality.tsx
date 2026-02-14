@@ -131,7 +131,7 @@ export function DataQuality() {
         setReport(null);
       }
     } catch (err) {
-      console.error('Failed to fetch report:', err);
+      // Error displayed via setError below
       setError('Failed to load data quality report');
     } finally {
       setLoading(false);

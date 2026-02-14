@@ -9,6 +9,7 @@ import { Link, useParams } from 'react-router-dom';
 import { FunnelIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { useCampaigns } from '@/api/hooks';
+import { usePriceMetrics } from '@/hooks/usePriceMetrics';
 
 interface Campaign {
   id: string;
@@ -21,50 +22,6 @@ interface Campaign {
   lastUpdated: string;
 }
 
-// Mock data for demo
-const mockCampaigns: Campaign[] = [
-  {
-    id: '1',
-    name: 'Summer Sale 2024',
-    platform: 'Meta',
-    status: 'active',
-    spend: 5420,
-    roas: 4.2,
-    conversions: 234,
-    lastUpdated: '2h ago',
-  },
-  {
-    id: '2',
-    name: 'Retargeting - Cart Abandoners',
-    platform: 'Google',
-    status: 'active',
-    spend: 3200,
-    roas: 5.8,
-    conversions: 156,
-    lastUpdated: '4h ago',
-  },
-  {
-    id: '3',
-    name: 'Brand Awareness Q1',
-    platform: 'Meta',
-    status: 'paused',
-    spend: 8900,
-    roas: 2.1,
-    conversions: 89,
-    lastUpdated: '1d ago',
-  },
-  {
-    id: '4',
-    name: 'Product Launch - Winter Collection',
-    platform: 'TikTok',
-    status: 'draft',
-    spend: 0,
-    roas: 0,
-    conversions: 0,
-    lastUpdated: '2d ago',
-  },
-];
-
 const statusColors = {
   active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   paused: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
@@ -76,25 +33,26 @@ export default function TenantCampaigns() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { showPriceMetrics } = usePriceMetrics();
 
   // Fetch campaigns from API
   const { data: campaignsData } = useCampaigns();
 
-  // Transform API data or fall back to mock
+  // Transform API data to Campaign interface
   const campaigns = useMemo((): Campaign[] => {
-    if (campaignsData?.items && campaignsData.items.length > 0) {
-      return campaignsData.items.map((c: any) => ({
-        id: c.id?.toString() || c.campaign_id?.toString() || '',
-        name: c.name || c.campaign_name || '',
-        platform: c.platform || 'Unknown',
-        status: c.status?.toLowerCase() || 'active',
-        spend: c.spend || 0,
-        roas: c.roas || (c.spend > 0 ? c.revenue / c.spend : 0),
-        conversions: c.conversions || 0,
-        lastUpdated: c.updated_at ? getRelativeTime(c.updated_at) : '—',
-      }));
+    if (!campaignsData?.items || campaignsData.items.length === 0) {
+      return [];
     }
-    return mockCampaigns;
+    return campaignsData.items.map((c: any) => ({
+      id: c.id?.toString() || c.campaign_id?.toString() || '',
+      name: c.name || c.campaign_name || '',
+      platform: c.platform || 'Unknown',
+      status: c.status?.toLowerCase() || 'active',
+      spend: c.spend || 0,
+      roas: c.roas || (c.spend > 0 ? c.revenue / c.spend : 0),
+      conversions: c.conversions || 0,
+      lastUpdated: c.updated_at ? getRelativeTime(c.updated_at) : '—',
+    }));
   }, [campaignsData]);
 
   // Helper function to get relative time
@@ -175,12 +133,16 @@ export default function TenantCampaigns() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Spend
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  ROAS
-                </th>
+                {showPriceMetrics && (
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Spend
+                  </th>
+                )}
+                {showPriceMetrics && (
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    ROAS
+                  </th>
+                )}
                 <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Conversions
                 </th>
@@ -211,22 +173,26 @@ export default function TenantCampaigns() {
                       {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm">
-                    ${campaign.spend.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm">
-                    <span
-                      className={
-                        campaign.roas >= 3
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : campaign.roas < 2
-                            ? 'text-red-600 dark:text-red-400'
-                            : ''
-                      }
-                    >
-                      {campaign.roas > 0 ? `${campaign.roas}x` : '-'}
-                    </span>
-                  </td>
+                  {showPriceMetrics && (
+                    <td className="px-6 py-4 text-right text-sm">
+                      ${campaign.spend.toLocaleString()}
+                    </td>
+                  )}
+                  {showPriceMetrics && (
+                    <td className="px-6 py-4 text-right text-sm">
+                      <span
+                        className={
+                          campaign.roas >= 3
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : campaign.roas < 2
+                              ? 'text-red-600 dark:text-red-400'
+                              : ''
+                        }
+                      >
+                        {campaign.roas > 0 ? `${campaign.roas}x` : '-'}
+                      </span>
+                    </td>
+                  )}
                   <td className="px-6 py-4 text-right text-sm">
                     {campaign.conversions > 0 ? campaign.conversions.toLocaleString() : '-'}
                   </td>

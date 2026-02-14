@@ -8,7 +8,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
   XMarkIcon,
   SparklesIcon,
@@ -132,7 +131,7 @@ export default function OnboardingChat({
       ]);
     } catch (err) {
       setError('Failed to start onboarding. Please try again.');
-      console.error('Start conversation error:', err);
+      // Error displayed via setError above
     } finally {
       setIsLoading(false);
     }
@@ -200,7 +199,7 @@ export default function OnboardingChat({
       }
     } catch (err) {
       setError('Failed to send message. Please try again.');
-      console.error('Send message error:', err);
+      // Error displayed via setError above
     } finally {
       setIsLoading(false);
     }

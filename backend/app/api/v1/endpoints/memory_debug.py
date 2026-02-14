@@ -27,10 +27,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
-router = APIRouter(prefix="/debug/memory", tags=["Memory Debug"])
+from app.auth.deps import require_superadmin
+
+router = APIRouter(
+    prefix="/debug/memory",
+    tags=["Memory Debug"],
+    dependencies=[Depends(require_superadmin())],
+)
 
 # These will be set during app startup
 _auditor = None

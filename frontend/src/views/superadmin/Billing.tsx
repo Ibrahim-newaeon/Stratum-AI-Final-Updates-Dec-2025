@@ -57,6 +57,15 @@ interface Invoice {
   paidAt: Date | null;
 }
 
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  features: string[];
+  subscribers: number;
+  highlighted: boolean;
+}
+
 export default function Billing() {
   const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'invoices' | 'plans'>(
     'overview'
@@ -66,7 +75,7 @@ export default function Billing() {
   // Modal states
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<(typeof mockPlans)[0] | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showEditPlanModal, setShowEditPlanModal] = useState(false);
@@ -78,151 +87,21 @@ export default function Billing() {
   const { data: subscriptionsData } = useBillingSubscriptions();
   const retryPaymentMutation = useRetryPayment();
 
-  // Default mock data
-  const mockMetrics = {
-    mrr: 45890,
-    mrrGrowth: 8.5,
-    arr: 550680,
-    activeSubscriptions: 89,
-    churnRate: 2.3,
-    pastDue: 4,
-    totalRevenue: 1250000,
-  };
-
-  // Use API data or fallback to mock
+  // Use real API data, defaulting to 0 when loading
   const metrics = {
-    mrr: revenueData?.mrr ?? mockMetrics.mrr,
-    mrrGrowth: revenueData?.mrrGrowth ?? mockMetrics.mrrGrowth,
-    arr: revenueData?.arr ?? mockMetrics.arr,
+    mrr: revenueData?.mrr ?? 0,
+    mrrGrowth: revenueData?.mrrGrowth ?? 0,
+    arr: revenueData?.arr ?? 0,
     activeSubscriptions:
-      subscriptionsData?.items?.filter((s) => s.status === 'active').length ??
-      mockMetrics.activeSubscriptions,
-    churnRate: revenueData?.churnRate ?? mockMetrics.churnRate,
+      subscriptionsData?.items?.filter((s: any) => s.status === 'active').length ?? 0,
+    churnRate: revenueData?.churnRate ?? 0,
     pastDue:
-      subscriptionsData?.items?.filter((s) => s.status === 'past_due').length ??
-      mockMetrics.pastDue,
-    totalRevenue: mockMetrics.totalRevenue,
+      subscriptionsData?.items?.filter((s: any) => s.status === 'past_due').length ?? 0,
   };
 
-  const mockSubscriptions: Subscription[] = [
-    {
-      id: 's1',
-      tenantId: 't1',
-      tenantName: 'Acme Corporation',
-      plan: 'enterprise',
-      status: 'active',
-      mrr: 1999,
-      startDate: new Date('2024-01-15'),
-      nextBilling: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Visa ****4242',
-      failedPayments: 0,
-    },
-    {
-      id: 's2',
-      tenantId: 't2',
-      tenantName: 'TechStart Inc',
-      plan: 'pro',
-      status: 'active',
-      mrr: 499,
-      startDate: new Date('2024-03-01'),
-      nextBilling: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Mastercard ****5555',
-      failedPayments: 0,
-    },
-    {
-      id: 's3',
-      tenantId: 't3',
-      tenantName: 'Fashion Forward',
-      plan: 'pro',
-      status: 'past_due',
-      mrr: 499,
-      startDate: new Date('2024-02-15'),
-      nextBilling: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Visa ****1234',
-      failedPayments: 2,
-    },
-    {
-      id: 's4',
-      tenantId: 't4',
-      tenantName: 'HealthPlus',
-      plan: 'starter',
-      status: 'trialing',
-      mrr: 0,
-      startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      nextBilling: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      paymentMethod: 'Not set',
-      failedPayments: 0,
-    },
-  ];
-
-  const mockInvoices: Invoice[] = [
-    {
-      id: 'inv-001',
-      tenantName: 'Acme Corporation',
-      amount: 1999,
-      status: 'paid',
-      dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      paidAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: 'inv-002',
-      tenantName: 'TechStart Inc',
-      amount: 499,
-      status: 'pending',
-      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      paidAt: null,
-    },
-    {
-      id: 'inv-003',
-      tenantName: 'Fashion Forward',
-      amount: 499,
-      status: 'overdue',
-      dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      paidAt: null,
-    },
-  ];
-
-  const mockPlans = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      price: 99,
-      features: ['2 platforms', '5 campaigns', 'Basic analytics', 'Email support'],
-      subscribers: 23,
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: 499,
-      features: [
-        '5 platforms',
-        'Unlimited campaigns',
-        'Advanced analytics',
-        'Priority support',
-        'Autopilot',
-      ],
-      subscribers: 52,
-      highlighted: true,
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 1999,
-      features: [
-        'Unlimited platforms',
-        'Unlimited campaigns',
-        'Custom analytics',
-        'Dedicated support',
-        'Full Autopilot',
-        'SLA',
-      ],
-      subscribers: 14,
-    },
-  ];
-
-  // Use API data or fallback to mock
+  // Use real API data, defaulting to empty arrays when loading
   const subscriptions: Subscription[] =
-    subscriptionsData?.items?.map((s) => ({
+    subscriptionsData?.items?.map((s: any) => ({
       id: s.id,
       tenantId: String(s.tenantId),
       tenantName: s.tenantName,
@@ -233,27 +112,27 @@ export default function Billing() {
       nextBilling: new Date(s.nextBillingDate),
       paymentMethod: s.paymentMethod,
       failedPayments: s.failedPayments,
-    })) ?? mockSubscriptions;
+    })) ?? [];
 
   const invoices: Invoice[] =
-    invoicesData?.items?.map((i) => ({
+    invoicesData?.items?.map((i: any) => ({
       id: i.id,
       tenantName: i.tenantName,
       amount: i.amount,
       status: i.status,
       dueDate: new Date(i.dueDate),
       paidAt: i.paidAt ? new Date(i.paidAt) : null,
-    })) ?? mockInvoices;
+    })) ?? [];
 
-  const plans =
-    plansData?.map((p) => ({
+  const plans: Plan[] =
+    plansData?.map((p: any) => ({
       id: p.id,
       name: p.name,
       price: p.price,
-      features: p.features,
-      subscribers: p.subscriberCount,
+      features: p.features || [],
+      subscribers: p.subscriberCount || 0,
       highlighted: p.name === 'Pro',
-    })) ?? mockPlans;
+    })) ?? [];
 
   const handleRetryPayment = async (subscriptionId: string) => {
     try {
@@ -263,7 +142,7 @@ export default function Billing() {
         description: 'Payment retry initiated successfully',
       });
     } catch (error) {
-      console.error('Failed to retry payment:', error);
+      // Error displayed via toast below
       toast({
         title: 'Error',
         description: 'Failed to retry payment. Please try again.',
@@ -371,7 +250,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
   };
 
   // Edit plan - show modal
-  const handleEditPlan = (plan: (typeof mockPlans)[0]) => {
+  const handleEditPlan = (plan: Plan) => {
     setSelectedPlan(plan);
     setShowEditPlanModal(true);
   };

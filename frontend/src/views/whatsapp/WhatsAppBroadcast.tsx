@@ -3,7 +3,7 @@
  * Send approved templates to multiple contacts with scheduling
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MegaphoneIcon,
@@ -20,6 +20,7 @@ import {
   TagIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { whatsappApi } from '@/services/api';
 
 interface Template {
   id: number;
@@ -48,97 +49,67 @@ interface BroadcastHistory {
   status: 'completed' | 'in_progress' | 'scheduled' | 'failed';
 }
 
-const mockTemplates: Template[] = [
-  {
-    id: 1,
-    name: 'order_confirmation',
-    category: 'UTILITY',
-    body_text: 'Hi {{1}}, your order #{{2}} has been confirmed...',
-    usage_count: 1245,
-  },
-  {
-    id: 2,
-    name: 'appointment_reminder',
-    category: 'UTILITY',
-    body_text: 'Hi {{1}}, this is a reminder for your appointment on {{2}}...',
-    usage_count: 856,
-  },
-  {
-    id: 4,
-    name: 'verification_code',
-    category: 'AUTHENTICATION',
-    body_text: 'Your verification code is {{1}}...',
-    usage_count: 3421,
-  },
-];
-
-const mockSegments: Segment[] = [
-  {
-    id: 1,
-    name: 'All Opted-In Contacts',
-    count: 11234,
-    description: 'All contacts with opt-in status',
-  },
-  { id: 2, name: 'Active Customers', count: 5678, description: 'Made purchase in last 30 days' },
-  { id: 3, name: 'High Value Customers', count: 1234, description: 'Total spend > $500' },
-  { id: 4, name: 'New Subscribers', count: 890, description: 'Joined in last 7 days' },
-  { id: 5, name: 'Abandoned Cart', count: 456, description: 'Cart abandoned in last 24h' },
-];
-
-const mockHistory: BroadcastHistory[] = [
-  {
-    id: 1,
-    template_name: 'order_confirmation',
-    recipients: 500,
-    sent: 500,
-    delivered: 485,
-    read: 412,
-    failed: 15,
-    sent_at: '2025-01-30T10:00:00Z',
-    status: 'completed',
-  },
-  {
-    id: 2,
-    template_name: 'appointment_reminder',
-    recipients: 1200,
-    sent: 1200,
-    delivered: 1150,
-    read: 980,
-    failed: 50,
-    sent_at: '2025-01-29T09:00:00Z',
-    status: 'completed',
-  },
-  {
-    id: 3,
-    template_name: 'promo_winter_sale',
-    recipients: 5000,
-    sent: 2500,
-    delivered: 2400,
-    read: 0,
-    failed: 100,
-    sent_at: '2025-01-30T14:00:00Z',
-    status: 'in_progress',
-  },
-  {
-    id: 4,
-    template_name: 'verification_code',
-    recipients: 300,
-    sent: 0,
-    delivered: 0,
-    read: 0,
-    failed: 0,
-    sent_at: '2025-01-31T08:00:00Z',
-    status: 'scheduled',
-  },
-];
-
 export default function WhatsAppBroadcast() {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [history, setHistory] = useState<BroadcastHistory[]>(mockHistory);
+  const [history, setHistory] = useState<BroadcastHistory[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [templatesRes, messagesRes] = await Promise.allSettled([
+          whatsappApi.listTemplates({ page_size: 50 }),
+          whatsappApi.listMessages({ page_size: 50 }),
+        ]);
+
+        if (templatesRes.status === 'fulfilled' && templatesRes.value?.data?.items) {
+          setTemplates(
+            templatesRes.value.data.items.map((t: any) => ({
+              id: t.id,
+              name: t.name,
+              category: t.category || 'UTILITY',
+              body_text: t.body_text || '',
+              usage_count: t.usage_count || 0,
+            }))
+          );
+        }
+
+        if (messagesRes.status === 'fulfilled' && messagesRes.value?.data?.items) {
+          setHistory(
+            messagesRes.value.data.items.map((m: any) => ({
+              id: m.id,
+              template_name: m.template_name || m.message_type || 'Unknown',
+              recipients: m.recipients || 0,
+              sent: m.sent || 0,
+              delivered: m.delivered || 0,
+              read: m.read || 0,
+              failed: m.failed || 0,
+              sent_at: m.sent_at || m.created_at,
+              status: m.status || 'completed',
+            }))
+          );
+        }
+      } catch (error) {
+        // Error handled silently
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const totalSent = history.reduce((acc, h) => acc + h.sent, 0);
   const totalDelivered = history.reduce((acc, h) => acc + h.delivered, 0);
   const totalRead = history.reduce((acc, h) => acc + h.read, 0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25D366]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -168,13 +139,13 @@ export default function WhatsAppBroadcast() {
         <StatCard
           title="Messages Sent"
           value={totalSent.toLocaleString()}
-          subtitle={`${((totalDelivered / totalSent) * 100).toFixed(1)}% delivered`}
+          subtitle={totalSent > 0 ? `${((totalDelivered / totalSent) * 100).toFixed(1)}% delivered` : 'No messages yet'}
           icon={PaperAirplaneIcon}
         />
         <StatCard
           title="Delivered"
           value={totalDelivered.toLocaleString()}
-          subtitle={`${((totalRead / totalDelivered) * 100).toFixed(1)}% read`}
+          subtitle={totalDelivered > 0 ? `${((totalRead / totalDelivered) * 100).toFixed(1)}% read` : 'No deliveries yet'}
           icon={CheckCircleIcon}
         />
         <StatCard
@@ -202,6 +173,15 @@ export default function WhatsAppBroadcast() {
               </tr>
             </thead>
             <tbody>
+              {history.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-gray-400">
+                    <MegaphoneIcon className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                    <p className="font-medium">No broadcasts yet</p>
+                    <p className="text-sm mt-1">Create your first broadcast campaign to get started</p>
+                  </td>
+                </tr>
+              )}
               {history.map((broadcast) => {
                 const deliveryRate =
                   broadcast.sent > 0
@@ -277,8 +257,8 @@ export default function WhatsAppBroadcast() {
       <AnimatePresence>
         {showCreateModal && (
           <CreateBroadcastModal
-            templates={mockTemplates}
-            segments={mockSegments}
+            templates={templates}
+            segments={[]}
             onClose={() => setShowCreateModal(false)}
             onCreate={(broadcast) => {
               setHistory((prev) => [{ ...broadcast, id: prev.length + 1 }, ...prev]);

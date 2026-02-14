@@ -158,7 +158,7 @@ export function usePdfExport() {
 
         return { success: true, filename: finalFilename };
       } catch (error) {
-        console.error('PDF Export Error:', error);
+        // Error returned in result object
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -289,7 +289,7 @@ export function usePdfExport() {
         setProgress(100);
         return { success: true, filename: finalFilename };
       } catch (error) {
-        console.error('PDF Export Error:', error);
+        // Error returned in result object
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',

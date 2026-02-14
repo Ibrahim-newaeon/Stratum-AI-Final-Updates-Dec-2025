@@ -28,7 +28,7 @@ interface UseWebSocketOptions {
   onError?: (error: Event) => void;
 }
 
-const DEFAULT_WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
+const DEFAULT_WS_URL = import.meta.env.VITE_WS_URL || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const {
@@ -65,7 +65,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         setConnectionState('connected');
         reconnectCountRef.current = 0;
         onConnect?.();
-        console.log('[WebSocket] Connected');
+        // Connected successfully
       };
 
       ws.onmessage = (event) => {
@@ -75,21 +75,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           handleMessage(message);
           onMessage?.(message);
         } catch (error) {
-          console.error('[WebSocket] Failed to parse message:', error);
+          // Failed to parse message
         }
       };
 
       ws.onclose = () => {
         setConnectionState('disconnected');
         onDisconnect?.();
-        console.log('[WebSocket] Disconnected');
+        // Disconnected
 
         // Attempt reconnection
         if (reconnectCountRef.current < reconnectAttempts) {
           reconnectCountRef.current++;
-          console.log(
-            `[WebSocket] Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`
-          );
+          // Reconnecting...
           reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval);
         }
       };
@@ -97,11 +95,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       ws.onerror = (error) => {
         setConnectionState('error');
         onError?.(error);
-        console.error('[WebSocket] Error:', error);
+        // WebSocket error occurred
       };
     } catch (error) {
       setConnectionState('error');
-      console.error('[WebSocket] Connection failed:', error);
+      // Connection failed
     }
   }, [url, reconnectAttempts, reconnectInterval, onConnect, onDisconnect, onError, onMessage]);
 
@@ -124,7 +122,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
       wsRef.current.send(JSON.stringify(message));
     } else {
-      console.warn('[WebSocket] Cannot send - not connected');
+      // Cannot send - not connected
     }
   }, []);
 
@@ -175,7 +173,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           break;
 
         default:
-          console.log('[WebSocket] Unhandled message type:', message.type);
+          // Unhandled message type
       }
     },
     [queryClient]

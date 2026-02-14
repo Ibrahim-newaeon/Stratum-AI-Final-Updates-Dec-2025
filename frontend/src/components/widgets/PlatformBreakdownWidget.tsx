@@ -1,24 +1,32 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { cn, getPlatformColor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+
+interface PlatformData {
+  name: string;
+  value: number;
+  color: string;
+}
 
 interface PlatformBreakdownWidgetProps {
+  data?: PlatformData[];
   className?: string;
 }
 
-const mockData = [
-  { name: 'Google', value: 35, color: getPlatformColor('google') },
-  { name: 'Meta', value: 30, color: getPlatformColor('meta') },
-  { name: 'TikTok', value: 20, color: '#000000' },
-  { name: 'Snapchat', value: 15, color: '#FFFC00' },
-];
+export function PlatformBreakdownWidget({ data, className }: PlatformBreakdownWidgetProps) {
+  if (!data || data.length === 0) {
+    return (
+      <div className={cn('h-full p-4 flex items-center justify-center', className)}>
+        <p className="text-sm text-muted-foreground">No platform data available</p>
+      </div>
+    );
+  }
 
-export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetProps) {
   return (
     <div className={cn('h-full p-4', className)}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={mockData}
+            data={data}
             cx="50%"
             cy="50%"
             innerRadius={50}
@@ -26,7 +34,7 @@ export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetPr
             paddingAngle={2}
             dataKey="value"
           >
-            {mockData.map((entry, index) => (
+            {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>

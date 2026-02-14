@@ -46,8 +46,11 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     Meta sends X-Hub-Signature-256 header with HMAC SHA256 signature.
     """
     if not settings.whatsapp_app_secret:
-        logger.warning("WhatsApp app secret not configured, skipping signature verification")
-        return True  # Skip verification in development
+        if settings.app_env == "production":
+            logger.error("WhatsApp app secret not configured in production — rejecting webhook")
+            return False
+        logger.warning("WhatsApp app secret not configured, skipping signature verification (dev only)")
+        return True
 
     expected_signature = hmac.new(
         settings.whatsapp_app_secret.encode("utf-8"), payload, hashlib.sha256
@@ -1038,9 +1041,11 @@ async def whatsapp_webhook(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook signature"
             )
     else:
-        logger.warning("No webhook signature header received")
-        # In production, you might want to reject unsigned requests
-        # For now, we allow it with a warning for development purposes
+        logger.warning("Unsigned webhook request rejected")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing webhook signature header",
+        )
 
     body = await request.json()
 

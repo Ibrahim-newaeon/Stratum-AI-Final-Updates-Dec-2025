@@ -479,7 +479,7 @@ export function ProfileSearch() {
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Export failed:', error);
+      // Error handled silently
     }
   };
 

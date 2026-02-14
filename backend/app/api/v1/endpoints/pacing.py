@@ -478,20 +478,14 @@ async def get_alerts(
     """Get alerts with optional filters."""
     service = PacingAlertService(db, current_user.tenant_id)
 
-    # For active alerts endpoint
-    if status is None or status == AlertStatus.ACTIVE:
-        alerts = await service.get_active_alerts(
-            target_id=target_id,
-            severity=severity,
-            alert_type=alert_type,
-        )
-    else:
-        # TODO: Support filtering by other statuses
-        alerts = await service.get_active_alerts(
-            target_id=target_id,
-            severity=severity,
-            alert_type=alert_type,
-        )
+    # Currently returns active alerts for all status filters.
+    # Non-active status filtering (resolved, dismissed) can be added
+    # when PacingAlertService supports those query modes.
+    alerts = await service.get_active_alerts(
+        target_id=target_id,
+        severity=severity,
+        alert_type=alert_type,
+    )
 
     return {
         "status": "success",

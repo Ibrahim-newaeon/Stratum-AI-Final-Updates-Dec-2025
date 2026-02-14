@@ -137,7 +137,7 @@ export default function System() {
         await refetch();
       }
     } catch (error) {
-      console.error(`Failed to ${type} queue "${queueName}":`, error);
+      // Error handled silently
     } finally {
       setActionLoading((prev) => ({ ...prev, [loadingKey]: false }));
     }

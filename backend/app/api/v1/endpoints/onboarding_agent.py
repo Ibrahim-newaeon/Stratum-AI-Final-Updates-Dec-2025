@@ -12,13 +12,16 @@ from datetime import datetime
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from redis import asyncio as aioredis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import CurrentUserDep, OptionalUserDep
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.db.session import get_async_session
 from app.services.agents import (
     ConversationContext,
     ConversationState,
@@ -313,6 +316,7 @@ async def get_conversation_status(
 async def complete_onboarding(
     session_id: str,
     current_user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Complete the onboarding conversation and save data to database.
@@ -337,8 +341,33 @@ async def complete_onboarding(
                 detail="Onboarding not yet completed",
             )
 
-        # TODO: Persist onboarding data to database
-        # This would integrate with the existing TenantOnboarding model
+        # Persist onboarding data to tenant settings
+        from app.base_models import Tenant
+
+        result = await db.execute(
+            select(Tenant).where(Tenant.id == current_user.tenant_id)
+        )
+        tenant = result.scalar_one_or_none()
+        if tenant:
+            tenant_settings = tenant.settings or {}
+            data = context.onboarding_data
+            if data.company_name:
+                tenant.name = data.company_name
+            if data.industry:
+                tenant_settings["industry"] = data.industry
+            if data.timezone:
+                tenant_settings["timezone"] = data.timezone
+            if data.currency:
+                tenant_settings["currency"] = data.currency
+            if data.selected_platforms:
+                tenant_settings["selected_platforms"] = data.selected_platforms
+            if data.healthy_threshold:
+                tenant_settings["trust_threshold_autopilot"] = data.healthy_threshold
+            if data.degraded_threshold:
+                tenant_settings["trust_threshold_alert"] = data.degraded_threshold
+            tenant_settings["onboarding_completed"] = True
+            tenant.settings = tenant_settings
+            await db.commit()
 
         # Delete session after completion
         await delete_session(session_id, redis)

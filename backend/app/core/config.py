@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     app_name: str = Field(default="Stratum AI", description="Application name")
     app_env: Literal["development", "staging", "production"] = Field(default="development")
-    debug: bool = Field(default=True)
+    debug: bool = Field(default=False)
     secret_key: str = Field(
         default="",
         description="Secret key for signing (REQUIRED: set via SECRET_KEY env var, min 32 chars)",
@@ -92,7 +92,7 @@ class Settings(BaseSettings):
     # Ad Platform Configuration
     # -------------------------------------------------------------------------
     use_mock_ad_data: bool = Field(
-        default=True, description="Use mock data instead of real ad platform APIs"
+        default=False, description="Use mock data instead of real ad platform APIs"
     )
 
     # OAuth callback base URL (for constructing redirect URIs)
@@ -140,8 +140,8 @@ class Settings(BaseSettings):
     whatsapp_business_account_id: Optional[str] = Field(
         default=None, description="WhatsApp Business Account ID"
     )
-    whatsapp_verify_token: str = Field(
-        default="stratum-whatsapp-verify-token", description="Token for webhook verification"
+    whatsapp_verify_token: Optional[str] = Field(
+        default=None, description="Token for webhook verification (REQUIRED if WhatsApp enabled)"
     )
     whatsapp_app_secret: Optional[str] = Field(
         default=None, description="WhatsApp/Meta App Secret for webhook signature verification"
@@ -196,6 +196,10 @@ class Settings(BaseSettings):
     pii_encryption_key: str = Field(
         default="",
         description="AES encryption key for PII (REQUIRED: set via PII_ENCRYPTION_KEY env var, min 32 chars)",
+    )
+    embed_signing_key: Optional[str] = Field(
+        default=None,
+        description="HMAC signing key for embed widget tokens (REQUIRED if embed widgets enabled, min 32 chars)",
     )
 
     # Email verification and password reset token expiry
@@ -505,16 +509,18 @@ def get_settings() -> Settings:
 
     In development mode, provides fallback values for required keys
     to allow local testing without full configuration.
+    In production, missing keys will cause a validation error.
     """
     import os
 
-    # Provide fallback values for security keys if not set
-    # The security validator will warn about weak/missing keys
-    for key, fallback in _DEV_FALLBACK_KEYS.items():
-        env_key = key.upper()
-        current = os.getenv(env_key, "")
-        if not current or len(current) < 32:
-            os.environ[env_key] = fallback
+    # Only inject fallback keys in non-production environments
+    app_env = os.getenv("APP_ENV", "development").lower()
+    if app_env != "production":
+        for key, fallback in _DEV_FALLBACK_KEYS.items():
+            env_key = key.upper()
+            current = os.getenv(env_key, "")
+            if not current or len(current) < 32:
+                os.environ[env_key] = fallback
 
     return Settings()
 

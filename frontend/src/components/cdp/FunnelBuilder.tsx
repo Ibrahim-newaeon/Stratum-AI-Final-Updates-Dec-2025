@@ -275,7 +275,7 @@ function FunnelForm({ funnel, onSave, onCancel }: FunnelFormProps) {
       }
       onSave();
     } catch (error) {
-      console.error('Save failed:', error);
+      // Error handled by mutation
     }
   };
 

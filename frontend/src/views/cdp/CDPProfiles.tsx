@@ -362,7 +362,7 @@ export default function CDPProfiles() {
     try {
       await exportMutation.mutateAsync({ format: 'csv', limit: 1000 });
     } catch (error) {
-      console.error('Export failed:', error);
+      // Error handled by mutation
     }
   };
 

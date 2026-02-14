@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   CreditCard,
+  DollarSign,
   Download,
   Eye,
   EyeOff,
@@ -28,6 +29,8 @@ import { useExportData, useRequestDeletion } from '@/api/hooks';
 import { useCurrentUser, useUpdatePreferences } from '@/api/auth';
 import { useMetricVisibility, useUpdateMetricVisibility } from '@/api/dashboard';
 import { useToast } from '@/components/ui/use-toast';
+import { useFeatureFlagsStore, defaultFeatures } from '@/stores/featureFlagsStore';
+import { useFeatureFlags, useUpdateFeatureFlags } from '@/api/featureFlags';
 
 type SettingsTab =
   | 'profile'
@@ -153,14 +156,13 @@ function ProfileSettings() {
   // Get user data from tenant store
   const user = useTenantStore((state) => state.user);
 
-  // Parse name into first/last (fallback to mock data)
-  const fullName = user?.full_name || 'John Doe';
+  const fullName = user?.full_name || '';
   const nameParts = fullName.split(' ');
-  const firstName = nameParts[0] || 'John';
-  const lastName = nameParts.slice(1).join(' ') || 'Doe';
-  const initials = `${firstName[0] || 'J'}${lastName[0] || 'D'}`;
-  const email = user?.email || 'john.doe@company.com';
-  const role = user?.role || 'media_buyer';
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+  const initials = `${firstName[0] || '?'}${lastName[0] || ''}`;
+  const email = user?.email || '';
+  const role = user?.role || 'user';
   const timezone = user?.timezone || 'America/New_York';
 
   // Format role for display
@@ -263,8 +265,7 @@ function OrganizationSettings() {
   // Get tenant data from store
   const tenant = useTenantStore((state) => state.tenant);
 
-  // Use tenant data or fall back to mock
-  const companyName = tenant?.name || 'Acme Corporation';
+  const companyName = tenant?.name || '';
   const industry = tenant?.settings?.industry || 'ecommerce';
   const plan = tenant?.plan || 'pro';
   const maxUsers = tenant?.max_users || 10;
@@ -290,13 +291,8 @@ function OrganizationSettings() {
         setTeamMembers(response.data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch team members:', error);
-      // Fallback to mock data
-      setTeamMembers([
-        { id: 1, email: 'admin@company.com', role: 'admin', is_active: true },
-        { id: 2, email: 'jane.smith@company.com', role: 'manager', is_active: true },
-        { id: 3, email: 'bob.wilson@company.com', role: 'user', is_active: true },
-      ]);
+      // Error handled - showing empty state
+      setTeamMembers([]);
     } finally {
       setIsLoading(false);
     }
@@ -602,29 +598,17 @@ function SecuritySettings({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState<string | null>(null);
 
-  // API Keys data
-  const apiKeys = [
-    {
-      id: 'production',
-      name: 'Production API Key',
-      key: 'strat_live_' + '•'.repeat(28) + 'abc',
-      fullKey: 'strat_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxx_abc',
-      type: 'live' as const,
-      status: 'active' as const,
-      created: 'Jan 15, 2024',
-      lastUsed: '2 minutes ago',
-    },
-    {
-      id: 'test',
-      name: 'Test API Key',
-      key: 'strat_test_' + '•'.repeat(28) + 'xyz',
-      fullKey: 'strat_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxx_xyz',
-      type: 'test' as const,
-      status: 'active' as const,
-      created: 'Jan 10, 2024',
-      lastUsed: '3 days ago',
-    },
-  ];
+  // API Keys data — to be fetched from backend when API is available
+  const apiKeys: Array<{
+    id: string;
+    name: string;
+    key: string;
+    fullKey: string;
+    type: 'live' | 'test';
+    status: 'active' | 'revoked';
+    created: string;
+    lastUsed: string;
+  }> = [];
 
   const copyToClipboard = (key: string, keyId: string) => {
     navigator.clipboard.writeText(key);
@@ -697,6 +681,12 @@ function SecuritySettings({
         </div>
 
         <div className="space-y-4">
+          {apiKeys.length === 0 && (
+            <div className="p-4 rounded-xl border border-white/10 glass text-center">
+              <p className="text-muted-foreground">No API keys created yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Create a key to integrate with the Stratum API</p>
+            </div>
+          )}
           {apiKeys.map((apiKey) => {
             const isVisible = apiKey.type === 'live' ? showApiKey : showTestKey;
             const setVisible = apiKey.type === 'live' ? setShowApiKey : setShowTestKey;
@@ -1207,6 +1197,9 @@ function PreferenceSettings() {
     <div className="space-y-6">
       <h2 className="text-lg font-semibold">{t('settings.preferenceSettings')}</h2>
 
+      {/* Price Metrics Toggle */}
+      <PriceMetricsToggle />
+
       <div>
         <label className="text-sm font-medium mb-2 block">{t('settings.theme')}</label>
         <div className="flex gap-3">
@@ -1258,6 +1251,96 @@ function PreferenceSettings() {
 
       {/* Metric Visibility */}
       <MetricVisibilitySettings />
+    </div>
+  );
+}
+
+function PriceMetricsToggle() {
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1;
+  const features = useFeatureFlagsStore((state) => state.features);
+  const setFeatures = useFeatureFlagsStore((state) => state.setFeatures);
+
+  // Load feature flags from API (populates Zustand store)
+  useFeatureFlags(tenantId);
+
+  const updateFlags = useUpdateFeatureFlags(tenantId);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const showPriceMetrics = features?.show_price_metrics ?? defaultFeatures.show_price_metrics;
+
+  const handleToggle = () => {
+    const newValue = !showPriceMetrics;
+    const currentFeatures = features || defaultFeatures;
+
+    // Optimistic update in Zustand store
+    setFeatures({ ...currentFeatures, show_price_metrics: newValue });
+
+    // Persist to backend
+    setSaveStatus('saving');
+    updateFlags.mutate(
+      { show_price_metrics: newValue },
+      {
+        onSuccess: () => {
+          setSaveStatus('saved');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        },
+        onError: () => {
+          // Revert optimistic update
+          setFeatures({ ...currentFeatures, show_price_metrics: !newValue });
+          setSaveStatus('error');
+          setTimeout(() => setSaveStatus('idle'), 3000);
+        },
+      }
+    );
+  };
+
+  return (
+    <div className="p-4 rounded-xl border border-primary/20 bg-primary/5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <DollarSign className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">Show Price Metrics</p>
+              {saveStatus === 'saving' && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Saving...
+                </span>
+              )}
+              {saveStatus === 'saved' && (
+                <span className="flex items-center gap-1 text-xs text-green-500">
+                  <Check className="w-3 h-3" />
+                  Saved
+                </span>
+              )}
+              {saveStatus === 'error' && (
+                <span className="text-xs text-red-500">Failed to save</span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Toggle visibility of spend, revenue, ROAS, and CPA across all dashboard views
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleToggle}
+          disabled={saveStatus === 'saving'}
+          className={cn(
+            'relative w-12 h-6 rounded-full transition-colors disabled:opacity-50',
+            showPriceMetrics ? 'bg-primary' : 'bg-muted'
+          )}
+        >
+          <span
+            className={cn(
+              'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+              showPriceMetrics ? 'translate-x-7' : 'translate-x-1'
+            )}
+          />
+        </button>
+      </div>
     </div>
   );
 }
@@ -1378,6 +1461,12 @@ function MetricVisibilitySettings() {
 
 function BillingSettings() {
   const { t } = useTranslation();
+  const tenant = useTenantStore((state) => state.tenant);
+
+  const plan = tenant?.plan || 'free';
+  const planExpires = tenant?.plan_expires_at
+    ? new Date(tenant.plan_expires_at).toLocaleDateString()
+    : null;
 
   return (
     <div className="space-y-6">
@@ -1386,8 +1475,10 @@ function BillingSettings() {
       <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium">Pro Plan</p>
-            <p className="text-sm text-muted-foreground">$99/month • Renews Dec 15, 2024</p>
+            <p className="font-medium capitalize">{plan} Plan</p>
+            <p className="text-sm text-muted-foreground">
+              {planExpires ? `Renews ${planExpires}` : 'No expiration set'}
+            </p>
           </div>
           <button className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors text-sm">
             {t('settings.changePlan')}
@@ -1398,52 +1489,20 @@ function BillingSettings() {
       <div>
         <h3 className="font-medium mb-3">{t('settings.paymentMethod')}</h3>
         <div className="p-4 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-8 rounded bg-muted flex items-center justify-center text-xs font-bold">
-                VISA
-              </div>
-              <div>
-                <p className="font-medium">•••• •••• •••• 4242</p>
-                <p className="text-sm text-muted-foreground">Expires 12/25</p>
-              </div>
-            </div>
-            <button className="text-sm text-primary hover:underline">{t('settings.update')}</button>
-          </div>
+          <p className="text-muted-foreground text-center py-2">
+            No payment method on file. Contact support to manage billing.
+          </p>
         </div>
       </div>
 
       <div>
         <h3 className="font-medium mb-3">{t('settings.billingHistory')}</h3>
         <div className="rounded-lg border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="p-3 text-left text-sm font-medium">{t('settings.date')}</th>
-                <th className="p-3 text-left text-sm font-medium">{t('settings.description')}</th>
-                <th className="p-3 text-right text-sm font-medium">{t('settings.amount')}</th>
-                <th className="p-3 text-right text-sm font-medium" />
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {[
-                { date: 'Nov 15, 2024', desc: 'Pro Plan - Monthly', amount: '$99.00' },
-                { date: 'Oct 15, 2024', desc: 'Pro Plan - Monthly', amount: '$99.00' },
-                { date: 'Sep 15, 2024', desc: 'Pro Plan - Monthly', amount: '$99.00' },
-              ].map((invoice, i) => (
-                <tr key={i}>
-                  <td className="p-3 text-sm">{invoice.date}</td>
-                  <td className="p-3 text-sm">{invoice.desc}</td>
-                  <td className="p-3 text-sm text-right">{invoice.amount}</td>
-                  <td className="p-3 text-right">
-                    <button className="text-sm text-primary hover:underline">
-                      <Download className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="p-6 text-center text-muted-foreground">
+            <CreditCard className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>No billing history available</p>
+            <p className="text-sm mt-1">Invoices will appear here once billing is configured</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1466,9 +1525,8 @@ function GDPRSettings() {
       await exportData.mutateAsync('json');
       setExportStatus('ready');
     } catch (error) {
-      console.error('Export failed:', error);
-      // Fallback to mock success for demo
-      setTimeout(() => setExportStatus('ready'), 3000);
+      // Error handled silently
+      setExportStatus('idle');
     }
   };
 
@@ -1483,7 +1541,7 @@ function GDPRSettings() {
       await requestDeletion.mutateAsync('User requested account deletion');
       alert('Deletion request submitted. You will receive an email confirmation.');
     } catch (error) {
-      console.error('Deletion request failed:', error);
+      // Deletion request handled - showing demo fallback
       alert('Deletion request submitted (demo mode).');
     }
   };

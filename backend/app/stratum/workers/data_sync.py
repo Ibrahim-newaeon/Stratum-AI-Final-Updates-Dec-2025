@@ -83,6 +83,8 @@ except ImportError:
         return decorator
 
 
+import os
+
 from app.stratum.core.signal_health import SignalHealthCalculator
 from app.stratum.models import EMQScore, PerformanceMetrics, Platform
 
@@ -91,7 +93,11 @@ logger = logging.getLogger("stratum.workers.data_sync")
 
 # Celery app configuration
 if CELERY_AVAILABLE:
-    app = Celery("stratum", broker="redis://localhost:6379/0", backend="redis://localhost:6379/1")
+    app = Celery(
+        "stratum",
+        broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
+        backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/1"),
+    )
 
     app.conf.update(
         task_serializer="json",

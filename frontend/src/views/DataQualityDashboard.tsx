@@ -476,7 +476,7 @@ export function DataQualityDashboard() {
         }
       }
     } catch (err: any) {
-      console.error('Failed to fetch quality data:', err);
+      // Error may be displayed via setError below
       // Keep mock data as fallback - don't show error for expected 404s
       if (err.response?.status !== 404) {
         setError(err.response?.data?.detail || 'Failed to load quality data');

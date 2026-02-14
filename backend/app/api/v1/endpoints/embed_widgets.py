@@ -66,8 +66,12 @@ def get_token_service(db: Session = Depends(get_db)) -> EmbedTokenService:
 
 
 def get_security_service() -> EmbedSecurityService:
-    signing_key = getattr(settings, "EMBED_SIGNING_KEY", "stratum-embed-secret-key")
-    return EmbedSecurityService(signing_key)
+    if not settings.embed_signing_key or len(settings.embed_signing_key) < 32:
+        raise HTTPException(
+            status_code=503,
+            detail="Embed widget service not configured (EMBED_SIGNING_KEY required)",
+        )
+    return EmbedSecurityService(settings.embed_signing_key)
 
 
 # Temporary: Get tenant_id from request (should come from auth)

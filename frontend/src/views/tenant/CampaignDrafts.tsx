@@ -17,7 +17,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
-import { useDeleteCampaignDraft, usePublishDraft, useSubmitDraft } from '@/api/campaignBuilder';
+import {
+  useCampaignDrafts,
+  useDeleteCampaignDraft,
+  usePublishDraft,
+  useSubmitDraft,
+  type CampaignDraft as APIDraft,
+} from '@/api/campaignBuilder';
 
 type DraftStatus =
   | 'draft'
@@ -27,72 +33,6 @@ type DraftStatus =
   | 'publishing'
   | 'published'
   | 'failed';
-
-interface CampaignDraft {
-  id: string;
-  name: string;
-  platform: string;
-  status: DraftStatus;
-  budget: number;
-  currency: string;
-  objective: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  approvedBy?: string;
-}
-
-const mockDrafts: CampaignDraft[] = [
-  {
-    id: '1',
-    name: 'KSA Prospecting - Q1',
-    platform: 'meta',
-    status: 'draft',
-    budget: 500,
-    currency: 'SAR',
-    objective: 'sales',
-    createdAt: '2024-01-18T10:00:00Z',
-    updatedAt: '2024-01-20T14:30:00Z',
-    createdBy: 'Ahmed Al-Saud',
-  },
-  {
-    id: '2',
-    name: 'UAE Retargeting',
-    platform: 'google',
-    status: 'submitted',
-    budget: 1200,
-    currency: 'AED',
-    objective: 'conversions',
-    createdAt: '2024-01-15T09:00:00Z',
-    updatedAt: '2024-01-19T11:00:00Z',
-    createdBy: 'Sara Mohammed',
-  },
-  {
-    id: '3',
-    name: 'Brand Awareness - Ramadan',
-    platform: 'meta',
-    status: 'approved',
-    budget: 2500,
-    currency: 'SAR',
-    objective: 'awareness',
-    createdAt: '2024-01-10T08:00:00Z',
-    updatedAt: '2024-01-18T16:00:00Z',
-    createdBy: 'Omar Hassan',
-    approvedBy: 'Admin User',
-  },
-  {
-    id: '4',
-    name: 'Product Launch - Winter',
-    platform: 'tiktok',
-    status: 'rejected',
-    budget: 800,
-    currency: 'SAR',
-    objective: 'traffic',
-    createdAt: '2024-01-12T12:00:00Z',
-    updatedAt: '2024-01-17T10:00:00Z',
-    createdBy: 'Fatima Al-Ali',
-  },
-];
 
 const statusConfig: Record<DraftStatus, { icon: any; label: string; color: string }> = {
   draft: {
@@ -134,22 +74,23 @@ const statusConfig: Record<DraftStatus, { icon: any; label: string; color: strin
 
 export default function CampaignDrafts() {
   const { tenantId } = useParams<{ tenantId: string }>();
-  const [drafts, setDrafts] = useState(mockDrafts);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
   // API hooks
   const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0;
+  const { data: apiDrafts, isLoading } = useCampaignDrafts(tenantIdNum);
   const submitDraft = useSubmitDraft(tenantIdNum);
   const publishDraft = usePublishDraft(tenantIdNum);
   const deleteDraft = useDeleteCampaignDraft(tenantIdNum);
+
+  // Map API drafts to component display format
+  const drafts: APIDraft[] = apiDrafts ?? [];
 
   const handleDelete = async (draftId: string) => {
     if (confirm('Are you sure you want to delete this draft?')) {
       try {
         await deleteDraft.mutateAsync(draftId);
-        // Update local state optimistically
-        setDrafts(drafts.filter((d) => d.id !== draftId));
         toast({
           title: 'Draft deleted',
           description: 'The campaign draft has been deleted successfully.',
@@ -168,10 +109,6 @@ export default function CampaignDrafts() {
   const handleSubmit = async (draftId: string) => {
     try {
       await submitDraft.mutateAsync(draftId);
-      // Update local state optimistically
-      setDrafts(
-        drafts.map((d) => (d.id === draftId ? { ...d, status: 'submitted' as DraftStatus } : d))
-      );
       toast({
         title: 'Draft submitted',
         description: 'The campaign draft has been submitted for approval.',
@@ -187,25 +124,13 @@ export default function CampaignDrafts() {
   };
 
   const handlePublish = async (draftId: string) => {
-    // Set publishing status optimistically
-    setDrafts(
-      drafts.map((d) => (d.id === draftId ? { ...d, status: 'publishing' as DraftStatus } : d))
-    );
     try {
       await publishDraft.mutateAsync(draftId);
-      // Update local state on success
-      setDrafts(
-        drafts.map((d) => (d.id === draftId ? { ...d, status: 'published' as DraftStatus } : d))
-      );
       toast({
         title: 'Campaign published',
         description: 'The campaign has been published successfully.',
       });
     } catch (error) {
-      // Revert to approved status on failure
-      setDrafts(
-        drafts.map((d) => (d.id === draftId ? { ...d, status: 'failed' as DraftStatus } : d))
-      );
       toast({
         title: 'Publish failed',
         description:
@@ -224,7 +149,7 @@ export default function CampaignDrafts() {
         <div>
           <h1 className="text-2xl font-bold">Campaign Drafts</h1>
           <p className="text-muted-foreground">
-            {drafts.length} draft{drafts.length !== 1 ? 's' : ''} total
+            {isLoading ? 'Loading...' : `${drafts.length} draft${drafts.length !== 1 ? 's' : ''} total`}
           </p>
         </div>
         <Link
@@ -273,12 +198,20 @@ export default function CampaignDrafts() {
                     <h3 className="font-semibold text-lg">{draft.name}</h3>
                     <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                       <span className="capitalize">{draft.platform}</span>
-                      <span>-</span>
-                      <span className="capitalize">{draft.objective}</span>
-                      <span>-</span>
-                      <span>
-                        {draft.currency} {draft.budget}/day
-                      </span>
+                      {draft.draft_json?.objective && (
+                        <>
+                          <span>-</span>
+                          <span className="capitalize">{draft.draft_json.objective}</span>
+                        </>
+                      )}
+                      {draft.draft_json?.budget && (
+                        <>
+                          <span>-</span>
+                          <span>
+                            {draft.draft_json.currency ?? 'USD'} {draft.draft_json.budget}/day
+                          </span>
+                        </>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 mt-2">
                       <span
@@ -290,9 +223,9 @@ export default function CampaignDrafts() {
                         <StatusIcon className="h-3 w-3" />
                         {status.label}
                       </span>
-                      {draft.approvedBy && (
+                      {draft.approved_at && (
                         <span className="text-xs text-muted-foreground">
-                          Approved by {draft.approvedBy}
+                          Approved {new Date(draft.approved_at).toLocaleDateString()}
                         </span>
                       )}
                     </div>
@@ -351,8 +284,8 @@ export default function CampaignDrafts() {
 
               {/* Metadata */}
               <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-muted-foreground">
-                <span>Created by {draft.createdBy}</span>
-                <span>Updated {new Date(draft.updatedAt).toLocaleDateString()}</span>
+                <span>Created {new Date(draft.created_at).toLocaleDateString()}</span>
+                <span>Updated {new Date(draft.updated_at).toLocaleDateString()}</span>
               </div>
             </div>
           );

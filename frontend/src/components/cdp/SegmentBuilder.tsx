@@ -379,7 +379,7 @@ function SegmentForm({ segment, onSave, onCancel }: SegmentFormProps) {
       const result = await previewMutation.mutateAsync({ rules });
       setPreviewCount(result.estimated_count);
     } catch (error) {
-      console.error('Preview failed:', error);
+      // Error handled by mutation
     } finally {
       setPreviewLoading(false);
     }
@@ -403,7 +403,7 @@ function SegmentForm({ segment, onSave, onCancel }: SegmentFormProps) {
       }
       onSave();
     } catch (error) {
-      console.error('Save failed:', error);
+      // Error handled by mutation
     }
   };
 

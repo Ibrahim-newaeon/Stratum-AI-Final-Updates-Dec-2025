@@ -232,8 +232,8 @@ export default function CMS() {
       }
       setShowPostEditor(false);
       setEditingPost(undefined);
-    } catch (error) {
-      console.error('Failed to save post:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
@@ -277,7 +277,6 @@ export default function CMS() {
         // Force refetch authors list after successful creation
         await refetchAuthors();
       } catch (error: any) {
-        console.error('Failed to create author:', error);
         alert(
           error?.response?.data?.detail ||
             error?.message ||
@@ -357,8 +356,8 @@ export default function CMS() {
       }
       setShowPageEditor(false);
       setEditingPage(null);
-    } catch (error) {
-      console.error('Failed to save page:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
@@ -366,16 +365,16 @@ export default function CMS() {
   const handleSubmitForReview = async (post: CMSPost) => {
     try {
       await submitForReview.mutateAsync({ postId: post.id });
-    } catch (error) {
-      console.error('Failed to submit for review:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
   const handleApprove = async (post: CMSPost) => {
     try {
       await approvePost.mutateAsync({ postId: post.id });
-    } catch (error) {
-      console.error('Failed to approve:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
@@ -389,8 +388,8 @@ export default function CMS() {
       setShowRejectModal(false);
       setRejectReason('');
       setSelectedPostForWorkflow(null);
-    } catch (error) {
-      console.error('Failed to reject:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
@@ -404,8 +403,8 @@ export default function CMS() {
       setShowChangesModal(false);
       setChangesNotes('');
       setSelectedPostForWorkflow(null);
-    } catch (error) {
-      console.error('Failed to request changes:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
@@ -419,24 +418,24 @@ export default function CMS() {
       setShowScheduleModal(false);
       setScheduleDate('');
       setSelectedPostForWorkflow(null);
-    } catch (error) {
-      console.error('Failed to schedule:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
   const handlePublish = async (post: CMSPost) => {
     try {
       await publishPost.mutateAsync(post.id);
-    } catch (error) {
-      console.error('Failed to publish:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
   const handleUnpublish = async (post: CMSPost) => {
     try {
       await unpublishPost.mutateAsync(post.id);
-    } catch (error) {
-      console.error('Failed to unpublish:', error);
+    } catch {
+      // Error handled by mutation's onError
     }
   };
 
@@ -444,8 +443,8 @@ export default function CMS() {
     if (confirm('Are you sure you want to archive this post?')) {
       try {
         await archivePost.mutateAsync(post.id);
-      } catch (error) {
-        console.error('Failed to archive:', error);
+      } catch {
+        // Error handled by mutation's onError
       }
     }
   };

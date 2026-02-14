@@ -213,7 +213,7 @@ function SegmentBuilderModal({
         limit: 10,
       });
     } catch (error) {
-      console.error('Preview failed:', error);
+      // Error handled by mutation
     }
   };
 
@@ -533,7 +533,7 @@ export default function CDPSegments() {
       setShowBuilder(false);
       refetch();
     } catch (error) {
-      console.error('Create failed:', error);
+      // Error handled by mutation
     }
   };
 
@@ -547,7 +547,7 @@ export default function CDPSegments() {
       setEditingSegment(undefined);
       refetch();
     } catch (error) {
-      console.error('Update failed:', error);
+      // Error handled by mutation
     }
   };
 
@@ -557,7 +557,7 @@ export default function CDPSegments() {
       setDeleteConfirm(null);
       refetch();
     } catch (error) {
-      console.error('Delete failed:', error);
+      // Error handled by mutation
     }
   };
 
@@ -566,7 +566,7 @@ export default function CDPSegments() {
       await computeMutation.mutateAsync(segmentId);
       refetch();
     } catch (error) {
-      console.error('Compute failed:', error);
+      // Error handled by mutation
     }
   };
 

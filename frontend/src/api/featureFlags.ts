@@ -31,6 +31,7 @@ export interface FeatureFlagsUpdate {
   max_campaigns?: number;
   max_users?: number;
   data_retention_days?: number;
+  show_price_metrics?: boolean;
 }
 
 // =============================================================================
@@ -47,7 +48,7 @@ export function useFeatureFlags(tenantId: number) {
     queryKey: ['feature-flags', tenantId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: FeatureFlagsResponse }>(
-        `/tenant/${tenantId}/features`
+        `/features/tenant/${tenantId}/features`
       );
       return response.data.data;
     },
@@ -81,7 +82,7 @@ export function useUpdateFeatureFlags(tenantId: number) {
   return useMutation({
     mutationFn: async (updates: FeatureFlagsUpdate) => {
       const response = await apiClient.put<{ data: { features: FeatureFlags } }>(
-        `/tenant/${tenantId}/features`,
+        `/features/tenant/${tenantId}/features`,
         updates
       );
       return response.data.data;
@@ -100,7 +101,7 @@ export function useSuperadminFeatureFlags(tenantId: number) {
     queryKey: ['superadmin-feature-flags', tenantId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: FeatureFlagsResponse }>(
-        `/superadmin/tenants/${tenantId}/features`
+        `/features/superadmin/tenants/${tenantId}/features`
       );
       return response.data.data;
     },
@@ -117,7 +118,7 @@ export function useSuperadminUpdateFeatureFlags(tenantId: number) {
   return useMutation({
     mutationFn: async (updates: FeatureFlagsUpdate) => {
       const response = await apiClient.put<{ data: { features: FeatureFlags } }>(
-        `/superadmin/tenants/${tenantId}/features`,
+        `/features/superadmin/tenants/${tenantId}/features`,
         updates
       );
       return response.data.data;
@@ -137,7 +138,7 @@ export function useSuperadminResetFeatureFlags(tenantId: number) {
   return useMutation({
     mutationFn: async () => {
       const response = await apiClient.post<{ data: { features: FeatureFlags } }>(
-        `/superadmin/tenants/${tenantId}/features/reset`
+        `/features/superadmin/tenants/${tenantId}/features/reset`
       );
       return response.data.data;
     },

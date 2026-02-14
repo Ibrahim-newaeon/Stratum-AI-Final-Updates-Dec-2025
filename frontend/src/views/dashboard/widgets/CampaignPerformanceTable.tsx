@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePriceMetrics } from '@/hooks/usePriceMetrics';
 import type { CampaignSummaryItem, TrendDirection } from '@/api/dashboard';
 
 interface CampaignPerformanceTableProps {
@@ -25,6 +26,7 @@ export function CampaignPerformanceTable({
   loading = false,
   onViewAll,
 }: CampaignPerformanceTableProps) {
+  const { showPriceMetrics } = usePriceMetrics();
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -121,9 +123,9 @@ export function CampaignPerformanceTable({
                 <th className="p-3 font-medium">Campaign</th>
                 <th className="p-3 font-medium">Platform</th>
                 <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium text-right">Spend</th>
-                <th className="p-3 font-medium text-right">Revenue</th>
-                <th className="p-3 font-medium text-right">ROAS</th>
+                {showPriceMetrics && <th className="p-3 font-medium text-right">Spend</th>}
+                {showPriceMetrics && <th className="p-3 font-medium text-right">Revenue</th>}
+                {showPriceMetrics && <th className="p-3 font-medium text-right">ROAS</th>}
                 <th className="p-3 font-medium text-right">Conv.</th>
                 <th className="p-3 font-medium text-center">Score</th>
               </tr>
@@ -150,26 +152,32 @@ export function CampaignPerformanceTable({
                     <span className="text-sm capitalize">{campaign.platform}</span>
                   </td>
                   <td className="p-3">{getStatusBadge(campaign.status)}</td>
-                  <td className="p-3 text-right text-sm font-medium">
-                    {formatCurrency(campaign.spend)}
-                  </td>
-                  <td className="p-3 text-right text-sm font-medium text-green-500">
-                    {formatCurrency(campaign.revenue)}
-                  </td>
-                  <td className="p-3 text-right">
-                    <span
-                      className={cn(
-                        'text-sm font-medium',
-                        campaign.roas !== null && campaign.roas >= 3
-                          ? 'text-green-500'
-                          : campaign.roas !== null && campaign.roas >= 1
-                            ? 'text-yellow-500'
-                            : 'text-muted-foreground'
-                      )}
-                    >
-                      {formatRoas(campaign.roas)}
-                    </span>
-                  </td>
+                  {showPriceMetrics && (
+                    <td className="p-3 text-right text-sm font-medium">
+                      {formatCurrency(campaign.spend)}
+                    </td>
+                  )}
+                  {showPriceMetrics && (
+                    <td className="p-3 text-right text-sm font-medium text-green-500">
+                      {formatCurrency(campaign.revenue)}
+                    </td>
+                  )}
+                  {showPriceMetrics && (
+                    <td className="p-3 text-right">
+                      <span
+                        className={cn(
+                          'text-sm font-medium',
+                          campaign.roas !== null && campaign.roas >= 3
+                            ? 'text-green-500'
+                            : campaign.roas !== null && campaign.roas >= 1
+                              ? 'text-yellow-500'
+                              : 'text-muted-foreground'
+                        )}
+                      >
+                        {formatRoas(campaign.roas)}
+                      </span>
+                    </td>
+                  )}
                   <td className="p-3 text-right text-sm font-medium">
                     {campaign.conversions.toLocaleString()}
                   </td>

@@ -1,0 +1,405 @@
+# =============================================================================
+# Stratum AI - Prometheus Alerting Rules
+# =============================================================================
+# Usage: Include in prometheus.yml under rule_files:
+#   rule_files:
+#     - /etc/prometheus/alerting_rules.yml
+#
+# Notification channels should be configured in Alertmanager.
+# =============================================================================
+
+groups:
+  # ===========================================================================
+  # 1. API Health & Performance
+  # ===========================================================================
+  - name: stratum-api-health
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: >
+          (
+            sum(rate(stratum_http_latency_seconds_count{status=~"5.."}[5m]))
+            /
+            sum(rate(stratum_http_latency_seconds_count[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High 5xx error rate (> 5%)"
+          description: >
+            The API is returning 5xx errors at {{ $value | humanizePercentage }}
+            over the last 5 minutes. Investigate logs and health endpoints.
+          runbook_url: "https://docs.stratum.ai/runbooks/high-error-rate"
+
+      - alert: HighLatencyP95
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(stratum_http_latency_seconds_bucket[5m])) by (le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High p95 latency (> 2s)"
+          description: >
+            API p95 latency is {{ $value | humanizeDuration }} over the last
+            5 minutes. Target SLO is < 500ms p95.
+          runbook_url: "https://docs.stratum.ai/runbooks/high-latency"
+
+      - alert: HighLatencyP99
+        expr: >
+          histogram_quantile(0.99,
+            sum(rate(stratum_http_latency_seconds_bucket[5m])) by (le)
+          ) > 5.0
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Critical p99 latency (> 5s)"
+          description: >
+            API p99 latency is {{ $value | humanizeDuration }}. This affects
+            user experience significantly.
+
+      - alert: HealthCheckFailing
+        expr: up{job="stratum-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Stratum API health check failing"
+          description: >
+            The API instance {{ $labels.instance }} has been unreachable
+            for more than 2 minutes. Check container health and network.
+          runbook_url: "https://docs.stratum.ai/runbooks/health-check-failure"
+
+      - alert: HighRequestsInProgress
+        expr: stratum_http_requests_inprogress > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High number of in-progress requests (> 100)"
+          description: >
+            {{ $value }} requests are currently in-progress. This may
+            indicate resource exhaustion or slow downstream dependencies.
+
+  # ===========================================================================
+  # 2. Trust Gate & Autopilot
+  # ===========================================================================
+  - name: stratum-trust-gate
+    interval: 60s
+    rules:
+      - alert: TrustGateBlockSpike
+        expr: >
+          (
+            sum(rate(stratum_trust_gate_decisions_total{decision="block"}[15m]))
+            /
+            sum(rate(stratum_trust_gate_decisions_total[15m]))
+          ) > 0.5
+        for: 15m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Trust gate blocking > 50% of actions"
+          description: >
+            The trust gate is blocking {{ $value | humanizePercentage }}
+            of automation actions. Signal health may be degraded across
+            multiple tenants.
+
+      - alert: TrustGateEvaluationSlow
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(stratum_trust_gate_evaluation_duration_seconds_bucket[5m])) by (le)
+          ) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Trust gate evaluation p95 > 1s"
+          description: >
+            Trust gate evaluations are taking {{ $value | humanizeDuration }}
+            at p95. This slows down automation decisions.
+
+      - alert: AutopilotActionsFailing
+        expr: >
+          (
+            sum(rate(stratum_autopilot_actions_total{status="failed"}[15m]))
+            /
+            sum(rate(stratum_autopilot_actions_total[15m]))
+          ) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Autopilot action failure rate > 10%"
+          description: >
+            {{ $value | humanizePercentage }} of autopilot actions are
+            failing. Check platform API connectivity and rate limits.
+
+      - alert: HighBudgetAtRisk
+        expr: stratum_autopilot_budget_at_risk_usd > 10000
+        for: 10m
+        labels:
+          severity: critical
+          team: product
+        annotations:
+          summary: "Budget at risk > $10,000"
+          description: >
+            Tenant {{ $labels.tenant_id }} has ${{ $value | humanize }}
+            budget at risk due to signal health issues.
+
+  # ===========================================================================
+  # 3. Signal Health & EMQ
+  # ===========================================================================
+  - name: stratum-signal-health
+    interval: 60s
+    rules:
+      - alert: LowSignalHealth
+        expr: stratum_signal_health_score < 40
+        for: 15m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Signal health score < 40 (degraded)"
+          description: >
+            Tenant {{ $labels.tenant_id }} platform {{ $labels.platform }}
+            has signal health at {{ $value }}. Autopilot is in degraded mode.
+
+      - alert: CriticalSignalHealth
+        expr: stratum_signal_health_score < 20
+        for: 10m
+        labels:
+          severity: critical
+          team: product
+        annotations:
+          summary: "Signal health score < 20 (unhealthy)"
+          description: >
+            Tenant {{ $labels.tenant_id }} platform {{ $labels.platform }}
+            has critical signal health at {{ $value }}. All automation blocked.
+
+      - alert: EMQScoreDrop
+        expr: >
+          (stratum_emq_score - stratum_emq_score offset 1h)
+          / stratum_emq_score offset 1h < -0.2
+        for: 15m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "EMQ score dropped > 20% in 1 hour"
+          description: >
+            EMQ score for tenant {{ $labels.tenant_id }} on
+            {{ $labels.platform }} dropped significantly.
+
+      - alert: HighSignalVolatility
+        expr: stratum_signal_volatility_index > 80
+        for: 30m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "High signal volatility (SVI > 80)"
+          description: >
+            Tenant {{ $labels.tenant_id }} has high signal volatility
+            (SVI={{ $value }}). Data may be unreliable.
+
+  # ===========================================================================
+  # 4. Platform Integration
+  # ===========================================================================
+  - name: stratum-platform-integration
+    interval: 60s
+    rules:
+      - alert: PlatformAPIErrorRate
+        expr: >
+          (
+            sum(rate(stratum_platform_api_requests_total{status="error"}[5m])) by (platform)
+            /
+            sum(rate(stratum_platform_api_requests_total[5m])) by (platform)
+          ) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Platform {{ $labels.platform }} API error rate > 10%"
+          description: >
+            {{ $labels.platform }} API is returning errors at
+            {{ $value | humanizePercentage }}.
+
+      - alert: PlatformAPIHighLatency
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(stratum_platform_api_latency_seconds_bucket[5m])) by (le, platform)
+          ) > 10.0
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Platform {{ $labels.platform }} API p95 latency > 10s"
+          description: >
+            API calls to {{ $labels.platform }} are taking
+            {{ $value | humanizeDuration }} at p95.
+
+      - alert: PlatformSyncStale
+        expr: >
+          (time() - stratum_platform_sync_last_success_timestamp) > 7200
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Platform sync stale (> 2h since last success)"
+          description: >
+            Tenant {{ $labels.tenant_id }} has not synced with
+            {{ $labels.platform }} for over 2 hours.
+
+      - alert: CAPIMatchRateLow
+        expr: stratum_capi_match_rate < 30
+        for: 30m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "CAPI match rate < 30%"
+          description: >
+            Tenant {{ $labels.tenant_id }} CAPI match rate on
+            {{ $labels.platform }} is {{ $value }}%. Check event parameters.
+
+  # ===========================================================================
+  # 5. Celery Workers & Queue
+  # ===========================================================================
+  - name: stratum-celery
+    interval: 60s
+    rules:
+      - alert: CeleryTaskFailureRate
+        expr: >
+          (
+            sum(rate(stratum_celery_tasks_total{status="failure"}[15m])) by (task_name)
+            /
+            sum(rate(stratum_celery_tasks_total[15m])) by (task_name)
+          ) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Celery task {{ $labels.task_name }} failure rate > 10%"
+          description: >
+            Task {{ $labels.task_name }} is failing at
+            {{ $value | humanizePercentage }}.
+
+      - alert: CeleryTaskSlow
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(stratum_celery_task_duration_seconds_bucket[5m])) by (le, task_name)
+          ) > 300
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Celery task {{ $labels.task_name }} p95 duration > 5min"
+          description: >
+            Task {{ $labels.task_name }} is taking
+            {{ $value | humanizeDuration }} at p95.
+
+  # ===========================================================================
+  # 6. Infrastructure (Database, Redis)
+  # ===========================================================================
+  - name: stratum-infrastructure
+    interval: 30s
+    rules:
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "PostgreSQL is down"
+          description: >
+            PostgreSQL instance {{ $labels.instance }} is unreachable.
+            All database operations will fail.
+          runbook_url: "https://docs.stratum.ai/runbooks/postgres-down"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Redis is down"
+          description: >
+            Redis instance {{ $labels.instance }} is unreachable.
+            Caching and Celery broker will be affected.
+          runbook_url: "https://docs.stratum.ai/runbooks/redis-down"
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Redis memory usage > 90%"
+          description: >
+            Redis is using {{ $value | humanizePercentage }} of its
+            configured max memory. Consider scaling or reviewing eviction policy.
+
+  # ===========================================================================
+  # 7. Incidents
+  # ===========================================================================
+  - name: stratum-incidents
+    interval: 60s
+    rules:
+      - alert: OpenCriticalIncidents
+        expr: stratum_incidents_open{severity="critical"} > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: product
+        annotations:
+          summary: "{{ $value }} critical incident(s) open"
+          description: >
+            Tenant {{ $labels.tenant_id }} has {{ $value }} open critical
+            incidents requiring immediate attention.
+
+      - alert: HighIncidentRate
+        expr: >
+          sum(rate(stratum_incidents_total[1h])) by (tenant_id) > 5
+        for: 30m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "High incident rate (> 5/hour)"
+          description: >
+            Tenant {{ $labels.tenant_id }} is generating incidents at
+            {{ $value | humanize }}/hour.
+
+      - alert: SlowIncidentResolution
+        expr: >
+          histogram_quantile(0.5,
+            sum(rate(stratum_incident_mttr_seconds_bucket[24h])) by (le, severity)
+          ) > 14400
+        for: 1h
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: "Median incident MTTR > 4 hours"
+          description: >
+            {{ $labels.severity }} incidents have a median resolution time
+            of {{ $value | humanizeDuration }}.

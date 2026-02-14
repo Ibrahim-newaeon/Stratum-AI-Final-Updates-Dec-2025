@@ -266,7 +266,9 @@ def _purge_cloudfront(paths: list[str], settings) -> None:
         return
 
     client = boto3.client("cloudfront")
-    caller_ref = f"cms-{int(__import__('time').time())}"
+    import time as _time
+
+    caller_ref = f"cms-{int(_time.time())}"
 
     client.create_invalidation(
         DistributionId=settings.cdn_zone_id,

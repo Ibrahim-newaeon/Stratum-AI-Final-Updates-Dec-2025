@@ -51,7 +51,7 @@ class ApiClient {
       const data = await response.json();
       return { data, success: true };
     } catch (error) {
-      console.error('API request failed:', error);
+      // Error returned in result object
       return {
         data: null as T,
         success: false,

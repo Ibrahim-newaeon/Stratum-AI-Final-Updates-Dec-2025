@@ -33,6 +33,9 @@ export interface FeatureFlags {
   max_campaigns: number;
   max_users: number;
   data_retention_days: number;
+
+  // Dashboard
+  show_price_metrics: boolean;
 }
 
 export interface FeatureCategory {
@@ -83,6 +86,7 @@ export const defaultFeatures: FeatureFlags = {
   max_campaigns: 20,
   max_users: 5,
   data_retention_days: 90,
+  show_price_metrics: true,
 };
 
 // =============================================================================

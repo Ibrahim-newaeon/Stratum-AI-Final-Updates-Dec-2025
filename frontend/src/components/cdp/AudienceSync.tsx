@@ -219,7 +219,7 @@ function CreateAudienceModal({
       setAutoSync(true);
       setSyncInterval(24);
     } catch (error) {
-      console.error('Failed to create audience:', error);
+      // Error handled by mutation
     }
   };
 
@@ -553,7 +553,7 @@ function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalP
 
       onClose();
     } catch (error) {
-      console.error('Export failed:', error);
+      // Error handled silently
     } finally {
       setIsExporting(false);
     }
@@ -845,7 +845,7 @@ export function AudienceSync() {
       await syncMutation.mutateAsync({ audienceId, operation: 'update' });
       refetch();
     } catch (error) {
-      console.error('Sync failed:', error);
+      // Error handled silently
     } finally {
       setSyncingIds((prev) => {
         const next = new Set(prev);
@@ -868,7 +868,7 @@ export function AudienceSync() {
       await deleteMutation.mutateAsync({ audienceId, deleteFromPlatform: true });
       refetch();
     } catch (error) {
-      console.error('Delete failed:', error);
+      // Error handled silently
     }
   };
 

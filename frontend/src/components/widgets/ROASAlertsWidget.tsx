@@ -97,7 +97,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
         setError(null);
       }
     } catch (err) {
-      console.error('Failed to fetch alerts:', err);
+      // Error displayed via setError below
       setError('Failed to load alerts');
     } finally {
       setLoading(false);

@@ -121,7 +121,7 @@ function WebhookForm({ webhook, onSave, onCancel }: WebhookFormProps) {
       }
       onSave();
     } catch (error) {
-      console.error('Save failed:', error);
+      // Error handled by mutation
     }
   };
 

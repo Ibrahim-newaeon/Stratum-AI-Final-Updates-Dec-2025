@@ -47,8 +47,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE_URL = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const runtimeUrl = (window as unknown as { __RUNTIME_CONFIG__?: { VITE_API_URL?: string } }).__RUNTIME_CONFIG__?.VITE_API_URL;
+const API_BASE_URL = runtimeUrl || import.meta.env.VITE_API_URL || '/api/v1';
 
 // =============================================================================
 // Types
@@ -104,48 +104,6 @@ interface SystemHealth {
   platforms: Record<string, { status: string; success_rate: number }>;
   resources: { cpu_percent: number; memory_percent: number; disk_percent: number };
 }
-
-interface SystemAlert {
-  id: string;
-  type: 'error' | 'warning' | 'info';
-  message: string;
-  component: string;
-  timestamp: string;
-}
-
-// =============================================================================
-// Mock data for features not yet connected
-// =============================================================================
-const mockAlerts: SystemAlert[] = [
-  {
-    id: '1',
-    type: 'warning',
-    message: 'High API latency detected on Meta endpoints',
-    component: 'API Gateway',
-    timestamp: '5 mins ago',
-  },
-  {
-    id: '2',
-    type: 'info',
-    message: 'Database backup completed successfully',
-    component: 'Database',
-    timestamp: '30 mins ago',
-  },
-  {
-    id: '3',
-    type: 'error',
-    message: 'Failed to sync TikTok campaigns for 3 tenants',
-    component: 'Sync Service',
-    timestamp: '1 hour ago',
-  },
-  {
-    id: '4',
-    type: 'info',
-    message: 'New version v2.4.1 deployed successfully',
-    component: 'Deployment',
-    timestamp: '2 hours ago',
-  },
-];
 
 // =============================================================================
 // Main Component
@@ -486,36 +444,9 @@ export default function SuperadminDashboard() {
               <AlertCircle className="w-5 h-5 text-primary" />
               System Alerts
             </h3>
-            <div className="space-y-3">
-              {mockAlerts.map((alert, idx) => (
-                <div
-                  key={alert.id}
-                  className={cn(
-                    'flex items-start gap-3 p-3 rounded-lg border motion-enter',
-                    alert.type === 'error' && 'bg-red-500/5 border-red-500/20',
-                    alert.type === 'warning' && 'bg-amber-500/5 border-amber-500/20',
-                    alert.type === 'info' && 'bg-blue-500/5 border-blue-500/20'
-                  )}
-                  style={{ animationDelay: `${idx * 30}ms` }}
-                >
-                  {alert.type === 'error' && (
-                    <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                  )}
-                  {alert.type === 'warning' && (
-                    <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  )}
-                  {alert.type === 'info' && (
-                    <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                  )}
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{alert.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {alert.component} • {alert.timestamp}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-muted-foreground text-center py-4">
+              No active alerts
+            </p>
           </div>
 
           {/* Usage Limits & Overage Warnings */}
@@ -812,13 +743,9 @@ export default function SuperadminDashboard() {
                   {
                     name: 'API Server',
                     status: 'healthy',
-                    cpu: systemHealth?.resources.cpu_percent || 45,
-                    memory: systemHealth?.resources.memory_percent || 62,
+                    cpu: systemHealth?.resources.cpu_percent ?? 0,
+                    memory: systemHealth?.resources.memory_percent ?? 0,
                   },
-                  { name: 'Worker Nodes', status: 'healthy', cpu: 78, memory: 84 },
-                  { name: 'Database', status: 'healthy', cpu: 23, memory: 56 },
-                  { name: 'Redis Cache', status: 'healthy', cpu: 12, memory: 45 },
-                  { name: 'ML Service', status: 'healthy', cpu: 67, memory: 71 },
                 ].map((service, idx) => (
                   <div
                     key={idx}

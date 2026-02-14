@@ -47,16 +47,9 @@ interface ConsentProfile {
 function useConsentStats(tenantId: number) {
   return useQuery({
     queryKey: ['cdp-consent-stats', tenantId],
-    queryFn: async () => {
-      // Simulated stats - in production, this would be a real API call
-      const stats: ConsentStats[] = CONSENT_TYPES.map((type) => ({
-        consent_type: type.value,
-        total_profiles: Math.floor(Math.random() * 10000) + 1000,
-        granted: Math.floor(Math.random() * 8000) + 500,
-        revoked: Math.floor(Math.random() * 2000) + 100,
-        grant_rate: Math.random() * 40 + 50,
-      }));
-      return stats;
+    queryFn: async (): Promise<ConsentStats[]> => {
+      // Consent stats API not yet available - return empty data
+      return [];
     },
     staleTime: 60 * 1000,
   });
@@ -69,17 +62,9 @@ function useConsentProfiles(
 ) {
   return useQuery({
     queryKey: ['cdp-consent-profiles', tenantId, filters],
-    queryFn: async () => {
-      // Simulated profiles - in production, this would be a real API call
-      const profiles: ConsentProfile[] = Array.from({ length: 20 }, (_, i) => ({
-        profile_id: `profile-${i + 1}`,
-        email: `user${i + 1}@example.com`,
-        consent_type: filters.consent_type || CONSENT_TYPES[i % 4].value,
-        granted: filters.granted !== undefined ? filters.granted : Math.random() > 0.3,
-        granted_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        source: ['web_form', 'api', 'import', 'preference_center'][i % 4],
-      }));
-      return { profiles, total: 150 };
+    queryFn: async (): Promise<{ profiles: ConsentProfile[]; total: number }> => {
+      // Consent profiles API not yet available - return empty data
+      return { profiles: [], total: 0 };
     },
     staleTime: 30 * 1000,
   });
@@ -102,9 +87,31 @@ export function ConsentManager() {
   const profiles = profilesData?.profiles || [];
 
   const handleExportConsent = async (consentType?: string) => {
-    // In production, this would trigger a real export
-    console.log('Exporting consent data for:', consentType || 'all');
-    alert('Export started. Check your email for the download link.');
+    const exportData = profiles.filter(
+      (p) => !consentType || p.consent_type === consentType
+    );
+    if (exportData.length === 0) {
+      alert('No consent records to export.');
+      return;
+    }
+    const headers = ['Profile ID', 'Email', 'Consent Type', 'Granted', 'Granted At', 'Revoked At', 'Source'];
+    const rows = exportData.map((p) => [
+      p.profile_id,
+      p.email || '',
+      p.consent_type,
+      p.granted ? 'Yes' : 'No',
+      p.granted_at || '',
+      p.revoked_at || '',
+      p.source || '',
+    ]);
+    const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `consent-export-${consentType || 'all'}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (

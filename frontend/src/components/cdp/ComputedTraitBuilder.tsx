@@ -91,7 +91,7 @@ export function ComputedTraitBuilder() {
       setFormData(initialFormData);
       setShowForm(false);
     } catch (error) {
-      console.error('Failed to create trait:', error);
+      // Error handled by mutation
     }
   };
 
@@ -100,7 +100,7 @@ export function ComputedTraitBuilder() {
     try {
       await deleteMutation.mutateAsync(traitId);
     } catch (error) {
-      console.error('Failed to delete trait:', error);
+      // Error handled by mutation
     } finally {
       setDeletingId(null);
     }

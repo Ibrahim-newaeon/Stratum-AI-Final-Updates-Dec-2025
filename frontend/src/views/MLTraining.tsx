@@ -72,7 +72,7 @@ export default function MLTraining() {
       const response = await apiClient.get('/ml/models');
       setModels(response.data.models || []);
     } catch (err) {
-      console.error('Failed to fetch models:', err);
+      // Error handled silently
     }
   };
 
@@ -81,7 +81,7 @@ export default function MLTraining() {
       const response = await apiClient.get('/ml/training-data');
       setTrainingFiles(response.data.files || []);
     } catch (err) {
-      console.error('Failed to fetch training data:', err);
+      // Error handled silently
     }
   };
 
@@ -125,7 +125,7 @@ export default function MLTraining() {
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 'Failed to upload file. Please try again.';
       setError(errorMessage);
-      console.error('Upload error:', err);
+      // Error displayed via setError above
     } finally {
       setIsLoading(false);
       if (fileInputRef.current) {
@@ -149,7 +149,7 @@ export default function MLTraining() {
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 'Failed to generate sample data';
       setError(errorMessage);
-      console.error('Generate sample error:', err);
+      // Error displayed via setError above
     } finally {
       setIsLoading(false);
     }
@@ -174,7 +174,7 @@ export default function MLTraining() {
         err.response?.data?.detail ||
         'Training failed. Please ensure you have uploaded training data.';
       setError(errorMessage);
-      console.error('Training error:', err);
+      // Error displayed via setError above
     } finally {
       setIsTraining(false);
     }
@@ -191,7 +191,7 @@ export default function MLTraining() {
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 'Failed to delete model';
       setError(errorMessage);
-      console.error('Delete error:', err);
+      // Error displayed via setError above
     }
   };
 

@@ -36,7 +36,7 @@ async def get_entity_metrics(
     Fetch entity metrics for recommendations.
     In production, this queries fact_daily_metrics.
     """
-    # Placeholder - in production query actual metrics
+    # Returns empty until fact_daily_metrics is populated by sync workers
     return []
 
 
@@ -45,7 +45,7 @@ async def get_baseline_metrics(db: AsyncSession, tenant_id: int) -> dict[str, Ba
     Fetch baseline metrics for entities.
     In production, this queries aggregated historical data.
     """
-    # Placeholder - in production query actual baselines
+    # Returns empty until historical data is aggregated by sync workers
     return {}
 
 
@@ -304,12 +304,8 @@ async def get_anomalies(
     if target_date is None:
         target_date = datetime.now(UTC).date()
 
-    # In production, this would:
-    # 1. Fetch historical metrics for the lookback period
-    # 2. Run anomaly detection algorithms
-    # 3. Return detected anomalies
-
-    # Placeholder response
+    # Anomaly detection runs via scheduled workers.
+    # This endpoint returns any anomalies stored in fact_alerts.
     anomalies = []
 
     # Example anomaly structure
@@ -395,8 +391,7 @@ async def get_kpis(
     else:
         compare_date = target_date - timedelta(days=1)
 
-    # In production, query fact_daily_metrics for actual KPIs
-    # Placeholder response
+    # Returns zero values until fact_daily_metrics is populated by sync workers
     kpis = {
         "date": target_date.isoformat(),
         "comparison_date": compare_date.isoformat(),

@@ -80,8 +80,8 @@ async def update_tenant_features(
     if getattr(request.state, "tenant_id", None) != tenant_id:
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
-    # Check admin role
-    user_role = getattr(request.state, "user_role", None)
+    # Check admin role (middleware sets request.state.role)
+    user_role = getattr(request.state, "role", None)
     if user_role not in ["superadmin", "admin", "tenant_admin"]:
         raise HTTPException(status_code=403, detail="Admin role required")
 
@@ -112,7 +112,7 @@ async def superadmin_get_tenant_features(
     """
     Get feature flags for any tenant (superadmin only).
     """
-    user_role = getattr(request.state, "user_role", None)
+    user_role = getattr(request.state, "role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 
@@ -140,7 +140,7 @@ async def superadmin_update_tenant_features(
     """
     Update feature flags for any tenant (superadmin only).
     """
-    user_role = getattr(request.state, "user_role", None)
+    user_role = getattr(request.state, "role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 
@@ -173,7 +173,7 @@ async def superadmin_reset_tenant_features(
     """
     Reset tenant features to plan defaults (superadmin only).
     """
-    user_role = getattr(request.state, "user_role", None)
+    user_role = getattr(request.state, "role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 
@@ -192,7 +192,7 @@ async def get_feature_metadata(request: Request):
     """
     Get feature categories and descriptions for UI.
     """
-    user_role = getattr(request.state, "user_role", None)
+    user_role = getattr(request.state, "role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 

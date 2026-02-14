@@ -7,7 +7,8 @@
 
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const runtimeUrl = (window as unknown as { __RUNTIME_CONFIG__?: { VITE_API_URL?: string } }).__RUNTIME_CONFIG__?.VITE_API_URL;
+const API_BASE_URL = runtimeUrl || import.meta.env.VITE_API_URL || '/api/v1';
 
 // Create axios instance with default config
 export const apiClient: AxiosInstance = axios.create({

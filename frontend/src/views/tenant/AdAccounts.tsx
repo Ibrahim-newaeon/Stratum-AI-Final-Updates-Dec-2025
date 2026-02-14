@@ -34,40 +34,6 @@ interface AdAccount {
   lastSyncAt: string;
 }
 
-const mockAccounts: AdAccount[] = [
-  {
-    id: '1',
-    platformAccountId: 'act_123456789',
-    name: 'Main Business Account',
-    platform: 'meta',
-    currency: 'SAR',
-    timezone: 'Asia/Riyadh',
-    enabled: true,
-    spendCap: 50000,
-    lastSyncAt: '2024-01-20T10:30:00Z',
-  },
-  {
-    id: '2',
-    platformAccountId: 'act_987654321',
-    name: 'E-commerce Store',
-    platform: 'meta',
-    currency: 'SAR',
-    timezone: 'Asia/Riyadh',
-    enabled: true,
-    lastSyncAt: '2024-01-20T10:30:00Z',
-  },
-  {
-    id: '3',
-    platformAccountId: '123-456-7890',
-    name: 'Company Google Ads',
-    platform: 'google',
-    currency: 'SAR',
-    timezone: 'Asia/Riyadh',
-    enabled: false,
-    lastSyncAt: '2024-01-19T14:00:00Z',
-  },
-];
-
 const platformLabels = {
   meta: 'Meta Ads',
   google: 'Google Ads',
@@ -112,8 +78,7 @@ export default function AdAccounts() {
       lastSyncAt: acc.last_synced_at || new Date().toISOString(),
     }));
 
-    // Return API data if available, otherwise fall back to mock
-    return apiAccounts.length > 0 ? apiAccounts : mockAccounts;
+    return apiAccounts;
   }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts]);
 
   const handleToggleAccount = async (account: AdAccount) => {
@@ -124,7 +89,7 @@ export default function AdAccounts() {
         data: { is_enabled: !account.enabled },
       });
     } catch (error) {
-      console.error('Failed to toggle account:', error);
+      // Error handled silently - demo mode fallback
       // Fallback: local state update for demo mode
     }
   };
@@ -139,7 +104,7 @@ export default function AdAccounts() {
         syncAccounts.mutateAsync('snapchat'),
       ]);
     } catch (error) {
-      console.error('Failed to sync accounts:', error);
+      // Error handled by mutation
     }
   };
 

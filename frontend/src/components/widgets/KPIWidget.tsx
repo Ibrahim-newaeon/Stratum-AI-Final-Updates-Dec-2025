@@ -9,19 +9,17 @@ import {
 } from 'lucide-react';
 import { cn, formatCompactNumber, formatCurrency, formatPercent } from '@/lib/utils';
 
-interface KPIWidgetProps {
-  type: 'spend' | 'revenue' | 'roas' | 'conversions' | 'ctr' | 'impressions';
-  className?: string;
+interface KPIData {
+  value: number;
+  change: number;
+  trend: 'up' | 'down';
 }
 
-const mockData = {
-  spend: { value: 45678, change: 12.5, trend: 'up' as const },
-  revenue: { value: 156789, change: 18.2, trend: 'up' as const },
-  roas: { value: 3.43, change: 5.1, trend: 'up' as const },
-  conversions: { value: 2847, change: -3.2, trend: 'down' as const },
-  ctr: { value: 2.84, change: 0.3, trend: 'up' as const },
-  impressions: { value: 12500000, change: 8.7, trend: 'up' as const },
-};
+interface KPIWidgetProps {
+  type: 'spend' | 'revenue' | 'roas' | 'conversions' | 'ctr' | 'impressions';
+  data?: KPIData;
+  className?: string;
+}
 
 const config = {
   spend: {
@@ -62,10 +60,24 @@ const config = {
   },
 };
 
-export function KPIWidget({ type, className }: KPIWidgetProps) {
-  const data = mockData[type];
+export function KPIWidget({ type, data, className }: KPIWidgetProps) {
   const cfg = config[type];
   const Icon = cfg.icon;
+
+  if (!data) {
+    return (
+      <div className={cn('h-full p-4 flex flex-col justify-between', className)}>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{cfg.label}</span>
+          <Icon className={cn('w-5 h-5', cfg.color)} />
+        </div>
+        <div className="mt-2">
+          <p className="text-2xl font-bold tabular-nums text-muted-foreground">--</p>
+          <p className="text-xs text-muted-foreground mt-1">No data available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn('h-full p-4 flex flex-col justify-between', className)}>

@@ -106,7 +106,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
         setError(null);
       }
     } catch (err) {
-      console.error('Failed to fetch predictions:', err);
+      // Error displayed via setError below
       setError('Failed to load predictions');
     } finally {
       setLoading(false);

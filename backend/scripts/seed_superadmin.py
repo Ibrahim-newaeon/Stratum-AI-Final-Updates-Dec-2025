@@ -13,6 +13,7 @@ Or from the backend folder:
 """
 
 import asyncio
+import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -27,14 +28,19 @@ from app.core.config import settings
 from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_lookup
 
 # =============================================================================
-# Super Admin Configuration
+# Super Admin Configuration (read from env vars with fallbacks for dev only)
 # =============================================================================
 
-SUPERADMIN_EMAIL = "ibrahim@new-aeon.com"
-SUPERADMIN_PASSWORD = "Newaeon@2025"
-SUPERADMIN_NAME = "Ibrahim (Super Admin)"
+SUPERADMIN_EMAIL = os.environ.get("SUPERADMIN_EMAIL", "ibrahim@new-aeon.com")
+SUPERADMIN_PASSWORD = os.environ.get("SUPERADMIN_PASSWORD", "")
+SUPERADMIN_NAME = os.environ.get("SUPERADMIN_NAME", "Ibrahim (Super Admin)")
 SUPERADMIN_TENANT_NAME = "Stratum Platform"
 SUPERADMIN_TENANT_SLUG = "stratum-platform"
+
+if not SUPERADMIN_PASSWORD:
+    print("ERROR: SUPERADMIN_PASSWORD env var is required.")
+    print("Usage: SUPERADMIN_PASSWORD=YourSecurePass123! python scripts/seed_superadmin.py")
+    sys.exit(1)
 
 
 async def create_superadmin():

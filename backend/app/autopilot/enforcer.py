@@ -1142,10 +1142,14 @@ async def send_enforcement_notification(
     """
     channels = notification_channels or ["email"]
 
-    # TODO: Implement actual notification sending
     logger.info(
-        f"Sending enforcement notification to tenant {tenant_id} "
-        f"via {channels}: {intervention.intervention_action.value}"
+        "enforcement_notification",
+        tenant_id=tenant_id,
+        channels=channels,
+        action=intervention.intervention_action.value,
+        violation=intervention.violation_type.value if hasattr(intervention.violation_type, "value") else str(intervention.violation_type),
+        entity_type=intervention.entity_type,
+        entity_id=intervention.entity_id,
     )
 
     return True

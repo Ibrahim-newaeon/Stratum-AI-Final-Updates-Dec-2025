@@ -200,7 +200,7 @@ export default function CDPEvents() {
         limit: 10000,
       });
     } catch (error) {
-      console.error('Export failed:', error);
+      // Error handled by mutation
     }
   };
 

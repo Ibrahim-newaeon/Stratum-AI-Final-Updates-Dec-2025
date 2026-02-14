@@ -26,7 +26,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import CurrentUserDep, VerifiedUserDep
@@ -431,12 +431,41 @@ async def get_dashboard_overview(
     current_cpa = current_spend / current_conversions if current_conversions > 0 else 0
     current_ctr = (current_clicks / current_impressions * 100) if current_impressions > 0 else 0
 
-    # For demo, use mock previous period (in production, query historical data)
-    prev_spend = current_spend * 0.9  # Mock 10% growth
-    prev_revenue = current_revenue * 0.85
-    prev_conversions = int(current_conversions * 0.88)
-    prev_impressions = int(current_impressions * 0.95)
-    prev_clicks = int(current_clicks * 0.92)
+    # Query previous period from fact_platform_daily for real comparisons
+    try:
+        prev_result = await db.execute(
+            text(
+                "SELECT COALESCE(SUM(spend), 0) as spend, "
+                "COALESCE(SUM(revenue), 0) as revenue, "
+                "COALESCE(SUM(conversions), 0) as conversions, "
+                "COALESCE(SUM(impressions), 0) as impressions, "
+                "COALESCE(SUM(clicks), 0) as clicks "
+                "FROM fact_platform_daily "
+                "WHERE tenant_id = :tenant_id AND date BETWEEN :start AND :end"
+            ),
+            {"tenant_id": tenant_id, "start": prev_start, "end": prev_end},
+        )
+        prev_row = prev_result.mappings().first()
+        if prev_row and prev_row["spend"] > 0:
+            prev_spend = float(prev_row["spend"])
+            prev_revenue = float(prev_row["revenue"])
+            prev_conversions = int(prev_row["conversions"])
+            prev_impressions = int(prev_row["impressions"])
+            prev_clicks = int(prev_row["clicks"])
+        else:
+            # No historical data yet — show zero change
+            prev_spend = current_spend
+            prev_revenue = current_revenue
+            prev_conversions = current_conversions
+            prev_impressions = current_impressions
+            prev_clicks = current_clicks
+    except Exception:
+        # Table may not have data yet — show zero change
+        prev_spend = current_spend
+        prev_revenue = current_revenue
+        prev_conversions = current_conversions
+        prev_impressions = current_impressions
+        prev_clicks = current_clicks
 
     prev_roas = prev_revenue / prev_spend if prev_spend > 0 else 0
     prev_cpa = prev_spend / prev_conversions if prev_conversions > 0 else 0
@@ -539,8 +568,8 @@ async def get_dashboard_overview(
             platforms=platforms_summary,
             total_campaigns=len(campaigns),
             active_campaigns=active_campaigns,
-            pending_recommendations=3 if has_campaigns else 0,  # Mock
-            active_alerts=1 if has_campaigns else 0,  # Mock
+            pending_recommendations=0,
+            active_alerts=0,
             hidden_metrics=hidden_metrics,
         ),
     )
@@ -1032,7 +1061,7 @@ async def get_signal_health(
     )
     has_campaigns = (campaign_count_result.scalar() or 0) > 0
 
-    # Mock signal health (in production, query FactSignalHealthDaily)
+    # Signal health based on actual platform connectivity and data state
     if connected_count == 0 and not has_env_credentials and not has_campaigns:
         return APIResponse(
             success=True,
@@ -1047,11 +1076,74 @@ async def get_signal_health(
             ),
         )
 
-    # Simulated healthy status
-    overall_score = 85
-    emq_score = 0.92
-    data_freshness = 5
-    issues = []
+    # Compute signal health from real data
+    issues: list[str] = []
+    overall_score = 0
+    emq_score: float | None = None
+    data_freshness: int | None = None
+
+    try:
+        # Check data freshness from fact_platform_daily
+        freshness_result = await db.execute(
+            text(
+                "SELECT MAX(date) as latest_date "
+                "FROM fact_platform_daily WHERE tenant_id = :tenant_id"
+            ),
+            {"tenant_id": tenant_id},
+        )
+        latest_row = freshness_result.mappings().first()
+        latest_date = latest_row["latest_date"] if latest_row else None
+
+        if latest_date:
+            days_stale = (date.today() - latest_date).days
+            data_freshness = days_stale * 24 * 60  # Convert to minutes
+            freshness_score = max(0, 100 - (days_stale * 15))  # -15 per day stale
+        else:
+            freshness_score = 0
+            issues.append("No historical data synced yet")
+
+        # Check EMQ from fact_alerts (emq_degraded alerts)
+        emq_result = await db.execute(
+            text(
+                "SELECT COUNT(*) as degraded_count "
+                "FROM fact_alerts WHERE tenant_id = :tenant_id "
+                "AND alert_type = 'emq_degraded' "
+                "AND (resolved = false OR resolved IS NULL) "
+                "AND date >= CURRENT_DATE - INTERVAL '7 days'"
+            ),
+            {"tenant_id": tenant_id},
+        )
+        emq_row = emq_result.mappings().first()
+        emq_degraded = emq_row["degraded_count"] if emq_row else 0
+
+        if emq_degraded == 0:
+            emq_score = 0.95
+            emq_component = 95
+        elif emq_degraded <= 2:
+            emq_score = 0.75
+            emq_component = 75
+            issues.append(f"{emq_degraded} EMQ degradation alerts active")
+        else:
+            emq_score = 0.50
+            emq_component = 50
+            issues.append(f"{emq_degraded} EMQ degradation alerts active")
+
+        # Platform connectivity score
+        connectivity_score = 100 if (connected_count > 0 or has_env_credentials) else 0
+
+        # Weighted overall score
+        overall_score = int(
+            freshness_score * 0.4 + emq_component * 0.35 + connectivity_score * 0.25
+        )
+    except Exception:
+        # If analytics tables aren't populated yet, derive from connectivity
+        if connected_count > 0 or has_env_credentials:
+            overall_score = 75
+            if has_campaigns:
+                overall_score = 80
+        else:
+            overall_score = 0
+            issues.append("Signal health data not yet available")
 
     # Check thresholds
     autopilot_threshold = onboarding.trust_threshold_autopilot if onboarding else 70

@@ -415,7 +415,7 @@ export function WhatsApp() {
 
       setConversations(convos);
     } catch (err: any) {
-      console.error('Failed to fetch WhatsApp data:', err);
+      // Error displayed via setError below
       setError(err.response?.data?.detail || 'Failed to load data');
     } finally {
       setIsLoading(false);
@@ -434,7 +434,7 @@ export function WhatsApp() {
         )
       );
     } catch (err) {
-      console.error('Failed to fetch messages:', err);
+      // Error handled silently
     }
   };
 
@@ -483,7 +483,7 @@ export function WhatsApp() {
       setSelectedContactIds([]);
       setBroadcastTemplate('');
     } catch (err: any) {
-      console.error('Failed to send broadcast:', err);
+      // Error displayed via alert below
       alert(err.response?.data?.detail || 'Failed to send broadcast');
     } finally {
       setIsSending(false);
@@ -625,7 +625,7 @@ export function WhatsApp() {
       await fetchData();
       resetContactModal();
     } catch (err: any) {
-      console.error('Failed to add contact:', err);
+      // Error displayed via alert below
       alert(err.response?.data?.detail || 'Failed to add contact');
     } finally {
       setIsImporting(false);
@@ -659,7 +659,7 @@ export function WhatsApp() {
       await fetchData();
       resetContactModal();
     } catch (err: any) {
-      console.error('Failed to import contacts:', err);
+      // Error displayed via alert below
       alert('Failed to import contacts: ' + (err.response?.data?.detail || err.message));
     } finally {
       setIsImporting(false);
@@ -723,7 +723,7 @@ export function WhatsApp() {
       setEditingContact(null);
       setEditName('');
     } catch (err: any) {
-      console.error('Failed to update contact:', err);
+      // Error displayed via alert below
       alert(err.response?.data?.detail || 'Failed to update contact');
     } finally {
       setIsUpdating(false);
@@ -742,7 +742,7 @@ export function WhatsApp() {
       await apiClient.delete(`/whatsapp/contacts/${contact.id}`);
       await fetchData();
     } catch (err: any) {
-      console.error('Failed to delete contact:', err);
+      // Error displayed via alert below
       alert(err.response?.data?.detail || 'Failed to delete contact');
     }
   };
@@ -758,7 +758,7 @@ export function WhatsApp() {
       }
       await fetchData();
     } catch (err: any) {
-      console.error('Failed to update opt-in status:', err);
+      // Error displayed via alert below
       alert(err.response?.data?.detail || 'Failed to update opt-in status');
     }
   };
@@ -790,7 +790,7 @@ export function WhatsApp() {
         footer_text: '',
       });
     } catch (err: any) {
-      console.error('Failed to create template:', err);
+      // Error displayed via alert below
       alert(err.response?.data?.detail || 'Failed to create template');
     } finally {
       setIsCreatingTemplate(false);
@@ -804,7 +804,7 @@ export function WhatsApp() {
       await apiClient.delete(`/whatsapp/templates/${template.id}`);
       await fetchData();
     } catch (err: any) {
-      console.error('Failed to delete template:', err);
+      // Error displayed via alert below
       alert(err.response?.data?.detail || 'Failed to delete template');
     }
   };
@@ -1443,7 +1443,7 @@ export function WhatsApp() {
                       setChatMessages((prev) => [...prev, newMessage]);
                       setReplyText('');
                     } catch (err: any) {
-                      console.error('Failed to send message:', err);
+                      // Error displayed via alert below
                       alert(err.response?.data?.detail || 'Failed to send message');
                     } finally {
                       setIsSending(false);
