@@ -544,7 +544,7 @@ export default function DashboardLayout() {
               {[
                 { href: '/dashboard/tenants', icon: BuildingOffice2Icon, name: 'nav.tenants' },
                 { href: '/dashboard/ml-training', icon: CpuChipIcon, name: 'nav.mlTraining' },
-                { href: '/dashboard/capi-setup', icon: SignalIcon, name: 'nav.capiSetup' },
+                { href: '/dashboard/integrations', icon: SignalIcon, name: 'nav.integrations' },
                 { href: '/dashboard/data-quality', icon: ChartPieIcon, name: 'nav.dataQuality' },
                 {
                   href: '/dashboard/emq-dashboard',

@@ -584,7 +584,7 @@ export function Overview() {
             {/* Right: Quick action cards */}
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:w-72">
               <button
-                onClick={() => navigate('/dashboard/capi-setup')}
+                onClick={() => navigate('/dashboard/integrations')}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/20 transition-all group text-left"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors">

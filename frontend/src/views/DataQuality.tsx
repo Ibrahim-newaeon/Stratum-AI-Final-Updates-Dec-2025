@@ -178,7 +178,7 @@ export function DataQuality() {
             Connect platforms and stream conversion events to see your data quality analysis.
           </p>
           <a
-            href="/capi-setup"
+            href="/dashboard/integrations"
             className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
           >
             Connect Platforms
@@ -475,7 +475,7 @@ export function DataQuality() {
 
           <div className="px-6 py-4 border-t bg-muted/30">
             <a
-              href="/capi-setup"
+              href="/dashboard/integrations"
               className="flex items-center justify-center gap-2 text-sm text-primary hover:underline"
             >
               Configure Platform Settings

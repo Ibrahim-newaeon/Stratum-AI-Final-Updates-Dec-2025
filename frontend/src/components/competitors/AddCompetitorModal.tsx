@@ -81,9 +81,14 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
     return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`;
   };
 
-  // Generate Google Ads Transparency URL
-  const getGoogleTransparencyUrl = (name: string) => {
-    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`;
+  // Generate Google Ads Transparency URL - search by full website URL with country filter
+  const getGoogleTransparencyUrl = (domain: string, country: string = 'SA') => {
+    // Build full URL (Google Transparency needs https://www. prefix for best results)
+    let fullUrl = domain.replace(/\/+$/, '');
+    if (!fullUrl.startsWith('http')) {
+      fullUrl = `https://www.${fullUrl}`;
+    }
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(fullUrl)}&region=${country}`;
   };
 
   // Toggle platform selection
@@ -507,7 +512,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
                 {/* Quick Links */}
                 <div className="flex items-center gap-2">
                   <a
-                    href={getMetaAdsLibraryUrl(newCompetitor.name, newCompetitor.country)}
+                    href={getMetaAdsLibraryUrl(scanResult?.fb_page_name || scanResult?.ad_library?.page_name || newCompetitor.name, newCompetitor.country)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
@@ -517,7 +522,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
                     <ArrowTopRightOnSquareIcon className="w-3 h-3" />
                   </a>
                   <a
-                    href={getGoogleTransparencyUrl(newCompetitor.name)}
+                    href={getGoogleTransparencyUrl(newCompetitor.domain, newCompetitor.country)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"

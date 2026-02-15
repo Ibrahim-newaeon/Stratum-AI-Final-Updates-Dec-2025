@@ -228,9 +228,9 @@ export default function ConnectPlatforms() {
           <ExclamationTriangleIcon className="w-3 h-3" />
           <span>
             This grants access to <strong>ad accounts & campaigns</strong>. For server-side
-            conversion tracking (CAPI), go to{' '}
-            <a href="/dashboard/capi-setup" className="text-primary hover:underline">
-              CAPI Setup
+            conversion tracking, go to{' '}
+            <a href="/dashboard/integrations" className="text-primary hover:underline">
+              Integrations
             </a>
           </span>
         </p>

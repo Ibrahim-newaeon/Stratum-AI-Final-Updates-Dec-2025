@@ -36,7 +36,7 @@
     "settings": "الإعدادات",
     "tenants": "المؤسسات",
     "mlTraining": "تدريب الذكاء الاصطناعي",
-    "capiSetup": "إعداد واجهة التحويلات",
+    "integrations": "التكاملات",
     "dataQuality": "جودة البيانات",
     "emqDashboard": "لوحة جودة المطابقة"
   },

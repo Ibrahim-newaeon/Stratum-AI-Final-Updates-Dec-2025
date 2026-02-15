@@ -92,9 +92,22 @@ export function Competitors() {
     return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`;
   };
 
-  // Generate Google Ads Transparency URL - search by name
-  const getGoogleTransparencyUrl = (name: string) => {
-    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`;
+  // Generate Google Ads Transparency URL - search by full website URL with country filter
+  const getGoogleTransparencyUrl = (domain: string, country: string = 'SA') => {
+    // Build full URL (Google Transparency needs https://www. prefix for best results)
+    let fullUrl = domain.replace(/\/+$/, '');
+    if (!fullUrl.startsWith('http')) {
+      fullUrl = `https://www.${fullUrl}`;
+    }
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(fullUrl)}&region=${country}`;
+  };
+
+  // Get best Meta search query: prefer FB page name from scan results, fallback to competitor name
+  const getMetaSearchQuery = (competitorId: string, competitorName: string) => {
+    const scan = scanResults[competitorId];
+    if (scan?.fb_page_name) return scan.fb_page_name;
+    if (scan?.ad_library?.page_name) return scan.ad_library.page_name;
+    return competitorName;
   };
 
   // Handle delete competitor
@@ -569,24 +582,24 @@ export function Competitors() {
                 {scanningId === competitor.id ? 'Scanning...' : 'Scan'}
               </button>
               <a
-                href={getMetaAdsLibraryUrl(competitor.name, competitor.country || 'SA')}
+                href={getMetaAdsLibraryUrl(getMetaSearchQuery(competitor.id, competitor.name), competitor.country || 'SA')}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
-                title={`Search "${competitor.name}" in Meta Ads Library`}
+                title={`Search "${getMetaSearchQuery(competitor.id, competitor.name)}" in Meta Ads Library`}
               >
                 <span className="font-bold">M</span>
                 Meta Ads
                 <ArrowTopRightOnSquareIcon className="w-3 h-3" />
               </a>
               <a
-                href={getGoogleTransparencyUrl(competitor.name)}
+                href={getGoogleTransparencyUrl(competitor.domain, competitor.country || 'SA')}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
-                title={`Search "${competitor.name}" in Google Transparency`}
+                title={`Search "${competitor.domain}" in Google Transparency (${competitor.country || 'SA'})`}
               >
                 <span className="font-bold">G</span>
                 Google

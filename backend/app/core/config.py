@@ -147,7 +147,7 @@ class Settings(BaseSettings):
         default=None, description="WhatsApp/Meta App Secret for webhook signature verification"
     )
     whatsapp_api_version: str = Field(
-        default="v18.0", description="WhatsApp/Meta Graph API version"
+        default="v24.0", description="WhatsApp/Meta Graph API version"
     )
 
     # -------------------------------------------------------------------------

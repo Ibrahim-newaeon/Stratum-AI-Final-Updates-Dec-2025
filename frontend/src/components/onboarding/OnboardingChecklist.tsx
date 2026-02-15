@@ -45,7 +45,7 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
     description: 'Link your Meta, Google, TikTok, or Snapchat account',
     icon: Link2,
     actionLabel: 'Connect',
-    actionUrl: '/dashboard/capi-setup',
+    actionUrl: '/dashboard/integrations',
     completed: false,
     required: true,
   },

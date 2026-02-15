@@ -1,5 +1,5 @@
 /**
- * Conversion API (CAPI) Setup Page
+ * Integrations Page
  * No-code platform connection wizard for streaming first-party data
  */
 
@@ -34,31 +34,43 @@ const PLATFORMS = [
     description: 'Facebook & Instagram Conversion API',
     credentials: [
       {
+        field: 'app_id',
+        label: 'App ID',
+        placeholder: '123456789012345',
+        help: 'Found in Meta for Developers > Your App > Settings > Basic. This is your Meta App ID.',
+      },
+      {
+        field: 'app_secret',
+        label: 'App Secret',
+        placeholder: '',
+        help: 'Found in Meta for Developers > Your App > Settings > Basic. Click "Show" to reveal your App Secret.',
+        sensitive: true,
+      },
+      {
+        field: 'access_token',
+        label: 'Access Token',
+        placeholder: 'EAABsbCS...',
+        help: 'System User Token from Business Settings > System Users > Generate Token. Required permissions: ads_management, ads_read.',
+        sensitive: true,
+      },
+      {
+        field: 'ad_account_ids',
+        label: 'Ad Account IDs',
+        placeholder: 'act_123456789, act_987654321',
+        help: 'Comma-separated list of Ad Account IDs. Found in Ads Manager > Account Settings. Each starts with "act_" followed by numbers.',
+      },
+      {
+        field: 'capi_access_token',
+        label: 'CAPI Access Token',
+        placeholder: 'EAABsbCS...',
+        help: 'Dedicated Conversions API token. Go to Events Manager > Settings > Generate Access Token. Can be the same as Access Token if using a System User.',
+        sensitive: true,
+      },
+      {
         field: 'pixel_id',
         label: 'Pixel ID',
         placeholder: '123456789012345',
         help: 'Found in Events Manager > Data Sources > Your Pixel. This is the 15-16 digit number associated with your Meta Pixel.',
-      },
-      {
-        field: 'ad_account_id',
-        label: 'Ad Account ID',
-        placeholder: 'act_123456789',
-        help: 'Found in Ads Manager > Account Settings, or Business Settings > Accounts > Ad Accounts. Starts with "act_" followed by numbers.',
-        optional: true,
-      },
-      {
-        field: 'dataset_id',
-        label: 'Dataset ID',
-        placeholder: '123456789012345',
-        help: 'Found in Events Manager > Data Sources. If you use a Dataset instead of a Pixel, enter the Dataset ID here. Often the same as Pixel ID.',
-        optional: true,
-      },
-      {
-        field: 'access_token',
-        label: 'CAPI Access Token',
-        placeholder: 'EAABsbCS...',
-        help: 'System User Token for Conversions API. Go to Business Settings > System Users > Generate Token. Required permissions: ads_management, ads_read. Use a System User (not personal token) for production.',
-        sensitive: true,
       },
     ],
   },
@@ -67,40 +79,95 @@ const PLATFORMS = [
     name: 'Google Ads',
     logo: '/platforms/google.svg',
     color: 'bg-red-500',
-    description: 'Enhanced Conversions for Web',
+    description: 'Google Ads & Enhanced Conversions',
     credentials: [
-      {
-        field: 'customer_id',
-        label: 'Customer ID',
-        placeholder: '123-456-7890',
-        help: 'Your Google Ads Customer ID (10 digits with dashes). Found at the top of Google Ads dashboard next to your account name.',
-      },
-      {
-        field: 'manager_id',
-        label: 'Manager Account ID (MCC)',
-        placeholder: '123-456-7890',
-        help: 'If using a Manager (MCC) account, enter the MCC Customer ID here. Leave empty if not using a manager account.',
-        optional: true,
-      },
-      {
-        field: 'conversion_action_id',
-        label: 'Conversion Action ID',
-        placeholder: '123456789',
-        help: 'Found in Google Ads > Tools & Settings > Measurement > Conversions > click your conversion action > the numeric ID in the URL.',
-      },
       {
         field: 'developer_token',
         label: 'Developer Token',
-        placeholder: 'aBcDeFgHiJkLmNoPqR',
-        help: 'Found in Google Ads API Center (Tools > Setup > API Center). Required for server-to-server API calls. Apply for Basic or Standard access.',
+        placeholder: '',
+        help: 'Found in Google Ads API Center (Tools > Setup > API Center). Required for server-to-server API calls.',
+        sensitive: true,
+      },
+      {
+        field: 'client_id',
+        label: 'Client ID',
+        placeholder: '',
+        help: 'OAuth 2.0 Client ID from Google Cloud Console > APIs & Services > Credentials.',
+      },
+      {
+        field: 'client_secret',
+        label: 'Client Secret',
+        placeholder: '',
+        help: 'OAuth 2.0 Client Secret from Google Cloud Console > APIs & Services > Credentials.',
+        sensitive: true,
+      },
+      {
+        field: 'refresh_token',
+        label: 'Refresh Token',
+        placeholder: '1//0abc...',
+        help: 'OAuth 2.0 refresh token. Generate via Google OAuth Playground or your app. Scopes: https://www.googleapis.com/auth/adwords',
         sensitive: true,
       },
       {
         field: 'access_token',
-        label: 'OAuth Refresh Token',
-        placeholder: '1//0abc...',
-        help: 'OAuth 2.0 refresh token for Google Ads API. Generate via Google OAuth Playground or your app credentials. Scopes: https://www.googleapis.com/auth/adwords',
+        label: 'Access Token',
+        placeholder: '',
+        help: 'OAuth 2.0 access token. Auto-refreshed using Refresh Token, but can be provided for initial setup.',
         sensitive: true,
+      },
+      {
+        field: 'customer_id',
+        label: 'Customer ID',
+        placeholder: '1234567890',
+        help: 'Your Google Ads Customer ID (10 digits). Found at the top of Google Ads dashboard next to your account name.',
+      },
+      {
+        field: 'mcc_id',
+        label: 'MCC ID (Manager Account)',
+        placeholder: '1234567890',
+        help: 'Manager (MCC) account ID. Required if managing multiple accounts under a manager account.',
+      },
+      {
+        field: 'sub_account_ids',
+        label: 'Sub-Account IDs',
+        placeholder: '1234567890, 0987654321',
+        help: 'Comma-separated list of sub-account Customer IDs under the MCC. Leave empty if not using sub-accounts.',
+        optional: true,
+      },
+      {
+        field: 'gtm_server_container',
+        label: 'GTM Server Container',
+        placeholder: 'GTM-XXXXXXX',
+        help: 'Google Tag Manager Server-Side container ID. Found in GTM > Admin > Container Settings.',
+        optional: true,
+      },
+      {
+        field: 'gtm_web_container',
+        label: 'GTM Web Container',
+        placeholder: 'GTM-XXXXXXX',
+        help: 'Google Tag Manager Web container ID. Found in GTM > Admin > Container Settings.',
+        optional: true,
+      },
+      {
+        field: 'ga4_measurement_id',
+        label: 'GA4 Measurement ID',
+        placeholder: 'G-XXXXXXXXXX',
+        help: 'Found in Google Analytics > Admin > Data Streams > your web stream.',
+        optional: true,
+      },
+      {
+        field: 'tag_id',
+        label: 'Tag ID',
+        placeholder: '',
+        help: 'Google Ads conversion tag ID. Found in Google Ads > Tools > Conversions.',
+        optional: true,
+      },
+      {
+        field: 'google_ads_id',
+        label: 'Google Ads ID',
+        placeholder: 'AW-XXXXXXXXX',
+        help: 'Your Google Ads conversion tracking ID. Found in Google Ads > Tools > Conversions > Tag setup.',
+        optional: true,
       },
     ],
   },
@@ -112,23 +179,48 @@ const PLATFORMS = [
     description: 'TikTok Events API',
     credentials: [
       {
-        field: 'pixel_code',
-        label: 'Pixel Code',
-        placeholder: 'CXXXXXXXXXX',
-        help: 'Found in TikTok Ads Manager > Events > Manage > Web Events. Starts with "C" followed by alphanumeric characters.',
+        field: 'app_id',
+        label: 'App ID',
+        placeholder: '',
+        help: 'Found in TikTok for Business > Developer Portal > My Apps. Your TikTok marketing app identifier.',
+      },
+      {
+        field: 'access_token',
+        label: 'Access Token',
+        placeholder: '',
+        help: 'Long-lived access token from TikTok for Business. Go to Developer Portal > My Apps > Generate Token.',
+        sensitive: true,
+      },
+      {
+        field: 'app_secret',
+        label: 'App Secret',
+        placeholder: '',
+        help: 'Found in TikTok for Business > Developer Portal > My Apps > your app settings.',
+        sensitive: true,
+      },
+      {
+        field: 'ad_account_id',
+        label: 'Ad Account ID',
+        placeholder: '',
+        help: 'Found in TikTok Ads Manager > Account Settings. Your TikTok ad account number.',
       },
       {
         field: 'advertiser_id',
         label: 'Advertiser ID',
         placeholder: '7012345678901234567',
-        help: 'Found in TikTok Ads Manager > Account Settings, or at the top of TikTok Ads dashboard. This is your TikTok ad account number.',
-        optional: true,
+        help: 'Found at the top of TikTok Ads Manager dashboard. This is your advertiser-level identifier.',
       },
       {
-        field: 'access_token',
-        label: 'Events API Access Token',
+        field: 'pixel_id',
+        label: 'Pixel ID',
+        placeholder: 'CXXXXXXXXXX',
+        help: 'Found in TikTok Ads Manager > Events > Manage > Web Events. Starts with "C" followed by alphanumeric characters.',
+      },
+      {
+        field: 'capi_token',
+        label: 'CAPI Token',
         placeholder: '',
-        help: 'Long-lived access token from TikTok for Business > Events Manager > Manage > Settings > Generate Access Token. Required for server-side event delivery.',
+        help: 'Conversions API token from Events Manager > Manage > Settings > Generate Access Token. Required for server-side event delivery.',
         sensitive: true,
       },
     ],
@@ -141,24 +233,36 @@ const PLATFORMS = [
     description: 'Snapchat Conversion API',
     credentials: [
       {
-        field: 'pixel_id',
-        label: 'Pixel ID',
-        placeholder: 'abc12345-1234-1234-1234-123456789012',
-        help: 'Found in Ads Manager > Events Manager > Snap Pixel. This is a UUID-format identifier for your Snap Pixel.',
+        field: 'app_id',
+        label: 'App ID',
+        placeholder: '',
+        help: 'Found in Snap Kit Developer Portal > Your App. Your Snapchat application identifier.',
+      },
+      {
+        field: 'app_secret',
+        label: 'App Secret',
+        placeholder: '',
+        help: 'Found in Snap Kit Developer Portal > Your App > OAuth2 settings.',
+        sensitive: true,
+      },
+      {
+        field: 'capi_token',
+        label: 'CAPI Token',
+        placeholder: '',
+        help: 'Conversions API token from Snapchat Business Manager > Snap Pixel > Conversions API. Generate a long-lived token for server-side events.',
+        sensitive: true,
       },
       {
         field: 'ad_account_id',
         label: 'Ad Account ID',
         placeholder: 'abc12345-1234-1234-1234-123456789012',
         help: 'Found in Ads Manager > Account Settings. This is your Snapchat ad account identifier.',
-        optional: true,
       },
       {
-        field: 'access_token',
-        label: 'CAPI Access Token',
-        placeholder: '',
-        help: 'Conversions API token from Snapchat Business Manager > Snap Pixel > Conversions API. Generate a long-lived token for server-side events.',
-        sensitive: true,
+        field: 'pixel_id',
+        label: 'Pixel ID',
+        placeholder: 'abc12345-1234-1234-1234-123456789012',
+        help: 'Found in Ads Manager > Events Manager > Snap Pixel. This is a UUID-format identifier for your Snap Pixel.',
       },
     ],
   },
@@ -170,29 +274,48 @@ const PLATFORMS = [
     description: 'WhatsApp Business Cloud API',
     credentials: [
       {
+        field: 'waba_id',
+        label: 'WABA ID (WhatsApp Business Account ID)',
+        placeholder: '317355655648785',
+        help: 'Found in Meta Business Suite > WhatsApp Manager > Account Settings. Required to manage messaging and templates.',
+      },
+      {
         field: 'phone_number_id',
         label: 'Phone Number ID',
-        placeholder: '1234567890123456',
-        help: 'From Meta Business Suite > WhatsApp Manager > Phone Numbers. This is the numeric ID for your WhatsApp business phone number.',
+        placeholder: '966289803226237',
+        help: 'The sending number identifier. Found in Meta Business Suite > WhatsApp Manager > Phone Numbers.',
       },
       {
-        field: 'business_account_id',
-        label: 'Business Account ID (WABA)',
-        placeholder: '1234567890123456',
-        help: 'WhatsApp Business Account ID from Meta Business Suite > WhatsApp Manager > Account Settings. Required to manage messaging.',
+        field: 'whatsapp_phone_number',
+        label: 'WhatsApp Phone Number',
+        placeholder: '00966512345678',
+        help: 'Full phone number in international format: 00 + country code + phone number (e.g., 00966512345678 for Saudi Arabia).',
       },
       {
-        field: 'access_token',
-        label: 'WhatsApp Cloud API Token',
+        field: 'meta_app_id',
+        label: 'Meta App ID',
+        placeholder: '123456789012345',
+        help: 'The Meta App linked to the WhatsApp integration. Found in Meta for Developers > Your App > Settings > Basic.',
+      },
+      {
+        field: 'graph_api_version',
+        label: 'Graph API Version',
+        placeholder: 'v24.0',
+        help: 'The Graph API version your integration uses (e.g., v24.0). Check Meta for Developers for the latest supported version.',
+      },
+      {
+        field: 'system_user_access_token',
+        label: 'System User Access Token',
         placeholder: 'EAABsbCS...',
-        help: 'Permanent System User token with whatsapp_business_messaging permission. Go to Business Settings > System Users > Generate Token.',
+        help: 'Long-lived / permanent System User token with whatsapp_business_messaging and whatsapp_business_management permissions. Go to Business Settings > System Users > Generate Token.',
         sensitive: true,
       },
       {
-        field: 'webhook_verify_token',
-        label: 'Webhook Verify Token',
-        placeholder: 'your_verify_token',
-        help: 'Custom string you create for webhook verification. Must match the token configured in your Meta App > WhatsApp > Configuration > Webhook.',
+        field: 'business_manager_id',
+        label: 'Business Manager ID',
+        placeholder: '123456789012345',
+        help: 'Your Meta Business Manager ID. Found in Business Settings > Business Info. Helpful for multi-business setups.',
+        optional: true,
       },
     ],
   },
@@ -341,7 +464,7 @@ export function CAPISetup() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading platform connections...</p>
+          <p className="text-muted-foreground">Loading integrations...</p>
         </div>
       </div>
     );
@@ -352,20 +475,10 @@ export function CAPISetup() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Conversion API Setup</h1>
+          <h1 className="text-2xl font-bold text-foreground">Integrations</h1>
           <p className="text-muted-foreground mt-1">
             Connect ad platforms to stream first-party conversion data (purchases, leads, sign-ups)
             and boost ROAS by 30-50%
-          </p>
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            <span>
-              This is for <strong>server-side event tracking only</strong>. To manage ad accounts &
-              campaigns, use{' '}
-              <a href="/dashboard/tenants" className="text-primary hover:underline">
-                Tenant Settings → Connect Platforms
-              </a>
-            </span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -643,7 +756,7 @@ export function CAPISetup() {
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <a
-          href="/data-quality"
+          href="/dashboard/data-quality"
           className="flex items-center justify-between p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-3">

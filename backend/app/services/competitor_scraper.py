@@ -145,6 +145,77 @@ def _extract_social_link(url: str, patterns: list[re.Pattern]) -> Optional[str]:
     return None
 
 
+# ── Facebook Page Name Fetcher ────────────────────────────────────────────
+async def fetch_fb_page_display_name(fb_url: str) -> Optional[str]:
+    """
+    Fetch the actual display name of a Facebook page by loading the page
+    and extracting the title from Open Graph meta or <title> tag.
+
+    For example:
+      facebook.com/Alrugghaib → "Al Rugaib Furniture - مفروشات الرقيب"
+
+    This is critical because the Meta Ad Library API searches by page name,
+    not by URL slug.
+
+    Args:
+        fb_url: Full Facebook page URL (e.g., https://www.facebook.com/Alrugghaib)
+
+    Returns:
+        The page display name, or None if extraction failed.
+    """
+    if not fb_url:
+        return None
+
+    # Ensure full URL
+    if not fb_url.startswith("http"):
+        fb_url = f"https://www.facebook.com/{fb_url}"
+
+    try:
+        async with httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=12.0,
+            headers={"User-Agent": USER_AGENT},
+            verify=False,
+        ) as client:
+            response = await client.get(fb_url)
+            if response.status_code != 200:
+                logger.warning("fb_page_fetch_failed", url=fb_url, status=response.status_code)
+                return None
+
+            soup = BeautifulSoup(response.text, "lxml")
+
+            # Priority 1: Open Graph og:title (most reliable for FB pages)
+            og_title = soup.find("meta", property="og:title")
+            if og_title and og_title.get("content"):
+                page_name = str(og_title["content"]).strip()
+                if page_name and page_name.lower() not in ("facebook", ""):
+                    logger.info("fb_page_name_from_og", url=fb_url, name=page_name)
+                    return page_name
+
+            # Priority 2: <title> tag — usually "Page Name | Facebook"
+            title_tag = soup.find("title")
+            if title_tag:
+                raw_title = title_tag.get_text(strip=True)
+                # Remove common Facebook suffixes
+                for suffix in [" | Facebook", " - Facebook", " – Facebook", " — Facebook"]:
+                    if raw_title.endswith(suffix):
+                        raw_title = raw_title[: -len(suffix)].strip()
+                        break
+                if raw_title and raw_title.lower() not in ("facebook", "log in", "log into facebook"):
+                    logger.info("fb_page_name_from_title", url=fb_url, name=raw_title)
+                    return raw_title
+
+            logger.info("fb_page_name_not_found", url=fb_url)
+            return None
+
+    except httpx.TimeoutException:
+        logger.warning("fb_page_fetch_timeout", url=fb_url)
+        return None
+    except Exception as e:
+        logger.warning("fb_page_fetch_error", url=fb_url, error=str(e)[:200])
+        return None
+
+
 # ── Website Scraper ───────────────────────────────────────────────────────────
 async def scrape_website(domain: str) -> CompetitorScanResult:
     """
@@ -405,21 +476,30 @@ async def scan_competitor(
     # Step 1: Scrape the website for social links
     scan_result = await scrape_website(domain)
 
-    # Step 2: Search Meta Ad Library using FB page name or IG business account
-    # Priority: FB business page name > IG business account > competitor name
+    # Step 2: Search Meta Ad Library using FB page display name or IG business account
+    # Priority: FB page display name (fetched) > FB URL slug > IG account > competitor name
     search_query = name
     fb_page_name: Optional[str] = None
+    fb_url_slug: Optional[str] = None
     ig_account_name: Optional[str] = None
 
     if scan_result.social_links.facebook:
-        # Extract page name from Facebook URL (e.g., facebook.com/MyBrand → "MyBrand")
         fb_url = scan_result.social_links.facebook
         parsed = urlparse(fb_url)
         path_parts = [p for p in parsed.path.strip("/").split("/") if p]
         if path_parts:
-            fb_page_name = path_parts[0]
-            # Use FB business page name as the primary search query
-            search_query = fb_page_name
+            fb_url_slug = path_parts[0]
+
+        # Fetch the ACTUAL Facebook page display name (e.g., "Al Rugaib Furniture - مفروشات الرقيب")
+        # This is what Meta Ad Library API needs to find ads — NOT the URL slug
+        display_name = await fetch_fb_page_display_name(fb_url)
+        if display_name:
+            fb_page_name = display_name
+            search_query = display_name
+        elif fb_url_slug:
+            # Fallback to URL slug if we couldn't fetch the display name
+            fb_page_name = fb_url_slug
+            search_query = fb_url_slug
 
     if scan_result.social_links.instagram:
         # Extract IG business account name (e.g., instagram.com/mybrand → "mybrand")
@@ -436,6 +516,7 @@ async def scan_competitor(
         "ad_library_search_query",
         domain=domain,
         fb_page=fb_page_name,
+        fb_url_slug=fb_url_slug,
         ig_account=ig_account_name,
         search_query=search_query,
     )
