@@ -3,7 +3,7 @@
 # =============================================================================
 
 # Build stage - compile React/Vite app
-FROM node:20-alpine AS build
+FROM node:25-alpine AS build
 
 WORKDIR /app
 
@@ -44,7 +44,7 @@ RUN echo "=== Final dist/ contents ===" && find dist/ -type f | head -50 && \
     echo "=== dist/ size ===" && du -sh dist/
 
 # Production stage - serve static files
-FROM node:20-alpine
+FROM node:25-alpine
 
 WORKDIR /app
 
