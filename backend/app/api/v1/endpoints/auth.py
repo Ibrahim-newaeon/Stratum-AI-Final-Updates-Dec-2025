@@ -70,6 +70,7 @@ class SignupRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     full_name: str = Field(..., min_length=2, max_length=255)
     company_name: str = Field(..., min_length=2, max_length=255)
+    company_website: str = Field(..., min_length=4, max_length=500)
     phone: Optional[str] = Field(None, max_length=50)
 
     @field_validator("password")
@@ -846,6 +847,7 @@ async def signup(
     tenant = Tenant(
         name=signup_data.company_name,
         slug=slug,
+        domain=signup_data.company_website,
         plan="free",
         settings={},
         feature_flags={},

@@ -46,6 +46,7 @@ export interface SignupRequest {
   password: string;
   phone?: string;
   company_name?: string;
+  company_website: string;
   verification_token?: string;
 }
 

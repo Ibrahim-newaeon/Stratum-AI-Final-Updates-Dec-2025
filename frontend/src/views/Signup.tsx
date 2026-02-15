@@ -14,6 +14,7 @@ import {
   ExclamationCircleIcon,
   EyeIcon,
   EyeSlashIcon,
+  GlobeAltIcon,
   LockClosedIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
@@ -71,6 +72,7 @@ const signupSchema = z
     name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Please enter a valid email'),
     company: z.string().min(2, 'Company name is required'),
+    website: z.string().min(4, 'Company website is required'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
@@ -105,6 +107,7 @@ export default function Signup() {
         password: data.password,
         full_name: data.name,
         company_name: data.company,
+        company_website: data.website,
       },
       {
         onSuccess: () => {
@@ -368,6 +371,40 @@ export default function Signup() {
                   />
                 </div>
                 {errors.company && <p className="text-sm text-red-500">{errors.company.message}</p>}
+              </div>
+
+              {/* Company Website */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: theme.textSecondary }}>
+                  Company Website
+                </label>
+                <div className="relative">
+                  <GlobeAltIcon
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                    style={{ color: theme.textMuted }}
+                  />
+                  <input
+                    {...register('website')}
+                    type="url"
+                    placeholder="https://example.com"
+                    className="w-full pl-12 pr-4 py-3 rounded-2xl outline-none transition-all duration-200"
+                    style={{
+                      background: theme.bgCard,
+                      backdropFilter: 'blur(40px)',
+                      border: `1px solid ${theme.border}`,
+                      color: theme.textPrimary,
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                      e.target.style.boxShadow = `0 0 0 3px ${theme.primaryLight}`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+                {errors.website && <p className="text-sm text-red-500">{errors.website.message}</p>}
               </div>
 
               {/* Password */}
