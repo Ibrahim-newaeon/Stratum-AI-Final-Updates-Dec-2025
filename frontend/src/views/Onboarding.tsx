@@ -337,18 +337,16 @@ export default function Onboarding() {
   const handleSkip = async () => {
     try {
       await skipOnboarding.mutateAsync();
-      toast({
-        title: 'Onboarding Skipped',
-        description: 'You can complete setup later from Settings.',
-      });
-      navigate('/dashboard/overview');
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to skip onboarding.',
-        variant: 'destructive',
-      });
+    } catch {
+      // Backend skip may fail — that's OK, proceed anyway
     }
+    // Persist skip client-side so OnboardingGuard won't redirect back
+    localStorage.setItem('stratum_onboarding_skipped', 'true');
+    toast({
+      title: 'Onboarding Skipped',
+      description: 'You can complete setup later from Settings.',
+    });
+    navigate('/dashboard/overview');
   };
 
   const togglePlatform = (platform: AdPlatform) => {
