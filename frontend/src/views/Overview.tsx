@@ -263,11 +263,33 @@ export function Overview() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [showKeyboardHints, setShowKeyboardHints] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(() => {
-    return localStorage.getItem('stratum_welcome_dismissed') !== 'true';
-  });
 
   const { user } = useAuth();
+
+  // Welcome Hero: show only on the very first login, never again on re-login.
+  // Uses a user-specific localStorage key + login counter to survive browser resets.
+  const [showWelcome, setShowWelcome] = useState(() => {
+    // Legacy key — if already dismissed, respect it
+    if (localStorage.getItem('stratum_welcome_dismissed') === 'true') {
+      return false;
+    }
+    // User-specific key
+    const userId = user?.id || user?.email || 'default';
+    const dismissedKey = `stratum_welcome_dismissed_${userId}`;
+    if (localStorage.getItem(dismissedKey) === 'true') {
+      return false;
+    }
+    // Track login sessions — only show on first login (count === 0)
+    const loginCountKey = `stratum_login_count_${userId}`;
+    const loginCount = parseInt(localStorage.getItem(loginCountKey) || '0', 10);
+    localStorage.setItem(loginCountKey, (loginCount + 1).toString());
+    if (loginCount > 0) {
+      // Not the first login — auto-dismiss permanently
+      localStorage.setItem(dismissedKey, 'true');
+      return false;
+    }
+    return true;
+  });
 
   // Get tenant ID from tenant store
   const tenantId = useTenantStore((state) => state.tenantId) ?? 1;
@@ -562,6 +584,9 @@ export function Overview() {
             onClick={() => {
               setShowWelcome(false);
               localStorage.setItem('stratum_welcome_dismissed', 'true');
+              // Also persist with user-specific key
+              const userId = user?.id || user?.email || 'default';
+              localStorage.setItem(`stratum_welcome_dismissed_${userId}`, 'true');
             }}
             className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
             title="Dismiss"

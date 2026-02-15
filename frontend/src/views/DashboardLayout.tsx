@@ -66,6 +66,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NeuralNetworkBg } from '@/components/ui/NeuralNetworkBg';
 import { TrustGateIndicator } from '@/components/ui/TrustGateIndicator';
 import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
+import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 
 // Stratum AI Dashboard Theme - Midnight Teal Glass
 const theme = {
@@ -818,6 +819,9 @@ export default function DashboardLayout() {
           initialEmail={user?.email}
           language={i18n.language}
         />
+
+        {/* In-App Feedback Widget */}
+        <FeedbackWidget />
       </div>
     </div>
   );
