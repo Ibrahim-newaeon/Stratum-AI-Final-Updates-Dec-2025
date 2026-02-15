@@ -41,11 +41,11 @@ export interface LoginResponse {
 }
 
 export interface SignupRequest {
-  name: string;
+  full_name: string;
   email: string;
   password: string;
   phone?: string;
-  company?: string;
+  company_name?: string;
   verification_token?: string;
 }
 
@@ -117,7 +117,7 @@ export const authApi = {
    * Register a new user
    */
   signup: async (data: SignupRequest): Promise<SignupResponse> => {
-    const response = await apiClient.post<ApiResponse<SignupResponse>>('/auth/register', data);
+    const response = await apiClient.post<ApiResponse<SignupResponse>>('/auth/signup', data);
     return response.data.data;
   },
 

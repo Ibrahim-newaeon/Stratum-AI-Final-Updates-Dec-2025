@@ -103,8 +103,8 @@ export default function Signup() {
       {
         email: data.email,
         password: data.password,
-        name: data.name,
-        company: data.company,
+        full_name: data.name,
+        company_name: data.company,
       },
       {
         onSuccess: () => {
