@@ -151,9 +151,9 @@ export default function Login() {
           {/* ================================================================
               LEFT PANEL - BRANDING + REVENUE LIFT DASHBOARD
               ================================================================ */}
-          <section className="lg:w-7/12 p-8 lg:p-16 hidden lg:flex flex-col justify-between space-y-12 login-hero-gradient">
+          <section className="lg:w-7/12 p-6 lg:p-[48px] hidden lg:flex flex-col justify-between space-y-8 login-hero-gradient">
             {/* Top: Logo + Status bar */}
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div className="flex items-center space-x-3">
                 <Link to="/" className="flex items-center space-x-3 group">
                   <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
@@ -199,20 +199,20 @@ export default function Login() {
 
             {/* Hero heading */}
             <div className="max-w-xl">
-              <h2 className="text-4xl lg:text-6xl font-display font-extrabold leading-tight mb-6">
+              <h2 className="text-3xl lg:text-5xl font-display font-extrabold leading-tight mb-4">
                 Master your{' '}
                 <span className="login-gradient-text italic">Revenue Lift</span>{' '}
                 with real-time AI
               </h2>
-              <p className="text-[#F5F5F0]/50 text-lg leading-relaxed mb-10">
+              <p className="text-[#F5F5F0]/50 text-base leading-relaxed mb-6">
                 Log in to access your autonomous growth dashboard and optimize customer acquisition
                 costs with Stratum's Trust-Gated Autopilot.
               </p>
 
               {/* Revenue Lift Dashboard Card */}
-              <div className="login-glass p-8 rounded-3xl shadow-2xl relative group overflow-hidden">
+              <div className="login-glass p-5 rounded-2xl shadow-2xl relative group overflow-hidden">
                 {/* Card header */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-5">
                   <div>
                     <h3 className="font-display font-bold text-lg">Revenue Lift Dashboard</h3>
                     <p className="text-xs text-[#F5F5F0]/40">Live optimization performance</p>
@@ -232,7 +232,7 @@ export default function Login() {
                 </div>
 
                 {/* Bar chart */}
-                <div className="flex items-end justify-between h-48 gap-2 px-2">
+                <div className="flex items-end justify-between h-36 gap-2 px-2">
                   {chartData.map((bar) => (
                     <div
                       key={bar.day}
@@ -261,7 +261,7 @@ export default function Login() {
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-[#B8860B]/20">
+                <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-[#B8860B]/20">
                   <div>
                     <p className="text-[10px] text-[#F5F5F0]/40 uppercase font-bold tracking-widest mb-1">
                       Total Recovery
@@ -304,14 +304,14 @@ export default function Login() {
           {/* ================================================================
               RIGHT PANEL - LOGIN FORM
               ================================================================ */}
-          <section className="lg:w-5/12 p-6 lg:p-12 flex items-center justify-center bg-black/20 relative min-h-screen">
+          <section className="lg:w-5/12 p-4 lg:p-[40px] flex items-center justify-center bg-black/20 relative min-h-screen">
             {/* Corner decorations */}
             <div className="absolute top-10 right-10 w-24 h-24 border-t-2 border-r-2 border-[#FFD700]/20 pointer-events-none rounded-tr-3xl hidden lg:block" />
             <div className="absolute bottom-10 left-10 w-24 h-24 border-b-2 border-l-2 border-[#FFD700]/20 pointer-events-none rounded-bl-3xl hidden lg:block" />
 
             <div className="w-full max-w-md">
               {/* Mobile logo */}
-              <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
+              <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
                   <span className="font-display font-bold text-[#1A1A1A] text-xl -rotate-45">S</span>
                 </div>
@@ -319,8 +319,8 @@ export default function Login() {
               </div>
 
               {/* Form Card */}
-              <div className="login-glass p-8 lg:p-10 rounded-[2.5rem] shadow-2xl relative z-20">
-                <div className="text-center mb-10">
+              <div className="login-glass p-6 lg:p-[32px] rounded-[2rem] shadow-2xl relative z-20">
+                <div className="text-center mb-6">
                   <h2 className="text-2xl lg:text-3xl font-display font-bold mb-3">
                     Welcome back
                   </h2>
@@ -329,7 +329,7 @@ export default function Login() {
                   </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
                     <div className="flex items-center gap-3 p-4 rounded-xl text-sm bg-[#DC143C]/10 border border-[#DC143C]/30 text-[#DC143C]">
                       <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
@@ -355,7 +355,7 @@ export default function Login() {
                         placeholder="name@company.com"
                         required
                         disabled={isLoading}
-                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700]/50 focus:ring-4 focus:ring-[#FFD700]/5 rounded-2xl pl-12 pr-4 py-4 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700]/50 focus:ring-4 focus:ring-[#FFD700]/5 rounded-xl pl-12 pr-4 py-3 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                     </div>
                   </div>
@@ -386,7 +386,7 @@ export default function Login() {
                         placeholder="••••••••••••"
                         required
                         disabled={isLoading}
-                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700]/50 focus:ring-4 focus:ring-[#FFD700]/5 rounded-2xl pl-12 pr-12 py-4 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700]/50 focus:ring-4 focus:ring-[#FFD700]/5 rounded-xl pl-12 pr-12 py-3 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                       <button
                         type="button"
@@ -423,7 +423,7 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-[#FFD700] text-[#1A1A1A] font-bold py-4 rounded-2xl shadow-lg login-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:hover:scale-100"
+                    className="w-full bg-[#FFD700] text-[#1A1A1A] font-bold py-3 rounded-xl shadow-lg login-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:hover:scale-100"
                   >
                     {isLoading ? (
                       <span className="flex items-center gap-2">
@@ -466,7 +466,7 @@ export default function Login() {
                   </button>
 
                   {/* Quick Demo Access divider */}
-                  <div className="relative my-8">
+                  <div className="relative my-5">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-[#B8860B]/20" />
                     </div>
@@ -491,7 +491,7 @@ export default function Login() {
                   </div>
 
                   {/* Sign up link */}
-                  <p className="text-center text-sm text-[#F5F5F0]/50 mt-10">
+                  <p className="text-center text-sm text-[#F5F5F0]/50 mt-6">
                     Don't have an account?{' '}
                     <Link to="/signup" className="text-[#FFD700] font-bold hover:underline">
                       Sign up
@@ -500,7 +500,7 @@ export default function Login() {
                 </form>
 
                 {/* Terms footer */}
-                <div className="mt-8 pt-8 border-t border-[#B8860B]/15 text-center">
+                <div className="mt-5 pt-5 border-t border-[#B8860B]/15 text-center">
                   <p className="text-[10px] text-[#F5F5F0]/30 uppercase tracking-widest leading-loose">
                     By signing in, you agree to our
                     <br />

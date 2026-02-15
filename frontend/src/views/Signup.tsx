@@ -155,7 +155,7 @@ export default function Signup() {
           {/* ================================================================
               LEFT PANEL - BRANDING + ROI CALCULATOR
               ================================================================ */}
-          <section className="lg:w-7/12 p-8 lg:p-16 flex flex-col justify-between space-y-12 hidden lg:flex signup-hero-gradient">
+          <section className="lg:w-7/12 p-6 lg:p-[48px] flex flex-col justify-between space-y-6 hidden lg:flex signup-hero-gradient">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
@@ -171,7 +171,7 @@ export default function Signup() {
 
             {/* Hero heading */}
             <div className="max-w-xl">
-              <h2 className="text-4xl lg:text-6xl font-display font-extrabold leading-tight mb-6">
+              <h2 className="text-3xl lg:text-5xl font-display font-extrabold leading-tight mb-4">
                 Start optimizing your revenue with{' '}
                 <span className="signup-gradient-text italic">AI-powered</span> insights
               </h2>
@@ -182,8 +182,8 @@ export default function Signup() {
             </div>
 
             {/* ROI Calculator Card */}
-            <div className="max-w-md signup-glass p-6 rounded-2xl shadow-xl">
-              <div className="flex items-center justify-between mb-6">
+            <div className="max-w-md signup-glass p-5 rounded-2xl shadow-xl">
+              <div className="flex items-center justify-between mb-4">
                 <h3 className="font-display font-bold text-lg flex items-center gap-2">
                   <svg
                     className="w-5 h-5 text-[#FFD700]"
@@ -245,8 +245,8 @@ export default function Signup() {
             </div>
 
             {/* Trust badges + Social proof */}
-            <div className="space-y-8">
-              <div className="flex flex-wrap gap-6 text-sm text-[#F5F5F0]/50 font-medium">
+            <div className="space-y-5">
+              <div className="flex flex-wrap gap-5 text-sm text-[#F5F5F0]/50 font-medium">
                 {['14-day free trial', 'No credit card required', 'Cancel anytime'].map((text) => (
                   <div key={text} className="flex items-center gap-2">
                     <svg
@@ -285,10 +285,10 @@ export default function Signup() {
           {/* ================================================================
               RIGHT PANEL - SIGNUP FORM
               ================================================================ */}
-          <section className="lg:w-5/12 p-6 lg:p-12 flex items-center justify-center bg-black/20 min-h-screen">
+          <section className="lg:w-5/12 p-4 lg:p-[40px] flex items-center justify-center bg-black/20 min-h-screen">
             <div className="w-full max-w-md">
               {/* Mobile logo */}
-              <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
+              <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
                   <span className="font-display font-bold text-[#1A1A1A] text-xl -rotate-45">S</span>
                 </div>
@@ -296,15 +296,15 @@ export default function Signup() {
               </div>
 
               {/* Form Card */}
-              <div className="signup-glass p-8 lg:p-10 rounded-[2rem] shadow-2xl">
-                <div className="text-center mb-10">
-                  <h2 className="text-2xl lg:text-3xl font-display font-bold mb-2">
+              <div className="signup-glass p-5 lg:p-[28px] rounded-[1.5rem] shadow-2xl">
+                <div className="text-center mb-5">
+                  <h2 className="text-xl lg:text-2xl font-display font-bold mb-1">
                     Create your account
                   </h2>
                   <p className="text-[#F5F5F0]/50 text-sm">Start your 14-day free trial</p>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
                   {apiError && (
                     <div className="flex items-center gap-3 p-4 rounded-xl text-sm bg-[#DC143C]/10 border border-[#DC143C]/30 text-[#DC143C]">
                       <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
@@ -325,7 +325,7 @@ export default function Signup() {
                       id="signup-name"
                       type="text"
                       placeholder="John Doe"
-                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-2.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                     />
                     {errors.name && (
                       <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.name.message}</p>
@@ -347,7 +347,7 @@ export default function Signup() {
                         id="signup-email"
                         type="email"
                         placeholder="name@company.com"
-                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl pl-12 pr-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl pl-12 pr-4 py-2.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                     </div>
                     {errors.email && (
@@ -368,7 +368,7 @@ export default function Signup() {
                       id="signup-company"
                       type="text"
                       placeholder="Acme Inc."
-                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-2.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                     />
                     {errors.company && (
                       <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.company.message}</p>
@@ -388,7 +388,7 @@ export default function Signup() {
                       id="signup-website"
                       type="url"
                       placeholder="https://example.com"
-                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-2.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                     />
                     {errors.website && (
                       <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.website.message}</p>
@@ -410,7 +410,7 @@ export default function Signup() {
                         id="signup-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••••••"
-                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl pl-12 pr-12 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl pl-12 pr-12 py-2.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                       <button
                         type="button"
@@ -443,7 +443,7 @@ export default function Signup() {
                         id="signup-confirm"
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Confirm password"
-                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 pr-12 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 pr-12 py-2.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                       <button
                         type="button"
@@ -468,7 +468,7 @@ export default function Signup() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-[#FFD700] text-[#1A1A1A] font-bold py-4 rounded-xl shadow-lg signup-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:hover:scale-100"
+                    className="w-full bg-[#FFD700] text-[#1A1A1A] font-bold py-3 rounded-xl shadow-lg signup-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:hover:scale-100"
                   >
                     {isLoading ? (
                       <span className="flex items-center gap-2">
@@ -511,7 +511,7 @@ export default function Signup() {
                   </button>
 
                   {/* Sign in link */}
-                  <p className="text-center text-sm text-[#F5F5F0]/50 mt-8">
+                  <p className="text-center text-sm text-[#F5F5F0]/50 mt-5">
                     Already have an account?{' '}
                     <Link
                       to="/login"
