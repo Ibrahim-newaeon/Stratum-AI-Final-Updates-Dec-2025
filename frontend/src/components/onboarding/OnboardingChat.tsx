@@ -130,8 +130,19 @@ export default function OnboardingChat({
         },
       ]);
     } catch (err) {
-      setError('Failed to start onboarding. Please try again.');
-      // Error displayed via setError above
+      // Backend unavailable — provide offline fallback greeting
+      setSessionId('offline');
+      setProgress(0);
+      setMessages([
+        {
+          id: '1',
+          role: 'assistant',
+          content:
+            '👋 Welcome to **Stratum AI**!\n\nI\'m your onboarding assistant. The backend service is currently starting up — but you can already explore the dashboard!\n\nUse the sidebar to navigate between **Overview**, **Campaigns**, **CDP**, and more. When the service is ready, come back here to complete your guided setup.',
+          timestamp: new Date(),
+          quickReplies: ['Explore Dashboard', 'View CDP', 'Check Integrations'],
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -212,6 +223,20 @@ export default function OnboardingChat({
   };
 
   const handleQuickReply = (reply: string) => {
+    // In offline mode, navigate instead of sending messages
+    if (sessionId === 'offline') {
+      const routes: Record<string, string> = {
+        'Explore Dashboard': '/dashboard/overview',
+        'View CDP': '/dashboard/cdp',
+        'Check Integrations': '/dashboard/integrations',
+      };
+      const route = routes[reply];
+      if (route) {
+        onClose();
+        window.location.href = route;
+        return;
+      }
+    }
     sendMessage(reply);
   };
 

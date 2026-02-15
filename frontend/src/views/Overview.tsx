@@ -425,11 +425,18 @@ export function Overview() {
   // Refresh data
   const handleRefresh = useCallback(async () => {
     setLoading(true);
-    // Refetch API data
-    await refetchCampaigns();
+    try {
+      await refetchCampaigns();
+    } catch {
+      // API may be unavailable — that's OK, demo data still shows
+    }
     setLastUpdated(new Date());
     setLoading(false);
-  }, [refetchCampaigns]);
+    toast({
+      title: 'Dashboard refreshed',
+      description: `Data updated at ${new Date().toLocaleTimeString()}`,
+    });
+  }, [refetchCampaigns, toast]);
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: Partial<DashboardFilters>) => {

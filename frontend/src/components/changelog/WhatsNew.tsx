@@ -263,11 +263,14 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[85vh] bg-card rounded-2xl border shadow-2xl overflow-hidden"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          >
+          <div
+            className="pointer-events-auto w-full max-w-2xl max-h-[80vh] bg-card rounded-2xl border shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="relative overflow-hidden">
@@ -292,7 +295,7 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
             </div>
 
             {/* Content */}
-            <div className="flex h-[calc(85vh-140px)]">
+            <div className="flex flex-1 min-h-0">
               {/* Version Sidebar */}
               <div className="w-48 border-r bg-muted/30 p-3 overflow-y-auto shrink-0">
                 <div className="space-y-1">
@@ -434,6 +437,7 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                 Got it!
               </button>
             </div>
+          </div>
           </motion.div>
         </>
       )}

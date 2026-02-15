@@ -18,6 +18,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useDemoMode } from '@/hooks/useDemoMode';
+import { OnboardingDemoBanner } from '@/components/demo/OnboardingDemoBanner';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
@@ -109,12 +111,72 @@ const getSeverityStyle = (severity: string) => {
   return styles[severity] || styles.medium;
 };
 
+const DEMO_REPORT: QualityReport = {
+  overall_score: 72,
+  estimated_roas_improvement: 34.5,
+  data_gaps_summary: { critical: 1, high: 2, medium: 3, low: 1 },
+  trend: 'up',
+  platform_scores: {
+    meta: {
+      score: 78,
+      quality_level: 'Good',
+      potential_roas_lift: 28,
+      fields_present: ['email', 'phone', 'fbp', 'fbc', 'external_id', 'ip_address', 'user_agent'],
+      fields_missing: ['click_id', 'subscription_id'],
+      data_gaps: [
+        { field: 'click_id', severity: 'high', impact_percent: 15, recommendation: 'Capture fbclid from URL parameters', how_to_fix: 'Add URL parameter extraction to your tracking code' },
+        { field: 'subscription_id', severity: 'medium', impact_percent: 8, recommendation: 'Pass subscription ID for recurring revenue events', how_to_fix: 'Include subscription_id in your CAPI payload' },
+      ],
+    },
+    google: {
+      score: 65,
+      quality_level: 'Fair',
+      potential_roas_lift: 42,
+      fields_present: ['email', 'phone', 'gclid', 'ip_address'],
+      fields_missing: ['user_agent', 'click_id', 'external_id'],
+      data_gaps: [
+        { field: 'user_agent', severity: 'critical', impact_percent: 20, recommendation: 'Include browser user agent string', how_to_fix: 'Capture navigator.userAgent and pass to your conversion endpoint' },
+        { field: 'external_id', severity: 'high', impact_percent: 12, recommendation: 'Send hashed user ID for better matching', how_to_fix: 'Hash your internal user ID with SHA-256 and include in payload' },
+      ],
+    },
+    tiktok: {
+      score: 70,
+      quality_level: 'Good',
+      potential_roas_lift: 35,
+      fields_present: ['email', 'phone', 'ttclid', 'ip_address', 'user_agent'],
+      fields_missing: ['external_id'],
+      data_gaps: [
+        { field: 'external_id', severity: 'medium', impact_percent: 10, recommendation: 'Include hashed external ID', how_to_fix: 'Pass SHA-256 hashed user identifier in the external_id field' },
+      ],
+    },
+    snapchat: {
+      score: 58,
+      quality_level: 'Fair',
+      potential_roas_lift: 48,
+      fields_present: ['email', 'phone', 'ip_address'],
+      fields_missing: ['sclid', 'user_agent', 'external_id'],
+      data_gaps: [
+        { field: 'sclid', severity: 'high', impact_percent: 18, recommendation: 'Capture Snapchat click ID', how_to_fix: 'Extract ScCid parameter from the landing page URL' },
+        { field: 'user_agent', severity: 'medium', impact_percent: 10, recommendation: 'Include user agent for deduplication', how_to_fix: 'Capture and send the browser user agent string' },
+      ],
+    },
+  },
+  top_recommendations: [
+    { priority: 1, field: 'user_agent', action: 'Add browser user agent to Google conversions', how_to_fix: 'Capture navigator.userAgent server-side', impact: '+20% match rate', severity: 'critical', affected_platforms: ['google'] },
+    { priority: 2, field: 'click_id', action: 'Capture click IDs across all platforms', how_to_fix: 'Extract platform-specific click IDs from URL parameters', impact: '+15% attribution accuracy', severity: 'high', affected_platforms: ['meta', 'snapchat'] },
+    { priority: 3, field: 'external_id', action: 'Include hashed user identifiers', how_to_fix: 'SHA-256 hash your internal user ID and include in payloads', impact: '+12% cross-device matching', severity: 'high', affected_platforms: ['google', 'tiktok', 'snapchat'] },
+  ],
+};
+
 export function DataQuality() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [report, setReport] = useState<QualityReport | null>(null);
+  const [hasRealApiData, setHasRealApiData] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [_error, setError] = useState<string | null>(null);
+
+  const { showDemoData, showDemoBanner, dismissDemo } = useDemoMode(hasRealApiData);
 
   const fetchReport = async () => {
     try {
@@ -122,8 +184,9 @@ export function DataQuality() {
       const response = await fetch(`${API_BASE}/capi/quality/report`);
       const data = await response.json();
 
-      if (data.success && data.data) {
+      if (data.success && data.data && data.data.overall_score > 0) {
         setReport(data.data);
+        setHasRealApiData(true);
         if (!selectedPlatform && Object.keys(data.data.platform_scores || {}).length > 0) {
           setSelectedPlatform(Object.keys(data.data.platform_scores)[0]);
         }
@@ -131,8 +194,8 @@ export function DataQuality() {
         setReport(null);
       }
     } catch (err) {
-      // Error displayed via setError below
-      setError('Failed to load data quality report');
+      // Backend unavailable — will fall through to demo data
+      setReport(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -146,7 +209,17 @@ export function DataQuality() {
     return () => clearInterval(interval);
   }, []);
 
-  const selectedScore = selectedPlatform ? report?.platform_scores[selectedPlatform] : null;
+  // Use real report if available, otherwise demo data
+  const activeReport = report || (showDemoData ? DEMO_REPORT : null);
+  const selectedScore = selectedPlatform ? activeReport?.platform_scores[selectedPlatform] : null;
+
+  // Auto-select first platform when report changes
+  useEffect(() => {
+    if (activeReport && !selectedPlatform) {
+      const platforms = Object.keys(activeReport.platform_scores || {});
+      if (platforms.length > 0) setSelectedPlatform(platforms[0]);
+    }
+  }, [activeReport, selectedPlatform]);
 
   if (loading) {
     return (
@@ -163,7 +236,7 @@ export function DataQuality() {
     );
   }
 
-  if (!report || report.overall_score === 0) {
+  if (!activeReport) {
     return (
       <div className="space-y-6">
         <div>
@@ -191,6 +264,11 @@ export function DataQuality() {
 
   return (
     <div className="space-y-6">
+      {/* Demo Banner */}
+      {showDemoBanner && (
+        <OnboardingDemoBanner onDismiss={dismissDemo} ctaRoute="/dashboard/integrations" />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -212,21 +290,21 @@ export function DataQuality() {
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Overall Score */}
-        <div className={cn('rounded-xl border p-5', getScoreBg(report.overall_score))}>
+        <div className={cn('rounded-xl border p-5', getScoreBg(activeReport.overall_score))}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-muted-foreground">Overall Score</span>
-            <Activity className={cn('w-5 h-5', getScoreColor(report.overall_score))} />
+            <Activity className={cn('w-5 h-5', getScoreColor(activeReport.overall_score))} />
           </div>
-          <div className={cn('text-3xl font-bold', getScoreColor(report.overall_score))}>
-            {report.overall_score}%
+          <div className={cn('text-3xl font-bold', getScoreColor(activeReport.overall_score))}>
+            {activeReport.overall_score}%
           </div>
           <div className="mt-2 flex items-center gap-1 text-sm">
-            {report.trend === 'improving' ? (
+            {activeReport.trend === 'improving' ? (
               <>
                 <TrendingUp className="w-4 h-4 text-green-500" />
                 <span className="text-green-500">Improving</span>
               </>
-            ) : report.trend === 'declining' ? (
+            ) : activeReport.trend === 'declining' ? (
               <>
                 <TrendingDown className="w-4 h-4 text-red-500" />
                 <span className="text-red-500">Declining</span>
@@ -244,7 +322,7 @@ export function DataQuality() {
             <TrendingUp className="w-5 h-5 text-green-500" />
           </div>
           <div className="text-3xl font-bold text-green-500">
-            +{report.estimated_roas_improvement}%
+            +{activeReport.estimated_roas_improvement}%
           </div>
           <p className="mt-2 text-sm text-muted-foreground">Fix data gaps to unlock</p>
         </div>
@@ -256,14 +334,14 @@ export function DataQuality() {
             <AlertTriangle className="w-5 h-5 text-red-500" />
           </div>
           <div className="text-3xl font-bold text-foreground">
-            {report.data_gaps_summary.critical + report.data_gaps_summary.high}
+            {activeReport.data_gaps_summary.critical + activeReport.data_gaps_summary.high}
           </div>
           <div className="mt-2 flex gap-2">
             <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/10 text-red-500">
-              {report.data_gaps_summary.critical} critical
+              {activeReport.data_gaps_summary.critical} critical
             </span>
             <span className="px-2 py-0.5 text-xs rounded-full bg-orange-500/10 text-orange-500">
-              {report.data_gaps_summary.high} high
+              {activeReport.data_gaps_summary.high} high
             </span>
           </div>
         </div>
@@ -275,7 +353,7 @@ export function DataQuality() {
             <Target className="w-5 h-5 text-primary" />
           </div>
           <div className="text-3xl font-bold text-foreground">
-            {Object.keys(report.platform_scores).length}
+            {Object.keys(activeReport.platform_scores).length}
           </div>
           <p className="mt-2 text-sm text-muted-foreground">Active connections</p>
         </div>
@@ -291,7 +369,7 @@ export function DataQuality() {
 
           {/* Platform Tabs */}
           <div className="flex border-b overflow-x-auto">
-            {Object.entries(report.platform_scores).map(([platform, score]) => (
+            {Object.entries(activeReport.platform_scores).map(([platform, score]) => (
               <button
                 key={platform}
                 onClick={() => setSelectedPlatform(platform)}
@@ -433,7 +511,7 @@ export function DataQuality() {
           </div>
 
           <div className="p-4 space-y-3">
-            {report.top_recommendations.map((rec, idx) => (
+            {activeReport.top_recommendations.map((rec, idx) => (
               <div
                 key={idx}
                 className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
