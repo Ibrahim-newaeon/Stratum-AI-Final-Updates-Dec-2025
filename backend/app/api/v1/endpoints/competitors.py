@@ -6,10 +6,12 @@ Competitor benchmarking and market intelligence.
 Implements Module D: Competitor Intelligence.
 """
 
+import os
 from datetime import UTC, datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +28,27 @@ from app.schemas import (
 
 logger = get_logger(__name__)
 router = APIRouter()
+
+
+# ── Scan request / response schemas ──────────────────────────────────────────
+class CompetitorScanRequest(BaseModel):
+    """Request body for scanning a competitor."""
+
+    domain: str = Field(..., min_length=3, max_length=255, description="Competitor website domain")
+    name: str = Field(..., min_length=1, max_length=255, description="Competitor name for ad library search")
+    country: str = Field(default="SA", max_length=10, description="ISO country code")
+
+
+class CompetitorScanResponse(BaseModel):
+    """Response from a competitor scan."""
+
+    domain: str
+    social_links: dict
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    ad_library: dict
+    scanned_at: str
+    scrape_error: Optional[str] = None
 
 
 @router.get("", response_model=APIResponse[list[CompetitorResponse]])
@@ -321,4 +344,119 @@ async def get_competitor_keywords(
             "total_paid": competitor.paid_keywords_count,
             "total_organic": competitor.organic_keywords_count,
         },
+    )
+
+
+# ── Competitor Scan: Scrape website + Meta Ad Library ─────────────────────────
+
+
+@router.post("/scan", response_model=APIResponse[CompetitorScanResponse])
+async def scan_competitor_endpoint(
+    request: Request,
+    scan_request: CompetitorScanRequest,
+):
+    """
+    Scan a competitor: scrape their website for social links (FB, IG, etc.)
+    and search Meta Ad Library for their active ads.
+
+    Returns social_links and ad_library results.
+    """
+    from app.services.competitor_scraper import scan_competitor
+
+    # Use the platform META_ACCESS_TOKEN for Ad Library API
+    access_token = os.environ.get("META_ACCESS_TOKEN")
+
+    scan_result = await scan_competitor(
+        domain=scan_request.domain,
+        name=scan_request.name,
+        country=scan_request.country,
+        access_token=access_token,
+    )
+
+    return APIResponse(
+        success=True,
+        data=scan_result,
+        message="Competitor scan complete",
+    )
+
+
+@router.post("/{competitor_id}/scan", response_model=APIResponse[CompetitorScanResponse])
+async def scan_existing_competitor(
+    request: Request,
+    competitor_id: int,
+    country: str = Query("SA", max_length=10),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Scan an existing tracked competitor: scrape their website for social links
+    and search Meta Ad Library, then update the DB record.
+    """
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(CompetitorBenchmark).where(
+            CompetitorBenchmark.id == competitor_id,
+            CompetitorBenchmark.tenant_id == tenant_id,
+        )
+    )
+    competitor = result.scalar_one_or_none()
+
+    if not competitor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Competitor not found",
+        )
+
+    from app.services.competitor_scraper import scan_competitor
+
+    access_token = os.environ.get("META_ACCESS_TOKEN")
+
+    scan_result = await scan_competitor(
+        domain=competitor.domain,
+        name=competitor.name or competitor.domain,
+        country=country,
+        access_token=access_token,
+    )
+
+    # Update the competitor record with scraped data
+    if scan_result.get("social_links"):
+        competitor.social_links = scan_result["social_links"]
+    if scan_result.get("meta_title"):
+        competitor.meta_title = scan_result["meta_title"]
+    if scan_result.get("meta_description"):
+        competitor.meta_description = scan_result["meta_description"]
+
+    ad_library = scan_result.get("ad_library", {})
+    if ad_library.get("has_ads"):
+        competitor.ad_creatives_count = ad_library.get("ad_count", 0)
+        competitor.detected_ad_platforms = ad_library.get("ads", [{}])[0].get("platforms") if ad_library.get("ads") else None
+
+    competitor.last_fetched_at = datetime.now(UTC)
+    competitor.data_source = "scraper"
+
+    # Append to metrics history
+    history = competitor.metrics_history or []
+    history.append({
+        "timestamp": datetime.now(UTC).isoformat(),
+        "social_links": scan_result.get("social_links"),
+        "ad_library": {
+            "has_ads": ad_library.get("has_ads"),
+            "ad_count": ad_library.get("ad_count"),
+        },
+    })
+    competitor.metrics_history = history[-50:]  # Keep last 50 snapshots
+
+    await db.commit()
+    await db.refresh(competitor)
+
+    logger.info(
+        "competitor_scanned",
+        competitor_id=competitor_id,
+        has_ads=ad_library.get("has_ads"),
+    )
+
+    return APIResponse(
+        success=True,
+        data=scan_result,
+        message="Competitor scanned and updated",
     )

@@ -72,6 +72,47 @@ export interface CreateCompetitorRequest {
   platforms?: string[];
 }
 
+export interface CompetitorScanRequest {
+  domain: string;
+  name: string;
+  country?: string;
+}
+
+export interface CompetitorScanResult {
+  domain: string;
+  social_links: {
+    facebook: string | null;
+    instagram: string | null;
+    twitter: string | null;
+    linkedin: string | null;
+    tiktok: string | null;
+    youtube: string | null;
+  };
+  meta_title: string | null;
+  meta_description: string | null;
+  ad_library: {
+    has_ads: boolean;
+    ad_count: number;
+    ads: Array<{
+      id: string;
+      page_name: string;
+      page_id: string;
+      creative_body: string;
+      link_title: string;
+      start_date: string;
+      snapshot_url: string;
+      platforms: string[];
+      impressions: { lower_bound: string; upper_bound: string } | null;
+    }>;
+    search_url: string;
+    page_id: string | null;
+    page_name: string | null;
+    error: string | null;
+  };
+  scanned_at: string;
+  scrape_error: string | null;
+}
+
 // API Functions
 export const competitorsApi = {
   /**
@@ -170,6 +211,30 @@ export const competitorsApi = {
     const response = await apiClient.post<ApiResponse<Competitor>>(`/competitors/${id}/refresh`);
     return response.data.data;
   },
+
+  /**
+   * Scan a competitor: scrape website for social links + search Meta Ad Library
+   */
+  scanCompetitor: async (data: CompetitorScanRequest): Promise<CompetitorScanResult> => {
+    const response = await apiClient.post<ApiResponse<CompetitorScanResult>>(
+      '/competitors/scan',
+      data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Scan an existing tracked competitor
+   */
+  scanExistingCompetitor: async (id: string, country?: string): Promise<CompetitorScanResult> => {
+    const params = country ? { country } : {};
+    const response = await apiClient.post<ApiResponse<CompetitorScanResult>>(
+      `/competitors/${id}/scan`,
+      null,
+      { params }
+    );
+    return response.data.data;
+  },
 };
 
 // React Query Hooks
@@ -257,6 +322,30 @@ export function useRefreshCompetitor() {
     mutationFn: competitorsApi.refreshCompetitor,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['competitors', id] });
+    },
+  });
+}
+
+export function useScanCompetitor() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: competitorsApi.scanCompetitor,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['competitors'] });
+    },
+  });
+}
+
+export function useScanExistingCompetitor() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, country }: { id: string; country?: string }) =>
+      competitorsApi.scanExistingCompetitor(id, country),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['competitors', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['competitors'] });
     },
   });
 }

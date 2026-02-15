@@ -12,20 +12,24 @@ import { cn } from '@/lib/utils';
 import {
   useCompetitors,
   useDeleteCompetitor,
+  useScanExistingCompetitor,
   useShareOfVoice,
 } from '@/api/hooks';
+import type { CompetitorScanResult } from '@/api/competitors';
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
   ChartBarIcon,
+  CheckCircleIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
   GlobeAltIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   TrashIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { AddCompetitorModal } from '@/components/competitors/AddCompetitorModal';
 
@@ -62,6 +66,10 @@ export function Competitors() {
   const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Scan state
+  const [scanningId, setScanningId] = useState<string | null>(null);
+  const [scanResults, setScanResults] = useState<Record<string, CompetitorScanResult>>({});
+
   // Auto-open modal if ?action=create is in URL
   useEffect(() => {
     if (searchParams.get('action') === 'create') {
@@ -77,6 +85,7 @@ export function Competitors() {
   const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const { data: sovData } = useShareOfVoice(startDate, endDate);
   const deleteCompetitor = useDeleteCompetitor();
+  const scanExistingCompetitor = useScanExistingCompetitor();
 
   // Generate Meta Ads Library URL - search by name (brand name works better)
   const getMetaAdsLibraryUrl = (name: string, country: string) => {
@@ -96,6 +105,23 @@ export function Competitors() {
       refetchCompetitors();
     } catch (error) {
       // Error handled by mutation
+    }
+  };
+
+  // Handle scan competitor
+  const handleScanCompetitor = async (id: string, country?: string) => {
+    setScanningId(id);
+    try {
+      const result = await scanExistingCompetitor.mutateAsync({
+        id,
+        country: country || 'SA',
+      });
+      setScanResults((prev) => ({ ...prev, [id]: result }));
+      refetchCompetitors();
+    } catch (error) {
+      // Error handled by mutation
+    } finally {
+      setScanningId(null);
     }
   };
 
@@ -441,9 +467,107 @@ export function Competitors() {
               </span>
             </div>
 
-            {/* Quick Links to Ad Libraries */}
-            {/* Quick Links - Search by competitor name */}
+            {/* Scan Results (if available) */}
+            {scanResults[competitor.id] && (
+              <div className="mt-3 pt-3 border-t space-y-2" onClick={(e) => e.stopPropagation()}>
+                {/* Social Links */}
+                {scanResults[competitor.id].social_links && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {scanResults[competitor.id].social_links.facebook && (
+                      <a
+                        href={scanResults[competitor.id].social_links.facebook!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"
+                      >
+                        <span className="font-bold">f</span> Facebook
+                        <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                      </a>
+                    )}
+                    {scanResults[competitor.id].social_links.instagram && (
+                      <a
+                        href={scanResults[competitor.id].social_links.instagram!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-pink-500/10 text-pink-500 hover:bg-pink-500/20"
+                      >
+                        <span className="font-bold">IG</span> Instagram
+                        <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                      </a>
+                    )}
+                    {scanResults[competitor.id].social_links.tiktok && (
+                      <a
+                        href={scanResults[competitor.id].social_links.tiktok!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-muted text-foreground hover:bg-muted/80"
+                      >
+                        <span className="font-bold">TT</span> TikTok
+                        <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Ad Library Status */}
+                <div className={cn(
+                  'flex items-center gap-2 px-3 py-2 rounded-lg text-xs',
+                  scanResults[competitor.id].ad_library.has_ads
+                    ? 'bg-green-500/10 text-green-500'
+                    : 'bg-amber-500/10 text-amber-500'
+                )}>
+                  {scanResults[competitor.id].ad_library.has_ads ? (
+                    <>
+                      <CheckCircleIcon className="w-4 h-4" />
+                      <span className="font-medium">
+                        {scanResults[competitor.id].ad_library.ad_count}+ Active Ads Found
+                      </span>
+                      {scanResults[competitor.id].ad_library.page_name && (
+                        <span className="text-muted-foreground">
+                          ({scanResults[competitor.id].ad_library.page_name})
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <XCircleIcon className="w-4 h-4" />
+                      <span className="font-medium">No Active Ads</span>
+                    </>
+                  )}
+                  {scanResults[competitor.id].ad_library.search_url && (
+                    <a
+                      href={scanResults[competitor.id].ad_library.search_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-primary hover:underline flex items-center gap-1"
+                    >
+                      View <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Links + Actions */}
             <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+              {/* Scan Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleScanCompetitor(competitor.id, competitor.country || 'SA');
+                }}
+                disabled={scanningId === competitor.id}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors',
+                  scanningId === competitor.id
+                    ? 'bg-cyan-500/10 text-cyan-500'
+                    : 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20'
+                )}
+                title="Scan website & check Meta Ad Library"
+              >
+                <MagnifyingGlassIcon className={cn('w-3 h-3', scanningId === competitor.id && 'animate-spin')} />
+                {scanningId === competitor.id ? 'Scanning...' : 'Scan'}
+              </button>
               <a
                 href={getMetaAdsLibraryUrl(competitor.name, competitor.country || 'SA')}
                 target="_blank"
@@ -453,7 +577,7 @@ export function Competitors() {
                 title={`Search "${competitor.name}" in Meta Ads Library`}
               >
                 <span className="font-bold">M</span>
-                Meta Ads Library
+                Meta Ads
                 <ArrowTopRightOnSquareIcon className="w-3 h-3" />
               </a>
               <a
@@ -465,7 +589,7 @@ export function Competitors() {
                 title={`Search "${competitor.name}" in Google Transparency`}
               >
                 <span className="font-bold">G</span>
-                Google Transparency
+                Google
                 <ArrowTopRightOnSquareIcon className="w-3 h-3" />
               </a>
               <button

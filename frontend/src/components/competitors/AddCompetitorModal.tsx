@@ -1,15 +1,26 @@
 /**
  * Add Competitor Modal - Shared Component
  * Used by both Benchmarks and Competitors pages
+ *
+ * Features:
+ * - Enter competitor name + domain + country
+ * - "Scan" button scrapes website for FB/IG links + searches Meta Ad Library
+ * - Shows scraped social links and ad presence results
+ * - "Add & Track" saves competitor to DB
  */
 
 import { useState } from 'react';
-import { useCreateCompetitor, useCompetitors } from '@/api/hooks';
+import { useCreateCompetitor, useCompetitors, useScanCompetitor } from '@/api/hooks';
+import type { CompetitorScanResult } from '@/api/competitors';
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
+  CheckCircleIcon,
   CheckIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
   PlusIcon,
+  XCircleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
@@ -56,7 +67,13 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
     platforms: ['meta', 'google'] as string[],
   });
 
+  // Scan state
+  const [scanResult, setScanResult] = useState<CompetitorScanResult | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+
   const createCompetitor = useCreateCompetitor();
+  const scanCompetitor = useScanCompetitor();
   const { refetch: refetchCompetitors } = useCompetitors();
 
   // Generate Meta Ads Library URL
@@ -79,6 +96,28 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
     }));
   };
 
+  // Handle scan
+  const handleScan = async () => {
+    if (!newCompetitor.name || !newCompetitor.domain) return;
+
+    setIsScanning(true);
+    setScanError(null);
+    setScanResult(null);
+
+    try {
+      const result = await scanCompetitor.mutateAsync({
+        domain: newCompetitor.domain,
+        name: newCompetitor.name,
+        country: newCompetitor.country,
+      });
+      setScanResult(result);
+    } catch (err) {
+      setScanError(err instanceof Error ? err.message : 'Scan failed. Try again.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
   // Handle form submission
   const handleAddCompetitor = async () => {
     if (!newCompetitor.name || !newCompetitor.domain) return;
@@ -91,7 +130,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
         country: newCompetitor.country,
         platforms: newCompetitor.platforms,
       });
-      setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] });
+      resetForm();
       refetchCompetitors();
       onSuccess?.();
       onClose();
@@ -102,13 +141,24 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
     }
   };
 
+  // Reset form
+  const resetForm = () => {
+    setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] });
+    setScanResult(null);
+    setScanError(null);
+  };
+
   // Handle close and reset form
   const handleClose = () => {
-    setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] });
+    resetForm();
     onClose();
   };
 
   if (!isOpen) return null;
+
+  const socialLinks = scanResult?.social_links;
+  const adLibrary = scanResult?.ad_library;
+  const hasSocialLinks = socialLinks && Object.values(socialLinks).some(Boolean);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -119,13 +169,13 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 bg-card rounded-2xl shadow-2xl border overflow-hidden">
+      <div className="relative w-full max-w-lg mx-4 bg-card rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b shrink-0">
           <div>
             <h2 className="text-xl font-semibold">Add Competitor</h2>
             <p className="text-sm text-muted-foreground">
-              Track competitor ads via Meta Ads Library & Google Transparency
+              Scan website for social links & check Meta Ad Library
             </p>
           </div>
           <button
@@ -136,119 +186,344 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
           </button>
         </div>
 
-        {/* Form */}
-        <div className="p-6 space-y-5">
-          {/* Competitor Name */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Competitor Name *</label>
-            <input
-              type="text"
-              value={newCompetitor.name}
-              onChange={(e) => setNewCompetitor((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g., Competitor Inc"
-              className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-
-          {/* Domain/Website */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Website / Domain *</label>
-            <input
-              type="text"
-              value={newCompetitor.domain}
-              onChange={(e) =>
-                setNewCompetitor((prev) => ({ ...prev, domain: e.target.value }))
-              }
-              placeholder="e.g., competitor.com"
-              className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Used to search ads in Meta Ads Library and Google Transparency
-            </p>
-          </div>
-
-          {/* Country Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Competitor's Country *</label>
-            <select
-              value={newCompetitor.country}
-              onChange={(e) =>
-                setNewCompetitor((prev) => ({ ...prev, country: e.target.value }))
-              }
-              className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              {COUNTRIES.map((country) => (
-                <option key={country.code} value={country.code}>
-                  {country.flag} {country.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-foreground mt-1">
-              Select the country where competitor runs ads (for Meta Ads Library filter)
-            </p>
-          </div>
-
-          {/* Platform Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Platforms to Track</label>
-            <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map((platform) => (
-                <button
-                  key={platform.id}
-                  type="button"
-                  onClick={() => togglePlatform(platform.id)}
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all',
-                    newCompetitor.platforms.includes(platform.id)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border hover:border-primary/50'
-                  )}
-                >
-                  <span className="w-5 h-5 rounded bg-muted flex items-center justify-center text-xs font-bold">
-                    {platform.icon}
-                  </span>
-                  <span className="text-sm">{platform.name}</span>
-                  {newCompetitor.platforms.includes(platform.id) && (
-                    <CheckIcon className="w-4 h-4" />
-                  )}
-                </button>
-              ))}
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto flex-1">
+          {/* Form */}
+          <div className="p-6 space-y-5">
+            {/* Competitor Name */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Competitor Name *</label>
+              <input
+                type="text"
+                value={newCompetitor.name}
+                onChange={(e) => setNewCompetitor((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Competitor Inc"
+                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
             </div>
-          </div>
 
-          {/* Quick Links Preview */}
-          {newCompetitor.name && (
-            <div className="p-4 rounded-lg bg-muted/50 space-y-3">
-              <p className="text-sm font-medium">
-                Preview Ad Library Links for "{newCompetitor.name}":
+            {/* Domain/Website */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Website / Domain *</label>
+              <input
+                type="text"
+                value={newCompetitor.domain}
+                onChange={(e) =>
+                  setNewCompetitor((prev) => ({ ...prev, domain: e.target.value }))
+                }
+                placeholder="e.g., competitor.com"
+                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                We'll scrape this website to find their Facebook & Instagram accounts
               </p>
-              <div className="space-y-2">
-                <a
-                  href={getMetaAdsLibraryUrl(newCompetitor.name, newCompetitor.country)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-primary hover:underline"
-                >
-                  <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                  Search "{newCompetitor.name}" in Meta Ads Library (
-                  {COUNTRIES.find((c) => c.code === newCompetitor.country)?.name})
-                </a>
-                <a
-                  href={getGoogleTransparencyUrl(newCompetitor.name)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-primary hover:underline"
-                >
-                  <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                  Search "{newCompetitor.name}" in Google Ads Transparency
-                </a>
+            </div>
+
+            {/* Country Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Country *</label>
+              <select
+                value={newCompetitor.country}
+                onChange={(e) =>
+                  setNewCompetitor((prev) => ({ ...prev, country: e.target.value }))
+                }
+                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                {COUNTRIES.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Used to search Meta Ad Library for ads in this country
+              </p>
+            </div>
+
+            {/* Platform Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Platforms to Track</label>
+              <div className="flex flex-wrap gap-2">
+                {PLATFORMS.map((platform) => (
+                  <button
+                    key={platform.id}
+                    type="button"
+                    onClick={() => togglePlatform(platform.id)}
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all',
+                      newCompetitor.platforms.includes(platform.id)
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border hover:border-primary/50'
+                    )}
+                  >
+                    <span className="w-5 h-5 rounded bg-muted flex items-center justify-center text-xs font-bold">
+                      {platform.icon}
+                    </span>
+                    <span className="text-sm">{platform.name}</span>
+                    {newCompetitor.platforms.includes(platform.id) && (
+                      <CheckIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
+
+            {/* Scan Button */}
+            {newCompetitor.name && newCompetitor.domain && (
+              <button
+                onClick={handleScan}
+                disabled={isScanning}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {isScanning ? (
+                  <>
+                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                    Scanning website & Meta Ad Library...
+                  </>
+                ) : (
+                  <>
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                    Scan Competitor
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Scan Error */}
+            {scanError && (
+              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+                <div className="flex items-center gap-2">
+                  <ExclamationTriangleIcon className="w-5 h-5 shrink-0" />
+                  {scanError}
+                </div>
+              </div>
+            )}
+
+            {/* Scan Results */}
+            {scanResult && (
+              <div className="space-y-4">
+                {/* Social Links Found */}
+                <div className="p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    {hasSocialLinks ? (
+                      <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <XCircleIcon className="w-5 h-5 text-amber-500" />
+                    )}
+                    Social Media Links
+                  </div>
+
+                  {hasSocialLinks ? (
+                    <div className="space-y-2">
+                      {socialLinks.facebook && (
+                        <a
+                          href={socialLinks.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-blue-500 hover:underline"
+                        >
+                          <span className="w-6 h-6 rounded bg-blue-500/10 flex items-center justify-center text-xs font-bold text-blue-500">
+                            f
+                          </span>
+                          {socialLinks.facebook}
+                          <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                        </a>
+                      )}
+                      {socialLinks.instagram && (
+                        <a
+                          href={socialLinks.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-pink-500 hover:underline"
+                        >
+                          <span className="w-6 h-6 rounded bg-pink-500/10 flex items-center justify-center text-xs font-bold text-pink-500">
+                            IG
+                          </span>
+                          {socialLinks.instagram}
+                          <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                        </a>
+                      )}
+                      {socialLinks.twitter && (
+                        <a
+                          href={socialLinks.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-sky-500 hover:underline"
+                        >
+                          <span className="w-6 h-6 rounded bg-sky-500/10 flex items-center justify-center text-xs font-bold text-sky-500">
+                            X
+                          </span>
+                          {socialLinks.twitter}
+                          <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                        </a>
+                      )}
+                      {socialLinks.tiktok && (
+                        <a
+                          href={socialLinks.tiktok}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-foreground hover:underline"
+                        >
+                          <span className="w-6 h-6 rounded bg-muted flex items-center justify-center text-xs font-bold">
+                            TT
+                          </span>
+                          {socialLinks.tiktok}
+                          <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                        </a>
+                      )}
+                      {socialLinks.linkedin && (
+                        <a
+                          href={socialLinks.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                        >
+                          <span className="w-6 h-6 rounded bg-blue-600/10 flex items-center justify-center text-xs font-bold text-blue-600">
+                            in
+                          </span>
+                          {socialLinks.linkedin}
+                          <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      No social media links found on this website
+                      {scanResult.scrape_error && ` (${scanResult.scrape_error})`}
+                    </p>
+                  )}
+                </div>
+
+                {/* Meta Ad Library Results */}
+                <div
+                  className={cn(
+                    'p-4 rounded-lg border space-y-3',
+                    adLibrary?.has_ads
+                      ? 'bg-green-500/5 border-green-500/20'
+                      : 'bg-amber-500/5 border-amber-500/20'
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      {adLibrary?.has_ads ? (
+                        <>
+                          <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                          <span className="text-green-500">Active Ads Found</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircleIcon className="w-5 h-5 text-amber-500" />
+                          <span className="text-amber-500">No Active Ads</span>
+                        </>
+                      )}
+                    </div>
+                    {adLibrary?.has_ads && (
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/10 text-green-500 font-medium">
+                        {adLibrary.ad_count}+ ads
+                      </span>
+                    )}
+                  </div>
+
+                  {adLibrary?.has_ads && adLibrary.page_name && (
+                    <p className="text-xs text-muted-foreground">
+                      Page: <span className="font-medium text-foreground">{adLibrary.page_name}</span>
+                    </p>
+                  )}
+
+                  {/* Show first few ads */}
+                  {adLibrary?.ads && adLibrary.ads.length > 0 && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {adLibrary.ads.slice(0, 5).map((ad, i) => (
+                        <div
+                          key={ad.id || i}
+                          className="p-3 rounded-lg bg-background/50 border text-xs space-y-1"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium truncate flex-1">
+                              {ad.link_title || ad.page_name || 'Ad'}
+                            </span>
+                            {ad.snapshot_url && (
+                              <a
+                                href={ad.snapshot_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline flex items-center gap-1 shrink-0 ml-2"
+                              >
+                                View
+                                <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                          {ad.creative_body && (
+                            <p className="text-muted-foreground line-clamp-2">
+                              {ad.creative_body}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            {ad.start_date && (
+                              <span>Started: {new Date(ad.start_date).toLocaleDateString()}</span>
+                            )}
+                            {ad.platforms && ad.platforms.length > 0 && (
+                              <span>
+                                Platforms: {ad.platforms.join(', ')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {adLibrary?.error && adLibrary.error !== 'no_access_token' && (
+                    <p className="text-xs text-amber-500">
+                      API note: {adLibrary.error}
+                    </p>
+                  )}
+
+                  {/* Search URL link */}
+                  {adLibrary?.search_url && (
+                    <a
+                      href={adLibrary.search_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs text-primary hover:underline"
+                    >
+                      <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                      View in Meta Ad Library
+                    </a>
+                  )}
+                </div>
+
+                {/* Quick Links */}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={getMetaAdsLibraryUrl(newCompetitor.name, newCompetitor.country)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
+                  >
+                    <span className="font-bold">M</span>
+                    Meta Ad Library
+                    <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                  </a>
+                  <a
+                    href={getGoogleTransparencyUrl(newCompetitor.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                  >
+                    <span className="font-bold">G</span>
+                    Google Transparency
+                    <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/30">
+        <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/30 shrink-0">
           <button
             onClick={handleClose}
             className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
@@ -268,7 +543,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
             ) : (
               <>
                 <PlusIcon className="w-4 h-4" />
-                Add Competitor
+                Add & Track
               </>
             )}
           </button>
