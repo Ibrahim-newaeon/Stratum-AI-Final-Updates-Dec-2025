@@ -20,6 +20,7 @@ import { motion } from 'framer-motion';
 import { listItem, staggerContainer } from '@/lib/animations';
 import {
   AlertTriangle,
+  ArrowRight,
   BarChart3,
   Bell,
   CheckCircle,
@@ -28,11 +29,14 @@ import {
   Eye,
   Info,
   Keyboard,
+  Link2,
   MousePointerClick,
   RefreshCw,
   ShoppingCart,
   Target,
   TrendingUp,
+  Users,
+  Zap,
 } from 'lucide-react';
 import { cn, formatCompactNumber, formatCurrency } from '@/lib/utils';
 import { KPICard } from '@/components/dashboard/KPICard';
@@ -61,6 +65,7 @@ import {
 import { useAnomalies, useCampaigns, useTenantOverview } from '@/api/hooks';
 import { ExportFormat, useExportDashboard } from '@/api/dashboard';
 import { useTenantStore } from '@/stores/tenantStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Mock data for demonstration
 const mockCampaigns: Campaign[] = [
@@ -256,6 +261,11 @@ export function Overview() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [showKeyboardHints, setShowKeyboardHints] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    return localStorage.getItem('stratum_welcome_dismissed') !== 'true';
+  });
+
+  const { user } = useAuth();
 
   // Get tenant ID from tenant store
   const tenantId = useTenantStore((state) => state.tenantId) ?? 1;
@@ -531,6 +541,85 @@ export function Overview() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Welcome Hero - for first-time users */}
+      {showWelcome && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 lg:p-8"
+        >
+          {/* Dismiss button */}
+          <button
+            onClick={() => {
+              setShowWelcome(false);
+              localStorage.setItem('stratum_welcome_dismissed', 'true');
+            }}
+            className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+            title="Dismiss"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+            {/* Left: Welcome text */}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Getting Started</span>
+              </div>
+              <h2 className="text-xl lg:text-2xl font-bold mb-2">
+                Welcome{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! Your Revenue OS is ready.
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                Connect your ad platforms to unlock real-time ROAS tracking, AI-powered optimizations, and trust-gated automation. Below is sample data showing what your dashboard will look like.
+              </p>
+            </div>
+
+            {/* Right: Quick action cards */}
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:w-72">
+              <button
+                onClick={() => navigate('/dashboard/capi-setup')}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/20 transition-all group text-left"
+              >
+                <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors">
+                  <Link2 className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">Connect a Platform</p>
+                  <p className="text-xs text-muted-foreground">Meta, Google, TikTok, Snapchat</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </button>
+              <button
+                onClick={() => navigate('/dashboard/cdp')}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-card hover:bg-accent/50 border border-border/50 transition-all group text-left"
+              >
+                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-accent transition-colors">
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">Explore CDP</p>
+                  <p className="text-xs text-muted-foreground">Profiles, segments, audiences</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </button>
+            </div>
+          </div>
+
+          {/* Sample data notice */}
+          <div className="mt-5 pt-4 border-t border-border/50 flex items-center gap-2">
+            <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              The data below is sample data for demonstration. Connect your platforms to see real metrics.
+            </p>
+          </div>
+        </motion.div>
       )}
 
       {/* Page Header */}
