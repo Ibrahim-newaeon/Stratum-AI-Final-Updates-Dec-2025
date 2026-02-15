@@ -118,11 +118,10 @@ export function FeedbackWidget() {
             whileHover={{ scale: 1.12 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-20 right-4 w-12 h-12 rounded-full text-white shadow-lg hover:shadow-xl transition-shadow z-40 flex items-center justify-center"
+            className="fixed bottom-20 right-4 w-12 h-12 rounded-full text-[#0b1215] shadow-lg hover:shadow-xl transition-shadow z-40 flex items-center justify-center"
             style={{
-              background:
-                'linear-gradient(135deg, #00c7be 0%, #e2b347 100%)',
-              boxShadow: '0 0 25px rgba(0, 199, 190, 0.3)',
+              background: '#00c7be',
+              boxShadow: '0 0 25px rgba(0, 199, 190, 0.35)',
             }}
             title="Send Feedback"
             aria-label="Open feedback form"
