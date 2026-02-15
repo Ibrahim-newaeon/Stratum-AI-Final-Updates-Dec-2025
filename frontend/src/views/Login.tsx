@@ -1,6 +1,6 @@
 /**
  * Login Page - Stratum AI
- * Gold/Crimson/Charcoal design: Two-panel layout with Revenue Lift chart + modern login form
+ * Premium Gold/Charcoal design: Centered card with animated background
  */
 
 import { useState } from 'react';
@@ -16,61 +16,88 @@ import { useAuth } from '@/contexts/AuthContext';
 import { pageSEO, SEO } from '@/components/common/SEO';
 
 // ---------------------------------------------------------------------------
-// Chart data for Revenue Lift Dashboard
-// ---------------------------------------------------------------------------
-const chartData = [
-  { day: 'Mon', value: 12400, height: '40%' },
-  { day: 'Tue', value: 15200, height: '55%' },
-  { day: 'Wed', value: 18900, height: '85%', highlight: true },
-  { day: 'Thu', value: 14100, height: '45%' },
-  { day: 'Fri', value: 22500, height: '75%' },
-  { day: 'Sat', value: 28400, height: '95%' },
-  { day: 'Sun', value: 21200, height: '65%' },
-];
-
-// ---------------------------------------------------------------------------
-// Styles — Gold / Crimson / Charcoal
+// Styles
 // ---------------------------------------------------------------------------
 const pageStyles = `
-  .login-mesh-bg {
-    background-image: radial-gradient(circle at 1px 1px, rgba(184, 134, 11, 0.08) 1px, transparent 0);
-    background-size: 40px 40px;
+  @keyframes loginFloat1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.05); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
   }
-  .login-hero-gradient {
-    background: radial-gradient(circle at 50% -20%, rgba(139, 0, 0, 0.25) 0%, rgba(184, 134, 11, 0.1) 50%, transparent 100%), #1A1A1A;
+  @keyframes loginFloat2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-40px, 30px) scale(1.1); }
+    66% { transform: translate(20px, -40px) scale(0.9); }
   }
-  .login-glass {
-    background: rgba(20, 20, 20, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(184, 134, 11, 0.25);
+  @keyframes loginFloat3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(50px, 30px) scale(1.08); }
   }
-  .login-glow-gold {
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  @keyframes loginPulseRing {
+    0% { transform: scale(0.95); opacity: 0.5; }
+    50% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(0.95); opacity: 0.5; }
   }
-  .login-glow-gold:hover {
-    box-shadow: 0 0 30px rgba(255, 215, 0, 0.45);
+  @keyframes loginShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
-  .login-chart-bar {
-    transition: all 0.3s ease-out;
+  @keyframes loginFadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .login-chart-bar:hover {
-    opacity: 1;
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  @keyframes loginSlideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
   }
-  @keyframes loginSlide {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+  .login-float-1 { animation: loginFloat1 20s ease-in-out infinite; }
+  .login-float-2 { animation: loginFloat2 25s ease-in-out infinite; }
+  .login-float-3 { animation: loginFloat3 18s ease-in-out infinite; }
+  .login-pulse-ring { animation: loginPulseRing 3s ease-in-out infinite; }
+  .login-fade-up { animation: loginFadeUp 0.6s ease-out both; }
+  .login-fade-up-d1 { animation: loginFadeUp 0.6s ease-out 0.1s both; }
+  .login-fade-up-d2 { animation: loginFadeUp 0.6s ease-out 0.2s both; }
+  .login-fade-up-d3 { animation: loginFadeUp 0.6s ease-out 0.3s both; }
+  .login-slide-in { animation: loginSlideIn 0.4s ease-out both; }
+  .login-shimmer-btn {
+    background: linear-gradient(
+      110deg,
+      #FFD700 0%,
+      #FFD700 40%,
+      #FFF8DC 50%,
+      #FFD700 60%,
+      #FFD700 100%
+    );
+    background-size: 200% 100%;
   }
-  .login-animate-slide {
-    animation: loginSlide 30s linear infinite;
+  .login-shimmer-btn:hover {
+    animation: loginShimmer 1.5s ease infinite;
+  }
+  .login-input-glow:focus-within {
+    box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.4), 0 0 12px rgba(255, 215, 0, 0.08);
+  }
+  .login-card-glow {
+    box-shadow:
+      0 0 0 1px rgba(184, 134, 11, 0.15),
+      0 24px 48px -12px rgba(0, 0, 0, 0.5),
+      0 0 80px -20px rgba(255, 215, 0, 0.08);
   }
   .login-gradient-text {
-    background: linear-gradient(135deg, #FFD700 0%, #DC143C 100%);
+    background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 `;
+
+// ---------------------------------------------------------------------------
+// Stats shown below the card
+// ---------------------------------------------------------------------------
+const stats = [
+  { label: 'Revenue Recovered', value: '$142M+' },
+  { label: 'Active Brands', value: '150+' },
+  { label: 'Avg ROAS Lift', value: '+22%' },
+  { label: 'Uptime', value: '99.9%' },
+];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -140,388 +167,285 @@ export default function Login() {
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
       <style>{pageStyles}</style>
 
-      <div className="bg-[#1A1A1A] text-[#F5F5F0] min-h-screen flex font-sans selection:bg-[#FFD700]/30 overflow-x-hidden">
-        {/* Mesh dot grid background */}
-        <div className="fixed inset-0 login-mesh-bg pointer-events-none opacity-40" />
-        {/* Ambient glow orbs */}
-        <div className="fixed top-0 right-0 w-[800px] h-[800px] bg-[#8B0000]/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="fixed bottom-0 left-0 w-[800px] h-[800px] bg-[#B8860B]/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="bg-[#0D0D12] text-[#F5F5F0] min-h-screen flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-[#FFD700]/30">
+        {/* ── Animated Background ── */}
+        {/* Floating gradient orbs */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="login-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#FFD700]/[0.07] to-transparent blur-[100px]" />
+          <div className="login-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-tl from-[#8B0000]/[0.08] to-transparent blur-[100px]" />
+          <div className="login-float-3 absolute top-[40%] right-[20%] w-[300px] h-[300px] rounded-full bg-gradient-to-b from-[#B8860B]/[0.05] to-transparent blur-[80px]" />
+        </div>
 
-        <main className="relative z-10 w-full flex flex-col lg:flex-row min-h-screen">
-          {/* ================================================================
-              LEFT PANEL - BRANDING + REVENUE LIFT DASHBOARD
-              ================================================================ */}
-          <section className="lg:w-7/12 p-6 lg:p-[48px] hidden lg:flex flex-col justify-between space-y-8 login-hero-gradient">
-            {/* Top: Logo + Status bar */}
-            <div className="space-y-5">
-              <div className="flex items-center space-x-3">
-                <Link to="/" className="flex items-center space-x-3 group">
-                  <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
-                    <span className="font-display font-bold text-[#1A1A1A] text-xl -rotate-45">S</span>
-                  </div>
-                  <div>
-                    <h1 className="font-display font-bold text-lg leading-tight tracking-tight">STRATUM AI</h1>
-                    <p className="text-[10px] tracking-widest text-[#FFD700] font-bold uppercase">
-                      Revenue OS
-                    </p>
-                  </div>
-                </Link>
-              </div>
+        {/* Subtle dot grid */}
+        <div
+          className="fixed inset-0 pointer-events-none opacity-30"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(184, 134, 11, 0.06) 1px, transparent 0)',
+            backgroundSize: '32px 32px',
+          }}
+        />
 
-              {/* Platform status + scrolling ticker */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 login-glass rounded-full text-[11px] font-bold uppercase tracking-wider shrink-0">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFD700] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FFD700]" />
-                  </span>
-                  Platform Status:{' '}
-                  <span className="text-[#FFD700] ml-1">Operational</span>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex gap-8 whitespace-nowrap login-animate-slide text-xs text-[#F5F5F0]/50 font-medium">
-                    {[
-                      'New Meta API Integration Live',
-                      'Predictive LTV v2.4 Released',
-                      'Dashboard latency reduced by 40%',
-                      'New Meta API Integration Live',
-                      'Predictive LTV v2.4 Released',
-                      'Dashboard latency reduced by 40%',
-                    ].map((text, i) => (
-                      <span key={i} className="flex items-center gap-2">
-                        <span className="text-[#FFD700]">#</span> {text}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+        {/* ── Top Navigation Bar ── */}
+        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-[24px] lg:px-[48px] py-[18px]">
+          <Link to="/" className="flex items-center gap-[10px] group">
+            <div className="w-[34px] h-[34px] bg-[#FFD700] rounded-[8px] flex items-center justify-center rotate-45 shadow-[0_0_20px_rgba(255,215,0,0.25)] group-hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-shadow">
+              <span className="font-display font-bold text-[#0D0D12] text-[15px] -rotate-45">S</span>
             </div>
+            <div className="hidden sm:block">
+              <p className="font-display font-bold text-[14px] leading-tight tracking-tight text-white/90">STRATUM AI</p>
+              <p className="text-[9px] tracking-[0.25em] text-[#FFD700]/70 font-bold uppercase">Revenue OS</p>
+            </div>
+          </Link>
 
-            {/* Hero heading */}
-            <div className="max-w-xl">
-              <h2 className="text-3xl lg:text-5xl font-display font-extrabold leading-tight mb-4">
-                Master your{' '}
-                <span className="login-gradient-text italic">Revenue Lift</span>{' '}
-                with real-time AI
+          <div className="flex items-center gap-[16px]">
+            <div className="hidden sm:flex items-center gap-[6px] px-[10px] py-[5px] rounded-full border border-[#22C55E]/30 bg-[#22C55E]/5">
+              <span className="relative flex h-[6px] w-[6px]">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-60" />
+                <span className="relative inline-flex rounded-full h-[6px] w-[6px] bg-[#22C55E]" />
+              </span>
+              <span className="text-[10px] font-semibold text-[#22C55E]/80 uppercase tracking-wider">All Systems Operational</span>
+            </div>
+            <Link
+              to="/signup"
+              className="text-[13px] font-semibold text-white/50 hover:text-white/90 transition-colors"
+            >
+              Create account
+            </Link>
+          </div>
+        </nav>
+
+        {/* ── Main Content ── */}
+        <main className="relative z-10 w-full max-w-[420px] mx-auto px-[20px] py-[100px]">
+          {/* Card */}
+          <div className="login-card-glow login-fade-up bg-[#16161E]/80 backdrop-blur-xl rounded-[20px] p-[28px] lg:p-[36px] border border-white/[0.06]">
+            {/* Header */}
+            <div className="text-center mb-[28px]">
+              <div className="inline-flex items-center gap-[8px] px-[12px] py-[5px] rounded-full bg-[#FFD700]/[0.08] border border-[#FFD700]/[0.15] mb-[16px]">
+                <svg className="w-[14px] h-[14px] text-[#FFD700]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                <span className="text-[10px] font-bold text-[#FFD700] uppercase tracking-wider">Enterprise-grade Security</span>
+              </div>
+              <h2 className="text-[24px] lg:text-[28px] font-display font-bold mb-[6px] text-white">
+                Welcome back
               </h2>
-              <p className="text-[#F5F5F0]/50 text-base leading-relaxed mb-6">
-                Log in to access your autonomous growth dashboard and optimize customer acquisition
-                costs with Stratum's Trust-Gated Autopilot.
+              <p className="text-[13px] text-white/40 leading-relaxed">
+                Sign in to your Stratum AI dashboard
               </p>
-
-              {/* Revenue Lift Dashboard Card */}
-              <div className="login-glass p-5 rounded-2xl shadow-2xl relative group overflow-hidden">
-                {/* Card header */}
-                <div className="flex items-center justify-between mb-5">
-                  <div>
-                    <h3 className="font-display font-bold text-lg">Revenue Lift Dashboard</h3>
-                    <p className="text-xs text-[#F5F5F0]/40">Live optimization performance</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors">
-                      <svg className="w-4 h-4 text-[#F5F5F0]/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                      </svg>
-                    </div>
-                    <div className="w-8 h-8 rounded-lg bg-[#FFD700]/20 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-[#FFD700]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bar chart */}
-                <div className="flex items-end justify-between h-36 gap-2 px-2">
-                  {chartData.map((bar) => (
-                    <div
-                      key={bar.day}
-                      className="group/bar relative flex-1 flex flex-col items-center justify-end h-full"
-                    >
-                      <div className="absolute -top-8 bg-black/60 text-[#FFD700] text-[10px] py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
-                        ${(bar.value / 1000).toFixed(1)}k
-                      </div>
-                      <div
-                        className={`w-full rounded-t-md login-chart-bar ${
-                          bar.highlight
-                            ? 'bg-[#FFD700]/60 group-hover/bar:bg-[#FFD700]'
-                            : 'bg-white/10 group-hover/bar:bg-[#FFD700]/40'
-                        }`}
-                        style={{ height: bar.height }}
-                      />
-                      <div
-                        className={`mt-2 text-[10px] uppercase font-bold ${
-                          bar.highlight ? 'text-[#FFD700]' : 'text-[#F5F5F0]/40'
-                        }`}
-                      >
-                        {bar.day}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Stats row */}
-                <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-[#B8860B]/20">
-                  <div>
-                    <p className="text-[10px] text-[#F5F5F0]/40 uppercase font-bold tracking-widest mb-1">
-                      Total Recovery
-                    </p>
-                    <p className="text-xl font-display font-bold text-[#F5F5F0]">$142.8k</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-[#F5F5F0]/40 uppercase font-bold tracking-widest mb-1">
-                      ROAS Lift
-                    </p>
-                    <p className="text-xl font-display font-bold text-[#FFD700]">+22.4%</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-[#F5F5F0]/40 uppercase font-bold tracking-widest mb-1">
-                      AI Efficiency
-                    </p>
-                    <p className="text-xl font-display font-bold text-[#F5F5F0]">94.2%</p>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center gap-8 text-xs text-[#F5F5F0]/40 font-medium">
-              <span>&copy; 2026 Stratum AI</span>
-              <div className="flex gap-4">
-                <a className="hover:text-[#FFD700] transition-colors" href="#">
-                  Status
-                </a>
-                <a className="hover:text-[#FFD700] transition-colors" href="#">
-                  Security
-                </a>
-                <a className="hover:text-[#FFD700] transition-colors" href="#">
-                  Privacy
-                </a>
-              </div>
-            </div>
-          </section>
-
-          {/* ================================================================
-              RIGHT PANEL - LOGIN FORM
-              ================================================================ */}
-          <section className="lg:w-5/12 p-4 lg:p-[40px] flex items-center justify-center bg-black/20 relative min-h-screen">
-            {/* Corner decorations */}
-            <div className="absolute top-10 right-10 w-24 h-24 border-t-2 border-r-2 border-[#FFD700]/20 pointer-events-none rounded-tr-3xl hidden lg:block" />
-            <div className="absolute bottom-10 left-10 w-24 h-24 border-b-2 border-l-2 border-[#FFD700]/20 pointer-events-none rounded-bl-3xl hidden lg:block" />
-
-            <div className="w-full max-w-md">
-              {/* Mobile logo */}
-              <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
-                  <span className="font-display font-bold text-[#1A1A1A] text-xl -rotate-45">S</span>
+            <form onSubmit={handleSubmit} className="space-y-[16px]">
+              {/* Error Alert */}
+              {error && (
+                <div className="login-slide-in flex items-center gap-[10px] p-[12px] rounded-[12px] text-[13px] bg-[#DC143C]/[0.08] border border-[#DC143C]/20 text-[#FF6B6B]">
+                  <ExclamationCircleIcon className="w-[18px] h-[18px] flex-shrink-0" />
+                  <span>{error}</span>
                 </div>
-                <span className="font-display font-bold text-xl tracking-tight">STRATUM AI</span>
-              </div>
+              )}
 
-              {/* Form Card */}
-              <div className="login-glass p-6 lg:p-[32px] rounded-[2rem] shadow-2xl relative z-20">
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl lg:text-3xl font-display font-bold mb-3">
-                    Welcome back
-                  </h2>
-                  <p className="text-[#F5F5F0]/50 text-sm">
-                    Enter your credentials to access Stratum OS
-                  </p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {error && (
-                    <div className="flex items-center gap-3 p-4 rounded-xl text-sm bg-[#DC143C]/10 border border-[#DC143C]/30 text-[#DC143C]">
-                      <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
-                      <span>{error}</span>
-                    </div>
-                  )}
-
-                  {/* Work Email */}
-                  <div>
-                    <label
-                      htmlFor="login-email"
-                      className="block text-[10px] font-bold text-[#F5F5F0]/50 uppercase tracking-[0.2em] mb-2 ml-1"
-                    >
-                      Work Email
-                    </label>
-                    <div className="relative group">
-                      <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#F5F5F0]/40 transition-colors group-focus-within:text-[#FFD700]" />
-                      <input
-                        id="login-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="name@company.com"
-                        required
-                        disabled={isLoading}
-                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700]/50 focus:ring-4 focus:ring-[#FFD700]/5 rounded-xl pl-12 pr-4 py-3 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2 ml-1">
-                      <label
-                        htmlFor="login-password"
-                        className="block text-[10px] font-bold text-[#F5F5F0]/50 uppercase tracking-[0.2em]"
-                      >
-                        Password
-                      </label>
-                      <Link
-                        to="/forgot-password"
-                        className="text-[10px] font-bold text-[#FFD700] hover:underline uppercase tracking-wider"
-                      >
-                        Forgot?
-                      </Link>
-                    </div>
-                    <div className="relative group">
-                      <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#F5F5F0]/40 transition-colors group-focus-within:text-[#FFD700]" />
-                      <input
-                        id="login-password"
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        required
-                        disabled={isLoading}
-                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700]/50 focus:ring-4 focus:ring-[#FFD700]/5 rounded-xl pl-12 pr-12 py-3 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F5F5F0]/40 hover:text-[#F5F5F0] transition-colors"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeSlashIcon className="w-5 h-5" />
-                        ) : (
-                          <EyeIcon className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Remember me */}
-                  <div className="flex items-center gap-3 py-2">
-                    <input
-                      id="login-remember"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={() => setRememberMe(!rememberMe)}
-                      className="w-5 h-5 rounded-md border-[#B8860B]/30 bg-black/40 text-[#FFD700] focus:ring-offset-[#1A1A1A] focus:ring-[#FFD700] cursor-pointer"
-                    />
-                    <label
-                      htmlFor="login-remember"
-                      className="text-xs text-[#F5F5F0]/50 font-medium cursor-pointer select-none"
-                    >
-                      Remember me for 30 days
-                    </label>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
+              {/* Email Field */}
+              <div className="login-fade-up-d1">
+                <label
+                  htmlFor="login-email"
+                  className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.12em] mb-[8px]"
+                >
+                  Email address
+                </label>
+                <div className="relative login-input-glow rounded-[12px] transition-shadow">
+                  <EnvelopeIcon className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/25 pointer-events-none" />
+                  <input
+                    id="login-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    required
                     disabled={isLoading}
-                    className="w-full bg-[#FFD700] text-[#1A1A1A] font-bold py-3 rounded-xl shadow-lg login-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:hover:scale-100"
+                    className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-[#FFD700]/40 focus:bg-white/[0.06] rounded-[12px] pl-[42px] pr-[14px] py-[12px] text-[14px] transition-all outline-none text-white placeholder:text-white/20"
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="login-fade-up-d2">
+                <div className="flex justify-between items-center mb-[8px]">
+                  <label
+                    htmlFor="login-password"
+                    className="block text-[11px] font-semibold text-white/40 uppercase tracking-[0.12em]"
                   >
-                    {isLoading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Signing in...
-                      </span>
+                    Password
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-[11px] font-semibold text-[#FFD700]/60 hover:text-[#FFD700] transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative login-input-glow rounded-[12px] transition-shadow">
+                  <LockClosedIcon className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/25 pointer-events-none" />
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    disabled={isLoading}
+                    className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-[#FFD700]/40 focus:bg-white/[0.06] rounded-[12px] pl-[42px] pr-[44px] py-[12px] text-[14px] transition-all outline-none text-white placeholder:text-white/20"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute right-[14px] top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-[18px] h-[18px]" />
                     ) : (
-                      <>
-                        Sign in to dashboard
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2}
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
-                          />
-                        </svg>
-                      </>
+                      <EyeIcon className="w-[18px] h-[18px]" />
                     )}
                   </button>
-
-                  {/* Quick Demo Access divider */}
-                  <div className="relative my-5">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-[#B8860B]/20" />
-                    </div>
-                    <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-                      <span className="bg-transparent px-4 text-[#F5F5F0]/30">Quick Demo Access</span>
-                    </div>
-                  </div>
-
-                  {/* Demo role buttons */}
-                  <div className="grid grid-cols-3 gap-3">
-                    {(['superadmin', 'admin', 'user'] as const).map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => handleDemoLogin(role)}
-                        disabled={isLoading}
-                        className="py-2 px-3 bg-black/40 hover:bg-white/10 text-[10px] font-bold text-[#F5F5F0]/50 rounded-lg border border-[#B8860B]/20 transition-colors uppercase tracking-wider disabled:opacity-50"
-                      >
-                        {role === 'superadmin' ? 'Super' : role === 'admin' ? 'Admin' : 'User'}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Sign up link */}
-                  <p className="text-center text-sm text-[#F5F5F0]/50 mt-6">
-                    Don't have an account?{' '}
-                    <Link to="/signup" className="text-[#FFD700] font-bold hover:underline">
-                      Sign up
-                    </Link>
-                  </p>
-                </form>
-
-                {/* Terms footer */}
-                <div className="mt-5 pt-5 border-t border-[#B8860B]/15 text-center">
-                  <p className="text-[10px] text-[#F5F5F0]/30 uppercase tracking-widest leading-loose">
-                    By signing in, you agree to our
-                    <br />
-                    <a className="underline hover:text-[#F5F5F0]/60" href="#">
-                      Terms of Service
-                    </a>{' '}
-                    &amp;{' '}
-                    <a className="underline hover:text-[#F5F5F0]/60" href="#">
-                      Privacy Policy
-                    </a>
-                  </p>
                 </div>
               </div>
 
-              {/* Mobile footer */}
-              <div className="lg:hidden flex justify-center mt-8 text-xs text-[#F5F5F0]/40 font-medium">
-                <span>&copy; 2026 Stratum AI</span>
+              {/* Remember Me */}
+              <div className="flex items-center gap-[10px] login-fade-up-d2">
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={rememberMe}
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className={`w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center transition-all flex-shrink-0 ${
+                    rememberMe
+                      ? 'bg-[#FFD700] border-[#FFD700]'
+                      : 'bg-white/[0.04] border-white/[0.12] hover:border-white/20'
+                  }`}
+                >
+                  {rememberMe && (
+                    <svg className="w-[12px] h-[12px] text-[#0D0D12]" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  )}
+                </button>
+                <span className="text-[12px] text-white/40 select-none cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
+                  Keep me signed in for 30 days
+                </span>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="login-fade-up-d3 w-full login-shimmer-btn text-[#0D0D12] font-bold py-[13px] rounded-[12px] shadow-[0_0_24px_rgba(255,215,0,0.25)] hover:shadow-[0_0_36px_rgba(255,215,0,0.35)] hover:scale-[1.015] active:scale-[0.985] transition-all flex items-center justify-center gap-[8px] text-[14px] disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-[0_0_24px_rgba(255,215,0,0.25)]"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-[8px]">
+                    <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Signing in...
+                  </span>
+                ) : (
+                  <>
+                    Sign in
+                    <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="relative my-[22px]">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/[0.06]" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-[12px] text-[10px] font-semibold text-white/25 uppercase tracking-[0.15em] bg-[#16161E]">
+                  Quick Demo Access
+                </span>
               </div>
             </div>
-          </section>
+
+            {/* Demo Buttons */}
+            <div className="grid grid-cols-3 gap-[8px]">
+              {([
+                { role: 'superadmin' as const, label: 'Super Admin', icon: '⚡' },
+                { role: 'admin' as const, label: 'Admin', icon: '🛡️' },
+                { role: 'user' as const, label: 'Viewer', icon: '👤' },
+              ]).map((item) => (
+                <button
+                  key={item.role}
+                  type="button"
+                  onClick={() => handleDemoLogin(item.role)}
+                  disabled={isLoading}
+                  className="group py-[10px] px-[8px] bg-white/[0.03] hover:bg-white/[0.06] text-[11px] font-semibold text-white/40 hover:text-white/70 rounded-[10px] border border-white/[0.06] hover:border-white/[0.12] transition-all disabled:opacity-50 flex flex-col items-center gap-[4px]"
+                >
+                  <span className="text-[14px] opacity-60 group-hover:opacity-100 transition-opacity">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Sign up link */}
+            <p className="text-center text-[13px] text-white/35 mt-[22px]">
+              Don't have an account?{' '}
+              <Link to="/signup" className="login-gradient-text font-bold hover:opacity-80 transition-opacity">
+                Create one free
+              </Link>
+            </p>
+          </div>
+
+          {/* ── Stats Row ── */}
+          <div className="login-fade-up-d3 grid grid-cols-4 gap-[8px] mt-[24px] px-[4px]">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="text-[16px] lg:text-[18px] font-display font-bold text-white/80">{stat.value}</p>
+                <p className="text-[9px] text-white/25 uppercase tracking-wider font-medium mt-[2px]">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </main>
+
+        {/* ── Footer ── */}
+        <footer className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-between px-[24px] lg:px-[48px] py-[16px]">
+          <span className="text-[11px] text-white/20 font-medium">&copy; 2026 Stratum AI Inc.</span>
+          <div className="flex gap-[20px]">
+            {['Privacy', 'Terms', 'Security'].map((link) => (
+              <a
+                key={link}
+                href="#"
+                className="text-[11px] text-white/20 hover:text-white/50 font-medium transition-colors"
+              >
+                {link}
+              </a>
+            ))}
+          </div>
+        </footer>
+
+        {/* ── Decorative Ring (desktop only) ── */}
+        <div className="hidden lg:block fixed pointer-events-none login-pulse-ring" style={{
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '700px',
+          height: '700px',
+          borderRadius: '50%',
+          border: '1px solid rgba(255, 215, 0, 0.03)',
+        }} />
+        <div className="hidden lg:block fixed pointer-events-none" style={{
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '900px',
+          height: '900px',
+          borderRadius: '50%',
+          border: '1px solid rgba(255, 215, 0, 0.015)',
+        }} />
       </div>
     </>
   );
