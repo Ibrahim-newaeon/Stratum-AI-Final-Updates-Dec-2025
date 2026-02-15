@@ -14,6 +14,7 @@
 import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
+  EnvelopeIcon,
   ExclamationCircleIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -46,6 +47,7 @@ export default function Login() {
   const [ssoHover, setSsoHover] = useState(false);
 
   const from = location.state?.from?.pathname || '/dashboard/overview';
+  const showVerificationBanner = location.state?.registered || location.state?.needsVerification;
 
   // BUG-016: Inline validation helpers
   const emailError = touched.email && !email.trim()
@@ -174,6 +176,19 @@ export default function Login() {
               </div>
 
               <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3">
+                {/* Verification Banner — shown after signup redirect */}
+                {showVerificationBanner && (
+                  <div className="auth-slide-in flex items-start gap-2 p-3 rounded-xl text-[13px] bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                    <EnvelopeIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span>Please verify your email before signing in. Check your inbox for a verification link.</span>
+                      <Link to="/verify-email" className="block mt-1 text-[#00c7be] font-bold hover:underline text-[12px]">
+                        Resend verification email
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
                 {/* Error Alert */}
                 {error && (
                   <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">

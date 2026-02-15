@@ -74,8 +74,8 @@ export default function Signup() {
         company_website: data.website,
       },
       {
-        onSuccess: () => {
-          navigate('/login', { state: { registered: true } });
+        onSuccess: (_data, variables) => {
+          navigate(`/verify-email?email=${encodeURIComponent(variables.email)}`);
         },
       }
     );

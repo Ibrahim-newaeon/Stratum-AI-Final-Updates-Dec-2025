@@ -53,6 +53,7 @@ export interface SignupRequest {
 export interface SignupResponse {
   user: User;
   message: string;
+  verification_required?: boolean;
 }
 
 export interface VerifyEmailRequest {
