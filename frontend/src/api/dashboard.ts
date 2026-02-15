@@ -138,9 +138,10 @@ export interface DashboardOverviewResponse {
 }
 
 // Metric visibility types
+// Backend may return available_metrics as string[] or {key, label}[]
 export interface MetricVisibilityResponse {
   hidden_metrics: string[];
-  available_metrics: string[];
+  available_metrics: (string | { key: string; label: string })[];
 }
 
 // Sync response

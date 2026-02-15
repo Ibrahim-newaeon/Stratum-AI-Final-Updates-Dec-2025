@@ -1365,7 +1365,23 @@ function MetricVisibilitySettings() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const hiddenMetrics = visibility?.hidden_metrics || [];
-  const availableMetrics = visibility?.available_metrics || Object.keys(METRIC_LABELS);
+  // Backend may return available_metrics as string[] or {key, label}[] — normalise to string[]
+  const rawMetrics = visibility?.available_metrics || Object.keys(METRIC_LABELS);
+  const availableMetrics: string[] = rawMetrics.map((m: unknown) =>
+    typeof m === 'object' && m !== null && 'key' in (m as Record<string, unknown>)
+      ? (m as Record<string, string>).key
+      : String(m)
+  );
+  // Build label lookup from backend response (overrides local METRIC_LABELS when available)
+  const backendLabels: Record<string, string> = {};
+  for (const m of rawMetrics) {
+    if (typeof m === 'object' && m !== null && 'key' in (m as Record<string, unknown>)) {
+      const obj = m as Record<string, string>;
+      backendLabels[obj.key] = obj.label;
+    }
+  }
+  const getMetricLabel = (metric: string) =>
+    backendLabels[metric] || METRIC_LABELS[metric] || metric;
 
   const handleToggle = (metric: string) => {
     const updated = hiddenMetrics.includes(metric)
@@ -1434,7 +1450,7 @@ function MetricVisibilitySettings() {
                   <Eye className="w-4 h-4 text-primary" />
                 )}
                 <span className={cn('text-sm', isHidden && 'text-muted-foreground')}>
-                  {METRIC_LABELS[metric] || metric}
+                  {getMetricLabel(metric)}
                 </span>
               </div>
               <button
