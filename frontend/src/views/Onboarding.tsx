@@ -375,7 +375,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <div className="container max-w-4xl mx-auto py-12 px-4">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="h-10 w-10 rounded-xl bg-gradient-stratum flex items-center justify-center shadow-glow">
               <span className="text-white font-bold text-xl">S</span>
@@ -387,6 +387,38 @@ export default function Onboarding() {
             Complete these steps to get the most out of Stratum AI
           </p>
         </div>
+
+        {/* Welcome Banner - shown on first step */}
+        {currentStep === 0 && (
+          <div className="mb-8 p-5 rounded-2xl border border-primary/20 bg-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Welcome to Stratum AI!</p>
+                <p className="text-sm text-muted-foreground">
+                  Customize your workspace in a few steps, or jump straight into the dashboard.
+                  You can always configure these settings later.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSkip}
+              disabled={isSubmitting}
+              className={cn(
+                'flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm transition-all',
+                'border-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50',
+                'flex items-center gap-2',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+            >
+              <SkipForward className="w-4 h-4" />
+              Skip & Go to Dashboard
+            </button>
+          </div>
+        )}
 
         {/* Progress Steps - Onboarding Stepper */}
         <div className="onboarding-stepper mb-12">
@@ -918,10 +950,10 @@ export default function Onboarding() {
               type="button"
               onClick={handleSkip}
               disabled={isSubmitting}
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+              className="px-4 py-2 rounded-lg border border-muted-foreground/20 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/40 hover:bg-muted/50 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               <SkipForward className="w-4 h-4" />
-              Skip for now
+              Skip setup
             </button>
 
             <div className="flex items-center gap-3">
