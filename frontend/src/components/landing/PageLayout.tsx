@@ -336,8 +336,8 @@ export function PageLayout({ children }: PageLayoutProps) {
         </div>
       </header>
 
-      {/* Spacer for fixed header */}
-      <div className="h-20" />
+      {/* BUG-018: Spacer for fixed header — ensures content is not hidden behind the sticky nav */}
+      <div className="h-[72px] lg:h-20" />
 
       {/* Main Content */}
       <main className="flex-1 relative z-10">{children}</main>
@@ -492,6 +492,11 @@ export function PageLayout({ children }: PageLayoutProps) {
         .cta-button:hover {
           transform: translateY(-2px);
           box-shadow: 0 0 40px rgba(0, 199, 190, 0.3) !important;
+        }
+
+        /* BUG-018: Anchor sections offset by header height so they don't hide behind nav */
+        [id] {
+          scroll-margin-top: 5rem;
         }
       `}</style>
     </div>

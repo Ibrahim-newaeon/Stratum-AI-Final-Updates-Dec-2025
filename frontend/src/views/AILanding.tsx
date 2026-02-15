@@ -33,7 +33,7 @@ export default function AILanding() {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
   return (
-    <div className="relative min-h-screen bg-[#030303] text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#030303] text-white overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
       {/* Ambient Background - 2026 Mesh Gradient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Primary mesh gradient */}

@@ -37,6 +37,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingRole, setLoadingRole] = useState<string | null>(null); // BUG-019: per-button spinner
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(
     () => localStorage.getItem('stratum_remember_me') === 'true'
@@ -103,9 +104,11 @@ export default function Login() {
   };
 
   // BUG-001/002: Demo login now uses demoLogin() with client-side fallback
+  // BUG-019: Track which demo button is loading for per-button spinner
   const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'user') => {
     setError('');
     setIsLoading(true);
+    setLoadingRole(role);
 
     try {
       const result = await demoLogin(role);
@@ -118,6 +121,7 @@ export default function Login() {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
+      setLoadingRole(null);
     }
   };
 
@@ -140,9 +144,9 @@ export default function Login() {
 
           {/* Right Panel — Form */}
           <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-[#0b1215]/50 relative">
-            {/* Decorative corners */}
-            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-[#00c7be]/20 pointer-events-none rounded-tr-2xl hidden lg:block" />
-            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-[#00c7be]/20 pointer-events-none rounded-bl-2xl hidden lg:block" />
+            {/* BUG-025: Decorative corners — increased opacity from /20 to /40 for visibility */}
+            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-[#00c7be]/40 pointer-events-none rounded-tr-2xl hidden lg:block" />
+            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-[#00c7be]/40 pointer-events-none rounded-bl-2xl hidden lg:block" />
 
             <div className="w-full max-w-[400px] auth-glass-card rounded-[24px] p-7 shadow-2xl relative z-20 auth-fade-up">
               {/* Header */}
@@ -304,14 +308,14 @@ export default function Login() {
                 </button>
               </form>
 
-              {/* Enterprise Protocol Divider */}
+              {/* BUG-027: Section divider — consistent uppercase label */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-white/5" />
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
                   <span className="bg-[#0d1419] px-4 text-white/20">
-                    Enterprise Protocol
+                    Enterprise SSO
                   </span>
                 </div>
               </div>
@@ -336,14 +340,14 @@ export default function Login() {
                 )}
               </div>
 
-              {/* Quick Demo Access Divider */}
+              {/* BUG-027: Section divider — consistent uppercase label */}
               <div className="relative my-5">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-white/5" />
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
                   <span className="bg-[#0d1419] px-4 text-white/20">
-                    Quick Demo Access
+                    Demo Access
                   </span>
                 </div>
               </div>
@@ -362,9 +366,17 @@ export default function Login() {
                     disabled={isLoading}
                     className="group py-2.5 px-2 bg-white/[0.03] hover:bg-white/[0.06] text-[11px] font-semibold text-white/40 hover:text-white/70 rounded-xl border border-white/[0.06] hover:border-white/[0.12] transition-all disabled:opacity-50 flex flex-col items-center gap-1"
                   >
-                    <span className="text-[14px] opacity-60 group-hover:opacity-100 transition-opacity">
-                      {item.icon}
-                    </span>
+                    {/* BUG-019: Show spinner on the specific demo button that's loading */}
+                    {loadingRole === item.role ? (
+                      <svg className="animate-spin w-[14px] h-[14px] text-[#00c7be]" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    ) : (
+                      <span className="text-[14px] opacity-60 group-hover:opacity-100 transition-opacity">
+                        {item.icon}
+                      </span>
+                    )}
                     <span>{item.label}</span>
                   </button>
                 ))}

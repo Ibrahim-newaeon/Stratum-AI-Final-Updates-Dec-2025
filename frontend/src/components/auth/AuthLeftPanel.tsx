@@ -74,7 +74,11 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
                 Real-time AI autonomous performance
               </p>
             </div>
-            <div className="px-3 py-1 bg-[#00c7be]/20 rounded text-[10px] font-bold text-[#00c7be] uppercase border border-[#00c7be]/20">
+            <div className="px-3 py-1 bg-[#00c7be]/20 rounded text-[10px] font-bold text-[#00c7be] uppercase border border-[#00c7be]/20 flex items-center gap-1.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00c7be] opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00c7be]" />
+              </span>
               Live Sync
             </div>
           </div>

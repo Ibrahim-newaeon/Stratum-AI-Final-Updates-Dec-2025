@@ -5,6 +5,8 @@
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { useTenantStore } from '@/stores/tenantStore';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
+import IdleTimeoutWarning from '@/components/auth/IdleTimeoutWarning';
 
 const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
@@ -289,6 +291,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem('stratum_demo_mode');
+    // BUG-023: Clean up all onboarding-related localStorage keys on logout
+    localStorage.removeItem('stratum_onboarding_progress');
+    localStorage.removeItem('stratum_onboarding_dismissed');
+    localStorage.removeItem('stratum_onboarding_skipped');
+    localStorage.removeItem('stratum_onboarding_demo_dismissed');
     // Clear Zustand tenant store on logout
     useTenantStore.getState().logout();
   };
@@ -300,6 +307,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
     }
   };
+
+  // BUG-014: Session idle timeout — auto-logout after 30 min of inactivity
+  const { isWarning, secondsLeft, resetTimer } = useIdleTimeout({
+    timeout: 30 * 60 * 1000, // 30 minutes
+    warningDuration: 60 * 1000, // 60-second warning
+    onTimeout: () => {
+      logout();
+      window.location.href = '/login?reason=idle';
+    },
+    enabled: !!user, // Only active when logged in
+  });
 
   return (
     <AuthContext.Provider
@@ -315,6 +333,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {isWarning && (
+        <IdleTimeoutWarning secondsLeft={secondsLeft} onStay={resetTimer} />
+      )}
     </AuthContext.Provider>
   );
 }

@@ -33,6 +33,8 @@ interface FeedbackEntry {
 }
 
 const STORAGE_KEY = 'stratum-feedback';
+/** BUG-021: Cap stored feedback entries to prevent unbounded localStorage growth */
+const MAX_FEEDBACK_ENTRIES = 50;
 
 const ratings = [
   { value: 1, emoji: '\u{1F61E}', label: 'Terrible' },
@@ -87,7 +89,11 @@ export function FeedbackWidget() {
         localStorage.getItem(STORAGE_KEY) || '[]',
       );
       existing.push(feedback);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+      // BUG-021: Trim oldest entries if we exceed the max to prevent unbounded growth
+      const trimmed = existing.length > MAX_FEEDBACK_ENTRIES
+        ? existing.slice(-MAX_FEEDBACK_ENTRIES)
+        : existing;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
     } catch {
       // Silently ignore storage errors
     }

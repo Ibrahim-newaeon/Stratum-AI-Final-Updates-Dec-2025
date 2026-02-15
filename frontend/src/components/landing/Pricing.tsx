@@ -119,7 +119,7 @@ export function Pricing() {
   const isLoading = plansLoading || badgesLoading;
 
   return (
-    <section className="py-32" id="pricing" style={{ background: theme.bgBase }}>
+    <section className="py-32" id="pricing" style={{ background: theme.bgBase, scrollMarginTop: '5rem' }}>
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-16">

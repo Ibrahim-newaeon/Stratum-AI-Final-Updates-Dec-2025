@@ -50,16 +50,27 @@ export const setTenantId = (tenantId: number | null) => {
   }
 };
 
+// BUG-020: Don't hardcode default tenant ID — return 0 (no tenant) instead of 1
+// The actual tenant ID should come from the user's JWT / session, not a magic default.
 export const getTenantId = (): number => {
   if (!currentTenantId) {
     const stored = localStorage.getItem('tenant_id');
-    currentTenantId = stored ? parseInt(stored, 10) : 1;
+    currentTenantId = stored ? parseInt(stored, 10) : 0;
   }
   return currentTenantId;
 };
 
-// Super admin bypass header management
-let superAdminBypass = false;
+// BUG-022: Super admin bypass header management — read persisted state on init
+let superAdminBypass = (() => {
+  try {
+    const stored = localStorage.getItem('stratum-tenant-store');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed?.state?.superAdminBypass === true;
+    }
+  } catch { /* ignore */ }
+  return false;
+})();
 
 export const setSuperAdminBypass = (bypass: boolean) => {
   superAdminBypass = bypass;
