@@ -424,11 +424,21 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
                     )}
                   </div>
 
-                  {adLibrary?.has_ads && adLibrary.page_name && (
-                    <p className="text-xs text-muted-foreground">
-                      Page: <span className="font-medium text-foreground">{adLibrary.page_name}</span>
-                    </p>
-                  )}
+                  {/* Show which account was searched */}
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    {scanResult.fb_page_name && (
+                      <p>FB Page: <span className="font-medium text-foreground">{scanResult.fb_page_name}</span></p>
+                    )}
+                    {scanResult.ig_account_name && (
+                      <p>IG Account: <span className="font-medium text-foreground">@{scanResult.ig_account_name}</span></p>
+                    )}
+                    {adLibrary?.search_query && (
+                      <p>Searched: <span className="font-medium text-foreground">"{adLibrary.search_query}"</span></p>
+                    )}
+                    {adLibrary?.has_ads && adLibrary.page_name && (
+                      <p>Ad Page: <span className="font-medium text-foreground">{adLibrary.page_name}</span></p>
+                    )}
+                  </div>
 
                   {/* Show first few ads */}
                   {adLibrary?.ads && adLibrary.ads.length > 0 && (

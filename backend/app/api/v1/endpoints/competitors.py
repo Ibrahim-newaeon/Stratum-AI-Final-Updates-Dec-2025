@@ -46,6 +46,8 @@ class CompetitorScanResponse(BaseModel):
     social_links: dict
     meta_title: Optional[str] = None
     meta_description: Optional[str] = None
+    fb_page_name: Optional[str] = None
+    ig_account_name: Optional[str] = None
     ad_library: dict
     scanned_at: str
     scrape_error: Optional[str] = None

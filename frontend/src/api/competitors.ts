@@ -90,6 +90,8 @@ export interface CompetitorScanResult {
   };
   meta_title: string | null;
   meta_description: string | null;
+  fb_page_name: string | null;
+  ig_account_name: string | null;
   ad_library: {
     has_ads: boolean;
     ad_count: number;
@@ -105,6 +107,7 @@ export interface CompetitorScanResult {
       impressions: { lower_bound: string; upper_bound: string } | null;
     }>;
     search_url: string;
+    search_query: string | null;
     page_id: string | null;
     page_name: string | null;
     error: string | null;

@@ -63,6 +63,7 @@ class AdLibraryResult:
         self.ad_count: int = 0
         self.ads: list[dict[str, Any]] = []
         self.search_url: str = ""
+        self.search_query: Optional[str] = None
         self.page_id: Optional[str] = None
         self.page_name: Optional[str] = None
         self.error: Optional[str] = None
@@ -73,6 +74,7 @@ class AdLibraryResult:
             "ad_count": self.ad_count,
             "ads": self.ads[:10],  # Limit to first 10
             "search_url": self.search_url,
+            "search_query": self.search_query,
             "page_id": self.page_id,
             "page_name": self.page_name,
             "error": self.error,
@@ -87,6 +89,8 @@ class CompetitorScanResult:
         self.social_links = SocialLinks()
         self.meta_title: Optional[str] = None
         self.meta_description: Optional[str] = None
+        self.fb_page_name: Optional[str] = None
+        self.ig_account_name: Optional[str] = None
         self.ad_library_result = AdLibraryResult()
         self.scanned_at = datetime.now(UTC).isoformat()
         self.scrape_error: Optional[str] = None
@@ -97,6 +101,8 @@ class CompetitorScanResult:
             "social_links": self.social_links.to_dict(),
             "meta_title": self.meta_title,
             "meta_description": self.meta_description,
+            "fb_page_name": self.fb_page_name,
+            "ig_account_name": self.ig_account_name,
             "ad_library": self.ad_library_result.to_dict(),
             "scanned_at": self.scanned_at,
             "scrape_error": self.scrape_error,
@@ -288,6 +294,7 @@ async def search_meta_ad_library(
     """
     result = AdLibraryResult()
     result.search_url = get_meta_ad_library_search_url(query, country)
+    result.search_query = query
 
     if not access_token:
         # Without a token, we can only provide the search URL
@@ -398,24 +405,72 @@ async def scan_competitor(
     # Step 1: Scrape the website for social links
     scan_result = await scrape_website(domain)
 
-    # Step 2: Search Meta Ad Library
-    # Use the Facebook page name if we found one, otherwise use the competitor name
+    # Step 2: Search Meta Ad Library using FB page name or IG business account
+    # Priority: FB business page name > IG business account > competitor name
     search_query = name
+    fb_page_name: Optional[str] = None
+    ig_account_name: Optional[str] = None
+
     if scan_result.social_links.facebook:
-        # Extract page name from Facebook URL
+        # Extract page name from Facebook URL (e.g., facebook.com/MyBrand → "MyBrand")
         fb_url = scan_result.social_links.facebook
         parsed = urlparse(fb_url)
-        path_parts = parsed.path.strip("/").split("/")
-        if path_parts and path_parts[0]:
+        path_parts = [p for p in parsed.path.strip("/").split("/") if p]
+        if path_parts:
             fb_page_name = path_parts[0]
-            # Use page name for more accurate search
+            # Use FB business page name as the primary search query
             search_query = fb_page_name
 
+    if scan_result.social_links.instagram:
+        # Extract IG business account name (e.g., instagram.com/mybrand → "mybrand")
+        ig_url = scan_result.social_links.instagram
+        parsed = urlparse(ig_url)
+        path_parts = [p for p in parsed.path.strip("/").split("/") if p]
+        if path_parts:
+            ig_account_name = path_parts[0]
+            # If no FB page found, use IG account name
+            if not fb_page_name:
+                search_query = ig_account_name
+
+    logger.info(
+        "ad_library_search_query",
+        domain=domain,
+        fb_page=fb_page_name,
+        ig_account=ig_account_name,
+        search_query=search_query,
+    )
+
+    # Search Ad Library with the best available query
     ad_result = await search_meta_ad_library(
         query=search_query,
         country=country,
         access_token=access_token,
     )
+
+    # If no ads found with FB page name, try IG account as fallback
+    if not ad_result.has_ads and ig_account_name and fb_page_name and ig_account_name != fb_page_name:
+        logger.info("ad_library_fallback_ig", ig_account=ig_account_name)
+        ig_result = await search_meta_ad_library(
+            query=ig_account_name,
+            country=country,
+            access_token=access_token,
+        )
+        if ig_result.has_ads:
+            ad_result = ig_result
+
+    # If still no ads, try the original competitor name as last resort
+    if not ad_result.has_ads and search_query != name:
+        logger.info("ad_library_fallback_name", name=name)
+        name_result = await search_meta_ad_library(
+            query=name,
+            country=country,
+            access_token=access_token,
+        )
+        if name_result.has_ads:
+            ad_result = name_result
+
     scan_result.ad_library_result = ad_result
+    scan_result.fb_page_name = fb_page_name
+    scan_result.ig_account_name = ig_account_name
 
     return scan_result.to_dict()
