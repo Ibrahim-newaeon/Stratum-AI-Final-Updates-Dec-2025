@@ -1,6 +1,6 @@
 /**
  * Signup Page - Stratum AI
- * New design: Two-panel layout with ROI calculator + modern form
+ * Gold/Crimson/Charcoal design: Two-panel layout with ROI calculator + modern form
  */
 
 import { useState } from 'react';
@@ -38,18 +38,27 @@ const signupSchema = z
 type SignupForm = z.infer<typeof signupSchema>;
 
 // ---------------------------------------------------------------------------
-// Styles (injected via <style> tag)
+// Styles — Gold / Crimson / Charcoal
 // ---------------------------------------------------------------------------
 const pageStyles = `
-  .signup-dot-grid {
-    background-image: radial-gradient(circle at 2px 2px, rgba(0, 229, 193, 0.05) 1px, transparent 0);
+  .signup-mesh-bg {
+    background-image: radial-gradient(circle at 1px 1px, rgba(184, 134, 11, 0.08) 1px, transparent 0);
     background-size: 40px 40px;
   }
-  .signup-glow-primary {
-    box-shadow: 0 0 20px rgba(0, 229, 193, 0.3);
+  .signup-hero-gradient {
+    background: radial-gradient(circle at 50% -20%, rgba(139, 0, 0, 0.25) 0%, rgba(184, 134, 11, 0.1) 50%, transparent 100%), #1A1A1A;
   }
-  .signup-glow-primary:hover {
-    box-shadow: 0 0 30px rgba(0, 229, 193, 0.45);
+  .signup-glass {
+    background: rgba(20, 20, 20, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(184, 134, 11, 0.25);
+  }
+  .signup-glow-gold {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  .signup-glow-gold:hover {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.45);
   }
   @keyframes signupScroll {
     0% { transform: translateY(0); }
@@ -68,18 +77,23 @@ const pageStyles = `
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #00E5C1;
+    background: #FFD700;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(0, 229, 193, 0.5);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
   }
   .signup-range::-moz-range-thumb {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #00E5C1;
+    background: #FFD700;
     cursor: pointer;
     border: none;
-    box-shadow: 0 0 8px rgba(0, 229, 193, 0.5);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  }
+  .signup-gradient-text {
+    background: linear-gradient(135deg, #FFD700 0%, #DC143C 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 `;
 
@@ -130,23 +144,26 @@ export default function Signup() {
       <SEO {...pageSEO.signup} url="https://stratum-ai.com/signup" />
       <style>{pageStyles}</style>
 
-      <div className="bg-[#020617] text-slate-100 min-h-screen flex font-sans selection:bg-[#00E5C1]/30">
-        {/* Dot grid background */}
-        <div className="fixed inset-0 signup-dot-grid pointer-events-none opacity-20" />
+      <div className="bg-[#1A1A1A] text-[#F5F5F0] min-h-screen flex font-sans selection:bg-[#FFD700]/30">
+        {/* Mesh dot grid background */}
+        <div className="fixed inset-0 signup-mesh-bg pointer-events-none opacity-40" />
+        {/* Ambient glow orbs */}
+        <div className="fixed top-0 right-0 w-[800px] h-[800px] bg-[#8B0000]/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-0 left-0 w-[800px] h-[800px] bg-[#B8860B]/5 rounded-full blur-[150px] pointer-events-none" />
 
         <main className="relative z-10 w-full flex flex-col lg:flex-row min-h-screen">
           {/* ================================================================
               LEFT PANEL - BRANDING + ROI CALCULATOR
               ================================================================ */}
-          <section className="lg:w-7/12 p-8 lg:p-16 flex flex-col justify-between space-y-12 hidden lg:flex">
+          <section className="lg:w-7/12 p-8 lg:p-16 flex flex-col justify-between space-y-12 hidden lg:flex signup-hero-gradient">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-[#00E5C1] rounded-lg flex items-center justify-center">
-                <span className="font-display font-bold text-[#020617] text-xl">S</span>
+              <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+                <span className="font-display font-bold text-[#1A1A1A] text-xl -rotate-45">S</span>
               </div>
               <div>
-                <h1 className="font-display font-bold text-lg leading-tight">Stratum AI</h1>
-                <p className="text-[10px] tracking-widest text-[#00E5C1] font-bold uppercase">
+                <h1 className="font-display font-bold text-lg leading-tight tracking-tight">STRATUM AI</h1>
+                <p className="text-[10px] tracking-widest text-[#FFD700] font-bold uppercase">
                   Revenue OS
                 </p>
               </div>
@@ -154,22 +171,22 @@ export default function Signup() {
 
             {/* Hero heading */}
             <div className="max-w-xl">
-              <h2 className="text-4xl lg:text-6xl font-display font-bold leading-tight mb-6">
+              <h2 className="text-4xl lg:text-6xl font-display font-extrabold leading-tight mb-6">
                 Start optimizing your revenue with{' '}
-                <span className="text-[#00E5C1] italic">AI-powered</span> insights
+                <span className="signup-gradient-text italic">AI-powered</span> insights
               </h2>
-              <p className="text-slate-400 text-lg leading-relaxed">
+              <p className="text-[#F5F5F0]/50 text-lg leading-relaxed">
                 Join 150+ growth teams using Stratum to automate marketing decisions and recover lost
                 revenue through predictive analytics.
               </p>
             </div>
 
             {/* ROI Calculator Card */}
-            <div className="max-w-md bg-white/5 backdrop-blur-md border border-slate-700/50 p-6 rounded-2xl shadow-xl">
+            <div className="max-w-md signup-glass p-6 rounded-2xl shadow-xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-display font-bold text-lg flex items-center gap-2">
                   <svg
-                    className="w-5 h-5 text-[#00E5C1]"
+                    className="w-5 h-5 text-[#FFD700]"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={2}
@@ -183,7 +200,7 @@ export default function Signup() {
                   </svg>
                   Live ROI Calculator
                 </h3>
-                <span className="px-2 py-1 bg-[#00E5C1]/10 text-[#00E5C1] text-[10px] font-bold rounded-full uppercase tracking-wider">
+                <span className="px-2 py-1 bg-[#FFD700]/10 text-[#FFD700] text-[10px] font-bold rounded-full uppercase tracking-wider">
                   Predictive
                 </span>
               </div>
@@ -191,8 +208,8 @@ export default function Signup() {
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between text-sm mb-2 font-medium">
-                    <label className="text-slate-400">Monthly Ad Spend</label>
-                    <span className="text-[#00E5C1]">
+                    <label className="text-[#F5F5F0]/50">Monthly Ad Spend</label>
+                    <span className="text-[#FFD700] font-mono font-bold">
                       ${adSpend.toLocaleString()}
                     </span>
                   </div>
@@ -203,25 +220,25 @@ export default function Signup() {
                     step="1000"
                     value={adSpend}
                     onChange={(e) => setAdSpend(Number(e.target.value))}
-                    className="signup-range w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                    className="signup-range w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#B8860B]/20">
                   <div>
-                    <p className="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-1">
+                    <p className="text-[11px] text-[#F5F5F0]/40 uppercase font-bold tracking-wider mb-1">
                       Projected Recovery
                     </p>
-                    <p className="text-2xl font-display font-bold text-[#00E5C1]">
+                    <p className="text-2xl font-display font-bold text-[#FFD700]">
                       +${projectedRecovery.toLocaleString()}
-                      <span className="text-xs font-normal text-slate-400 ml-1">/mo</span>
+                      <span className="text-xs font-normal text-[#F5F5F0]/40 ml-1">/mo</span>
                     </p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-1">
+                    <p className="text-[11px] text-[#F5F5F0]/40 uppercase font-bold tracking-wider mb-1">
                       Efficiency Lift
                     </p>
-                    <p className="text-2xl font-display font-bold text-white">{efficiencyLift}%</p>
+                    <p className="text-2xl font-display font-bold text-[#F5F5F0]">{efficiencyLift}%</p>
                   </div>
                 </div>
               </div>
@@ -229,11 +246,11 @@ export default function Signup() {
 
             {/* Trust badges + Social proof */}
             <div className="space-y-8">
-              <div className="flex flex-wrap gap-6 text-sm text-slate-400 font-medium">
+              <div className="flex flex-wrap gap-6 text-sm text-[#F5F5F0]/50 font-medium">
                 {['14-day free trial', 'No credit card required', 'Cancel anytime'].map((text) => (
                   <div key={text} className="flex items-center gap-2">
                     <svg
-                      className="w-4 h-4 text-[#00E5C1]"
+                      className="w-4 h-4 text-[#FFD700]"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -255,9 +272,9 @@ export default function Signup() {
                     { company: 'Vertex Ltd', text: 'increased ROAS by 22% this week' },
                     { company: 'Aura Analytics', text: 'scaled spend by 3x with Stratum' },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 text-sm text-slate-400">
-                      <div className="w-1.5 h-1.5 bg-[#00E5C1] rounded-full animate-pulse" />
-                      <span className="font-bold text-slate-200">{item.company}</span> {item.text}
+                    <div key={i} className="flex items-center gap-3 text-sm text-[#F5F5F0]/50">
+                      <div className="w-1.5 h-1.5 bg-[#FFD700] rounded-full animate-pulse" />
+                      <span className="font-bold text-[#F5F5F0]/80">{item.company}</span> {item.text}
                     </div>
                   ))}
                 </div>
@@ -268,28 +285,28 @@ export default function Signup() {
           {/* ================================================================
               RIGHT PANEL - SIGNUP FORM
               ================================================================ */}
-          <section className="lg:w-5/12 p-6 lg:p-12 flex items-center justify-center bg-slate-900/30 min-h-screen">
+          <section className="lg:w-5/12 p-6 lg:p-12 flex items-center justify-center bg-black/20 min-h-screen">
             <div className="w-full max-w-md">
               {/* Mobile logo */}
               <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
-                <div className="w-10 h-10 bg-[#00E5C1] rounded-lg flex items-center justify-center">
-                  <span className="font-display font-bold text-[#020617] text-xl">S</span>
+                <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+                  <span className="font-display font-bold text-[#1A1A1A] text-xl -rotate-45">S</span>
                 </div>
-                <span className="font-display font-bold text-xl">Stratum AI</span>
+                <span className="font-display font-bold text-xl tracking-tight">STRATUM AI</span>
               </div>
 
               {/* Form Card */}
-              <div className="bg-[#0f172a] p-8 lg:p-10 rounded-[2rem] border border-slate-800 shadow-2xl">
+              <div className="signup-glass p-8 lg:p-10 rounded-[2rem] shadow-2xl">
                 <div className="text-center mb-10">
                   <h2 className="text-2xl lg:text-3xl font-display font-bold mb-2">
                     Create your account
                   </h2>
-                  <p className="text-slate-400 text-sm">Start your 14-day free trial</p>
+                  <p className="text-[#F5F5F0]/50 text-sm">Start your 14-day free trial</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                   {apiError && (
-                    <div className="flex items-center gap-3 p-4 rounded-xl text-sm bg-red-500/10 border border-red-500/30 text-red-400">
+                    <div className="flex items-center gap-3 p-4 rounded-xl text-sm bg-[#DC143C]/10 border border-[#DC143C]/30 text-[#DC143C]">
                       <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
                       <span>{apiError}</span>
                     </div>
@@ -299,7 +316,7 @@ export default function Signup() {
                   <div>
                     <label
                       htmlFor="signup-name"
-                      className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1"
+                      className="block text-xs font-bold text-[#F5F5F0]/50 uppercase tracking-wider mb-2 ml-1"
                     >
                       Full Name
                     </label>
@@ -308,10 +325,10 @@ export default function Signup() {
                       id="signup-name"
                       type="text"
                       placeholder="John Doe"
-                      className="w-full bg-slate-800/50 border border-transparent focus:border-[#00E5C1] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-white placeholder:text-slate-500"
+                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                     />
                     {errors.name && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.name.message}</p>
+                      <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.name.message}</p>
                     )}
                   </div>
 
@@ -319,22 +336,22 @@ export default function Signup() {
                   <div>
                     <label
                       htmlFor="signup-email"
-                      className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1"
+                      className="block text-xs font-bold text-[#F5F5F0]/50 uppercase tracking-wider mb-2 ml-1"
                     >
                       Work Email
                     </label>
                     <div className="relative">
-                      <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500" />
+                      <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#F5F5F0]/40" />
                       <input
                         {...register('email')}
                         id="signup-email"
                         type="email"
                         placeholder="name@company.com"
-                        className="w-full bg-slate-800/50 border border-transparent focus:border-[#00E5C1] focus:ring-0 rounded-xl pl-12 pr-4 py-3.5 text-sm transition-all outline-none text-white placeholder:text-slate-500"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl pl-12 pr-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                     </div>
                     {errors.email && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.email.message}</p>
+                      <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.email.message}</p>
                     )}
                   </div>
 
@@ -342,7 +359,7 @@ export default function Signup() {
                   <div>
                     <label
                       htmlFor="signup-company"
-                      className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1"
+                      className="block text-xs font-bold text-[#F5F5F0]/50 uppercase tracking-wider mb-2 ml-1"
                     >
                       Company
                     </label>
@@ -351,10 +368,10 @@ export default function Signup() {
                       id="signup-company"
                       type="text"
                       placeholder="Acme Inc."
-                      className="w-full bg-slate-800/50 border border-transparent focus:border-[#00E5C1] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-white placeholder:text-slate-500"
+                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                     />
                     {errors.company && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.company.message}</p>
+                      <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.company.message}</p>
                     )}
                   </div>
 
@@ -362,7 +379,7 @@ export default function Signup() {
                   <div>
                     <label
                       htmlFor="signup-website"
-                      className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1"
+                      className="block text-xs font-bold text-[#F5F5F0]/50 uppercase tracking-wider mb-2 ml-1"
                     >
                       Company Website
                     </label>
@@ -371,10 +388,10 @@ export default function Signup() {
                       id="signup-website"
                       type="url"
                       placeholder="https://example.com"
-                      className="w-full bg-slate-800/50 border border-transparent focus:border-[#00E5C1] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-white placeholder:text-slate-500"
+                      className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                     />
                     {errors.website && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.website.message}</p>
+                      <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.website.message}</p>
                     )}
                   </div>
 
@@ -382,22 +399,22 @@ export default function Signup() {
                   <div>
                     <label
                       htmlFor="signup-password"
-                      className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1"
+                      className="block text-xs font-bold text-[#F5F5F0]/50 uppercase tracking-wider mb-2 ml-1"
                     >
                       Password
                     </label>
                     <div className="relative">
-                      <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500" />
+                      <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#F5F5F0]/40" />
                       <input
                         {...register('password')}
                         id="signup-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••••••"
-                        className="w-full bg-slate-800/50 border border-transparent focus:border-[#00E5C1] focus:ring-0 rounded-xl pl-12 pr-12 py-3.5 text-sm transition-all outline-none text-white placeholder:text-slate-500"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl pl-12 pr-12 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                       <button
                         type="button"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F5F5F0]/40 hover:text-[#F5F5F0]/80 transition-colors"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -408,7 +425,7 @@ export default function Signup() {
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.password.message}</p>
+                      <p className="text-xs text-[#DC143C] mt-1 ml-1">{errors.password.message}</p>
                     )}
                   </div>
 
@@ -416,7 +433,7 @@ export default function Signup() {
                   <div>
                     <label
                       htmlFor="signup-confirm"
-                      className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1"
+                      className="block text-xs font-bold text-[#F5F5F0]/50 uppercase tracking-wider mb-2 ml-1"
                     >
                       Confirm Password
                     </label>
@@ -426,11 +443,11 @@ export default function Signup() {
                         id="signup-confirm"
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Confirm password"
-                        className="w-full bg-slate-800/50 border border-transparent focus:border-[#00E5C1] focus:ring-0 rounded-xl px-4 pr-12 py-3.5 text-sm transition-all outline-none text-white placeholder:text-slate-500"
+                        className="w-full bg-black/40 border border-[#B8860B]/20 focus:border-[#FFD700] focus:ring-0 rounded-xl px-4 pr-12 py-3.5 text-sm transition-all outline-none text-[#F5F5F0] placeholder:text-[#F5F5F0]/20"
                       />
                       <button
                         type="button"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F5F5F0]/40 hover:text-[#F5F5F0]/80 transition-colors"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
                         {showConfirmPassword ? (
@@ -441,7 +458,7 @@ export default function Signup() {
                       </button>
                     </div>
                     {errors.confirmPassword && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">
+                      <p className="text-xs text-[#DC143C] mt-1 ml-1">
                         {errors.confirmPassword.message}
                       </p>
                     )}
@@ -451,7 +468,7 @@ export default function Signup() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-[#00E5C1] text-[#020617] font-bold py-4 rounded-xl shadow-lg signup-glow-primary hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:hover:scale-100"
+                    className="w-full bg-[#FFD700] text-[#1A1A1A] font-bold py-4 rounded-xl shadow-lg signup-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:hover:scale-100"
                   >
                     {isLoading ? (
                       <span className="flex items-center gap-2">
@@ -494,11 +511,11 @@ export default function Signup() {
                   </button>
 
                   {/* Sign in link */}
-                  <p className="text-center text-sm text-slate-400 mt-8">
+                  <p className="text-center text-sm text-[#F5F5F0]/50 mt-8">
                     Already have an account?{' '}
                     <Link
                       to="/login"
-                      className="text-[#00E5C1] font-bold hover:underline"
+                      className="text-[#FFD700] font-bold hover:underline"
                     >
                       Sign in
                     </Link>
