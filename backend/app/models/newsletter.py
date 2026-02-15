@@ -220,7 +220,7 @@ class NewsletterEvent(Base):
 
     # Event
     event_type: Mapped[str] = mapped_column(String(20), nullable=False)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    event_metadata: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
     # e.g. { "link_url": "https://...", "user_agent": "...", "ip": "..." }
 
     # Timestamp

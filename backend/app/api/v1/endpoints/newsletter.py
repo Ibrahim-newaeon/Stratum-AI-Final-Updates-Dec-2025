@@ -630,7 +630,7 @@ async def campaign_analytics(
                 "id": e.id,
                 "event_type": e.event_type,
                 "subscriber_id": e.subscriber_id,
-                "metadata": e.metadata,
+                "metadata": e.event_metadata,
                 "created_at": e.created_at.isoformat(),
             }
             for e in events
@@ -819,7 +819,7 @@ async def track_click(
             campaign_id=campaign_id,
             subscriber_id=subscriber_id,
             event_type=NewsletterEventType.CLICKED.value,
-            metadata={"link_url": url},
+            event_metadata={"link_url": url},
         )
         db.add(event)
 
