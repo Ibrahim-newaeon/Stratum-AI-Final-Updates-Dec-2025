@@ -186,7 +186,7 @@ export default {
           'Consolas',
           'monospace',
         ],
-        display: ['Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['Outfit', 'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       fontSize: {
         micro: ['10px', { lineHeight: '1.4', fontWeight: '400' }],
