@@ -73,6 +73,21 @@ class WhatsAppClient:
             "Content-Type": "application/json",
         }
 
+    @staticmethod
+    def _normalize_phone(phone: str) -> str:
+        """
+        Normalize phone number to WhatsApp API format: {country_code}{number}.
+
+        Accepts: +962798960079, 00962798960079, 962798960079
+        Returns: 962798960079
+        """
+        phone = phone.strip().replace(" ", "").replace("-", "")
+        if phone.startswith("+"):
+            phone = phone[1:]
+        elif phone.startswith("00"):
+            phone = phone[2:]
+        return phone
+
     async def _make_request(
         self,
         method: str,
@@ -135,9 +150,10 @@ class WhatsAppClient:
         Returns:
             API response with message ID (wamid)
         """
+        phone = self._normalize_phone(recipient_phone)
         payload = {
             "messaging_product": "whatsapp",
-            "to": recipient_phone,
+            "to": phone,
             "type": "template",
             "template": {
                 "name": template_name,
@@ -167,9 +183,10 @@ class WhatsAppClient:
         Returns:
             API response with message ID (wamid)
         """
+        phone = self._normalize_phone(recipient_phone)
         payload = {
             "messaging_product": "whatsapp",
-            "to": recipient_phone,
+            "to": phone,
             "type": "text",
             "text": {
                 "body": text,
@@ -200,9 +217,10 @@ class WhatsAppClient:
         Returns:
             API response with message ID (wamid)
         """
+        phone = self._normalize_phone(recipient_phone)
         payload = {
             "messaging_product": "whatsapp",
-            "to": recipient_phone,
+            "to": phone,
             "type": media_type,
             media_type: {"link": media_url},
         }
@@ -250,9 +268,10 @@ class WhatsAppClient:
         if footer:
             interactive["footer"] = {"text": footer}
 
+        phone = self._normalize_phone(recipient_phone)
         payload = {
             "messaging_product": "whatsapp",
-            "to": recipient_phone,
+            "to": phone,
             "type": "interactive",
             "interactive": interactive,
         }
