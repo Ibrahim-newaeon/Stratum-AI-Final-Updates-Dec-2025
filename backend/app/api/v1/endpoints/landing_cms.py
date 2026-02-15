@@ -31,6 +31,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.base_models import LandingPageSubscriber, SubscriberStatus
 from app.db.session import get_async_session
+from app.services.email_service import get_email_service
 
 logger = logging.getLogger("stratum.landing_cms")
 
@@ -424,6 +425,8 @@ async def create_subscriber(
             ip_address=client_ip,
             user_agent=user_agent,
             capi_sent=False,
+            # Newsletter subscription (explicit opt-in)
+            subscribed_to_newsletter=True,
             created_at=datetime.now(UTC),
             updated_at=datetime.now(UTC),
         )
@@ -446,6 +449,14 @@ async def create_subscriber(
                     send_conversion_to_platforms, subscriber.id, attributed_platform
                 )
 
+            # Send newsletter welcome email in background
+            background_tasks.add_task(
+                _send_newsletter_welcome_email,
+                subscriber_data.email.lower(),
+                subscriber_data.full_name,
+                subscriber.id,
+            )
+
             return SubscriberResponse(
                 success=True,
                 message="Thank you for signing up! Check your email frequently - we'll send your access credentials soon.",
@@ -467,6 +478,80 @@ async def create_subscriber(
                 status_code=500,
                 detail="An error occurred while processing your request. Please try again.",
             )
+
+
+def _send_newsletter_welcome_email(
+    email: str, full_name: Optional[str], subscriber_id: int
+) -> None:
+    """Send a welcome email to new newsletter subscriber (runs in background)."""
+    try:
+        email_service = get_email_service()
+        api_base = os.getenv("API_BASE_URL", "https://back-production-47a1.up.railway.app/api/v1")
+        unsubscribe_url = f"{api_base}/newsletter/unsubscribe?token={_encode_unsub_token(subscriber_id)}"
+
+        name = full_name or "there"
+        subject = "Welcome to the Stratum AI Newsletter!"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="display: inline-block; background: #00c7be; width: 48px; height: 48px; border-radius: 12px; line-height: 48px; margin-bottom: 8px;">
+            <span style="color: white; font-weight: bold; font-size: 22px;">S</span>
+        </div>
+        <h1 style="color: #0b1215; margin: 8px 0 0;">Stratum AI</h1>
+    </div>
+
+    <div style="background: white; border-radius: 12px; padding: 32px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+        <h2 style="margin-top: 0; color: #0b1215;">Hi {name},</h2>
+
+        <p>Thanks for subscribing to the Stratum AI newsletter! You're now on the list to receive:</p>
+
+        <ul style="padding-left: 20px; color: #475569;">
+            <li><strong>Product updates</strong> — New features and improvements</li>
+            <li><strong>Industry insights</strong> — Trends in ad tech and revenue operations</li>
+            <li><strong>Tips & guides</strong> — Get the most out of your campaigns</li>
+        </ul>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="https://stratumai.app"
+               style="background: #00c7be; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                Explore Stratum AI
+            </a>
+        </div>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 12px;">
+        <p>
+            You're receiving this because you subscribed at stratumai.app.<br>
+            <a href="{unsubscribe_url}" style="color: #94a3b8; text-decoration: underline;">Unsubscribe</a>
+        </p>
+        <p>Stratum AI &middot; 14001 N 7th ST STE F111, Phoenix, AZ</p>
+    </div>
+</body>
+</html>
+"""
+
+        email_service.send_newsletter_email(
+            to_email=email,
+            subject=subject,
+            html_content=html_content,
+            unsubscribe_url=unsubscribe_url,
+        )
+        logger.info(f"Newsletter welcome email sent to {email[:20]}...")
+    except Exception as e:
+        logger.error(f"Failed to send newsletter welcome email: {e}")
+
+
+def _encode_unsub_token(subscriber_id: int) -> str:
+    """Encode subscriber ID as a base64 unsubscribe token."""
+    import base64
+    return base64.urlsafe_b64encode(str(subscriber_id).encode()).decode()
 
 
 # Alias endpoint for /lead (same as /subscribe)

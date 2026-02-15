@@ -209,30 +209,44 @@ export function Footer() {
 
             {/* Newsletter Signup */}
             <div className="mt-6">
-              <p className="text-sm font-medium text-white mb-2">Get updates</p>
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Your email"
-                  required
-                  className="flex-1 px-3 py-2 text-sm rounded-xl text-white placeholder-white/40 focus:outline-none transition-colors"
-                  style={{
-                    background: theme.bgCard,
-                    border: `1px solid ${theme.border}`,
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-sm rounded-lg text-white transition-all duration-200 hover:brightness-110 disabled:opacity-50"
-                  style={{ background: theme.gold }}
-                >
-                  {isSubmitting ? '...' : 'Subscribe'}
-                </button>
-              </form>
-              {message && <p className="mt-2 text-xs" style={{ color: theme.green }}>{message}</p>}
+              <p className="text-sm font-medium text-white mb-2">Subscribe to our newsletter</p>
+              {message ? (
+                <div className="flex items-start gap-2 py-2">
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: theme.green }} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: theme.green }}>{message}</p>
+                    <p className="text-xs mt-1" style={{ color: theme.textMuted }}>You can unsubscribe anytime.</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Your email"
+                      required
+                      className="flex-1 px-3 py-2 text-sm rounded-xl text-white placeholder-white/40 focus:outline-none transition-colors"
+                      style={{
+                        background: theme.bgCard,
+                        border: `1px solid ${theme.border}`,
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-4 py-2 text-sm rounded-lg text-white transition-all duration-200 hover:brightness-110 disabled:opacity-50"
+                      style={{ background: theme.gold }}
+                    >
+                      {isSubmitting ? '...' : 'Subscribe'}
+                    </button>
+                  </form>
+                  <p className="mt-2 text-xs" style={{ color: theme.textTertiary }}>Product updates, insights & tips. No spam.</p>
+                </>
+              )}
             </div>
           </div>
 
