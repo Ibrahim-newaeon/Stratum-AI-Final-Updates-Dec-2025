@@ -269,6 +269,50 @@ async def pause_rule(
     )
 
 
+@router.post("/{rule_id}/toggle", response_model=APIResponse[RuleResponse])
+async def toggle_rule(
+    request: Request,
+    rule_id: int,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Toggle a rule between active and paused status."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(Rule).where(
+            Rule.id == rule_id,
+            Rule.tenant_id == tenant_id,
+            Rule.is_deleted == False,
+        )
+    )
+    rule = result.scalar_one_or_none()
+
+    if not rule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rule not found",
+        )
+
+    # Toggle: active → paused, paused/draft → active
+    if rule.status == RuleStatus.ACTIVE:
+        rule.status = RuleStatus.PAUSED
+        new_status = "paused"
+    else:
+        rule.status = RuleStatus.ACTIVE
+        new_status = "active"
+
+    await db.commit()
+    await db.refresh(rule)
+
+    logger.info("rule_toggled", rule_id=rule_id, new_status=new_status)
+
+    return APIResponse(
+        success=True,
+        data=RuleResponse.model_validate(rule),
+        message=f"Rule {new_status}",
+    )
+
+
 @router.post("/{rule_id}/test")
 async def test_rule(
     request: Request,

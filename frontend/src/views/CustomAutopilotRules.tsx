@@ -138,11 +138,12 @@ export default function CustomAutopilotRules() {
   const [editingRule, setEditingRule] = useState<AutopilotRule | null>(null);
 
   // API hooks
-  const { data: rulesData, isLoading } = useRules();
+  const { data: rulesData, isLoading, refetch } = useRules();
   const toggleRule = useToggleRule();
   const deleteRule = useDeleteRule();
   const createRule = useCreateRule();
   const updateRule = useUpdateRule();
+  const [error, setError] = useState<string | null>(null);
 
   const isSaving = createRule.isPending || updateRule.isPending;
 
@@ -163,6 +164,7 @@ export default function CustomAutopilotRules() {
   }), [rules, searchQuery, statusFilter]);
 
   const handleSaveRule = async (rule: any) => {
+    setError(null);
     try {
       if (editingRule) {
         await updateRule.mutateAsync({
@@ -206,33 +208,46 @@ export default function CustomAutopilotRules() {
           campaignIds: rule.targeting?.specificCampaigns,
         });
       }
-    } catch (error) {
-      // Error handled by mutation
-    }
 
-    setShowBuilder(false);
-    setEditingRule(null);
+      // Explicitly refetch rules list to ensure new/updated rule appears
+      await refetch();
+      setShowBuilder(false);
+      setEditingRule(null);
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || err?.message || 'Failed to save rule';
+      setError(message);
+      console.error('Rule save failed:', err);
+    }
   };
 
   const handleToggleRule = async (ruleId: string) => {
+    setError(null);
     try {
       await toggleRule.mutateAsync(ruleId);
-    } catch (error) {
-      // Error handled by mutation
+      await refetch();
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || err?.message || 'Failed to toggle rule';
+      setError(message);
+      console.error('Rule toggle failed:', err);
     }
   };
 
   const handleDeleteRule = async (ruleId: string) => {
     if (confirm('Are you sure you want to delete this rule?')) {
+      setError(null);
       try {
         await deleteRule.mutateAsync(ruleId);
-      } catch (error) {
-        // Error handled by mutation
+        await refetch();
+      } catch (err: any) {
+        const message = err?.response?.data?.detail || err?.message || 'Failed to delete rule';
+        setError(message);
+        console.error('Rule delete failed:', err);
       }
     }
   };
 
   const handleDuplicateRule = async (rule: AutopilotRule) => {
+    setError(null);
     try {
       await createRule.mutateAsync({
         name: `${rule.name} (Copy)`,
@@ -252,8 +267,11 @@ export default function CustomAutopilotRules() {
         platforms: rule.targeting.platforms,
         campaignIds: rule.targeting.specificCampaigns,
       });
-    } catch (error) {
-      // Error handled by mutation
+      await refetch();
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || err?.message || 'Failed to duplicate rule';
+      setError(message);
+      console.error('Rule duplicate failed:', err);
     }
   };
 
@@ -343,6 +361,19 @@ export default function CustomAutopilotRules() {
           <span>Create Rule</span>
         </button>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center justify-between gap-2 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-400 hover:text-red-300 font-medium"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
