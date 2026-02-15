@@ -200,8 +200,13 @@ export function Benchmarks() {
             <option value="tiktok">TikTok Ads</option>
           </select>
 
-          <button className="p-2 rounded-lg border hover:bg-muted transition-colors">
-            <RefreshCw className="w-4 h-4" />
+          <button
+            onClick={() => refetchCompetitors()}
+            disabled={isLoadingCompetitors}
+            className="p-2 rounded-lg border hover:bg-muted transition-colors disabled:opacity-50"
+            title="Refresh competitor data"
+          >
+            <RefreshCw className={cn("w-4 h-4", isLoadingCompetitors && "animate-spin")} />
           </button>
 
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
