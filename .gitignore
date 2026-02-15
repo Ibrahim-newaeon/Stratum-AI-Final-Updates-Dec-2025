@@ -9,6 +9,7 @@ venv/
 dist/
 build/
 *.egg-info/
+.vite/
 
 # Environment files (keep .env.example and .env.production.example)
 .env
