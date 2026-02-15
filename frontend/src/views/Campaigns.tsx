@@ -411,7 +411,7 @@ export function Campaigns() {
                     <SortIcon field="name" />
                   </button>
                 </th>
-                <th className="p-4 text-left text-sm font-medium">{t('campaigns.status')}</th>
+                <th className="p-4 text-left text-sm font-medium">{t('campaigns.statusLabel')}</th>
                 <th className="p-4 text-right">
                   <button
                     onClick={() => handleSort('spend')}

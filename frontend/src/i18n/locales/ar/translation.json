@@ -21,7 +21,8 @@
     "next": "التالي",
     "previous": "السابق",
     "back": "رجوع",
-    "moreFilters": "المزيد من الفلاتر"
+    "moreFilters": "المزيد من الفلاتر",
+    "viewAll": "عرض الكل"
   },
   "nav": {
     "overview": "نظرة عامة",
@@ -78,7 +79,20 @@
     "predictedRevenue": "الإيرادات المتوقعة",
     "predictedROAS": "عائد الإنفاق الإعلاني المتوقع",
     "runSimulation": "تشغيل المحاكاة",
-    "confidence": "الثقة"
+    "confidence": "الثقة",
+    "budget": "الميزانية",
+    "budgetTooltip": "عدّل الميزانية اليومية أو الإجمالية لرؤية النتائج المتوقعة",
+    "bid": "المزايدة",
+    "bidTooltip": "عدّل مبلغ المزايدة لكل إجراء أو ظهور",
+    "audience": "الجمهور",
+    "audienceTooltip": "غيّر حجم الجمهور لرؤية تأثيره على الأداء",
+    "projectedResults": "النتائج المتوقعة",
+    "spend": "الإنفاق",
+    "revenue": "الإيرادات",
+    "impressions": "مرات الظهور",
+    "clicks": "النقرات",
+    "conversions": "التحويلات",
+    "adjustSliders": "حرّك المؤشرات لمحاكاة سيناريوهات مختلفة"
   },
   "campaigns": {
     "title": "الحملات",
@@ -110,6 +124,7 @@
       "tiktok": "تيك توك",
       "snapchat": "سناب شات"
     },
+    "statusLabel": "الحالة",
     "status": {
       "active": "نشط",
       "paused": "متوقف مؤقتًا",
@@ -199,7 +214,15 @@
     "performance": "مقاييس الأداء",
     "insights": "رؤى الذكاء الاصطناعي",
     "predictions": "التنبؤات",
-    "optimization": "توصيات التحسين"
+    "optimization": "توصيات التحسين",
+    "aiInsights": "رؤى الذكاء الاصطناعي",
+    "revenueForecast": "توقعات الإيرادات",
+    "forecastDescription": "مسار الإيرادات المتوقع بالذكاء الاصطناعي بناءً على اتجاهات الأداء الحالية",
+    "forecastedRevenue": "الإيرادات المتوقعة",
+    "confidence": "الثقة",
+    "modelAccuracy": "دقة النموذج",
+    "attributionModel": "نموذج الإسناد",
+    "anomalyDetection": "كشف الشذوذ"
   },
   "benchmarks": {
     "title": "ذكاء المنافسين",

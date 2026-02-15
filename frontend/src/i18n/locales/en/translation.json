@@ -21,7 +21,8 @@
     "next": "Next",
     "previous": "Previous",
     "back": "Back",
-    "moreFilters": "More Filters"
+    "moreFilters": "More Filters",
+    "viewAll": "View All"
   },
   "nav": {
     "overview": "Overview",
@@ -78,7 +79,20 @@
     "predictedRevenue": "Predicted Revenue",
     "predictedROAS": "Predicted ROAS",
     "runSimulation": "Run Simulation",
-    "confidence": "Confidence"
+    "confidence": "Confidence",
+    "budget": "Budget",
+    "budgetTooltip": "Adjust the daily or total budget to see projected results",
+    "bid": "Bid",
+    "bidTooltip": "Adjust the bid amount per action or impression",
+    "audience": "Audience",
+    "audienceTooltip": "Change audience size to see its impact on performance",
+    "projectedResults": "Projected Results",
+    "spend": "Spend",
+    "revenue": "Revenue",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "conversions": "Conversions",
+    "adjustSliders": "Adjust the sliders to simulate different scenarios"
   },
   "campaigns": {
     "title": "Campaigns",
@@ -110,6 +124,7 @@
       "tiktok": "TikTok",
       "snapchat": "Snapchat"
     },
+    "statusLabel": "Status",
     "status": {
       "active": "Active",
       "paused": "Paused",
@@ -199,7 +214,15 @@
     "performance": "Performance Metrics",
     "insights": "AI Insights",
     "predictions": "Predictions",
-    "optimization": "Optimization Recommendations"
+    "optimization": "Optimization Recommendations",
+    "aiInsights": "AI Insights",
+    "revenueForecast": "Revenue Forecast",
+    "forecastDescription": "AI-predicted revenue trajectory based on current performance trends",
+    "forecastedRevenue": "Forecasted Revenue",
+    "confidence": "Confidence",
+    "modelAccuracy": "Model Accuracy",
+    "attributionModel": "Attribution Model",
+    "anomalyDetection": "Anomaly Detection"
   },
   "benchmarks": {
     "title": "Competitor Intelligence",
