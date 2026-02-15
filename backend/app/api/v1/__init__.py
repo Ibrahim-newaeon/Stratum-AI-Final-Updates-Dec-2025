@@ -41,6 +41,8 @@ from app.api.v1.endpoints import (
     meta_capi,
     mfa,
     ml_training,
+    # Newsletter / Email Campaigns
+    newsletter,
     notifications,
     oauth,
     onboarding,
@@ -413,6 +415,12 @@ api_router.include_router(
 api_router.include_router(
     cms.router,
     tags=["CMS"],
+)
+
+# Newsletter / Email Campaigns
+api_router.include_router(
+    newsletter.router,
+    tags=["Newsletter"],
 )
 
 # Knowledge Graph (Revenue attribution, Trust explainability, Insights)

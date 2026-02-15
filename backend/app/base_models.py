@@ -1300,6 +1300,21 @@ class LandingPageSubscriber(Base):
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
+    # Newsletter subscription fields
+    subscribed_to_newsletter: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    unsubscribed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    newsletter_preferences: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    last_email_sent_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_email_opened_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    email_send_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    email_open_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -1319,6 +1334,7 @@ class LandingPageSubscriber(Base):
         Index("ix_subscriber_source", "source_page", "language"),
         Index("ix_subscriber_platform", "attributed_platform"),
         Index("ix_subscriber_lead_score", "lead_score"),
+        Index("ix_subscriber_newsletter", "subscribed_to_newsletter"),
     )
 
 

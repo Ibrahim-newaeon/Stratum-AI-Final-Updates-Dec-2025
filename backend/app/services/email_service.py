@@ -492,6 +492,56 @@ If you didn't expect this invitation, you can safely ignore this email.
         message = self._create_message(to_email, subject, html_content, text_content)
         return self._send_email(to_email, message)
 
+    def send_newsletter_email(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+        from_name: Optional[str] = None,
+        from_email: Optional[str] = None,
+        reply_to: Optional[str] = None,
+        unsubscribe_url: Optional[str] = None,
+    ) -> bool:
+        """
+        Send a newsletter/campaign email with CAN-SPAM compliance headers.
+
+        Args:
+            to_email: Recipient email address.
+            subject: Email subject line.
+            html_content: Pre-built HTML content (with tracking pixels/links already injected).
+            from_name: Sender name override (falls back to system default).
+            from_email: Sender email override (falls back to system default).
+            reply_to: Reply-to email address.
+            unsubscribe_url: One-click unsubscribe URL for CAN-SPAM compliance.
+
+        Returns:
+            True if sent successfully, False otherwise.
+        """
+        # Strip HTML tags for plain text fallback
+        import re
+
+        text_content = re.sub(r"<[^>]+>", "", html_content)
+        text_content = re.sub(r"\s+", " ", text_content).strip()
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = subject
+        message["From"] = f"{from_name or self.from_name} <{from_email or self.from_address}>"
+        message["To"] = to_email
+
+        if reply_to:
+            message["Reply-To"] = reply_to
+
+        # CAN-SPAM / RFC 8058 compliance headers
+        if unsubscribe_url:
+            message["List-Unsubscribe"] = f"<{unsubscribe_url}>"
+            message["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+
+        # Attach content
+        message.attach(MIMEText(text_content, "plain"))
+        message.attach(MIMEText(html_content, "html"))
+
+        return self._send_email(to_email, message)
+
 
 # Singleton instance
 _email_service: Optional[EmailService] = None

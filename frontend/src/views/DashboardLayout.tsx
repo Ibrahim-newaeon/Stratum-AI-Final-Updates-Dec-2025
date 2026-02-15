@@ -50,6 +50,8 @@ import {
   ExclamationTriangleIcon,
   MapIcon,
   CurrencyDollarIcon,
+  EnvelopeIcon,
+  DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import LearningHub from '@/components/guide/LearningHub';
@@ -162,6 +164,13 @@ const kgNavigation = [
   { name: 'Journey Explorer', href: '/dashboard/knowledge-graph/journeys', icon: MapIcon },
 ];
 
+const newsletterNavigation = [
+  { name: 'Overview', href: '/dashboard/newsletter', icon: EnvelopeIcon },
+  { name: 'Campaigns', href: '/dashboard/newsletter/campaigns', icon: DocumentTextIcon },
+  { name: 'Templates', href: '/dashboard/newsletter/templates', icon: DocumentDuplicateIcon },
+  { name: 'Subscribers', href: '/dashboard/newsletter/subscribers', icon: UserGroupIcon },
+];
+
 export default function DashboardLayout() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
@@ -173,6 +182,7 @@ export default function DashboardLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'));
   const [kgExpanded, setKgExpanded] = useState(location.pathname.startsWith('/dashboard/knowledge-graph'));
+  const [newsletterExpanded, setNewsletterExpanded] = useState(location.pathname.startsWith('/dashboard/newsletter'));
   const [superadminExpanded, setSuperadminExpanded] = useState(
     location.pathname.startsWith('/dashboard/superadmin')
   );
@@ -444,6 +454,82 @@ export default function DashboardLayout() {
                       style={{ borderLeft: `2px solid ${theme.primaryLight}` }}
                     >
                       {kgNavigation.map((item, index) => {
+                        const isActive = location.pathname === item.href;
+                        return (
+                          <motion.div
+                            key={item.name}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.02, duration: 0.15 }}
+                          >
+                            <NavLink
+                              to={item.href}
+                              className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-150"
+                              style={{
+                                background: isActive ? theme.primaryLight : 'transparent',
+                                color: isActive ? theme.primary : theme.textSecondary,
+                              }}
+                              onClick={() => setSidebarOpen(false)}
+                            >
+                              <item.icon
+                                className="h-4 w-4"
+                                style={{ color: isActive ? theme.primary : theme.textMuted }}
+                              />
+                              {item.name}
+                            </NavLink>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Newsletter Section */}
+              <div className="pt-2">
+                <button
+                  onClick={() => setNewsletterExpanded(!newsletterExpanded)}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+                  style={{
+                    background: location.pathname.startsWith('/dashboard/newsletter')
+                      ? theme.primaryLight
+                      : 'transparent',
+                    color: location.pathname.startsWith('/dashboard/newsletter')
+                      ? theme.primary
+                      : theme.textSecondary,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <EnvelopeIcon
+                      className="h-5 w-5"
+                      style={{
+                        color: location.pathname.startsWith('/dashboard/newsletter')
+                          ? theme.primary
+                          : theme.textMuted,
+                      }}
+                    />
+                    <span>Newsletter</span>
+                  </div>
+                  <ChevronDownIcon
+                    className={cn(
+                      'h-4 w-4 transition-transform duration-200',
+                      newsletterExpanded && 'rotate-180'
+                    )}
+                    style={{ color: theme.textMuted }}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {newsletterExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="mt-1 ml-3 pl-3 space-y-0.5 overflow-hidden"
+                      style={{ borderLeft: `2px solid ${theme.primaryLight}` }}
+                    >
+                      {newsletterNavigation.map((item, index) => {
                         const isActive = location.pathname === item.href;
                         return (
                           <motion.div

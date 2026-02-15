@@ -64,6 +64,14 @@ const CDPComputedTraits = lazy(() => import('./views/cdp/CDPComputedTraits'));
 const CDPConsent = lazy(() => import('./views/cdp/CDPConsent'));
 const CDPPredictiveChurn = lazy(() => import('./views/cdp/CDPPredictiveChurn'));
 
+// Newsletter / Email Campaigns views
+const NewsletterDashboard = lazy(() => import('./views/newsletter/NewsletterDashboard'));
+const NewsletterCampaigns = lazy(() => import('./views/newsletter/NewsletterCampaigns'));
+const NewsletterCampaignEditor = lazy(() => import('./views/newsletter/NewsletterCampaignEditor'));
+const NewsletterTemplates = lazy(() => import('./views/newsletter/NewsletterTemplates'));
+const NewsletterSubscribers = lazy(() => import('./views/newsletter/NewsletterSubscribers'));
+const NewsletterAnalytics = lazy(() => import('./views/newsletter/NewsletterAnalytics'));
+
 // Knowledge Graph views
 const KnowledgeGraphInsights = lazy(() => import('./views/KnowledgeGraphInsights'));
 const KGProblemDetection = lazy(() => import('./views/knowledge-graph/KGProblemDetection'));
@@ -873,6 +881,64 @@ function App() {
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <CDPPredictiveChurn />
+                          </Suspense>
+                        }
+                      />
+
+                      {/* Newsletter / Email Campaign routes */}
+                      <Route
+                        path="newsletter"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <NewsletterDashboard />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="newsletter/campaigns"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <NewsletterCampaigns />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="newsletter/campaigns/new"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <NewsletterCampaignEditor />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="newsletter/campaigns/:id/edit"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <NewsletterCampaignEditor />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="newsletter/campaigns/:id/analytics"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <NewsletterAnalytics />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="newsletter/templates"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <NewsletterTemplates />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="newsletter/subscribers"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <NewsletterSubscribers />
                           </Suspense>
                         }
                       />
