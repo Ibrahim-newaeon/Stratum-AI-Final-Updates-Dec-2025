@@ -6,6 +6,7 @@ import {
   Bell,
   Building,
   Check,
+  ChevronDown,
   ChevronRight,
   Copy,
   CreditCard,
@@ -31,6 +32,13 @@ import { useMetricVisibility, useUpdateMetricVisibility } from '@/api/dashboard'
 import { useToast } from '@/components/ui/use-toast';
 import { useFeatureFlagsStore, defaultFeatures } from '@/stores/featureFlagsStore';
 import { useFeatureFlags, useUpdateFeatureFlags } from '@/api/featureFlags';
+import {
+  METRIC_REGISTRY,
+  METRIC_CATEGORIES,
+  METRIC_LABELS,
+  type MetricCategory,
+  type MetricDefinition,
+} from '@/constants/metrics';
 
 type SettingsTab =
   | 'profile'
@@ -1345,24 +1353,25 @@ function PriceMetricsToggle() {
   );
 }
 
-const METRIC_LABELS: Record<string, string> = {
-  cpc: 'Cost per Click (CPC)',
-  cpm: 'Cost per Mille (CPM)',
-  cpv: 'Cost per View (CPV)',
-  cpa: 'Cost per Acquisition (CPA)',
-  spend: 'Total Spend',
-  roas: 'Return on Ad Spend (ROAS)',
-  ctr: 'Click-Through Rate (CTR)',
-  impressions: 'Impressions',
-  clicks: 'Clicks',
-  conversions: 'Conversions',
-  revenue: 'Revenue',
+const PLATFORM_BADGE_COLORS: Record<string, string> = {
+  meta: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  google: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  tiktok: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+  snapchat: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+};
+
+const PLATFORM_BADGE_LABELS: Record<string, string> = {
+  meta: 'META',
+  google: 'GOOGLE',
+  tiktok: 'TIKTOK',
+  snapchat: 'SNAP',
 };
 
 function MetricVisibilitySettings() {
   const { data: visibility, isLoading } = useMetricVisibility();
   const updateVisibility = useUpdateMetricVisibility();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [expandedCategories, setExpandedCategories] = useState<Set<MetricCategory>>(new Set());
 
   const hiddenMetrics = visibility?.hidden_metrics || [];
   // Backend may return available_metrics as string[] or {key, label}[] — normalise to string[]
@@ -1383,6 +1392,17 @@ function MetricVisibilitySettings() {
   const getMetricLabel = (metric: string) =>
     backendLabels[metric] || METRIC_LABELS[metric] || metric;
 
+  // Group registry metrics by category
+  const metricsByCategory = METRIC_CATEGORIES.map((cat) => {
+    const metrics = Object.values(METRIC_REGISTRY).filter((m) => m.category === cat.id);
+    // Only include metrics that the backend knows about OR that exist in the registry
+    const filtered = metrics.filter(
+      (m) => availableMetrics.includes(m.id) || !visibility?.available_metrics
+    );
+    const visibleCount = filtered.filter((m) => !hiddenMetrics.includes(m.id)).length;
+    return { ...cat, metrics: filtered, visibleCount, totalCount: filtered.length };
+  }).filter((cat) => cat.metrics.length > 0);
+
   const handleToggle = (metric: string) => {
     const updated = hiddenMetrics.includes(metric)
       ? hiddenMetrics.filter((m) => m !== metric)
@@ -1395,6 +1415,43 @@ function MetricVisibilitySettings() {
         setTimeout(() => setSaveStatus('idle'), 2000);
       },
       onError: () => setSaveStatus('idle'),
+    });
+  };
+
+  const handleToggleCategory = (categoryId: MetricCategory, action: 'show' | 'hide') => {
+    const categoryMetrics = Object.values(METRIC_REGISTRY)
+      .filter((m) => m.category === categoryId)
+      .map((m) => m.id);
+
+    let updated: string[];
+    if (action === 'hide') {
+      // Add all category metrics to hidden
+      const toAdd = categoryMetrics.filter((id) => !hiddenMetrics.includes(id));
+      updated = [...hiddenMetrics, ...toAdd];
+    } else {
+      // Remove all category metrics from hidden
+      updated = hiddenMetrics.filter((id) => !categoryMetrics.includes(id));
+    }
+
+    setSaveStatus('saving');
+    updateVisibility.mutate(updated, {
+      onSuccess: () => {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      },
+      onError: () => setSaveStatus('idle'),
+    });
+  };
+
+  const toggleExpand = (categoryId: MetricCategory) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
     });
   };
 
@@ -1438,35 +1495,108 @@ function MetricVisibilitySettings() {
       <p className="text-sm text-muted-foreground mb-4">
         Choose which metrics to show on the dashboard. Hidden metrics will not appear in cards or tables.
       </p>
-      <div className="space-y-2">
-        {availableMetrics.map((metric) => {
-          const isHidden = hiddenMetrics.includes(metric);
+      <div className="space-y-3">
+        {metricsByCategory.map((cat) => {
+          const isExpanded = expandedCategories.has(cat.id);
+          const allVisible = cat.visibleCount === cat.totalCount;
           return (
-            <div key={metric} className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex items-center gap-2">
-                {isHidden ? (
-                  <EyeOff className="w-4 h-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="w-4 h-4 text-primary" />
-                )}
-                <span className={cn('text-sm', isHidden && 'text-muted-foreground')}>
-                  {getMetricLabel(metric)}
-                </span>
-              </div>
-              <button
-                onClick={() => handleToggle(metric)}
-                className={cn(
-                  'relative w-10 h-5 rounded-full transition-colors',
-                  !isHidden ? 'bg-primary' : 'bg-muted'
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform',
-                    !isHidden ? 'translate-x-5' : 'translate-x-0.5'
+            <div key={cat.id} className="rounded-lg border overflow-hidden">
+              {/* Category header */}
+              <div className="flex items-center justify-between p-3 bg-muted/30">
+                <button
+                  onClick={() => toggleExpand(cat.id)}
+                  className="flex items-center gap-2 flex-1 text-left"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   )}
-                />
-              </button>
+                  <span className="text-sm font-medium">{cat.label}</span>
+                  <span className="text-xs text-muted-foreground">
+                    ({cat.visibleCount}/{cat.totalCount} visible)
+                  </span>
+                </button>
+                <button
+                  onClick={() =>
+                    handleToggleCategory(cat.id, allVisible ? 'hide' : 'show')
+                  }
+                  className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors text-muted-foreground"
+                >
+                  {allVisible ? 'Hide All' : 'Show All'}
+                </button>
+              </div>
+              {/* Metric rows */}
+              {isExpanded && (
+                <div className="divide-y">
+                  {cat.metrics.map((metric: MetricDefinition) => {
+                    const isHidden = hiddenMetrics.includes(metric.id);
+                    return (
+                      <div
+                        key={metric.id}
+                        className="flex items-center justify-between px-4 py-2.5"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {isHidden ? (
+                            <EyeOff className="w-4 h-4 text-muted-foreground shrink-0" />
+                          ) : (
+                            <Eye className="w-4 h-4 text-primary shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={cn(
+                                  'text-sm',
+                                  isHidden && 'text-muted-foreground'
+                                )}
+                              >
+                                {getMetricLabel(metric.id)}
+                              </span>
+                              {metric.showWithCostTrigger && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold uppercase">
+                                  Cost
+                                </span>
+                              )}
+                              {metric.isPriceMetric && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold uppercase">
+                                  Price
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {metric.platforms.map((p) => (
+                                <span
+                                  key={p}
+                                  className={cn(
+                                    'text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase',
+                                    PLATFORM_BADGE_COLORS[p]
+                                  )}
+                                >
+                                  {PLATFORM_BADGE_LABELS[p]}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleToggle(metric.id)}
+                          className={cn(
+                            'relative w-10 h-5 rounded-full transition-colors shrink-0 ml-3',
+                            !isHidden ? 'bg-primary' : 'bg-muted'
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform',
+                              !isHidden ? 'translate-x-5' : 'translate-x-0.5'
+                            )}
+                          />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

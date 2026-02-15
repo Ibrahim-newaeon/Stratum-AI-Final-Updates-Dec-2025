@@ -19,6 +19,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { METRIC_REGISTRY, type MetricCategory } from '@/constants/metrics';
 
 // =============================================================================
 // Types
@@ -127,29 +128,31 @@ const DATA_SOURCES: DataSource[] = [
   },
 ];
 
+// Campaign-related metric categories from the centralized registry
+const CAMPAIGN_CATEGORIES: MetricCategory[] = [
+  'reach_awareness',
+  'engagement',
+  'video',
+  'conversion',
+  'quality_relevance',
+  'audience',
+  'messaging',
+  'delivery_auction',
+  'attribution',
+  'shopping_catalog',
+  'ar_interactive',
+];
+
 const AVAILABLE_METRICS: Record<string, Metric[]> = {
-  campaigns: [
-    { id: 'spend', name: 'Ad Spend', field: 'spend', aggregation: 'sum', format: 'currency' },
-    {
-      id: 'impressions',
-      name: 'Impressions',
-      field: 'impressions',
-      aggregation: 'sum',
-      format: 'number',
-    },
-    { id: 'clicks', name: 'Clicks', field: 'clicks', aggregation: 'sum', format: 'number' },
-    {
-      id: 'conversions',
-      name: 'Conversions',
-      field: 'conversions',
-      aggregation: 'sum',
-      format: 'number',
-    },
-    { id: 'ctr', name: 'CTR', field: 'ctr', aggregation: 'avg', format: 'percentage' },
-    { id: 'cpc', name: 'CPC', field: 'cpc', aggregation: 'avg', format: 'currency' },
-    { id: 'roas', name: 'ROAS', field: 'roas', aggregation: 'avg', format: 'decimal' },
-    { id: 'cpa', name: 'CPA', field: 'cpa', aggregation: 'avg', format: 'currency' },
-  ],
+  campaigns: Object.values(METRIC_REGISTRY)
+    .filter((m) => CAMPAIGN_CATEGORIES.includes(m.category))
+    .map((m) => ({
+      id: m.id,
+      name: m.label,
+      field: m.id,
+      aggregation: (['percentage', 'decimal', 'duration'].includes(m.format) ? 'avg' : 'sum') as Metric['aggregation'],
+      format: (m.format === 'duration' ? 'number' : m.format) as Metric['format'],
+    })),
   cdp: [
     {
       id: 'total_profiles',
