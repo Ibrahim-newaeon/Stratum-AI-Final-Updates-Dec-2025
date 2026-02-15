@@ -66,6 +66,8 @@ import { useAnomalies, useCampaigns, useTenantOverview } from '@/api/hooks';
 import { ExportFormat, useExportDashboard } from '@/api/dashboard';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDemoMode } from '@/hooks/useDemoMode';
+import { OnboardingDemoBanner } from '@/components/demo/OnboardingDemoBanner';
 
 // Mock data for demonstration
 const mockCampaigns: Campaign[] = [
@@ -279,6 +281,10 @@ export function Overview() {
   const { data: overviewData } = useTenantOverview(tenantId);
   const { data: _anomaliesData } = useAnomalies(tenantId);
 
+  // Demo mode: show mock data on first visit, real data after dismissal
+  const hasRealData = !!(campaignsData?.items && campaignsData.items.length > 0);
+  const { showDemoData, showDemoBanner, dismissDemo } = useDemoMode(hasRealData);
+
   // Export mutation
   const exportMutation = useExportDashboard();
 
@@ -293,7 +299,7 @@ export function Overview() {
     campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
   });
 
-  // Use API campaigns or fall back to mock data
+  // Use API campaigns, demo mock data for first-time users, or empty for returning users
   const campaigns = useMemo(() => {
     if (campaignsData?.items && campaignsData.items.length > 0) {
       return campaignsData.items.map((c: any) => ({
@@ -315,8 +321,9 @@ export function Overview() {
         start_date: c.start_date || c.startDate || new Date().toISOString(),
       })) as Campaign[];
     }
-    return mockCampaigns;
-  }, [campaignsData]);
+    // First-time user: show demo data; returning user: show empty
+    return showDemoData ? mockCampaigns : [];
+  }, [campaignsData, showDemoData]);
 
   // Memoized: Calculate KPI metrics from campaigns (API or mock)
   const kpis = useMemo((): KPIMetrics => {
@@ -622,6 +629,11 @@ export function Overview() {
         </motion.div>
       )}
 
+      {/* Onboarding Demo Banner - shown to first-time users with demo data */}
+      {showDemoBanner && !showWelcome && (
+        <OnboardingDemoBanner onDismiss={dismissDemo} />
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -838,13 +850,13 @@ export function Overview() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PlatformPerformanceChart
-          data={mockPlatformSummary}
+          data={showDemoData ? mockPlatformSummary : []}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
 
         <ROASByPlatformChart
-          data={mockPlatformSummary}
+          data={showDemoData ? mockPlatformSummary : []}
           loading={initialLoading}
           targetROAS={3.0}
           onRefresh={handleRefresh}
@@ -855,14 +867,14 @@ export function Overview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <DailyTrendChart
-            data={mockDailyPerformance}
+            data={showDemoData ? mockDailyPerformance : []}
             loading={initialLoading}
             onRefresh={handleRefresh}
           />
         </div>
 
         <RegionalBreakdownChart
-          data={regionalData}
+          data={showDemoData ? regionalData : []}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
@@ -945,7 +957,7 @@ export function Overview() {
             initial="hidden"
             animate="visible"
           >
-            {mockAlerts.map((alert) => (
+            {(showDemoData ? mockAlerts : []).map((alert) => (
               <motion.div
                 key={alert.id}
                 variants={listItem}

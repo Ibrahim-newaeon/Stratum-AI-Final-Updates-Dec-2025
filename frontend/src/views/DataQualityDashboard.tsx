@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import { cn, getPlatformColor } from '@/lib/utils';
 import { apiClient } from '@/api/client';
+import { useDemoMode } from '@/hooks/useDemoMode';
+import { OnboardingDemoBanner } from '@/components/demo/OnboardingDemoBanner';
 
 // Types
 interface KPICard {
@@ -353,6 +355,10 @@ export function DataQualityDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [error, setError] = useState<string | null>(null);
+  const [hasRealApiData, setHasRealApiData] = useState(false);
+
+  // Demo mode: show mock data on first visit, real data after dismissal
+  const { showDemoData, showDemoBanner, dismissDemo } = useDemoMode(hasRealApiData);
 
   // Filters
   const [dateRange, setDateRange] = useState('7d');
@@ -360,7 +366,7 @@ export function DataQualityDashboard() {
   const [eventFilter, setEventFilter] = useState('all');
   const [envFilter, setEnvFilter] = useState('prod');
 
-  // Data state - initialized with mock data as fallback
+  // Data state - initialized with mock data or empty depending on demo mode
   const [kpis, setKpis] = useState<KPICard[]>(mockKPIs);
   const [platformEMQ, setPlatformEMQ] = useState<PlatformEMQ[]>(mockPlatformEMQ);
   const [eventEMQ, _setEventEMQ] = useState<EventEMQ[]>(mockEventEMQ);
@@ -401,6 +407,7 @@ export function DataQualityDashboard() {
 
       const report = reportResponse.data?.data;
       if (report && report.overall_score > 0) {
+        setHasRealApiData(true);
         // Update KPIs from report
         setKpis((prev) =>
           prev.map((kpi) => {
@@ -713,6 +720,11 @@ export function DataQualityDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Onboarding Demo Banner */}
+      {showDemoBanner && (
+        <OnboardingDemoBanner onDismiss={dismissDemo} ctaRoute="/dashboard/integrations" />
+      )}
 
       {/* Error Display */}
       {error && (

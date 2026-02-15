@@ -11,3 +11,4 @@ export {
   useRealtimeIncidents,
 } from './useWebSocket';
 export { useKeyboardShortcuts, KeyboardShortcutsHelp } from './useKeyboardShortcuts';
+export { useDemoMode } from './useDemoMode';

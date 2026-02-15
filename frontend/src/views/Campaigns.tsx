@@ -32,6 +32,8 @@ import {
   usePauseCampaign,
 } from '@/api/hooks';
 import { useTenantStore } from '@/stores/tenantStore';
+import { useDemoMode } from '@/hooks/useDemoMode';
+import { OnboardingDemoBanner } from '@/components/demo/OnboardingDemoBanner';
 
 interface Campaign {
   id: number;
@@ -150,7 +152,11 @@ export function Campaigns() {
   const activateCampaign = useActivateCampaign();
   const deleteCampaign = useDeleteCampaign();
 
-  // Transform API data or fall back to mock
+  // Demo mode: show mock data on first visit, real data after dismissal
+  const hasRealData = !!(campaignsData?.items && campaignsData.items.length > 0);
+  const { showDemoData, showDemoBanner, dismissDemo } = useDemoMode(hasRealData);
+
+  // Transform API data, show demo mock for first-time users, or empty for returning users
   const campaigns = useMemo((): Campaign[] => {
     if (campaignsData?.items && campaignsData.items.length > 0) {
       return campaignsData.items.map((c: any) => ({
@@ -169,8 +175,8 @@ export function Campaigns() {
         trend: c.trend || (c.roas >= 3.5 ? 'up' : c.roas < 2.5 ? 'down' : 'stable'),
       }));
     }
-    return mockCampaigns;
-  }, [campaignsData]);
+    return showDemoData ? mockCampaigns : [];
+  }, [campaignsData, showDemoData]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -293,6 +299,11 @@ export function Campaigns() {
           <span>{t('campaigns.createNew')}</span>
         </button>
       </div>
+
+      {/* Onboarding Demo Banner */}
+      {showDemoBanner && (
+        <OnboardingDemoBanner onDismiss={dismissDemo} />
+      )}
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">

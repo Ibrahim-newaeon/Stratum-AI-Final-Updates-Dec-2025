@@ -35,6 +35,8 @@ import {
   XMarkIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
+import { useDemoMode } from '@/hooks/useDemoMode';
+import { OnboardingDemoBanner } from '@/components/demo/OnboardingDemoBanner';
 
 export default function TenantOverview() {
   const { tenantId } = useParams<{ tenantId: string }>();
@@ -71,6 +73,10 @@ export default function TenantOverview() {
   const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end);
   const { data: overviewData } = useTenantOverview(tid);
   const { data: recommendationsData } = useTenantRecommendations(tid);
+
+  // Demo mode: show fallback data on first visit
+  const hasRealData = !!(overviewData?.kpis || emqData?.score);
+  const { showDemoBanner, dismissDemo } = useDemoMode(hasRealData);
 
   // Transform data for components
   const emqScore = emqData?.score ?? 85;
@@ -490,6 +496,11 @@ export default function TenantOverview() {
           </button>
         </div>
       </div>
+
+      {/* Onboarding Demo Banner */}
+      {showDemoBanner && (
+        <OnboardingDemoBanner onDismiss={dismissDemo} />
+      )}
 
       {/* Trust Status Header - Always visible */}
       <div data-tour="trust-header">
