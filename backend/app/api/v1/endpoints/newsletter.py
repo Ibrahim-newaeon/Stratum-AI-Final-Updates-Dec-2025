@@ -20,7 +20,7 @@ from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import get_current_user, CurrentUserDep
-from app.core.database import get_db
+from app.db.session import get_async_session
 from app.base_models import LandingPageSubscriber, SubscriberStatus
 from app.models.newsletter import (
     CampaignStatus,
@@ -222,7 +222,7 @@ async def _count_audience(db: AsyncSession, filters: Optional[dict]) -> int:
 @router.get("/templates", response_model=list[TemplateResponse], tags=["Newsletter"])
 async def list_templates(
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     category: Optional[str] = None,
     is_active: bool = True,
 ) -> list[TemplateResponse]:
@@ -241,7 +241,7 @@ async def list_templates(
 async def create_template(
     data: TemplateCreate,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> TemplateResponse:
     """Create a new newsletter template."""
     template = NewsletterTemplate(
@@ -264,7 +264,7 @@ async def update_template(
     template_id: int,
     data: TemplateUpdate,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> TemplateResponse:
     """Update an existing template."""
     result = await db.execute(
@@ -286,7 +286,7 @@ async def update_template(
 async def delete_template(
     template_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete a template (soft-delete by setting is_active=False)."""
     result = await db.execute(
@@ -307,7 +307,7 @@ async def delete_template(
 @router.get("/campaigns", response_model=CampaignListResponse, tags=["Newsletter"])
 async def list_campaigns(
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     status: Optional[str] = None,
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
@@ -338,7 +338,7 @@ async def list_campaigns(
 async def create_campaign(
     data: CampaignCreate,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> CampaignResponse:
     """Create a new newsletter campaign (draft)."""
     campaign = NewsletterCampaign(
@@ -369,7 +369,7 @@ async def create_campaign(
 async def get_campaign(
     campaign_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> CampaignResponse:
     """Get campaign details."""
     result = await db.execute(
@@ -386,7 +386,7 @@ async def update_campaign(
     campaign_id: int,
     data: CampaignUpdate,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> CampaignResponse:
     """Update a draft campaign."""
     result = await db.execute(
@@ -414,7 +414,7 @@ async def update_campaign(
 async def delete_campaign(
     campaign_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Delete a draft campaign."""
     result = await db.execute(
@@ -435,7 +435,7 @@ async def delete_campaign(
 async def duplicate_campaign(
     campaign_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> CampaignResponse:
     """Clone an existing campaign as a new draft."""
     result = await db.execute(
@@ -470,7 +470,7 @@ async def duplicate_campaign(
 async def send_campaign(
     campaign_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Queue campaign for immediate send."""
     result = await db.execute(
@@ -512,7 +512,7 @@ async def schedule_campaign(
     campaign_id: int,
     data: ScheduleRequest,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Schedule campaign for future send."""
     result = await db.execute(
@@ -542,7 +542,7 @@ async def schedule_campaign(
 async def cancel_campaign(
     campaign_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Cancel a scheduled or sending campaign."""
     result = await db.execute(
@@ -564,7 +564,7 @@ async def send_test_email(
     campaign_id: int,
     data: SendTestRequest,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Send test email to specified addresses."""
     result = await db.execute(
@@ -599,7 +599,7 @@ async def send_test_email(
 async def campaign_analytics(
     campaign_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> AnalyticsResponse:
     """Get detailed analytics for a campaign."""
     result = await db.execute(
@@ -644,7 +644,7 @@ async def campaign_analytics(
 @router.get("/subscribers", response_model=list[SubscriberResponse], tags=["Newsletter"])
 async def list_subscribers(
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     subscribed: Optional[bool] = None,
     platform: Optional[str] = None,
     min_score: Optional[int] = None,
@@ -670,7 +670,7 @@ async def list_subscribers(
 @router.get("/subscribers/stats", response_model=SubscriberStatsResponse, tags=["Newsletter"])
 async def subscriber_stats(
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> SubscriberStatsResponse:
     """Get newsletter subscriber statistics."""
     total_result = await db.execute(select(func.count(LandingPageSubscriber.id)))
@@ -692,7 +692,7 @@ async def subscriber_stats(
 async def manual_unsubscribe(
     subscriber_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Manually unsubscribe a subscriber from newsletters."""
     result = await db.execute(
@@ -712,7 +712,7 @@ async def manual_unsubscribe(
 async def resubscribe(
     subscriber_id: int,
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Re-subscribe a subscriber to newsletters."""
     result = await db.execute(
@@ -731,7 +731,7 @@ async def resubscribe(
 @router.get("/subscribers/count", tags=["Newsletter"])
 async def preview_audience_count(
     current_user: CurrentUserDep,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     status: Optional[str] = None,
     min_lead_score: Optional[int] = None,
     platform: Optional[str] = None,
@@ -763,7 +763,7 @@ TRACKING_PIXEL = base64.b64decode(
 async def track_open(
     campaign_id: int,
     subscriber_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> Response:
     """Track email open via invisible pixel."""
     # Record open event
@@ -810,7 +810,7 @@ async def track_click(
     campaign_id: int,
     subscriber_id: int,
     url: str = Query(...),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> Response:
     """Track link click and redirect to destination URL."""
     # Record click event
@@ -844,7 +844,7 @@ async def track_click(
 @router.get("/unsubscribe", tags=["Newsletter Tracking"])
 async def public_unsubscribe(
     token: str = Query(...),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ) -> Response:
     """One-click unsubscribe (CAN-SPAM compliance). Returns HTML confirmation."""
     campaign_id, subscriber_id = _decode_unsubscribe_token(token)

@@ -113,7 +113,7 @@ def send_newsletter_campaign(self, campaign_id: int) -> dict:
     Idempotent via status checks — safe to retry.
     """
     from app.core.config import settings
-    from app.core.database import SessionLocal
+    from app.db.session import SyncSessionLocal
     from app.base_models import LandingPageSubscriber
     from app.models.newsletter import (
         CampaignStatus,
@@ -123,7 +123,7 @@ def send_newsletter_campaign(self, campaign_id: int) -> dict:
     )
     from app.services.email_service import get_email_service
 
-    db = SessionLocal()
+    db = SyncSessionLocal()
     email_service = get_email_service()
     api_base_url = settings.frontend_url.rstrip("/")
 
@@ -266,10 +266,10 @@ def process_scheduled_campaigns(self) -> dict:
     Runs every minute. Dispatches send_newsletter_campaign for each
     campaign where status='scheduled' and scheduled_at <= now.
     """
-    from app.core.database import SessionLocal
+    from app.db.session import SyncSessionLocal
     from app.models.newsletter import CampaignStatus, NewsletterCampaign
 
-    db = SessionLocal()
+    db = SyncSessionLocal()
     try:
         due_campaigns = (
             db.query(NewsletterCampaign)
