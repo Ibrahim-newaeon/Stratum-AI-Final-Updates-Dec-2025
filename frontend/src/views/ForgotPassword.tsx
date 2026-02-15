@@ -62,12 +62,13 @@ export default function ForgotPassword() {
       />
       <style>{authStyles}</style>
 
-      <div className="bg-[#0b1215] text-white min-h-screen flex font-sans selection:bg-[#00c7be]/30 overflow-hidden">
-        {/* Background effects */}
+      <div className="bg-black text-white min-h-screen flex font-sans selection:bg-[#00c7be]/30 overflow-hidden">
+        {/* Background effects — matching landing page Apple Glass Dark */}
         <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#00c7be]/[0.07] to-transparent blur-[100px]" />
-          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-tl from-[#00c7be]/[0.05] to-transparent blur-[100px]" />
+          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.08), transparent 60%)' }} />
+          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 60%)' }} />
+          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(20, 240, 198, 0.05), transparent 60%)' }} />
         </div>
 
         <main className="relative z-10 w-full flex min-h-screen">
@@ -75,10 +76,10 @@ export default function ForgotPassword() {
           <AuthLeftPanel className="hidden lg:flex" />
 
           {/* Right Panel — Form */}
-          <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-[#0b1215]/50 relative">
-            {/* Decorative corners */}
-            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-[#00c7be]/20 pointer-events-none rounded-tr-2xl hidden lg:block" />
-            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-[#00c7be]/20 pointer-events-none rounded-bl-2xl hidden lg:block" />
+          <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-black/50 relative">
+            {/* Decorative corners — neutral white matching landing page borders */}
+            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-white/[0.08] pointer-events-none rounded-tr-2xl hidden lg:block" />
+            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-white/[0.08] pointer-events-none rounded-bl-2xl hidden lg:block" />
 
             <div className="w-full max-w-[400px] auth-glass-card rounded-[24px] p-7 shadow-2xl relative z-20 auth-fade-up">
               {isSuccess ? (
@@ -102,7 +103,7 @@ export default function ForgotPassword() {
 
                   <Link
                     to="/login"
-                    className="block w-full auth-gradient-btn auth-shimmer-btn text-[#0b1215] font-bold h-[46px] rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-[14px]"
+                    className="block w-full auth-gradient-btn auth-shimmer-btn text-white font-bold h-[46px] rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-[14px]"
                   >
                     <ArrowLeftIcon className="w-4 h-4" />
                     Back to Login
@@ -187,7 +188,7 @@ export default function ForgotPassword() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="auth-fade-up-d2 w-full auth-gradient-btn auth-shimmer-btn text-[#0b1215] font-bold h-[46px] rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-2 text-[14px] disabled:opacity-50 disabled:hover:scale-100"
+                      className="auth-fade-up-d2 w-full auth-gradient-btn auth-shimmer-btn text-white font-bold h-[46px] rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-2 text-[14px] disabled:opacity-50 disabled:hover:scale-100"
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">

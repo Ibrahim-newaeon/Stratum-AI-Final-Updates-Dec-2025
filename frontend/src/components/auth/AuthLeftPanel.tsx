@@ -97,7 +97,7 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
                 aria-label={`${bar.day}: ${bar.value}`}
               >
                 {/* Tooltip */}
-                <div className="absolute -top-10 bg-[#00c7be] text-[#0b1215] text-[11px] font-bold py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-all pointer-events-none z-20 shadow-xl">
+                <div className="absolute -top-10 bg-[#00c7be] text-black text-[11px] font-bold py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-all pointer-events-none z-20 shadow-xl">
                   {bar.value}
                 </div>
                 {/* Bar */}

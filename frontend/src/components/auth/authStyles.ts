@@ -1,6 +1,6 @@
 /**
  * Shared CSS styles for Login & Signup pages
- * Teal-themed glass card design with ambient animations
+ * Apple Glass Dark theme — matching landing page design system
  */
 
 export const authStyles = `
@@ -43,12 +43,10 @@ export const authStyles = `
   /* Glass card */
   .auth-glass-card {
     background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 199, 190, 0.1);
-    box-shadow:
-      0 24px 48px -12px rgba(0, 0, 0, 0.5),
-      0 0 80px -20px rgba(0, 199, 190, 0.06);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
   }
 
   /* Input focus glow */
@@ -56,13 +54,13 @@ export const authStyles = `
     box-shadow: 0 0 0 1px rgba(0, 199, 190, 0.4), 0 0 12px rgba(0, 199, 190, 0.08);
   }
 
-  /* CTA button gradient */
+  /* CTA button */
   .auth-gradient-btn {
-    background: linear-gradient(135deg, #00c7be 0%, #00a89f 100%);
-    box-shadow: 0 4px 20px rgba(0, 199, 190, 0.3);
+    background: #00c7be;
+    box-shadow: 0 0 40px rgba(0, 199, 190, 0.25);
   }
   .auth-gradient-btn:hover {
-    box-shadow: 0 4px 30px rgba(0, 199, 190, 0.45);
+    box-shadow: 0 0 40px rgba(0, 199, 190, 0.35);
   }
 
   /* Shimmer on hover */
@@ -85,11 +83,13 @@ export const authStyles = `
     animation: authShimmer 1.5s ease infinite;
   }
 
-  /* Cyber grid background */
+  /* Subtle grid background — matches landing page */
   .auth-cyber-grid {
     background-image:
-      radial-gradient(circle at 1px 1px, rgba(0, 199, 190, 0.06) 1px, transparent 0);
-    background-size: 40px 40px;
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: 0.5;
   }
 
   /* Chart bar grow */
@@ -104,12 +104,12 @@ export const authStyles = `
 
   /* Dashboard card chart glow */
   .auth-chart-glow {
-    filter: drop-shadow(0 0 8px rgba(0, 199, 190, 0.4));
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.15));
   }
 
   /* Gradient text */
   .auth-gradient-text {
-    background: linear-gradient(135deg, #00c7be 0%, #e2b347 100%);
+    background: linear-gradient(135deg, #00c7be 0%, #14f0c6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

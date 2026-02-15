@@ -130,12 +130,13 @@ export default function Login() {
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
       <style>{authStyles}</style>
 
-      <div className="bg-[#0b1215] text-white min-h-screen flex font-sans selection:bg-[#00c7be]/30 overflow-hidden">
-        {/* Background effects */}
+      <div className="bg-black text-white min-h-screen flex font-sans selection:bg-[#00c7be]/30 overflow-hidden">
+        {/* Background effects — matching landing page Apple Glass Dark */}
         <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#00c7be]/[0.07] to-transparent blur-[100px]" />
-          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-tl from-[#00c7be]/[0.05] to-transparent blur-[100px]" />
+          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.08), transparent 60%)' }} />
+          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 60%)' }} />
+          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(20, 240, 198, 0.05), transparent 60%)' }} />
         </div>
 
         <main className="relative z-10 w-full flex min-h-screen">
@@ -143,10 +144,10 @@ export default function Login() {
           <AuthLeftPanel className="hidden lg:flex" />
 
           {/* Right Panel — Form */}
-          <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-[#0b1215]/50 relative">
-            {/* BUG-025: Decorative corners — increased opacity from /20 to /40 for visibility */}
-            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-[#00c7be]/40 pointer-events-none rounded-tr-2xl hidden lg:block" />
-            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-[#00c7be]/40 pointer-events-none rounded-bl-2xl hidden lg:block" />
+          <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-black/50 relative">
+            {/* Decorative corners — neutral white matching landing page borders */}
+            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-white/[0.08] pointer-events-none rounded-tr-2xl hidden lg:block" />
+            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-white/[0.08] pointer-events-none rounded-bl-2xl hidden lg:block" />
 
             <div className="w-full max-w-[400px] auth-glass-card rounded-[24px] p-7 shadow-2xl relative z-20 auth-fade-up">
               {/* Header */}
@@ -273,7 +274,7 @@ export default function Login() {
                     id="remember"
                     checked={rememberMe}
                     onChange={() => setRememberMe(!rememberMe)}
-                    className="w-4 h-4 rounded border-white/10 bg-white/5 text-[#00c7be] focus:ring-[#00c7be] focus:ring-offset-[#0b1215] cursor-pointer"
+                    className="w-4 h-4 rounded border-white/10 bg-white/5 text-[#00c7be] focus:ring-[#00c7be] focus:ring-offset-black cursor-pointer"
                   />
                   <label
                     htmlFor="remember"
@@ -287,7 +288,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-[#0b1215] font-bold h-[46px] rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-3 text-[14px] disabled:opacity-50 disabled:hover:scale-100"
+                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-bold h-[46px] rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-3 text-[14px] disabled:opacity-50 disabled:hover:scale-100"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
@@ -314,7 +315,7 @@ export default function Login() {
                   <div className="w-full border-t border-white/5" />
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-                  <span className="bg-[#0d1419] px-4 text-white/20">
+                  <span className="bg-black px-4 text-white/20">
                     Enterprise SSO
                   </span>
                 </div>
@@ -334,7 +335,7 @@ export default function Login() {
                   Authenticate with SSO
                 </button>
                 {ssoHover && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#00c7be] text-[#0b1215] text-[11px] font-bold py-1 px-3 rounded-lg whitespace-nowrap z-30 shadow-lg">
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#00c7be] text-white text-[11px] font-bold py-1 px-3 rounded-lg whitespace-nowrap z-30 shadow-lg">
                     Coming Soon
                   </div>
                 )}
@@ -346,7 +347,7 @@ export default function Login() {
                   <div className="w-full border-t border-white/5" />
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-                  <span className="bg-[#0d1419] px-4 text-white/20">
+                  <span className="bg-black px-4 text-white/20">
                     Demo Access
                   </span>
                 </div>
