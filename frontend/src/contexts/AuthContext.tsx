@@ -3,10 +3,53 @@
  * Manages user authentication state across the application
  */
 
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { useTenantStore } from '@/stores/tenantStore';
 
 const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+
+/** Known demo credentials for client-side fallback when backend is unavailable */
+const DEMO_CREDENTIALS: Record<string, { email: string; password: string; user: User }> = {
+  superadmin: {
+    email: 'ibrahim@new-aeon.com',
+    password: 'Newaeon@2025',
+    user: {
+      id: 'demo-sa-001',
+      email: 'ibrahim@new-aeon.com',
+      name: 'Ibrahim (Super Admin)',
+      role: 'superadmin',
+      organization: 'New Aeon',
+      permissions: ['all'],
+      tenant_id: 1,
+    },
+  },
+  admin: {
+    email: 'demo@stratum.ai',
+    password: 'demo1234',
+    user: {
+      id: 'demo-admin-001',
+      email: 'demo@stratum.ai',
+      name: 'Demo Admin',
+      role: 'admin',
+      organization: 'Acme Commerce',
+      permissions: ['all'],
+      tenant_id: 1,
+    },
+  },
+  user: {
+    email: 'demo@stratum.ai',
+    password: 'demo1234',
+    user: {
+      id: 'demo-user-001',
+      email: 'demo@stratum.ai',
+      name: 'Demo Viewer',
+      role: 'user',
+      organization: 'Acme Commerce',
+      permissions: ['read'],
+      tenant_id: 1,
+    },
+  },
+};
 
 /** Decode JWT payload without a library */
 function decodeJwtPayload(token: string): Record<string, unknown> {
@@ -33,7 +76,9 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isDemoSession: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  demoLogin: (role: 'superadmin' | 'admin' | 'user') => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
 }
@@ -47,9 +92,13 @@ const REFRESH_TOKEN_KEY = 'refresh_token';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemoSession, setIsDemoSession] = useState(false);
 
   // Check for existing session on mount and sync tenant store
   useEffect(() => {
+    const isDemo = localStorage.getItem('stratum_demo_mode') === 'true';
+    setIsDemoSession(isDemo);
+
     const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
       try {
@@ -176,11 +225,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /** Client-side demo login — creates a mock session without hitting the backend */
+  const demoLogin = useCallback(
+    async (role: 'superadmin' | 'admin' | 'user'): Promise<{ success: boolean; error?: string }> => {
+      const demo = DEMO_CREDENTIALS[role];
+      if (!demo) return { success: false, error: 'Unknown demo role' };
+
+      // First try the real backend
+      try {
+        const result = await login(demo.email, demo.password);
+        if (result.success) return result;
+      } catch {
+        // Backend unavailable — fall through to client-side fallback
+      }
+
+      // Client-side fallback: set user directly without API
+      const demoUser = { ...demo.user };
+      // Assign different user for 'user' role vs 'admin' role (both use same email)
+      if (role === 'user') {
+        demoUser.id = 'demo-user-001';
+        demoUser.name = 'Demo Viewer';
+        demoUser.role = 'user';
+        demoUser.permissions = ['read'];
+      }
+
+      setUser(demoUser);
+      setIsDemoSession(true);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(demoUser));
+      localStorage.setItem('stratum_demo_mode', 'true');
+
+      // Set a placeholder token so the API interceptor doesn't redirect
+      localStorage.setItem(ACCESS_TOKEN_KEY, 'demo-token');
+      localStorage.setItem(REFRESH_TOKEN_KEY, 'demo-refresh-token');
+
+      // Sync tenant store
+      const tenantStore = useTenantStore.getState();
+      if (demoUser.tenant_id) {
+        tenantStore.setTenantId(demoUser.tenant_id);
+      }
+      tenantStore.setUser({
+        id: Number(demoUser.id.replace(/\D/g, '')) || 1,
+        email: demoUser.email,
+        full_name: demoUser.name,
+        role: demoUser.role,
+        avatar_url: null,
+        locale: 'en',
+        timezone: 'UTC',
+        is_active: true,
+        is_verified: true,
+        last_login_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      });
+
+      return { success: true };
+    },
+    [login]
+  );
+
   const logout = () => {
     setUser(null);
+    setIsDemoSession(false);
     localStorage.removeItem(AUTH_STORAGE_KEY);
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem('stratum_demo_mode');
     // Clear Zustand tenant store on logout
     useTenantStore.getState().logout();
   };
@@ -199,7 +307,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        isDemoSession,
         login,
+        demoLogin,
         logout,
         updateUser,
       }}

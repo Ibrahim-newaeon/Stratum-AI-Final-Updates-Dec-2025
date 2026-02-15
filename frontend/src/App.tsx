@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import DashboardLayout from './views/DashboardLayout';
 import TenantLayout from './views/TenantLayout';
@@ -15,6 +15,7 @@ import OnboardingGuard from './components/auth/OnboardingGuard';
 import { SkipToContent } from './components/ui/skip-to-content';
 import { useDocumentDirection } from './hooks/useDocumentDirection';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 // Component to handle document direction - must be inside i18n provider
 function DocumentDirectionHandler() {
@@ -191,61 +192,75 @@ function App() {
                 <SkipToContent />
                 <div className="min-h-screen bg-background" id="main-content" role="main">
                   <Routes>
-                    {/* Public routes — Landing */}
+                    {/* Public routes — Landing (BUG-015: wrapped with ErrorBoundary) */}
                     <Route
                       path="/"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <Landing />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the landing page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Landing />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/ar"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <LandingAr />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <LandingAr />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/login"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <Login />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the login page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Login />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/signup"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <Signup />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the signup page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Signup />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/forgot-password"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <ForgotPassword />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ForgotPassword />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/reset-password"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <ResetPassword />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ResetPassword />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/verify-email"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <VerifyEmail />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <VerifyEmail />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
 

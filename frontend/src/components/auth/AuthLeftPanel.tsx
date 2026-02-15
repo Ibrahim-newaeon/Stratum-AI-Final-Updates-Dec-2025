@@ -80,11 +80,17 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
           </div>
 
           {/* Bar Chart */}
-          <div className="flex items-end justify-between h-48 gap-4 px-4">
+          <div
+            className="flex items-end justify-between h-48 gap-4 px-4"
+            role="img"
+            aria-label="Revenue bar chart showing daily performance from Monday to Friday"
+          >
             {CHART_BARS.map((bar, i) => (
               <div
                 key={bar.day}
                 className="group/bar relative flex-1 flex flex-col items-center justify-end h-full"
+                role="presentation"
+                aria-label={`${bar.day}: ${bar.value}`}
               >
                 {/* Tooltip */}
                 <div className="absolute -top-10 bg-[#00c7be] text-[#0b1215] text-[11px] font-bold py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-all pointer-events-none z-20 shadow-xl">
@@ -147,7 +153,7 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
 
       {/* Footer */}
       <div className="flex items-center gap-8 text-[11px] text-white/30 font-medium uppercase tracking-widest">
-        <span>&copy; 2026 Stratum Intelligence</span>
+        <span>&copy; 2026 Stratum AI</span>
         <div className="flex gap-6">
           <a
             className="hover:text-[#00c7be] transition-colors"

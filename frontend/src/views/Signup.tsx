@@ -32,6 +32,9 @@ const signupSchema = z.object({
   company: z.string().min(2, 'Company name is required'),
   website: z.string().min(4, 'Company website is required'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  termsAccepted: z.literal(true, {
+    errorMap: () => ({ message: 'You must accept the terms to continue' }),
+  }),
 });
 
 type SignupForm = z.infer<typeof signupSchema>;
@@ -42,8 +45,6 @@ type SignupForm = z.infer<typeof signupSchema>;
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [termsError, setTermsError] = useState(false);
 
   const registerMutation = useSignup();
   const isLoading = registerMutation.isPending;
@@ -53,17 +54,17 @@ export default function Signup() {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
+    setValue,
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
+    defaultValues: { termsAccepted: false as unknown as true },
   });
 
-  const onSubmit = async (data: SignupForm) => {
-    if (!termsAccepted) {
-      setTermsError(true);
-      return;
-    }
-    setTermsError(false);
+  // BUG-005: termsAccepted is now part of Zod schema — validation shows alongside other field errors
+  const termsAccepted = watch('termsAccepted');
 
+  const onSubmit = async (data: SignupForm) => {
     registerMutation.mutate(
       {
         email: data.email,
@@ -150,6 +151,7 @@ export default function Signup() {
                       {...register('name')}
                       id="signup-name"
                       type="text"
+                      autoComplete="name"
                       placeholder="Your full name"
                       className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-4 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
                     />
@@ -173,6 +175,7 @@ export default function Signup() {
                       {...register('email')}
                       id="signup-email"
                       type="email"
+                      autoComplete="email"
                       placeholder="name@company.ai"
                       className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-4 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
                     />
@@ -196,6 +199,7 @@ export default function Signup() {
                       {...register('company')}
                       id="signup-company"
                       type="text"
+                      autoComplete="organization"
                       placeholder="Company name"
                       className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-4 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
                     />
@@ -221,6 +225,7 @@ export default function Signup() {
                       {...register('website')}
                       id="signup-website"
                       type="url"
+                      autoComplete="url"
                       placeholder="https://company.com"
                       className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-4 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
                     />
@@ -244,6 +249,7 @@ export default function Signup() {
                       {...register('password')}
                       id="signup-password"
                       type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
                       placeholder="Create a strong password"
                       className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-11 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
                     />
@@ -265,17 +271,16 @@ export default function Signup() {
                   )}
                 </div>
 
-                {/* Terms Checkbox */}
+                {/* Terms Checkbox — BUG-005: now validated via Zod schema */}
                 <div className="flex items-start gap-2.5 py-1 auth-fade-up-d3">
                   <input
                     type="checkbox"
                     id="terms"
-                    checked={termsAccepted}
-                    onChange={() => {
-                      setTermsAccepted(!termsAccepted);
-                      if (termsError) setTermsError(false);
-                    }}
+                    checked={!!termsAccepted}
+                    onChange={(e) => setValue('termsAccepted', e.target.checked as unknown as true, { shouldValidate: true })}
                     className="mt-0.5 w-4 h-4 rounded border-white/10 bg-white/5 text-[#00c7be] focus:ring-[#00c7be] focus:ring-offset-[#0b1215] cursor-pointer"
+                    aria-invalid={!!errors.termsAccepted}
+                    aria-describedby={errors.termsAccepted ? 'terms-error' : undefined}
                   />
                   <label
                     htmlFor="terms"
@@ -292,9 +297,9 @@ export default function Signup() {
                     .
                   </label>
                 </div>
-                {termsError && (
-                  <p className="text-xs text-red-400 -mt-2 ml-1">
-                    You must accept the terms to continue
+                {errors.termsAccepted && (
+                  <p id="terms-error" className="text-xs text-red-400 -mt-2 ml-1">
+                    {errors.termsAccepted.message}
                   </p>
                 )}
 

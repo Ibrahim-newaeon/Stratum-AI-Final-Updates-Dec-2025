@@ -103,6 +103,12 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // BUG-004: In demo mode, don't attempt token refresh or redirect — just reject
+      const isDemoMode = localStorage.getItem('stratum_demo_mode') === 'true';
+      if (isDemoMode) {
+        return Promise.reject(error);
+      }
+
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
@@ -118,10 +124,14 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed - logout user
+        // Refresh failed - clear tokens gracefully
         setAccessToken(null);
         localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+
+        // BUG-004: Only redirect if not already on login page to prevent redirect loops
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
 

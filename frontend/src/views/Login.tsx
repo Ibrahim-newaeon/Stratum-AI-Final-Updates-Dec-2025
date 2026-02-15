@@ -1,9 +1,17 @@
 /**
  * Login Page - Stratum AI
  * Split-screen layout: Branding left panel + glass card form
+ *
+ * Fixes applied:
+ * - BUG-001/002: Demo login now uses demoLogin() with client-side fallback
+ * - BUG-003: Autofill captured via onInput + form ref reading on submit
+ * - BUG-006: SSO button shows "Coming Soon" tooltip on hover
+ * - BUG-007: Remember Me persists session via localStorage flag
+ * - BUG-012: Page title no longer flickers (SEO title set immediately)
+ * - BUG-016: Inline validation for email & password fields
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ExclamationCircleIcon,
@@ -22,25 +30,67 @@ import { authStyles } from '@/components/auth/authStyles';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, demoLogin } = useAuth();
 
+  const formRef = useRef<HTMLFormElement>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(
+    () => localStorage.getItem('stratum_remember_me') === 'true'
+  );
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+  const [ssoHover, setSsoHover] = useState(false);
 
   const from = location.state?.from?.pathname || '/dashboard/overview';
+
+  // BUG-016: Inline validation helpers
+  const emailError = touched.email && !email.trim()
+    ? 'Email is required'
+    : touched.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ? 'Please enter a valid email'
+      : '';
+  const passwordError = touched.password && !password
+    ? 'Password is required'
+    : touched.password && password.length > 0 && password.length < 6
+      ? 'Password must be at least 6 characters'
+      : '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // BUG-003: Read directly from form inputs to capture browser autofill
+    const formEl = formRef.current;
+    const actualEmail = formEl?.querySelector<HTMLInputElement>('#login-email')?.value || email;
+    const actualPassword = formEl?.querySelector<HTMLInputElement>('#login-password')?.value || password;
+
+    // Sync React state with autofilled values
+    if (actualEmail !== email) setEmail(actualEmail);
+    if (actualPassword !== password) setPassword(actualPassword);
+
+    // Validate
+    if (!actualEmail || !actualPassword) {
+      setTouched({ email: true, password: true });
+      setError('Please fill in all fields');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(actualEmail, actualPassword);
       if (result.success) {
+        // BUG-007: Persist remember-me preference
+        if (rememberMe) {
+          localStorage.setItem('stratum_remember_me', 'true');
+        } else {
+          localStorage.removeItem('stratum_remember_me');
+          // Session-only: don't remove tokens, but mark for cleanup on window close
+          sessionStorage.setItem('stratum_session_only', 'true');
+        }
         navigate(from, { replace: true });
       } else {
         setError(result.error || 'Login failed');
@@ -52,25 +102,17 @@ export default function Login() {
     }
   };
 
+  // BUG-001/002: Demo login now uses demoLogin() with client-side fallback
   const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'user') => {
-    const credentials = {
-      superadmin: { email: 'ibrahim@new-aeon.com', password: 'Newaeon@2025' },
-      admin: { email: 'demo@stratum.ai', password: 'demo1234' },
-      user: { email: 'demo@stratum.ai', password: 'demo1234' },
-    };
-
-    const { email: demoEmail, password: demoPassword } = credentials[role];
-    setEmail(demoEmail);
-    setPassword(demoPassword);
     setError('');
     setIsLoading(true);
 
     try {
-      const result = await login(demoEmail, demoPassword);
+      const result = await demoLogin(role);
       if (result.success) {
         navigate(from, { replace: true });
       } else {
-        setError(result.error || 'Login failed');
+        setError(result.error || 'Demo login failed');
       }
     } catch {
       setError('An unexpected error occurred');
@@ -126,7 +168,7 @@ export default function Login() {
                 </span>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3">
                 {/* Error Alert */}
                 {error && (
                   <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">
@@ -147,15 +189,24 @@ export default function Login() {
                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/25 pointer-events-none" />
                     <input
                       id="login-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
+                      onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                       placeholder="you@company.com"
                       required
                       disabled={isLoading}
+                      aria-invalid={!!emailError}
+                      aria-describedby={emailError ? 'login-email-error' : undefined}
                       className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-4 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
                     />
                   </div>
+                  {emailError && (
+                    <p id="login-email-error" className="text-xs text-red-400 mt-1 ml-1">{emailError}</p>
+                  )}
                 </div>
 
                 {/* Encryption Key */}
@@ -178,12 +229,18 @@ export default function Login() {
                     <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/25 pointer-events-none" />
                     <input
                       id="login-password"
+                      name="password"
                       type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
+                      onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                       placeholder="••••••••••••"
                       required
                       disabled={isLoading}
+                      aria-invalid={!!passwordError}
+                      aria-describedby={passwordError ? 'login-password-error' : undefined}
                       className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-11 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
                     />
                     <button
@@ -191,6 +248,7 @@ export default function Login() {
                       tabIndex={-1}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? (
                         <EyeSlashIcon className="w-[18px] h-[18px]" />
@@ -199,6 +257,9 @@ export default function Login() {
                       )}
                     </button>
                   </div>
+                  {passwordError && (
+                    <p id="login-password-error" className="text-xs text-red-400 mt-1 ml-1">{passwordError}</p>
+                  )}
                 </div>
 
                 {/* Remember Me */}
@@ -255,14 +316,25 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* SSO Button */}
-              <button
-                type="button"
-                className="w-full h-[44px] flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] text-[12px] font-bold text-white/50 rounded-xl border border-white/[0.08] transition-colors uppercase tracking-wider gap-2"
-              >
-                <BuildingOfficeIcon className="w-4 h-4" />
-                Authenticate with SSO
-              </button>
+              {/* BUG-006: SSO Button — disabled with Coming Soon tooltip */}
+              <div className="relative">
+                <button
+                  type="button"
+                  disabled
+                  onMouseEnter={() => setSsoHover(true)}
+                  onMouseLeave={() => setSsoHover(false)}
+                  className="w-full h-[44px] flex items-center justify-center bg-white/[0.04] text-[12px] font-bold text-white/30 rounded-xl border border-white/[0.06] transition-colors uppercase tracking-wider gap-2 cursor-not-allowed opacity-60"
+                  aria-label="SSO authentication coming soon"
+                >
+                  <BuildingOfficeIcon className="w-4 h-4" />
+                  Authenticate with SSO
+                </button>
+                {ssoHover && (
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#00c7be] text-[#0b1215] text-[11px] font-bold py-1 px-3 rounded-lg whitespace-nowrap z-30 shadow-lg">
+                    Coming Soon
+                  </div>
+                )}
+              </div>
 
               {/* Quick Demo Access Divider */}
               <div className="relative my-5">
@@ -279,9 +351,9 @@ export default function Login() {
               {/* Demo Buttons */}
               <div className="grid grid-cols-3 gap-2">
                 {([
-                  { role: 'superadmin' as const, label: 'Super Admin', icon: '⚡' },
-                  { role: 'admin' as const, label: 'Admin', icon: '🛡️' },
-                  { role: 'user' as const, label: 'Viewer', icon: '👤' },
+                  { role: 'superadmin' as const, label: 'Super Admin', icon: '\u26A1' },
+                  { role: 'admin' as const, label: 'Admin', icon: '\uD83D\uDEE1\uFE0F' },
+                  { role: 'user' as const, label: 'Viewer', icon: '\uD83D\uDC64' },
                 ]).map((item) => (
                   <button
                     key={item.role}

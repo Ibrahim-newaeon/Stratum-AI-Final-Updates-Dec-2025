@@ -121,6 +121,22 @@ export default function ConnectPlatforms() {
   const tid = parseInt(tenantId || '1', 10);
   const [connecting, setConnecting] = useState<string | null>(null);
 
+  // FEATURE: Sync On/Off toggle state per platform
+  const [syncEnabled, setSyncEnabled] = useState<Record<string, boolean>>({
+    meta: true,
+    google: true,
+    tiktok: true,
+    snapchat: true,
+    linkedin: true,
+  });
+
+  const handleToggleSync = (platformId: string) => {
+    setSyncEnabled((prev) => {
+      const newState = { ...prev, [platformId]: !prev[platformId] };
+      return newState;
+    });
+  };
+
   // API hooks for connector status
   const { data: metaStatus } = useConnectorStatus(tid, 'meta');
   const { data: googleStatus } = useConnectorStatus(tid, 'google');
@@ -280,9 +296,49 @@ export default function ConnectPlatforms() {
                 )}
               </div>
 
+              {/* FEATURE: Data Sync Toggle — only for connected platforms */}
+              {platform.status === 'connected' && (
+                <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Data Sync</span>
+                    <span
+                      className={cn(
+                        'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
+                        syncEnabled[platform.id]
+                          ? 'bg-emerald-500/10 text-emerald-500'
+                          : 'bg-amber-500/10 text-amber-500'
+                      )}
+                    >
+                      {syncEnabled[platform.id] ? 'Active' : 'Paused'}
+                    </span>
+                  </div>
+                  {/* Toggle switch — reuses Settings.tsx pattern */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={syncEnabled[platform.id]}
+                    aria-label={`Toggle data sync for ${platform.name}`}
+                    onClick={() => handleToggleSync(platform.id)}
+                    className={cn(
+                      'relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                      syncEnabled[platform.id]
+                        ? 'bg-primary'
+                        : 'bg-gray-300 dark:bg-gray-600'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                        syncEnabled[platform.id] && 'translate-x-6'
+                      )}
+                    />
+                  </button>
+                </div>
+              )}
+
               {/* Connection details */}
               {platform.status === 'connected' && (
-                <div className="mt-4 pt-4 border-t space-y-2">
+                <div className={cn('mt-3 pt-3 border-t space-y-2', !syncEnabled[platform.id] && 'opacity-50')}>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Connected Accounts</span>
                     <span className="font-medium">{platform.accountCount}</span>
@@ -299,7 +355,9 @@ export default function ConnectPlatforms() {
                     <>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Last Sync</span>
-                        <span className="font-medium">{platformHealthMock[platform.id].lastSync}</span>
+                        <span className={cn('font-medium', !syncEnabled[platform.id] && 'line-through')}>
+                          {syncEnabled[platform.id] ? platformHealthMock[platform.id].lastSync : 'Paused'}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Data Volume</span>
