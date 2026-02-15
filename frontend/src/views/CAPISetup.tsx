@@ -37,13 +37,27 @@ const PLATFORMS = [
         field: 'pixel_id',
         label: 'Pixel ID',
         placeholder: '123456789012345',
-        help: 'Found in Events Manager > Data Sources > Your Pixel',
+        help: 'Found in Events Manager > Data Sources > Your Pixel. This is the 15-16 digit number associated with your Meta Pixel.',
+      },
+      {
+        field: 'ad_account_id',
+        label: 'Ad Account ID',
+        placeholder: 'act_123456789',
+        help: 'Found in Ads Manager > Account Settings, or Business Settings > Accounts > Ad Accounts. Starts with "act_" followed by numbers.',
+        optional: true,
+      },
+      {
+        field: 'dataset_id',
+        label: 'Dataset ID',
+        placeholder: '123456789012345',
+        help: 'Found in Events Manager > Data Sources. If you use a Dataset instead of a Pixel, enter the Dataset ID here. Often the same as Pixel ID.',
+        optional: true,
       },
       {
         field: 'access_token',
         label: 'CAPI Access Token',
         placeholder: 'EAABsbCS...',
-        help: 'System User Token for Conversions API. Go to Business Settings > System Users > Generate Token with ads_management and ads_read permissions',
+        help: 'System User Token for Conversions API. Go to Business Settings > System Users > Generate Token. Required permissions: ads_management, ads_read. Use a System User (not personal token) for production.',
         sensitive: true,
       },
     ],
@@ -59,19 +73,33 @@ const PLATFORMS = [
         field: 'customer_id',
         label: 'Customer ID',
         placeholder: '123-456-7890',
-        help: 'Google Ads Customer ID',
+        help: 'Your Google Ads Customer ID (10 digits with dashes). Found at the top of Google Ads dashboard next to your account name.',
+      },
+      {
+        field: 'manager_id',
+        label: 'Manager Account ID (MCC)',
+        placeholder: '123-456-7890',
+        help: 'If using a Manager (MCC) account, enter the MCC Customer ID here. Leave empty if not using a manager account.',
+        optional: true,
       },
       {
         field: 'conversion_action_id',
         label: 'Conversion Action ID',
         placeholder: '123456789',
-        help: 'From Tools > Conversions',
+        help: 'Found in Google Ads > Tools & Settings > Measurement > Conversions > click your conversion action > the numeric ID in the URL.',
       },
       {
-        field: 'api_key',
-        label: 'API Key',
-        placeholder: 'AIza...',
-        help: 'OAuth token or Developer token',
+        field: 'developer_token',
+        label: 'Developer Token',
+        placeholder: 'aBcDeFgHiJkLmNoPqR',
+        help: 'Found in Google Ads API Center (Tools > Setup > API Center). Required for server-to-server API calls. Apply for Basic or Standard access.',
+        sensitive: true,
+      },
+      {
+        field: 'access_token',
+        label: 'OAuth Refresh Token',
+        placeholder: '1//0abc...',
+        help: 'OAuth 2.0 refresh token for Google Ads API. Generate via Google OAuth Playground or your app credentials. Scopes: https://www.googleapis.com/auth/adwords',
         sensitive: true,
       },
     ],
@@ -87,13 +115,20 @@ const PLATFORMS = [
         field: 'pixel_code',
         label: 'Pixel Code',
         placeholder: 'CXXXXXXXXXX',
-        help: 'Found in TikTok Ads Manager > Events > Manage > Web Events',
+        help: 'Found in TikTok Ads Manager > Events > Manage > Web Events. Starts with "C" followed by alphanumeric characters.',
+      },
+      {
+        field: 'advertiser_id',
+        label: 'Advertiser ID',
+        placeholder: '7012345678901234567',
+        help: 'Found in TikTok Ads Manager > Account Settings, or at the top of TikTok Ads dashboard. This is your TikTok ad account number.',
+        optional: true,
       },
       {
         field: 'access_token',
         label: 'Events API Access Token',
         placeholder: '',
-        help: 'Long-lived access token from TikTok Events Manager for server-side event tracking',
+        help: 'Long-lived access token from TikTok for Business > Events Manager > Manage > Settings > Generate Access Token. Required for server-side event delivery.',
         sensitive: true,
       },
     ],
@@ -108,14 +143,21 @@ const PLATFORMS = [
       {
         field: 'pixel_id',
         label: 'Pixel ID',
-        placeholder: '',
-        help: 'Found in Snap Pixel setup in Ads Manager',
+        placeholder: 'abc12345-1234-1234-1234-123456789012',
+        help: 'Found in Ads Manager > Events Manager > Snap Pixel. This is a UUID-format identifier for your Snap Pixel.',
+      },
+      {
+        field: 'ad_account_id',
+        label: 'Ad Account ID',
+        placeholder: 'abc12345-1234-1234-1234-123456789012',
+        help: 'Found in Ads Manager > Account Settings. This is your Snapchat ad account identifier.',
+        optional: true,
       },
       {
         field: 'access_token',
         label: 'CAPI Access Token',
         placeholder: '',
-        help: 'Conversions API token from Snapchat Business Manager > Snap Pixel > Conversions API',
+        help: 'Conversions API token from Snapchat Business Manager > Snap Pixel > Conversions API. Generate a long-lived token for server-side events.',
         sensitive: true,
       },
     ],
@@ -131,26 +173,26 @@ const PLATFORMS = [
         field: 'phone_number_id',
         label: 'Phone Number ID',
         placeholder: '1234567890123456',
-        help: 'From Meta Business Suite > WhatsApp Manager > Phone Numbers',
+        help: 'From Meta Business Suite > WhatsApp Manager > Phone Numbers. This is the numeric ID for your WhatsApp business phone number.',
       },
       {
         field: 'business_account_id',
-        label: 'Business Account ID',
+        label: 'Business Account ID (WABA)',
         placeholder: '1234567890123456',
-        help: 'WhatsApp Business Account ID (WABA ID) from Meta Business Suite',
+        help: 'WhatsApp Business Account ID from Meta Business Suite > WhatsApp Manager > Account Settings. Required to manage messaging.',
       },
       {
         field: 'access_token',
         label: 'WhatsApp Cloud API Token',
         placeholder: 'EAABsbCS...',
-        help: 'Permanent System User token with whatsapp_business_messaging permission from Business Settings',
+        help: 'Permanent System User token with whatsapp_business_messaging permission. Go to Business Settings > System Users > Generate Token.',
         sensitive: true,
       },
       {
         field: 'webhook_verify_token',
         label: 'Webhook Verify Token',
         placeholder: 'your_verify_token',
-        help: 'Custom string you create for webhook verification (must match webhook config)',
+        help: 'Custom string you create for webhook verification. Must match the token configured in your Meta App > WhatsApp > Configuration > Webhook.',
       },
     ],
   },
@@ -485,7 +527,12 @@ export function CAPISetup() {
                   {platform.credentials.map((cred) => (
                     <div key={cred.field}>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-sm font-medium text-foreground">{cred.label}</label>
+                        <label className="text-sm font-medium text-foreground">
+                          {cred.label}
+                          {(cred as any).optional && (
+                            <span className="text-xs font-normal text-muted-foreground ml-1.5">(optional)</span>
+                          )}
+                        </label>
                         <button
                           onClick={() => setShowHelp(showHelp === cred.field ? null : cred.field)}
                           className="text-muted-foreground hover:text-foreground"
@@ -512,7 +559,7 @@ export function CAPISetup() {
 
                   <button
                     onClick={handleConnect}
-                    disabled={connecting || platform.credentials.some((c) => !credentials[c.field])}
+                    disabled={connecting || platform.credentials.filter((c) => !(c as any).optional).some((c) => !credentials[c.field])}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {connecting ? (
