@@ -177,6 +177,7 @@ export function Rules() {
     conditionOperator: 'less_than',
     conditionValue: '',
     actionType: 'send_alert' as RuleAction,
+    actionConfig: {} as Record<string, any>,
     cooldownHours: 24,
   });
 
@@ -195,6 +196,7 @@ export function Rules() {
       conditionOperator: 'less_than',
       conditionValue: '',
       actionType: 'send_alert',
+      actionConfig: {},
       cooldownHours: 24,
     });
     setEditingRule(null);
@@ -214,6 +216,7 @@ export function Rules() {
       conditionOperator: rule.condition.operator,
       conditionValue: rule.condition.value,
       actionType: rule.action.type,
+      actionConfig: rule.action.config || {},
       cooldownHours: rule.cooldownHours,
     });
     setShowCreateModal(true);
@@ -224,9 +227,13 @@ export function Rules() {
       await createRule.mutateAsync({
         name: `${rule.name} (Copy)`,
         description: rule.description,
-        conditions: [{ field: rule.condition.field, operator: rule.condition.operator as any, value: rule.condition.value }],
-        actions: [{ type: rule.action.type as any, config: rule.action.config }],
-        trigger: 'metric_threshold',
+        condition_field: rule.condition.field,
+        condition_operator: rule.condition.operator,
+        condition_value: rule.condition.value,
+        condition_duration_hours: 24,
+        action_type: rule.action.type,
+        action_config: rule.action.config || {},
+        cooldown_hours: rule.cooldownHours,
         status: 'draft',
       } as any);
       toast({ title: 'Rule duplicated', description: `"${rule.name}" has been duplicated as a draft.` });
@@ -241,16 +248,12 @@ export function Rules() {
     const payload = {
       name: ruleForm.name,
       description: ruleForm.description,
-      conditions: [{
-        field: ruleForm.conditionField,
-        operator: ruleForm.conditionOperator as any,
-        value: ruleForm.conditionValue,
-      }],
-      actions: [{
-        type: ruleForm.actionType as any,
-        config: {},
-      }],
-      trigger: 'metric_threshold' as const,
+      condition_field: ruleForm.conditionField,
+      condition_operator: ruleForm.conditionOperator,
+      condition_value: ruleForm.conditionValue,
+      condition_duration_hours: 24,
+      action_type: ruleForm.actionType,
+      action_config: ruleForm.actionConfig,
       cooldown_hours: ruleForm.cooldownHours,
     };
 
@@ -656,11 +659,21 @@ export function Rules() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm font-medium mb-3">{t('rules.action')}</p>
+              <div className="p-4 rounded-lg bg-muted/50 space-y-3">
+                <p className="text-sm font-medium">{t('rules.action')}</p>
                 <select
                   value={ruleForm.actionType}
-                  onChange={(e) => setRuleForm(f => ({ ...f, actionType: e.target.value as RuleAction }))}
+                  onChange={(e) => {
+                    const newType = e.target.value as RuleAction;
+                    const defaultConfig = newType === 'notify_whatsapp'
+                      ? { contact_ids: [], template_name: 'rule_alert' }
+                      : newType === 'notify_slack'
+                        ? { webhook_url: '' }
+                        : newType === 'adjust_budget'
+                          ? { adjustment_type: 'decrease', adjustment_value: 10 }
+                          : {};
+                    setRuleForm(f => ({ ...f, actionType: newType, actionConfig: defaultConfig }));
+                  }}
                   className="w-full px-3 py-2 rounded-lg border bg-background"
                 >
                   <option value="apply_label">Apply Label</option>
@@ -670,6 +683,79 @@ export function Rules() {
                   <option value="notify_slack">Notify Slack</option>
                   <option value="notify_whatsapp">Notify WhatsApp</option>
                 </select>
+
+                {/* WhatsApp Config */}
+                {ruleForm.actionType === 'notify_whatsapp' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Contact IDs (comma-separated)</label>
+                      <input
+                        type="text"
+                        value={(ruleForm.actionConfig.contact_ids || []).join(', ')}
+                        onChange={(e) => {
+                          const ids = e.target.value.split(',').map(s => s.trim()).filter(Boolean).map(Number).filter(n => !isNaN(n));
+                          setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, contact_ids: ids } }));
+                        }}
+                        placeholder="1, 2, 3"
+                        className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">IDs of opted-in WhatsApp contacts to notify</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Message Template</label>
+                      <select
+                        value={ruleForm.actionConfig.template_name || 'rule_alert'}
+                        onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, template_name: e.target.value } }))}
+                        className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+                      >
+                        <option value="rule_alert">Rule Alert (default)</option>
+                        <option value="budget_alert">Budget Alert</option>
+                        <option value="performance_alert">Performance Alert</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Slack Config */}
+                {ruleForm.actionType === 'notify_slack' && (
+                  <div className="pt-2 border-t">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Slack Webhook URL</label>
+                    <input
+                      type="url"
+                      value={ruleForm.actionConfig.webhook_url || ''}
+                      onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, webhook_url: e.target.value } }))}
+                      placeholder="https://hooks.slack.com/services/..."
+                      className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                )}
+
+                {/* Budget Adjust Config */}
+                {ruleForm.actionType === 'adjust_budget' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div className="flex gap-3">
+                      <select
+                        value={ruleForm.actionConfig.adjustment_type || 'decrease'}
+                        onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, adjustment_type: e.target.value } }))}
+                        className="px-3 py-2 rounded-lg border bg-background text-sm"
+                      >
+                        <option value="decrease">Decrease by</option>
+                        <option value="increase">Increase by</option>
+                      </select>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          value={ruleForm.actionConfig.adjustment_value || 10}
+                          onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, adjustment_value: parseInt(e.target.value) || 0 } }))}
+                          className="w-20 px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          min={1}
+                          max={100}
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
