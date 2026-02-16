@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, ApiResponse, PaginatedResponse } from './client';
 
 // Types
-export type UserRole = 'superadmin' | 'admin' | 'user' | 'viewer';
+export type UserRole = 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer';
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'churned';
 export type PlanTier = 'starter' | 'pro' | 'enterprise';
 
@@ -77,6 +77,12 @@ export interface UpdateUserRequest {
   isActive?: boolean;
 }
 
+export interface InviteUserRequest {
+  email: string;
+  full_name?: string;
+  role: UserRole;
+}
+
 export interface CreateTenantRequest {
   name: string;
   domain?: string;
@@ -109,6 +115,11 @@ export const adminApi = {
 
   createUser: async (data: CreateUserRequest): Promise<User> => {
     const response = await apiClient.post<ApiResponse<User>>('/admin/users', data);
+    return response.data.data;
+  },
+
+  inviteUser: async (data: InviteUserRequest): Promise<User> => {
+    const response = await apiClient.post<ApiResponse<User>>('/users/invite', data);
     return response.data.data;
   },
 
@@ -202,6 +213,18 @@ export function useCreateUser() {
     mutationFn: adminApi.createUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+  });
+}
+
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: adminApi.inviteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'tenants'] });
     },
   });
 }

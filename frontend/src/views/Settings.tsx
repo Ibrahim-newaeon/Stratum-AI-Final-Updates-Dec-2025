@@ -270,6 +270,7 @@ function ProfileSettings() {
 
 function OrganizationSettings() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   // Get tenant data from store
   const tenant = useTenantStore((state) => state.tenant);
 
@@ -285,7 +286,7 @@ function OrganizationSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('user');
+  const [inviteRole, setInviteRole] = useState('analyst');
   const [isInviting, setIsInviting] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<number | null>(null);
 
@@ -324,10 +325,18 @@ function OrganizationSettings() {
         setTeamMembers([...teamMembers, response.data.data]);
         setShowInviteModal(false);
         setInviteEmail('');
-        setInviteRole('user');
+        setInviteRole('analyst');
+        toast({
+          title: 'Success',
+          description: 'Invitation sent successfully',
+        });
       }
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to invite user');
+      toast({
+        title: 'Error',
+        description: error.response?.data?.detail || 'Failed to invite user',
+        variant: 'destructive',
+      });
     } finally {
       setIsInviting(false);
     }
@@ -450,9 +459,10 @@ function OrganizationSettings() {
                   onChange={(e) => setInviteRole(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="user">User</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
+                  <option value="admin">Admin - Full access to all features</option>
+                  <option value="manager">Manager - Manage campaigns and team</option>
+                  <option value="analyst">Analyst - View reports and analytics</option>
+                  <option value="viewer">Viewer - Read-only access</option>
                 </select>
               </div>
             </div>

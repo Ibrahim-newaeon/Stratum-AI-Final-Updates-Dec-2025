@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCreateUser, useDeleteUser, useTenantUsers, useUpdateUser } from '@/api/admin';
+import { useInviteUser, useDeleteUser, useTenantUsers, useUpdateUser, type UserRole } from '@/api/admin';
 import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowLeftIcon,
@@ -49,7 +49,7 @@ export default function TeamManagement() {
   const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0;
 
   const { data: usersData, isLoading, refetch } = useTenantUsers(tenantIdNum);
-  const createUserMutation = useCreateUser();
+  const inviteUserMutation = useInviteUser();
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();
 
@@ -60,7 +60,7 @@ export default function TeamManagement() {
   const [newUser, setNewUser] = useState({
     email: '',
     name: '',
-    role: 'viewer',
+    role: 'analyst',
   });
 
   const users: TeamMember[] = usersData || [];
@@ -82,21 +82,17 @@ export default function TeamManagement() {
     }
 
     try {
-      // Generate a temporary password for invite flow - user will reset via email
-      const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
-      await createUserMutation.mutateAsync({
-        tenantId: tenantIdNum,
+      await inviteUserMutation.mutateAsync({
         email: newUser.email,
-        name: newUser.name || newUser.email.split('@')[0],
-        password: tempPassword,
-        role: newUser.role as 'superadmin' | 'admin' | 'user' | 'viewer',
+        full_name: newUser.name || undefined,
+        role: newUser.role as UserRole,
       });
       toast({
         title: 'Success',
-        description: 'Team member invited successfully',
+        description: 'Invitation sent successfully',
       });
       setShowInviteModal(false);
-      setNewUser({ email: '', name: '', role: 'viewer' });
+      setNewUser({ email: '', name: '', role: 'analyst' });
       refetch();
     } catch (error) {
       toast({
@@ -111,7 +107,7 @@ export default function TeamManagement() {
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
-        data: { role: newRole as 'superadmin' | 'admin' | 'user' | 'viewer' },
+        data: { role: newRole as UserRole },
       });
       toast({
         title: 'Success',
@@ -433,10 +429,10 @@ export default function TeamManagement() {
               </button>
               <button
                 onClick={handleInvite}
-                disabled={createUserMutation.isPending}
+                disabled={inviteUserMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {createUserMutation.isPending ? 'Inviting...' : 'Send Invite'}
+                {inviteUserMutation.isPending ? 'Inviting...' : 'Send Invite'}
               </button>
             </div>
           </div>

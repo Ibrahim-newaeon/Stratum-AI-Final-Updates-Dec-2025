@@ -33,7 +33,7 @@ class InviteUserRequest(BaseModel):
 
     email: EmailStr
     full_name: Optional[str] = None
-    role: str = Field(default="user", description="User role: admin, manager, user")
+    role: str = Field(default="analyst", description="User role: admin, manager, analyst, viewer")
 
 
 class UpdateUserRequest(BaseModel):
@@ -259,9 +259,10 @@ async def invite_user(
     role_map = {
         "admin": UserRole.ADMIN,
         "manager": UserRole.MANAGER,
-        "user": UserRole.USER,
+        "analyst": UserRole.ANALYST,
+        "viewer": UserRole.VIEWER,
     }
-    user_role = role_map.get(invite_data.role.lower(), UserRole.USER)
+    user_role = role_map.get(invite_data.role.lower(), UserRole.ANALYST)
 
     # Create user with temporary password (will need to set password on first login)
     temp_password = secrets.token_urlsafe(16)
