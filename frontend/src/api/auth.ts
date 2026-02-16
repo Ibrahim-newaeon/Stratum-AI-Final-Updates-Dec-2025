@@ -67,6 +67,8 @@ export interface VerifyEmailResponse {
 
 export interface ForgotPasswordRequest {
   email: string;
+  delivery_method?: 'email' | 'whatsapp';
+  phone_number?: string;
 }
 
 export interface ForgotPasswordResponse {

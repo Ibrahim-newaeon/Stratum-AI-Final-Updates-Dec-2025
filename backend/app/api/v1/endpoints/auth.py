@@ -108,9 +108,17 @@ class ResendVerificationRequest(BaseModel):
 
 
 class ForgotPasswordRequest(BaseModel):
-    """Forgot password request."""
+    """Forgot password request with delivery method choice."""
 
     email: EmailStr
+    delivery_method: str = Field(
+        default="email",
+        description="How to deliver the reset link: 'email' or 'whatsapp'",
+    )
+    phone_number: Optional[str] = Field(
+        default=None,
+        description="Phone number for WhatsApp delivery (optional — falls back to user's registered phone)",
+    )
 
 
 class ResetPasswordRequest(BaseModel):
@@ -1096,22 +1104,29 @@ async def forgot_password(
     db: AsyncSession = Depends(get_async_session),
 ):
     """
-    Request password reset email.
+    Request password reset link via email or WhatsApp.
 
     Args:
-        forgot_data: Email address
+        forgot_data: Email, delivery_method ('email' | 'whatsapp'), optional phone_number
 
     Returns:
         Success message (always returns success to prevent email enumeration)
     """
     email_lower = forgot_data.email.lower()
     email_hash = hash_pii_for_lookup(email_lower)
+    delivery_method = forgot_data.delivery_method or "email"
+
+    # Success messages per delivery method
+    if delivery_method == "whatsapp":
+        success_msg = "If the account exists, a password reset link has been sent via WhatsApp"
+    else:
+        success_msg = "If the email exists, a password reset link has been sent"
 
     # Always return success to prevent email enumeration
     success_response = APIResponse(
         success=True,
-        data=MessageResponse(message="If the email exists, a password reset link has been sent"),
-        message="Password reset email sent",
+        data=MessageResponse(message=success_msg),
+        message="Password reset link sent",
     )
 
     # Find user
@@ -1140,22 +1155,71 @@ async def forgot_password(
         logger.error("Redis error storing reset token", error=str(e))
         return success_response
 
-    # Send reset email
-    async def send_reset_email():
-        try:
-            email_service = get_email_service()
-            full_name = decrypt_pii(user.full_name) if user.full_name else None
-            email_service.send_password_reset_email(
-                to_email=email_lower,
-                token=reset_token,
-                user_name=full_name,
-            )
-        except Exception as e:
-            logger.error("Error sending reset email", error=str(e))
+    reset_url = f"{settings.frontend_url}/reset-password?token={reset_token}"
 
-    background_tasks.add_task(send_reset_email)
+    if delivery_method == "whatsapp":
+        # ---------------------------------------------------------------
+        # WhatsApp delivery
+        # ---------------------------------------------------------------
+        # Resolve phone: use provided phone_number or fall back to user's registered phone
+        phone = forgot_data.phone_number
+        if not phone and user.phone:
+            try:
+                phone = decrypt_pii(user.phone)
+            except Exception:
+                phone = None
 
-    logger.info("password_reset_requested", user_id=user.id)
+        if not phone:
+            # No phone available — silently return success (anti-enumeration)
+            logger.warning("whatsapp_reset_no_phone", user_id=user.id)
+            return success_response
+
+        # WhatsApp Template: "password_reset_link" (AUTHENTICATION category)
+        # Body: "Your Stratum AI password reset link: {{1}}. This link expires in 1 hour."
+        # Must be pre-approved in Meta Business Manager before use.
+        async def send_reset_whatsapp():
+            try:
+                whatsapp_client = get_whatsapp_client()
+                clean_phone = phone.replace("+", "") if phone else ""
+                await whatsapp_client.send_template_message(
+                    recipient_phone=clean_phone,
+                    template_name="password_reset_link",
+                    language_code="en",
+                    components=[
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {"type": "text", "text": reset_url},
+                            ],
+                        }
+                    ],
+                )
+                logger.info("password_reset_whatsapp_sent", user_id=user.id)
+            except WhatsAppAPIError as e:
+                logger.error("WhatsApp API error sending reset link", error=e.message)
+            except Exception as e:
+                logger.error("Error sending WhatsApp reset link", error=str(e))
+
+        background_tasks.add_task(send_reset_whatsapp)
+    else:
+        # ---------------------------------------------------------------
+        # Email delivery (default)
+        # ---------------------------------------------------------------
+        async def send_reset_email():
+            try:
+                email_service = get_email_service()
+                full_name = decrypt_pii(user.full_name) if user.full_name else None
+                email_service.send_password_reset_email(
+                    to_email=email_lower,
+                    token=reset_token,
+                    user_name=full_name,
+                )
+            except Exception as e:
+                logger.error("Error sending reset email", error=str(e))
+
+        background_tasks.add_task(send_reset_email)
+
+    logger.info("password_reset_requested", user_id=user.id, method=delivery_method)
 
     return success_response
 
