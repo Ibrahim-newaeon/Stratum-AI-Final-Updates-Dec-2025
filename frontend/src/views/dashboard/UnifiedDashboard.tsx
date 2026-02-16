@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowRight,
   BarChart3,
+  Calendar,
   ChevronDown,
   DollarSign,
   Loader2,
@@ -58,20 +59,34 @@ const periodOptions: { value: TimePeriod; label: string }[] = [
   { value: '90d', label: 'Last 90 Days' },
   { value: 'this_month', label: 'This Month' },
   { value: 'last_month', label: 'Last Month' },
+  { value: 'custom', label: 'Custom Range' },
 ];
+
+function formatDateLabel(start: string, end: string): string {
+  const s = new Date(start + 'T00:00:00');
+  const e = new Date(end + 'T00:00:00');
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  const endOpts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+  return `${s.toLocaleDateString('en-US', opts)} – ${e.toLocaleDateString('en-US', endOpts)}`;
+}
 
 export default function UnifiedDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState<TimePeriod>('7d');
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [appliedStartDate, setAppliedStartDate] = useState<string | undefined>();
+  const [appliedEndDate, setAppliedEndDate] = useState<string | undefined>();
   const { showPriceMetrics } = usePriceMetrics();
 
   // Fetch all dashboard data
   const {
     data: overview,
     isLoading: overviewLoading,
-  } = useDashboardOverview(period);
+  } = useDashboardOverview(period, true, appliedStartDate, appliedEndDate);
 
   const { data: campaigns, isLoading: campaignsLoading } = useDashboardCampaigns({
     period,
@@ -98,13 +113,30 @@ export default function UnifiedDashboard() {
 
   // Handlers
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.refetchQueries({ queryKey: ['dashboard'] });
   }, [queryClient]);
 
   const handlePeriodChange = useCallback((newPeriod: TimePeriod) => {
+    if (newPeriod === 'custom') {
+      setShowCustomPicker(true);
+      return;
+    }
     setPeriod(newPeriod);
+    setAppliedStartDate(undefined);
+    setAppliedEndDate(undefined);
+    setShowCustomPicker(false);
     setShowPeriodDropdown(false);
   }, []);
+
+  const handleApplyCustomRange = useCallback(() => {
+    if (customStartDate && customEndDate) {
+      setPeriod('custom');
+      setAppliedStartDate(customStartDate);
+      setAppliedEndDate(customEndDate);
+      setShowCustomPicker(false);
+      setShowPeriodDropdown(false);
+    }
+  }, [customStartDate, customEndDate]);
 
   const handleApproveRecommendation = useCallback(
     async (id: string) => {
@@ -162,29 +194,66 @@ export default function UnifiedDashboard() {
           {/* Period Selector */}
           <div className="relative">
             <button
-              onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
+              onClick={() => { setShowPeriodDropdown(!showPeriodDropdown); setShowCustomPicker(false); }}
               className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium bg-background hover:bg-muted transition-colors"
             >
-              {periodOptions.find((p) => p.value === period)?.label || 'Last 7 Days'}
+              {period === 'custom' && appliedStartDate && appliedEndDate
+                ? formatDateLabel(appliedStartDate, appliedEndDate)
+                : periodOptions.find((p) => p.value === period)?.label || 'Last 7 Days'}
               <ChevronDown className="w-4 h-4 ml-2" />
             </button>
 
             {showPeriodDropdown && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowPeriodDropdown(false)} />
-                <div className="absolute right-0 mt-2 w-48 bg-card border rounded-lg shadow-lg z-20 py-1">
+                <div className="fixed inset-0 z-10" onClick={() => { setShowPeriodDropdown(false); setShowCustomPicker(false); }} />
+                <div className="absolute right-0 mt-2 w-64 bg-card border rounded-lg shadow-lg z-20 py-1">
                   {periodOptions.map((option) => (
                     <button
                       key={option.value}
                       onClick={() => handlePeriodChange(option.value)}
                       className={cn(
-                        'w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors',
-                        period === option.value && 'bg-muted font-medium'
+                        'w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2',
+                        period === option.value && !showCustomPicker && 'bg-muted font-medium'
                       )}
                     >
+                      {option.value === 'custom' && <Calendar className="w-4 h-4" />}
                       {option.label}
                     </button>
                   ))}
+
+                  {/* Custom Date Range Picker */}
+                  {showCustomPicker && (
+                    <div className="border-t px-4 py-3 space-y-3">
+                      <div className="space-y-2">
+                        <label className="block text-xs font-medium text-muted-foreground">Start Date</label>
+                        <input
+                          type="date"
+                          value={customStartDate}
+                          onChange={(e) => setCustomStartDate(e.target.value)}
+                          max={customEndDate || undefined}
+                          className="w-full px-3 py-1.5 text-sm border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-medium text-muted-foreground">End Date</label>
+                        <input
+                          type="date"
+                          value={customEndDate}
+                          onChange={(e) => setCustomEndDate(e.target.value)}
+                          min={customStartDate || undefined}
+                          max={new Date().toISOString().split('T')[0]}
+                          className="w-full px-3 py-1.5 text-sm border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                      </div>
+                      <button
+                        onClick={handleApplyCustomRange}
+                        disabled={!customStartDate || !customEndDate}
+                        className="w-full px-3 py-1.5 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             )}

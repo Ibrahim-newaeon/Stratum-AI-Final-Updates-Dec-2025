@@ -13,7 +13,7 @@ import { apiClient, ApiResponse } from './client';
 // Types
 // =============================================================================
 
-export type TimePeriod = 'today' | 'yesterday' | '7d' | '30d' | '90d' | 'this_month' | 'last_month';
+export type TimePeriod = 'today' | 'yesterday' | '7d' | '30d' | '90d' | 'this_month' | 'last_month' | 'custom';
 
 export type TrendDirection = 'up' | 'down' | 'stable';
 
@@ -217,10 +217,19 @@ export const dashboardApi = {
   /**
    * Get dashboard overview with metrics and status
    */
-  getOverview: async (period: TimePeriod = '7d'): Promise<DashboardOverviewResponse> => {
+  getOverview: async (
+    period: TimePeriod = '7d',
+    startDate?: string,
+    endDate?: string,
+  ): Promise<DashboardOverviewResponse> => {
+    const params: Record<string, string> = { period };
+    if (period === 'custom' && startDate && endDate) {
+      params.start_date = startDate;
+      params.end_date = endDate;
+    }
     const response = await apiClient.get<ApiResponse<DashboardOverviewResponse>>(
       '/dashboard/overview',
-      { params: { period } }
+      { params }
     );
     return response.data.data;
   },
@@ -356,10 +365,15 @@ export const dashboardApi = {
 /**
  * Get dashboard overview
  */
-export function useDashboardOverview(period: TimePeriod = '7d', enabled = true) {
+export function useDashboardOverview(
+  period: TimePeriod = '7d',
+  enabled = true,
+  startDate?: string,
+  endDate?: string,
+) {
   return useQuery({
-    queryKey: ['dashboard', 'overview', period],
-    queryFn: () => dashboardApi.getOverview(period),
+    queryKey: ['dashboard', 'overview', period, startDate, endDate],
+    queryFn: () => dashboardApi.getOverview(period, startDate, endDate),
     enabled,
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 5 * 60 * 1000, // 5 minutes

@@ -63,6 +63,7 @@ class TimePeriod(str, Enum):
     LAST_90_DAYS = "90d"
     THIS_MONTH = "this_month"
     LAST_MONTH = "last_month"
+    CUSTOM = "custom"
 
 
 class TrendDirection(str, Enum):
@@ -286,11 +287,17 @@ class DashboardExportRequest(BaseModel):
 # =============================================================================
 
 
-def get_date_range(period: TimePeriod) -> tuple[date, date]:
+def get_date_range(
+    period: TimePeriod,
+    custom_start: Optional[date] = None,
+    custom_end: Optional[date] = None,
+) -> tuple[date, date]:
     """Get start and end dates for a time period."""
     today = datetime.now(UTC).date()
 
-    if period == TimePeriod.TODAY:
+    if period == TimePeriod.CUSTOM and custom_start and custom_end:
+        return custom_start, custom_end
+    elif period == TimePeriod.TODAY:
         return today, today
     elif period == TimePeriod.YESTERDAY:
         yesterday = today - timedelta(days=1)
@@ -373,17 +380,20 @@ def format_percentage(value: float) -> str:
 async def get_dashboard_overview(
     current_user: CurrentUserDep,
     period: TimePeriod = Query(default=TimePeriod.LAST_7_DAYS),
+    custom_start: Optional[date] = Query(default=None, alias="start_date", description="Custom range start (YYYY-MM-DD)"),
+    custom_end: Optional[date] = Query(default=None, alias="end_date", description="Custom range end (YYYY-MM-DD)"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
     Get the main dashboard overview.
 
     Returns key metrics, signal health, platform breakdown, and quick stats.
+    Pass period=custom with start_date and end_date for custom date ranges.
     """
     tenant_id = current_user.tenant_id
 
     # Get date range
-    start_date, end_date = get_date_range(period)
+    start_date, end_date = get_date_range(period, custom_start, custom_end)
     prev_start, prev_end = get_previous_period(start_date, end_date)
 
     # Check onboarding status
@@ -549,6 +559,7 @@ async def get_dashboard_overview(
         TimePeriod.LAST_90_DAYS: "Last 90 Days",
         TimePeriod.THIS_MONTH: "This Month",
         TimePeriod.LAST_MONTH: "Last Month",
+        TimePeriod.CUSTOM: f"{start_date.strftime('%b %d')} – {end_date.strftime('%b %d, %Y')}",
     }
 
     return APIResponse(
@@ -579,6 +590,8 @@ async def get_dashboard_overview(
 async def get_campaign_performance(
     current_user: CurrentUserDep,
     period: TimePeriod = Query(default=TimePeriod.LAST_7_DAYS),
+    custom_start: Optional[date] = Query(default=None, alias="start_date"),
+    custom_end: Optional[date] = Query(default=None, alias="end_date"),
     platform: Optional[str] = Query(None),
     status_filter: Optional[str] = Query(None, alias="status"),
     sort_by: str = Query(default="spend"),
