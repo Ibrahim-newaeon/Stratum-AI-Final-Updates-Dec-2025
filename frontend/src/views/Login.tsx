@@ -1,6 +1,7 @@
 /**
  * Login Page - Stratum AI
- * Split-screen layout: Branding left panel + glass card form
+ * Split-screen layout: Trust Gauge left panel + glass card form
+ * Cyberpunk Dark theme — midnight navy + spectral pink/orange/gold
  *
  * Fixes applied:
  * - BUG-001/002: Demo login now uses demoLogin() with client-side fallback
@@ -132,13 +133,13 @@ export default function Login() {
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
       <style>{authStyles}</style>
 
-      <div className="bg-black text-white min-h-screen flex font-sans selection:bg-[#00c7be]/30 overflow-hidden">
-        {/* Background effects — matching landing page Apple Glass Dark */}
+      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        {/* Background mesh */}
         <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.08), transparent 60%)' }} />
-          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 60%)' }} />
-          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(20, 240, 198, 0.05), transparent 60%)' }} />
+          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
+          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 140, 0, 0.06), transparent 60%)' }} />
+          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
         </div>
 
         <main className="relative z-10 w-full flex min-h-screen">
@@ -146,43 +147,39 @@ export default function Login() {
           <AuthLeftPanel className="hidden lg:flex" />
 
           {/* Right Panel — Form */}
-          <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-black/50 relative">
-            {/* Decorative corners — neutral white matching landing page borders */}
-            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-white/[0.08] pointer-events-none rounded-tr-2xl hidden lg:block" />
-            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-white/[0.08] pointer-events-none rounded-bl-2xl hidden lg:block" />
+          <section className="lg:w-5/12 w-full flex flex-col items-center justify-center p-6 lg:p-8 bg-[#080E1C] relative">
+            {/* Subtle gradient overlay */}
+            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-[#FF1F6D]/5 to-transparent pointer-events-none" />
 
-            <div className="w-full max-w-[400px] auth-glass-card rounded-[24px] p-7 shadow-2xl relative z-20 auth-fade-up">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up mb-12">
               {/* Header */}
-              <div className="mb-8 text-center">
-                <div className="w-14 h-14 bg-[#00c7be]/10 rounded-full flex items-center justify-center mx-auto mb-5 border border-[#00c7be]/20">
-                  <FingerPrintIcon className="w-7 h-7 text-[#00c7be]" />
-                </div>
-                <h2 className="text-[24px] font-display font-bold text-white mb-2">
+              <div className="mb-10">
+                <h2 className="text-3xl font-display font-extrabold text-white mb-2 tracking-tight">
                   Dashboard Access
                 </h2>
-                <p className="text-white/40 text-[14px]">
-                  Authenticate to access your Stratum dashboard
+                <p className="text-slate-400 text-sm">
+                  Enter your neural credentials to initialize session.
                 </p>
               </div>
 
               {/* Mobile logo */}
               <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-                <div className="w-9 h-9 bg-[#00c7be] rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="font-display font-bold text-white text-base">S</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-[#FF1F6D] to-[#FF3D00] rounded-lg flex items-center justify-center shadow-lg rotate-45">
+                  <span className="font-display font-bold text-white text-base -rotate-45">S</span>
                 </div>
                 <span className="font-display font-bold text-lg tracking-tight text-white">
                   STRATUM AI
                 </span>
               </div>
 
-              <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 {/* Verification Banner — shown after signup redirect */}
                 {showVerificationBanner && (
                   <div className="auth-slide-in flex items-start gap-2 p-3 rounded-xl text-[13px] bg-amber-500/10 border border-amber-500/20 text-amber-400">
                     <EnvelopeIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     <div>
                       <span>Please verify your email before signing in. Check your inbox for a verification link.</span>
-                      <Link to="/verify-email" className="block mt-1 text-[#00c7be] font-bold hover:underline text-[12px]">
+                      <Link to="/verify-email" className="block mt-1 text-[#FF1F6D] font-bold hover:underline text-[12px]">
                         Resend verification email
                       </Link>
                     </div>
@@ -197,16 +194,16 @@ export default function Login() {
                   </div>
                 )}
 
-                {/* Work Identity */}
-                <div className="auth-fade-up-d1">
+                {/* Neural Identifier (Email) */}
+                <div className="space-y-2 auth-fade-up-d1">
                   <label
                     htmlFor="login-email"
-                    className="block text-[12px] font-bold text-white/30 uppercase tracking-wider mb-1.5 ml-1"
+                    className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1"
                   >
-                    Work Identity
+                    Neural Identifier
                   </label>
-                  <div className="relative auth-input-glow rounded-xl transition-shadow">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/25 pointer-events-none" />
+                  <div className="relative">
+                    <FingerPrintIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
                     <input
                       id="login-email"
                       name="email"
@@ -216,12 +213,12 @@ export default function Login() {
                       onChange={(e) => setEmail(e.target.value)}
                       onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
                       onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                      placeholder="you@company.com"
+                      placeholder="u_alpha_772"
                       required
                       disabled={isLoading}
                       aria-invalid={!!emailError}
                       aria-describedby={emailError ? 'login-email-error' : undefined}
-                      className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-4 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
+                      className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-4 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.3)]"
                     />
                   </div>
                   {emailError && (
@@ -229,24 +226,24 @@ export default function Login() {
                   )}
                 </div>
 
-                {/* Encryption Key */}
-                <div className="auth-fade-up-d2">
-                  <div className="flex justify-between items-center mb-1.5 ml-1">
+                {/* Security Key (Password) */}
+                <div className="space-y-2 auth-fade-up-d2">
+                  <div className="flex justify-between items-center px-1">
                     <label
                       htmlFor="login-password"
-                      className="block text-[12px] font-bold text-white/30 uppercase tracking-wider"
+                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500"
                     >
-                      Encryption Key
+                      Security Key
                     </label>
                     <Link
                       to="/forgot-password"
-                      className="text-[11px] font-bold text-[#00c7be] hover:text-white transition-colors"
+                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-[#FF1F6D] hover:text-white transition-colors"
                     >
-                      Recovery
+                      Reset Key
                     </Link>
                   </div>
-                  <div className="relative auth-input-glow rounded-xl transition-shadow">
-                    <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/25 pointer-events-none" />
+                  <div className="relative">
+                    <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
                     <input
                       id="login-password"
                       name="password"
@@ -261,7 +258,7 @@ export default function Login() {
                       disabled={isLoading}
                       aria-invalid={!!passwordError}
                       aria-describedby={passwordError ? 'login-password-error' : undefined}
-                      className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-11 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
+                      className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-11 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.3)]"
                     />
                     <button
                       type="button"
@@ -283,19 +280,19 @@ export default function Login() {
                 </div>
 
                 {/* Remember Me */}
-                <div className="flex items-center gap-2.5 py-1 auth-fade-up-d2">
+                <div className="flex items-center gap-3 px-1 py-2 auth-fade-up-d2">
                   <input
                     type="checkbox"
                     id="remember"
                     checked={rememberMe}
                     onChange={() => setRememberMe(!rememberMe)}
-                    className="w-4 h-4 rounded border-white/10 bg-white/5 text-[#00c7be] focus:ring-[#00c7be] focus:ring-offset-black cursor-pointer"
+                    className="w-4 h-4 rounded border-white/10 bg-[#050B18] text-[#FF1F6D] focus:ring-[#FF1F6D] focus:ring-offset-[#050B18] cursor-pointer"
                   />
                   <label
                     htmlFor="remember"
-                    className="text-[12px] text-white/40 font-medium cursor-pointer select-none"
+                    className="text-xs text-slate-400 font-medium cursor-pointer select-none"
                   >
-                    Maintain active session
+                    Keep session active for 24h
                   </label>
                 </div>
 
@@ -303,73 +300,62 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-bold h-[46px] rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-3 text-[14px] disabled:opacity-50 disabled:hover:scale-100"
+                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  {isLoading ? (
+                  {isLoading && !loadingRole ? (
                     <span className="flex items-center gap-2">
                       <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      Signing in...
+                      INITIALIZING...
                     </span>
                   ) : (
-                    <>
-                      Sign in to Dashboard
-                      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                      </svg>
-                    </>
+                    <>INITIALIZE SESSION</>
                   )}
                 </button>
               </form>
 
-              {/* BUG-027: Section divider — consistent uppercase label */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/5" />
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-                  <span className="bg-black px-4 text-white/20">
-                    Enterprise SSO
-                  </span>
-                </div>
-              </div>
-
-              {/* BUG-006: SSO Button — disabled with Coming Soon tooltip */}
-              <div className="relative">
-                <button
-                  type="button"
-                  disabled
-                  onMouseEnter={() => setSsoHover(true)}
-                  onMouseLeave={() => setSsoHover(false)}
-                  className="w-full h-[44px] flex items-center justify-center bg-white/[0.04] text-[12px] font-bold text-white/30 rounded-xl border border-white/[0.06] transition-colors uppercase tracking-wider gap-2 cursor-not-allowed opacity-60"
-                  aria-label="SSO authentication coming soon"
-                >
-                  <BuildingOfficeIcon className="w-4 h-4" />
-                  Authenticate with SSO
-                </button>
-                {ssoHover && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#00c7be] text-white text-[11px] font-bold py-1 px-3 rounded-lg whitespace-nowrap z-30 shadow-lg">
-                    Coming Soon
-                  </div>
-                )}
-              </div>
-
-              {/* BUG-027: Section divider — consistent uppercase label */}
-              <div className="relative my-5">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/5" />
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-                  <span className="bg-black px-4 text-white/20">
-                    Demo Access
-                  </span>
+              {/* SSO Section */}
+              <div className="mt-12 pt-8 border-t border-white/5 flex flex-col items-center gap-4">
+                <p className="text-xs text-slate-500 font-medium tracking-wide">Or connect via Enterprise SSO</p>
+                {/* BUG-006: SSO Buttons — disabled with Coming Soon tooltip */}
+                <div className="flex gap-4 relative">
+                  {['hub', 'key', 'security'].map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      disabled
+                      onMouseEnter={() => setSsoHover(true)}
+                      onMouseLeave={() => setSsoHover(false)}
+                      className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors cursor-not-allowed opacity-60"
+                      aria-label="SSO authentication coming soon"
+                    >
+                      <BuildingOfficeIcon className="w-5 h-5 text-slate-300" />
+                    </button>
+                  ))}
+                  {ssoHover && (
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#FF1F6D] text-white text-[11px] font-bold py-1 px-3 rounded-lg whitespace-nowrap z-30 shadow-lg">
+                      Coming Soon
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              {/* Demo Buttons */}
-              <div className="grid grid-cols-3 gap-2">
+            {/* Divider */}
+            <div className="w-full max-w-md px-10 mb-8">
+              <div className="h-[1px] w-full bg-white/10" />
+            </div>
+
+            {/* Demo Access Section */}
+            <div className="w-full max-w-md px-10 relative z-10">
+              <div className="text-center mb-4">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                  Demo Access
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-8">
                 {([
                   { role: 'superadmin' as const, label: 'Super Admin', icon: '\u26A1' },
                   { role: 'admin' as const, label: 'Admin', icon: '\uD83D\uDEE1\uFE0F' },
@@ -384,7 +370,7 @@ export default function Login() {
                   >
                     {/* BUG-019: Show spinner on the specific demo button that's loading */}
                     {loadingRole === item.role ? (
-                      <svg className="animate-spin w-[14px] h-[14px] text-[#00c7be]" viewBox="0 0 24 24">
+                      <svg className="animate-spin w-[14px] h-[14px] text-[#FF1F6D]" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
@@ -398,17 +384,23 @@ export default function Login() {
                 ))}
               </div>
 
-              {/* Bottom Link */}
-              <div className="mt-6 pt-4">
+              {/* Footer links */}
+              <div className="flex flex-col items-center gap-4">
                 <p className="text-center text-[13px] text-white/30">
                   New entity?{' '}
                   <Link
                     to="/signup"
-                    className="text-[#00c7be] font-bold hover:underline"
+                    className="text-[#FF1F6D] font-bold hover:text-white transition-colors"
                   >
                     Request access
                   </Link>
                 </p>
+                <div className="flex gap-6">
+                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/privacy">Privacy Protocol</a>
+                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/terms">Legal Core</a>
+                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/contact">Support</a>
+                </div>
+                <span className="text-[10px] text-slate-600 font-mono tracking-widest">&copy; 2026 STRATUM ARTIFICIAL INTELLIGENCE</span>
               </div>
             </div>
           </section>

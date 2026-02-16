@@ -1,18 +1,10 @@
 /**
  * Shared Left Panel for Login & Signup pages
- * Branding, hero text, dashboard preview card, footer
+ * Cyberpunk Dark theme — Trust Gauge, spectral gradient, brand metrics
  */
 
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-
-const CHART_BARS = [
-  { day: 'MON', height: '45%', value: '$14.2k', highlight: false },
-  { day: 'TUE', height: '65%', value: '$18.1k', highlight: false },
-  { day: 'WED', height: '85%', value: '$24.9k', highlight: true },
-  { day: 'THU', height: '50%', value: '$15.4k', highlight: false },
-  { day: 'FRI', height: '75%', value: '$21.8k', highlight: false },
-];
 
 interface AuthLeftPanelProps {
   className?: string;
@@ -22,156 +14,119 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
   return (
     <section
       className={cn(
-        'w-7/12 p-12 flex-col justify-between relative border-r border-white/5',
+        'w-7/12 bg-[#050B18] relative overflow-hidden items-center justify-center border-r border-white/5',
         className
       )}
+      style={{
+        backgroundImage:
+          'radial-gradient(circle at 1px 1px, rgba(255, 31, 109, 0.05) 1px, transparent 0)',
+        backgroundSize: '40px 40px',
+      }}
     >
-      {/* Top: Logo + Status */}
-      <div className="space-y-8">
-        <div className="flex items-center space-x-3">
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-[#00c7be] rounded-lg flex items-center justify-center shadow-lg shadow-[#00c7be]/20">
-              <span className="font-display font-bold text-white text-xl uppercase">S</span>
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-lg leading-tight tracking-tight text-white">
-                Stratum AI
-              </h1>
-              <p className="text-[10px] tracking-widest text-[#00c7be] font-bold uppercase">
-                Revenue OS
-              </p>
-            </div>
-          </Link>
-        </div>
+      {/* Hero glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 50%, rgba(255, 31, 109, 0.1) 0%, transparent 70%)',
+        }}
+      />
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#00c7be]/5 border border-[#00c7be]/20 rounded-full text-[11px] font-bold uppercase tracking-wider text-[#00c7be]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]" />
-            </span>
-            Platform Status: <span className="text-white ml-1">Optimized</span>
+      {/* Top: Logo */}
+      <div className="absolute top-12 left-12 flex items-center gap-2 z-20">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#FF1F6D] to-[#FF3D00] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_20px_rgba(255,31,109,0.5)]">
+            <span className="text-white text-lg -rotate-45 font-bold font-display">S</span>
           </div>
-        </div>
+          <span className="font-display font-bold tracking-tighter text-2xl text-white">
+            STRATUM AI
+          </span>
+        </Link>
       </div>
 
-      {/* Center: Hero + Dashboard Preview */}
-      <div className="max-w-2xl">
-        <h2 className="text-5xl font-display font-bold leading-tight mb-8 text-white">
-          Experience the{' '}
-          <span className="text-[#00c7be]">Next Generation</span> of Revenue
-          Intelligence
-        </h2>
-
-        {/* Dashboard Preview Card */}
-        <div className="auth-glass-card p-8 rounded-[2rem] relative overflow-hidden group">
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <h3 className="font-display font-bold text-lg text-white">
-                Revenue Lift Dashboard
-              </h3>
-              <p className="text-xs text-white/40">
-                Real-time AI autonomous performance
-              </p>
+      {/* Center: Trust Gauge Card */}
+      <div className="relative z-10 w-full max-w-lg">
+        <div className="auth-glass-card rounded-3xl p-10 border-white/10 shadow-2xl">
+          {/* Window chrome */}
+          <div className="flex items-center justify-between mb-12">
+            <div className="flex gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#FF3D00]" />
+              <div className="w-3 h-3 rounded-full bg-[#FF8C00]" />
+              <div className="w-3 h-3 rounded-full bg-[#00F5FF]" />
             </div>
-            <div className="px-3 py-1 bg-[#00c7be]/20 rounded text-[10px] font-bold text-[#00c7be] uppercase border border-[#00c7be]/20 flex items-center gap-1.5">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00c7be] opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00c7be]" />
-              </span>
-              Live Sync
+            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">
+              System Monitoring Active
             </div>
           </div>
 
-          {/* Bar Chart */}
-          <div
-            className="flex items-end justify-between h-48 gap-4 px-4"
-            role="img"
-            aria-label="Revenue bar chart showing daily performance from Monday to Friday"
-          >
-            {CHART_BARS.map((bar, i) => (
-              <div
-                key={bar.day}
-                className="group/bar relative flex-1 flex flex-col items-center justify-end h-full"
-                role="presentation"
-                aria-label={`${bar.day}: ${bar.value}`}
-              >
-                {/* Tooltip */}
-                <div className="absolute -top-10 bg-[#00c7be] text-black text-[11px] font-bold py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-all pointer-events-none z-20 shadow-xl">
-                  {bar.value}
-                </div>
-                {/* Bar */}
-                <div
-                  className={cn(
-                    'auth-bar-grow w-full rounded-t-lg transition-all duration-500 border-x border-t',
-                    bar.highlight
-                      ? 'bg-[#00c7be]/60 border-white/20 auth-chart-glow group-hover/bar:bg-[#00c7be]/80'
-                      : 'bg-white/[0.06] border-white/5 group-hover/bar:bg-[#00c7be]/30'
-                  )}
-                  style={{
-                    height: bar.height,
-                    animationDelay: `${i * 0.15}s`,
-                  }}
+          {/* Trust Gauge SVG */}
+          <div className="flex flex-col items-center justify-center mb-12">
+            <div className="relative w-64 h-64 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90 auth-spectral-ring" viewBox="0 0 256 256">
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="110"
+                  fill="transparent"
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth="10"
                 />
-                <div
-                  className={cn(
-                    'mt-3 text-[10px] font-bold',
-                    bar.highlight ? 'text-[#00c7be]' : 'text-white/30'
-                  )}
-                >
-                  {bar.day}
+                <circle
+                  cx="128"
+                  cy="128"
+                  r="110"
+                  fill="transparent"
+                  stroke="url(#spectralGrad)"
+                  strokeWidth="16"
+                  strokeDasharray="690"
+                  strokeDashoffset="36"
+                  strokeLinecap="round"
+                />
+                <defs>
+                  <linearGradient id="spectralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FF3D00" />
+                    <stop offset="33%" stopColor="#FF8C00" />
+                    <stop offset="66%" stopColor="#FFD700" />
+                    <stop offset="100%" stopColor="#FF1F6D" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute text-center">
+                <div className="text-6xl font-display font-black text-white tracking-tighter">
+                  94.7<span className="text-[#FF1F6D] text-3xl">%</span>
+                </div>
+                <div className="text-[12px] uppercase font-bold tracking-[0.2em] text-slate-400 mt-1">
+                  Trust Score
                 </div>
               </div>
-            ))}
+            </div>
           </div>
 
-          {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-6 mt-10 pt-8 border-t border-white/10">
-            <div>
-              <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">
-                ROAS LIFT
-              </p>
-              <p className="text-xl font-display font-bold text-[#00c7be]">
-                +34.2%
-              </p>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-[#FF8C00] mb-2">
+                Revenue Growth
+              </div>
+              <div className="text-2xl font-mono font-bold text-white">+124.8%</div>
             </div>
-            <div>
-              <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">
-                CAC REDUCTION
-              </p>
-              <p className="text-xl font-display font-bold text-white">
-                -18.4%
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">
-                AI PRECISION
-              </p>
-              <p className="text-xl font-display font-bold text-white">
-                99.2%
-              </p>
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-[#00F5FF] mb-2">
+                AI Efficiency
+              </div>
+              <div className="text-2xl font-mono font-bold text-white">99.2%</div>
             </div>
           </div>
         </div>
+
+        {/* Ambient blurs behind card */}
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#FF1F6D]/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-[#FF8C00]/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center gap-8 text-[11px] text-white/30 font-medium uppercase tracking-widest">
-        <span>&copy; 2026 Stratum AI</span>
-        <div className="flex gap-6">
-          <a
-            className="hover:text-[#00c7be] transition-colors"
-            href="/security"
-          >
-            Security
-          </a>
-          <a
-            className="hover:text-[#00c7be] transition-colors"
-            href="/privacy"
-          >
-            Privacy
-          </a>
-        </div>
+      {/* Bottom: Protocol text */}
+      <div className="absolute bottom-12 left-12 text-[10px] font-mono text-slate-500 uppercase tracking-widest z-20">
+        Protocol v4.0.26 // Quantum Encrypted Session
       </div>
     </section>
   );

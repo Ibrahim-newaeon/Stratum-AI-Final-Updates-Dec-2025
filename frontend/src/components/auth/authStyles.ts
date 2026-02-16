@@ -1,6 +1,6 @@
 /**
  * Shared CSS styles for Login & Signup pages
- * Apple Glass Dark theme — matching landing page design system
+ * Cyberpunk Dark theme — midnight navy + spectral pink/orange/gold
  */
 
 export const authStyles = `
@@ -42,25 +42,26 @@ export const authStyles = `
 
   /* Glass card */
   .auth-glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(10, 22, 40, 0.8);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
   }
 
-  /* Input focus glow */
+  /* Input focus glow — cyan accent for inputs */
   .auth-input-glow:focus-within {
-    box-shadow: 0 0 0 1px rgba(0, 199, 190, 0.4), 0 0 12px rgba(0, 199, 190, 0.08);
+    box-shadow: 0 0 0 1px rgba(0, 245, 255, 0.4), 0 0 15px rgba(0, 245, 255, 0.15);
   }
 
-  /* CTA button */
+  /* CTA button — spectral pink-to-red gradient */
   .auth-gradient-btn {
-    background: #00c7be;
-    box-shadow: 0 0 40px rgba(0, 199, 190, 0.25);
+    background: linear-gradient(135deg, #FF1F6D 0%, #FF3D00 100%);
+    box-shadow: 0 0 20px rgba(255, 31, 109, 0.4);
   }
   .auth-gradient-btn:hover {
-    box-shadow: 0 0 40px rgba(0, 199, 190, 0.35);
+    box-shadow: 0 0 35px rgba(255, 31, 109, 0.6);
+    transform: translateY(-1px);
   }
 
   /* Shimmer on hover */
@@ -71,11 +72,11 @@ export const authStyles = `
   .auth-shimmer-btn {
     background: linear-gradient(
       110deg,
-      #00c7be 0%,
-      #00c7be 40%,
-      #66efe8 50%,
-      #00c7be 60%,
-      #00c7be 100%
+      #FF1F6D 0%,
+      #FF1F6D 40%,
+      #FF8C00 50%,
+      #FF1F6D 60%,
+      #FF1F6D 100%
     );
     background-size: 200% 100%;
   }
@@ -83,12 +84,11 @@ export const authStyles = `
     animation: authShimmer 1.5s ease infinite;
   }
 
-  /* Subtle grid background — matches landing page */
+  /* Mesh background — matching landing page */
   .auth-cyber-grid {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 64px 64px;
+      radial-gradient(circle at 1px 1px, rgba(255, 31, 109, 0.05) 1px, transparent 0);
+    background-size: 40px 40px;
     opacity: 0.5;
   }
 
@@ -107,11 +107,16 @@ export const authStyles = `
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.15));
   }
 
-  /* Gradient text */
+  /* Gradient text — spectral pink to orange */
   .auth-gradient-text {
-    background: linear-gradient(135deg, #00c7be 0%, #14f0c6 100%);
+    background: linear-gradient(135deg, #FF1F6D 0%, #FF8C00 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Spectral ring — trust gauge glow */
+  .auth-spectral-ring {
+    filter: drop-shadow(0 0 12px rgba(255, 31, 109, 0.3));
   }
 `;

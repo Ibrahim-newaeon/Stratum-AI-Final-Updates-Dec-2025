@@ -1,6 +1,7 @@
 /**
  * Forgot Password Page - Stratum AI
  * Split-screen layout: Branding left panel + glass card form
+ * Cyberpunk Dark theme — midnight navy + spectral pink/orange/gold
  *
  * Two-step flow:
  *   Step 1 — Enter email
@@ -53,7 +54,6 @@ export default function ForgotPassword() {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<ForgotPasswordForm>({
     resolver: zodResolver(forgotPasswordSchema),
   });
@@ -91,13 +91,13 @@ export default function ForgotPassword() {
       />
       <style>{authStyles}</style>
 
-      <div className="bg-black text-white min-h-screen flex font-sans selection:bg-[#00c7be]/30 overflow-hidden">
-        {/* Background effects — matching landing page Apple Glass Dark */}
+      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        {/* Background effects — cyberpunk mesh */}
         <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.08), transparent 60%)' }} />
-          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 60%)' }} />
-          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(20, 240, 198, 0.05), transparent 60%)' }} />
+          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
+          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 140, 0, 0.06), transparent 60%)' }} />
+          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
         </div>
 
         <main className="relative z-10 w-full flex min-h-screen">
@@ -105,12 +105,11 @@ export default function ForgotPassword() {
           <AuthLeftPanel className="hidden lg:flex" />
 
           {/* Right Panel — Form */}
-          <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-black/50 relative">
-            {/* Decorative corners — neutral white matching landing page borders */}
-            <div className="absolute top-8 right-8 w-16 h-16 border-t border-r border-white/[0.08] pointer-events-none rounded-tr-2xl hidden lg:block" />
-            <div className="absolute bottom-8 left-8 w-16 h-16 border-b border-l border-white/[0.08] pointer-events-none rounded-bl-2xl hidden lg:block" />
+          <section className="lg:w-5/12 w-full flex items-center justify-center p-6 lg:p-8 bg-[#080E1C] relative">
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-bl from-[#FF1F6D]/5 via-transparent to-transparent pointer-events-none" />
 
-            <div className="w-full max-w-[400px] auth-glass-card rounded-[24px] p-7 shadow-2xl relative z-20 auth-fade-up">
+            <div className="w-full max-w-[400px] auth-glass-card rounded-xl p-10 shadow-2xl relative z-20 auth-fade-up">
               {isSuccess ? (
                 /* ─── Success State ─── */
                 <div className="text-center">
@@ -120,7 +119,7 @@ export default function ForgotPassword() {
                   <h2 className="text-[24px] font-display font-bold text-white mb-2">
                     {deliveryMethod === 'whatsapp' ? 'Check your WhatsApp' : 'Check your email'}
                   </h2>
-                  <p className="text-white/40 text-[14px] mb-2">
+                  <p className="text-slate-400 text-[14px] mb-2">
                     We&apos;ve sent a password reset link to:
                   </p>
                   <div className="flex items-center justify-center gap-2 mb-6">
@@ -135,7 +134,7 @@ export default function ForgotPassword() {
                         : submittedEmail}
                     </p>
                   </div>
-                  <p className="text-white/30 text-[13px] mb-8">
+                  <p className="text-slate-500 text-[13px] mb-8">
                     {deliveryMethod === 'whatsapp'
                       ? 'The link will expire in 1 hour. Open the message on your phone to reset your password.'
                       : "If you don't see it in your inbox, check your spam folder."}
@@ -151,7 +150,7 @@ export default function ForgotPassword() {
 
                   <button
                     onClick={resetFlow}
-                    className="mt-4 text-[13px] font-bold text-[#00c7be] hover:text-white transition-colors"
+                    className="mt-4 text-[13px] font-bold text-[#FF1F6D] hover:text-white transition-colors"
                   >
                     Try a different email
                   </button>
@@ -162,7 +161,7 @@ export default function ForgotPassword() {
                   {/* Back to step 1 */}
                   <button
                     onClick={() => setStep(1)}
-                    className="inline-flex items-center gap-2 text-[12px] font-bold text-white/30 hover:text-[#00c7be] transition-colors mb-6 uppercase tracking-wider"
+                    className="inline-flex items-center gap-2 text-[12px] font-bold text-slate-500 hover:text-[#FF1F6D] transition-colors mb-6 uppercase tracking-wider"
                   >
                     <ArrowLeftIcon className="w-3.5 h-3.5" />
                     Change email
@@ -170,22 +169,22 @@ export default function ForgotPassword() {
 
                   {/* Header */}
                   <div className="mb-6 text-center">
-                    <div className="w-14 h-14 bg-[#00c7be]/10 rounded-full flex items-center justify-center mx-auto mb-5 border border-[#00c7be]/20">
-                      <KeyIcon className="w-7 h-7 text-[#00c7be]" />
+                    <div className="w-14 h-14 bg-[#FF1F6D]/10 rounded-full flex items-center justify-center mx-auto mb-5 border border-[#FF1F6D]/20">
+                      <KeyIcon className="w-7 h-7 text-[#FF1F6D]" />
                     </div>
                     <h2 className="text-[24px] font-display font-bold text-white mb-2">
                       Choose Delivery Method
                     </h2>
-                    <p className="text-white/40 text-[14px]">
+                    <p className="text-slate-400 text-[14px]">
                       How would you like to receive your reset link?
                     </p>
                   </div>
 
                   {/* Email being used */}
-                  <div className="mb-5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                  <div className="mb-5 px-3 py-2.5 rounded-xl bg-[rgba(5,11,24,0.6)] border border-white/10">
                     <div className="flex items-center gap-2">
-                      <EnvelopeIcon className="w-4 h-4 text-white/30" />
-                      <span className="text-[13px] text-white/50 truncate">{submittedEmail}</span>
+                      <EnvelopeIcon className="w-4 h-4 text-slate-500" />
+                      <span className="text-[13px] text-slate-400 truncate">{submittedEmail}</span>
                     </div>
                   </div>
 
@@ -205,17 +204,17 @@ export default function ForgotPassword() {
                       onClick={() => setDeliveryMethod('email')}
                       className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
                         deliveryMethod === 'email'
-                          ? 'border-[#00c7be]/50 bg-[#00c7be]/5'
+                          ? 'border-[#FF1F6D]/50 bg-[#FF1F6D]/5'
                           : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                         deliveryMethod === 'email'
-                          ? 'bg-[#00c7be]/15'
+                          ? 'bg-[#FF1F6D]/15'
                           : 'bg-white/[0.05]'
                       }`}>
                         <EnvelopeIcon className={`w-5 h-5 ${
-                          deliveryMethod === 'email' ? 'text-[#00c7be]' : 'text-white/40'
+                          deliveryMethod === 'email' ? 'text-[#FF1F6D]' : 'text-slate-500'
                         }`} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -224,17 +223,17 @@ export default function ForgotPassword() {
                         }`}>
                           Email
                         </p>
-                        <p className="text-[12px] text-white/40 truncate">
+                        <p className="text-[12px] text-slate-500 truncate">
                           Send to {submittedEmail}
                         </p>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                         deliveryMethod === 'email'
-                          ? 'border-[#00c7be]'
+                          ? 'border-[#FF1F6D]'
                           : 'border-white/20'
                       }`}>
                         {deliveryMethod === 'email' && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#00c7be]" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#FF1F6D]" />
                         )}
                       </div>
                     </button>
@@ -245,7 +244,7 @@ export default function ForgotPassword() {
                       onClick={() => setDeliveryMethod('whatsapp')}
                       className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
                         deliveryMethod === 'whatsapp'
-                          ? 'border-[#00c7be]/50 bg-[#00c7be]/5'
+                          ? 'border-[#25D366]/50 bg-[#25D366]/5'
                           : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]'
                       }`}
                     >
@@ -256,7 +255,7 @@ export default function ForgotPassword() {
                       }`}>
                         {/* WhatsApp icon */}
                         <svg
-                          className={`w-5 h-5 ${deliveryMethod === 'whatsapp' ? 'text-[#25D366]' : 'text-white/40'}`}
+                          className={`w-5 h-5 ${deliveryMethod === 'whatsapp' ? 'text-[#25D366]' : 'text-slate-500'}`}
                           fill="currentColor"
                           viewBox="0 0 24 24"
                         >
@@ -269,17 +268,17 @@ export default function ForgotPassword() {
                         }`}>
                           WhatsApp
                         </p>
-                        <p className="text-[12px] text-white/40">
+                        <p className="text-[12px] text-slate-500">
                           Send to your registered phone
                         </p>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                         deliveryMethod === 'whatsapp'
-                          ? 'border-[#00c7be]'
+                          ? 'border-[#25D366]'
                           : 'border-white/20'
                       }`}>
                         {deliveryMethod === 'whatsapp' && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#00c7be]" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#25D366]" />
                         )}
                       </div>
                     </button>
@@ -312,11 +311,11 @@ export default function ForgotPassword() {
 
                   {/* Bottom Link */}
                   <div className="mt-6 pt-4">
-                    <p className="text-center text-[13px] text-white/30">
+                    <p className="text-center text-[13px] text-slate-500">
                       Remember your password?{' '}
                       <Link
                         to="/login"
-                        className="text-[#00c7be] font-bold hover:underline"
+                        className="text-[#FF1F6D] font-bold hover:underline"
                       >
                         Sign in
                       </Link>
@@ -329,7 +328,7 @@ export default function ForgotPassword() {
                   {/* Back link */}
                   <Link
                     to="/login"
-                    className="inline-flex items-center gap-2 text-[12px] font-bold text-white/30 hover:text-[#00c7be] transition-colors mb-6 uppercase tracking-wider"
+                    className="inline-flex items-center gap-2 text-[12px] font-bold text-slate-500 hover:text-[#FF1F6D] transition-colors mb-6 uppercase tracking-wider"
                   >
                     <ArrowLeftIcon className="w-3.5 h-3.5" />
                     Back to login
@@ -337,21 +336,21 @@ export default function ForgotPassword() {
 
                   {/* Header */}
                   <div className="mb-8 text-center">
-                    <div className="w-14 h-14 bg-[#00c7be]/10 rounded-full flex items-center justify-center mx-auto mb-5 border border-[#00c7be]/20">
-                      <KeyIcon className="w-7 h-7 text-[#00c7be]" />
+                    <div className="w-14 h-14 bg-[#FF1F6D]/10 rounded-full flex items-center justify-center mx-auto mb-5 border border-[#FF1F6D]/20">
+                      <KeyIcon className="w-7 h-7 text-[#FF1F6D]" />
                     </div>
                     <h2 className="text-[24px] font-display font-bold text-white mb-2">
                       Password Recovery
                     </h2>
-                    <p className="text-white/40 text-[14px]">
+                    <p className="text-slate-400 text-[14px]">
                       Enter your email to get started
                     </p>
                   </div>
 
                   {/* Mobile logo */}
                   <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-                    <div className="w-9 h-9 bg-[#00c7be] rounded-lg flex items-center justify-center shadow-lg">
-                      <span className="font-display font-bold text-white text-base">S</span>
+                    <div className="w-9 h-9 bg-gradient-to-br from-[#FF1F6D] to-[#FF3D00] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,31,109,0.4)]">
+                      <span className="font-display font-bold text-white text-base -rotate-45">✦</span>
                     </div>
                     <span className="font-display font-bold text-lg tracking-tight text-white">
                       STRATUM AI
@@ -371,20 +370,20 @@ export default function ForgotPassword() {
                     <div className="auth-fade-up-d1">
                       <label
                         htmlFor="forgot-email"
-                        className="block text-[12px] font-bold text-white/30 uppercase tracking-wider mb-1.5 ml-1"
+                        className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1"
                       >
-                        Work Identity
+                        Neural Identifier
                       </label>
-                      <div className="relative auth-input-glow rounded-xl transition-shadow">
-                        <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/25 pointer-events-none" />
+                      <div className="relative">
                         <input
                           {...register('email')}
                           id="forgot-email"
                           type="email"
                           autoComplete="email"
                           placeholder="you@company.com"
-                          className="w-full h-[44px] bg-white/[0.04] border border-white/[0.08] focus:border-[#00c7be]/50 focus:ring-4 focus:ring-[#00c7be]/5 rounded-xl pl-11 pr-4 text-[14px] transition-all outline-none text-white placeholder:text-white/20"
+                          className="w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0 bg-[rgba(5,11,24,0.6)] border border-white/10 transition-all focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.2)] outline-none text-[14px]"
                         />
+                        <EnvelopeIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-600" />
                       </div>
                       {errors.email && (
                         <p className="text-xs text-red-400 mt-1 ml-1">{errors.email.message}</p>
@@ -405,11 +404,11 @@ export default function ForgotPassword() {
 
                   {/* Bottom Link */}
                   <div className="mt-6 pt-4">
-                    <p className="text-center text-[13px] text-white/30">
+                    <p className="text-center text-[13px] text-slate-500">
                       Remember your password?{' '}
                       <Link
                         to="/login"
-                        className="text-[#00c7be] font-bold hover:underline"
+                        className="text-[#FF1F6D] font-bold hover:underline"
                       >
                         Sign in
                       </Link>
