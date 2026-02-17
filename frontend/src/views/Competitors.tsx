@@ -5,10 +5,11 @@
  * Integrates with Meta Ads Library and Google Ads Transparency Center
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useCompetitors, useShareOfVoice, useCreateCompetitor, useDeleteCompetitor } from '@/api/hooks'
+import apiClient from '@/api/client'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -94,7 +95,7 @@ export function Competitors() {
     platforms: ['meta', 'google'] as string[],
   })
 
-  const { data: competitorsData, refetch: refetchCompetitors } = useCompetitors()
+  const { data: competitorsData, isLoading: isLoadingCompetitors, refetch: refetchCompetitors } = useCompetitors()
   // Get last 30 days for share of voice
   const endDate = new Date().toISOString().split('T')[0]
   const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -155,91 +156,58 @@ export function Competitors() {
     }))
   }
 
-  // Sample competitors
-  const competitors: Competitor[] = competitorsData?.map((c) => ({
+  // Map API competitors to view model
+  const competitors: Competitor[] = (competitorsData?.items || competitorsData || []).map((c: any) => ({
     id: c.id,
     name: c.name,
     domain: c.domain,
     logo: null,
     adSpend: c.estimatedSpend ?? 0,
-    adSpendTrend: Math.random() * 40 - 20,
+    adSpendTrend: c.spendTrend ?? 0,
     shareOfVoice: c.shareOfVoice ?? 0,
-    keywordOverlap: Math.floor(Math.random() * 50) + 10,
+    keywordOverlap: c.keywordOverlap ?? 0,
     creativesTracked: c.activeCreatives ?? 0,
-    lastRefresh: new Date(c.lastUpdated ?? Date.now()),
-    status: c.isActive ? 'active' : 'paused',
-  })) ?? [
-    {
-      id: '1',
-      name: 'CompetitorOne',
-      domain: 'competitorone.com',
-      logo: null,
-      adSpend: 125000,
-      adSpendTrend: 15,
-      shareOfVoice: 24,
-      keywordOverlap: 45,
-      creativesTracked: 32,
-      lastRefresh: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      status: 'active' as const,
-    },
-    {
-      id: '2',
-      name: 'MarketLeader Inc',
-      domain: 'marketleader.com',
-      logo: null,
-      adSpend: 280000,
-      adSpendTrend: 8,
-      shareOfVoice: 35,
-      keywordOverlap: 62,
-      creativesTracked: 78,
-      lastRefresh: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      status: 'active' as const,
-    },
-    {
-      id: '3',
-      name: 'NewEntrant Co',
-      domain: 'newentrant.io',
-      logo: null,
-      adSpend: 45000,
-      adSpendTrend: 85,
-      shareOfVoice: 8,
-      keywordOverlap: 28,
-      creativesTracked: 15,
-      lastRefresh: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      status: 'active' as const,
-    },
-    {
-      id: '4',
-      name: 'OldPlayer Ltd',
-      domain: 'oldplayer.com',
-      logo: null,
-      adSpend: 95000,
-      adSpendTrend: -12,
-      shareOfVoice: 18,
-      keywordOverlap: 55,
-      creativesTracked: 24,
-      lastRefresh: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      status: 'paused' as const,
-    },
-  ]
+    lastRefresh: new Date(c.lastUpdated ?? c.lastRefreshedAt ?? Date.now()),
+    status: c.isActive !== false ? 'active' : 'paused',
+    country: c.country,
+    platforms: c.platforms,
+  }))
 
-  const keywordOverlaps: KeywordOverlap[] = [
-    { keyword: 'marketing automation', yourPosition: 3, competitorPosition: 1, searchVolume: 12500, cpc: 8.50, competitor: 'MarketLeader Inc' },
-    { keyword: 'email campaigns', yourPosition: 2, competitorPosition: 4, searchVolume: 8900, cpc: 5.20, competitor: 'CompetitorOne' },
-    { keyword: 'ad optimization', yourPosition: 5, competitorPosition: 2, searchVolume: 6700, cpc: 12.30, competitor: 'MarketLeader Inc' },
-    { keyword: 'social media ads', yourPosition: 1, competitorPosition: 3, searchVolume: 15200, cpc: 4.80, competitor: 'NewEntrant Co' },
-    { keyword: 'ppc management', yourPosition: 4, competitorPosition: 1, searchVolume: 9800, cpc: 15.60, competitor: 'CompetitorOne' },
-  ]
+  // Keyword overlaps — fetched from API
+  const [keywordOverlaps, setKeywordOverlaps] = useState<KeywordOverlap[]>([])
+  const [isLoadingKeywords, setIsLoadingKeywords] = useState(false)
 
-  // Share of Voice data
+  // Fetch keyword overlaps when competitors change
+  useEffect(() => {
+    if (competitors.length === 0) {
+      setKeywordOverlaps([])
+      return
+    }
+    setIsLoadingKeywords(true)
+    apiClient.get('/competitors/keywords/overlap')
+      .then((res) => {
+        const data = res.data?.data || res.data || []
+        if (Array.isArray(data)) {
+          setKeywordOverlaps(data.map((kw: any) => ({
+            keyword: kw.keyword,
+            yourPosition: kw.yourPosition ?? kw.your_position ?? 0,
+            competitorPosition: kw.competitorPosition ?? kw.competitor_position ?? 0,
+            searchVolume: kw.searchVolume ?? kw.search_volume ?? 0,
+            cpc: kw.cpc ?? 0,
+            competitor: kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? '',
+          })))
+        }
+      })
+      .catch(() => {
+        setKeywordOverlaps([])
+      })
+      .finally(() => setIsLoadingKeywords(false))
+  }, [competitors.length])
+
+  // Share of Voice data — from API or empty defaults
   const shareOfVoice = sovData ?? {
-    you: 15,
-    competitors: [
-      { name: 'MarketLeader Inc', share: 35 },
-      { name: 'CompetitorOne', share: 24 },
-      { name: 'OldPlayer Ltd', share: 18 },
-      { name: 'NewEntrant Co', share: 8 },
-    ],
+    you: 0,
+    competitors: competitors.map((c) => ({ name: c.name, share: c.shareOfVoice })),
   }
 
   const filteredCompetitors = competitors.filter((c) =>
@@ -360,7 +328,34 @@ export function Competitors() {
         />
       </div>
 
+      {/* Loading State */}
+      {isLoadingCompetitors && (
+        <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+          <ArrowPathIcon className="w-5 h-5 animate-spin" />
+          Loading competitors...
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoadingCompetitors && competitors.length === 0 && (
+        <div className="text-center py-12 rounded-xl border bg-card">
+          <EyeIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No competitors tracked yet</h3>
+          <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+            Start tracking your competitors to monitor their ad spend, keyword overlap, and share of voice.
+          </p>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Add Your First Competitor
+          </button>
+        </div>
+      )}
+
       {/* Competitors Grid */}
+      {!isLoadingCompetitors && competitors.length > 0 && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredCompetitors.map((competitor) => (
           <div
@@ -477,68 +472,116 @@ export function Competitors() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Keyword Overlap Table */}
       <div className="rounded-xl border bg-card overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="font-semibold">Keyword Overlap</h2>
-          <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border hover:bg-muted transition-colors">
-            <ArrowPathIcon className="w-4 h-4" />
+          <div>
+            <h2 className="font-semibold">Keyword Overlap</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Keywords where you and your competitors both appear in search results.
+              Lower position numbers mean higher ranking. Use this to identify opportunities
+              where you can outbid or outrank competitors on high-value keywords.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setIsLoadingKeywords(true)
+              apiClient.get('/competitors/keywords/overlap')
+                .then((res) => {
+                  const data = res.data?.data || res.data || []
+                  if (Array.isArray(data)) {
+                    setKeywordOverlaps(data.map((kw: any) => ({
+                      keyword: kw.keyword,
+                      yourPosition: kw.yourPosition ?? kw.your_position ?? 0,
+                      competitorPosition: kw.competitorPosition ?? kw.competitor_position ?? 0,
+                      searchVolume: kw.searchVolume ?? kw.search_volume ?? 0,
+                      cpc: kw.cpc ?? 0,
+                      competitor: kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? '',
+                    })))
+                  }
+                })
+                .catch(() => setKeywordOverlaps([]))
+                .finally(() => setIsLoadingKeywords(false))
+            }}
+            disabled={isLoadingKeywords}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border hover:bg-muted transition-colors disabled:opacity-50 flex-shrink-0"
+          >
+            <ArrowPathIcon className={cn('w-4 h-4', isLoadingKeywords && 'animate-spin')} />
             Refresh
           </button>
         </div>
-        <table className="w-full">
-          <thead className="bg-muted/50 border-b">
-            <tr>
-              <th className="p-4 text-left text-sm font-medium">Keyword</th>
-              <th className="p-4 text-center text-sm font-medium">Your Position</th>
-              <th className="p-4 text-center text-sm font-medium">Competitor</th>
-              <th className="p-4 text-center text-sm font-medium">Their Position</th>
-              <th className="p-4 text-right text-sm font-medium">Search Volume</th>
-              <th className="p-4 text-right text-sm font-medium">CPC</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {keywordOverlaps.map((kw, i) => (
-              <tr key={i} className="hover:bg-muted/30 transition-colors">
-                <td className="p-4 font-medium">{kw.keyword}</td>
-                <td className="p-4 text-center">
-                  <span className={cn(
-                    'px-2 py-1 rounded text-sm font-medium',
-                    kw.yourPosition <= 3 ? 'bg-green-500/10 text-green-500' :
-                    kw.yourPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
-                    'bg-muted text-muted-foreground'
-                  )}>
-                    #{kw.yourPosition}
-                  </span>
-                </td>
-                <td className="p-4 text-center text-sm text-muted-foreground">
-                  {kw.competitor}
-                </td>
-                <td className="p-4 text-center">
-                  <span className={cn(
-                    'px-2 py-1 rounded text-sm font-medium',
-                    kw.competitorPosition <= 3 ? 'bg-red-500/10 text-red-500' :
-                    kw.competitorPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
-                    'bg-muted text-muted-foreground'
-                  )}>
-                    #{kw.competitorPosition}
-                  </span>
-                </td>
-                <td className="p-4 text-right text-muted-foreground">
-                  {kw.searchVolume.toLocaleString()}
-                </td>
-                <td className="p-4 text-right font-medium">${kw.cpc.toFixed(2)}</td>
+
+        {isLoadingKeywords ? (
+          <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+            <ArrowPathIcon className="w-4 h-4 animate-spin" />
+            Loading keyword data...
+          </div>
+        ) : keywordOverlaps.length > 0 ? (
+          <table className="w-full">
+            <thead className="bg-muted/50 border-b">
+              <tr>
+                <th className="p-4 text-left text-sm font-medium">Keyword</th>
+                <th className="p-4 text-center text-sm font-medium">Your Position</th>
+                <th className="p-4 text-center text-sm font-medium">Competitor</th>
+                <th className="p-4 text-center text-sm font-medium">Their Position</th>
+                <th className="p-4 text-right text-sm font-medium">Search Volume</th>
+                <th className="p-4 text-right text-sm font-medium">CPC</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {keywordOverlaps.map((kw, i) => (
+                <tr key={i} className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 font-medium">{kw.keyword}</td>
+                  <td className="p-4 text-center">
+                    <span className={cn(
+                      'px-2 py-1 rounded text-sm font-medium',
+                      kw.yourPosition <= 3 ? 'bg-green-500/10 text-green-500' :
+                      kw.yourPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
+                      'bg-muted text-muted-foreground'
+                    )}>
+                      #{kw.yourPosition}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center text-sm text-muted-foreground">
+                    {kw.competitor}
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={cn(
+                      'px-2 py-1 rounded text-sm font-medium',
+                      kw.competitorPosition <= 3 ? 'bg-red-500/10 text-red-500' :
+                      kw.competitorPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
+                      'bg-muted text-muted-foreground'
+                    )}>
+                      #{kw.competitorPosition}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right text-muted-foreground">
+                    {kw.searchVolume.toLocaleString()}
+                  </td>
+                  <td className="p-4 text-right font-medium">${kw.cpc.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="text-center py-8">
+            <MagnifyingGlassIcon className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground mb-1">No keyword overlap data available</p>
+            <p className="text-xs text-muted-foreground max-w-md mx-auto">
+              Add competitors and connect your ad platforms to see which keywords you both target.
+              This helps you identify opportunities to outrank competitors on high-value searches.
+            </p>
+          </div>
+        )}
       </div>
 
-      {filteredCompetitors.length === 0 && (
+      {/* No search results */}
+      {!isLoadingCompetitors && competitors.length > 0 && filteredCompetitors.length === 0 && (
         <div className="text-center py-12">
-          <EyeIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No competitors found</p>
+          <MagnifyingGlassIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">No competitors match your search</p>
         </div>
       )}
 

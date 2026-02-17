@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
@@ -14,76 +14,87 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  ScatterChart,
-  Scatter,
-  ZAxis,
 } from 'recharts'
 import {
   Trophy,
   TrendingUp,
   TrendingDown,
   Target,
-  Users,
   Globe,
-  Filter,
   Download,
   RefreshCw,
   Info,
   ExternalLink,
   Plus,
+  Smartphone,
+  Monitor,
+  Laptop,
+  Tablet,
+  Loader2,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SmartTooltip } from '@/components/guide/SmartTooltip'
 import { useCompetitors } from '@/api/hooks'
+import apiClient from '@/api/client'
 
 // Colors for competitors in charts
 const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899']
-
-// Mock radar data
-const mockRadarData = [
-  { metric: 'ROAS', you: 85, industry: 70 },
-  { metric: 'CTR', you: 78, industry: 65 },
-  { metric: 'CPC', you: 72, industry: 75 },
-  { metric: 'Conv Rate', you: 82, industry: 60 },
-  { metric: 'Reach', you: 65, industry: 80 },
-  { metric: 'Engagement', you: 90, industry: 72 },
-]
-
-// Mock market share trend
-const mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
-  month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
-  you: 15 + Math.random() * 5 + i * 0.3,
-  compA: 22 + Math.random() * 4 - i * 0.2,
-  compB: 20 + Math.random() * 3,
-  compC: 14 + Math.random() * 4 + i * 0.1,
-}))
-
-// Mock demographic data for heatmap
-const mockDemographics = [
-  { age: '18-24', male: 2.1, female: 2.8, ctr: 2.45 },
-  { age: '25-34', male: 3.5, female: 4.2, ctr: 3.85 },
-  { age: '35-44', male: 2.8, female: 3.1, ctr: 2.95 },
-  { age: '45-54', male: 1.9, female: 2.2, ctr: 2.05 },
-  { age: '55-64', male: 1.4, female: 1.6, ctr: 1.50 },
-  { age: '65+', male: 0.9, female: 1.1, ctr: 1.00 },
-]
-
-// Mock geographic data
-const mockGeoData = [
-  { region: 'California', impressions: 4500000, ctr: 3.2, roas: 4.1, x: 100, y: 200, z: 45 },
-  { region: 'New York', impressions: 3800000, ctr: 2.9, roas: 3.8, x: 350, y: 150, z: 38 },
-  { region: 'Texas', impressions: 3200000, ctr: 2.5, roas: 3.2, x: 200, y: 280, z: 32 },
-  { region: 'Florida', impressions: 2900000, ctr: 2.7, roas: 3.5, x: 340, y: 320, z: 29 },
-  { region: 'Illinois', impressions: 2100000, ctr: 2.3, roas: 3.0, x: 250, y: 180, z: 21 },
-]
 
 export function Benchmarks() {
   const { t } = useTranslation()
   const [selectedIndustry, setSelectedIndustry] = useState('ecommerce')
   const [selectedPlatform, setSelectedPlatform] = useState('all')
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Fetch competitors from API
-  const { data: competitorsData, isLoading: isLoadingCompetitors } = useCompetitors()
+  const { data: competitorsData, isLoading: isLoadingCompetitors, refetch: refetchCompetitors } = useCompetitors()
+
+  // Benchmark data state (loaded from API when available)
+  const [benchmarkData, setBenchmarkData] = useState<{
+    metrics: any[] | null
+    radarData: any[] | null
+    geoData: any[] | null
+    languageData: any[] | null
+    deviceData: any[] | null
+    osData: any[] | null
+  }>({
+    metrics: null,
+    radarData: null,
+    geoData: null,
+    languageData: null,
+    deviceData: null,
+    osData: null,
+  })
+
+  // Refresh handler — fetches latest data from API
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      const params: Record<string, string> = {}
+      if (selectedPlatform !== 'all') params.platform = selectedPlatform
+      if (selectedIndustry) params.industry = selectedIndustry
+
+      const [metricsRes, geoRes, audienceRes] = await Promise.allSettled([
+        apiClient.get('/benchmarks/metrics', { params }),
+        apiClient.get('/benchmarks/geographic', { params }),
+        apiClient.get('/benchmarks/audience', { params }),
+      ])
+
+      setBenchmarkData((prev) => ({
+        ...prev,
+        metrics: metricsRes.status === 'fulfilled' ? (metricsRes.value.data?.data || metricsRes.value.data) : prev.metrics,
+        geoData: geoRes.status === 'fulfilled' ? (geoRes.value.data?.data || geoRes.value.data) : prev.geoData,
+        languageData: audienceRes.status === 'fulfilled' ? (audienceRes.value.data?.data?.languages || null) : prev.languageData,
+        deviceData: audienceRes.status === 'fulfilled' ? (audienceRes.value.data?.data?.devices || null) : prev.deviceData,
+        osData: audienceRes.status === 'fulfilled' ? (audienceRes.value.data?.data?.operating_systems || null) : prev.osData,
+      }))
+      refetchCompetitors()
+    } catch {
+      // Silently handle errors — empty states will show
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [selectedPlatform, selectedIndustry, refetchCompetitors])
 
   // Generate Meta Ads Library URL
   const getMetaAdsLibraryUrl = (name: string, country: string = 'SA') => {
@@ -95,18 +106,17 @@ export function Benchmarks() {
     return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
   }
 
-  // Build competitor data for charts - combine user's competitors with "Your Brand" and "Industry Avg"
+  // Build competitor data for charts
   const chartCompetitors = [
     { name: 'Your Brand', roas: 3.5, ctr: 2.8, cpc: 1.2, share: 18, color: '#0ea5e9', isYou: true },
-    // Add real competitors from API
-    ...(competitorsData?.items || []).slice(0, 5).map((comp, index) => ({
+    ...(competitorsData?.items || []).slice(0, 5).map((comp: any, index: number) => ({
       name: comp.name,
       domain: comp.domain,
       country: comp.country || 'SA',
-      roas: 2.5 + Math.random() * 2, // Simulated data - would come from real metrics
-      ctr: 1.8 + Math.random() * 1.5,
-      cpc: 0.8 + Math.random() * 1,
-      share: 10 + Math.random() * 20,
+      roas: comp.estimatedRoas ?? (2.5 + (index * 0.4)),
+      ctr: comp.estimatedCtr ?? (1.8 + (index * 0.3)),
+      cpc: comp.estimatedCpc ?? (0.8 + (index * 0.2)),
+      share: comp.shareOfVoice ?? (10 + (index * 5)),
       color: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length],
     })),
     { name: 'Industry Avg', roas: 3.0, ctr: 2.4, cpc: 1.3, share: 22, color: '#6b7280', isAvg: true },
@@ -115,29 +125,40 @@ export function Benchmarks() {
   // Check if user has competitors
   const hasCompetitors = (competitorsData?.items?.length || 0) > 0
 
-  const benchmarkMetrics = [
+  // Radar chart data — from API or default "awaiting data" values
+  const radarData = benchmarkData.radarData || [
+    { metric: 'ROAS', you: 0, industry: 0 },
+    { metric: 'CTR', you: 0, industry: 0 },
+    { metric: 'CPC', you: 0, industry: 0 },
+    { metric: 'Conv Rate', you: 0, industry: 0 },
+    { metric: 'Reach', you: 0, industry: 0 },
+    { metric: 'Engagement', you: 0, industry: 0 },
+  ]
+
+  // Benchmark summary metric cards — from API or defaults indicating no data
+  const benchmarkMetrics = benchmarkData.metrics || [
     {
       label: 'ROAS',
-      yours: 3.5,
-      industry: 3.0,
-      percentile: 75,
+      yours: 0,
+      industry: 0,
+      percentile: 0,
       trend: 'up',
       tooltip: t('benchmarks.roasTooltip'),
     },
     {
       label: 'CTR',
-      yours: 2.8,
-      industry: 2.4,
-      percentile: 68,
+      yours: 0,
+      industry: 0,
+      percentile: 0,
       trend: 'up',
       format: 'percent',
       tooltip: t('benchmarks.ctrTooltip'),
     },
     {
       label: 'CPC',
-      yours: 1.2,
-      industry: 1.3,
-      percentile: 62,
+      yours: 0,
+      industry: 0,
+      percentile: 0,
       trend: 'down',
       format: 'currency',
       invertTrend: true,
@@ -145,9 +166,9 @@ export function Benchmarks() {
     },
     {
       label: 'Conv. Rate',
-      yours: 4.2,
-      industry: 3.5,
-      percentile: 82,
+      yours: 0,
+      industry: 0,
+      percentile: 0,
       trend: 'up',
       format: 'percent',
       tooltip: t('benchmarks.convRateTooltip'),
@@ -155,9 +176,19 @@ export function Benchmarks() {
   ]
 
   const formatValue = (value: number, format?: string) => {
+    if (value === 0) return '—'
     if (format === 'percent') return formatPercent(value)
     if (format === 'currency') return formatCurrency(value)
     return value.toFixed(2) + 'x'
+  }
+
+  // Device icon helper
+  const getDeviceIcon = (device: string) => {
+    const d = device.toLowerCase()
+    if (d.includes('mobile') || d.includes('phone')) return <Smartphone className="w-4 h-4" />
+    if (d.includes('tablet') || d.includes('ipad')) return <Tablet className="w-4 h-4" />
+    if (d.includes('desktop') || d.includes('pc')) return <Monitor className="w-4 h-4" />
+    return <Laptop className="w-4 h-4" />
   }
 
   return (
@@ -195,8 +226,13 @@ export function Benchmarks() {
             <option value="tiktok">TikTok Ads</option>
           </select>
 
-          <button className="p-2 rounded-lg border hover:bg-muted transition-colors">
-            <RefreshCw className="w-4 h-4" />
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg border hover:bg-muted transition-colors disabled:opacity-50"
+            title="Refresh benchmark data"
+          >
+            <RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />
           </button>
 
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
@@ -208,11 +244,12 @@ export function Benchmarks() {
 
       {/* Benchmark Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {benchmarkMetrics.map((metric) => {
+        {benchmarkMetrics.map((metric: any) => {
+          const hasData = metric.yours > 0 || metric.industry > 0
           const isAboveAvg = metric.invertTrend
             ? metric.yours < metric.industry
             : metric.yours > metric.industry
-          const diff = ((metric.yours - metric.industry) / metric.industry) * 100
+          const diff = metric.industry > 0 ? ((metric.yours - metric.industry) / metric.industry) * 100 : 0
 
           return (
             <div key={metric.label} className="p-4 rounded-xl border bg-card">
@@ -223,42 +260,54 @@ export function Benchmarks() {
                     <Info className="w-3 h-3" />
                   </span>
                 </SmartTooltip>
-                <span className="text-xs text-muted-foreground">
-                  Top {100 - metric.percentile}%
-                </span>
+                {hasData && (
+                  <span className="text-xs text-muted-foreground">
+                    Top {100 - (metric.percentile || 0)}%
+                  </span>
+                )}
               </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-2xl font-bold">
-                    {formatValue(metric.yours, metric.format)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Industry: {formatValue(metric.industry, metric.format)}
+              {hasData ? (
+                <>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {formatValue(metric.yours, metric.format)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Industry: {formatValue(metric.industry, metric.format)}
+                      </p>
+                    </div>
+                    <div
+                      className={cn(
+                        'flex items-center gap-1 text-sm font-medium',
+                        isAboveAvg ? 'text-green-500' : 'text-red-500'
+                      )}
+                    >
+                      {isAboveAvg ? (
+                        <TrendingUp className="w-4 h-4" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4" />
+                      )}
+                      {Math.abs(diff).toFixed(0)}%
+                    </div>
+                  </div>
+                  <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all',
+                        isAboveAvg ? 'bg-green-500' : 'bg-red-500'
+                      )}
+                      style={{ width: `${metric.percentile || 0}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-3">
+                  <p className="text-sm text-muted-foreground">
+                    Click refresh to load data
                   </p>
                 </div>
-                <div
-                  className={cn(
-                    'flex items-center gap-1 text-sm font-medium',
-                    isAboveAvg ? 'text-green-500' : 'text-red-500'
-                  )}
-                >
-                  {isAboveAvg ? (
-                    <TrendingUp className="w-4 h-4" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4" />
-                  )}
-                  {Math.abs(diff).toFixed(0)}%
-                </div>
-              </div>
-              <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={cn(
-                    'h-full rounded-full transition-all',
-                    isAboveAvg ? 'bg-green-500' : 'bg-red-500'
-                  )}
-                  style={{ width: `${metric.percentile}%` }}
-                />
-              </div>
+              )}
             </div>
           )
         })}
@@ -277,7 +326,7 @@ export function Benchmarks() {
             </p>
           </div>
           <Link
-            to="/app/1/competitors"
+            to="/dashboard/competitors"
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -286,12 +335,15 @@ export function Benchmarks() {
         </div>
 
         {isLoadingCompetitors ? (
-          <div className="text-center py-8 text-muted-foreground">Loading competitors...</div>
+          <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading competitors...
+          </div>
         ) : !hasCompetitors ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-3">No competitors tracked yet</p>
             <Link
-              to="/app/1/competitors"
+              to="/dashboard/competitors"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
             >
               <Plus className="w-4 h-4" />
@@ -300,7 +352,7 @@ export function Benchmarks() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(competitorsData?.items || []).slice(0, 6).map((competitor) => (
+            {(competitorsData?.items || []).slice(0, 6).map((competitor: any) => (
               <div key={competitor.id} className="p-3 rounded-lg border bg-background">
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -377,7 +429,7 @@ export function Benchmarks() {
           <h3 className="font-semibold mb-4">{t('benchmarks.performanceRadar')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={mockRadarData}>
+              <RadarChart data={radarData}>
                 <PolarGrid className="stroke-muted" />
                 <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12 }} />
                 <PolarRadiusAxis tick={{ fontSize: 10 }} domain={[0, 100]} />
@@ -418,60 +470,133 @@ export function Benchmarks() {
         </div>
       </div>
 
-      {/* Demographics Heatmap */}
+      {/* Language & Device Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Language Breakdown */}
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2">
+                <Globe className="w-5 h-5 text-primary" />
+                Language Breakdown
+              </h3>
+              <p className="text-xs text-muted-foreground">Performance by audience language</p>
+            </div>
+          </div>
+
+          {benchmarkData.languageData && benchmarkData.languageData.length > 0 ? (
+            <div className="space-y-3">
+              {benchmarkData.languageData.map((lang: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-background">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{lang.flag || '🌐'}</span>
+                    <div>
+                      <p className="font-medium text-sm">{lang.name || lang.language}</p>
+                      <p className="text-xs text-muted-foreground">{formatCompactNumber(lang.impressions || 0)} impressions</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-sm">{formatPercent(lang.ctr || 0)} CTR</p>
+                    <p className="text-xs text-muted-foreground">{lang.share ? `${lang.share}% of traffic` : ''}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Globe className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground mb-1">No language data available yet</p>
+              <p className="text-xs text-muted-foreground">Click refresh to load audience insights from your connected platforms.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Device Breakdown */}
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-primary" />
+                Device Breakdown
+              </h3>
+              <p className="text-xs text-muted-foreground">Performance by device type</p>
+            </div>
+          </div>
+
+          {benchmarkData.deviceData && benchmarkData.deviceData.length > 0 ? (
+            <div className="space-y-3">
+              {benchmarkData.deviceData.map((device: any, i: number) => {
+                const pct = device.share || 0
+                return (
+                  <div key={i} className="p-3 rounded-lg border bg-background">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {getDeviceIcon(device.name || device.device)}
+                        <span className="font-medium text-sm">{device.name || device.device}</span>
+                      </div>
+                      <span className="text-sm font-semibold">{pct}%</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                      <span>CTR: {formatPercent(device.ctr || 0)}</span>
+                      <span>ROAS: {device.roas ? `${device.roas.toFixed(1)}x` : '—'}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Smartphone className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground mb-1">No device data available yet</p>
+              <p className="text-xs text-muted-foreground">Click refresh to load device breakdown from your connected platforms.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Operating System Breakdown */}
       <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              {t('benchmarks.demographicsHeatmap')}
+              <Monitor className="w-5 h-5 text-primary" />
+              Operating System
             </h3>
-            <p className="text-xs text-muted-foreground">{t('benchmarks.ctrBySegment')}</p>
+            <p className="text-xs text-muted-foreground">Performance breakdown by OS</p>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="p-3 text-left text-sm font-medium">Age Group</th>
-                <th className="p-3 text-center text-sm font-medium">Male CTR%</th>
-                <th className="p-3 text-center text-sm font-medium">Female CTR%</th>
-                <th className="p-3 text-center text-sm font-medium">Average</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockDemographics.map((row) => (
-                <tr key={row.age} className="border-b last:border-0">
-                  <td className="p-3 font-medium">{row.age}</td>
-                  <td className="p-3">
-                    <div
-                      className="mx-auto w-16 py-1 rounded text-center text-sm font-medium"
-                      style={{
-                        backgroundColor: `rgba(14, 165, 233, ${row.male / 5})`,
-                        color: row.male > 2.5 ? 'white' : 'inherit',
-                      }}
-                    >
-                      {formatPercent(row.male)}
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <div
-                      className="mx-auto w-16 py-1 rounded text-center text-sm font-medium"
-                      style={{
-                        backgroundColor: `rgba(236, 72, 153, ${row.female / 5})`,
-                        color: row.female > 2.5 ? 'white' : 'inherit',
-                      }}
-                    >
-                      {formatPercent(row.female)}
-                    </div>
-                  </td>
-                  <td className="p-3 text-center font-semibold">{formatPercent(row.ctr)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {benchmarkData.osData && benchmarkData.osData.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {benchmarkData.osData.map((os: any, i: number) => (
+              <div key={i} className="p-4 rounded-lg border bg-background text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-muted flex items-center justify-center">
+                  <span className="text-lg font-bold text-muted-foreground">
+                    {(os.name || os.os || '?').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <p className="font-medium text-sm mb-1">{os.name || os.os}</p>
+                <p className="text-2xl font-bold">{os.share || 0}%</p>
+                <div className="flex justify-center gap-3 mt-2 text-xs text-muted-foreground">
+                  <span>CTR {formatPercent(os.ctr || 0)}</span>
+                  <span>ROAS {os.roas ? `${os.roas.toFixed(1)}x` : '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Monitor className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground mb-1">No operating system data available yet</p>
+            <p className="text-xs text-muted-foreground">Click refresh to load OS breakdown from your connected platforms.</p>
+          </div>
+        )}
       </div>
 
       {/* Geographic Performance */}
@@ -486,27 +611,35 @@ export function Benchmarks() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {mockGeoData.map((region) => (
-            <div key={region.region} className="p-4 rounded-lg border bg-background">
-              <p className="font-medium text-sm mb-2">{region.region}</p>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Impressions</span>
-                  <span className="font-medium">{formatCompactNumber(region.impressions)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">CTR</span>
-                  <span className="font-medium">{formatPercent(region.ctr)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">ROAS</span>
-                  <span className="font-semibold text-green-500">{region.roas.toFixed(1)}x</span>
+        {benchmarkData.geoData && benchmarkData.geoData.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {benchmarkData.geoData.map((region: any, i: number) => (
+              <div key={i} className="p-4 rounded-lg border bg-background">
+                <p className="font-medium text-sm mb-2">{region.region || region.name}</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Impressions</span>
+                    <span className="font-medium">{formatCompactNumber(region.impressions || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">CTR</span>
+                    <span className="font-medium">{formatPercent(region.ctr || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">ROAS</span>
+                    <span className="font-semibold text-green-500">{region.roas ? `${region.roas.toFixed(1)}x` : '—'}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Globe className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground mb-1">No geographic data available yet</p>
+            <p className="text-xs text-muted-foreground">Click refresh to load regional performance from your connected platforms.</p>
+          </div>
+        )}
       </div>
     </div>
   )

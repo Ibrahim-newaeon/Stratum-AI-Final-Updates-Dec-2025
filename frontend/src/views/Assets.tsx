@@ -22,7 +22,6 @@ import {
 } from 'lucide-react'
 import { cn, formatCompactNumber, formatPercent } from '@/lib/utils'
 import { useAssets, useDeleteAsset, useBulkArchiveAssets } from '@/api/hooks'
-import { useTenantStore } from '@/stores/tenantStore'
 
 type AssetType = 'image' | 'video' | 'copy'
 type AssetStatus = 'active' | 'paused' | 'fatigued' | 'draft'
@@ -42,85 +41,6 @@ interface Asset {
   duration?: string
 }
 
-const mockAssets: Asset[] = [
-  {
-    id: 1,
-    name: 'Summer_Banner_v3',
-    type: 'image',
-    status: 'fatigued',
-    thumbnail: 'https://placehold.co/300x250/0ea5e9/white?text=Summer+Sale',
-    impressions: 2300000,
-    ctr: 1.8,
-    fatigueScore: 78,
-    campaigns: ['Summer Sale 2024', 'Brand Awareness Q4'],
-    createdAt: '2024-06-15',
-    dimensions: '300x250',
-  },
-  {
-    id: 2,
-    name: 'Product_Hero_Widget',
-    type: 'image',
-    status: 'active',
-    thumbnail: 'https://placehold.co/1200x628/10b981/white?text=Widget+Pro',
-    impressions: 890000,
-    ctr: 3.2,
-    fatigueScore: 23,
-    campaigns: ['Product Launch - Widget Pro'],
-    createdAt: '2024-09-01',
-    dimensions: '1200x628',
-  },
-  {
-    id: 3,
-    name: 'Brand_Video_30s',
-    type: 'video',
-    status: 'active',
-    thumbnail: 'https://placehold.co/1920x1080/8b5cf6/white?text=Brand+Video',
-    impressions: 1560000,
-    ctr: 2.9,
-    fatigueScore: 35,
-    campaigns: ['Brand Awareness Q4', 'TikTok Influencer Collab'],
-    createdAt: '2024-08-20',
-    duration: '0:30',
-  },
-  {
-    id: 4,
-    name: 'Retargeting_Carousel',
-    type: 'image',
-    status: 'active',
-    thumbnail: 'https://placehold.co/1080x1080/f59e0b/white?text=Carousel',
-    impressions: 670000,
-    ctr: 4.1,
-    fatigueScore: 15,
-    campaigns: ['Retargeting - Cart Abandoners'],
-    createdAt: '2024-10-05',
-    dimensions: '1080x1080',
-  },
-  {
-    id: 5,
-    name: 'Holiday_Promo_Copy',
-    type: 'copy',
-    status: 'draft',
-    thumbnail: 'https://placehold.co/400x200/6b7280/white?text=Ad+Copy',
-    impressions: 0,
-    ctr: 0,
-    fatigueScore: 0,
-    campaigns: [],
-    createdAt: '2024-11-28',
-  },
-  {
-    id: 6,
-    name: 'Flash_Sale_Banner',
-    type: 'image',
-    status: 'paused',
-    thumbnail: 'https://placehold.co/728x90/ef4444/white?text=Flash+Sale',
-    impressions: 450000,
-    ctr: 2.1,
-    fatigueScore: 52,
-    campaigns: ['Summer Sale 2024'],
-    createdAt: '2024-07-10',
-    dimensions: '728x90',
-  },
-]
 
 type ViewMode = 'grid' | 'list'
 
@@ -132,33 +52,28 @@ export function Assets() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedAssets, setSelectedAssets] = useState<number[]>([])
 
-  // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
-
   // Fetch assets from API
-  const { data: assetsData, isLoading } = useAssets(tenantId)
-  const deleteAsset = useDeleteAsset(tenantId)
-  const bulkArchive = useBulkArchiveAssets(tenantId)
+  const { data: assetsData, isLoading } = useAssets()
+  const deleteAsset = useDeleteAsset()
+  const bulkArchive = useBulkArchiveAssets()
 
-  // Transform API data or fall back to mock
+  // Transform API data into view-layer Asset shape
   const assets = useMemo((): Asset[] => {
-    if (assetsData?.items && assetsData.items.length > 0) {
-      return assetsData.items.map((a: any) => ({
-        id: Number(a.id) || 0,
-        name: a.name || a.filename || '',
-        type: a.type || a.asset_type || 'image',
-        status: a.status || 'active',
-        thumbnail: a.thumbnail_url || a.url || `https://placehold.co/300x250/0ea5e9/white?text=${encodeURIComponent(a.name || 'Asset')}`,
-        impressions: a.impressions || 0,
-        ctr: a.ctr || 0,
-        fatigueScore: a.fatigue_score || a.fatigueScore || 0,
-        campaigns: a.campaigns || [],
-        createdAt: a.created_at || a.createdAt || new Date().toISOString(),
-        dimensions: a.dimensions || a.width && a.height ? `${a.width}x${a.height}` : undefined,
-        duration: a.duration,
-      }))
-    }
-    return mockAssets
+    if (!assetsData?.items || assetsData.items.length === 0) return []
+    return assetsData.items.map((a: any) => ({
+      id: Number(a.id) || 0,
+      name: a.name || a.filename || '',
+      type: a.type || a.asset_type || 'image',
+      status: a.status || 'active',
+      thumbnail: a.thumbnail_url || a.url || `https://placehold.co/300x250/0ea5e9/white?text=${encodeURIComponent(a.name || 'Asset')}`,
+      impressions: a.impressions || 0,
+      ctr: a.ctr || 0,
+      fatigueScore: a.fatigue_score || a.fatigueScore || 0,
+      campaigns: a.campaigns || [],
+      createdAt: a.created_at || a.createdAt || new Date().toISOString(),
+      dimensions: a.dimensions || (a.width && a.height ? `${a.width}x${a.height}` : undefined),
+      duration: a.duration,
+    }))
   }, [assetsData])
 
   // Handle bulk delete
@@ -294,6 +209,29 @@ export function Assets() {
         </div>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center py-16">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Loading assets...</p>
+        </div>
+      )}
+
+      {/* Empty State (no assets from API) */}
+      {!isLoading && assets.length === 0 && (
+        <div className="text-center py-16 rounded-xl border bg-card">
+          <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No assets yet</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Upload your first creative asset to start tracking performance and fatigue scores across campaigns.
+          </p>
+          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            <Upload className="w-4 h-4" />
+            <span>{t('assets.upload')}</span>
+          </button>
+        </div>
+      )}
+
       {/* Bulk Actions */}
       {selectedAssets.length > 0 && (
         <div className="flex items-center gap-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
@@ -321,8 +259,8 @@ export function Assets() {
         </div>
       )}
 
-      {/* Asset Grid */}
-      {viewMode === 'grid' ? (
+      {/* Asset Grid / List */}
+      {!isLoading && assets.length > 0 && viewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredAssets.map((asset) => (
             <div
@@ -409,8 +347,10 @@ export function Assets() {
             </div>
           ))}
         </div>
-      ) : (
-        /* List View */
+      )}
+
+      {/* List View */}
+      {!isLoading && assets.length > 0 && viewMode === 'list' && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <table className="w-full">
             <thead className="bg-muted/50 border-b">
@@ -502,7 +442,8 @@ export function Assets() {
         </div>
       )}
 
-      {filteredAssets.length === 0 && (
+      {/* No search results (assets exist but filter yields nothing) */}
+      {!isLoading && assets.length > 0 && filteredAssets.length === 0 && (
         <div className="text-center py-12">
           <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">{t('assets.noResults')}</p>
