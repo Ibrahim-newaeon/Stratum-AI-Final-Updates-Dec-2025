@@ -18,16 +18,15 @@ Supports:
 - LinkedIn Offline Conversions
 """
 
-import contextlib
 import csv
 import hashlib
 import io
-import statistics
+import json
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-from typing import Any, Optional
-
+import asyncio
 import httpx
 
 from app.core.logging import get_logger
@@ -40,10 +39,8 @@ logger = get_logger(__name__)
 # Data Models
 # =============================================================================
 
-
 class OfflineConversionStatus(str, Enum):
     """Status of an offline conversion upload."""
-
     PENDING = "pending"
     PROCESSING = "processing"
     UPLOADED = "uploaded"
@@ -53,7 +50,6 @@ class OfflineConversionStatus(str, Enum):
 
 class OfflineConversionSource(str, Enum):
     """Source of offline conversion data."""
-
     CRM = "crm"
     POS = "pos"  # Point of Sale
     CALL_CENTER = "call_center"
@@ -65,7 +61,6 @@ class OfflineConversionSource(str, Enum):
 @dataclass
 class OfflineConversion:
     """Single offline conversion record."""
-
     # Identifiers
     conversion_id: str
     platform: str
@@ -92,17 +87,16 @@ class OfflineConversion:
     # Processing status
     status: OfflineConversionStatus = OfflineConversionStatus.PENDING
     error_message: Optional[str] = None
-    platform_response: Optional[dict] = None
+    platform_response: Optional[Dict] = None
 
 
 @dataclass
 class OfflineConversionBatch:
     """Batch of offline conversions for upload."""
-
     batch_id: str
     platform: str
-    conversions: list[OfflineConversion]
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    conversions: List[OfflineConversion]
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     status: OfflineConversionStatus = OfflineConversionStatus.PENDING
     total_records: int = 0
     successful_records: int = 0
@@ -113,21 +107,19 @@ class OfflineConversionBatch:
 @dataclass
 class UploadResult:
     """Result of an offline conversion upload."""
-
     batch_id: str
     platform: str
     success: bool
     total_records: int
     successful_records: int
     failed_records: int
-    errors: list[dict[str, Any]]
-    platform_response: Optional[dict] = None
+    errors: List[Dict[str, Any]]
+    platform_response: Optional[Dict] = None
 
 
 # =============================================================================
 # Platform-Specific Uploaders
 # =============================================================================
-
 
 class BaseOfflineUploader:
     """Base class for platform-specific offline uploaders."""
@@ -136,25 +128,15 @@ class BaseOfflineUploader:
 
     def __init__(self):
         self.hasher = PIIHasher()
-        self._credentials: dict[str, str] = {}
+        self._credentials: Dict[str, str] = {}
 
-    def set_credentials(self, credentials: dict[str, str]):
+    def set_credentials(self, credentials: Dict[str, str]):
         """Set platform credentials."""
         self._credentials = credentials
 
-    async def upload(self, conversions: list[OfflineConversion]) -> UploadResult:
-        """
-        Upload conversions to the platform.
-
-        This is an abstract method - concrete implementations exist in:
-        - MetaOfflineUploader.upload()
-        - GoogleOfflineUploader.upload()
-        - TikTokOfflineUploader.upload()
-
-        Raises:
-            NotImplementedError: This base class method must be overridden.
-        """
-        raise NotImplementedError("Subclass must implement upload()")
+    async def upload(self, conversions: List[OfflineConversion]) -> UploadResult:
+        """Upload conversions. Override in subclasses."""
+        raise NotImplementedError
 
     def _hash_email(self, email: Optional[str]) -> Optional[str]:
         """Hash email for privacy."""
@@ -183,7 +165,7 @@ class MetaOfflineUploader(BaseOfflineUploader):
     BASE_URL = "https://graph.facebook.com"
     API_VERSION = "v18.0"
 
-    async def upload(self, conversions: list[OfflineConversion]) -> UploadResult:
+    async def upload(self, conversions: List[OfflineConversion]) -> UploadResult:
         """Upload conversions to Meta Offline Events API."""
         offline_event_set_id = self._credentials.get("offline_event_set_id")
         access_token = self._credentials.get("access_token")
@@ -214,15 +196,12 @@ class MetaOfflineUploader(BaseOfflineUploader):
                 all_results = []
 
                 for i in range(0, len(formatted_events), batch_size):
-                    batch = formatted_events[i : i + batch_size]
+                    batch = formatted_events[i:i + batch_size]
 
                     response = await client.post(
                         url,
                         params={"access_token": access_token},
-                        json={
-                            "data": batch,
-                            "upload_tag": f"stratum_offline_{datetime.now(UTC).strftime('%Y%m%d')}",
-                        },
+                        json={"data": batch, "upload_tag": f"stratum_offline_{datetime.now().strftime('%Y%m%d')}"},
                         timeout=60.0,
                     )
 
@@ -230,13 +209,11 @@ class MetaOfflineUploader(BaseOfflineUploader):
                     all_results.append(result)
 
                 # Aggregate results
-                total_received = sum(
-                    r.get("num_processed_entries", 0) for r in all_results if "error" not in r
-                )
+                total_received = sum(r.get("num_processed_entries", 0) for r in all_results if "error" not in r)
                 errors = [r.get("error", {}) for r in all_results if "error" in r]
 
                 return UploadResult(
-                    batch_id=f"meta_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
+                    batch_id=f"meta_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     platform=self.PLATFORM_NAME,
                     success=len(errors) == 0,
                     total_records=len(conversions),
@@ -258,7 +235,7 @@ class MetaOfflineUploader(BaseOfflineUploader):
                 errors=[{"message": str(e)}],
             )
 
-    def _format_conversion(self, conv: OfflineConversion) -> dict[str, Any]:
+    def _format_conversion(self, conv: OfflineConversion) -> Dict[str, Any]:
         """Format conversion for Meta Offline Events API."""
         # Build match keys (user identifiers)
         match_keys = {}
@@ -274,7 +251,7 @@ class MetaOfflineUploader(BaseOfflineUploader):
             match_keys["external_id"] = [conv.external_id]
 
         # Event time (Unix timestamp)
-        event_time = conv.event_time or datetime.now(UTC)
+        event_time = conv.event_time or datetime.now(timezone.utc)
         if isinstance(event_time, datetime):
             event_time = int(event_time.timestamp())
 
@@ -307,7 +284,7 @@ class GoogleOfflineUploader(BaseOfflineUploader):
     BASE_URL = "https://googleads.googleapis.com"
     API_VERSION = "v15"
 
-    async def upload(self, conversions: list[OfflineConversion]) -> UploadResult:
+    async def upload(self, conversions: List[OfflineConversion]) -> UploadResult:
         """Upload conversions to Google Ads Offline Conversion Import."""
         customer_id = self._credentials.get("customer_id", "").replace("-", "")
         conversion_action_id = self._credentials.get("conversion_action_id")
@@ -366,13 +343,12 @@ class GoogleOfflineUploader(BaseOfflineUploader):
                     failed_count = len(partial_errors.get("details", []))
 
                     return UploadResult(
-                        batch_id=f"google_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
+                        batch_id=f"google_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                         platform=self.PLATFORM_NAME,
                         success=failed_count == 0,
                         total_records=len(conversions),
                         successful_records=len(formatted_conversions) - failed_count,
-                        failed_records=failed_count
-                        + (len(conversions) - len(formatted_conversions)),
+                        failed_records=failed_count + (len(conversions) - len(formatted_conversions)),
                         errors=[partial_errors] if partial_errors else [],
                         platform_response=result,
                     )
@@ -404,7 +380,7 @@ class GoogleOfflineUploader(BaseOfflineUploader):
         conv: OfflineConversion,
         customer_id: str,
         conversion_action_id: str,
-    ) -> Optional[dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]:
         """Format conversion for Google Ads API."""
         # Google requires GCLID for click-based attribution
         gclid = conv.click_id
@@ -417,11 +393,11 @@ class GoogleOfflineUploader(BaseOfflineUploader):
             return None
 
         # Format timestamp
-        event_time = conv.event_time or datetime.now(UTC)
+        event_time = conv.event_time or datetime.now(timezone.utc)
         if isinstance(event_time, datetime):
             conversion_datetime = event_time.strftime("%Y-%m-%d %H:%M:%S%z")
         else:
-            conversion_datetime = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S%z")
+            conversion_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")
 
         formatted = {
             "conversionAction": f"customers/{customer_id}/conversionActions/{conversion_action_id}",
@@ -445,7 +421,7 @@ class TikTokOfflineUploader(BaseOfflineUploader):
     PLATFORM_NAME = "tiktok"
     BASE_URL = "https://business-api.tiktok.com/open_api/v1.3"
 
-    async def upload(self, conversions: list[OfflineConversion]) -> UploadResult:
+    async def upload(self, conversions: List[OfflineConversion]) -> UploadResult:
         """Upload conversions to TikTok Events API."""
         pixel_code = self._credentials.get("pixel_code")
         access_token = self._credentials.get("access_token")
@@ -480,7 +456,7 @@ class TikTokOfflineUploader(BaseOfflineUploader):
 
                 if result.get("code") == 0:
                     return UploadResult(
-                        batch_id=f"tiktok_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
+                        batch_id=f"tiktok_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                         platform=self.PLATFORM_NAME,
                         success=True,
                         total_records=len(conversions),
@@ -497,12 +473,7 @@ class TikTokOfflineUploader(BaseOfflineUploader):
                         total_records=len(conversions),
                         successful_records=0,
                         failed_records=len(conversions),
-                        errors=[
-                            {
-                                "message": result.get("message", "Upload failed"),
-                                "code": result.get("code"),
-                            }
-                        ],
+                        errors=[{"message": result.get("message", "Upload failed"), "code": result.get("code")}],
                     )
 
         except Exception as e:
@@ -517,9 +488,9 @@ class TikTokOfflineUploader(BaseOfflineUploader):
                 errors=[{"message": str(e)}],
             )
 
-    def _format_conversion(self, conv: OfflineConversion) -> dict[str, Any]:
+    def _format_conversion(self, conv: OfflineConversion) -> Dict[str, Any]:
         """Format conversion for TikTok Events API."""
-        event_time = conv.event_time or datetime.now(UTC)
+        event_time = conv.event_time or datetime.now(timezone.utc)
         if isinstance(event_time, datetime):
             event_time = int(event_time.timestamp())
 
@@ -539,10 +510,107 @@ class TikTokOfflineUploader(BaseOfflineUploader):
         }
 
 
+class LinkedInOfflineUploader(BaseOfflineUploader):
+    """LinkedIn Conversions API uploader for offline conversions."""
+
+    PLATFORM_NAME = "linkedin"
+    BASE_URL = "https://api.linkedin.com/rest"
+    API_VERSION = "202401"
+
+    async def upload(self, conversions: List[OfflineConversion]) -> UploadResult:
+        """Upload conversions to LinkedIn Conversions API."""
+        conversion_id = self._credentials.get("conversion_id")
+        access_token = self._credentials.get("access_token")
+
+        if not conversion_id or not access_token:
+            return UploadResult(
+                batch_id="",
+                platform=self.PLATFORM_NAME,
+                success=False,
+                total_records=len(conversions),
+                successful_records=0,
+                failed_records=len(conversions),
+                errors=[{"message": "Missing conversion_id or access_token"}],
+            )
+
+        # Format conversions
+        formatted_events = [self._format_conversion(conv, conversion_id) for conv in conversions]
+
+        try:
+            async with httpx.AsyncClient() as client:
+                url = f"{self.BASE_URL}/conversionEvents"
+                headers = {
+                    "Authorization": f"Bearer {access_token}",
+                    "LinkedIn-Version": self.API_VERSION,
+                    "Content-Type": "application/json",
+                }
+
+                payload = {"elements": formatted_events}
+
+                response = await client.post(url, json=payload, headers=headers, timeout=60.0)
+
+                if response.status_code in [200, 201]:
+                    return UploadResult(
+                        batch_id=f"linkedin_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        platform=self.PLATFORM_NAME,
+                        success=True,
+                        total_records=len(conversions),
+                        successful_records=len(conversions),
+                        failed_records=0,
+                        errors=[],
+                        platform_response=response.json() if response.text else None,
+                    )
+                else:
+                    return UploadResult(
+                        batch_id="",
+                        platform=self.PLATFORM_NAME,
+                        success=False,
+                        total_records=len(conversions),
+                        successful_records=0,
+                        failed_records=len(conversions),
+                        errors=[{"message": f"HTTP {response.status_code}", "body": response.text}],
+                    )
+
+        except Exception as e:
+            logger.error(f"LinkedIn offline upload error: {e}")
+            return UploadResult(
+                batch_id="",
+                platform=self.PLATFORM_NAME,
+                success=False,
+                total_records=len(conversions),
+                successful_records=0,
+                failed_records=len(conversions),
+                errors=[{"message": str(e)}],
+            )
+
+    def _format_conversion(self, conv: OfflineConversion, conversion_id: str) -> Dict[str, Any]:
+        """Format conversion for LinkedIn API."""
+        event_time = conv.event_time or datetime.now(timezone.utc)
+        if isinstance(event_time, datetime):
+            event_time_ms = int(event_time.timestamp() * 1000)
+        else:
+            event_time_ms = int(event_time * 1000)
+
+        user_ids = []
+        if conv.email:
+            user_ids.append({"idType": "SHA256_EMAIL", "idValue": self._hash_email(conv.email)})
+        if conv.phone:
+            user_ids.append({"idType": "SHA256_PHONE_NUMBER", "idValue": self._hash_phone(conv.phone)})
+
+        return {
+            "conversion": f"urn:li:conversion:{conversion_id}",
+            "conversionHappenedAt": event_time_ms,
+            "user": {"userIds": user_ids},
+            "conversionValue": {
+                "currencyCode": conv.currency,
+                "amount": str(conv.conversion_value),
+            },
+        }
+
+
 # =============================================================================
 # Offline Conversion Service
 # =============================================================================
-
 
 class OfflineConversionService:
     """
@@ -556,14 +624,15 @@ class OfflineConversionService:
     """
 
     def __init__(self):
-        self._uploaders: dict[str, BaseOfflineUploader] = {
+        self._uploaders: Dict[str, BaseOfflineUploader] = {
             "meta": MetaOfflineUploader(),
             "google": GoogleOfflineUploader(),
             "tiktok": TikTokOfflineUploader(),
+            "linkedin": LinkedInOfflineUploader(),
         }
-        self._batches: dict[str, OfflineConversionBatch] = {}
+        self._batches: Dict[str, OfflineConversionBatch] = {}
 
-    def set_platform_credentials(self, platform: str, credentials: dict[str, str]):
+    def set_platform_credentials(self, platform: str, credentials: Dict[str, str]):
         """Set credentials for a platform uploader."""
         if platform in self._uploaders:
             self._uploaders[platform].set_credentials(credentials)
@@ -572,8 +641,8 @@ class OfflineConversionService:
         self,
         csv_content: str,
         platform: str,
-        column_mapping: Optional[dict[str, str]] = None,
-    ) -> list[OfflineConversion]:
+        column_mapping: Optional[Dict[str, str]] = None,
+    ) -> List[OfflineConversion]:
         """
         Parse CSV content into OfflineConversion objects.
 
@@ -617,9 +686,9 @@ class OfflineConversionService:
 
     def _parse_row(
         self,
-        row: dict[str, str],
+        row: Dict[str, str],
         platform: str,
-        mapping: dict[str, list[str]],
+        mapping: Dict[str, List[str]],
         row_index: int,
     ) -> Optional[OfflineConversion]:
         """Parse a single CSV row into an OfflineConversion."""
@@ -648,7 +717,7 @@ class OfflineConversionService:
         if event_time_str:
             for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y"]:
                 try:
-                    event_time = datetime.strptime(event_time_str, fmt).replace(tzinfo=UTC)
+                    event_time = datetime.strptime(event_time_str, fmt).replace(tzinfo=timezone.utc)
                     break
                 except ValueError:
                     continue
@@ -657,11 +726,13 @@ class OfflineConversionService:
         value_str = get_value("conversion_value")
         conversion_value = 0.0
         if value_str:
-            with contextlib.suppress(ValueError):
+            try:
                 conversion_value = float(value_str.replace(",", "").replace("$", ""))
+            except ValueError:
+                pass
 
         return OfflineConversion(
-            conversion_id=f"{platform}_{row_index}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
+            conversion_id=f"{platform}_{row_index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
             platform=platform,
             email=email,
             phone=phone,
@@ -679,7 +750,7 @@ class OfflineConversionService:
 
     async def upload_conversions(
         self,
-        conversions: list[OfflineConversion],
+        conversions: List[OfflineConversion],
         platform: str,
     ) -> UploadResult:
         """
@@ -706,7 +777,7 @@ class OfflineConversionService:
         uploader = self._uploaders[platform]
 
         # Create batch record
-        batch_id = f"{platform}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
+        batch_id = f"{platform}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
         batch = OfflineConversionBatch(
             batch_id=batch_id,
             platform=platform,
@@ -724,18 +795,14 @@ class OfflineConversionService:
         batch.successful_records = result.successful_records
         batch.failed_records = result.failed_records
         batch.status = (
-            OfflineConversionStatus.UPLOADED
-            if result.success
-            else OfflineConversionStatus.PARTIAL
-            if result.successful_records > 0
+            OfflineConversionStatus.UPLOADED if result.success
+            else OfflineConversionStatus.PARTIAL if result.successful_records > 0
             else OfflineConversionStatus.FAILED
         )
         if result.errors:
             batch.error_summary = "; ".join(str(e.get("message", "")) for e in result.errors[:3])
 
-        logger.info(
-            f"Offline upload {batch_id}: {result.successful_records}/{result.total_records} succeeded"
-        )
+        logger.info(f"Offline upload {batch_id}: {result.successful_records}/{result.total_records} succeeded")
 
         return result
 
@@ -743,8 +810,8 @@ class OfflineConversionService:
         self,
         csv_content: str,
         platform: str,
-        credentials: dict[str, str],
-        column_mapping: Optional[dict[str, str]] = None,
+        credentials: Dict[str, str],
+        column_mapping: Optional[Dict[str, str]] = None,
     ) -> UploadResult:
         """
         Parse CSV and upload conversions to a platform.
@@ -778,7 +845,7 @@ class OfflineConversionService:
         # Upload
         return await self.upload_conversions(conversions, platform)
 
-    def get_batch_status(self, batch_id: str) -> Optional[dict[str, Any]]:
+    def get_batch_status(self, batch_id: str) -> Optional[Dict[str, Any]]:
         """Get status of an upload batch."""
         batch = self._batches.get(batch_id)
         if not batch:
@@ -799,7 +866,7 @@ class OfflineConversionService:
         self,
         platform: Optional[str] = None,
         limit: int = 20,
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """Get recent upload history."""
         batches = list(self._batches.values())
 
@@ -828,7 +895,7 @@ class OfflineConversionService:
         platform: Optional[str] = None,
         status: Optional[str] = None,
         limit: int = 50,
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """
         List offline conversion batches.
 
@@ -875,42 +942,38 @@ offline_conversion_service = OfflineConversionService()
 # Advanced Offline Conversion Features (P0 Enhancement)
 # =============================================================================
 
-
 @dataclass
 class MatchRatePrediction:
     """Prediction of match rate before upload."""
-
     predicted_match_rate: float
     confidence: float
     risk_level: str  # low, medium, high
-    factors: list[dict[str, Any]]
-    recommendations: list[str]
+    factors: List[Dict[str, Any]]
+    recommendations: List[str]
 
 
 @dataclass
 class DataQualityScore:
     """Quality score for offline conversion data."""
-
     overall_score: float  # 0-100
     completeness_score: float
     format_score: float
     freshness_score: float
     identifier_quality: float
-    issues: list[dict[str, Any]]
+    issues: List[Dict[str, Any]]
     passed_validation: bool
 
 
 @dataclass
 class ReconciliationResult:
     """Result of reconciliation with platform reports."""
-
     platform: str
     batch_id: str
     our_count: int
     platform_count: int
     matched_count: int
     discrepancy_rate: float
-    discrepancies: list[dict[str, Any]]
+    discrepancies: List[Dict[str, Any]]
     status: str  # matched, discrepancy, pending
 
 
@@ -923,25 +986,23 @@ class MatchRatePredictor:
     """
 
     def __init__(self):
-        self._historical_rates: dict[str, list[tuple[datetime, float, dict[str, Any]]]] = {}
+        self._historical_rates: Dict[str, List[Tuple[datetime, float, Dict[str, Any]]]] = {}
 
     def record_match_rate(
         self,
         platform: str,
         match_rate: float,
-        data_characteristics: dict[str, Any],
+        data_characteristics: Dict[str, Any],
     ):
         """Record historical match rate for learning."""
         if platform not in self._historical_rates:
             self._historical_rates[platform] = []
 
-        self._historical_rates[platform].append(
-            (
-                datetime.now(UTC),
-                match_rate,
-                data_characteristics,
-            )
-        )
+        self._historical_rates[platform].append((
+            datetime.now(timezone.utc),
+            match_rate,
+            data_characteristics,
+        ))
 
         # Keep last 100 records
         if len(self._historical_rates[platform]) > 100:
@@ -950,7 +1011,7 @@ class MatchRatePredictor:
     def predict(
         self,
         platform: str,
-        conversions: list[dict[str, Any]],
+        conversions: List[Dict[str, Any]],
     ) -> MatchRatePrediction:
         """Predict match rate for a batch of conversions."""
         factors = []
@@ -970,61 +1031,47 @@ class MatchRatePredictor:
         # Check for email presence
         email_count = sum(1 for c in conversions if c.get("user_data", {}).get("email"))
         email_rate = email_count / total * 100
-        factors.append(
-            {
-                "factor": "email_presence",
-                "value": f"{email_rate:.1f}%",
-                "impact": email_rate * 0.4,  # Email is 40% of match potential
-            }
-        )
+        factors.append({
+            "factor": "email_presence",
+            "value": f"{email_rate:.1f}%",
+            "impact": email_rate * 0.4,  # Email is 40% of match potential
+        })
 
         if email_rate < 50:
-            recommendations.append(
-                "Include email for more conversions - improves match rate significantly"
-            )
+            recommendations.append("Include email for more conversions - improves match rate significantly")
 
         # Check for phone presence
         phone_count = sum(1 for c in conversions if c.get("user_data", {}).get("phone"))
         phone_rate = phone_count / total * 100
-        factors.append(
-            {
-                "factor": "phone_presence",
-                "value": f"{phone_rate:.1f}%",
-                "impact": phone_rate * 0.3,  # Phone is 30% of match potential
-            }
-        )
+        factors.append({
+            "factor": "phone_presence",
+            "value": f"{phone_rate:.1f}%",
+            "impact": phone_rate * 0.3,  # Phone is 30% of match potential
+        })
 
         if phone_rate < 30:
             recommendations.append("Add phone numbers where available for better matching")
 
         # Check for address completeness
-        address_count = sum(
-            1 for c in conversions if self._has_complete_address(c.get("user_data", {}))
-        )
+        address_count = sum(1 for c in conversions if self._has_complete_address(c.get("user_data", {})))
         address_rate = address_count / total * 100
-        factors.append(
-            {
-                "factor": "address_completeness",
-                "value": f"{address_rate:.1f}%",
-                "impact": address_rate * 0.2,
-            }
-        )
+        factors.append({
+            "factor": "address_completeness",
+            "value": f"{address_rate:.1f}%",
+            "impact": address_rate * 0.2,
+        })
 
         # Check data freshness
         stale_count = sum(1 for c in conversions if self._is_stale(c))
         freshness_rate = (total - stale_count) / total * 100
-        factors.append(
-            {
-                "factor": "data_freshness",
-                "value": f"{freshness_rate:.1f}% fresh",
-                "impact": freshness_rate * 0.1,
-            }
-        )
+        factors.append({
+            "factor": "data_freshness",
+            "value": f"{freshness_rate:.1f}% fresh",
+            "impact": freshness_rate * 0.1,
+        })
 
         if stale_count > total * 0.2:
-            recommendations.append(
-                f"{stale_count} conversions are >7 days old - may have lower match rates"
-            )
+            recommendations.append(f"{stale_count} conversions are >7 days old - may have lower match rates")
 
         # Calculate predicted rate
         base_rate = sum(f["impact"] for f in factors)
@@ -1062,23 +1109,23 @@ class MatchRatePredictor:
             recommendations=recommendations,
         )
 
-    def _has_complete_address(self, user_data: dict[str, Any]) -> bool:
+    def _has_complete_address(self, user_data: Dict[str, Any]) -> bool:
         """Check if user has complete address data."""
         required = ["first_name", "last_name", "postal_code", "country"]
         return all(user_data.get(f) for f in required)
 
-    def _is_stale(self, conversion: dict[str, Any]) -> bool:
+    def _is_stale(self, conversion: Dict[str, Any]) -> bool:
         """Check if conversion is stale (>7 days old)."""
         event_time = conversion.get("event_time")
         if not event_time:
             return True
 
         if isinstance(event_time, int):
-            event_dt = datetime.fromtimestamp(event_time, tz=UTC)
+            event_dt = datetime.fromtimestamp(event_time, tz=timezone.utc)
         else:
             event_dt = event_time
 
-        return (datetime.now(UTC) - event_dt).days > 7
+        return (datetime.now(timezone.utc) - event_dt).days > 7
 
 
 class DataQualityScorer:
@@ -1097,7 +1144,7 @@ class DataQualityScorer:
 
     def score(
         self,
-        conversions: list[dict[str, Any]],
+        conversions: List[Dict[str, Any]],
     ) -> DataQualityScore:
         """Score the quality of conversion data."""
         issues = []
@@ -1124,12 +1171,10 @@ class DataQualityScorer:
         completeness_score = complete_count / total * 100
 
         if completeness_score < 90:
-            issues.append(
-                {
-                    "severity": "warning",
-                    "message": f"{total - complete_count} conversions missing required fields",
-                }
-            )
+            issues.append({
+                "severity": "warning",
+                "message": f"{total - complete_count} conversions missing required fields",
+            })
 
         # Format score
         format_issues = 0
@@ -1140,23 +1185,21 @@ class DataQualityScorer:
         format_score = (total - format_issues) / total * 100
 
         if format_issues > 0:
-            issues.append(
-                {
-                    "severity": "warning",
-                    "message": f"{format_issues} conversions have format issues",
-                }
-            )
+            issues.append({
+                "severity": "warning",
+                "message": f"{format_issues} conversions have format issues",
+            })
 
         # Freshness score
         stale_count = 0
         very_stale_count = 0
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         for conv in conversions:
             event_time = conv.get("event_time")
             if event_time:
                 if isinstance(event_time, int):
-                    event_dt = datetime.fromtimestamp(event_time, tz=UTC)
+                    event_dt = datetime.fromtimestamp(event_time, tz=timezone.utc)
                 else:
                     event_dt = event_time
 
@@ -1170,12 +1213,10 @@ class DataQualityScorer:
         freshness_score = max(0, freshness_score)
 
         if very_stale_count > 0:
-            issues.append(
-                {
-                    "severity": "error",
-                    "message": f"{very_stale_count} conversions are >30 days old - may not be accepted",
-                }
-            )
+            issues.append({
+                "severity": "error",
+                "message": f"{very_stale_count} conversions are >30 days old - may not be accepted",
+            })
 
         # Identifier quality
         identifier_score = 0
@@ -1188,19 +1229,17 @@ class DataQualityScorer:
         identifier_quality = identifier_score / total * 100
 
         if identifier_quality < 80:
-            issues.append(
-                {
-                    "severity": "warning",
-                    "message": f"{total - identifier_score} conversions lack email/phone/external_id",
-                }
-            )
+            issues.append({
+                "severity": "warning",
+                "message": f"{total - identifier_score} conversions lack email/phone/external_id",
+            })
 
         # Overall score (weighted average)
         overall_score = (
-            completeness_score * 0.3
-            + format_score * 0.2
-            + freshness_score * 0.2
-            + identifier_quality * 0.3
+            completeness_score * 0.3 +
+            format_score * 0.2 +
+            freshness_score * 0.2 +
+            identifier_quality * 0.3
         )
 
         passed_validation = overall_score >= 60 and completeness_score >= 80
@@ -1215,7 +1254,7 @@ class DataQualityScorer:
             passed_validation=passed_validation,
         )
 
-    def _validate_format(self, conversion: dict[str, Any]) -> bool:
+    def _validate_format(self, conversion: Dict[str, Any]) -> bool:
         """Validate format of a conversion."""
         # Check event_time format
         event_time = conversion.get("event_time")
@@ -1248,14 +1287,14 @@ class PlatformReconciler:
     """
 
     def __init__(self):
-        self._reconciliation_history: dict[str, list[ReconciliationResult]] = {}
+        self._reconciliation_history: Dict[str, List[ReconciliationResult]] = {}
 
     def reconcile(
         self,
         batch_id: str,
         platform: str,
-        our_conversions: list[dict[str, Any]],
-        platform_report: dict[str, Any],
+        our_conversions: List[Dict[str, Any]],
+        platform_report: Dict[str, Any],
     ) -> ReconciliationResult:
         """Reconcile our conversions with platform report."""
         our_count = len(our_conversions)
@@ -1266,28 +1305,24 @@ class PlatformReconciler:
 
         # Check for count discrepancy
         if our_count != platform_count:
-            discrepancies.append(
-                {
-                    "type": "count_mismatch",
-                    "our_value": our_count,
-                    "platform_value": platform_count,
-                    "difference": our_count - platform_count,
-                }
-            )
+            discrepancies.append({
+                "type": "count_mismatch",
+                "our_value": our_count,
+                "platform_value": platform_count,
+                "difference": our_count - platform_count,
+            })
 
         # Check match rate
         expected_match_rate = 0.7  # 70% expected
         actual_match_rate = matched_count / our_count if our_count > 0 else 0
 
         if actual_match_rate < expected_match_rate - 0.1:
-            discrepancies.append(
-                {
-                    "type": "low_match_rate",
-                    "expected": f"{expected_match_rate * 100:.0f}%",
-                    "actual": f"{actual_match_rate * 100:.1f}%",
-                    "message": "Match rate below expectations",
-                }
-            )
+            discrepancies.append({
+                "type": "low_match_rate",
+                "expected": f"{expected_match_rate * 100:.0f}%",
+                "actual": f"{actual_match_rate * 100:.1f}%",
+                "message": "Match rate below expectations",
+            })
 
         # Calculate discrepancy rate
         discrepancy_rate = len(discrepancies) / 3 * 100  # Normalized
@@ -1320,9 +1355,9 @@ class PlatformReconciler:
         self,
         platform: Optional[str] = None,
         days: int = 30,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Get reconciliation summary."""
-        cutoff = datetime.now(UTC) - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
         if platform:
             results = self._reconciliation_history.get(platform, [])

@@ -13,10 +13,10 @@ Tasks:
 
 from app.workers.celery_app import celery_app
 from app.workers.tasks import (
+    sync_campaign_data,
     evaluate_rules,
     fetch_competitor_data,
     generate_forecast,
-    sync_campaign_data,
 )
 
 __all__ = [

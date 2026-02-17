@@ -15,19 +15,19 @@ Enhanced with:
 
 import json
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Ridge
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor
+from sklearn.linear_model import Ridge, ElasticNet
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.impute import SimpleImputer
 
 from app.core.logging import get_logger
 
@@ -40,16 +40,7 @@ logger = get_logger(__name__)
 
 CREATIVE_TYPES = ["image", "video", "carousel", "collection", "stories", "reels", "unknown"]
 AUDIENCE_TYPES = ["broad", "lookalike", "custom", "interest", "retargeting", "unknown"]
-OBJECTIVES = [
-    "conversions",
-    "traffic",
-    "awareness",
-    "engagement",
-    "leads",
-    "sales",
-    "app_installs",
-    "unknown",
-]
+OBJECTIVES = ["conversions", "traffic", "awareness", "engagement", "leads", "sales", "app_installs", "unknown"]
 BID_STRATEGIES = ["lowest_cost", "cost_cap", "bid_cap", "target_roas", "manual", "unknown"]
 PLATFORMS = ["meta", "google", "tiktok", "snapchat", "linkedin"]
 
@@ -68,10 +59,10 @@ class ModelTrainer:
         self.models_path = Path(models_path or os.getenv("ML_MODELS_PATH", "./models"))
         self.models_path.mkdir(parents=True, exist_ok=True)
 
-        self.scalers: dict[str, StandardScaler] = {}
-        self.feature_names: dict[str, list[str]] = {}
+        self.scalers: Dict[str, StandardScaler] = {}
+        self.feature_names: Dict[str, List[str]] = {}
 
-    def train_all(self, df: pd.DataFrame, include_platform_models: bool = True) -> dict[str, Any]:
+    def train_all(self, df: pd.DataFrame, include_platform_models: bool = True) -> Dict[str, Any]:
         """
         Train all models from a dataset.
 
@@ -134,14 +125,40 @@ class ModelTrainer:
         # =====================================================================
         # Core Performance Metrics
         # =====================================================================
-        df["ctr"] = np.where(df["impressions"] > 0, df["clicks"] / df["impressions"] * 100, 0)
-        df["cvr"] = np.where(df["clicks"] > 0, df["conversions"] / df["clicks"] * 100, 0)
-        df["roas"] = np.where(df["spend"] > 0, df["revenue"] / df["spend"], 0)
-        df["cpc"] = np.where(df["clicks"] > 0, df["spend"] / df["clicks"], 0)
-        df["cpm"] = np.where(df["impressions"] > 0, df["spend"] / df["impressions"] * 1000, 0)
-        df["cpa"] = np.where(df["conversions"] > 0, df["spend"] / df["conversions"], 0)
+        df["ctr"] = np.where(
+            df["impressions"] > 0,
+            df["clicks"] / df["impressions"] * 100,
+            0
+        )
+        df["cvr"] = np.where(
+            df["clicks"] > 0,
+            df["conversions"] / df["clicks"] * 100,
+            0
+        )
+        df["roas"] = np.where(
+            df["spend"] > 0,
+            df["revenue"] / df["spend"],
+            0
+        )
+        df["cpc"] = np.where(
+            df["clicks"] > 0,
+            df["spend"] / df["clicks"],
+            0
+        )
+        df["cpm"] = np.where(
+            df["impressions"] > 0,
+            df["spend"] / df["impressions"] * 1000,
+            0
+        )
+        df["cpa"] = np.where(
+            df["conversions"] > 0,
+            df["spend"] / df["conversions"],
+            0
+        )
         df["revenue_per_conversion"] = np.where(
-            df["conversions"] > 0, df["revenue"] / df["conversions"], 0
+            df["conversions"] > 0,
+            df["revenue"] / df["conversions"],
+            0
         )
 
         # Log transforms for skewed features
@@ -167,12 +184,8 @@ class ModelTrainer:
         # Video-specific features
         if "video_length_seconds" in df.columns:
             df["video_length_seconds"] = df["video_length_seconds"].fillna(0)
-            df["is_short_video"] = (df["video_length_seconds"] > 0) & (
-                df["video_length_seconds"] <= 15
-            )
-            df["is_medium_video"] = (df["video_length_seconds"] > 15) & (
-                df["video_length_seconds"] <= 60
-            )
+            df["is_short_video"] = (df["video_length_seconds"] > 0) & (df["video_length_seconds"] <= 15)
+            df["is_medium_video"] = (df["video_length_seconds"] > 15) & (df["video_length_seconds"] <= 60)
             df["is_long_video"] = df["video_length_seconds"] > 60
         else:
             df["video_length_seconds"] = 0
@@ -273,11 +286,9 @@ class ModelTrainer:
                     df[f"{col}_7d_avg"] = df.groupby("campaign_id")[col].transform(
                         lambda x: x.rolling(7, min_periods=1).mean()
                     )
-                    df[f"{col}_7d_std"] = (
-                        df.groupby("campaign_id")[col]
-                        .transform(lambda x: x.rolling(7, min_periods=1).std())
-                        .fillna(0)
-                    )
+                    df[f"{col}_7d_std"] = df.groupby("campaign_id")[col].transform(
+                        lambda x: x.rolling(7, min_periods=1).std()
+                    ).fillna(0)
 
             # Trend direction (positive if improving)
             df["roas_trend"] = df.groupby("campaign_id")["roas"].transform(
@@ -329,7 +340,7 @@ class ModelTrainer:
 
         return df
 
-    def train_roas_predictor(self, df: pd.DataFrame) -> dict[str, Any]:
+    def train_roas_predictor(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
         Train enhanced ROAS prediction model.
 
@@ -352,29 +363,16 @@ class ModelTrainer:
 
         # Core performance metrics
         core_metrics = [
-            "log_spend",
-            "log_impressions",
-            "log_clicks",
-            "log_conversions",
-            "ctr",
-            "cvr",
-            "cpm",
-            "cpc",
-            "cpa",
-            "revenue_per_conversion",
-            "ctr_cvr_product",
+            "log_spend", "log_impressions", "log_clicks", "log_conversions",
+            "ctr", "cvr", "cpm", "cpc", "cpa", "revenue_per_conversion",
+            "ctr_cvr_product"
         ]
         feature_cols.extend([c for c in core_metrics if c in df.columns])
 
         # Creative features
         creative_cols = [c for c in df.columns if c.startswith("creative_")]
         feature_cols.extend(creative_cols)
-        video_features = [
-            "video_length_seconds",
-            "is_short_video",
-            "is_medium_video",
-            "is_long_video",
-        ]
+        video_features = ["video_length_seconds", "is_short_video", "is_medium_video", "is_long_video"]
         feature_cols.extend([c for c in video_features if c in df.columns])
         if "has_cta" in df.columns:
             feature_cols.append("has_cta")
@@ -403,14 +401,8 @@ class ModelTrainer:
 
         # Historical features
         historical_features = [
-            "roas_7d_avg",
-            "roas_7d_std",
-            "ctr_7d_avg",
-            "ctr_7d_std",
-            "cvr_7d_avg",
-            "cvr_7d_std",
-            "roas_trend",
-            "is_improving",
+            "roas_7d_avg", "roas_7d_std", "ctr_7d_avg", "ctr_7d_std",
+            "cvr_7d_avg", "cvr_7d_std", "roas_trend", "is_improving"
         ]
         feature_cols.extend([c for c in historical_features if c in df.columns])
 
@@ -446,7 +438,9 @@ class ModelTrainer:
             logger.warning(f"Limited training data: {len(X)} samples")
 
         # Train-test split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         # Handle missing values
         imputer = SimpleImputer(strategy="median")
@@ -525,7 +519,7 @@ class ModelTrainer:
 
         return metrics
 
-    def train_conversion_predictor(self, df: pd.DataFrame) -> dict[str, Any]:
+    def train_conversion_predictor(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
         Train conversion prediction model.
 
@@ -549,7 +543,9 @@ class ModelTrainer:
         X, y = X[mask], y[mask]
 
         # Train-test split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         # Scale features
         scaler = StandardScaler()
@@ -572,7 +568,7 @@ class ModelTrainer:
         # Feature importances
         metrics["feature_importances"] = {
             name: float(imp)
-            for name, imp in zip(feature_cols, model.feature_importances_, strict=False)
+            for name, imp in zip(feature_cols, model.feature_importances_)
         }
 
         # Save
@@ -586,7 +582,7 @@ class ModelTrainer:
 
         return metrics
 
-    def train_budget_impact_predictor(self, df: pd.DataFrame) -> dict[str, Any]:
+    def train_budget_impact_predictor(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
         Train budget impact prediction model.
 
@@ -595,24 +591,22 @@ class ModelTrainer:
         """
         # Aggregate by campaign if there are multiple rows
         if "campaign_id" in df.columns:
-            agg_df = (
-                df.groupby("campaign_id")
-                .agg(
-                    {
-                        "spend": "sum",
-                        "revenue": "sum",
-                        "impressions": "sum",
-                        "clicks": "sum",
-                        "conversions": "sum",
-                    }
-                )
-                .reset_index()
-            )
+            agg_df = df.groupby("campaign_id").agg({
+                "spend": "sum",
+                "revenue": "sum",
+                "impressions": "sum",
+                "clicks": "sum",
+                "conversions": "sum",
+            }).reset_index()
         else:
             agg_df = df.copy()
 
         # Calculate efficiency metrics
-        agg_df["roas"] = np.where(agg_df["spend"] > 0, agg_df["revenue"] / agg_df["spend"], 0)
+        agg_df["roas"] = np.where(
+            agg_df["spend"] > 0,
+            agg_df["revenue"] / agg_df["spend"],
+            0
+        )
         agg_df["log_spend"] = np.log1p(agg_df["spend"])
         agg_df["log_revenue"] = np.log1p(agg_df["revenue"])
 
@@ -629,7 +623,9 @@ class ModelTrainer:
             return {"error": "Not enough data for budget impact model"}
 
         # Train-test split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         # Simple Ridge regression (captures log-log relationship)
         model = Ridge(alpha=1.0)
@@ -653,7 +649,7 @@ class ModelTrainer:
 
         return metrics
 
-    def _evaluate_model(self, y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
+    def _evaluate_model(self, y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
         """Calculate evaluation metrics."""
         return {
             "r2": float(r2_score(y_true, y_pred)),
@@ -667,8 +663,8 @@ class ModelTrainer:
         model: Any,
         scaler: Optional[StandardScaler],
         name: str,
-        features: list[str],
-        metrics: dict[str, Any],
+        features: List[str],
+        metrics: Dict[str, Any],
         imputer: Optional[SimpleImputer] = None,
     ) -> None:
         """Save model, preprocessors, and metadata to disk."""
@@ -691,11 +687,7 @@ class ModelTrainer:
         for key, value in metrics.items():
             if isinstance(value, dict):
                 serializable_metrics[key] = {
-                    k: int(v)
-                    if isinstance(v, (np.integer, np.int64))
-                    else float(v)
-                    if isinstance(v, (np.floating, np.float64))
-                    else v
+                    k: int(v) if isinstance(v, (np.integer, np.int64)) else float(v) if isinstance(v, (np.floating, np.float64)) else v
                     for k, v in value.items()
                 }
             elif isinstance(value, (np.integer, np.int64)):
@@ -709,7 +701,7 @@ class ModelTrainer:
         metadata = {
             "name": name,
             "version": "2.0.0",  # Enhanced version with creative/audience features
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "features": features,
             "metrics": serializable_metrics,
             "model_type": type(model).__name__,
@@ -718,14 +710,15 @@ class ModelTrainer:
         }
 
         metadata_path = self.models_path / f"{name}_metadata.json"
-        with metadata_path.open("w") as f:
+        with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=2)
 
         print(f"  Saved: {model_path}")
         print(f"  R² Score: {metrics.get('r2', 'N/A'):.4f}")
         print(f"  Features: {len(features)}")
 
-    def train_platform_specific_models(self, df: pd.DataFrame) -> dict[str, Any]:
+
+    def train_platform_specific_models(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
         Train platform-specific ROAS models for better accuracy.
         Each platform has different characteristics and user behaviors.
@@ -743,9 +736,7 @@ class ModelTrainer:
             platform_df = df[df["platform"] == platform].copy()
 
             if len(platform_df) < 50:
-                logger.warning(
-                    f"Insufficient data for {platform} ({len(platform_df)} rows), skipping"
-                )
+                logger.warning(f"Insufficient data for {platform} ({len(platform_df)} rows), skipping")
                 continue
 
             logger.info(f"Training {platform} model with {len(platform_df)} samples")
@@ -753,13 +744,8 @@ class ModelTrainer:
             try:
                 # Use simplified feature set for platform-specific models
                 feature_cols = [
-                    "log_spend",
-                    "log_impressions",
-                    "log_clicks",
-                    "ctr",
-                    "cvr",
-                    "cpm",
-                    "cpc",
+                    "log_spend", "log_impressions", "log_clicks",
+                    "ctr", "cvr", "cpm", "cpc"
                 ]
 
                 # Add creative features if available
@@ -838,7 +824,7 @@ class ModelTrainer:
         return results
 
 
-def train_from_csv(csv_path: str, models_path: str = None) -> dict[str, Any]:
+def train_from_csv(csv_path: str, models_path: str = None) -> Dict[str, Any]:
     """
     Train models from a CSV file.
 
@@ -866,7 +852,7 @@ def train_from_sample_data(
     num_campaigns: int = 100,
     days: int = 30,
     models_path: str = None,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Train models using generated sample data.
 

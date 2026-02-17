@@ -12,28 +12,30 @@ Supported channels:
 - S3 (AWS Storage)
 """
 
+from datetime import datetime
+from typing import List, Dict, Any, Optional, Protocol
+from uuid import UUID
 import logging
-from abc import ABC, abstractmethod
-from datetime import UTC, datetime
-from email import encoders
-from email.mime.base import MIMEBase
+import os
+import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from pathlib import Path
-from typing import Any
-from uuid import UUID
-
-import aiohttp
+from email.mime.base import MIMEBase
+from email import encoders
 import aiosmtplib
-from sqlalchemy import and_, select
+import aiohttp
+from abc import ABC, abstractmethod
+
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.reporting import (
+    ReportExecution,
+    ReportDelivery,
+    DeliveryChannelConfig,
     DeliveryChannel,
     DeliveryStatus,
     ExecutionStatus,
-    ReportDelivery,
-    ReportExecution,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,7 +45,6 @@ logger = logging.getLogger(__name__)
 # Delivery Channel Interface
 # =============================================================================
 
-
 class DeliveryChannelHandler(ABC):
     """Abstract base class for delivery channel implementations."""
 
@@ -51,9 +52,9 @@ class DeliveryChannelHandler(ABC):
     async def deliver(
         self,
         execution: ReportExecution,
-        config: dict[str, Any],
+        config: Dict[str, Any],
         recipient: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Deliver a report through this channel.
 
@@ -70,16 +71,15 @@ class DeliveryChannelHandler(ABC):
 # Email Delivery
 # =============================================================================
 
-
 class EmailDelivery(DeliveryChannelHandler):
     """SMTP-based email delivery."""
 
     async def deliver(
         self,
         execution: ReportExecution,
-        config: dict[str, Any],
+        config: Dict[str, Any],
         recipient: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Send report via email with attachment."""
         try:
             # Build email
@@ -93,7 +93,7 @@ class EmailDelivery(DeliveryChannelHandler):
             msg.attach(MIMEText(body, "html"))
 
             # Attach report file
-            if execution.file_path and Path(execution.file_path).exists():
+            if execution.file_path and os.path.exists(execution.file_path):
                 await self._attach_file(msg, execution)
 
             # Send email
@@ -114,27 +114,23 @@ class EmailDelivery(DeliveryChannelHandler):
             }
 
         except Exception as e:
-            logger.error(f"Email delivery failed: {e!s}")
+            logger.error(f"Email delivery failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
             }
 
-    def _render_subject(self, execution: ReportExecution, config: dict[str, Any]) -> str:
+    def _render_subject(self, execution: ReportExecution, config: Dict[str, Any]) -> str:
         """Render email subject from template."""
         template = config.get("subject_template", "{{report_type}} Report - {{date_range}}")
 
         # Simple template replacement
-        subject = template.replace(
-            "{{report_type}}", execution.report_type.value.replace("_", " ").title()
-        )
-        subject = subject.replace(
-            "{{date_range}}", f"{execution.date_range_start} to {execution.date_range_end}"
-        )
+        subject = template.replace("{{report_type}}", execution.report_type.value.replace("_", " ").title())
+        subject = subject.replace("{{date_range}}", f"{execution.date_range_start} to {execution.date_range_end}")
 
         return subject
 
-    def _render_body(self, execution: ReportExecution, config: dict[str, Any]) -> str:
+    def _render_body(self, execution: ReportExecution, config: Dict[str, Any]) -> str:
         """Render email body from template."""
         template = config.get("body_template", "")
 
@@ -165,28 +161,18 @@ class EmailDelivery(DeliveryChannelHandler):
             </html>
             """
 
-        body = template.replace(
-            "{{report_type}}", execution.report_type.value.replace("_", " ").title()
-        )
-        body = body.replace(
-            "{{date_range}}", f"{execution.date_range_start} to {execution.date_range_end}"
-        )
-        body = body.replace(
-            "{{generated_at}}",
-            execution.completed_at.strftime("%Y-%m-%d %H:%M UTC")
-            if execution.completed_at
-            else "N/A",
-        )
+        body = template.replace("{{report_type}}", execution.report_type.value.replace("_", " ").title())
+        body = body.replace("{{date_range}}", f"{execution.date_range_start} to {execution.date_range_end}")
+        body = body.replace("{{generated_at}}", execution.completed_at.strftime("%Y-%m-%d %H:%M UTC") if execution.completed_at else "N/A")
 
         return body
 
     async def _attach_file(self, msg: MIMEMultipart, execution: ReportExecution):
         """Attach report file to email."""
-        file_path = Path(execution.file_path)
-        filename = file_path.name
+        filename = os.path.basename(execution.file_path)
         content_type = self._get_content_type(execution.format.value)
 
-        with file_path.open("rb") as f:
+        with open(execution.file_path, "rb") as f:
             part = MIMEBase(*content_type.split("/"))
             part.set_payload(f.read())
             encoders.encode_base64(part)
@@ -212,16 +198,15 @@ class EmailDelivery(DeliveryChannelHandler):
 # Slack Delivery
 # =============================================================================
 
-
 class SlackDelivery(DeliveryChannelHandler):
     """Slack webhook-based delivery."""
 
     async def deliver(
         self,
         execution: ReportExecution,
-        config: dict[str, Any],
+        config: Dict[str, Any],
         recipient: str,  # Channel name or webhook URL
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Send report notification to Slack."""
         try:
             # Build Slack message
@@ -230,35 +215,33 @@ class SlackDelivery(DeliveryChannelHandler):
             # Determine webhook URL
             webhook_url = config.get("webhook_url") or recipient
 
-            async with (
-                aiohttp.ClientSession() as session,
-                session.post(
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
                     webhook_url,
                     json=message,
                     headers={"Content-Type": "application/json"},
-                ) as response,
-            ):
-                response_text = await response.text()
+                ) as response:
+                    response_text = await response.text()
 
-                if response.status == 200:
-                    return {
-                        "success": True,
-                        "response": response_text,
-                    }
-                else:
-                    return {
-                        "success": False,
-                        "error": f"Slack API error: {response.status} - {response_text}",
-                    }
+                    if response.status == 200:
+                        return {
+                            "success": True,
+                            "response": response_text,
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "error": f"Slack API error: {response.status} - {response_text}",
+                        }
 
         except Exception as e:
-            logger.error(f"Slack delivery failed: {e!s}")
+            logger.error(f"Slack delivery failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
             }
 
-    def _build_message(self, execution: ReportExecution, config: dict[str, Any]) -> dict[str, Any]:
+    def _build_message(self, execution: ReportExecution, config: Dict[str, Any]) -> Dict[str, Any]:
         """Build Slack Block Kit message."""
         report_type = execution.report_type.value.replace("_", " ").title()
         date_range = f"{execution.date_range_start} to {execution.date_range_end}"
@@ -281,7 +264,7 @@ class SlackDelivery(DeliveryChannelHandler):
                     "type": "plain_text",
                     "text": f":chart_with_upwards_trend: {report_type} Report",
                     "emoji": True,
-                },
+                }
             },
             {
                 "type": "section",
@@ -292,46 +275,40 @@ class SlackDelivery(DeliveryChannelHandler):
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*Generated:*\n{datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
+                        "text": f"*Generated:*\n{datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
                     },
                 ],
             },
         ]
 
         if summary_text:
-            blocks.append(
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"*Key Metrics:*\n{summary_text}",
-                    },
-                }
-            )
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Key Metrics:*\n{summary_text}",
+                },
+            })
 
         # Add download link if available
         if execution.file_url:
-            blocks.append(
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"<{execution.file_url}|:arrow_down: Download Report>",
-                    },
-                }
-            )
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"<{execution.file_url}|:arrow_down: Download Report>",
+                },
+            })
 
-        blocks.append(
-            {
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "Sent by Stratum AI Automated Reporting",
-                    }
-                ],
-            }
-        )
+        blocks.append({
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "Sent by Stratum AI Automated Reporting",
+                }
+            ],
+        })
 
         return {"blocks": blocks}
 
@@ -340,16 +317,15 @@ class SlackDelivery(DeliveryChannelHandler):
 # Microsoft Teams Delivery
 # =============================================================================
 
-
 class TeamsDelivery(DeliveryChannelHandler):
     """Microsoft Teams webhook-based delivery."""
 
     async def deliver(
         self,
         execution: ReportExecution,
-        config: dict[str, Any],
+        config: Dict[str, Any],
         recipient: str,  # Webhook URL
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Send report notification to Microsoft Teams."""
         try:
             # Build Teams Adaptive Card
@@ -357,35 +333,33 @@ class TeamsDelivery(DeliveryChannelHandler):
 
             webhook_url = config.get("webhook_url") or recipient
 
-            async with (
-                aiohttp.ClientSession() as session,
-                session.post(
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
                     webhook_url,
                     json=card,
                     headers={"Content-Type": "application/json"},
-                ) as response,
-            ):
-                response_text = await response.text()
+                ) as response:
+                    response_text = await response.text()
 
-                if response.status in (200, 202):
-                    return {
-                        "success": True,
-                        "response": response_text,
-                    }
-                else:
-                    return {
-                        "success": False,
-                        "error": f"Teams API error: {response.status} - {response_text}",
-                    }
+                    if response.status in (200, 202):
+                        return {
+                            "success": True,
+                            "response": response_text,
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "error": f"Teams API error: {response.status} - {response_text}",
+                        }
 
         except Exception as e:
-            logger.error(f"Teams delivery failed: {e!s}")
+            logger.error(f"Teams delivery failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
             }
 
-    def _build_card(self, execution: ReportExecution, config: dict[str, Any]) -> dict[str, Any]:
+    def _build_card(self, execution: ReportExecution, config: Dict[str, Any]) -> Dict[str, Any]:
         """Build Microsoft Teams Adaptive Card."""
         report_type = execution.report_type.value.replace("_", " ").title()
         date_range = f"{execution.date_range_start} to {execution.date_range_end}"
@@ -393,7 +367,7 @@ class TeamsDelivery(DeliveryChannelHandler):
         facts = [
             {"title": "Report Type", "value": report_type},
             {"title": "Date Range", "value": date_range},
-            {"title": "Generated", "value": datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")},
+            {"title": "Generated", "value": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")},
         ]
 
         # Add metrics if available
@@ -402,9 +376,7 @@ class TeamsDelivery(DeliveryChannelHandler):
             if "total_spend" in metrics:
                 facts.append({"title": "Total Spend", "value": f"${metrics['total_spend']:,.2f}"})
             if "total_revenue" in metrics:
-                facts.append(
-                    {"title": "Total Revenue", "value": f"${metrics['total_revenue']:,.2f}"}
-                )
+                facts.append({"title": "Total Revenue", "value": f"${metrics['total_revenue']:,.2f}"})
             if "overall_roas" in metrics:
                 facts.append({"title": "ROAS", "value": f"{metrics['overall_roas']:.2f}x"})
 
@@ -429,7 +401,9 @@ class TeamsDelivery(DeliveryChannelHandler):
                 {
                     "@type": "OpenUri",
                     "name": "Download Report",
-                    "targets": [{"os": "default", "uri": execution.file_url}],
+                    "targets": [
+                        {"os": "default", "uri": execution.file_url}
+                    ],
                 }
             ]
 
@@ -440,16 +414,15 @@ class TeamsDelivery(DeliveryChannelHandler):
 # Webhook Delivery (Generic)
 # =============================================================================
 
-
 class WebhookDelivery(DeliveryChannelHandler):
     """Generic HTTP webhook delivery."""
 
     async def deliver(
         self,
         execution: ReportExecution,
-        config: dict[str, Any],
+        config: Dict[str, Any],
         recipient: str,  # Webhook URL
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Send report data to a webhook endpoint."""
         try:
             payload = self._build_payload(execution, config)
@@ -465,36 +438,34 @@ class WebhookDelivery(DeliveryChannelHandler):
             if config.get("auth_header"):
                 headers["Authorization"] = config["auth_header"]
 
-            async with (
-                aiohttp.ClientSession() as session,
-                session.post(
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
                     webhook_url,
                     json=payload,
                     headers=headers,
                     timeout=aiohttp.ClientTimeout(total=30),
-                ) as response,
-            ):
-                response_text = await response.text()
+                ) as response:
+                    response_text = await response.text()
 
-                if response.status < 400:
-                    return {
-                        "success": True,
-                        "response": response_text,
-                    }
-                else:
-                    return {
-                        "success": False,
-                        "error": f"Webhook error: {response.status} - {response_text}",
-                    }
+                    if response.status < 400:
+                        return {
+                            "success": True,
+                            "response": response_text,
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "error": f"Webhook error: {response.status} - {response_text}",
+                        }
 
         except Exception as e:
-            logger.error(f"Webhook delivery failed: {e!s}")
+            logger.error(f"Webhook delivery failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
             }
 
-    def _build_payload(self, execution: ReportExecution, config: dict[str, Any]) -> dict[str, Any]:
+    def _build_payload(self, execution: ReportExecution, config: Dict[str, Any]) -> Dict[str, Any]:
         """Build webhook payload."""
         return {
             "event": "report.generated",
@@ -506,9 +477,7 @@ class WebhookDelivery(DeliveryChannelHandler):
                     "start": str(execution.date_range_start),
                     "end": str(execution.date_range_end),
                 },
-                "generated_at": execution.completed_at.isoformat()
-                if execution.completed_at
-                else None,
+                "generated_at": execution.completed_at.isoformat() if execution.completed_at else None,
                 "file_url": execution.file_url,
                 "metrics_summary": execution.metrics_summary,
             },
@@ -520,16 +489,15 @@ class WebhookDelivery(DeliveryChannelHandler):
 # S3 Delivery
 # =============================================================================
 
-
 class S3Delivery(DeliveryChannelHandler):
     """AWS S3 storage delivery."""
 
     async def deliver(
         self,
         execution: ReportExecution,
-        config: dict[str, Any],
+        config: Dict[str, Any],
         recipient: str,  # S3 path prefix
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Upload report to S3."""
         try:
             import aioboto3
@@ -538,9 +506,8 @@ class S3Delivery(DeliveryChannelHandler):
             prefix = config.get("prefix", recipient or "reports/")
 
             # Build S3 key
-            timestamp = datetime.now(UTC).strftime("%Y/%m/%d")
-            file_path = Path(execution.file_path)
-            filename = file_path.name
+            timestamp = datetime.utcnow().strftime("%Y/%m/%d")
+            filename = os.path.basename(execution.file_path)
             s3_key = f"{prefix.rstrip('/')}/{timestamp}/{filename}"
 
             session = aioboto3.Session(
@@ -550,7 +517,7 @@ class S3Delivery(DeliveryChannelHandler):
             )
 
             async with session.client("s3") as s3:
-                with file_path.open("rb") as f:
+                with open(execution.file_path, "rb") as f:
                     await s3.put_object(
                         Bucket=bucket,
                         Key=s3_key,
@@ -577,7 +544,7 @@ class S3Delivery(DeliveryChannelHandler):
                 "error": "aioboto3 package not installed for S3 delivery",
             }
         except Exception as e:
-            logger.error(f"S3 delivery failed: {e!s}")
+            logger.error(f"S3 delivery failed: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
@@ -599,7 +566,6 @@ class S3Delivery(DeliveryChannelHandler):
 # Delivery Service (Orchestrator)
 # =============================================================================
 
-
 class DeliveryService:
     """
     Orchestrates report delivery across multiple channels.
@@ -620,9 +586,9 @@ class DeliveryService:
     async def deliver_report(
         self,
         execution_id: UUID,
-        channels: list[str],
-        delivery_config: dict[str, Any],
-    ) -> dict[str, Any]:
+        channels: List[str],
+        delivery_config: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Deliver a report to multiple channels.
 
@@ -689,7 +655,7 @@ class DeliveryService:
 
                 if result.get("success"):
                     delivery.status = DeliveryStatus.SENT
-                    delivery.sent_at = datetime.now(UTC)
+                    delivery.sent_at = datetime.utcnow()
                     delivery.message_id = result.get("message_id")
                     delivery.delivery_response = result
                     results["successful"] += 1
@@ -699,13 +665,11 @@ class DeliveryService:
                     delivery.delivery_response = result
                     results["failed"] += 1
 
-                channel_results.append(
-                    {
-                        "recipient": recipient,
-                        "success": result.get("success"),
-                        "error": result.get("error"),
-                    }
-                )
+                channel_results.append({
+                    "recipient": recipient,
+                    "success": result.get("success"),
+                    "error": result.get("error"),
+                })
 
             results["channels"][channel_name] = channel_results
 
@@ -716,8 +680,8 @@ class DeliveryService:
     def _get_recipients(
         self,
         channel: DeliveryChannel,
-        config: dict[str, Any],
-    ) -> list[str]:
+        config: Dict[str, Any],
+    ) -> List[str]:
         """Extract recipients from channel config."""
         if channel == DeliveryChannel.EMAIL:
             recipients = config.get("recipients", [])
@@ -732,7 +696,12 @@ class DeliveryService:
                 return [config["webhook_url"]]
             return []
 
-        elif channel == DeliveryChannel.TEAMS or channel == DeliveryChannel.WEBHOOK:
+        elif channel == DeliveryChannel.TEAMS:
+            if config.get("webhook_url"):
+                return [config["webhook_url"]]
+            return []
+
+        elif channel == DeliveryChannel.WEBHOOK:
             if config.get("webhook_url"):
                 return [config["webhook_url"]]
             return []
@@ -745,14 +714,14 @@ class DeliveryService:
     async def retry_delivery(
         self,
         delivery_id: UUID,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Retry a failed delivery."""
         delivery = await self.db.get(ReportDelivery, delivery_id)
         if not delivery or delivery.tenant_id != self.tenant_id:
             raise ValueError(f"Delivery not found: {delivery_id}")
 
         if delivery.status != DeliveryStatus.FAILED:
-            raise ValueError("Can only retry failed deliveries")
+            raise ValueError(f"Can only retry failed deliveries")
 
         execution = await self.db.get(ReportExecution, delivery.execution_id)
 
@@ -760,7 +729,6 @@ class DeliveryService:
         channel_config = {}
         if execution.schedule_id:
             from app.models.reporting import ScheduledReport
-
             schedule = await self.db.get(ScheduledReport, execution.schedule_id)
             if schedule:
                 channel_config = schedule.delivery_config.get(delivery.channel.value, {})
@@ -773,11 +741,11 @@ class DeliveryService:
         result = await handler.deliver(execution, channel_config, delivery.recipient)
 
         delivery.retry_count += 1
-        delivery.last_retry_at = datetime.now(UTC)
+        delivery.last_retry_at = datetime.utcnow()
 
         if result.get("success"):
             delivery.status = DeliveryStatus.SENT
-            delivery.sent_at = datetime.now(UTC)
+            delivery.sent_at = datetime.utcnow()
             delivery.message_id = result.get("message_id")
             delivery.error_message = None
         else:
@@ -791,7 +759,7 @@ class DeliveryService:
     async def get_delivery_status(
         self,
         execution_id: UUID,
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """Get delivery status for an execution."""
         query = (
             select(ReportDelivery)

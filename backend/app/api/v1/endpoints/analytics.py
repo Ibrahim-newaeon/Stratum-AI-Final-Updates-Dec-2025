@@ -5,7 +5,7 @@
 Analytics endpoints for dashboard data and KPI calculations.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models import AdPlatform, Campaign, CampaignMetric, CampaignStatus
+from app.models import Campaign, CampaignMetric, CampaignStatus, AdPlatform
 from app.schemas import (
     APIResponse,
     DemographicsResponse,
@@ -40,7 +40,7 @@ async def get_kpi_tiles(
     tenant_id = getattr(request.state, "tenant_id", None)
 
     # Determine date ranges
-    today = datetime.now(UTC).date()
+    today = date.today()
     if period == "today":
         start_date = today
         prev_start = today - timedelta(days=1)
@@ -66,7 +66,8 @@ async def get_kpi_tiles(
             func.sum(CampaignMetric.impressions).label("impressions"),
             func.sum(CampaignMetric.clicks).label("clicks"),
             func.sum(CampaignMetric.conversions).label("conversions"),
-        ).where(
+        )
+        .where(
             CampaignMetric.tenant_id == tenant_id,
             CampaignMetric.date >= start_date,
             CampaignMetric.date <= today,
@@ -82,7 +83,8 @@ async def get_kpi_tiles(
             func.sum(CampaignMetric.impressions).label("impressions"),
             func.sum(CampaignMetric.clicks).label("clicks"),
             func.sum(CampaignMetric.conversions).label("conversions"),
-        ).where(
+        )
+        .where(
             CampaignMetric.tenant_id == tenant_id,
             CampaignMetric.date >= prev_start,
             CampaignMetric.date <= prev_end,
@@ -208,24 +210,14 @@ async def get_demographics(
         if campaign.demographics_age:
             for age_range, metrics in campaign.demographics_age.items():
                 if age_range not in age_data:
-                    age_data[age_range] = {
-                        "impressions": 0,
-                        "clicks": 0,
-                        "conversions": 0,
-                        "spend_cents": 0,
-                    }
+                    age_data[age_range] = {"impressions": 0, "clicks": 0, "conversions": 0, "spend_cents": 0}
                 for metric, value in metrics.items():
                     age_data[age_range][metric] = age_data[age_range].get(metric, 0) + value
 
         if campaign.demographics_gender:
             for gender, metrics in campaign.demographics_gender.items():
                 if gender not in gender_data:
-                    gender_data[gender] = {
-                        "impressions": 0,
-                        "clicks": 0,
-                        "conversions": 0,
-                        "spend_cents": 0,
-                    }
+                    gender_data[gender] = {"impressions": 0, "clicks": 0, "conversions": 0, "spend_cents": 0}
                 for metric, value in metrics.items():
                     gender_data[gender][metric] = gender_data[gender].get(metric, 0) + value
 
@@ -237,15 +229,19 @@ async def get_demographics(
                     location_data[location][metric] = location_data[location].get(metric, 0) + value
 
     # Format for response
-    age_breakdown = [{"range": k, **v} for k, v in sorted(age_data.items())]
+    age_breakdown = [
+        {"range": k, **v}
+        for k, v in sorted(age_data.items())
+    ]
 
-    gender_breakdown = [{"gender": k, **v} for k, v in gender_data.items()]
+    gender_breakdown = [
+        {"gender": k, **v}
+        for k, v in gender_data.items()
+    ]
 
     location_breakdown = [
         {"location": k, **v}
-        for k, v in sorted(
-            location_data.items(), key=lambda x: x[1].get("impressions", 0), reverse=True
-        )[:20]
+        for k, v in sorted(location_data.items(), key=lambda x: x[1].get("impressions", 0), reverse=True)[:20]
     ]
 
     return APIResponse(
@@ -307,15 +303,13 @@ async def get_location_heatmap(
         coords = LOCATION_COORDINATES.get(location, {"lat": 0, "lng": 0})
         weight = metrics.get(metric, 0)
         if weight > 0:
-            points.append(
-                {
-                    "location": location,
-                    "lat": coords["lat"],
-                    "lng": coords["lng"],
-                    "weight": weight,
-                    **metrics,
-                }
-            )
+            points.append({
+                "location": location,
+                "lat": coords["lat"],
+                "lng": coords["lng"],
+                "weight": weight,
+                **metrics,
+            })
 
     # Sort by weight and limit
     points.sort(key=lambda x: x["weight"], reverse=True)
@@ -380,19 +374,17 @@ async def get_platform_breakdown(
         roas = revenue / spend if spend > 0 else 0
         ctr = ((row.clicks or 0) / (row.impressions or 1)) * 100
 
-        breakdown.append(
-            {
-                "platform": row.platform.value,
-                "spend": spend,
-                "revenue": revenue,
-                "roas": round(roas, 2),
-                "impressions": row.impressions or 0,
-                "clicks": row.clicks or 0,
-                "conversions": row.conversions or 0,
-                "ctr": round(ctr, 2),
-                "campaign_count": row.campaign_count,
-            }
-        )
+        breakdown.append({
+            "platform": row.platform.value,
+            "spend": spend,
+            "revenue": revenue,
+            "roas": round(roas, 2),
+            "impressions": row.impressions or 0,
+            "clicks": row.clicks or 0,
+            "conversions": row.conversions or 0,
+            "ctr": round(ctr, 2),
+            "campaign_count": row.campaign_count,
+        })
 
     return APIResponse(success=True, data=breakdown)
 
@@ -408,7 +400,7 @@ async def get_performance_trends(
     Get daily performance trends for a specified metric.
     """
     tenant_id = getattr(request.state, "tenant_id", None)
-    start_date = datetime.now(UTC).date() - timedelta(days=days)
+    start_date = date.today() - timedelta(days=days)
 
     result = await db.execute(
         select(
@@ -443,12 +435,10 @@ async def get_performance_trends(
             "roas": round(roas, 2),
         }.get(metric, 0)
 
-        trends.append(
-            {
-                "date": row.date.isoformat(),
-                "value": value,
-            }
-        )
+        trends.append({
+            "date": row.date.isoformat(),
+            "value": value,
+        })
 
     return APIResponse(success=True, data={"metric": metric, "trends": trends})
 
@@ -469,14 +459,15 @@ async def get_tenant_overview(
     # Only superadmin can see all tenants
     if user_role != UserRole.ADMIN.value:
         from fastapi import HTTPException, status
-
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
 
     # Get all active tenants
-    tenant_result = await db.execute(select(Tenant).where(Tenant.is_deleted == False))
+    tenant_result = await db.execute(
+        select(Tenant).where(Tenant.is_deleted == False)
+    )
     tenants = tenant_result.scalars().all()
 
     tenant_analytics = []
@@ -490,9 +481,10 @@ async def get_tenant_overview(
                 func.sum(CampaignMetric.conversions).label("conversions"),
                 func.sum(CampaignMetric.clicks).label("clicks"),
                 func.sum(CampaignMetric.impressions).label("impressions"),
-            ).where(
+            )
+            .where(
                 CampaignMetric.tenant_id == tenant.id,
-                CampaignMetric.date >= datetime.now(UTC).date() - timedelta(days=30),
+                CampaignMetric.date >= date.today() - timedelta(days=30),
             )
         )
         metrics = metrics_result.one()
@@ -516,21 +508,19 @@ async def get_tenant_overview(
         else:
             status = "at_risk"
 
-        tenant_analytics.append(
-            {
-                "id": tenant.id,
-                "name": tenant.name,
-                "slug": tenant.slug,
-                "plan": tenant.plan,
-                "roas": roas,
-                "emq": emq,
-                "status": status,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-                "impressions": metrics.impressions or 0,
-            }
-        )
+        tenant_analytics.append({
+            "id": tenant.id,
+            "name": tenant.name,
+            "slug": tenant.slug,
+            "plan": tenant.plan,
+            "roas": roas,
+            "emq": emq,
+            "status": status,
+            "spend": spend,
+            "revenue": revenue,
+            "conversions": conversions,
+            "impressions": metrics.impressions or 0,
+        })
 
     # Sort by revenue descending
     tenant_analytics.sort(key=lambda x: x["revenue"], reverse=True)
@@ -554,13 +544,12 @@ async def get_executive_summary(
     # Only superadmin can see executive summary
     if user_role != UserRole.ADMIN.value:
         from fastapi import HTTPException, status
-
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
 
-    today = datetime.now(UTC).date()
+    today = date.today()
     start_30d = today - timedelta(days=30)
     prev_start = today - timedelta(days=60)
     prev_end = today - timedelta(days=31)
@@ -573,7 +562,8 @@ async def get_executive_summary(
             func.sum(CampaignMetric.conversions).label("conversions"),
             func.sum(CampaignMetric.impressions).label("impressions"),
             func.sum(CampaignMetric.clicks).label("clicks"),
-        ).where(
+        )
+        .where(
             CampaignMetric.date >= start_30d,
             CampaignMetric.date <= today,
         )
@@ -586,7 +576,8 @@ async def get_executive_summary(
             func.sum(CampaignMetric.spend_cents).label("spend"),
             func.sum(CampaignMetric.revenue_cents).label("revenue"),
             func.sum(CampaignMetric.conversions).label("conversions"),
-        ).where(
+        )
+        .where(
             CampaignMetric.date >= prev_start,
             CampaignMetric.date <= prev_end,
         )
@@ -594,7 +585,9 @@ async def get_executive_summary(
     prev = prev_result.one()
 
     # Get tenant counts
-    tenant_count = await db.execute(select(func.count(Tenant.id)).where(Tenant.is_deleted == False))
+    tenant_count = await db.execute(
+        select(func.count(Tenant.id)).where(Tenant.is_deleted == False)
+    )
     total_tenants = tenant_count.scalar()
 
     # Get campaign counts
@@ -620,20 +613,17 @@ async def get_executive_summary(
             return 0
         return round(((curr - previous) / previous) * 100, 1)
 
-    return APIResponse(
-        success=True,
-        data={
-            "total_revenue": current_revenue,
-            "revenue_change": calc_change(current_revenue, prev_revenue),
-            "total_spend": current_spend,
-            "spend_change": calc_change(current_spend, prev_spend),
-            "platform_roas": round(current_roas, 2),
-            "roas_change": calc_change(current_roas, prev_roas),
-            "total_tenants": total_tenants,
-            "active_campaigns": active_campaigns,
-            "total_conversions": current.conversions or 0,
-            "conversions_change": calc_change(current.conversions or 0, prev.conversions or 0),
-            "total_impressions": current.impressions or 0,
-            "period": "30d",
-        },
-    )
+    return APIResponse(success=True, data={
+        "total_revenue": current_revenue,
+        "revenue_change": calc_change(current_revenue, prev_revenue),
+        "total_spend": current_spend,
+        "spend_change": calc_change(current_spend, prev_spend),
+        "platform_roas": round(current_roas, 2),
+        "roas_change": calc_change(current_roas, prev_roas),
+        "total_tenants": total_tenants,
+        "active_campaigns": active_campaigns,
+        "total_conversions": current.conversions or 0,
+        "conversions_change": calc_change(current.conversions or 0, prev.conversions or 0),
+        "total_impressions": current.impressions or 0,
+        "period": "30d",
+    })

@@ -7,35 +7,36 @@
  * - Autopilot status and configuration
  */
 
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
-  ActionStatus,
-  AutopilotAction,
-  getActionStatusLabel,
-  getActionTypeLabel,
-  getPlatformIcon,
-  useApproveAction,
-  useApproveAllActions,
-  useAutopilotActions,
   useAutopilotStatus,
+  useAutopilotActions,
+  useApproveAction,
   useDismissAction,
-} from '@/api/autopilot';
-import { useAutopilotLevel } from '@/stores/featureFlagsStore';
+  useApproveAllActions,
+  AutopilotAction,
+  ActionStatus,
+  getActionTypeLabel,
+  getActionStatusColor,
+  getActionStatusLabel,
+  getPlatformIcon,
+} from '@/api/autopilot'
+import { useCanFeature, useAutopilotLevel } from '@/stores/featureFlagsStore'
 
 // =============================================================================
 // Types
 // =============================================================================
 
 interface AutopilotPanelProps {
-  tenantId: number;
-  compact?: boolean;
+  tenantId: number
+  compact?: boolean
 }
 
 interface ActionRowProps {
-  action: AutopilotAction;
-  onApprove: (id: string) => void;
-  onDismiss: (id: string) => void;
-  isProcessing: boolean;
+  action: AutopilotAction
+  onApprove: (id: string) => void
+  onDismiss: (id: string) => void
+  isProcessing: boolean
 }
 
 // =============================================================================
@@ -49,7 +50,7 @@ const StatusBadge: React.FC<{ status: ActionStatus }> = ({ status }) => {
     applied: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
     failed: 'bg-red-500/15 text-red-700 dark:text-red-400',
     dismissed: 'bg-muted text-muted-foreground',
-  };
+  }
 
   return (
     <span
@@ -58,11 +59,16 @@ const StatusBadge: React.FC<{ status: ActionStatus }> = ({ status }) => {
     >
       {getActionStatusLabel(status)}
     </span>
-  );
-};
+  )
+}
 
-const ActionRow: React.FC<ActionRowProps> = ({ action, onApprove, onDismiss, isProcessing }) => {
-  const [expanded, setExpanded] = useState(false);
+const ActionRow: React.FC<ActionRowProps> = ({
+  action,
+  onApprove,
+  onDismiss,
+  isProcessing,
+}) => {
+  const [expanded, setExpanded] = useState(false)
 
   return (
     <div className="border-b border-border last:border-0">
@@ -74,9 +80,7 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, onApprove, onDismiss, isP
         aria-label={`${getActionTypeLabel(action.action_type)} - ${action.entity_name || action.entity_id}`}
       >
         <div className="flex items-center space-x-3">
-          <span className="text-lg" aria-hidden="true">
-            {getPlatformIcon(action.platform)}
-          </span>
+          <span className="text-lg" aria-hidden="true">{getPlatformIcon(action.platform)}</span>
           <div className="text-left">
             <div className="font-medium text-foreground">
               {getActionTypeLabel(action.action_type)}
@@ -117,11 +121,7 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, onApprove, onDismiss, isP
             viewBox="0 0 20 20"
             aria-hidden="true"
           >
-            <path
-              fillRule="evenodd"
-              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
         </div>
       </button>
@@ -181,21 +181,21 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, onApprove, onDismiss, isP
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 const AutopilotLevelIndicator: React.FC<{ level: number; name: string }> = ({ level, name }) => {
   const colors = {
     0: 'bg-muted text-muted-foreground',
     1: 'bg-blue-500/15 text-blue-700 dark:text-blue-400',
     2: 'bg-primary/15 text-primary',
-  };
+  }
 
   const icons = {
     0: '💡', // Suggest only
     1: '🛡️', // Guarded
     2: '✋', // Approval required
-  };
+  }
 
   return (
     <div
@@ -203,13 +203,11 @@ const AutopilotLevelIndicator: React.FC<{ level: number; name: string }> = ({ le
       role="status"
       aria-label={`Autopilot level: ${name}`}
     >
-      <span className="mr-2" aria-hidden="true">
-        {icons[level as keyof typeof icons] || '💡'}
-      </span>
+      <span className="mr-2" aria-hidden="true">{icons[level as keyof typeof icons] || '💡'}</span>
       {name}
     </div>
-  );
-};
+  )
+}
 
 // =============================================================================
 // Main Component
@@ -217,39 +215,35 @@ const AutopilotLevelIndicator: React.FC<{ level: number; name: string }> = ({ le
 
 export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
   tenantId,
-  compact: _compact = false,
+  compact = false,
 }) => {
-  const autopilotLevel = useAutopilotLevel();
-  const [statusFilter, setStatusFilter] = useState<ActionStatus | ''>('');
+  const autopilotLevel = useAutopilotLevel()
+  const [statusFilter, setStatusFilter] = useState<ActionStatus | ''>('')
 
-  const { data: status, isLoading: statusLoading } = useAutopilotStatus(tenantId);
-  const {
-    data: actionsData,
-    isLoading: actionsLoading,
-    refetch,
-  } = useAutopilotActions(tenantId, statusFilter ? { status: statusFilter } : undefined);
+  const { data: status, isLoading: statusLoading } = useAutopilotStatus(tenantId)
+  const { data: actionsData, isLoading: actionsLoading, refetch } = useAutopilotActions(
+    tenantId,
+    statusFilter ? { status: statusFilter } : undefined
+  )
 
-  const approveAction = useApproveAction(tenantId);
-  const dismissAction = useDismissAction(tenantId);
-  const approveAll = useApproveAllActions(tenantId);
+  const approveAction = useApproveAction(tenantId)
+  const dismissAction = useDismissAction(tenantId)
+  const approveAll = useApproveAllActions(tenantId)
 
-  const isProcessing = approveAction.isPending || dismissAction.isPending || approveAll.isPending;
+  const isProcessing = approveAction.isPending || dismissAction.isPending || approveAll.isPending
 
   if (autopilotLevel === 0) {
     return (
       <div className="bg-card rounded-lg border border-border p-6">
         <div className="text-center">
-          <div className="text-4xl mb-3" aria-hidden="true">
-            💡
-          </div>
+          <div className="text-4xl mb-3" aria-hidden="true">💡</div>
           <h3 className="text-lg font-medium text-foreground mb-2">Autopilot: Suggest Only</h3>
           <p className="text-muted-foreground">
-            Autopilot is in suggest-only mode. You'll see recommendations but no actions will be
-            queued for execution.
+            Autopilot is in suggest-only mode. You'll see recommendations but no actions will be queued for execution.
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (statusLoading || actionsLoading) {
@@ -261,11 +255,11 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
           <div className="h-20 skeleton" />
         </div>
       </div>
-    );
+    )
   }
 
-  const actions = actionsData?.actions || [];
-  const queuedActions = actions.filter((a) => a.status === 'queued');
+  const actions = actionsData?.actions || []
+  const queuedActions = actions.filter((a) => a.status === 'queued')
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
@@ -300,12 +294,7 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
               aria-label="Refresh actions list"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
           </div>
@@ -335,21 +324,11 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
       {status && status.pending_actions > 0 && (
         <div className="px-6 py-3 bg-amber-500/10 border-b border-amber-500/30" role="alert">
           <div className="flex items-center">
-            <svg
-              className="w-5 h-5 text-amber-500 mr-2"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
+            <svg className="w-5 h-5 text-amber-500 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
             <span className="text-amber-700 dark:text-amber-400 font-medium">
-              {status.pending_actions} action{status.pending_actions > 1 ? 's' : ''} pending
-              approval
+              {status.pending_actions} action{status.pending_actions > 1 ? 's' : ''} pending approval
             </span>
           </div>
         </div>
@@ -359,12 +338,8 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
       <div className="divide-y divide-border">
         {actions.length === 0 ? (
           <div className="px-6 py-8 text-center">
-            <div className="text-muted-foreground text-4xl mb-3" aria-hidden="true">
-              🤖
-            </div>
-            <div className="text-foreground">
-              No actions {statusFilter ? `with status "${statusFilter}"` : ''}
-            </div>
+            <div className="text-muted-foreground text-4xl mb-3" aria-hidden="true">🤖</div>
+            <div className="text-foreground">No actions {statusFilter ? `with status "${statusFilter}"` : ''}</div>
             <div className="text-sm text-muted-foreground mt-1">
               Actions will appear here when recommendations are generated.
             </div>
@@ -396,7 +371,7 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default AutopilotPanel;
+export default AutopilotPanel

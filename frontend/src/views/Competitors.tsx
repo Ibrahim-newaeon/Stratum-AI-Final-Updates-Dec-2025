@@ -5,155 +5,158 @@
  * Integrates with Meta Ads Library and Google Ads Transparency Center
  */
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
+import { useCompetitors, useShareOfVoice, useCreateCompetitor, useDeleteCompetitor } from '@/api/hooks'
 import {
-  useCompetitors,
-  useDeleteCompetitor,
-  useScanExistingCompetitor,
-  useShareOfVoice,
-} from '@/api/hooks';
-import type { CompetitorScanResult } from '@/api/competitors';
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon,
-  ChartBarIcon,
-  CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  GlobeAltIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  EyeIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  GlobeAltIcon,
+  ChartBarIcon,
+  ArrowPathIcon,
+  EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon,
+  CheckIcon,
   TrashIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline';
-import { AddCompetitorModal } from '@/components/competitors/AddCompetitorModal';
+  ArrowTopRightOnSquareIcon,
+} from '@heroicons/react/24/outline'
 
 interface Competitor {
-  id: string;
-  name: string;
-  domain: string;
-  logo: string | null;
-  adSpend: number;
-  adSpendTrend: number;
-  shareOfVoice: number;
-  keywordOverlap: number;
-  creativesTracked: number;
-  lastRefresh: Date;
-  status: 'active' | 'paused';
-  country?: string;
-  platforms?: string[];
+  id: string
+  name: string
+  domain: string
+  logo: string | null
+  adSpend: number
+  adSpendTrend: number
+  shareOfVoice: number
+  keywordOverlap: number
+  creativesTracked: number
+  lastRefresh: Date
+  status: 'active' | 'paused'
+  country?: string
+  platforms?: string[]
 }
 
 interface KeywordOverlap {
-  keyword: string;
-  yourPosition: number;
-  competitorPosition: number;
-  searchVolume: number;
-  cpc: number;
-  competitor: string;
+  keyword: string
+  yourPosition: number
+  competitorPosition: number
+  searchVolume: number
+  cpc: number
+  competitor: string
 }
 
+// Countries for Meta Ads Library and Google Transparency
+const COUNTRIES = [
+  { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪' },
+  { code: 'EG', name: 'Egypt', flag: '🇪🇬' },
+  { code: 'KW', name: 'Kuwait', flag: '🇰🇼' },
+  { code: 'QA', name: 'Qatar', flag: '🇶🇦' },
+  { code: 'BH', name: 'Bahrain', flag: '🇧🇭' },
+  { code: 'OM', name: 'Oman', flag: '🇴🇲' },
+  { code: 'JO', name: 'Jordan', flag: '🇯🇴' },
+  { code: 'LB', name: 'Lebanon', flag: '🇱🇧' },
+  { code: 'US', name: 'United States', flag: '🇺🇸' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+  { code: 'FR', name: 'France', flag: '🇫🇷' },
+  { code: 'IN', name: 'India', flag: '🇮🇳' },
+  { code: 'PK', name: 'Pakistan', flag: '🇵🇰' },
+  { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
+]
+
+const PLATFORMS = [
+  { id: 'meta', name: 'Meta (Facebook/Instagram)', icon: 'M' },
+  { id: 'google', name: 'Google Ads', icon: 'G' },
+  { id: 'tiktok', name: 'TikTok', icon: 'T' },
+  { id: 'snapchat', name: 'Snapchat', icon: 'S' },
+  { id: 'linkedin', name: 'LinkedIn', icon: 'L' },
+]
 
 export function Competitors() {
-  const { t: _t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { t } = useTranslation()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Scan state
-  const [scanningId, setScanningId] = useState<string | null>(null);
-  const [scanResults, setScanResults] = useState<Record<string, CompetitorScanResult>>({});
+  // Form state for new competitor
+  const [newCompetitor, setNewCompetitor] = useState({
+    name: '',
+    domain: '',
+    country: 'SA',
+    platforms: ['meta', 'google'] as string[],
+  })
 
-  // Auto-open modal if ?action=create is in URL
-  useEffect(() => {
-    if (searchParams.get('action') === 'create') {
-      setIsModalOpen(true);
-      // Clear the URL parameter after opening
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
-  const { data: competitorsData, refetch: refetchCompetitors } = useCompetitors();
+  const { data: competitorsData, refetch: refetchCompetitors } = useCompetitors()
   // Get last 30 days for share of voice
-  const endDate = new Date().toISOString().split('T')[0];
-  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const { data: sovData } = useShareOfVoice(startDate, endDate);
-  const deleteCompetitor = useDeleteCompetitor();
-  const scanExistingCompetitor = useScanExistingCompetitor();
+  const endDate = new Date().toISOString().split('T')[0]
+  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const { data: sovData } = useShareOfVoice(startDate, endDate)
+  const createCompetitor = useCreateCompetitor()
+  const deleteCompetitor = useDeleteCompetitor()
 
   // Generate Meta Ads Library URL - search by name (brand name works better)
   const getMetaAdsLibraryUrl = (name: string, country: string) => {
-    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`;
-  };
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`
+  }
 
-  // Generate Google Ads Transparency URL - search by full website URL with country filter
-  const getGoogleTransparencyUrl = (domain: string, country: string = 'SA') => {
-    // Build full URL (Google Transparency needs https://www. prefix for best results)
-    let fullUrl = domain.replace(/\/+$/, '');
-    if (!fullUrl.startsWith('http')) {
-      fullUrl = `https://www.${fullUrl}`;
+  // Generate Google Ads Transparency URL - search by name
+  const getGoogleTransparencyUrl = (name: string) => {
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
+  }
+
+  // Handle form submission
+  const handleAddCompetitor = async () => {
+    if (!newCompetitor.name || !newCompetitor.domain) return
+
+    setIsSubmitting(true)
+    try {
+      await createCompetitor.mutateAsync({
+        name: newCompetitor.name,
+        domain: newCompetitor.domain,
+        country: newCompetitor.country,
+        platforms: newCompetitor.platforms,
+      })
+      setIsModalOpen(false)
+      setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] })
+      refetchCompetitors()
+    } catch (error) {
+      console.error('Failed to add competitor:', error)
+    } finally {
+      setIsSubmitting(false)
     }
-    return `https://adstransparency.google.com/?query=${encodeURIComponent(fullUrl)}&region=${country}`;
-  };
-
-  // Get best Meta search query: prefer FB page name from scan results, fallback to competitor name
-  const getMetaSearchQuery = (competitorId: string, competitorName: string) => {
-    const scan = scanResults[competitorId];
-    if (scan?.fb_page_name) return scan.fb_page_name;
-    if (scan?.ad_library?.page_name) return scan.ad_library.page_name;
-    return competitorName;
-  };
+  }
 
   // Handle delete competitor
   const handleDeleteCompetitor = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this competitor?')) return;
+    if (!confirm('Are you sure you want to delete this competitor?')) return
     try {
-      await deleteCompetitor.mutateAsync(id);
-      refetchCompetitors();
+      await deleteCompetitor.mutateAsync(id)
+      refetchCompetitors()
     } catch (error) {
-      // Error handled by mutation
+      console.error('Failed to delete competitor:', error)
     }
-  };
+  }
 
-  // Handle scan competitor
-  const handleScanCompetitor = async (id: string, country?: string) => {
-    setScanningId(id);
-    try {
-      const result = await scanExistingCompetitor.mutateAsync({
-        id,
-        country: country || 'SA',
-      });
-      setScanResults((prev) => ({ ...prev, [id]: result }));
-      refetchCompetitors();
-    } catch (error) {
-      // Error handled by mutation
-    } finally {
-      setScanningId(null);
-    }
-  };
+  // Toggle platform selection
+  const togglePlatform = (platformId: string) => {
+    setNewCompetitor(prev => ({
+      ...prev,
+      platforms: prev.platforms.includes(platformId)
+        ? prev.platforms.filter(p => p !== platformId)
+        : [...prev.platforms, platformId]
+    }))
+  }
 
-  // Sample competitors - handle paginated response
-  const competitorsList = Array.isArray(competitorsData)
-    ? competitorsData
-    : (competitorsData as { data?: unknown[] } | undefined)?.data || [];
-  const competitors: Competitor[] = (
-    competitorsList as {
-      id: string;
-      name: string;
-      domain: string;
-      estimatedSpend?: number;
-      shareOfVoice?: number;
-      activeCreatives?: number;
-      lastUpdated?: string;
-      isActive?: boolean;
-    }[]
-  ).map((c) => ({
+  // Sample competitors
+  const competitors: Competitor[] = competitorsData?.map((c) => ({
     id: c.id,
     name: c.name,
     domain: c.domain,
@@ -218,56 +221,18 @@ export function Competitors() {
       lastRefresh: new Date(Date.now() - 12 * 60 * 60 * 1000),
       status: 'paused' as const,
     },
-  ];
+  ]
 
   const keywordOverlaps: KeywordOverlap[] = [
-    {
-      keyword: 'marketing automation',
-      yourPosition: 3,
-      competitorPosition: 1,
-      searchVolume: 12500,
-      cpc: 8.5,
-      competitor: 'MarketLeader Inc',
-    },
-    {
-      keyword: 'email campaigns',
-      yourPosition: 2,
-      competitorPosition: 4,
-      searchVolume: 8900,
-      cpc: 5.2,
-      competitor: 'CompetitorOne',
-    },
-    {
-      keyword: 'ad optimization',
-      yourPosition: 5,
-      competitorPosition: 2,
-      searchVolume: 6700,
-      cpc: 12.3,
-      competitor: 'MarketLeader Inc',
-    },
-    {
-      keyword: 'social media ads',
-      yourPosition: 1,
-      competitorPosition: 3,
-      searchVolume: 15200,
-      cpc: 4.8,
-      competitor: 'NewEntrant Co',
-    },
-    {
-      keyword: 'ppc management',
-      yourPosition: 4,
-      competitorPosition: 1,
-      searchVolume: 9800,
-      cpc: 15.6,
-      competitor: 'CompetitorOne',
-    },
-  ];
+    { keyword: 'marketing automation', yourPosition: 3, competitorPosition: 1, searchVolume: 12500, cpc: 8.50, competitor: 'MarketLeader Inc' },
+    { keyword: 'email campaigns', yourPosition: 2, competitorPosition: 4, searchVolume: 8900, cpc: 5.20, competitor: 'CompetitorOne' },
+    { keyword: 'ad optimization', yourPosition: 5, competitorPosition: 2, searchVolume: 6700, cpc: 12.30, competitor: 'MarketLeader Inc' },
+    { keyword: 'social media ads', yourPosition: 1, competitorPosition: 3, searchVolume: 15200, cpc: 4.80, competitor: 'NewEntrant Co' },
+    { keyword: 'ppc management', yourPosition: 4, competitorPosition: 1, searchVolume: 9800, cpc: 15.60, competitor: 'CompetitorOne' },
+  ]
 
-  // Share of Voice data - handle API response shape
-  type ShareOfVoiceData = { you: number; competitors: { name: string; share: number }[] };
-  const shareOfVoice: ShareOfVoiceData = (sovData && !Array.isArray(sovData)
-    ? (sovData as ShareOfVoiceData)
-    : null) ?? {
+  // Share of Voice data
+  const shareOfVoice = sovData ?? {
     you: 15,
     competitors: [
       { name: 'MarketLeader Inc', share: 35 },
@@ -275,36 +240,33 @@ export function Competitors() {
       { name: 'OldPlayer Ltd', share: 18 },
       { name: 'NewEntrant Co', share: 8 },
     ],
-  };
+  }
 
-  const filteredCompetitors = competitors.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.domain.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCompetitors = competitors.filter((c) =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.domain.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-    return `$${value}`;
-  };
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`
+    return `$${value}`
+  }
 
   const formatLastRefresh = (date: Date) => {
-    const hours = Math.floor((Date.now() - date.getTime()) / (60 * 60 * 1000));
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  };
+    const hours = Math.floor((Date.now() - date.getTime()) / (60 * 60 * 1000))
+    if (hours < 1) return 'Just now'
+    if (hours < 24) return `${hours}h ago`
+    return `${Math.floor(hours / 24)}d ago`
+  }
 
   // Stats
   const stats = {
     totalCompetitors: competitors.length,
     activeTracking: competitors.filter((c) => c.status === 'active').length,
-    avgKeywordOverlap: Math.round(
-      competitors.reduce((sum, c) => sum + c.keywordOverlap, 0) / competitors.length
-    ),
+    avgKeywordOverlap: Math.round(competitors.reduce((sum, c) => sum + c.keywordOverlap, 0) / competitors.length),
     totalCreatives: competitors.reduce((sum, c) => sum + c.creativesTracked, 0),
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -325,28 +287,28 @@ export function Competitors() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="metric-card premium p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <div className="text-sm text-muted-foreground mb-1">Tracked Competitors</div>
           <div className="text-2xl font-bold">{stats.totalCompetitors}</div>
         </div>
-        <div className="metric-card success p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <div className="text-sm text-muted-foreground mb-1">Active Tracking</div>
           <div className="text-2xl font-bold text-green-500">{stats.activeTracking}</div>
         </div>
-        <div className="metric-card active p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <div className="text-sm text-muted-foreground mb-1">Avg Keyword Overlap</div>
           <div className="text-2xl font-bold">{stats.avgKeywordOverlap}%</div>
         </div>
-        <div className="metric-card warning p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <div className="text-sm text-muted-foreground mb-1">Creatives Tracked</div>
           <div className="text-2xl font-bold">{stats.totalCreatives}</div>
         </div>
       </div>
 
       {/* Share of Voice */}
-      <div className="metric-card premium p-6">
+      <div className="rounded-xl border bg-card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <ChartBarIcon className="w-5 h-5 text-purple-500" />
+          <ChartBarIcon className="w-5 h-5 text-primary" />
           <h2 className="font-semibold">Share of Voice</h2>
         </div>
         <div className="flex items-center gap-2 mb-4">
@@ -380,9 +342,7 @@ export function Competitors() {
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1'][i % 4] }}
               />
-              <span>
-                {c.name} ({c.share}%)
-              </span>
+              <span>{c.name} ({c.share}%)</span>
             </div>
           ))}
         </div>
@@ -406,12 +366,12 @@ export function Competitors() {
           <div
             key={competitor.id}
             className={cn(
-              'metric-card info p-4 cursor-pointer',
+              'p-4 rounded-xl border bg-card hover:shadow-md transition-all cursor-pointer',
               selectedCompetitor === competitor.id && 'ring-2 ring-primary'
             )}
-            onClick={() =>
-              setSelectedCompetitor(selectedCompetitor === competitor.id ? null : competitor.id)
-            }
+            onClick={() => setSelectedCompetitor(
+              selectedCompetitor === competitor.id ? null : competitor.id
+            )}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -424,14 +384,12 @@ export function Competitors() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    'px-2 py-1 rounded-full text-xs',
-                    competitor.status === 'active'
-                      ? 'bg-green-500/10 text-green-500'
-                      : 'bg-muted text-muted-foreground'
-                  )}
-                >
+                <span className={cn(
+                  'px-2 py-1 rounded-full text-xs',
+                  competitor.status === 'active'
+                    ? 'bg-green-500/10 text-green-500'
+                    : 'bg-muted text-muted-foreground'
+                )}>
                   {competitor.status}
                 </span>
                 <button className="p-1 rounded hover:bg-muted transition-colors">
@@ -445,12 +403,10 @@ export function Competitors() {
                 <div className="text-sm text-muted-foreground">Est. Ad Spend</div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{formatCurrency(competitor.adSpend)}/mo</span>
-                  <span
-                    className={cn(
-                      'flex items-center text-xs',
-                      competitor.adSpendTrend >= 0 ? 'text-green-500' : 'text-red-500'
-                    )}
-                  >
+                  <span className={cn(
+                    'flex items-center text-xs',
+                    competitor.adSpendTrend >= 0 ? 'text-green-500' : 'text-red-500'
+                  )}>
                     {competitor.adSpendTrend >= 0 ? (
                       <ArrowTrendingUpIcon className="w-3 h-3" />
                     ) : (
@@ -480,135 +436,37 @@ export function Competitors() {
               </span>
             </div>
 
-            {/* Scan Results (if available) */}
-            {scanResults[competitor.id] && (
-              <div className="mt-3 pt-3 border-t space-y-2" onClick={(e) => e.stopPropagation()}>
-                {/* Social Links */}
-                {scanResults[competitor.id].social_links && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {scanResults[competitor.id].social_links.facebook && (
-                      <a
-                        href={scanResults[competitor.id].social_links.facebook!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"
-                      >
-                        <span className="font-bold">f</span> Facebook
-                        <ArrowTopRightOnSquareIcon className="w-3 h-3" />
-                      </a>
-                    )}
-                    {scanResults[competitor.id].social_links.instagram && (
-                      <a
-                        href={scanResults[competitor.id].social_links.instagram!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-pink-500/10 text-pink-500 hover:bg-pink-500/20"
-                      >
-                        <span className="font-bold">IG</span> Instagram
-                        <ArrowTopRightOnSquareIcon className="w-3 h-3" />
-                      </a>
-                    )}
-                    {scanResults[competitor.id].social_links.tiktok && (
-                      <a
-                        href={scanResults[competitor.id].social_links.tiktok!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-muted text-foreground hover:bg-muted/80"
-                      >
-                        <span className="font-bold">TT</span> TikTok
-                        <ArrowTopRightOnSquareIcon className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {/* Ad Library Status */}
-                <div className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-lg text-xs',
-                  scanResults[competitor.id].ad_library.has_ads
-                    ? 'bg-green-500/10 text-green-500'
-                    : 'bg-amber-500/10 text-amber-500'
-                )}>
-                  {scanResults[competitor.id].ad_library.has_ads ? (
-                    <>
-                      <CheckCircleIcon className="w-4 h-4" />
-                      <span className="font-medium">
-                        {scanResults[competitor.id].ad_library.ad_count}+ Active Ads Found
-                      </span>
-                      {scanResults[competitor.id].ad_library.page_name && (
-                        <span className="text-muted-foreground">
-                          ({scanResults[competitor.id].ad_library.page_name})
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <XCircleIcon className="w-4 h-4" />
-                      <span className="font-medium">No Active Ads</span>
-                    </>
-                  )}
-                  {scanResults[competitor.id].ad_library.search_url && (
-                    <a
-                      href={scanResults[competitor.id].ad_library.search_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-auto text-primary hover:underline flex items-center gap-1"
-                    >
-                      View <ArrowTopRightOnSquareIcon className="w-3 h-3" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Quick Links + Actions */}
+            {/* Quick Links to Ad Libraries */}
+            {/* Quick Links - Search by competitor name */}
             <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-              {/* Scan Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleScanCompetitor(competitor.id, competitor.country || 'SA');
-                }}
-                disabled={scanningId === competitor.id}
-                className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors',
-                  scanningId === competitor.id
-                    ? 'bg-cyan-500/10 text-cyan-500'
-                    : 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20'
-                )}
-                title="Scan website & check Meta Ad Library"
-              >
-                <MagnifyingGlassIcon className={cn('w-3 h-3', scanningId === competitor.id && 'animate-spin')} />
-                {scanningId === competitor.id ? 'Scanning...' : 'Scan'}
-              </button>
               <a
-                href={getMetaAdsLibraryUrl(getMetaSearchQuery(competitor.id, competitor.name), competitor.country || 'SA')}
+                href={getMetaAdsLibraryUrl(competitor.name, competitor.country || 'SA')}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
-                title={`Search "${getMetaSearchQuery(competitor.id, competitor.name)}" in Meta Ads Library`}
+                title={`Search "${competitor.name}" in Meta Ads Library`}
               >
                 <span className="font-bold">M</span>
-                Meta Ads
+                Meta Ads Library
                 <ArrowTopRightOnSquareIcon className="w-3 h-3" />
               </a>
               <a
-                href={getGoogleTransparencyUrl(competitor.domain, competitor.country || 'SA')}
+                href={getGoogleTransparencyUrl(competitor.name)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
-                title={`Search "${competitor.domain}" in Google Transparency (${competitor.country || 'SA'})`}
+                title={`Search "${competitor.name}" in Google Transparency`}
               >
                 <span className="font-bold">G</span>
-                Google
+                Google Transparency
                 <ArrowTopRightOnSquareIcon className="w-3 h-3" />
               </a>
               <button
                 onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteCompetitor(competitor.id);
+                  e.stopPropagation()
+                  handleDeleteCompetitor(competitor.id)
                 }}
                 className="ml-auto p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors"
                 title="Delete competitor"
@@ -621,8 +479,8 @@ export function Competitors() {
       </div>
 
       {/* Keyword Overlap Table */}
-      <div className="metric-card active overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-cyan-500/20">
+      <div className="rounded-xl border bg-card overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b">
           <h2 className="font-semibold">Keyword Overlap</h2>
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border hover:bg-muted transition-colors">
             <ArrowPathIcon className="w-4 h-4" />
@@ -630,7 +488,7 @@ export function Competitors() {
           </button>
         </div>
         <table className="w-full">
-          <thead className="bg-cyan-500/10 border-b border-cyan-500/20">
+          <thead className="bg-muted/50 border-b">
             <tr>
               <th className="p-4 text-left text-sm font-medium">Keyword</th>
               <th className="p-4 text-center text-sm font-medium">Your Position</th>
@@ -645,31 +503,25 @@ export function Competitors() {
               <tr key={i} className="hover:bg-muted/30 transition-colors">
                 <td className="p-4 font-medium">{kw.keyword}</td>
                 <td className="p-4 text-center">
-                  <span
-                    className={cn(
-                      'px-2 py-1 rounded text-sm font-medium',
-                      kw.yourPosition <= 3
-                        ? 'bg-green-500/10 text-green-500'
-                        : kw.yourPosition <= 5
-                          ? 'bg-amber-500/10 text-amber-500'
-                          : 'bg-muted text-muted-foreground'
-                    )}
-                  >
+                  <span className={cn(
+                    'px-2 py-1 rounded text-sm font-medium',
+                    kw.yourPosition <= 3 ? 'bg-green-500/10 text-green-500' :
+                    kw.yourPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
+                    'bg-muted text-muted-foreground'
+                  )}>
                     #{kw.yourPosition}
                   </span>
                 </td>
-                <td className="p-4 text-center text-sm text-muted-foreground">{kw.competitor}</td>
+                <td className="p-4 text-center text-sm text-muted-foreground">
+                  {kw.competitor}
+                </td>
                 <td className="p-4 text-center">
-                  <span
-                    className={cn(
-                      'px-2 py-1 rounded text-sm font-medium',
-                      kw.competitorPosition <= 3
-                        ? 'bg-red-500/10 text-red-500'
-                        : kw.competitorPosition <= 5
-                          ? 'bg-amber-500/10 text-amber-500'
-                          : 'bg-muted text-muted-foreground'
-                    )}
-                  >
+                  <span className={cn(
+                    'px-2 py-1 rounded text-sm font-medium',
+                    kw.competitorPosition <= 3 ? 'bg-red-500/10 text-red-500' :
+                    kw.competitorPosition <= 5 ? 'bg-amber-500/10 text-amber-500' :
+                    'bg-muted text-muted-foreground'
+                  )}>
                     #{kw.competitorPosition}
                   </span>
                 </td>
@@ -691,13 +543,175 @@ export function Competitors() {
       )}
 
       {/* Add Competitor Modal */}
-      <AddCompetitorModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={() => refetchCompetitors()}
-      />
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsModalOpen(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-lg mx-4 bg-card rounded-2xl shadow-2xl border overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-xl font-semibold">Add Competitor</h2>
+                <p className="text-sm text-muted-foreground">
+                  Track competitor ads via Meta Ads Library & Google Transparency
+                </p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-6 space-y-5">
+              {/* Competitor Name */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Competitor Name *
+                </label>
+                <input
+                  type="text"
+                  value={newCompetitor.name}
+                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Competitor Inc"
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              {/* Domain/Website */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Website / Domain *
+                </label>
+                <input
+                  type="text"
+                  value={newCompetitor.domain}
+                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, domain: e.target.value }))}
+                  placeholder="e.g., competitor.com"
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Used to search ads in Meta Ads Library and Google Transparency
+                </p>
+              </div>
+
+              {/* Country Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Competitor's Country *
+                </label>
+                <select
+                  value={newCompetitor.country}
+                  onChange={(e) => setNewCompetitor(prev => ({ ...prev, country: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  {COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.flag} {country.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select the country where competitor runs ads (for Meta Ads Library filter)
+                </p>
+              </div>
+
+              {/* Platform Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Platforms to Track
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORMS.map((platform) => (
+                    <button
+                      key={platform.id}
+                      type="button"
+                      onClick={() => togglePlatform(platform.id)}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all',
+                        newCompetitor.platforms.includes(platform.id)
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/50'
+                      )}
+                    >
+                      <span className="w-5 h-5 rounded bg-muted flex items-center justify-center text-xs font-bold">
+                        {platform.icon}
+                      </span>
+                      <span className="text-sm">{platform.name}</span>
+                      {newCompetitor.platforms.includes(platform.id) && (
+                        <CheckIcon className="w-4 h-4" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Links Preview - shows when name is entered */}
+              {newCompetitor.name && (
+                <div className="p-4 rounded-lg bg-muted/50 space-y-3">
+                  <p className="text-sm font-medium">Preview Ad Library Links for "{newCompetitor.name}":</p>
+                  <div className="space-y-2">
+                    <a
+                      href={getMetaAdsLibraryUrl(newCompetitor.name, newCompetitor.country)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                      Search "{newCompetitor.name}" in Meta Ads Library ({COUNTRIES.find(c => c.code === newCompetitor.country)?.name})
+                    </a>
+                    <a
+                      href={getGoogleTransparencyUrl(newCompetitor.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                      Search "{newCompetitor.name}" in Google Ads Transparency
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/30">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddCompetitor}
+                disabled={!newCompetitor.name || !newCompetitor.domain || isSubmitting}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <PlusIcon className="w-4 h-4" />
+                    Add Competitor
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
 
-export default Competitors;
+export default Competitors

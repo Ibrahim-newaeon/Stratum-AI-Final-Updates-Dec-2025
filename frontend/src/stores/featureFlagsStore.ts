@@ -5,8 +5,8 @@
  * Provides gating helpers for conditional feature rendering.
  */
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from 'zustand'
+import { devtools } from 'zustand/middleware'
 
 // =============================================================================
 // Types
@@ -14,67 +14,61 @@ import { devtools } from 'zustand/middleware';
 
 export interface FeatureFlags {
   // Trust Layer
-  signal_health: boolean;
-  attribution_variance: boolean;
+  signal_health: boolean
+  attribution_variance: boolean
 
   // Intelligence Layer
-  ai_recommendations: boolean;
-  anomaly_alerts: boolean;
-  creative_fatigue: boolean;
+  ai_recommendations: boolean
+  anomaly_alerts: boolean
+  creative_fatigue: boolean
 
   // Execution Layer
-  campaign_builder: boolean;
-  autopilot_level: number; // 0=suggest, 1=guarded auto, 2=approval required
+  campaign_builder: boolean
+  autopilot_level: number // 0=suggest, 1=guarded auto, 2=approval required
 
   // Platform
-  superadmin_profitability: boolean;
+  superadmin_profitability: boolean
 
   // Limits
-  max_campaigns: number;
-  max_users: number;
-  data_retention_days: number;
-
-  // Dashboard
-  show_price_metrics: boolean;
+  max_campaigns: number
+  max_users: number
+  data_retention_days: number
 }
 
 export interface FeatureCategory {
-  name: string;
-  description: string;
-  features: string[];
+  name: string
+  description: string
+  features: string[]
 }
 
 export interface FeatureFlagsState {
   // Current tenant's feature flags
-  features: FeatureFlags | null;
-  categories: Record<string, FeatureCategory>;
-  descriptions: Record<string, string>;
+  features: FeatureFlags | null
+  categories: Record<string, FeatureCategory>
+  descriptions: Record<string, string>
 
   // Loading state
-  isLoading: boolean;
-  error: string | null;
+  isLoading: boolean
+  error: string | null
 
   // Actions
-  setFeatures: (features: FeatureFlags) => void;
-  setMetadata: (
-    categories: Record<string, FeatureCategory>,
-    descriptions: Record<string, string>
-  ) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  reset: () => void;
+  setFeatures: (features: FeatureFlags) => void
+  setMetadata: (categories: Record<string, FeatureCategory>, descriptions: Record<string, string>) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+  reset: () => void
 
   // Gating helpers
-  can: (feature: keyof FeatureFlags) => boolean;
-  getAutopilotLevel: () => number;
-  isAutopilotBlocked: (signalHealthStatus: string) => boolean;
+  can: (feature: keyof FeatureFlags) => boolean
+  getAutopilotLevel: () => number
+  isAutopilotBlocked: (signalHealthStatus: string) => boolean
 }
 
 // =============================================================================
 // Default Values
 // =============================================================================
 
-export const defaultFeatures: FeatureFlags = {
+const defaultFeatures: FeatureFlags = {
   signal_health: false,
   attribution_variance: false,
   ai_recommendations: false,
@@ -86,8 +80,7 @@ export const defaultFeatures: FeatureFlags = {
   max_campaigns: 20,
   max_users: 5,
   data_retention_days: 90,
-  show_price_metrics: true,
-};
+}
 
 // =============================================================================
 // Store
@@ -121,57 +114,57 @@ export const useFeatureFlagsStore = create<FeatureFlagsState>()(
 
       // Gating helpers
       can: (feature) => {
-        const { features } = get();
-        if (!features) return false;
+        const { features } = get()
+        if (!features) return false
 
-        const value = features[feature];
-        if (typeof value === 'boolean') return value;
-        if (typeof value === 'number') return value > 0;
-        return Boolean(value);
+        const value = features[feature]
+        if (typeof value === 'boolean') return value
+        if (typeof value === 'number') return value > 0
+        return Boolean(value)
       },
 
       getAutopilotLevel: () => {
-        const { features } = get();
-        return features?.autopilot_level ?? 0;
+        const { features } = get()
+        return features?.autopilot_level ?? 0
       },
 
       isAutopilotBlocked: (signalHealthStatus) => {
-        const { features } = get();
-        if (!features) return true;
+        const { features } = get()
+        if (!features) return true
 
-        const level = features.autopilot_level;
+        const level = features.autopilot_level
 
         // Level 0 (suggest only) is never "blocked" since it doesn't auto-execute
-        if (level === 0) return false;
+        if (level === 0) return false
 
         // Block if signal health is degraded or critical
         if (signalHealthStatus === 'degraded' || signalHealthStatus === 'critical') {
-          return true;
+          return true
         }
 
-        return false;
+        return false
       },
     }),
     { name: 'FeatureFlagsStore' }
   )
-);
+)
 
 // =============================================================================
 // Selectors
 // =============================================================================
 
-export const selectFeatures = (state: FeatureFlagsState) => state.features;
-export const selectIsLoading = (state: FeatureFlagsState) => state.isLoading;
-export const selectError = (state: FeatureFlagsState) => state.error;
+export const selectFeatures = (state: FeatureFlagsState) => state.features
+export const selectIsLoading = (state: FeatureFlagsState) => state.isLoading
+export const selectError = (state: FeatureFlagsState) => state.error
 
 // =============================================================================
 // Convenience Hooks
 // =============================================================================
 
-export const useFeatures = () => useFeatureFlagsStore((state) => state.features);
+export const useFeatures = () => useFeatureFlagsStore((state) => state.features)
 export const useCanFeature = (feature: keyof FeatureFlags) =>
-  useFeatureFlagsStore((state) => state.can(feature));
-export const useAutopilotLevel = () => useFeatureFlagsStore((state) => state.getAutopilotLevel());
+  useFeatureFlagsStore((state) => state.can(feature))
+export const useAutopilotLevel = () => useFeatureFlagsStore((state) => state.getAutopilotLevel())
 
 // =============================================================================
 // Feature Gating Component Helper
@@ -187,7 +180,7 @@ export const useAutopilotLevel = () => useFeatureFlagsStore((state) => state.get
  * }
  */
 export function can(feature: keyof FeatureFlags): boolean {
-  return useFeatureFlagsStore.getState().can(feature);
+  return useFeatureFlagsStore.getState().can(feature)
 }
 
 /**
@@ -197,12 +190,12 @@ export function can(feature: keyof FeatureFlags): boolean {
  * 2 = Approval required
  */
 export function getAutopilotLevel(): number {
-  return useFeatureFlagsStore.getState().getAutopilotLevel();
+  return useFeatureFlagsStore.getState().getAutopilotLevel()
 }
 
 /**
  * Check if autopilot is blocked due to signal health.
  */
 export function isAutopilotBlocked(signalHealthStatus: string): boolean {
-  return useFeatureFlagsStore.getState().isAutopilotBlocked(signalHealthStatus);
+  return useFeatureFlagsStore.getState().isAutopilotBlocked(signalHealthStatus)
 }

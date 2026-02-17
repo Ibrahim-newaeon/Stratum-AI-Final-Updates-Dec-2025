@@ -7,9 +7,8 @@ Implements Module F: Security & Governance requirements.
 """
 
 import json
-from collections.abc import Callable
-from datetime import UTC, datetime
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Callable, Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -115,7 +114,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
                 "request_id": request_id,
                 "endpoint": request.url.path,
                 "http_method": request.method,
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
             }
 
             # Log the audit event (in production, this would write to the database)
@@ -200,7 +199,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
             if any(field in key.lower() for field in sensitive_fields):
                 sanitized[key] = "[REDACTED]"
             elif isinstance(value, dict):
-                sanitized[key] = self._sanitize_for_audit(value)  # type: ignore[assignment]
+                sanitized[key] = self._sanitize_for_audit(value)
             else:
                 sanitized[key] = value
 
@@ -213,7 +212,6 @@ class AuditMiddleware(BaseHTTPMiddleware):
         """
         try:
             import redis.asyncio as redis
-
             from app.core.config import settings
 
             client = redis.from_url(settings.redis_url)

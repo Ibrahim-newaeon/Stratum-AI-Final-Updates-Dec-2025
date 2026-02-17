@@ -15,26 +15,15 @@ Models:
 - AuditLog: Security and compliance audit trail
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+from decimal import Decimal
 from enum import Enum as PyEnum
-from typing import TYPE_CHECKING, Optional
-
-if TYPE_CHECKING:
-    from app.models.campaign_builder import (
-        CampaignDraft,
-        CampaignPublishLog,
-        TenantAdAccount,
-        TenantPlatformConnection,
-    )
-    from app.models.client import Client
-    from app.models.trust_layer import (
-        FactActionsQueue,
-        FactAttributionVarianceDaily,
-        FactSignalHealthDaily,
-    )
+from typing import Any, List, Optional
 
 from sqlalchemy import (
+    JSON,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Enum,
@@ -42,9 +31,11 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -58,7 +49,6 @@ from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin
 class UserRole(str, PyEnum):
     """User roles for access control."""
 
-    SUPERADMIN = "superadmin"  # Platform-wide admin (cross-tenant)
     ADMIN = "admin"
     MANAGER = "manager"
     ANALYST = "analyst"
@@ -72,6 +62,7 @@ class AdPlatform(str, PyEnum):
     GOOGLE = "google"
     TIKTOK = "tiktok"
     SNAPCHAT = "snapchat"
+    LINKEDIN = "linkedin"
 
 
 class CampaignStatus(str, PyEnum):
@@ -170,52 +161,44 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     max_campaigns: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
 
     # Relationships
-    users: Mapped[list["User"]] = relationship(
+    users: Mapped[List["User"]] = relationship(
         "User", back_populates="tenant", foreign_keys="[User.tenant_id]"
     )
-    campaigns: Mapped[list["Campaign"]] = relationship(
+    campaigns: Mapped[List["Campaign"]] = relationship(
         "Campaign", back_populates="tenant", foreign_keys="[Campaign.tenant_id]"
     )
-    assets: Mapped[list["CreativeAsset"]] = relationship(
+    assets: Mapped[List["CreativeAsset"]] = relationship(
         "CreativeAsset", back_populates="tenant", foreign_keys="[CreativeAsset.tenant_id]"
     )
-    rules: Mapped[list["Rule"]] = relationship(
+    rules: Mapped[List["Rule"]] = relationship(
         "Rule", back_populates="tenant", foreign_keys="[Rule.tenant_id]"
     )
-    competitors: Mapped[list["CompetitorBenchmark"]] = relationship(
-        "CompetitorBenchmark",
-        back_populates="tenant",
-        foreign_keys="[CompetitorBenchmark.tenant_id]",
+    competitors: Mapped[List["CompetitorBenchmark"]] = relationship(
+        "CompetitorBenchmark", back_populates="tenant", foreign_keys="[CompetitorBenchmark.tenant_id]"
     )
 
     # Trust Layer relationships (lazy import to avoid circular imports)
-    signal_health_records: Mapped[list["FactSignalHealthDaily"]] = relationship(
-        "FactSignalHealthDaily",
-        back_populates="tenant",
-        foreign_keys="[FactSignalHealthDaily.tenant_id]",
+    signal_health_records: Mapped[List["FactSignalHealthDaily"]] = relationship(
+        "FactSignalHealthDaily", back_populates="tenant", foreign_keys="[FactSignalHealthDaily.tenant_id]"
     )
-    attribution_variance_records: Mapped[list["FactAttributionVarianceDaily"]] = relationship(
-        "FactAttributionVarianceDaily",
-        back_populates="tenant",
-        foreign_keys="[FactAttributionVarianceDaily.tenant_id]",
+    attribution_variance_records: Mapped[List["FactAttributionVarianceDaily"]] = relationship(
+        "FactAttributionVarianceDaily", back_populates="tenant", foreign_keys="[FactAttributionVarianceDaily.tenant_id]"
     )
-    actions_queue: Mapped[list["FactActionsQueue"]] = relationship(
+    actions_queue: Mapped[List["FactActionsQueue"]] = relationship(
         "FactActionsQueue", back_populates="tenant", foreign_keys="[FactActionsQueue.tenant_id]"
     )
 
     # Campaign Builder relationships
-    platform_connections: Mapped[list["TenantPlatformConnection"]] = relationship(
-        "TenantPlatformConnection",
-        back_populates="tenant",
-        foreign_keys="[TenantPlatformConnection.tenant_id]",
+    platform_connections: Mapped[List["TenantPlatformConnection"]] = relationship(
+        "TenantPlatformConnection", back_populates="tenant", foreign_keys="[TenantPlatformConnection.tenant_id]"
     )
-    ad_accounts: Mapped[list["TenantAdAccount"]] = relationship(
+    ad_accounts: Mapped[List["TenantAdAccount"]] = relationship(
         "TenantAdAccount", back_populates="tenant", foreign_keys="[TenantAdAccount.tenant_id]"
     )
-    campaign_drafts: Mapped[list["CampaignDraft"]] = relationship(
+    campaign_drafts: Mapped[List["CampaignDraft"]] = relationship(
         "CampaignDraft", back_populates="tenant", foreign_keys="[CampaignDraft.tenant_id]"
     )
-    publish_logs: Mapped[list["CampaignPublishLog"]] = relationship(
+    publish_logs: Mapped[List["CampaignPublishLog"]] = relationship(
         "CampaignPublishLog", back_populates="tenant", foreign_keys="[CampaignPublishLog.tenant_id]"
     )
 
@@ -240,7 +223,9 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Authentication
     email: Mapped[str] = mapped_column(String(255), nullable=False)  # Encrypted
-    email_hash: Mapped[str] = mapped_column(String(64), nullable=False)  # For lookups
+    email_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False
+    )  # For lookups
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Profile (PII - encrypted)
@@ -252,41 +237,14 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
         default=UserRole.ANALYST,
-        nullable=False,
+        nullable=False
     )
     permissions: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
-
-    # Client scope (for portal users — VIEWER role)
-    client_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
-    )
-    user_type: Mapped[str] = mapped_column(
-        String(20), default="agency", nullable=False
-    )  # "agency" or "portal"
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_protected: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )  # Cannot be deleted/demoted
     last_login_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-
-    # Two-Factor Authentication (2FA/MFA)
-    totp_secret: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )  # Encrypted TOTP secret
-    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    totp_verified_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    backup_codes: Mapped[Optional[dict]] = mapped_column(
-        JSONB, nullable=True
-    )  # Encrypted backup codes
-    failed_totp_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    totp_lockout_until: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -304,22 +262,15 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")
-    audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user")
-    client: Mapped[Optional["Client"]] = relationship(
-        "Client", back_populates="portal_users", foreign_keys=[client_id]
+    audit_logs: Mapped[List["AuditLog"]] = relationship(
+        "AuditLog", back_populates="user"
     )
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "email_hash", name="uq_user_tenant_email"),
         Index("ix_users_email_hash", "email_hash"),
         Index("ix_users_tenant_active", "tenant_id", "is_active", "is_deleted"),
-        Index("ix_users_client", "client_id"),
     )
-
-    @property
-    def is_portal_user(self) -> bool:
-        """Return True if this user is a client portal user."""
-        return self.user_type == "portal"
 
 
 # =============================================================================
@@ -335,24 +286,21 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
-    # Client scope (nullable — existing campaigns may not have a client)
-    client_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
-    )
-
     # Platform Reference
     platform: Mapped[AdPlatform] = mapped_column(
-        Enum(AdPlatform, values_callable=lambda x: [e.value for e in x]), nullable=False
+        Enum(AdPlatform, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
     )
-    external_id: Mapped[str] = mapped_column(String(255), nullable=False)  # Platform's campaign ID
+    external_id: Mapped[str] = mapped_column(
+        String(255), nullable=False
+    )  # Platform's campaign ID
     account_id: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Campaign Info
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     status: Mapped[CampaignStatus] = mapped_column(
         Enum(CampaignStatus, values_callable=lambda x: [e.value for e in x]),
-        default=CampaignStatus.DRAFT,
-        nullable=False,
+        default=CampaignStatus.DRAFT, nullable=False
     )
     objective: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
@@ -405,13 +353,12 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="campaigns")
-    client: Mapped[Optional["Client"]] = relationship(
-        "Client", back_populates="campaigns", foreign_keys=[client_id]
-    )
-    metrics: Mapped[list["CampaignMetric"]] = relationship(
+    metrics: Mapped[List["CampaignMetric"]] = relationship(
         "CampaignMetric", back_populates="campaign", cascade="all, delete-orphan"
     )
-    assets: Mapped[list["CreativeAsset"]] = relationship("CreativeAsset", back_populates="campaign")
+    assets: Mapped[List["CreativeAsset"]] = relationship(
+        "CreativeAsset", back_populates="campaign"
+    )
 
     __table_args__ = (
         UniqueConstraint(
@@ -421,7 +368,6 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         Index("ix_campaigns_platform", "tenant_id", "platform"),
         Index("ix_campaigns_date_range", "tenant_id", "start_date", "end_date"),
         Index("ix_campaigns_roas", "tenant_id", "roas"),
-        Index("ix_campaigns_client", "client_id"),
     )
 
     def calculate_metrics(self) -> None:
@@ -478,7 +424,9 @@ class CampaignMetric(Base, TenantMixin):
     campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="metrics")
 
     __table_args__ = (
-        UniqueConstraint("campaign_id", "date", name="uq_campaign_metric_date"),
+        UniqueConstraint(
+            "campaign_id", "date", name="uq_campaign_metric_date"
+        ),
         Index("ix_campaign_metrics_date", "tenant_id", "date"),
         Index("ix_campaign_metrics_campaign_date", "campaign_id", "date"),
     )
@@ -503,7 +451,8 @@ class CreativeAsset(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     # Asset Info
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     asset_type: Mapped[AssetType] = mapped_column(
-        Enum(AssetType, values_callable=lambda x: [e.value for e in x]), nullable=False
+        Enum(AssetType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
     )
     file_url: Mapped[str] = mapped_column(String(1000), nullable=False)
     thumbnail_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
@@ -525,7 +474,9 @@ class CreativeAsset(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     ctr: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # Creative Fatigue Analysis
-    fatigue_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)  # 0-100 scale
+    fatigue_score: Mapped[float] = mapped_column(
+        Float, default=0.0, nullable=False
+    )  # 0-100 scale
     first_used_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -538,7 +489,9 @@ class CreativeAsset(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="assets")
-    campaign: Mapped[Optional["Campaign"]] = relationship("Campaign", back_populates="assets")
+    campaign: Mapped[Optional["Campaign"]] = relationship(
+        "Campaign", back_populates="assets"
+    )
 
     __table_args__ = (
         Index("ix_assets_tenant_type", "tenant_id", "asset_type"),
@@ -566,7 +519,7 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     status: Mapped[RuleStatus] = mapped_column(
         Enum(RuleStatus, values_callable=lambda x: [e.value for e in x]),
         default=RuleStatus.DRAFT,
-        nullable=False,
+        nullable=False
     )
 
     # Condition (IF)
@@ -574,7 +527,8 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         String(100), nullable=False
     )  # e.g., 'roas', 'ctr', 'spend'
     condition_operator: Mapped[RuleOperator] = mapped_column(
-        Enum(RuleOperator, values_callable=lambda x: [e.value for e in x]), nullable=False
+        Enum(RuleOperator, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
     )
     condition_value: Mapped[str] = mapped_column(
         String(255), nullable=False
@@ -585,7 +539,8 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Action (THEN)
     action_type: Mapped[RuleAction] = mapped_column(
-        Enum(RuleAction, values_callable=lambda x: [e.value for e in x]), nullable=False
+        Enum(RuleAction, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
     )
     action_config: Mapped[dict] = mapped_column(
         JSONB, default=dict, nullable=False
@@ -613,7 +568,7 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="rules")
-    executions: Mapped[list["RuleExecution"]] = relationship(
+    executions: Mapped[List["RuleExecution"]] = relationship(
         "RuleExecution", back_populates="rule", cascade="all, delete-orphan"
     )
 
@@ -640,10 +595,12 @@ class RuleExecution(Base, TenantMixin):
 
     # Execution Details
     executed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     triggered: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    condition_result: Mapped[dict] = mapped_column(JSONB, nullable=False)  # What was evaluated
+    condition_result: Mapped[dict] = mapped_column(
+        JSONB, nullable=False
+    )  # What was evaluated
     action_result: Mapped[Optional[dict]] = mapped_column(
         JSONB, nullable=True
     )  # What action was taken
@@ -674,7 +631,9 @@ class CompetitorBenchmark(Base, TimestampMixin, TenantMixin):
     # Competitor Info
     domain: Mapped[str] = mapped_column(String(255), nullable=False)
     name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    is_primary: Mapped[bool] = mapped_column(Boolean, default=False)  # Primary competitor flag
+    is_primary: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )  # Primary competitor flag
 
     # Scraped Metadata (Safe)
     meta_title: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
@@ -706,7 +665,9 @@ class CompetitorBenchmark(Base, TimestampMixin, TenantMixin):
     )  # Array of timestamped snapshots
 
     # Data Source
-    data_source: Mapped[str] = mapped_column(String(50), default="scraper", nullable=False)
+    data_source: Mapped[str] = mapped_column(
+        String(50), default="scraper", nullable=False
+    )
     last_fetched_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -741,7 +702,8 @@ class AuditLog(Base):
 
     # Action Details
     action: Mapped[AuditAction] = mapped_column(
-        Enum(AuditAction, values_callable=lambda x: [e.value for e in x]), nullable=False
+        Enum(AuditAction, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
     )
     resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
     resource_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -761,7 +723,7 @@ class AuditLog(Base):
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
@@ -817,7 +779,7 @@ class MLPrediction(Base, TenantMixin):
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
     predicted_at: Mapped[Optional[datetime]] = mapped_column(
@@ -883,7 +845,9 @@ class APIKey(Base, TimestampMixin, TenantMixin):
     )
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    key_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)  # SHA256 hash
+    key_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True
+    )  # SHA256 hash
     key_prefix: Mapped[str] = mapped_column(String(10), nullable=False)  # For identification
 
     # Permissions
@@ -891,8 +855,12 @@ class APIKey(Base, TimestampMixin, TenantMixin):
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (Index("ix_api_keys_hash", "key_hash"),)
 
@@ -902,7 +870,6 @@ class APIKey(Base, TimestampMixin, TenantMixin):
 # =============================================================================
 class WhatsAppOptInStatus(str, PyEnum):
     """WhatsApp contact opt-in status."""
-
     PENDING = "pending"
     OPTED_IN = "opted_in"
     OPTED_OUT = "opted_out"
@@ -910,14 +877,12 @@ class WhatsAppOptInStatus(str, PyEnum):
 
 class WhatsAppMessageDirection(str, PyEnum):
     """WhatsApp message direction."""
-
     OUTBOUND = "outbound"
     INBOUND = "inbound"
 
 
 class WhatsAppMessageStatus(str, PyEnum):
     """WhatsApp message delivery status."""
-
     PENDING = "pending"
     SENT = "sent"
     DELIVERED = "delivered"
@@ -927,7 +892,6 @@ class WhatsAppMessageStatus(str, PyEnum):
 
 class WhatsAppTemplateStatus(str, PyEnum):
     """WhatsApp template approval status."""
-
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -936,7 +900,6 @@ class WhatsAppTemplateStatus(str, PyEnum):
 
 class WhatsAppTemplateCategory(str, PyEnum):
     """WhatsApp template categories."""
-
     MARKETING = "MARKETING"
     UTILITY = "UTILITY"
     AUTHENTICATION = "AUTHENTICATION"
@@ -966,16 +929,21 @@ class WhatsAppContact(Base, TimestampMixin, TenantMixin):
     verification_expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Opt-in Status (REQUIRED for WhatsApp Business)
     opt_in_status: Mapped[WhatsAppOptInStatus] = mapped_column(
         Enum(WhatsAppOptInStatus, values_callable=lambda x: [e.value for e in x]),
-        default=WhatsAppOptInStatus.PENDING,
-        nullable=False,
+        default=WhatsAppOptInStatus.PENDING, nullable=False
     )
-    opt_in_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    opt_out_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    opt_in_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    opt_out_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     opt_in_method: Mapped[Optional[str]] = mapped_column(
         String(50), nullable=True
     )  # web_form, sms, qr_code, manual
@@ -1004,10 +972,10 @@ class WhatsAppContact(Base, TimestampMixin, TenantMixin):
 
     # Relationships
     user: Mapped["User"] = relationship("User")
-    messages: Mapped[list["WhatsAppMessage"]] = relationship(
+    messages: Mapped[List["WhatsAppMessage"]] = relationship(
         "WhatsAppMessage", back_populates="contact", cascade="all, delete-orphan"
     )
-    conversations: Mapped[list["WhatsAppConversation"]] = relationship(
+    conversations: Mapped[List["WhatsAppConversation"]] = relationship(
         "WhatsAppConversation", back_populates="contact", cascade="all, delete-orphan"
     )
 
@@ -1031,8 +999,7 @@ class WhatsAppTemplate(Base, TimestampMixin, TenantMixin):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     category: Mapped[WhatsAppTemplateCategory] = mapped_column(
-        Enum(WhatsAppTemplateCategory, values_callable=lambda x: [e.value for e in x]),
-        nullable=False,
+        Enum(WhatsAppTemplateCategory, values_callable=lambda x: [e.value for e in x]), nullable=False
     )
 
     # Template Content
@@ -1053,18 +1020,18 @@ class WhatsAppTemplate(Base, TimestampMixin, TenantMixin):
     # Meta Approval Status
     meta_template_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     status: Mapped[WhatsAppTemplateStatus] = mapped_column(
-        Enum(WhatsAppTemplateStatus, values_callable=lambda x: [e.value for e in x]),
-        default=WhatsAppTemplateStatus.PENDING,
-        nullable=False,
+        Enum(WhatsAppTemplateStatus, values_callable=lambda x: [e.value for e in x]), default=WhatsAppTemplateStatus.PENDING, nullable=False
     )
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Usage Tracking
     usage_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
-    messages: Mapped[list["WhatsAppMessage"]] = relationship(
+    messages: Mapped[List["WhatsAppMessage"]] = relationship(
         "WhatsAppMessage", back_populates="template"
     )
 
@@ -1091,9 +1058,7 @@ class WhatsAppMessage(Base, TenantMixin):
 
     # Message Details
     direction: Mapped[WhatsAppMessageDirection] = mapped_column(
-        Enum(WhatsAppMessageDirection, values_callable=lambda x: [e.value for e in x]),
-        default=WhatsAppMessageDirection.OUTBOUND,
-        nullable=False,
+        Enum(WhatsAppMessageDirection, values_callable=lambda x: [e.value for e in x]), default=WhatsAppMessageDirection.OUTBOUND, nullable=False
     )
     message_type: Mapped[str] = mapped_column(
         String(20), nullable=False
@@ -1112,9 +1077,7 @@ class WhatsAppMessage(Base, TenantMixin):
 
     # Status Tracking
     status: Mapped[WhatsAppMessageStatus] = mapped_column(
-        Enum(WhatsAppMessageStatus, values_callable=lambda x: [e.value for e in x]),
-        default=WhatsAppMessageStatus.PENDING,
-        nullable=False,
+        Enum(WhatsAppMessageStatus, values_callable=lambda x: [e.value for e in x]), default=WhatsAppMessageStatus.PENDING, nullable=False
     )
     status_history: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
 
@@ -1127,18 +1090,28 @@ class WhatsAppMessage(Base, TenantMixin):
     )
 
     # Timing
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    sent_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    delivered_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    read_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
     # Relationships
-    contact: Mapped["WhatsAppContact"] = relationship("WhatsAppContact", back_populates="messages")
+    contact: Mapped["WhatsAppContact"] = relationship(
+        "WhatsAppContact", back_populates="messages"
+    )
     template: Mapped[Optional["WhatsAppTemplate"]] = relationship(
         "WhatsAppTemplate", back_populates="messages"
     )
@@ -1176,7 +1149,7 @@ class WhatsAppConversation(Base, TenantMixin):
     # Window Timing
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
     expires_at: Mapped[datetime] = mapped_column(
@@ -1189,7 +1162,7 @@ class WhatsAppConversation(Base, TenantMixin):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
@@ -1202,437 +1175,3 @@ class WhatsAppConversation(Base, TenantMixin):
         Index("ix_wa_conversations_contact", "contact_id"),
         Index("ix_wa_conversations_active", "tenant_id", "is_active", "expires_at"),
     )
-
-
-# =============================================================================
-# Landing Page Subscriber - Waitlist/Signup Collection
-# =============================================================================
-class SubscriberStatus(str, PyEnum):
-    """Status of landing page subscribers."""
-
-    PENDING = "pending"  # Awaiting review/approval
-    APPROVED = "approved"  # Approved for access
-    REJECTED = "rejected"  # Rejected/spam
-    CONVERTED = "converted"  # Converted to full user
-
-
-class LandingPageSubscriber(Base):
-    """
-    Landing page signups/waitlist subscribers.
-
-    Stores email submissions from landing pages for superadmin review
-    and eventual conversion to full platform users.
-
-    Includes full attribution tracking for ad platforms (Meta, Google, TikTok, Snapchat)
-    with platform-specific click IDs for CAPI conversion feedback.
-    """
-
-    __tablename__ = "landing_page_subscribers"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    # Contact Information
-    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    email_hash: Mapped[Optional[str]] = mapped_column(
-        String(64), nullable=True
-    )  # SHA256 for deduplication
-    full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    company_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-
-    # Source tracking
-    source_page: Mapped[str] = mapped_column(
-        String(50), default="landing", nullable=False
-    )  # landing, pricing, demo, etc.
-    language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)  # en, ar, etc.
-
-    # UTM tracking (works for all platforms)
-    utm_source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    utm_medium: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    utm_campaign: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    utm_term: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    utm_content: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    referrer_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    landing_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-
-    # Platform-specific click IDs (CRITICAL for conversion attribution)
-    fbclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Meta/Facebook
-    gclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Google
-    ttclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # TikTok
-    sccid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Snapchat
-    fbc: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Meta browser cookie
-    fbp: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Meta pixel cookie
-
-    # Detected platform (derived from click IDs or utm_source)
-    attributed_platform: Mapped[Optional[str]] = mapped_column(
-        String(20), nullable=True
-    )  # meta, google, tiktok, snapchat, organic
-
-    # Lead scoring
-    lead_score: Mapped[int] = mapped_column(
-        Integer, default=0, nullable=False
-    )  # 0-100 based on data completeness
-
-    # Status
-    status: Mapped[str] = mapped_column(
-        String(20), default=SubscriberStatus.PENDING.value, nullable=False
-    )
-
-    # Admin notes
-    admin_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    reviewed_by_user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    # CAPI conversion tracking
-    capi_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    capi_results: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON string
-
-    # Conversion tracking
-    converted_to_tenant_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
-    )
-    converted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    # Metadata
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-
-    # Newsletter subscription fields
-    subscribed_to_newsletter: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    unsubscribed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    newsletter_preferences: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    last_email_sent_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    last_email_opened_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    email_send_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    email_open_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-
-    __table_args__ = (
-        Index("ix_subscriber_email", "email"),
-        Index("ix_subscriber_status", "status", "created_at"),
-        Index("ix_subscriber_source", "source_page", "language"),
-        Index("ix_subscriber_platform", "attributed_platform"),
-        Index("ix_subscriber_lead_score", "lead_score"),
-        Index("ix_subscriber_newsletter", "subscribed_to_newsletter"),
-    )
-
-
-# =============================================================================
-# Landing Page CMS - Full Content Management System
-# =============================================================================
-
-
-class PageStatus(str, PyEnum):
-    """Status of landing pages."""
-
-    DRAFT = "draft"
-    PUBLISHED = "published"
-    ARCHIVED = "archived"
-
-
-class SectionType(str, PyEnum):
-    """Types of landing page sections."""
-
-    HERO = "hero"
-    STATS = "stats"
-    VALUE_PROP = "value_prop"
-    FEATURES = "features"
-    FEATURE_EXPLORER = "feature_explorer"
-    INTELLIGENCE = "intelligence"
-    INTEGRATIONS = "integrations"
-    ROI = "roi"
-    PROOF = "proof"
-    PRICING = "pricing"
-    CTA = "cta"
-    FOOTER = "footer"
-    CUSTOM = "custom"
-
-
-class LandingPageTemplate(Base):
-    """
-    Base templates for landing pages.
-
-    Stores the original HTML/structure that can be used to create
-    multiple landing pages with different content.
-    """
-
-    __tablename__ = "landing_page_templates"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    # Template identification
-    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    slug: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    # Template content
-    html_content: Mapped[str] = mapped_column(Text, nullable=False)
-    css_content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    js_content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    # Default configuration
-    default_theme: Mapped[str] = mapped_column(String(20), default="dark", nullable=False)
-    supported_languages: Mapped[str] = mapped_column(
-        String(100), default="en,ar", nullable=False
-    )  # Comma-separated list
-
-    # Section definitions (JSON)
-    section_schema: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True
-    )  # JSON defining editable sections
-
-    # Metadata
-    thumbnail_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-
-    # Relationships
-    pages: Mapped[list["LandingPage"]] = relationship(
-        "LandingPage", back_populates="template", cascade="all, delete-orphan"
-    )
-
-
-class LandingPage(Base):
-    """
-    Individual landing pages created from templates.
-
-    Each page can have its own content, translations, and section configurations.
-    """
-
-    __tablename__ = "landing_pages"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    # Page identification
-    name: Mapped[str] = mapped_column(String(200), nullable=False)
-    slug: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-
-    # Template reference
-    template_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("landing_page_templates.id", ondelete="CASCADE"), nullable=False
-    )
-
-    # Page settings
-    status: Mapped[str] = mapped_column(String(20), default=PageStatus.DRAFT.value, nullable=False)
-    default_language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
-    theme: Mapped[str] = mapped_column(String(20), default="dark", nullable=False)
-
-    # SEO (default/fallback)
-    meta_title: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    meta_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    meta_keywords: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    og_image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-
-    # Custom CSS/JS overrides
-    custom_css: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    custom_js: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    # Analytics
-    ga_tracking_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    fb_pixel_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-
-    # Publishing
-    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    published_by_user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-
-    # Relationships
-    template: Mapped["LandingPageTemplate"] = relationship(
-        "LandingPageTemplate", back_populates="pages"
-    )
-    sections: Mapped[list["LandingPageSection"]] = relationship(
-        "LandingPageSection", back_populates="page", cascade="all, delete-orphan"
-    )
-    translations: Mapped[list["LandingPageTranslation"]] = relationship(
-        "LandingPageTranslation", back_populates="page", cascade="all, delete-orphan"
-    )
-
-    __table_args__ = (
-        Index("ix_landing_page_slug", "slug"),
-        Index("ix_landing_page_status", "status"),
-    )
-
-
-class LandingPageSection(Base):
-    """
-    Individual sections within a landing page.
-
-    Each section can be toggled on/off and has its own content.
-    """
-
-    __tablename__ = "landing_page_sections"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    # Section identification
-    page_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("landing_pages.id", ondelete="CASCADE"), nullable=False
-    )
-    section_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    section_key: Mapped[str] = mapped_column(String(100), nullable=False)  # Unique within page
-
-    # Display settings
-    is_visible: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-
-    # Content (JSON format for flexibility)
-    content_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    # Styling overrides
-    custom_css_class: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    background_color: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    background_image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-
-    # Relationships
-    page: Mapped["LandingPage"] = relationship("LandingPage", back_populates="sections")
-    content_translations: Mapped[list["LandingPageSectionContent"]] = relationship(
-        "LandingPageSectionContent", back_populates="section", cascade="all, delete-orphan"
-    )
-
-    __table_args__ = (
-        Index("ix_section_page", "page_id", "section_key"),
-        Index("ix_section_order", "page_id", "display_order"),
-    )
-
-
-class LandingPageSectionContent(Base):
-    """
-    Translated content for each section.
-
-    Stores the actual text, images, and other content for each language.
-    """
-
-    __tablename__ = "landing_page_section_contents"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    # Section reference
-    section_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("landing_page_sections.id", ondelete="CASCADE"), nullable=False
-    )
-    language: Mapped[str] = mapped_column(String(10), nullable=False)
-
-    # Content fields (JSON for flexible structure)
-    content_data: Mapped[str] = mapped_column(Text, nullable=False)  # JSON
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-
-    # Relationships
-    section: Mapped["LandingPageSection"] = relationship(
-        "LandingPageSection", back_populates="content_translations"
-    )
-
-    __table_args__ = (Index("ix_section_content_lang", "section_id", "language", unique=True),)
-
-
-class LandingPageTranslation(Base):
-    """
-    Page-level translations for SEO and metadata.
-
-    Stores translated meta titles, descriptions, etc. for each language.
-    """
-
-    __tablename__ = "landing_page_translations"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    # Page reference
-    page_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("landing_pages.id", ondelete="CASCADE"), nullable=False
-    )
-    language: Mapped[str] = mapped_column(String(10), nullable=False)
-
-    # SEO translations
-    meta_title: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    meta_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    meta_keywords: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    og_image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
-        nullable=False,
-    )
-
-    # Relationships
-    page: Mapped["LandingPage"] = relationship("LandingPage", back_populates="translations")
-
-    __table_args__ = (Index("ix_page_translation_lang", "page_id", "language", unique=True),)

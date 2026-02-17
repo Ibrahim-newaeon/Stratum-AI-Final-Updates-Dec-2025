@@ -6,14 +6,14 @@ IFTTT-style automation rules engine.
 Implements Module C: Stratum Automation.
 """
 
-from datetime import UTC, datetime, timedelta
-from typing import Any, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.models import Campaign, Rule, RuleAction, RuleExecution, RuleOperator, RuleStatus
+from app.models import Campaign, Rule, RuleExecution, RuleStatus, RuleOperator, RuleAction
 
 logger = get_logger(__name__)
 
@@ -46,7 +46,7 @@ class RulesEngine:
         self,
         rule: Rule,
         dry_run: bool = False,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Evaluate a rule against applicable campaigns.
 
@@ -67,7 +67,7 @@ class RulesEngine:
         # Check cooldown
         if rule.last_triggered_at and not dry_run:
             cooldown_end = rule.last_triggered_at + timedelta(hours=rule.cooldown_hours)
-            if datetime.now(UTC) < cooldown_end:
+            if datetime.now(timezone.utc) < cooldown_end:
                 return {
                     "status": "skipped",
                     "reason": "Rule is in cooldown",
@@ -105,8 +105,8 @@ class RulesEngine:
 
         # Update rule metadata if any matched
         if matched_campaigns and not dry_run:
-            rule.last_evaluated_at = datetime.now(UTC)
-            rule.last_triggered_at = datetime.now(UTC)
+            rule.last_evaluated_at = datetime.now(timezone.utc)
+            rule.last_triggered_at = datetime.now(timezone.utc)
             rule.trigger_count += 1
             await self.db.commit()
 
@@ -118,7 +118,7 @@ class RulesEngine:
             "results": results,
         }
 
-    async def _get_applicable_campaigns(self, rule: Rule) -> list[Campaign]:
+    async def _get_applicable_campaigns(self, rule: Rule) -> List[Campaign]:
         """Get campaigns that this rule applies to."""
         query = select(Campaign).where(
             Campaign.tenant_id == self.tenant_id,
@@ -140,7 +140,7 @@ class RulesEngine:
         self,
         rule: Rule,
         campaign: Campaign,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Evaluate a rule condition against a campaign.
         """
@@ -196,12 +196,8 @@ class RulesEngine:
             "spend": lambda c: c.total_spend_cents / 100,
             "revenue": lambda c: c.revenue_cents / 100,
             "cpc": lambda c: (c.total_spend_cents / c.clicks / 100) if c.clicks > 0 else None,
-            "cpm": lambda c: (c.total_spend_cents / c.impressions * 1000 / 100)
-            if c.impressions > 0
-            else None,
-            "cpa": lambda c: (c.total_spend_cents / c.conversions / 100)
-            if c.conversions > 0
-            else None,
+            "cpm": lambda c: (c.total_spend_cents / c.impressions * 1000 / 100) if c.impressions > 0 else None,
+            "cpa": lambda c: (c.total_spend_cents / c.conversions / 100) if c.conversions > 0 else None,
             "conversion_rate": lambda c: (c.conversions / c.clicks * 100) if c.clicks > 0 else None,
         }
 
@@ -220,7 +216,6 @@ class RulesEngine:
             return value.lower() in ("true", "1", "yes")
         elif target_type == list:
             import json
-
             return json.loads(value) if value.startswith("[") else [value]
         return value
 
@@ -254,7 +249,7 @@ class RulesEngine:
         self,
         rule: Rule,
         campaign: Campaign,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Execute the rule action on a campaign."""
         action = rule.action_type
         config = rule.action_config
@@ -282,7 +277,6 @@ class RulesEngine:
 
         elif action == RuleAction.PAUSE_CAMPAIGN:
             from app.models import CampaignStatus
-
             campaign.status = CampaignStatus.PAUSED
             return {
                 "action": "pause_campaign",
@@ -334,8 +328,8 @@ class RulesEngine:
         self,
         rule: Rule,
         campaign: Campaign,
-        config: dict[str, Any],
-    ) -> dict[str, Any]:
+        config: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Send WhatsApp notification when a rule is triggered.
 
@@ -345,7 +339,7 @@ class RulesEngine:
             - message: Custom message text (for text messages within 24hr window)
         """
         from app.models import WhatsAppContact, WhatsAppMessage, WhatsAppMessageStatus
-        from app.services.whatsapp_client import WhatsAppAPIError, WhatsAppClient
+        from app.services.whatsapp_client import WhatsAppClient, WhatsAppAPIError
 
         contact_ids = config.get("contact_ids", [])
         template_name = config.get("template_name", "rule_alert")
@@ -360,7 +354,6 @@ class RulesEngine:
 
         # Get opted-in contacts
         from sqlalchemy import select
-
         result = await self.db.execute(
             select(WhatsAppContact).where(
                 WhatsAppContact.id.in_(contact_ids),
@@ -382,7 +375,7 @@ class RulesEngine:
             f"Rule Alert: {rule.name}\n"
             f"Campaign: {campaign.name}\n"
             f"Condition: {rule.condition_field} {rule.condition_operator.value} {rule.condition_value}\n"
-            f"Action triggered at: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}"
+            f"Action triggered at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"
         )
 
         # Send to each contact
@@ -416,10 +409,7 @@ class RulesEngine:
                                 "parameters": [
                                     {"type": "text", "text": rule.name},
                                     {"type": "text", "text": campaign.name},
-                                    {
-                                        "type": "text",
-                                        "text": f"{rule.condition_field} {rule.condition_operator.value} {rule.condition_value}",
-                                    },
+                                    {"type": "text", "text": f"{rule.condition_field} {rule.condition_operator.value} {rule.condition_value}"},
                                 ],
                             }
                         ],
@@ -435,16 +425,14 @@ class RulesEngine:
                 if api_response.get("messages"):
                     message.wamid = api_response["messages"][0].get("id")
                     message.status = WhatsAppMessageStatus.SENT
-                    message.sent_at = datetime.now(UTC)
+                    message.sent_at = datetime.now(timezone.utc)
 
                 sent_count += 1
-                results.append(
-                    {
-                        "contact_id": contact.id,
-                        "phone": contact.phone_number,
-                        "status": "sent",
-                    }
-                )
+                results.append({
+                    "contact_id": contact.id,
+                    "phone": contact.phone_number,
+                    "status": "sent",
+                })
 
                 logger.info(
                     "whatsapp_notification_sent",
@@ -458,14 +446,12 @@ class RulesEngine:
                 message.error_code = e.error_code
                 message.error_message = e.message
                 failed_count += 1
-                results.append(
-                    {
-                        "contact_id": contact.id,
-                        "phone": contact.phone_number,
-                        "status": "failed",
-                        "error": e.message,
-                    }
-                )
+                results.append({
+                    "contact_id": contact.id,
+                    "phone": contact.phone_number,
+                    "status": "failed",
+                    "error": e.message,
+                })
 
                 logger.warning(
                     "whatsapp_notification_failed",
@@ -476,14 +462,12 @@ class RulesEngine:
 
             except Exception as e:
                 failed_count += 1
-                results.append(
-                    {
-                        "contact_id": contact.id,
-                        "phone": contact.phone_number,
-                        "status": "failed",
-                        "error": str(e),
-                    }
-                )
+                results.append({
+                    "contact_id": contact.id,
+                    "phone": contact.phone_number,
+                    "status": "failed",
+                    "error": str(e),
+                })
 
         await self.db.commit()
 
@@ -499,15 +483,15 @@ class RulesEngine:
         self,
         rule: Rule,
         campaign: Campaign,
-        evaluation: dict[str, Any],
-        action_result: dict[str, Any],
+        evaluation: Dict[str, Any],
+        action_result: Dict[str, Any],
     ):
         """Log the rule execution."""
         execution = RuleExecution(
             tenant_id=self.tenant_id,
             rule_id=rule.id,
             campaign_id=campaign.id,
-            executed_at=datetime.now(UTC),
+            executed_at=datetime.now(timezone.utc),
             triggered=evaluation["matched"],
             condition_result=evaluation["condition"],
             action_result=action_result,
@@ -554,7 +538,7 @@ class RuleBuilder:
     def then(
         self,
         action: RuleAction,
-        config: dict[str, Any] = None,
+        config: Dict[str, Any] = None,
     ) -> "RuleBuilder":
         """Define the action (THEN part)."""
         self._rule_data["action_type"] = action
@@ -563,8 +547,8 @@ class RuleBuilder:
 
     def applies_to(
         self,
-        campaigns: list[int] = None,
-        platforms: list[str] = None,
+        campaigns: List[int] = None,
+        platforms: List[str] = None,
     ) -> "RuleBuilder":
         """Define scope."""
         if campaigns:
@@ -582,7 +566,7 @@ class RuleBuilder:
         """Build the rule."""
         return Rule(**self._rule_data)
 
-    def validate(self) -> list[str]:
+    def validate(self) -> List[str]:
         """Validate the rule configuration."""
         errors = []
 

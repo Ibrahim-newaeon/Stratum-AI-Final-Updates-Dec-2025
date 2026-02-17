@@ -6,33 +6,26 @@ Main FastAPI application entry point.
 Configures routers, middleware, and application lifecycle events.
 """
 
-from collections.abc import AsyncGenerator
+import time
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import AsyncGenerator, Optional
 
 import sentry_sdk
-from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, ORJSONResponse
 from sse_starlette.sse import EventSourceResponse
+import structlog
 
-from app.api.v1 import api_router
-from app.api.v1.endpoints.memory_debug import init_debug_endpoints, router as memory_debug_router
 from app.core.config import settings
-from app.core.exceptions import AppException
 from app.core.logging import get_logger, setup_logging
-from app.core.metrics import setup_metrics
 from app.core.websocket import ws_manager
 from app.db.session import async_engine, check_database_health
 from app.middleware.audit import AuditMiddleware
-from app.middleware.error_handler import ErrorHandlerMiddleware
-from app.middleware.rate_limit import RateLimitMiddleware
-from app.middleware.request_logging import RequestLoggingMiddleware
-from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
-from app.monitoring.memory_audit import MemoryAuditor
-from app.monitoring.middleware import MemoryProfilingMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
+from app.api.v1 import api_router
 
 # Setup logging
 setup_logging()
@@ -56,26 +49,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         debug=settings.debug,
     )
 
-    # Initialize Sentry for error tracking
-    if settings.sentry_dsn:
+    # Initialize Sentry (production only)
+    if settings.sentry_dsn and settings.is_production:
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.app_env,
-            release="stratum-backend@1.0.0",
-            # Performance monitoring
-            traces_sample_rate=0.1 if settings.is_production else 1.0,
-            # Profile sampling for performance insights
-            profiles_sample_rate=0.1 if settings.is_production else 0.0,
-            # Capture HTTP headers and request body
-            send_default_pii=False,
-            # Additional integrations
-            integrations=[],
-            # Filter out health check endpoints from traces
-            traces_sampler=lambda ctx: 0.0  # type: ignore[arg-type, return-value]
-            if ctx.get("wsgi_environ", {}).get("PATH_INFO", "").startswith("/health")
-            else None,
+            traces_sample_rate=0.1,
         )
-        logger.info("sentry_initialized", environment=settings.app_env)
+        logger.info("sentry_initialized")
 
     # Verify database connection
     db_health = await check_database_health()
@@ -84,34 +65,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     else:
         logger.info("database_connected")
 
-    # Start WebSocket manager (graceful - don't crash if Redis unavailable)
-    try:
-        await ws_manager.start()
-        logger.info("websocket_manager_started")
-    except Exception as e:
-        logger.error("websocket_manager_failed", error=str(e))
-        logger.warning("websocket_features_disabled_redis_unavailable")
-
-    # Note: Prometheus metrics are initialized in create_application()
-    logger.info("prometheus_metrics_ready", endpoint="/metrics")
-
-    # Start Memory Auditor (non-production or when explicitly enabled)
-    if not settings.is_production or settings.debug:
-        memory_auditor = app.state.memory_auditor
-        memory_auditor.start_tracking()
-        memory_auditor.take_snapshot(label="app_startup")
-        logger.info("memory_auditor_started", pid=memory_auditor.get_process_info().pid)
+    # Start WebSocket manager
+    await ws_manager.start()
+    logger.info("websocket_manager_started")
 
     yield
 
     # Shutdown
     logger.info("application_shutting_down")
-
-    # Stop memory tracking
-    if hasattr(app.state, "memory_auditor") and app.state.memory_auditor.is_tracking:
-        app.state.memory_auditor.take_snapshot(label="app_shutdown")
-        app.state.memory_auditor.stop_tracking()
-        logger.info("memory_auditor_stopped")
 
     # Stop WebSocket manager
     await ws_manager.stop()
@@ -140,27 +101,21 @@ def create_application() -> FastAPI:
     )
 
     # -------------------------------------------------------------------------
-    # Prometheus Metrics Instrumentation
-    # -------------------------------------------------------------------------
-    # Setup Prometheus metrics before middleware so we capture all requests
-    # This instruments the app and exposes /metrics endpoint
-    instrumentator = setup_metrics(app)
-    logger.info("prometheus_instrumentator_initialized")
-
-    # -------------------------------------------------------------------------
-    # Middleware (Starlette add_middleware PREPENDS — last added = outermost)
-    # Execution order: CORS → ErrorHandler → GZip → RequestLogging →
-    #                  RateLimit → Tenant → Audit → SecurityHeaders → Router
+    # Middleware (order matters - executed in reverse order)
     # -------------------------------------------------------------------------
 
-    # Innermost middleware (added first, closest to the router)
-    app.add_middleware(SecurityHeadersMiddleware)
+    # CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins_list,
+        allow_credentials=settings.cors_allow_credentials,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
+    )
 
-    # Audit logging for state-changing requests
-    app.add_middleware(AuditMiddleware)
-
-    # Tenant extraction and validation
-    app.add_middleware(TenantMiddleware)
+    # Gzip compression
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # Rate limiting
     app.add_middleware(
@@ -169,71 +124,42 @@ def create_application() -> FastAPI:
         burst_size=settings.rate_limit_burst,
     )
 
-    # Request logging middleware (request ID, timing, structured access logs)
-    app.add_middleware(RequestLoggingMiddleware)
+    # Tenant extraction and validation
+    app.add_middleware(TenantMiddleware)
 
-    # Gzip compression
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    # Audit logging for state-changing requests
+    app.add_middleware(AuditMiddleware)
 
-    # Error handler - catches exceptions from inner middleware
-    app.add_middleware(ErrorHandlerMiddleware)
+    # Request timing middleware
+    @app.middleware("http")
+    async def add_timing_header(request: Request, call_next):
+        """Add request timing and request ID headers."""
+        import uuid
 
-    # CORS - MUST be outermost (added LAST) so it handles OPTIONS preflight
-    # before any other middleware can reject the request
-    cors_origins = settings.cors_origins_list
-    logger.info("cors_origins_configured", origins=cors_origins)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=settings.cors_allow_credentials,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=[
-            "Content-Type",
-            "Authorization",
-            "X-Request-ID",
-            "X-Tenant-ID",
-            "Accept",
-            "Origin",
-            "Cache-Control",
-        ],
-        expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
-    )
+        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+        structlog.contextvars.bind_contextvars(request_id=request_id)
+
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        process_time = (time.perf_counter() - start_time) * 1000
+
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Process-Time-Ms"] = f"{process_time:.2f}"
+
+        # Log request completion
+        logger.info(
+            "request_completed",
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            duration_ms=round(process_time, 2),
+        )
+
+        return response
 
     # -------------------------------------------------------------------------
     # Exception Handlers
     # -------------------------------------------------------------------------
-    def _cors_headers(request: Request) -> dict:
-        """Build CORS headers for error responses so browsers can read them."""
-        origin = request.headers.get("origin", "")
-        if origin and origin in cors_origins:
-            return {
-                "access-control-allow-origin": origin,
-                "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-                "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Tenant-ID",
-            }
-        return {}
-
-    @app.exception_handler(AppException)
-    async def app_exception_handler(request: Request, exc: AppException):
-        """Handle structured application exceptions."""
-        request_id = getattr(request.state, "request_id", None)
-        logger.warning(
-            "app_exception",
-            error_code=exc.error_code,
-            status_code=exc.status_code,
-            message=exc.message,
-            path=request.url.path,
-            request_id=request_id,
-        )
-        payload = exc.to_dict()
-        if request_id:
-            payload["request_id"] = request_id
-        return JSONResponse(
-            status_code=exc.status_code,
-            content=payload,
-            headers=_cors_headers(request),
-        )
-
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         """Global exception handler for unhandled errors."""
@@ -244,23 +170,6 @@ def create_application() -> FastAPI:
             path=request.url.path,
             method=request.method,
         )
-
-        # Capture exception in Sentry
-        if settings.sentry_dsn:
-            with sentry_sdk.push_scope() as scope:
-                scope.set_tag("path", request.url.path)
-                scope.set_tag("method", request.method)
-                scope.set_context(
-                    "request",
-                    {
-                        "url": str(request.url),
-                        "method": request.method,
-                        "headers": dict(request.headers),
-                    },
-                )
-                sentry_sdk.capture_exception(exc)
-
-        headers = _cors_headers(request)
 
         if settings.is_development:
             import traceback
@@ -273,7 +182,6 @@ def create_application() -> FastAPI:
                     "error_type": type(exc).__name__,
                     "traceback": traceback.format_exc(),
                 },
-                headers=headers,
             )
 
         return JSONResponse(
@@ -283,31 +191,7 @@ def create_application() -> FastAPI:
                 "error": "An unexpected error occurred",
                 "message": "Please contact support if this persists",
             },
-            headers=headers,
         )
-
-    # -------------------------------------------------------------------------
-    # Memory Profiling (non-production or debug mode)
-    # -------------------------------------------------------------------------
-    if not settings.is_production or settings.debug:
-        auditor = MemoryAuditor()
-        app.state.memory_auditor = auditor
-
-        # NOTE: MemoryProfilingMiddleware is NOT added via add_middleware here
-        # because that would place it OUTSIDE CORSMiddleware (breaking CORS).
-        # Instead we only create a standalone tracker for debug endpoints.
-        memory_profiling_tracker = MemoryProfilingMiddleware(app, enabled=True)
-        app.state.memory_profiling_tracker = memory_profiling_tracker
-
-        # Initialize debug endpoints with auditor + middleware references
-        init_debug_endpoints(
-            auditor=auditor,
-            middleware=memory_profiling_tracker,
-        )
-
-        # Mount debug routes (outside /api/v1 prefix for easy access)
-        app.include_router(memory_debug_router)
-        logger.info("memory_profiling_enabled", endpoints="/debug/memory/*")
 
     # -------------------------------------------------------------------------
     # Include Routers
@@ -334,13 +218,9 @@ def create_application() -> FastAPI:
             redis_status = "healthy"
             await redis_client.close()
         except Exception as e:
-            redis_status = f"unhealthy: {e!s}"
+            redis_status = f"unhealthy: {str(e)}"
 
-        overall_status = (
-            "healthy"
-            if db_health["status"] == "healthy" and redis_status == "healthy"
-            else "unhealthy"
-        )
+        overall_status = "healthy" if db_health["status"] == "healthy" and redis_status == "healthy" else "unhealthy"
 
         return {
             "status": overall_status,
@@ -376,7 +256,6 @@ def create_application() -> FastAPI:
         Clients connect here to receive live notifications.
         """
         import asyncio
-
         import redis.asyncio as redis
 
         async def event_generator():
@@ -395,7 +274,9 @@ def create_application() -> FastAPI:
                     if await request.is_disconnected():
                         break
 
-                    message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                    message = await pubsub.get_message(
+                        ignore_subscribe_messages=True, timeout=1.0
+                    )
 
                     if message and message["type"] == "message":
                         yield {
@@ -442,7 +323,6 @@ def create_application() -> FastAPI:
         if token:
             try:
                 from app.auth.jwt import decode_token
-
                 payload = decode_token(token)
                 user_id = payload.get("sub")
                 if not tenant_id:
@@ -506,7 +386,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",  # noqa: S104 - Intentional for Docker/dev access
+        host="0.0.0.0",
         port=8000,
         reload=settings.is_development,
         log_level="info",

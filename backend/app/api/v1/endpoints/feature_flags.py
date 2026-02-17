@@ -14,22 +14,21 @@ Superadmin routes:
 - POST /api/superadmin/tenants/{tenant_id}/features/reset - Reset to defaults
 """
 
-from typing import Any
+from typing import Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.logging import get_logger
 from app.db.session import get_async_session
+from app.features.service import FeatureFlagsService
 from app.features.flags import (
+    FeatureFlags,
+    FeatureFlagsUpdate,
     FEATURE_CATEGORIES,
     FEATURE_DESCRIPTIONS,
-    FeatureFlagsUpdate,
 )
-from app.features.service import FeatureFlagsService
 from app.schemas.response import APIResponse
 
-logger = get_logger(__name__)
 
 # =============================================================================
 # Tenant Routes
@@ -38,7 +37,7 @@ logger = get_logger(__name__)
 tenant_router = APIRouter(prefix="/tenant/{tenant_id}", tags=["feature-flags"])
 
 
-@tenant_router.get("/features", response_model=APIResponse[dict[str, Any]])
+@tenant_router.get("/features", response_model=APIResponse[Dict[str, Any]])
 async def get_tenant_features(
     request: Request,
     tenant_id: int,
@@ -65,7 +64,7 @@ async def get_tenant_features(
     )
 
 
-@tenant_router.put("/features", response_model=APIResponse[dict[str, Any]])
+@tenant_router.put("/features", response_model=APIResponse[Dict[str, Any]])
 async def update_tenant_features(
     request: Request,
     tenant_id: int,
@@ -80,8 +79,8 @@ async def update_tenant_features(
     if getattr(request.state, "tenant_id", None) != tenant_id:
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
-    # Check admin role (middleware sets request.state.role)
-    user_role = getattr(request.state, "role", None)
+    # Check admin role
+    user_role = getattr(request.state, "user_role", None)
     if user_role not in ["superadmin", "admin", "tenant_admin"]:
         raise HTTPException(status_code=403, detail="Admin role required")
 
@@ -103,7 +102,7 @@ async def update_tenant_features(
 superadmin_router = APIRouter(prefix="/superadmin", tags=["superadmin-features"])
 
 
-@superadmin_router.get("/tenants/{tenant_id}/features", response_model=APIResponse[dict[str, Any]])
+@superadmin_router.get("/tenants/{tenant_id}/features", response_model=APIResponse[Dict[str, Any]])
 async def superadmin_get_tenant_features(
     request: Request,
     tenant_id: int,
@@ -112,7 +111,7 @@ async def superadmin_get_tenant_features(
     """
     Get feature flags for any tenant (superadmin only).
     """
-    user_role = getattr(request.state, "role", None)
+    user_role = getattr(request.state, "user_role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 
@@ -130,7 +129,7 @@ async def superadmin_get_tenant_features(
     )
 
 
-@superadmin_router.put("/tenants/{tenant_id}/features", response_model=APIResponse[dict[str, Any]])
+@superadmin_router.put("/tenants/{tenant_id}/features", response_model=APIResponse[Dict[str, Any]])
 async def superadmin_update_tenant_features(
     request: Request,
     tenant_id: int,
@@ -140,7 +139,7 @@ async def superadmin_update_tenant_features(
     """
     Update feature flags for any tenant (superadmin only).
     """
-    user_role = getattr(request.state, "role", None)
+    user_role = getattr(request.state, "user_role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 
@@ -148,12 +147,7 @@ async def superadmin_update_tenant_features(
     service = FeatureFlagsService(db)
     features = await service.update_tenant_features(tenant_id, updates, user_id)
 
-    logger.info(
-        "feature_flags_updated",
-        tenant_id=tenant_id,
-        user_id=user_id,
-        features_changed=list(updates.model_dump(exclude_unset=True).keys()),
-    )
+    # TODO: Log to audit_log
 
     return APIResponse(
         success=True,
@@ -162,9 +156,7 @@ async def superadmin_update_tenant_features(
     )
 
 
-@superadmin_router.post(
-    "/tenants/{tenant_id}/features/reset", response_model=APIResponse[dict[str, Any]]
-)
+@superadmin_router.post("/tenants/{tenant_id}/features/reset", response_model=APIResponse[Dict[str, Any]])
 async def superadmin_reset_tenant_features(
     request: Request,
     tenant_id: int,
@@ -173,7 +165,7 @@ async def superadmin_reset_tenant_features(
     """
     Reset tenant features to plan defaults (superadmin only).
     """
-    user_role = getattr(request.state, "role", None)
+    user_role = getattr(request.state, "user_role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 
@@ -187,12 +179,12 @@ async def superadmin_reset_tenant_features(
     )
 
 
-@superadmin_router.get("/feature-metadata", response_model=APIResponse[dict[str, Any]])
+@superadmin_router.get("/feature-metadata", response_model=APIResponse[Dict[str, Any]])
 async def get_feature_metadata(request: Request):
     """
     Get feature categories and descriptions for UI.
     """
-    user_role = getattr(request.state, "role", None)
+    user_role = getattr(request.state, "user_role", None)
     if user_role != "superadmin":
         raise HTTPException(status_code=403, detail="Superadmin role required")
 

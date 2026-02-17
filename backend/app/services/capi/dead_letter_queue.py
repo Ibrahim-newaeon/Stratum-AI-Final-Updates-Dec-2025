@@ -18,19 +18,20 @@ Features:
 
 import json
 import logging
-from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime, timedelta
-from enum import Enum
-from typing import Any, Optional
+from datetime import datetime, timezone, timedelta
+from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, field, asdict
 from uuid import uuid4
+from enum import Enum
 
 try:
     import redis.asyncio as aioredis
-
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
 
+from sqlalchemy import select, and_, update, delete, func
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 
@@ -39,17 +40,15 @@ logger = logging.getLogger(__name__)
 
 class DLQStatus(str, Enum):
     """Status of a DLQ entry."""
-
-    PENDING = "pending"  # Waiting for retry
-    RETRYING = "retrying"  # Currently being retried
-    RECOVERED = "recovered"  # Successfully replayed
-    EXPIRED = "expired"  # Past retention period
-    DISCARDED = "discarded"  # Manually discarded
+    PENDING = "pending"          # Waiting for retry
+    RETRYING = "retrying"        # Currently being retried
+    RECOVERED = "recovered"      # Successfully replayed
+    EXPIRED = "expired"          # Past retention period
+    DISCARDED = "discarded"      # Manually discarded
 
 
 class FailureReason(str, Enum):
     """Categorized failure reasons."""
-
     NETWORK_ERROR = "network_error"
     RATE_LIMITED = "rate_limited"
     AUTH_ERROR = "auth_error"
@@ -65,13 +64,12 @@ class DLQEntry:
     """
     Dead Letter Queue entry for a failed event.
     """
-
     id: str
     tenant_id: int
     platform: str
     event_name: str
     event_id: Optional[str]
-    event_data: dict[str, Any]
+    event_data: Dict[str, Any]
     failure_reason: str
     failure_category: FailureReason
     error_message: str
@@ -80,11 +78,11 @@ class DLQEntry:
     first_failure_at: datetime
     last_failure_at: datetime
     status: DLQStatus = DLQStatus.PENDING
-    platform_response: Optional[dict[str, Any]] = None
-    context: Optional[dict[str, Any]] = None
+    platform_response: Optional[Dict[str, Any]] = None
+    context: Optional[Dict[str, Any]] = None
     recovered_at: Optional[datetime] = None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         data = asdict(self)
         data["first_failure_at"] = self.first_failure_at.isoformat()
@@ -96,7 +94,7 @@ class DLQEntry:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "DLQEntry":
+    def from_dict(cls, data: Dict[str, Any]) -> "DLQEntry":
         """Create from dictionary."""
         data["first_failure_at"] = datetime.fromisoformat(data["first_failure_at"])
         data["last_failure_at"] = datetime.fromisoformat(data["last_failure_at"])
@@ -110,15 +108,14 @@ class DLQEntry:
 @dataclass
 class DLQStats:
     """Statistics for the Dead Letter Queue."""
-
     total_entries: int = 0
     pending: int = 0
     retrying: int = 0
     recovered: int = 0
     expired: int = 0
     discarded: int = 0
-    by_platform: dict[str, int] = field(default_factory=dict)
-    by_failure_category: dict[str, int] = field(default_factory=dict)
+    by_platform: Dict[str, int] = field(default_factory=dict)
+    by_failure_category: Dict[str, int] = field(default_factory=dict)
     oldest_entry_age_hours: float = 0.0
     recovery_rate_pct: float = 0.0
 
@@ -160,7 +157,7 @@ class DeadLetterQueue:
         self._connected = False
 
         # In-memory fallback
-        self._memory_queue: list[DLQEntry] = []
+        self._memory_queue: List[DLQEntry] = []
 
         # Statistics
         self._stats = DLQStats()
@@ -194,9 +191,7 @@ class DeadLetterQueue:
             self._redis = None
             self._connected = False
 
-    def _categorize_failure(
-        self, error_message: str, platform_response: Optional[dict] = None
-    ) -> FailureReason:
+    def _categorize_failure(self, error_message: str, platform_response: Optional[Dict] = None) -> FailureReason:
         """
         Categorize the failure reason from error message.
 
@@ -215,10 +210,7 @@ class DeadLetterQueue:
         if any(term in error_lower for term in ["rate limit", "too many requests", "429"]):
             return FailureReason.RATE_LIMITED
 
-        if any(
-            term in error_lower
-            for term in ["auth", "unauthorized", "forbidden", "401", "403", "token"]
-        ):
+        if any(term in error_lower for term in ["auth", "unauthorized", "forbidden", "401", "403", "token"]):
             return FailureReason.AUTH_ERROR
 
         if any(term in error_lower for term in ["connection", "network", "dns", "socket"]):
@@ -240,12 +232,12 @@ class DeadLetterQueue:
         tenant_id: int,
         platform: str,
         event_name: str,
-        event_data: dict[str, Any],
+        event_data: Dict[str, Any],
         error_message: str,
         retry_count: int = 0,
         max_retries: int = 3,
-        platform_response: Optional[dict[str, Any]] = None,
-        context: Optional[dict[str, Any]] = None,
+        platform_response: Optional[Dict[str, Any]] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> DLQEntry:
         """
         Add a failed event to the Dead Letter Queue.
@@ -264,7 +256,7 @@ class DeadLetterQueue:
         Returns:
             Created DLQEntry
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         entry = DLQEntry(
             id=str(uuid4()),
@@ -323,7 +315,7 @@ class DeadLetterQueue:
 
         # Trim if too large
         if len(self._memory_queue) > self.MAX_MEMORY_ENTRIES:
-            self._memory_queue = self._memory_queue[-self.MAX_MEMORY_ENTRIES :]
+            self._memory_queue = self._memory_queue[-self.MAX_MEMORY_ENTRIES:]
 
     async def get_entry(self, entry_id: str) -> Optional[DLQEntry]:
         """
@@ -357,7 +349,7 @@ class DeadLetterQueue:
         tenant_id: Optional[int] = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> list[DLQEntry]:
+    ) -> List[DLQEntry]:
         """
         Get pending DLQ entries for retry.
 
@@ -396,13 +388,12 @@ class DeadLetterQueue:
 
         # Fallback to memory
         filtered = [
-            e
-            for e in self._memory_queue
+            e for e in self._memory_queue
             if e.status == DLQStatus.PENDING
             and (platform is None or e.platform == platform)
             and (tenant_id is None or e.tenant_id == tenant_id)
         ]
-        return filtered[offset : offset + limit]
+        return filtered[offset:offset + limit]
 
     async def mark_recovered(self, entry_id: str) -> bool:
         """
@@ -419,7 +410,7 @@ class DeadLetterQueue:
             return False
 
         entry.status = DLQStatus.RECOVERED
-        entry.recovered_at = datetime.now(UTC)
+        entry.recovered_at = datetime.now(timezone.utc)
 
         await self._store_entry(entry)
         logger.info(f"DLQ: Entry {entry_id} marked as recovered")
@@ -465,7 +456,7 @@ class DeadLetterQueue:
             return False
 
         entry.retry_count += 1
-        entry.last_failure_at = datetime.now(UTC)
+        entry.last_failure_at = datetime.now(timezone.utc)
         entry.error_message = error_message
         entry.status = DLQStatus.PENDING
 
@@ -521,7 +512,7 @@ class DeadLetterQueue:
         # Calculate oldest entry age
         if entries:
             oldest = min(entries, key=lambda e: e.first_failure_at)
-            age = datetime.now(UTC) - oldest.first_failure_at
+            age = datetime.now(timezone.utc) - oldest.first_failure_at
             stats.oldest_entry_age_hours = age.total_seconds() / 3600
 
         # Calculate recovery rate
@@ -538,7 +529,7 @@ class DeadLetterQueue:
         Returns:
             Number of entries removed
         """
-        cutoff = datetime.now(UTC) - timedelta(days=self._retention_days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=self._retention_days)
         removed = 0
 
         if self._connected and self._redis:
@@ -567,15 +558,14 @@ class DeadLetterQueue:
         # Fallback to memory cleanup
         original_len = len(self._memory_queue)
         self._memory_queue = [
-            e
-            for e in self._memory_queue
+            e for e in self._memory_queue
             if e.first_failure_at > cutoff or e.status in [DLQStatus.RECOVERED, DLQStatus.DISCARDED]
         ]
         removed = original_len - len(self._memory_queue)
 
         return removed
 
-    async def replay_event(self, entry_id: str) -> dict[str, Any]:
+    async def replay_event(self, entry_id: str) -> Dict[str, Any]:
         """
         Prepare an event for replay.
 
@@ -601,7 +591,7 @@ class DeadLetterQueue:
             "original_retry_count": entry.retry_count,
         }
 
-    async def health_check(self) -> dict[str, Any]:
+    async def health_check(self) -> Dict[str, Any]:
         """
         Perform health check on the DLQ.
 

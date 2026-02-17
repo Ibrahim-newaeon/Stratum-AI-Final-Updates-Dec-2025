@@ -6,7 +6,7 @@ Tenant (Organization) management endpoints.
 Provides CRUD operations for multi-tenant administration.
 """
 
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
@@ -17,6 +17,7 @@ from app.db.session import get_async_session
 from app.models import Tenant, User, UserRole
 from app.schemas import (
     APIResponse,
+    PaginatedResponse,
     TenantCreate,
     TenantResponse,
     TenantUpdate,
@@ -46,7 +47,7 @@ def require_admin(request: Request) -> int:
     return user_id
 
 
-@router.get("", response_model=APIResponse[list[TenantResponse]])
+@router.get("", response_model=APIResponse[List[TenantResponse]])
 async def list_tenants(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -69,7 +70,10 @@ async def list_tenants(
 
     # Search filter
     if search:
-        query = query.where((Tenant.name.ilike(f"%{search}%")) | (Tenant.slug.ilike(f"%{search}%")))
+        query = query.where(
+            (Tenant.name.ilike(f"%{search}%")) |
+            (Tenant.slug.ilike(f"%{search}%"))
+        )
 
     query = query.offset(skip).limit(limit)
     result = await db.execute(query)
@@ -201,7 +205,9 @@ async def create_tenant(
     require_admin(request)
 
     # Check for duplicate slug
-    result = await db.execute(select(Tenant).where(Tenant.slug == tenant_data.slug))
+    result = await db.execute(
+        select(Tenant).where(Tenant.slug == tenant_data.slug)
+    )
     existing = result.scalar_one_or_none()
 
     if existing:
@@ -406,7 +412,10 @@ async def get_tenant_users(
 
     # Get user count
     count_result = await db.execute(
-        select(func.count(User.id)).where(User.tenant_id == tenant_id, User.is_deleted == False)
+        select(func.count(User.id)).where(
+            User.tenant_id == tenant_id,
+            User.is_deleted == False
+        )
     )
     user_count = count_result.scalar()
 

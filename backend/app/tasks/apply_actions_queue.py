@@ -6,20 +6,21 @@ Celery task for processing and applying approved autopilot actions.
 Handles safe execution of budget changes, pauses, and other campaign modifications.
 """
 
-import json
+from datetime import datetime, timezone
+from typing import Dict, Any, List, Optional
 import logging
-from datetime import UTC, datetime
-from typing import Any, Optional
+import json
 
 from celery import shared_task
-from sqlalchemy import and_, select
+from sqlalchemy import select, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.autopilot.service import ActionStatus, ActionType
-from app.core.websocket import publish_action_status_update
 from app.db.session import async_session_factory
-from app.features.flags import get_autopilot_caps
 from app.models.trust_layer import FactActionsQueue, FactSignalHealthDaily, SignalHealthStatus
+from app.autopilot.service import ActionStatus, ActionType, SAFE_ACTIONS
+from app.features.flags import get_autopilot_caps, AutopilotLevel
+from app.core.websocket import publish_action_status_update
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,36 +29,23 @@ logger = logging.getLogger(__name__)
 # Platform Executors
 # =============================================================================
 
-
 class PlatformExecutor:
-    """
-    Base class for platform-specific action execution.
-
-    This is an abstract base class - concrete implementations exist in:
-    - MetaExecutor
-    - GoogleExecutor
-    - TikTokExecutor
-    """
+    """Base class for platform-specific action execution."""
 
     async def execute_action(
         self,
         action_type: str,
         entity_type: str,
         entity_id: str,
-        action_details: dict[str, Any],
-    ) -> dict[str, Any]:
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Execute an action on the platform.
 
-        This is an abstract method that must be overridden by subclasses.
-
         Returns:
             Dict with keys: success, before_value, after_value, platform_response, error
-
-        Raises:
-            NotImplementedError: This base class method must be overridden.
         """
-        raise NotImplementedError("Subclass must implement execute_action()")
+        raise NotImplementedError
 
 
 class MetaExecutor(PlatformExecutor):
@@ -68,8 +56,8 @@ class MetaExecutor(PlatformExecutor):
         action_type: str,
         entity_type: str,
         entity_id: str,
-        action_details: dict[str, Any],
-    ) -> dict[str, Any]:
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Execute action on Meta platform."""
         # In production, this would use the Meta Marketing API
         # For now, simulate successful execution
@@ -88,18 +76,10 @@ class MetaExecutor(PlatformExecutor):
             amount = action_details.get("amount", 0)
             after_value["daily_budget"] = max(0, before_value["daily_budget"] - amount)
 
-        elif action_type in [
-            ActionType.PAUSE_CAMPAIGN.value,
-            ActionType.PAUSE_ADSET.value,
-            ActionType.PAUSE_CREATIVE.value,
-        ]:
+        elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value, ActionType.PAUSE_CREATIVE.value]:
             after_value["status"] = "PAUSED"
 
-        elif action_type in [
-            ActionType.ENABLE_CAMPAIGN.value,
-            ActionType.ENABLE_ADSET.value,
-            ActionType.ENABLE_CREATIVE.value,
-        ]:
+        elif action_type in [ActionType.ENABLE_CAMPAIGN.value, ActionType.ENABLE_ADSET.value, ActionType.ENABLE_CREATIVE.value]:
             after_value["status"] = "ACTIVE"
 
         return {
@@ -119,8 +99,8 @@ class GoogleExecutor(PlatformExecutor):
         action_type: str,
         entity_type: str,
         entity_id: str,
-        action_details: dict[str, Any],
-    ) -> dict[str, Any]:
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Execute action on Google Ads platform."""
         logger.info(f"[GOOGLE] Executing {action_type} on {entity_type} {entity_id}")
 
@@ -133,9 +113,7 @@ class GoogleExecutor(PlatformExecutor):
 
         elif action_type == ActionType.BUDGET_DECREASE.value:
             amount = action_details.get("amount", 0)
-            after_value["budget_micros"] = max(
-                0, before_value["budget_micros"] - (amount * 1000000)
-            )
+            after_value["budget_micros"] = max(0, before_value["budget_micros"] - (amount * 1000000))
 
         elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
             after_value["status"] = "PAUSED"
@@ -160,8 +138,8 @@ class TikTokExecutor(PlatformExecutor):
         action_type: str,
         entity_type: str,
         entity_id: str,
-        action_details: dict[str, Any],
-    ) -> dict[str, Any]:
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Execute action on TikTok Ads platform."""
         logger.info(f"[TIKTOK] Executing {action_type} on {entity_type} {entity_id}")
 
@@ -201,18 +179,18 @@ PLATFORM_EXECUTORS = {
 # Helper Functions
 # =============================================================================
 
-
 async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     """
     Check if signal health allows action execution.
     Returns True if OK/Risk, False if Degraded/Critical.
     """
+    from datetime import date
 
     result = await db.execute(
         select(FactSignalHealthDaily).where(
             and_(
                 FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date == datetime.now(UTC).date(),
+                FactSignalHealthDaily.date == date.today(),
             )
         )
     )
@@ -238,9 +216,7 @@ async def get_tenant_autopilot_level(db: AsyncSession, tenant_id: int) -> int:
     return features.get("autopilot_level", 0)
 
 
-def validate_action_caps(
-    action_type: str, action_details: dict[str, Any]
-) -> tuple[bool, Optional[str]]:
+def validate_action_caps(action_type: str, action_details: Dict[str, Any]) -> tuple[bool, Optional[str]]:
     """
     Validate that an action doesn't exceed caps.
 
@@ -257,10 +233,7 @@ def validate_action_caps(
             return False, f"Budget change ${amount} exceeds max ${caps['max_daily_budget_change']}"
 
         if abs(percentage) > caps["max_budget_pct_change"]:
-            return (
-                False,
-                f"Budget change {percentage}% exceeds max {caps['max_budget_pct_change']}%",
-            )
+            return False, f"Budget change {percentage}% exceeds max {caps['max_budget_pct_change']}%"
 
     return True, None
 
@@ -268,7 +241,6 @@ def validate_action_caps(
 # =============================================================================
 # Main Task
 # =============================================================================
-
 
 @shared_task(
     name="tasks.apply_actions_queue",
@@ -327,14 +299,10 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                             continue
 
                         # Parse action details
-                        action_details = (
-                            json.loads(action.action_json) if action.action_json else {}
-                        )
+                        action_details = json.loads(action.action_json) if action.action_json else {}
 
                         # Validate against caps
-                        is_valid, cap_error = validate_action_caps(
-                            action.action_type, action_details
-                        )
+                        is_valid, cap_error = validate_action_caps(action.action_type, action_details)
                         if not is_valid:
                             logger.warning(f"Action {action.id} exceeds caps: {cap_error}")
                             action.status = ActionStatus.FAILED.value
@@ -361,7 +329,7 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
 
                         if exec_result["success"]:
                             action.status = ActionStatus.APPLIED.value
-                            action.applied_at = datetime.now(UTC)
+                            action.applied_at = datetime.now(timezone.utc)
                             action.after_value = json.dumps(exec_result["after_value"])
                             action.platform_response = json.dumps(exec_result["platform_response"])
                             processed += 1
@@ -386,14 +354,10 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                         else:
                             action.status = ActionStatus.FAILED.value
                             action.error = exec_result.get("error", "Unknown error")
-                            action.platform_response = json.dumps(
-                                exec_result.get("platform_response")
-                            )
+                            action.platform_response = json.dumps(exec_result.get("platform_response"))
                             failed += 1
 
-                            logger.error(
-                                f"Failed to apply action {action.id}: {exec_result.get('error')}"
-                            )
+                            logger.error(f"Failed to apply action {action.id}: {exec_result.get('error')}")
 
                             # Publish WebSocket notification for failure
                             await publish_action_status_update(
@@ -403,16 +367,14 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                             )
 
                     except Exception as e:
-                        logger.error(f"Error processing action {action.id}: {e!s}")
+                        logger.error(f"Error processing action {action.id}: {str(e)}")
                         action.status = ActionStatus.FAILED.value
                         action.error = str(e)
                         failed += 1
 
                 await db.commit()
 
-                logger.info(
-                    f"Action queue processing complete: {processed} applied, {failed} failed"
-                )
+                logger.info(f"Action queue processing complete: {processed} applied, {failed} failed")
 
                 return {
                     "status": "success",
@@ -421,21 +383,21 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                 }
 
             except Exception as e:
-                logger.error(f"Action queue processing failed: {e!s}")
+                logger.error(f"Action queue processing failed: {str(e)}")
                 await db.rollback()
                 raise self.retry(exc=e)
 
     return asyncio.get_event_loop().run_until_complete(run_apply())
 
 
-async def log_action_audit(db: AsyncSession, action: FactActionsQueue, result: dict[str, Any]):
+async def log_action_audit(db: AsyncSession, action: FactActionsQueue, result: Dict[str, Any]):
     """
     Log action execution to audit trail.
 
     In production, this would write to a dedicated audit_log table.
     """
     audit_entry = {
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "tenant_id": action.tenant_id,
         "action_id": str(action.id),
         "action_type": action.action_type,
@@ -457,7 +419,6 @@ async def log_action_audit(db: AsyncSession, action: FactActionsQueue, result: d
 # Scheduled Task
 # =============================================================================
 
-
 @shared_task(name="tasks.schedule_apply_actions_queue")
 def schedule_apply_actions_queue():
     """
@@ -470,7 +431,6 @@ def schedule_apply_actions_queue():
 # =============================================================================
 # Single Action Execution
 # =============================================================================
-
 
 @shared_task(
     name="tasks.apply_single_action",
@@ -505,10 +465,7 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     return {"status": "error", "error": "Action not found"}
 
                 if action.status != ActionStatus.APPROVED.value:
-                    return {
-                        "status": "error",
-                        "error": f"Action status is {action.status}, expected approved",
-                    }
+                    return {"status": "error", "error": f"Action status is {action.status}, expected approved"}
 
                 # Check signal health
                 health_ok = await check_signal_health(db, action.tenant_id)
@@ -542,7 +499,7 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
 
                 if exec_result["success"]:
                     action.status = ActionStatus.APPLIED.value
-                    action.applied_at = datetime.now(UTC)
+                    action.applied_at = datetime.now(timezone.utc)
                     action.applied_by_user_id = user_id
                     action.after_value = json.dumps(exec_result["after_value"])
                     action.platform_response = json.dumps(exec_result["platform_response"])
@@ -576,7 +533,7 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     return {"status": "error", "error": action.error}
 
             except Exception as e:
-                logger.error(f"Single action execution failed: {e!s}")
+                logger.error(f"Single action execution failed: {str(e)}")
                 await db.rollback()
                 raise self.retry(exc=e)
 

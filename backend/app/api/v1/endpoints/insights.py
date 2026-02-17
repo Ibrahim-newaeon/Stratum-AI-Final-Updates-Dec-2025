@@ -8,18 +8,20 @@ API endpoints for Intelligence Layer features:
 - Anomaly alerts
 """
 
-from datetime import UTC, date, datetime, timedelta
-from typing import Any, Optional
+from datetime import date, timedelta
+from typing import Dict, Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_
 
-from app.analytics.logic.recommend import RecommendationsEngine
-from app.analytics.logic.types import BaselineMetrics, EntityMetrics
 from app.db.session import get_async_session
 from app.features.service import can_access_feature, get_tenant_features
 from app.quality.trust_layer_service import SignalHealthService
+from app.analytics.logic.recommend import RecommendationsEngine, generate_recommendations
+from app.analytics.logic.types import EntityMetrics, BaselineMetrics
 from app.schemas.response import APIResponse
+
 
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["insights"])
 
@@ -28,30 +30,25 @@ router = APIRouter(prefix="/tenant/{tenant_id}", tags=["insights"])
 # Helper Functions
 # =============================================================================
 
-
-async def get_entity_metrics(
-    db: AsyncSession, tenant_id: int, target_date: date
-) -> list[EntityMetrics]:
+async def get_entity_metrics(db: AsyncSession, tenant_id: int, target_date: date) -> List[EntityMetrics]:
     """
     Fetch entity metrics for recommendations.
     In production, this queries fact_daily_metrics.
     """
-    # Returns empty until fact_daily_metrics is populated by sync workers
+    # Placeholder - in production query actual metrics
     return []
 
 
-async def get_baseline_metrics(db: AsyncSession, tenant_id: int) -> dict[str, BaselineMetrics]:
+async def get_baseline_metrics(db: AsyncSession, tenant_id: int) -> Dict[str, BaselineMetrics]:
     """
     Fetch baseline metrics for entities.
     In production, this queries aggregated historical data.
     """
-    # Returns empty until historical data is aggregated by sync workers
+    # Placeholder - in production query actual baselines
     return {}
 
 
-async def check_signal_health_for_autopilot(
-    db: AsyncSession, tenant_id: int, target_date: date
-) -> dict[str, Any]:
+async def check_signal_health_for_autopilot(db: AsyncSession, tenant_id: int, target_date: date) -> Dict[str, Any]:
     """Check if autopilot should be blocked due to signal health."""
     service = SignalHealthService(db)
     health_data = await service.get_signal_health(tenant_id, target_date)
@@ -73,8 +70,7 @@ async def check_signal_health_for_autopilot(
 # Insights Endpoint
 # =============================================================================
 
-
-@router.get("/insights", response_model=APIResponse[dict[str, Any]])
+@router.get("/insights", response_model=APIResponse[Dict[str, Any]])
 async def get_insights(
     request: Request,
     tenant_id: int,
@@ -97,11 +93,12 @@ async def get_insights(
 
     if not await can_access_feature(db, tenant_id, "ai_recommendations"):
         raise HTTPException(
-            status_code=403, detail="AI recommendations feature is not enabled for this tenant"
+            status_code=403,
+            detail="AI recommendations feature is not enabled for this tenant"
         )
 
     if target_date is None:
-        target_date = datetime.now(UTC).date()
+        target_date = date.today()
 
     # Get tenant features for autopilot level
     features = await get_tenant_features(db, tenant_id)
@@ -151,16 +148,13 @@ async def get_insights(
         },
         "actions": recommendations_data.get("recommendations", [])[:5],  # Top 5 actions
         "risks": [
-            alert
-            for alert in recommendations_data.get("alerts", [])
+            alert for alert in recommendations_data.get("alerts", [])
             if alert.get("severity") in ["high", "critical"]
         ],
         "opportunities": recommendations_data.get("insights", [])[:3],  # Top 3 opportunities
         "autopilot": {
             "level": autopilot_level,
-            "level_name": {0: "Suggest Only", 1: "Guarded Auto", 2: "Approval Required"}.get(
-                autopilot_level, "Unknown"
-            ),
+            "level_name": {0: "Suggest Only", 1: "Guarded Auto", 2: "Approval Required"}.get(autopilot_level, "Unknown"),
             "blocked": autopilot_status["blocked"],
             "reason": autopilot_status["reason"],
         },
@@ -175,18 +169,13 @@ async def get_insights(
 # Recommendations Endpoint
 # =============================================================================
 
-
-@router.get("/recommendations", response_model=APIResponse[dict[str, Any]])
+@router.get("/recommendations", response_model=APIResponse[Dict[str, Any]])
 async def get_recommendations(
     request: Request,
     tenant_id: int,
     target_date: Optional[date] = Query(default=None, alias="date"),
-    entity_type: Optional[str] = Query(
-        default=None, description="Filter by entity type: campaign, adset, creative"
-    ),
-    priority: Optional[str] = Query(
-        default=None, description="Filter by priority: critical, high, medium, low"
-    ),
+    entity_type: Optional[str] = Query(default=None, description="Filter by entity type: campaign, adset, creative"),
+    priority: Optional[str] = Query(default=None, description="Filter by priority: critical, high, medium, low"),
     limit: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -207,11 +196,12 @@ async def get_recommendations(
 
     if not await can_access_feature(db, tenant_id, "ai_recommendations"):
         raise HTTPException(
-            status_code=403, detail="AI recommendations feature is not enabled for this tenant"
+            status_code=403,
+            detail="AI recommendations feature is not enabled for this tenant"
         )
 
     if target_date is None:
-        target_date = datetime.now(UTC).date()
+        target_date = date.today()
 
     # Get metrics
     entities_today = await get_entity_metrics(db, tenant_id, target_date)
@@ -240,7 +230,6 @@ async def get_recommendations(
 
     # Add guardrails info to each recommendation
     from app.features.flags import get_autopilot_caps
-
     caps = get_autopilot_caps()
 
     for rec in recommendations:
@@ -268,18 +257,13 @@ async def get_recommendations(
 # Anomalies Endpoint
 # =============================================================================
 
-
-@router.get("/anomalies", response_model=APIResponse[dict[str, Any]])
+@router.get("/anomalies", response_model=APIResponse[Dict[str, Any]])
 async def get_anomalies(
     request: Request,
     tenant_id: int,
     target_date: Optional[date] = Query(default=None, alias="date"),
-    days: int = Query(
-        default=7, ge=1, le=30, description="Days to look back for anomaly detection"
-    ),
-    severity: Optional[str] = Query(
-        default=None, description="Filter by severity: critical, high, medium, low"
-    ),
+    days: int = Query(default=7, ge=1, le=30, description="Days to look back for anomaly detection"),
+    severity: Optional[str] = Query(default=None, description="Filter by severity: critical, high, medium, low"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -298,14 +282,19 @@ async def get_anomalies(
 
     if not await can_access_feature(db, tenant_id, "anomaly_alerts"):
         raise HTTPException(
-            status_code=403, detail="Anomaly alerts feature is not enabled for this tenant"
+            status_code=403,
+            detail="Anomaly alerts feature is not enabled for this tenant"
         )
 
     if target_date is None:
-        target_date = datetime.now(UTC).date()
+        target_date = date.today()
 
-    # Anomaly detection runs via scheduled workers.
-    # This endpoint returns any anomalies stored in fact_alerts.
+    # In production, this would:
+    # 1. Fetch historical metrics for the lookback period
+    # 2. Run anomaly detection algorithms
+    # 3. Return detected anomalies
+
+    # Placeholder response
     anomalies = []
 
     # Example anomaly structure
@@ -353,15 +342,12 @@ async def get_anomalies(
 # KPIs Endpoint
 # =============================================================================
 
-
-@router.get("/kpis", response_model=APIResponse[dict[str, Any]])
+@router.get("/kpis", response_model=APIResponse[Dict[str, Any]])
 async def get_kpis(
     request: Request,
     tenant_id: int,
     target_date: Optional[date] = Query(default=None, alias="date"),
-    comparison: str = Query(
-        default="yesterday", description="Comparison period: yesterday, last_week, last_month"
-    ),
+    comparison: str = Query(default="yesterday", description="Comparison period: yesterday, last_week, last_month"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -379,7 +365,7 @@ async def get_kpis(
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
     if target_date is None:
-        target_date = datetime.now(UTC).date()
+        target_date = date.today()
 
     # Calculate comparison date
     if comparison == "yesterday":
@@ -391,7 +377,8 @@ async def get_kpis(
     else:
         compare_date = target_date - timedelta(days=1)
 
-    # Returns zero values until fact_daily_metrics is populated by sync workers
+    # In production, query fact_daily_metrics for actual KPIs
+    # Placeholder response
     kpis = {
         "date": target_date.isoformat(),
         "comparison_date": compare_date.isoformat(),

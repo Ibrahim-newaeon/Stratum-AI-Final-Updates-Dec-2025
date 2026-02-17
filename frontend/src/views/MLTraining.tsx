@@ -1,105 +1,105 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef } from 'react'
 import {
-  AlertCircle,
-  BarChart3,
+  Upload,
   Brain,
-  CheckCircle,
-  Cpu,
   Database,
   FileSpreadsheet,
   Play,
-  RefreshCw,
-  Sparkles,
-  Target,
   Trash2,
-  TrendingUp,
-  Upload,
+  CheckCircle,
   XCircle,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { apiClient } from '@/api/client';
+  AlertCircle,
+  RefreshCw,
+  BarChart3,
+  Target,
+  TrendingUp,
+  Cpu,
+  Sparkles,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { apiClient } from '@/api/client'
 
 // Types
 interface ModelInfo {
-  name: string;
-  version: string;
-  created_at: string;
+  name: string
+  version: string
+  created_at: string
   metrics: {
-    r2?: number;
-    mae?: number;
-    rmse?: number;
-    mape?: number;
-  };
-  features: string[];
+    r2?: number
+    mae?: number
+    rmse?: number
+    mape?: number
+  }
+  features: string[]
 }
 
 interface TrainingFile {
-  name: string;
-  path: string;
-  size_bytes: number;
-  modified_at: string;
+  name: string
+  path: string
+  size_bytes: number
+  modified_at: string
 }
 
 interface TrainingResult {
-  success: boolean;
-  message: string;
-  models_trained: string[];
-  metrics: Record<string, any>;
-  training_time_seconds: number;
+  success: boolean
+  message: string
+  models_trained: string[]
+  metrics: Record<string, any>
+  training_time_seconds: number
 }
 
-type TabType = 'upload' | 'models' | 'training';
+type TabType = 'upload' | 'models' | 'training'
 
 export default function MLTraining() {
-  const [activeTab, setActiveTab] = useState<TabType>('upload');
-  const [models, setModels] = useState<ModelInfo[]>([]);
-  const [trainingFiles, setTrainingFiles] = useState<TrainingFile[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTraining, setIsTraining] = useState(false);
-  const [, setUploadProgress] = useState(0);
-  const [trainingResult, setTrainingResult] = useState<TrainingResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('upload')
+  const [models, setModels] = useState<ModelInfo[]>([])
+  const [trainingFiles, setTrainingFiles] = useState<TrainingFile[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isTraining, setIsTraining] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [trainingResult, setTrainingResult] = useState<TrainingResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch models and training data on mount
   useEffect(() => {
-    fetchModels();
-    fetchTrainingData();
-  }, []);
+    fetchModels()
+    fetchTrainingData()
+  }, [])
 
   const fetchModels = async () => {
     try {
-      const response = await apiClient.get('/ml/models');
-      setModels(response.data.models || []);
+      const response = await apiClient.get('/ml/models')
+      setModels(response.data.models || [])
     } catch (err) {
-      // Error handled silently
+      console.error('Failed to fetch models:', err)
     }
-  };
+  }
 
   const fetchTrainingData = async () => {
     try {
-      const response = await apiClient.get('/ml/training-data');
-      setTrainingFiles(response.data.files || []);
+      const response = await apiClient.get('/ml/training-data')
+      setTrainingFiles(response.data.files || [])
     } catch (err) {
-      // Error handled silently
+      console.error('Failed to fetch training data:', err)
     }
-  };
+  }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]
+    if (!file) return
 
     if (!file.name.endsWith('.csv')) {
-      setError('Please upload a CSV file');
-      return;
+      setError('Please upload a CSV file')
+      return
     }
 
-    setIsLoading(true);
-    setError(null);
-    setUploadProgress(0);
+    setIsLoading(true)
+    setError(null)
+    setUploadProgress(0)
 
-    const formData = new FormData();
-    formData.append('file', file);
+    const formData = new FormData()
+    formData.append('file', file)
 
     try {
       const response = await apiClient.post('/ml/upload?train_after_upload=false', formData, {
@@ -108,98 +108,96 @@ export default function MLTraining() {
         },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(progress);
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(progress)
           }
         },
-      });
+      })
 
-      setUploadProgress(100);
+      setUploadProgress(100)
 
       // Refresh training data list
-      await fetchTrainingData();
+      await fetchTrainingData()
 
       // Show success
-      setError(null);
-      alert(`Successfully uploaded ${response.data.rows_processed || 'N/A'} rows of training data`);
+      setError(null)
+      alert(`Successfully uploaded ${response.data.rows_processed || 'N/A'} rows of training data`)
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Failed to upload file. Please try again.';
-      setError(errorMessage);
-      // Error displayed via setError above
+      const errorMessage = err.response?.data?.detail || 'Failed to upload file. Please try again.'
+      setError(errorMessage)
+      console.error('Upload error:', err)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = ''
       }
     }
-  };
+  }
 
   const handleGenerateSample = async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
       const response = await apiClient.post('/ml/generate-sample', {
         num_campaigns: 100,
         days_per_campaign: 30,
-      });
+      })
 
-      await fetchTrainingData();
-      alert(`Generated ${response.data.rows} rows of sample training data`);
+      await fetchTrainingData()
+      alert(`Generated ${response.data.rows} rows of sample training data`)
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Failed to generate sample data';
-      setError(errorMessage);
-      // Error displayed via setError above
+      const errorMessage = err.response?.data?.detail || 'Failed to generate sample data'
+      setError(errorMessage)
+      console.error('Generate sample error:', err)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleTrainModels = async (useSampleData: boolean = false) => {
-    setIsTraining(true);
-    setTrainingResult(null);
-    setError(null);
+    setIsTraining(true)
+    setTrainingResult(null)
+    setError(null)
 
     try {
       const url = useSampleData
         ? '/ml/train?use_sample_data=true&num_campaigns=100&days=30'
-        : '/ml/train';
+        : '/ml/train'
 
-      const response = await apiClient.post(url);
+      const response = await apiClient.post(url)
 
-      setTrainingResult(response.data);
-      await fetchModels();
+      setTrainingResult(response.data)
+      await fetchModels()
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.detail ||
-        'Training failed. Please ensure you have uploaded training data.';
-      setError(errorMessage);
-      // Error displayed via setError above
+      const errorMessage = err.response?.data?.detail || 'Training failed. Please ensure you have uploaded training data.'
+      setError(errorMessage)
+      console.error('Training error:', err)
     } finally {
-      setIsTraining(false);
+      setIsTraining(false)
     }
-  };
+  }
 
   const handleDeleteModel = async (modelName: string) => {
     if (!confirm(`Are you sure you want to delete the ${modelName} model?`)) {
-      return;
+      return
     }
 
     try {
-      await apiClient.delete(`/ml/models/${modelName}`);
-      await fetchModels();
+      await apiClient.delete(`/ml/models/${modelName}`)
+      await fetchModels()
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Failed to delete model';
-      setError(errorMessage);
-      // Error displayed via setError above
+      const errorMessage = err.response?.data?.detail || 'Failed to delete model'
+      setError(errorMessage)
+      console.error('Delete error:', err)
     }
-  };
+  }
 
   const formatBytes = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -208,41 +206,41 @@ export default function MLTraining() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    });
-  };
+    })
+  }
 
   const getModelIcon = (name: string) => {
-    if (name.includes('roas')) return <TrendingUp className="w-5 h-5" />;
-    if (name.includes('conversion')) return <Target className="w-5 h-5" />;
-    if (name.includes('budget')) return <BarChart3 className="w-5 h-5" />;
-    return <Brain className="w-5 h-5" />;
-  };
+    if (name.includes('roas')) return <TrendingUp className="w-5 h-5" />
+    if (name.includes('conversion')) return <Target className="w-5 h-5" />
+    if (name.includes('budget')) return <BarChart3 className="w-5 h-5" />
+    return <Brain className="w-5 h-5" />
+  }
 
   const tabs = [
     { id: 'upload' as TabType, label: 'Upload Data', icon: Upload },
     { id: 'models' as TabType, label: 'Models', icon: Brain },
     { id: 'training' as TabType, label: 'Train', icon: Cpu },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ML Training</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            ML Training
+          </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
             Upload training data and manage ML models
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium',
-              models.length > 0
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-            )}
-          >
+          <span className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
+            models.length > 0
+              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+          )}>
             <Cpu className="w-4 h-4" />
             {models.length} Models Ready
           </span>
@@ -271,10 +269,10 @@ export default function MLTraining() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-3 border-b-2 font-medium transition-colors',
+                "flex items-center gap-2 px-4 py-3 border-b-2 font-medium transition-colors",
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
               )}
             >
               <tab.icon className="w-5 h-5" />
@@ -323,15 +321,7 @@ export default function MLTraining() {
                 Required CSV Columns:
               </h3>
               <div className="flex flex-wrap gap-2">
-                {[
-                  'spend',
-                  'impressions',
-                  'clicks',
-                  'conversions',
-                  'revenue',
-                  'platform',
-                  'date',
-                ].map((col) => (
+                {['spend', 'impressions', 'clicks', 'conversions', 'revenue', 'platform', 'date'].map((col) => (
                   <span
                     key={col}
                     className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-600 dark:text-gray-400"
@@ -389,7 +379,9 @@ export default function MLTraining() {
                     <div className="flex items-center gap-3">
                       <Database className="w-5 h-5 text-blue-500" />
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{file.name}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {file.name}
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {formatBytes(file.size_bytes)} • {formatDate(file.modified_at)}
                         </p>
@@ -437,9 +429,11 @@ export default function MLTraining() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {model.name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                          {model.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">v{model.version}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          v{model.version}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -455,16 +449,11 @@ export default function MLTraining() {
                     {model.metrics.r2 !== undefined && (
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500 dark:text-gray-400">R² Score</span>
-                        <span
-                          className={cn(
-                            'font-medium',
-                            model.metrics.r2 > 0.7
-                              ? 'text-green-600'
-                              : model.metrics.r2 > 0.5
-                                ? 'text-yellow-600'
-                                : 'text-red-600'
-                          )}
-                        >
+                        <span className={cn(
+                          "font-medium",
+                          model.metrics.r2 > 0.7 ? "text-green-600" :
+                          model.metrics.r2 > 0.5 ? "text-yellow-600" : "text-red-600"
+                        )}>
                           {(model.metrics.r2 * 100).toFixed(1)}%
                         </span>
                       </div>
@@ -588,28 +577,22 @@ export default function MLTraining() {
 
           {/* Training Result */}
           {trainingResult && (
-            <div
-              className={cn(
-                'rounded-xl border p-6',
-                trainingResult.success
-                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                  : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-              )}
-            >
+            <div className={cn(
+              "rounded-xl border p-6",
+              trainingResult.success
+                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+            )}>
               <div className="flex items-center gap-3 mb-4">
                 {trainingResult.success ? (
                   <CheckCircle className="w-6 h-6 text-green-500" />
                 ) : (
                   <XCircle className="w-6 h-6 text-red-500" />
                 )}
-                <h3
-                  className={cn(
-                    'font-semibold',
-                    trainingResult.success
-                      ? 'text-green-700 dark:text-green-400'
-                      : 'text-red-700 dark:text-red-400'
-                  )}
-                >
+                <h3 className={cn(
+                  "font-semibold",
+                  trainingResult.success ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"
+                )}>
                   {trainingResult.message}
                 </h3>
               </div>
@@ -622,7 +605,7 @@ export default function MLTraining() {
 
                   <div className="space-y-3">
                     {trainingResult.models_trained.map((modelName) => {
-                      const metrics = trainingResult.metrics[modelName] || {};
+                      const metrics = trainingResult.metrics[modelName] || {}
                       return (
                         <div
                           key={modelName}
@@ -634,20 +617,15 @@ export default function MLTraining() {
                               {modelName}
                             </span>
                           </div>
-                          <span
-                            className={cn(
-                              'text-sm font-medium',
-                              metrics.r2 > 0.7
-                                ? 'text-green-600'
-                                : metrics.r2 > 0.5
-                                  ? 'text-yellow-600'
-                                  : 'text-red-600'
-                            )}
-                          >
+                          <span className={cn(
+                            "text-sm font-medium",
+                            metrics.r2 > 0.7 ? "text-green-600" :
+                            metrics.r2 > 0.5 ? "text-yellow-600" : "text-red-600"
+                          )}>
                             R² = {metrics.r2 ? (metrics.r2 * 100).toFixed(1) : 'N/A'}%
                           </span>
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 </>
@@ -673,9 +651,7 @@ export default function MLTraining() {
               <div className="flex items-start gap-3">
                 <Target className="w-5 h-5 text-green-500 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">
-                    Conversion Predictor
-                  </h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Conversion Predictor</h4>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Predicts conversions based on spend and engagement
                   </p>
@@ -695,5 +671,5 @@ export default function MLTraining() {
         </div>
       )}
     </div>
-  );
+  )
 }

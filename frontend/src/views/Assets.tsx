@@ -1,44 +1,45 @@
-import React, { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
+  Search,
+  Filter,
+  Upload,
+  Grid,
+  List,
+  MoreHorizontal,
+  Image as ImageIcon,
+  Video,
+  FileText,
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Copy,
-  Download,
   Eye,
-  FileText,
-  Grid,
-  Image as ImageIcon,
-  List,
-  Loader2,
-  MoreHorizontal,
-  Search,
-  Tag,
+  Download,
   Trash2,
-  Upload,
-  Video,
-} from 'lucide-react';
-import { cn, formatCompactNumber, formatPercent } from '@/lib/utils';
-import { useAssets, useBulkArchiveAssets, useDeleteAsset } from '@/api/hooks';
-import { useTenantStore } from '@/stores/tenantStore';
+  Copy,
+  Tag,
+  Loader2,
+} from 'lucide-react'
+import { cn, formatCompactNumber, formatPercent } from '@/lib/utils'
+import { useAssets, useDeleteAsset, useBulkArchiveAssets } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
-type AssetType = 'image' | 'video' | 'copy';
-type AssetStatus = 'active' | 'paused' | 'fatigued' | 'draft';
+type AssetType = 'image' | 'video' | 'copy'
+type AssetStatus = 'active' | 'paused' | 'fatigued' | 'draft'
 
 interface Asset {
-  id: number;
-  name: string;
-  type: AssetType;
-  status: AssetStatus;
-  thumbnail: string;
-  impressions: number;
-  ctr: number;
-  fatigueScore: number;
-  campaigns: string[];
-  createdAt: string;
-  dimensions?: string;
-  duration?: string;
+  id: number
+  name: string
+  type: AssetType
+  status: AssetStatus
+  thumbnail: string
+  impressions: number
+  ctr: number
+  fatigueScore: number
+  campaigns: string[]
+  createdAt: string
+  dimensions?: string
+  duration?: string
 }
 
 const mockAssets: Asset[] = [
@@ -119,25 +120,25 @@ const mockAssets: Asset[] = [
     createdAt: '2024-07-10',
     dimensions: '728x90',
   },
-];
+]
 
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list'
 
 export function Assets() {
-  const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [selectedAssets, setSelectedAssets] = useState<number[]>([]);
+  const { t } = useTranslation()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [selectedAssets, setSelectedAssets] = useState<number[]>([])
 
-  // Use tenant store for context (reserved for API calls)
-  useTenantStore((state) => state.tenantId);
+  // Get tenant ID from tenant store
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch assets from API
-  const { data: assetsData } = useAssets();
-  useDeleteAsset(); // Prefetch delete mutation
-  const bulkArchive = useBulkArchiveAssets();
+  const { data: assetsData, isLoading } = useAssets(tenantId)
+  const deleteAsset = useDeleteAsset(tenantId)
+  const bulkArchive = useBulkArchiveAssets(tenantId)
 
   // Transform API data or fall back to mock
   const assets = useMemo((): Asset[] => {
@@ -147,85 +148,76 @@ export function Assets() {
         name: a.name || a.filename || '',
         type: a.type || a.asset_type || 'image',
         status: a.status || 'active',
-        thumbnail:
-          a.thumbnail_url ||
-          a.url ||
-          `https://placehold.co/300x250/0ea5e9/white?text=${encodeURIComponent(a.name || 'Asset')}`,
+        thumbnail: a.thumbnail_url || a.url || `https://placehold.co/300x250/0ea5e9/white?text=${encodeURIComponent(a.name || 'Asset')}`,
         impressions: a.impressions || 0,
         ctr: a.ctr || 0,
         fatigueScore: a.fatigue_score || a.fatigueScore || 0,
         campaigns: a.campaigns || [],
         createdAt: a.created_at || a.createdAt || new Date().toISOString(),
-        dimensions: a.dimensions || (a.width && a.height) ? `${a.width}x${a.height}` : undefined,
+        dimensions: a.dimensions || a.width && a.height ? `${a.width}x${a.height}` : undefined,
         duration: a.duration,
-      }));
+      }))
     }
-    return mockAssets;
-  }, [assetsData]);
+    return mockAssets
+  }, [assetsData])
 
   // Handle bulk delete
   const handleBulkDelete = async () => {
-    await bulkArchive.mutateAsync(selectedAssets.map((id) => id.toString()));
-    setSelectedAssets([]);
-  };
+    await bulkArchive.mutateAsync(selectedAssets.map(id => id.toString()))
+    setSelectedAssets([])
+  }
 
   const filteredAssets = assets.filter((asset) => {
     if (searchQuery && !asset.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+      return false
     }
     if (typeFilter !== 'all' && asset.type !== typeFilter) {
-      return false;
+      return false
     }
     if (statusFilter !== 'all' && asset.status !== statusFilter) {
-      return false;
+      return false
     }
-    return true;
-  });
+    return true
+  })
 
   const toggleSelectAsset = (id: number) => {
-    setSelectedAssets((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  };
+    setSelectedAssets((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    )
+  }
 
   const getTypeIcon = (type: AssetType) => {
     switch (type) {
       case 'image':
-        return <ImageIcon className="w-4 h-4" />;
+        return <ImageIcon className="w-4 h-4" />
       case 'video':
-        return <Video className="w-4 h-4" />;
+        return <Video className="w-4 h-4" />
       case 'copy':
-        return <FileText className="w-4 h-4" />;
+        return <FileText className="w-4 h-4" />
     }
-  };
+  }
 
   const getStatusBadge = (status: AssetStatus) => {
-    const config: Record<
-      AssetStatus,
-      { color: string; icon: React.ComponentType<{ className?: string }>; label: string }
-    > = {
+    const config: Record<AssetStatus, { color: string; icon: React.ComponentType<{ className?: string }>; label: string }> = {
       active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
       paused: { color: 'bg-amber-500/10 text-amber-500', icon: Clock, label: 'Paused' },
       fatigued: { color: 'bg-red-500/10 text-red-500', icon: AlertTriangle, label: 'Fatigued' },
       draft: { color: 'bg-gray-500/10 text-gray-500', icon: FileText, label: 'Draft' },
-    };
-    const { color, icon: Icon, label } = config[status];
+    }
+    const { color, icon: Icon, label } = config[status]
     return (
-      <span
-        className={cn(
-          'px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1',
-          color
-        )}
-      >
+      <span className={cn('px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', color)}>
         <Icon className="w-3 h-3" />
         {label}
       </span>
-    );
-  };
+    )
+  }
 
   const getFatigueColor = (score: number) => {
-    if (score >= 70) return 'text-red-500 bg-red-500';
-    if (score >= 40) return 'text-amber-500 bg-amber-500';
-    return 'text-green-500 bg-green-500';
-  };
+    if (score >= 70) return 'text-red-500 bg-red-500'
+    if (score >= 40) return 'text-amber-500 bg-amber-500'
+    return 'text-green-500 bg-green-500'
+  }
 
   return (
     <div className="space-y-6">
@@ -322,11 +314,7 @@ export function Assets() {
               disabled={bulkArchive.isPending}
               className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-sm disabled:opacity-50"
             >
-              {bulkArchive.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
+              {bulkArchive.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               {t('assets.delete')}
             </button>
           </div>
@@ -359,7 +347,9 @@ export function Assets() {
                     className="rounded border-white/50 bg-black/30"
                   />
                 </div>
-                <div className="absolute top-2 right-2">{getStatusBadge(asset.status)}</div>
+                <div className="absolute top-2 right-2">
+                  {getStatusBadge(asset.status)}
+                </div>
                 <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/50 text-white text-xs">
                   {getTypeIcon(asset.type)}
                   <span>{asset.dimensions || asset.duration || 'Copy'}</span>
@@ -385,21 +375,13 @@ export function Assets() {
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">{t('assets.fatigueScore')}</span>
-                      <span
-                        className={cn(
-                          'font-medium',
-                          getFatigueColor(asset.fatigueScore).split(' ')[0]
-                        )}
-                      >
+                      <span className={cn('font-medium', getFatigueColor(asset.fatigueScore).split(' ')[0])}>
                         {asset.fatigueScore}%
                       </span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
-                        className={cn(
-                          'h-full rounded-full',
-                          getFatigueColor(asset.fatigueScore).split(' ')[1]
-                        )}
+                        className={cn('h-full rounded-full', getFatigueColor(asset.fatigueScore).split(' ')[1])}
                         style={{ width: `${asset.fatigueScore}%` }}
                       />
                     </div>
@@ -438,14 +420,12 @@ export function Assets() {
                     type="checkbox"
                     onChange={() => {
                       if (selectedAssets.length === filteredAssets.length) {
-                        setSelectedAssets([]);
+                        setSelectedAssets([])
                       } else {
-                        setSelectedAssets(filteredAssets.map((a) => a.id));
+                        setSelectedAssets(filteredAssets.map((a) => a.id))
                       }
                     }}
-                    checked={
-                      selectedAssets.length === filteredAssets.length && filteredAssets.length > 0
-                    }
+                    checked={selectedAssets.length === filteredAssets.length && filteredAssets.length > 0}
                     className="rounded"
                   />
                 </th>
@@ -501,19 +481,11 @@ export function Assets() {
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
-                          className={cn(
-                            'h-full rounded-full',
-                            getFatigueColor(asset.fatigueScore).split(' ')[1]
-                          )}
+                          className={cn('h-full rounded-full', getFatigueColor(asset.fatigueScore).split(' ')[1])}
                           style={{ width: `${asset.fatigueScore}%` }}
                         />
                       </div>
-                      <span
-                        className={cn(
-                          'text-sm font-medium',
-                          getFatigueColor(asset.fatigueScore).split(' ')[0]
-                        )}
-                      >
+                      <span className={cn('text-sm font-medium', getFatigueColor(asset.fatigueScore).split(' ')[0])}>
                         {asset.fatigueScore}%
                       </span>
                     </div>
@@ -537,7 +509,7 @@ export function Assets() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default Assets;
+export default Assets

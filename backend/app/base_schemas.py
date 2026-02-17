@@ -6,8 +6,9 @@ Pydantic models for API request/response validation.
 Implements strict type validation with comprehensive field constraints.
 """
 
-from datetime import date, datetime
-from typing import Generic, Optional, TypeVar
+from datetime import datetime, date
+from decimal import Decimal
+from typing import Any, Generic, List, Optional, TypeVar
 
 from pydantic import (
     BaseModel,
@@ -30,6 +31,7 @@ from app.models import (
     UserRole,
 )
 
+
 # =============================================================================
 # Generic Response Wrapper
 # =============================================================================
@@ -42,7 +44,7 @@ class APIResponse(BaseModel, Generic[DataT]):
     success: bool = True
     data: Optional[DataT] = None
     message: Optional[str] = None
-    errors: Optional[list[dict]] = None
+    errors: Optional[List[dict]] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,7 +52,7 @@ class APIResponse(BaseModel, Generic[DataT]):
 class PaginatedResponse(BaseModel, Generic[DataT]):
     """Paginated list response."""
 
-    items: list[DataT]
+    items: List[DataT]
     total: int
     page: int
     page_size: int
@@ -239,26 +241,24 @@ class CampaignCreate(CampaignBase):
     end_date: Optional[date] = None
     targeting_age_min: Optional[int] = Field(None, ge=13, le=100)
     targeting_age_max: Optional[int] = Field(None, ge=13, le=100)
-    targeting_genders: Optional[list[str]] = None
-    targeting_locations: Optional[list[dict]] = None
-    targeting_interests: Optional[list[str]] = None
+    targeting_genders: Optional[List[str]] = None
+    targeting_locations: Optional[List[dict]] = None
+    targeting_interests: Optional[List[str]] = None
 
     @model_validator(mode="after")
     def validate_dates(self):
         """Ensure end_date is after start_date."""
-        if self.start_date and self.end_date and self.end_date < self.start_date:
-            raise ValueError("end_date must be after start_date")
+        if self.start_date and self.end_date:
+            if self.end_date < self.start_date:
+                raise ValueError("end_date must be after start_date")
         return self
 
     @model_validator(mode="after")
     def validate_age_range(self):
         """Ensure age_max >= age_min."""
-        if (
-            self.targeting_age_min
-            and self.targeting_age_max
-            and self.targeting_age_max < self.targeting_age_min
-        ):
-            raise ValueError("targeting_age_max must be >= targeting_age_min")
+        if self.targeting_age_min and self.targeting_age_max:
+            if self.targeting_age_max < self.targeting_age_min:
+                raise ValueError("targeting_age_max must be >= targeting_age_min")
         return self
 
 
@@ -269,7 +269,7 @@ class CampaignUpdate(BaseSchema):
     status: Optional[CampaignStatus] = None
     daily_budget_cents: Optional[int] = Field(None, ge=0)
     lifetime_budget_cents: Optional[int] = Field(None, ge=0)
-    labels: Optional[list[str]] = None
+    labels: Optional[List[str]] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -314,13 +314,13 @@ class CampaignResponse(CampaignBase, TimestampMixin):
     # Targeting
     targeting_age_min: Optional[int]
     targeting_age_max: Optional[int]
-    targeting_genders: Optional[list[str]]
-    targeting_locations: Optional[list[dict]]
+    targeting_genders: Optional[List[str]]
+    targeting_locations: Optional[List[dict]]
 
     # Dates
     start_date: Optional[date]
     end_date: Optional[date]
-    labels: list[str]
+    labels: List[str]
     last_synced_at: Optional[datetime]
 
 
@@ -344,7 +344,7 @@ class CampaignListResponse(BaseSchema):
     clicks: int
     conversions: int
     roas: Optional[float]
-    labels: list[str]
+    labels: List[str]
     last_synced_at: Optional[datetime]
 
 
@@ -369,7 +369,7 @@ class CampaignMetricsTimeSeriesResponse(BaseSchema):
 
     campaign_id: int
     date_range: dict  # {"start": date, "end": date}
-    metrics: list[CampaignMetricResponse]
+    metrics: List[CampaignMetricResponse]
     aggregated: dict  # Summary stats
 
 
@@ -381,7 +381,7 @@ class CreativeAssetBase(BaseSchema):
 
     name: str = Field(..., min_length=1, max_length=500)
     asset_type: AssetType
-    tags: list[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
     folder: Optional[str] = Field(None, max_length=255)
 
 
@@ -402,7 +402,7 @@ class CreativeAssetUpdate(BaseSchema):
     """Creative asset update request."""
 
     name: Optional[str] = Field(None, max_length=500)
-    tags: Optional[list[str]] = None
+    tags: Optional[List[str]] = None
     folder: Optional[str] = Field(None, max_length=255)
     campaign_id: Optional[int] = None
 
@@ -435,7 +435,7 @@ class CreativeAssetResponse(CreativeAssetBase, TimestampMixin):
 
     # AI metadata
     ai_description: Optional[str]
-    ai_tags: Optional[list[str]]
+    ai_tags: Optional[List[str]]
     brand_safety_score: Optional[float]
 
 
@@ -475,8 +475,8 @@ class RuleCreate(RuleBase):
     condition_duration_hours: int = Field(default=24, ge=1, le=720)
     action_type: RuleAction
     action_config: dict = Field(default_factory=dict)
-    applies_to_campaigns: Optional[list[int]] = None
-    applies_to_platforms: Optional[list[AdPlatform]] = None
+    applies_to_campaigns: Optional[List[int]] = None
+    applies_to_platforms: Optional[List[AdPlatform]] = None
     cooldown_hours: int = Field(default=24, ge=1, le=168)
 
 
@@ -492,8 +492,8 @@ class RuleUpdate(BaseSchema):
     condition_duration_hours: Optional[int] = Field(None, ge=1, le=720)
     action_type: Optional[RuleAction] = None
     action_config: Optional[dict] = None
-    applies_to_campaigns: Optional[list[int]] = None
-    applies_to_platforms: Optional[list[AdPlatform]] = None
+    applies_to_campaigns: Optional[List[int]] = None
+    applies_to_platforms: Optional[List[AdPlatform]] = None
     cooldown_hours: Optional[int] = Field(None, ge=1, le=168)
 
 
@@ -508,8 +508,8 @@ class RuleResponse(RuleBase, TimestampMixin):
     condition_duration_hours: int
     action_type: RuleAction
     action_config: dict
-    applies_to_campaigns: Optional[list[int]]
-    applies_to_platforms: Optional[list[str]]
+    applies_to_campaigns: Optional[List[int]]
+    applies_to_platforms: Optional[List[str]]
     cooldown_hours: int
     last_evaluated_at: Optional[datetime]
     last_triggered_at: Optional[datetime]
@@ -543,10 +543,7 @@ class CompetitorBase(BaseSchema):
 class CompetitorCreate(CompetitorBase):
     """Competitor creation request."""
 
-    country: Optional[str] = Field(
-        None, max_length=10, description="Country code for ad library filtering"
-    )
-    platforms: Optional[list[str]] = Field(None, description="Ad platforms to track")
+    pass
 
 
 class CompetitorUpdate(BaseSchema):
@@ -565,13 +562,13 @@ class CompetitorResponse(CompetitorBase, TimestampMixin):
     # Scraped metadata
     meta_title: Optional[str]
     meta_description: Optional[str]
-    meta_keywords: Optional[list[str]]
+    meta_keywords: Optional[List[str]]
     social_links: Optional[dict]
 
     # Market intelligence
     estimated_traffic: Optional[int]
     traffic_trend: Optional[str]
-    top_keywords: Optional[list[dict]]
+    top_keywords: Optional[List[dict]]
     paid_keywords_count: Optional[int]
     organic_keywords_count: Optional[int]
 
@@ -581,7 +578,7 @@ class CompetitorResponse(CompetitorBase, TimestampMixin):
 
     # Ad intelligence
     estimated_ad_spend_cents: Optional[int]
-    detected_ad_platforms: Optional[list[str]]
+    detected_ad_platforms: Optional[List[str]]
     ad_creatives_count: Optional[int]
 
     # Metadata
@@ -593,7 +590,7 @@ class CompetitorResponse(CompetitorBase, TimestampMixin):
 class CompetitorShareOfVoiceResponse(BaseSchema):
     """Share of voice comparison response."""
 
-    competitors: list[dict]  # [{domain, share, trend}]
+    competitors: List[dict]  # [{domain, share, trend}]
     total_market: int
     date_range: dict
 
@@ -625,7 +622,7 @@ class SimulationResponse(BaseSchema):
 class ROASForecastRequest(BaseSchema):
     """ROAS forecasting request."""
 
-    campaign_ids: Optional[list[int]] = None
+    campaign_ids: Optional[List[int]] = None
     days_ahead: int = Field(default=30, ge=1, le=365)
     granularity: str = Field(default="daily", pattern=r"^(daily|weekly|monthly)$")
 
@@ -633,7 +630,7 @@ class ROASForecastRequest(BaseSchema):
 class ROASForecastResponse(BaseSchema):
     """ROAS forecasting response."""
 
-    forecasts: list[dict]  # [{date, predicted_roas, confidence_lower, confidence_upper}]
+    forecasts: List[dict]  # [{date, predicted_roas, confidence_lower, confidence_upper}]
     model_version: str
     generated_at: datetime
 
@@ -652,7 +649,7 @@ class ConversionPredictionResponse(BaseSchema):
     predicted_conversions: float
     predicted_conversion_rate: float
     confidence: float
-    factors: list[dict]  # Contributing factors
+    factors: List[dict]  # Contributing factors
 
 
 # =============================================================================
@@ -669,7 +666,7 @@ class AuditLogResponse(BaseSchema):
     resource_id: Optional[str]
     old_value: Optional[dict]
     new_value: Optional[dict]
-    changed_fields: Optional[list[str]]
+    changed_fields: Optional[List[str]]
     ip_address: Optional[str]
     user_agent: Optional[str]
     request_id: Optional[str]
@@ -713,7 +710,7 @@ class GDPRAnonymizeResponse(BaseSchema):
 
     user_id: int
     anonymized_at: datetime
-    tables_affected: list[str]
+    tables_affected: List[str]
     records_modified: int
 
 
@@ -759,15 +756,15 @@ class KPITileResponse(BaseSchema):
 class DemographicsResponse(BaseSchema):
     """Demographics breakdown response."""
 
-    age_breakdown: list[dict]  # [{range: "18-24", impressions: 1000, ...}]
-    gender_breakdown: list[dict]  # [{gender: "male", impressions: 500, ...}]
-    location_breakdown: list[dict]  # [{country: "US", state: "CA", ...}]
+    age_breakdown: List[dict]  # [{range: "18-24", impressions: 1000, ...}]
+    gender_breakdown: List[dict]  # [{gender: "male", impressions: 500, ...}]
+    location_breakdown: List[dict]  # [{country: "US", state: "CA", ...}]
 
 
 class HeatmapDataResponse(BaseSchema):
     """Location heatmap data response."""
 
-    points: list[dict]  # [{lat, lng, weight, ...}]
+    points: List[dict]  # [{lat, lng, weight, ...}]
     bounds: dict  # {"ne": {lat, lng}, "sw": {lat, lng}}
     aggregation: str  # 'country', 'state', 'city'
 

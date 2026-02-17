@@ -5,86 +5,84 @@
  * Shows live predictions, scenario simulator, and optimization recommendations
  */
 
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
-import { useBudgetOptimization, useLivePredictions, usePredictionAlerts } from '@/api/hooks';
-import { ConfidenceBandBadge } from '@/components/shared';
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
+import { useLivePredictions, useBudgetOptimization, usePredictionAlerts } from '@/api/hooks'
+import { ConfidenceBandBadge } from '@/components/shared'
 import {
-  AdjustmentsHorizontalIcon,
-  ArrowPathIcon,
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon,
-  BeakerIcon,
+  SparklesIcon,
   ChartBarIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  ExclamationTriangleIcon,
-  LightBulbIcon,
+  AdjustmentsHorizontalIcon,
   PlayIcon,
-  SparklesIcon,
-} from '@heroicons/react/24/outline';
+  ArrowPathIcon,
+  LightBulbIcon,
+  BeakerIcon,
+} from '@heroicons/react/24/outline'
 
 interface Prediction {
-  id: string;
-  campaign: string;
-  platform: string;
-  metric: string;
-  currentValue: number;
-  predictedValue: number;
-  confidence: number;
-  trend: 'up' | 'down' | 'stable';
-  horizon: string; // e.g., "7d", "30d"
-  updatedAt: Date;
+  id: string
+  campaign: string
+  platform: string
+  metric: string
+  currentValue: number
+  predictedValue: number
+  confidence: number
+  trend: 'up' | 'down' | 'stable'
+  horizon: string // e.g., "7d", "30d"
+  updatedAt: Date
 }
 
 interface OptimizationRecommendation {
-  id: string;
-  title: string;
-  description: string;
-  currentBudget: number;
-  recommendedBudget: number;
+  id: string
+  title: string
+  description: string
+  currentBudget: number
+  recommendedBudget: number
   expectedImpact: {
-    metric: string;
-    change: number;
-    unit: string;
-  };
-  confidence: number;
-  priority: 'high' | 'medium' | 'low';
+    metric: string
+    change: number
+    unit: string
+  }
+  confidence: number
+  priority: 'high' | 'medium' | 'low'
 }
 
 interface Scenario {
-  id: string;
-  name: string;
-  budgetChange: number;
-  predictedRoas: number;
-  predictedRevenue: number;
-  confidence: number;
+  id: string
+  name: string
+  budgetChange: number
+  predictedRoas: number
+  predictedRevenue: number
+  confidence: number
 }
 
 export function Predictions() {
-  const { t: _t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'predictions' | 'optimization' | 'scenarios'>(
-    'predictions'
-  );
-  const [timeHorizon, setTimeHorizon] = useState<'7d' | '30d' | '90d'>('30d');
-  const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
+  const { t } = useTranslation()
+  const [activeTab, setActiveTab] = useState<'predictions' | 'optimization' | 'scenarios'>('predictions')
+  const [timeHorizon, setTimeHorizon] = useState<'7d' | '30d' | '90d'>('30d')
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('all')
 
-  const { data: predictionsData, isLoading: _predictionsLoading } = useLivePredictions();
-  const { data: optimizationData } = useBudgetOptimization();
-  const { data: alertsData } = usePredictionAlerts();
+  const { data: predictionsData, isLoading: predictionsLoading } = useLivePredictions()
+  const { data: optimizationData } = useBudgetOptimization()
+  const { data: alertsData } = usePredictionAlerts()
 
-  // Sample predictions - use predictedValue from API
+  // Sample predictions
   const predictions: Prediction[] = predictionsData?.map((p) => ({
     id: p.campaignId,
     campaign: `Campaign ${p.campaignId}`,
     platform: 'Meta',
     metric: 'ROAS',
     currentValue: 3.2,
-    predictedValue: p.predictedValue ?? 3.5,
+    predictedValue: p.predictedRoas ?? 3.5,
     confidence: p.confidence ?? 85,
-    trend: (p.predictedValue ?? 0) > 3.2 ? 'up' : 'down',
+    trend: (p.predictedRoas ?? 0) > 3.2 ? 'up' : 'down',
     horizon: '30d',
     updatedAt: new Date(),
   })) ?? [
@@ -136,31 +134,22 @@ export function Predictions() {
       horizon: '30d',
       updatedAt: new Date(Date.now() - 90 * 60 * 1000),
     },
-  ];
+  ]
 
-  // Use optimizedAllocation from API (not recommendations)
-  const optimizations: OptimizationRecommendation[] = optimizationData?.optimizedAllocation?.map(
-    (r: {
-      campaignId: string;
-      campaignName: string;
-      currentBudget: number;
-      recommendedBudget: number;
-      expectedRoasChange: number;
-    }) => ({
-      id: r.campaignId,
-      title: `Optimize ${r.campaignName || r.campaignId}`,
-      description: `Adjust budget for better ROAS`,
-      currentBudget: r.currentBudget,
-      recommendedBudget: r.recommendedBudget,
-      expectedImpact: {
-        metric: 'ROAS',
-        change: r.expectedRoasChange,
-        unit: '%',
-      },
-      confidence: 85,
-      priority: 'high' as const,
-    })
-  ) ?? [
+  const optimizations: OptimizationRecommendation[] = optimizationData?.recommendations?.map((r) => ({
+    id: r.campaignId,
+    title: `Optimize ${r.campaignId}`,
+    description: r.action,
+    currentBudget: r.currentBudget,
+    recommendedBudget: r.suggestedBudget,
+    expectedImpact: {
+      metric: 'ROAS',
+      change: r.expectedRoasChange,
+      unit: '%',
+    },
+    confidence: 85,
+    priority: 'high' as const,
+  })) ?? [
     {
       id: '1',
       title: 'Increase Summer Sale budget',
@@ -191,85 +180,43 @@ export function Predictions() {
       confidence: 87,
       priority: 'high' as const,
     },
-  ];
+  ]
 
   const scenarios: Scenario[] = [
-    {
-      id: '1',
-      name: 'Conservative',
-      budgetChange: -20,
-      predictedRoas: 3.8,
-      predictedRevenue: 145000,
-      confidence: 92,
-    },
-    {
-      id: '2',
-      name: 'Current',
-      budgetChange: 0,
-      predictedRoas: 3.5,
-      predictedRevenue: 168000,
-      confidence: 88,
-    },
-    {
-      id: '3',
-      name: 'Aggressive',
-      budgetChange: 30,
-      predictedRoas: 3.2,
-      predictedRevenue: 205000,
-      confidence: 75,
-    },
-    {
-      id: '4',
-      name: 'Maximum Growth',
-      budgetChange: 50,
-      predictedRoas: 2.9,
-      predictedRevenue: 240000,
-      confidence: 62,
-    },
-  ];
+    { id: '1', name: 'Conservative', budgetChange: -20, predictedRoas: 3.8, predictedRevenue: 145000, confidence: 92 },
+    { id: '2', name: 'Current', budgetChange: 0, predictedRoas: 3.5, predictedRevenue: 168000, confidence: 88 },
+    { id: '3', name: 'Aggressive', budgetChange: 30, predictedRoas: 3.2, predictedRevenue: 205000, confidence: 75 },
+    { id: '4', name: 'Maximum Growth', budgetChange: 50, predictedRoas: 2.9, predictedRevenue: 240000, confidence: 62 },
+  ]
 
-  // Map PredictionAlert severity to local alert type
-  const alerts: { id: string; type: 'warning' | 'opportunity'; message: string }[] =
-    alertsData?.map((a) => ({
-      id: a.id,
-      type: a.severity === 'critical' || a.severity === 'warning' ? 'warning' : 'opportunity',
-      message: a.message,
-    })) ?? [
-      {
-        id: '1',
-        type: 'warning',
-        message: 'Brand Awareness Q4 ROAS predicted to drop 10% in next 7 days',
-      },
-      {
-        id: '2',
-        type: 'opportunity',
-        message: 'Summer Sale 2024 has scaling potential - consider budget increase',
-      },
-    ];
+  const alerts = alertsData ?? [
+    { id: '1', type: 'warning', message: 'Brand Awareness Q4 ROAS predicted to drop 10% in next 7 days' },
+    { id: '2', type: 'opportunity', message: 'Summer Sale 2024 has scaling potential - consider budget increase' },
+  ]
 
   const formatValue = (value: number, metric: string) => {
-    if (metric === 'ROAS') return `${value.toFixed(1)}x`;
-    if (metric === 'CPA') return `$${value.toFixed(0)}`;
-    if (metric === 'Revenue' || metric === 'Spend') return `$${(value / 1000).toFixed(0)}K`;
-    return value.toLocaleString();
-  };
+    if (metric === 'ROAS') return `${value.toFixed(1)}x`
+    if (metric === 'CPA') return `$${value.toFixed(0)}`
+    if (metric === 'Revenue' || metric === 'Spend') return `$${(value / 1000).toFixed(0)}K`
+    return value.toLocaleString()
+  }
 
   const formatChange = (current: number, predicted: number) => {
-    const change = ((predicted - current) / current) * 100;
-    return { value: Math.abs(change).toFixed(1), isPositive: change >= 0 };
-  };
+    const change = ((predicted - current) / current) * 100
+    return { value: Math.abs(change).toFixed(1), isPositive: change >= 0 }
+  }
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 85) return 'text-green-500';
-    if (confidence >= 70) return 'text-amber-500';
-    return 'text-red-500';
-  };
+    if (confidence >= 85) return 'text-green-500'
+    if (confidence >= 70) return 'text-amber-500'
+    return 'text-red-500'
+  }
 
   const tabs = [
     { id: 'predictions' as const, label: 'Live Predictions', icon: ChartBarIcon },
     { id: 'optimization' as const, label: 'Budget Optimization', icon: CurrencyDollarIcon },
     { id: 'scenarios' as const, label: 'Scenario Simulator', icon: BeakerIcon },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
@@ -327,7 +274,7 @@ export function Predictions() {
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b pb-4">
         {tabs.map((tab) => {
-          const Icon = tab.icon;
+          const Icon = tab.icon
           return (
             <button
               key={tab.id}
@@ -342,7 +289,7 @@ export function Predictions() {
               <Icon className="w-4 h-4" />
               {tab.label}
             </button>
-          );
+          )
         })}
       </div>
 
@@ -358,9 +305,7 @@ export function Predictions() {
             >
               <option value="all">All Campaigns</option>
               {predictions.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.campaign}
-                </option>
+                <option key={p.id} value={p.id}>{p.campaign}</option>
               ))}
             </select>
           </div>
@@ -369,7 +314,7 @@ export function Predictions() {
             {predictions
               .filter((p) => selectedCampaign === 'all' || p.id === selectedCampaign)
               .map((prediction) => {
-                const change = formatChange(prediction.currentValue, prediction.predictedValue);
+                const change = formatChange(prediction.currentValue, prediction.predictedValue)
                 return (
                   <div
                     key={prediction.id}
@@ -389,12 +334,7 @@ export function Predictions() {
                       </div>
                       <div className="flex items-center gap-2">
                         <ConfidenceBandBadge score={prediction.confidence} size="sm" />
-                        <span
-                          className={cn(
-                            'text-sm font-medium',
-                            getConfidenceColor(prediction.confidence)
-                          )}
-                        >
+                        <span className={cn('text-sm font-medium', getConfidenceColor(prediction.confidence))}>
                           {prediction.confidence}% confidence
                         </span>
                       </div>
@@ -424,26 +364,22 @@ export function Predictions() {
                           <span className="text-2xl font-bold">
                             {formatValue(prediction.predictedValue, prediction.metric)}
                           </span>
-                          <span
-                            className={cn(
-                              'text-sm font-medium',
-                              change.isPositive ? 'text-green-500' : 'text-red-500'
-                            )}
-                          >
-                            {change.isPositive ? '+' : '-'}
-                            {change.value}%
+                          <span className={cn(
+                            'text-sm font-medium',
+                            change.isPositive ? 'text-green-500' : 'text-red-500'
+                          )}>
+                            {change.isPositive ? '+' : '-'}{change.value}%
                           </span>
                         </div>
                       </div>
 
                       <div className="ml-auto text-sm text-muted-foreground">
                         <ClockIcon className="w-4 h-4 inline mr-1" />
-                        Updated {Math.floor((Date.now() - prediction.updatedAt.getTime()) / 60000)}m
-                        ago
+                        Updated {Math.floor((Date.now() - prediction.updatedAt.getTime()) / 60000)}m ago
                       </div>
                     </div>
                   </div>
-                );
+                )
               })}
           </div>
         </div>
@@ -484,14 +420,12 @@ export function Predictions() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold">{opt.title}</h3>
-                      <span
-                        className={cn(
-                          'px-2 py-0.5 rounded text-xs font-medium',
-                          opt.priority === 'high' && 'bg-green-500/10 text-green-500',
-                          opt.priority === 'medium' && 'bg-amber-500/10 text-amber-500',
-                          opt.priority === 'low' && 'bg-muted text-muted-foreground'
-                        )}
-                      >
+                      <span className={cn(
+                        'px-2 py-0.5 rounded text-xs font-medium',
+                        opt.priority === 'high' && 'bg-green-500/10 text-green-500',
+                        opt.priority === 'medium' && 'bg-amber-500/10 text-amber-500',
+                        opt.priority === 'low' && 'bg-muted text-muted-foreground'
+                      )}>
                         {opt.priority} priority
                       </span>
                     </div>
@@ -510,22 +444,17 @@ export function Predictions() {
                   <div className="text-xl text-muted-foreground">→</div>
                   <div>
                     <div className="text-sm text-muted-foreground">Recommended</div>
-                    <div
-                      className={cn(
-                        'text-xl font-bold',
-                        opt.recommendedBudget > opt.currentBudget
-                          ? 'text-green-500'
-                          : 'text-amber-500'
-                      )}
-                    >
+                    <div className={cn(
+                      'text-xl font-bold',
+                      opt.recommendedBudget > opt.currentBudget ? 'text-green-500' : 'text-amber-500'
+                    )}>
                       ${opt.recommendedBudget.toLocaleString()}
                     </div>
                   </div>
                   <div className="ml-auto">
                     <div className="text-sm text-muted-foreground">Expected Impact</div>
                     <div className="text-xl font-bold text-green-500">
-                      +{opt.expectedImpact.change}
-                      {opt.expectedImpact.unit} {opt.expectedImpact.metric}
+                      +{opt.expectedImpact.change}{opt.expectedImpact.unit} {opt.expectedImpact.metric}
                     </div>
                   </div>
                 </div>
@@ -572,16 +501,13 @@ export function Predictions() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">{scenario.name}</h3>
-                  <span
-                    className={cn(
-                      'px-2 py-0.5 rounded text-xs',
-                      scenario.budgetChange > 0 && 'bg-green-500/10 text-green-500',
-                      scenario.budgetChange < 0 && 'bg-amber-500/10 text-amber-500',
-                      scenario.budgetChange === 0 && 'bg-primary/10 text-primary'
-                    )}
-                  >
-                    {scenario.budgetChange > 0 ? '+' : ''}
-                    {scenario.budgetChange}% budget
+                  <span className={cn(
+                    'px-2 py-0.5 rounded text-xs',
+                    scenario.budgetChange > 0 && 'bg-green-500/10 text-green-500',
+                    scenario.budgetChange < 0 && 'bg-amber-500/10 text-amber-500',
+                    scenario.budgetChange === 0 && 'bg-primary/10 text-primary'
+                  )}>
+                    {scenario.budgetChange > 0 ? '+' : ''}{scenario.budgetChange}% budget
                   </span>
                 </div>
 
@@ -592,20 +518,15 @@ export function Predictions() {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Predicted Revenue</div>
-                    <div className="text-xl font-bold">
-                      ${(scenario.predictedRevenue / 1000).toFixed(0)}K
-                    </div>
+                    <div className="text-xl font-bold">${(scenario.predictedRevenue / 1000).toFixed(0)}K</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className={cn(
                           'h-full rounded-full',
-                          scenario.confidence >= 80
-                            ? 'bg-green-500'
-                            : scenario.confidence >= 60
-                              ? 'bg-amber-500'
-                              : 'bg-red-500'
+                          scenario.confidence >= 80 ? 'bg-green-500' :
+                          scenario.confidence >= 60 ? 'bg-amber-500' : 'bg-red-500'
                         )}
                         style={{ width: `${scenario.confidence}%` }}
                       />
@@ -640,7 +561,7 @@ export function Predictions() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default Predictions;
+export default Predictions

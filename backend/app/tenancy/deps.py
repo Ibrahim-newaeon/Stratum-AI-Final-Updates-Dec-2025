@@ -8,7 +8,8 @@ These dependencies ensure all data access is properly tenant-scoped
 and provide audit logging for super admin bypass operations.
 """
 
-from typing import Optional, TypeVar
+from datetime import datetime, timezone
+from typing import Any, Optional, Type, TypeVar
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -16,8 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
 from app.db.session import get_async_session
-from app.models import User
 from app.tenancy.context import TenantContext, get_tenant_context
+from app.models import User
 
 # Type variable for generic model queries
 T = TypeVar("T")
@@ -134,7 +135,6 @@ def require_tenant(tenant_id_param: str = "tenant_id"):
         ):
             ...
     """
-
     async def validator(request: Request) -> TenantContext:
         context = await get_tenant(request)
 
@@ -204,7 +204,7 @@ async def with_super_admin_bypass(request: Request) -> tuple[TenantContext, bool
 
 def tenant_query(
     session: AsyncSession,
-    model: type[T],
+    model: Type[T],
     tenant_id: int,
     *,
     include_deleted: bool = False,
@@ -312,7 +312,7 @@ class TenantScopedService:
 
     def tenant_query(
         self,
-        model: type[T],
+        model: Type[T],
         include_deleted: bool = False,
     ) -> Select:
         """Create a tenant-scoped query."""

@@ -10,86 +10,65 @@ API endpoints for Autopilot Enforcement features:
 - Intervention audit log
 """
 
-from typing import Any, Optional
+from datetime import date
+from typing import Dict, Any, List, Optional
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Request, Query, Body
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, Field
 
+from app.db.session import get_async_session
 from app.autopilot.enforcer import (
     AutopilotEnforcer,
     EnforcementMode,
+    EnforcementSettings,
     EnforcementRule,
     ViolationType,
 )
-from app.db.session import get_async_session
 from app.schemas.response import APIResponse
 
-router = APIRouter(
-    prefix="/tenant/{tenant_id}/autopilot/enforcement", tags=["autopilot-enforcement"]
-)
+
+router = APIRouter(prefix="/tenant/{tenant_id}/autopilot/enforcement", tags=["autopilot-enforcement"])
 
 
 # =============================================================================
 # Request/Response Models
 # =============================================================================
 
-
 class EnforcementSettingsRequest(BaseModel):
     """Request to update enforcement settings."""
-
-    enforcement_enabled: Optional[bool] = Field(
-        None, description="Kill switch - enable/disable enforcement"
-    )
-    default_mode: Optional[str] = Field(
-        None, description="Default enforcement mode: advisory, soft_block, hard_block"
-    )
-    max_daily_budget: Optional[float] = Field(
-        None, description="Maximum daily budget across all campaigns"
-    )
+    enforcement_enabled: Optional[bool] = Field(None, description="Kill switch - enable/disable enforcement")
+    default_mode: Optional[str] = Field(None, description="Default enforcement mode: advisory, soft_block, hard_block")
+    max_daily_budget: Optional[float] = Field(None, description="Maximum daily budget across all campaigns")
     max_campaign_budget: Optional[float] = Field(None, description="Maximum budget per campaign")
-    budget_increase_limit_pct: Optional[float] = Field(
-        None, description="Maximum budget increase percentage"
-    )
+    budget_increase_limit_pct: Optional[float] = Field(None, description="Maximum budget increase percentage")
     min_roas_threshold: Optional[float] = Field(None, description="Minimum ROAS threshold")
-    roas_lookback_days: Optional[int] = Field(
-        None, description="Days to look back for ROAS calculation"
-    )
-    max_budget_changes_per_day: Optional[int] = Field(
-        None, description="Maximum budget changes per day"
-    )
-    min_hours_between_changes: Optional[int] = Field(
-        None, description="Minimum hours between changes"
-    )
+    roas_lookback_days: Optional[int] = Field(None, description="Days to look back for ROAS calculation")
+    max_budget_changes_per_day: Optional[int] = Field(None, description="Maximum budget changes per day")
+    min_hours_between_changes: Optional[int] = Field(None, description="Minimum hours between changes")
 
 
 class EnforcementCheckRequest(BaseModel):
     """Request to check enforcement for a proposed action."""
-
-    action_type: str = Field(
-        ..., description="Type of action (budget_increase, budget_decrease, etc.)"
-    )
+    action_type: str = Field(..., description="Type of action (budget_increase, budget_decrease, etc.)")
     entity_type: str = Field(..., description="Entity type (campaign, adset, creative)")
     entity_id: str = Field(..., description="Platform entity ID")
-    proposed_value: dict[str, Any] = Field(..., description="Proposed new value")
-    current_value: Optional[dict[str, Any]] = Field(None, description="Current value")
-    metrics: Optional[dict[str, Any]] = Field(None, description="Current performance metrics")
+    proposed_value: Dict[str, Any] = Field(..., description="Proposed new value")
+    current_value: Optional[Dict[str, Any]] = Field(None, description="Current value")
+    metrics: Optional[Dict[str, Any]] = Field(None, description="Current performance metrics")
 
 
 class ConfirmActionRequest(BaseModel):
     """Request to confirm a soft-blocked action."""
-
     confirmation_token: str = Field(..., description="Token from enforcement check")
     override_reason: Optional[str] = Field(None, description="Reason for override")
 
 
 class AddRuleRequest(BaseModel):
     """Request to add a custom enforcement rule."""
-
     rule_id: str = Field(..., description="Unique rule identifier")
-    rule_type: str = Field(
-        ..., description="Type of rule (budget_exceeded, roas_below_threshold, etc.)"
-    )
+    rule_type: str = Field(..., description="Type of rule (budget_exceeded, roas_below_threshold, etc.)")
     threshold_value: float = Field(..., description="Threshold value for the rule")
     enforcement_mode: str = Field("advisory", description="Enforcement mode for this rule")
     enabled: bool = Field(True, description="Whether the rule is enabled")
@@ -98,7 +77,6 @@ class AddRuleRequest(BaseModel):
 
 class KillSwitchRequest(BaseModel):
     """Request to toggle kill switch."""
-
     enabled: bool = Field(..., description="Enable (true) or disable (false) enforcement")
     reason: Optional[str] = Field(None, description="Reason for change")
 
@@ -107,8 +85,7 @@ class KillSwitchRequest(BaseModel):
 # Endpoints
 # =============================================================================
 
-
-@router.get("/settings", response_model=APIResponse[dict[str, Any]])
+@router.get("/settings", response_model=APIResponse[Dict[str, Any]])
 async def get_enforcement_settings(
     request: Request,
     tenant_id: int,
@@ -136,9 +113,7 @@ async def get_enforcement_settings(
         data={
             "settings": {
                 "enforcement_enabled": settings.enforcement_enabled,
-                "default_mode": settings.default_mode.value
-                if isinstance(settings.default_mode, EnforcementMode)
-                else settings.default_mode,
+                "default_mode": settings.default_mode.value if isinstance(settings.default_mode, EnforcementMode) else settings.default_mode,
                 "max_daily_budget": settings.max_daily_budget,
                 "max_campaign_budget": settings.max_campaign_budget,
                 "budget_increase_limit_pct": settings.budget_increase_limit_pct,
@@ -157,7 +132,7 @@ async def get_enforcement_settings(
     )
 
 
-@router.put("/settings", response_model=APIResponse[dict[str, Any]])
+@router.put("/settings", response_model=APIResponse[Dict[str, Any]])
 async def update_enforcement_settings(
     request: Request,
     tenant_id: int,
@@ -209,9 +184,7 @@ async def update_enforcement_settings(
             "message": "Settings updated successfully",
             "settings": {
                 "enforcement_enabled": settings.enforcement_enabled,
-                "default_mode": settings.default_mode.value
-                if isinstance(settings.default_mode, EnforcementMode)
-                else settings.default_mode,
+                "default_mode": settings.default_mode.value if isinstance(settings.default_mode, EnforcementMode) else settings.default_mode,
                 "max_daily_budget": settings.max_daily_budget,
                 "max_campaign_budget": settings.max_campaign_budget,
                 "budget_increase_limit_pct": settings.budget_increase_limit_pct,
@@ -221,7 +194,7 @@ async def update_enforcement_settings(
     )
 
 
-@router.post("/check", response_model=APIResponse[dict[str, Any]])
+@router.post("/check", response_model=APIResponse[Dict[str, Any]])
 async def check_enforcement(
     request: Request,
     tenant_id: int,
@@ -259,7 +232,7 @@ async def check_enforcement(
     )
 
 
-@router.post("/confirm", response_model=APIResponse[dict[str, Any]])
+@router.post("/confirm", response_model=APIResponse[Dict[str, Any]])
 async def confirm_soft_blocked_action(
     request: Request,
     tenant_id: int,
@@ -299,7 +272,7 @@ async def confirm_soft_blocked_action(
     )
 
 
-@router.post("/kill-switch", response_model=APIResponse[dict[str, Any]])
+@router.post("/kill-switch", response_model=APIResponse[Dict[str, Any]])
 async def toggle_kill_switch(
     request: Request,
     tenant_id: int,
@@ -339,7 +312,7 @@ async def toggle_kill_switch(
     )
 
 
-@router.get("/audit-log", response_model=APIResponse[dict[str, Any]])
+@router.get("/audit-log", response_model=APIResponse[Dict[str, Any]])
 async def get_intervention_audit_log(
     request: Request,
     tenant_id: int,
@@ -376,7 +349,7 @@ async def get_intervention_audit_log(
     )
 
 
-@router.post("/rules", response_model=APIResponse[dict[str, Any]])
+@router.post("/rules", response_model=APIResponse[Dict[str, Any]])
 async def add_custom_rule(
     request: Request,
     tenant_id: int,
@@ -437,7 +410,7 @@ async def add_custom_rule(
     )
 
 
-@router.delete("/rules/{rule_id}", response_model=APIResponse[dict[str, Any]])
+@router.delete("/rules/{rule_id}", response_model=APIResponse[Dict[str, Any]])
 async def delete_custom_rule(
     request: Request,
     tenant_id: int,

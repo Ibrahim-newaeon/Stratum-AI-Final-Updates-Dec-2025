@@ -1,32 +1,25 @@
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { cn } from '@/lib/utils';
-
-interface PlatformData {
-  name: string;
-  value: number;
-  color: string;
-}
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { cn, getPlatformColor } from '@/lib/utils'
 
 interface PlatformBreakdownWidgetProps {
-  data?: PlatformData[];
-  className?: string;
+  className?: string
 }
 
-export function PlatformBreakdownWidget({ data, className }: PlatformBreakdownWidgetProps) {
-  if (!data || data.length === 0) {
-    return (
-      <div className={cn('h-full p-4 flex items-center justify-center', className)}>
-        <p className="text-sm text-muted-foreground">No platform data available</p>
-      </div>
-    );
-  }
+const mockData = [
+  { name: 'Google', value: 35, color: getPlatformColor('google') },
+  { name: 'Meta', value: 30, color: getPlatformColor('meta') },
+  { name: 'TikTok', value: 20, color: '#000000' },
+  { name: 'LinkedIn', value: 10, color: getPlatformColor('linkedin') },
+  { name: 'Snapchat', value: 5, color: '#FFFC00' },
+]
 
+export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetProps) {
   return (
     <div className={cn('h-full p-4', className)}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={mockData}
             cx="50%"
             cy="50%"
             innerRadius={50}
@@ -34,7 +27,7 @@ export function PlatformBreakdownWidget({ data, className }: PlatformBreakdownWi
             paddingAngle={2}
             dataKey="value"
           >
-            {data.map((entry, index) => (
+            {mockData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
@@ -44,7 +37,7 @@ export function PlatformBreakdownWidget({ data, className }: PlatformBreakdownWi
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
-            formatter={((value: number) => [`${value}%`, 'Share']) as any}
+            formatter={(value: number) => [`${value}%`, 'Share']}
           />
           <Legend
             verticalAlign="bottom"
@@ -54,5 +47,5 @@ export function PlatformBreakdownWidget({ data, className }: PlatformBreakdownWi
         </PieChart>
       </ResponsiveContainer>
     </div>
-  );
+  )
 }

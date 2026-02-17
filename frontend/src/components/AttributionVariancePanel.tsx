@@ -5,23 +5,24 @@
  * Helps identify discrepancies in revenue and conversion tracking.
  */
 
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
-  getStatusLabel,
-  MetricCard,
-  PlatformVarianceRow,
   useAttributionVariance,
-} from '@/api/trustLayer';
-import { useCanFeature } from '@/stores/featureFlagsStore';
+  AttributionVarianceData,
+  PlatformVarianceRow,
+  MetricCard,
+  getStatusLabel,
+} from '@/api/trustLayer'
+import { useCanFeature } from '@/stores/featureFlagsStore'
 
 // =============================================================================
 // Types
 // =============================================================================
 
 interface AttributionVariancePanelProps {
-  tenantId: number;
-  date?: string;
-  compact?: boolean;
+  tenantId: number
+  date?: string
+  compact?: boolean
 }
 
 // =============================================================================
@@ -34,27 +35,29 @@ const MetricCardComponent: React.FC<{ card: MetricCard }> = ({ card }) => {
     risk: 'border-yellow-200 bg-yellow-50',
     degraded: 'border-orange-200 bg-orange-50',
     neutral: 'border-gray-200 bg-gray-50',
-  };
+  }
 
   const valueColors: Record<string, string> = {
     ok: 'text-green-700',
     risk: 'text-yellow-700',
     degraded: 'text-orange-700',
     neutral: 'text-gray-700',
-  };
+  }
 
   return (
     <div className={`rounded-lg border p-4 ${statusColors[card.status]}`}>
       <div className="text-sm font-medium text-gray-600">{card.title}</div>
-      <div className={`text-2xl font-bold mt-1 ${valueColors[card.status]}`}>{card.value}</div>
+      <div className={`text-2xl font-bold mt-1 ${valueColors[card.status]}`}>
+        {card.value}
+      </div>
     </div>
-  );
-};
+  )
+}
 
 const VarianceBar: React.FC<{ variance: number }> = ({ variance }) => {
-  const absVariance = Math.abs(variance);
-  const width = Math.min(absVariance, 100);
-  const isPositive = variance >= 0;
+  const absVariance = Math.abs(variance)
+  const width = Math.min(absVariance, 100)
+  const isPositive = variance >= 0
 
   return (
     <div className="flex items-center space-x-2">
@@ -62,26 +65,23 @@ const VarianceBar: React.FC<{ variance: number }> = ({ variance }) => {
         <div className="absolute inset-y-0 left-1/2 w-0.5 bg-gray-300" />
         <div
           className={`absolute inset-y-0 ${isPositive ? 'left-1/2' : 'right-1/2'} ${
-            absVariance < 15 ? 'bg-green-400' : absVariance < 30 ? 'bg-yellow-400' : 'bg-red-400'
+            absVariance < 15 ? 'bg-green-400' :
+            absVariance < 30 ? 'bg-yellow-400' :
+            'bg-red-400'
           }`}
           style={{ width: `${width / 2}%` }}
         />
       </div>
-      <span
-        className={`text-sm font-medium ${
-          absVariance < 15
-            ? 'text-green-600'
-            : absVariance < 30
-              ? 'text-yellow-600'
-              : 'text-red-600'
-        }`}
-      >
-        {variance >= 0 ? '+' : ''}
-        {variance.toFixed(1)}%
+      <span className={`text-sm font-medium ${
+        absVariance < 15 ? 'text-green-600' :
+        absVariance < 30 ? 'text-yellow-600' :
+        'text-red-600'
+      }`}>
+        {variance >= 0 ? '+' : ''}{variance.toFixed(1)}%
       </span>
     </div>
-  );
-};
+  )
+}
 
 const PlatformVarianceRowComponent: React.FC<{ row: PlatformVarianceRow }> = ({ row }) => {
   const statusColors: Record<string, string> = {
@@ -90,14 +90,14 @@ const PlatformVarianceRowComponent: React.FC<{ row: PlatformVarianceRow }> = ({ 
     moderate_variance: 'bg-orange-100 text-orange-800',
     high_variance: 'bg-red-100 text-red-800',
     no_data: 'bg-gray-100 text-gray-800',
-  };
+  }
 
   const platformIcons: Record<string, string> = {
     meta: '📘',
     google: '🔴',
     tiktok: '🎵',
     snapchat: '👻',
-  };
+  }
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -105,12 +105,12 @@ const PlatformVarianceRowComponent: React.FC<{ row: PlatformVarianceRow }> = ({ 
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value);
-  };
+    }).format(value)
+  }
 
   const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-US').format(value);
-  };
+    return new Intl.NumberFormat('en-US').format(value)
+  }
 
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
@@ -136,11 +136,9 @@ const PlatformVarianceRowComponent: React.FC<{ row: PlatformVarianceRow }> = ({ 
           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
             <div
               className={`h-2 rounded-full ${
-                row.confidence >= 0.8
-                  ? 'bg-green-500'
-                  : row.confidence >= 0.5
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
+                row.confidence >= 0.8 ? 'bg-green-500' :
+                row.confidence >= 0.5 ? 'bg-yellow-500' :
+                'bg-red-500'
               }`}
               style={{ width: `${row.confidence * 100}%` }}
             />
@@ -149,15 +147,13 @@ const PlatformVarianceRowComponent: React.FC<{ row: PlatformVarianceRow }> = ({ 
         </div>
       </td>
       <td className="py-3 px-4 text-center">
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[row.status]}`}
-        >
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[row.status]}`}>
           {getStatusLabel(row.status)}
         </span>
       </td>
     </tr>
-  );
-};
+  )
+}
 
 // =============================================================================
 // Main Component
@@ -168,10 +164,10 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
   date,
   compact = false,
 }) => {
-  const canAttributionVariance = useCanFeature('attribution_variance');
-  const [expanded, setExpanded] = useState(!compact);
+  const canAttributionVariance = useCanFeature('attribution_variance')
+  const [expanded, setExpanded] = useState(!compact)
 
-  const { data, isLoading, error, refetch } = useAttributionVariance(tenantId, date);
+  const { data, isLoading, error, refetch } = useAttributionVariance(tenantId, date)
 
   if (!canAttributionVariance) {
     return (
@@ -180,7 +176,7 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
           Attribution Variance feature is not enabled for your plan.
         </div>
       </div>
-    );
+    )
   }
 
   if (isLoading) {
@@ -195,7 +191,7 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -209,11 +205,11 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
           Try again
         </button>
       </div>
-    );
+    )
   }
 
   if (!data) {
-    return null;
+    return null
   }
 
   return (
@@ -225,19 +221,13 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
       >
         <div className="flex items-center space-x-3">
           <h3 className="text-lg font-semibold text-gray-900">Attribution Variance</h3>
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              data.status === 'healthy'
-                ? 'bg-green-100 text-green-800'
-                : data.status === 'minor_variance'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : data.status === 'moderate_variance'
-                    ? 'bg-orange-100 text-orange-800'
-                    : data.status === 'high_variance'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
-            }`}
-          >
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            data.status === 'healthy' ? 'bg-green-100 text-green-800' :
+            data.status === 'minor_variance' ? 'bg-yellow-100 text-yellow-800' :
+            data.status === 'moderate_variance' ? 'bg-orange-100 text-orange-800' :
+            data.status === 'high_variance' ? 'bg-red-100 text-red-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
             {getStatusLabel(data.status)}
           </span>
         </div>
@@ -248,11 +238,7 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
             fill="currentColor"
             viewBox="0 0 20 20"
           >
-            <path
-              fillRule="evenodd"
-              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
         </div>
       </div>
@@ -275,42 +261,32 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
               <div>
                 <div className="text-sm text-gray-600 mb-1">Overall Revenue Variance</div>
                 <div className="flex items-center space-x-3">
-                  <span
-                    className={`text-2xl font-bold ${
-                      Math.abs(data.overall_revenue_variance_pct) < 15
-                        ? 'text-green-600'
-                        : Math.abs(data.overall_revenue_variance_pct) < 30
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
-                    }`}
-                  >
+                  <span className={`text-2xl font-bold ${
+                    Math.abs(data.overall_revenue_variance_pct) < 15 ? 'text-green-600' :
+                    Math.abs(data.overall_revenue_variance_pct) < 30 ? 'text-yellow-600' :
+                    'text-red-600'
+                  }`}>
                     {data.overall_revenue_variance_pct >= 0 ? '+' : ''}
                     {data.overall_revenue_variance_pct.toFixed(1)}%
                   </span>
                   <span className="text-sm text-gray-500">
-                    Platform {data.overall_revenue_variance_pct >= 0 ? 'over' : 'under'}-reports vs
-                    GA4
+                    Platform {data.overall_revenue_variance_pct >= 0 ? 'over' : 'under'}-reports vs GA4
                   </span>
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600 mb-1">Overall Conversion Variance</div>
                 <div className="flex items-center space-x-3">
-                  <span
-                    className={`text-2xl font-bold ${
-                      Math.abs(data.overall_conversion_variance_pct) < 15
-                        ? 'text-green-600'
-                        : Math.abs(data.overall_conversion_variance_pct) < 30
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
-                    }`}
-                  >
+                  <span className={`text-2xl font-bold ${
+                    Math.abs(data.overall_conversion_variance_pct) < 15 ? 'text-green-600' :
+                    Math.abs(data.overall_conversion_variance_pct) < 30 ? 'text-yellow-600' :
+                    'text-red-600'
+                  }`}>
                     {data.overall_conversion_variance_pct >= 0 ? '+' : ''}
                     {data.overall_conversion_variance_pct.toFixed(1)}%
                   </span>
                   <span className="text-sm text-gray-500">
-                    Platform {data.overall_conversion_variance_pct >= 0 ? 'over' : 'under'}-reports
-                    vs GA4
+                    Platform {data.overall_conversion_variance_pct >= 0 ? 'over' : 'under'}-reports vs GA4
                   </span>
                 </div>
               </div>
@@ -359,24 +335,18 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
                 <div
                   key={index}
                   className={`rounded-lg p-4 ${
-                    banner.type === 'error'
-                      ? 'bg-red-50 border border-red-200'
-                      : banner.type === 'warning'
-                        ? 'bg-yellow-50 border border-yellow-200'
-                        : 'bg-blue-50 border border-blue-200'
+                    banner.type === 'error' ? 'bg-red-50 border border-red-200' :
+                    banner.type === 'warning' ? 'bg-yellow-50 border border-yellow-200' :
+                    'bg-blue-50 border border-blue-200'
                   }`}
                 >
                   <div className="flex items-start">
                     <div className="flex-1">
-                      <h4
-                        className={`text-sm font-medium ${
-                          banner.type === 'error'
-                            ? 'text-red-800'
-                            : banner.type === 'warning'
-                              ? 'text-yellow-800'
-                              : 'text-blue-800'
-                        }`}
-                      >
+                      <h4 className={`text-sm font-medium ${
+                        banner.type === 'error' ? 'text-red-800' :
+                        banner.type === 'warning' ? 'text-yellow-800' :
+                        'text-blue-800'
+                      }`}>
                         {banner.title}
                       </h4>
                       <p className="mt-1 text-sm text-gray-600">{banner.message}</p>
@@ -403,9 +373,7 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
           {data.platform_rows.length === 0 && data.cards.length === 0 && (
             <div className="text-center py-8">
               <div className="text-gray-400 text-4xl mb-3">📈</div>
-              <div className="text-gray-600">
-                No attribution variance data available for this date.
-              </div>
+              <div className="text-gray-600">No attribution variance data available for this date.</div>
               <div className="text-sm text-gray-500 mt-1">
                 Ensure GA4 is connected and data has synced.
               </div>
@@ -415,29 +383,20 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
           {/* Info Box */}
           <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
             <div className="flex items-start space-x-2">
-              <svg
-                className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clipRule="evenodd"
-                />
+              <svg className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               <div>
-                <strong>About Attribution Variance:</strong> Variance between platform-reported and
-                GA4 data is normal due to different attribution windows and tracking methods.
-                Variance under 15% is typically acceptable. Higher variance may indicate tracking
-                issues or attribution window mismatches.
+                <strong>About Attribution Variance:</strong> Variance between platform-reported and GA4 data is normal
+                due to different attribution windows and tracking methods. Variance under 15% is typically acceptable.
+                Higher variance may indicate tracking issues or attribution window mismatches.
               </div>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default AttributionVariancePanel;
+export default AttributionVariancePanel

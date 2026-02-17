@@ -1,90 +1,81 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import GridLayout from 'react-grid-layout';
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import GridLayout, { Layout } from 'react-grid-layout'
 import {
-  GripVertical,
-  LayoutDashboard,
+  Settings,
   Plus,
   RotateCcw,
   Save,
-  Settings,
-  Trash2,
   X,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { KPIWidget } from '@/components/widgets/KPIWidget';
-import { ChartWidget } from '@/components/widgets/ChartWidget';
-import { CampaignsWidget } from '@/components/widgets/CampaignsWidget';
-import { PlatformBreakdownWidget } from '@/components/widgets/PlatformBreakdownWidget';
-import { AlertsWidget } from '@/components/widgets/AlertsWidget';
-import { QuickActionsWidget } from '@/components/widgets/QuickActionsWidget';
-import { SimulatorWidget } from '@/components/widgets/SimulatorWidget';
-import { availableWidgets, defaultWidgets, WidgetConfig, WidgetType } from '@/components/widgets';
+  GripVertical,
+  Trash2,
+  LayoutDashboard,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { KPIWidget } from '@/components/widgets/KPIWidget'
+import { ChartWidget } from '@/components/widgets/ChartWidget'
+import { CampaignsWidget } from '@/components/widgets/CampaignsWidget'
+import { PlatformBreakdownWidget } from '@/components/widgets/PlatformBreakdownWidget'
+import { AlertsWidget } from '@/components/widgets/AlertsWidget'
+import { QuickActionsWidget } from '@/components/widgets/QuickActionsWidget'
+import { SimulatorWidget } from '@/components/widgets/SimulatorWidget'
+import { WidgetConfig, WidgetType, defaultWidgets, availableWidgets } from '@/components/widgets'
 
-import 'react-grid-layout/css/styles.css';
+import 'react-grid-layout/css/styles.css'
 
-const GRID_COLS = 12;
-const ROW_HEIGHT = 80;
+const GRID_COLS = 12
+const ROW_HEIGHT = 80
 
 export function CustomDashboard() {
-  const { t } = useTranslation();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(1200);
+  const { t } = useTranslation()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(1200)
   const [widgets, setWidgets] = useState<WidgetConfig[]>(() => {
-    const saved = localStorage.getItem('stratum-dashboard-layout');
-    return saved ? JSON.parse(saved) : defaultWidgets;
-  });
-  const [isEditing, setIsEditing] = useState(false);
-  const [showAddWidget, setShowAddWidget] = useState(false);
+    const saved = localStorage.getItem('stratum-dashboard-layout')
+    return saved ? JSON.parse(saved) : defaultWidgets
+  })
+  const [isEditing, setIsEditing] = useState(false)
+  const [showAddWidget, setShowAddWidget] = useState(false)
 
   // Measure container width on mount and resize
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
+        setContainerWidth(containerRef.current.offsetWidth)
       }
-    };
+    }
 
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
-  const handleLayoutChange = useCallback(
-    (layout: any) => {
-      if (!isEditing) return;
-      setWidgets((prev) =>
-        prev.map((widget) => {
-          const layoutItem = layout.find((l: any) => l.i === widget.id) as any;
-          if (layoutItem) {
-            return {
-              ...widget,
-              x: layoutItem.x,
-              y: layoutItem.y,
-              w: layoutItem.w,
-              h: layoutItem.h,
-            };
-          }
-          return widget;
-        })
-      );
-    },
-    [isEditing]
-  );
+  const handleLayoutChange = useCallback((layout: Layout[]) => {
+    if (!isEditing) return
+    setWidgets((prev) =>
+      prev.map((widget) => {
+        const layoutItem = layout.find((l) => l.i === widget.id)
+        if (layoutItem) {
+          return { ...widget, x: layoutItem.x, y: layoutItem.y, w: layoutItem.w, h: layoutItem.h }
+        }
+        return widget
+      })
+    )
+  }, [isEditing])
 
   const handleSave = () => {
-    localStorage.setItem('stratum-dashboard-layout', JSON.stringify(widgets));
-    setIsEditing(false);
-  };
+    localStorage.setItem('stratum-dashboard-layout', JSON.stringify(widgets))
+    setIsEditing(false)
+  }
 
   const handleReset = () => {
-    setWidgets(defaultWidgets);
-    localStorage.removeItem('stratum-dashboard-layout');
-  };
+    setWidgets(defaultWidgets)
+    localStorage.removeItem('stratum-dashboard-layout')
+  }
 
   const handleAddWidget = (type: WidgetType) => {
-    const widgetDef = availableWidgets.find((w) => w.type === type);
-    if (!widgetDef) return;
+    const widgetDef = availableWidgets.find((w) => w.type === type)
+    if (!widgetDef) return
 
     const newWidget: WidgetConfig = {
       id: `${type}-${Date.now()}`,
@@ -96,51 +87,45 @@ export function CustomDashboard() {
       h: widgetDef.defaultSize.h,
       minW: 2,
       minH: 2,
-    };
-    setWidgets((prev) => [...prev, newWidget]);
-    setShowAddWidget(false);
-  };
+    }
+    setWidgets((prev) => [...prev, newWidget])
+    setShowAddWidget(false)
+  }
 
   const handleRemoveWidget = (id: string) => {
-    setWidgets((prev) => prev.filter((w) => w.id !== id));
-  };
+    setWidgets((prev) => prev.filter((w) => w.id !== id))
+  }
 
   const renderWidget = (widget: WidgetConfig) => {
-    const type = widget.type;
+    const type = widget.type
 
     if (type.startsWith('kpi-')) {
-      const kpiType = type.replace('kpi-', '') as
-        | 'spend'
-        | 'revenue'
-        | 'roas'
-        | 'conversions'
-        | 'ctr'
-        | 'impressions';
-      return <KPIWidget type={kpiType} />;
+      const kpiType = type.replace('kpi-', '') as 'spend' | 'revenue' | 'roas' | 'conversions' | 'ctr' | 'impressions'
+      return <KPIWidget type={kpiType} />
     }
 
     if (type.startsWith('chart-')) {
-      const chartType = type.replace('chart-', '') as 'revenue' | 'spend' | 'performance';
-      return <ChartWidget type={chartType} />;
+      const chartType = type.replace('chart-', '') as 'revenue' | 'spend' | 'performance'
+      return <ChartWidget type={chartType} />
     }
 
     switch (type) {
       case 'campaigns-top':
-        return <CampaignsWidget />;
+        return <CampaignsWidget />
       case 'platform-breakdown':
-        return <PlatformBreakdownWidget />;
+        return <PlatformBreakdownWidget />
       case 'alerts':
-        return <AlertsWidget />;
+        return <AlertsWidget />
       case 'quick-actions':
-        return <QuickActionsWidget />;
+        return <QuickActionsWidget />
       case 'simulator':
-        return <SimulatorWidget />;
+        return <SimulatorWidget />
       default:
-        return <div className="p-4 text-muted-foreground">Unknown widget</div>;
+        return <div className="p-4 text-muted-foreground">Unknown widget</div>
     }
-  };
+  }
 
-  const layout = widgets.map((widget) => ({
+  const layout: Layout[] = widgets.map((widget) => ({
     i: widget.id,
     x: widget.x,
     y: widget.y,
@@ -150,7 +135,7 @@ export function CustomDashboard() {
     minH: widget.minH || 2,
     maxW: widget.maxW,
     maxH: widget.maxH,
-  })) as any;
+  }))
 
   return (
     <div className="space-y-4">
@@ -210,61 +195,58 @@ export function CustomDashboard() {
 
       {isEditing && (
         <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm">
-          <strong>Edit Mode:</strong> Drag widgets to rearrange, resize from corners, or remove
-          widgets.
+          <strong>Edit Mode:</strong> Drag widgets to rearrange, resize from corners, or remove widgets.
         </div>
       )}
 
       {/* Grid Layout */}
       <div ref={containerRef} className="w-full">
         <GridLayout
-          {...{
-            className: "layout",
-            layout,
-            cols: GRID_COLS,
-            rowHeight: ROW_HEIGHT,
-            width: containerWidth,
-            isDraggable: isEditing,
-            isResizable: isEditing,
-            onLayoutChange: handleLayoutChange,
-            draggableHandle: ".widget-drag-handle",
-            compactType: "vertical",
-            preventCollision: false,
-          } as any}
+          className="layout"
+          layout={layout}
+          cols={GRID_COLS}
+          rowHeight={ROW_HEIGHT}
+          width={containerWidth}
+          isDraggable={isEditing}
+          isResizable={isEditing}
+          onLayoutChange={handleLayoutChange}
+          draggableHandle=".widget-drag-handle"
+          compactType="vertical"
+          preventCollision={false}
         >
-          {widgets.map((widget) => (
-            <div
-              key={widget.id}
-              className={cn(
-                'rounded-xl border bg-card overflow-hidden',
-                isEditing && 'ring-2 ring-primary/20'
-              )}
-            >
-              {/* Widget Header */}
-              <div
-                className={cn(
-                  'flex items-center justify-between px-4 py-2 border-b bg-muted/30',
-                  isEditing && 'cursor-move widget-drag-handle'
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  {isEditing && <GripVertical className="w-4 h-4 text-muted-foreground" />}
-                  <span className="font-medium text-sm">{widget.title}</span>
-                </div>
-                {isEditing && (
-                  <button
-                    onClick={() => handleRemoveWidget(widget.id)}
-                    className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+        {widgets.map((widget) => (
+          <div
+            key={widget.id}
+            className={cn(
+              'rounded-xl border bg-card overflow-hidden',
+              isEditing && 'ring-2 ring-primary/20'
+            )}
+          >
+            {/* Widget Header */}
+            <div className={cn(
+              'flex items-center justify-between px-4 py-2 border-b bg-muted/30',
+              isEditing && 'cursor-move widget-drag-handle'
+            )}>
+              <div className="flex items-center gap-2">
+                {isEditing && <GripVertical className="w-4 h-4 text-muted-foreground" />}
+                <span className="font-medium text-sm">{widget.title}</span>
               </div>
-
-              {/* Widget Content */}
-              <div className="h-[calc(100%-40px)]">{renderWidget(widget)}</div>
+              {isEditing && (
+                <button
+                  onClick={() => handleRemoveWidget(widget.id)}
+                  className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
-          ))}
+
+            {/* Widget Content */}
+            <div className="h-[calc(100%-40px)]">
+              {renderWidget(widget)}
+            </div>
+          </div>
+        ))}
         </GridLayout>
       </div>
 
@@ -298,7 +280,7 @@ export function CustomDashboard() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default CustomDashboard;
+export default CustomDashboard

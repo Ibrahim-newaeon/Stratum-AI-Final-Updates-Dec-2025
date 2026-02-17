@@ -1,50 +1,50 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next'
 import {
-  BarChart3,
-  DollarSign,
-  Eye,
-  MousePointerClick,
-  ShoppingCart,
-  Target,
-  TrendingDown,
   TrendingUp,
-} from 'lucide-react';
-import { cn, formatCompactNumber, formatCurrency, formatPercent } from '@/lib/utils';
-import { SmartTooltip } from '../guide/SmartTooltip';
+  TrendingDown,
+  DollarSign,
+  MousePointerClick,
+  Eye,
+  Target,
+  ShoppingCart,
+  BarChart3,
+} from 'lucide-react'
+import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
+import { SmartTooltip } from '../guide/SmartTooltip'
 
 interface KPIData {
-  spend: number;
-  spendChange: number;
-  revenue: number;
-  revenueChange: number;
-  roas: number;
-  roasChange: number;
-  impressions: number;
-  impressionsChange: number;
-  clicks: number;
-  clicksChange: number;
-  ctr: number;
-  ctrChange: number;
-  conversions: number;
-  conversionsChange: number;
-  cpa: number;
-  cpaChange: number;
+  spend: number
+  spendChange: number
+  revenue: number
+  revenueChange: number
+  roas: number
+  roasChange: number
+  impressions: number
+  impressionsChange: number
+  clicks: number
+  clicksChange: number
+  ctr: number
+  ctrChange: number
+  conversions: number
+  conversionsChange: number
+  cpa: number
+  cpaChange: number
 }
 
 interface KPITilesProps {
-  data: KPIData;
-  isLoading?: boolean;
-  className?: string;
+  data: KPIData
+  isLoading?: boolean
+  className?: string
 }
 
 interface TileProps {
-  title: string;
-  value: string | number;
-  change: number;
-  icon: React.ReactNode;
-  iconBg: string;
-  tooltip: string;
-  invertChangeColor?: boolean;
+  title: string
+  value: string | number
+  change: number
+  icon: React.ReactNode
+  iconBg: string
+  tooltip: string
+  invertChangeColor?: boolean
 }
 
 function KPITile({
@@ -56,14 +56,16 @@ function KPITile({
   tooltip,
   invertChangeColor = false,
 }: TileProps) {
-  const isPositive = invertChangeColor ? change < 0 : change > 0;
-  const isNegative = invertChangeColor ? change > 0 : change < 0;
+  const isPositive = invertChangeColor ? change < 0 : change > 0
+  const isNegative = invertChangeColor ? change > 0 : change < 0
 
   return (
     <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <SmartTooltip content={tooltip} position="top">
-          <span className="text-sm text-muted-foreground font-medium cursor-help">{title}</span>
+          <span className="text-sm text-muted-foreground font-medium cursor-help">
+            {title}
+          </span>
         </SmartTooltip>
         <div className={cn('p-2 rounded-lg', iconBg)}>{icon}</div>
       </div>
@@ -95,7 +97,7 @@ function KPITile({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function KPITileSkeleton() {
@@ -110,11 +112,11 @@ function KPITileSkeleton() {
         <div className="h-4 w-20 bg-muted rounded" />
       </div>
     </div>
-  );
+  )
 }
 
 export function KPITiles({ data, isLoading, className }: KPITilesProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   if (isLoading) {
     return (
@@ -123,7 +125,7 @@ export function KPITiles({ data, isLoading, className }: KPITilesProps) {
           <KPITileSkeleton key={i} />
         ))}
       </div>
-    );
+    )
   }
 
   const tiles: TileProps[] = [
@@ -193,7 +195,7 @@ export function KPITiles({ data, isLoading, className }: KPITilesProps) {
       tooltip: t('kpi.cpaTooltip'),
       invertChangeColor: true, // Lower CPA = better
     },
-  ];
+  ]
 
   return (
     <div id="kpi-tiles" className={cn('grid grid-cols-2 md:grid-cols-4 gap-4', className)}>
@@ -201,35 +203,23 @@ export function KPITiles({ data, isLoading, className }: KPITilesProps) {
         <KPITile key={tile.title} {...tile} />
       ))}
     </div>
-  );
+  )
 }
 
 // Compact variant for sidebar or smaller spaces
 export function KPITilesCompact({ data, className }: KPITilesProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const mainKPIs = [
     { label: 'ROAS', value: `${data.roas.toFixed(2)}x`, change: data.roasChange },
-    {
-      label: t('kpi.spend'),
-      value: formatCurrency(data.spend),
-      change: data.spendChange,
-      invert: true,
-    },
-    {
-      label: t('kpi.conversions'),
-      value: formatCompactNumber(data.conversions),
-      change: data.conversionsChange,
-    },
-  ];
+    { label: t('kpi.spend'), value: formatCurrency(data.spend), change: data.spendChange, invert: true },
+    { label: t('kpi.conversions'), value: formatCompactNumber(data.conversions), change: data.conversionsChange },
+  ]
 
   return (
     <div className={cn('space-y-2', className)}>
       {mainKPIs.map((kpi) => (
-        <div
-          key={kpi.label}
-          className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-        >
+        <div key={kpi.label} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
           <span className="text-sm text-muted-foreground">{kpi.label}</span>
           <div className="flex items-center gap-2">
             <span className="font-semibold">{kpi.value}</span>
@@ -247,7 +237,7 @@ export function KPITilesCompact({ data, className }: KPITilesProps) {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
-export default KPITiles;
+export default KPITiles

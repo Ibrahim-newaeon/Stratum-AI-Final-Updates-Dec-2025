@@ -13,13 +13,15 @@ Features:
 """
 
 import json
+import os
 import shutil
-from dataclasses import dataclass
-from datetime import UTC, datetime
-from enum import Enum
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass, field
+from enum import Enum
 
+import joblib
 import numpy as np
 import pandas as pd
 
@@ -31,17 +33,15 @@ logger = get_logger(__name__)
 
 class RetrainingTrigger(str, Enum):
     """Reasons for triggering model retraining."""
-
-    SCHEDULED = "scheduled"  # Regular schedule (e.g., weekly)
+    SCHEDULED = "scheduled"              # Regular schedule (e.g., weekly)
     PERFORMANCE_DRIFT = "performance_drift"  # Model accuracy degraded
-    DATA_VOLUME = "data_volume"  # Enough new data collected
-    MANUAL = "manual"  # User-triggered
-    NEW_FEATURES = "new_features"  # New features available
+    DATA_VOLUME = "data_volume"          # Enough new data collected
+    MANUAL = "manual"                    # User-triggered
+    NEW_FEATURES = "new_features"        # New features available
 
 
 class ModelStatus(str, Enum):
     """Status of a model version."""
-
     ACTIVE = "active"
     STAGING = "staging"
     RETIRED = "retired"
@@ -51,22 +51,20 @@ class ModelStatus(str, Enum):
 @dataclass
 class ModelVersion:
     """Represents a specific version of a trained model."""
-
     version_id: str
     model_name: str
     created_at: datetime
-    metrics: dict[str, float]
+    metrics: Dict[str, float]
     status: ModelStatus
     trigger: RetrainingTrigger
     training_samples: int
-    features: list[str]
+    features: List[str]
     path: str
 
 
 @dataclass
 class RetrainingConfig:
     """Configuration for the retraining pipeline."""
-
     # Scheduling
     retrain_interval_days: int = 7  # Retrain weekly
     min_samples_for_retrain: int = 1000  # Minimum new samples
@@ -109,7 +107,7 @@ class RetrainingPipeline:
             path.mkdir(parents=True, exist_ok=True)
 
         self.trainer = ModelTrainer(str(self.staging_path))
-        self._model_history: dict[str, list[ModelVersion]] = {}
+        self._model_history: Dict[str, List[ModelVersion]] = {}
         self._load_model_history()
 
     def _load_model_history(self):
@@ -117,7 +115,7 @@ class RetrainingPipeline:
         history_path = self.models_path / "model_history.json"
         if history_path.exists():
             try:
-                with history_path.open() as f:
+                with open(history_path, "r") as f:
                     data = json.load(f)
                 for model_name, versions in data.items():
                     self._model_history[model_name] = [
@@ -156,14 +154,14 @@ class RetrainingPipeline:
                 }
                 for v in versions
             ]
-        with history_path.open("w") as f:
+        with open(history_path, "w") as f:
             json.dump(data, f, indent=2)
 
     def check_retraining_needed(
         self,
         model_name: str,
         recent_predictions: Optional[pd.DataFrame] = None,
-    ) -> tuple[bool, RetrainingTrigger, str]:
+    ) -> Tuple[bool, RetrainingTrigger, str]:
         """
         Check if a model needs retraining.
 
@@ -180,40 +178,35 @@ class RetrainingPipeline:
             return True, RetrainingTrigger.MANUAL, "Model does not exist"
 
         # Load metadata
-        with metadata_path.open() as f:
+        with open(metadata_path, "r") as f:
             metadata = json.load(f)
 
         created_at = datetime.fromisoformat(metadata["created_at"])
-        age_days = (datetime.now(UTC) - created_at).days
+        age_days = (datetime.now(timezone.utc) - created_at).days
 
         # Check age-based retraining
         if age_days >= self.config.retrain_interval_days:
             return True, RetrainingTrigger.SCHEDULED, f"Model is {age_days} days old"
 
         # Check performance drift if predictions provided
-        if recent_predictions is not None and len(recent_predictions) > 100 and (
-            "prediction" in recent_predictions.columns
-            and "actual" in recent_predictions.columns
-        ):
-            # Calculate recent performance
-            y_true = recent_predictions["actual"].values
-            y_pred = recent_predictions["prediction"].values
+        if recent_predictions is not None and len(recent_predictions) > 100:
+            if "prediction" in recent_predictions.columns and "actual" in recent_predictions.columns:
+                # Calculate recent performance
+                y_true = recent_predictions["actual"].values
+                y_pred = recent_predictions["prediction"].values
 
-            # R² score
-            ss_res = np.sum((y_true - y_pred) ** 2)
-            ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
-            current_r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+                # R² score
+                ss_res = np.sum((y_true - y_pred) ** 2)
+                ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
+                current_r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
-            # Compare to training R²
-            training_r2 = metadata.get("metrics", {}).get("r2", 0)
+                # Compare to training R²
+                training_r2 = metadata.get("metrics", {}).get("r2", 0)
 
-            degradation = training_r2 - current_r2
-            if degradation > self.config.max_r2_degradation:
-                return (
-                    True,
-                    RetrainingTrigger.PERFORMANCE_DRIFT,
-                    f"R² degraded from {training_r2:.3f} to {current_r2:.3f}",
-                )
+                degradation = training_r2 - current_r2
+                if degradation > self.config.max_r2_degradation:
+                    return True, RetrainingTrigger.PERFORMANCE_DRIFT, \
+                        f"R² degraded from {training_r2:.3f} to {current_r2:.3f}"
 
         return False, RetrainingTrigger.MANUAL, "No retraining needed"
 
@@ -223,7 +216,7 @@ class RetrainingPipeline:
         training_data: pd.DataFrame,
         trigger: RetrainingTrigger = RetrainingTrigger.MANUAL,
         validate_before_promote: bool = True,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Retrain a specific model with new data.
 
@@ -238,13 +231,13 @@ class RetrainingPipeline:
         """
         logger.info(f"Starting retraining for {model_name} (trigger: {trigger.value})")
 
-        version_id = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+        version_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         results = {
             "version_id": version_id,
             "model_name": model_name,
             "trigger": trigger.value,
             "status": "started",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         try:
@@ -296,8 +289,8 @@ class RetrainingPipeline:
     def _compare_with_production(
         self,
         model_name: str,
-        new_metrics: dict[str, Any],
-    ) -> dict[str, Any]:
+        new_metrics: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Compare new model metrics with production model."""
         metadata_path = self.models_path / f"{model_name}_metadata.json"
 
@@ -305,7 +298,7 @@ class RetrainingPipeline:
             # No production model exists, always promote
             return {"should_promote": True, "reason": "No existing model"}
 
-        with metadata_path.open() as f:
+        with open(metadata_path, "r") as f:
             prod_metadata = json.load(f)
 
         prod_r2 = prod_metadata.get("metrics", {}).get("r2", 0)
@@ -336,7 +329,7 @@ class RetrainingPipeline:
         self,
         model_name: str,
         version_id: str,
-        metrics: dict[str, Any],
+        metrics: Dict[str, Any],
         trigger: RetrainingTrigger,
         training_data: pd.DataFrame,
     ):
@@ -366,14 +359,14 @@ class RetrainingPipeline:
         metadata_path = self.models_path / f"{model_name}_metadata.json"
         features = []
         if metadata_path.exists():
-            with metadata_path.open() as f:
+            with open(metadata_path, "r") as f:
                 metadata = json.load(f)
                 features = metadata.get("features", [])
 
         model_version = ModelVersion(
             version_id=version_id,
             model_name=model_name,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             metrics=metrics,
             status=ModelStatus.ACTIVE,
             trigger=trigger,
@@ -397,7 +390,7 @@ class RetrainingPipeline:
 
     def _archive_current_model(self, model_name: str):
         """Archive the current production model."""
-        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         archive_dir = self.archive_path / f"{model_name}_{timestamp}"
         archive_dir.mkdir(parents=True, exist_ok=True)
 
@@ -421,7 +414,7 @@ class RetrainingPipeline:
         versions = self._model_history[model_name]
         if len(versions) > self.config.max_model_versions:
             # Keep only the most recent versions
-            self._model_history[model_name] = versions[-self.config.max_model_versions :]
+            self._model_history[model_name] = versions[-self.config.max_model_versions:]
 
     def rollback(self, model_name: str, version_id: Optional[str] = None) -> bool:
         """
@@ -459,7 +452,7 @@ class RetrainingPipeline:
         for archive_dir in archive_dirs:
             metadata_path = archive_dir / f"{model_name}_metadata.json"
             if metadata_path.exists():
-                with metadata_path.open() as f:
+                with open(metadata_path, "r") as f:
                     metadata = json.load(f)
                 archived_time = datetime.fromisoformat(metadata["created_at"])
 
@@ -483,7 +476,7 @@ class RetrainingPipeline:
         logger.error(f"Archive not found for version {target.version_id}")
         return False
 
-    def get_model_status(self, model_name: str) -> dict[str, Any]:
+    def get_model_status(self, model_name: str) -> Dict[str, Any]:
         """Get status information for a model."""
         status = {
             "model_name": model_name,
@@ -497,7 +490,7 @@ class RetrainingPipeline:
 
         metadata_path = self.models_path / f"{model_name}_metadata.json"
         if metadata_path.exists():
-            with metadata_path.open() as f:
+            with open(metadata_path, "r") as f:
                 metadata = json.load(f)
 
             status["exists"] = True
@@ -506,7 +499,7 @@ class RetrainingPipeline:
 
             if status["created_at"]:
                 created = datetime.fromisoformat(status["created_at"])
-                status["age_days"] = (datetime.now(UTC) - created).days
+                status["age_days"] = (datetime.now(timezone.utc) - created).days
                 status["needs_retraining"] = status["age_days"] >= self.config.retrain_interval_days
 
         if model_name in self._model_history:
@@ -525,7 +518,7 @@ class RetrainingPipeline:
     def run_scheduled_retraining(
         self,
         training_data_loader: callable,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Run scheduled retraining for all models.
 
@@ -576,7 +569,6 @@ class RetrainingPipeline:
 # Celery Tasks for Scheduled Retraining
 # =============================================================================
 
-
 def create_retraining_task(app):
     """
     Create a Celery task for scheduled model retraining.
@@ -594,8 +586,7 @@ def create_retraining_task(app):
             },
         }
     """
-
-    @app.task(name="ml.retrain_models")
+    @app.task(name='ml.retrain_models')
     def retrain_models_task():
         from app.ml.data_loader import TrainingDataLoader
 
@@ -624,9 +615,7 @@ if __name__ == "__main__":
     parser.add_argument("--retrain", type=str, help="Retrain specific model")
     parser.add_argument("--status", type=str, help="Get model status")
     parser.add_argument("--rollback", type=str, help="Rollback model to previous version")
-    parser.add_argument(
-        "--run-all", action="store_true", help="Run scheduled retraining for all models"
-    )
+    parser.add_argument("--run-all", action="store_true", help="Run scheduled retraining for all models")
 
     args = parser.parse_args()
 

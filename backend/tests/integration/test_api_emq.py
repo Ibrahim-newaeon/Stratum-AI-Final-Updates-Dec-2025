@@ -14,10 +14,10 @@ Tests cover:
 - Autopilot state management
 """
 
-from datetime import UTC, datetime, timedelta
-
 import pytest
+from datetime import date, timedelta
 from httpx import AsyncClient
+
 
 pytestmark = pytest.mark.integration
 
@@ -30,7 +30,9 @@ class TestEmqScoreEndpoint:
         self, authenticated_client: AsyncClient, test_tenant: dict, test_signal_health: dict
     ):
         """Test successful EMQ score retrieval."""
-        response = await authenticated_client.get(f"/api/v1/tenants/{test_tenant['id']}/emq/score")
+        response = await authenticated_client.get(
+            f"/api/v1/tenants/{test_tenant['id']}/emq/score"
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -57,7 +59,7 @@ class TestEmqScoreEndpoint:
         self, authenticated_client: AsyncClient, test_tenant: dict
     ):
         """Test EMQ score retrieval with specific date."""
-        target_date = (datetime.now(UTC).date() - timedelta(days=1)).isoformat()
+        target_date = (date.today() - timedelta(days=1)).isoformat()
 
         response = await authenticated_client.get(
             f"/api/v1/tenants/{test_tenant['id']}/emq/score",
@@ -81,9 +83,13 @@ class TestEmqScoreEndpoint:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_get_emq_score_unauthorized(self, client: AsyncClient, test_tenant: dict):
+    async def test_get_emq_score_unauthorized(
+        self, client: AsyncClient, test_tenant: dict
+    ):
         """Test EMQ score without authentication."""
-        response = await client.get(f"/api/v1/tenants/{test_tenant['id']}/emq/score")
+        response = await client.get(
+            f"/api/v1/tenants/{test_tenant['id']}/emq/score"
+        )
 
         # Should return 401 or 403 depending on auth implementation
         assert response.status_code in [401, 403]
@@ -119,7 +125,9 @@ class TestPlaybookEndpoint:
     """Tests for playbook management endpoints."""
 
     @pytest.mark.asyncio
-    async def test_get_playbook_success(self, authenticated_client: AsyncClient, test_tenant: dict):
+    async def test_get_playbook_success(
+        self, authenticated_client: AsyncClient, test_tenant: dict
+    ):
         """Test successful playbook retrieval."""
         response = await authenticated_client.get(
             f"/api/v1/tenants/{test_tenant['id']}/emq/playbook"
@@ -139,7 +147,9 @@ class TestPlaybookEndpoint:
             assert item["priority"] in ["critical", "high", "medium", "low"]
 
     @pytest.mark.asyncio
-    async def test_update_playbook_item(self, authenticated_client: AsyncClient, test_tenant: dict):
+    async def test_update_playbook_item(
+        self, authenticated_client: AsyncClient, test_tenant: dict
+    ):
         """Test playbook item update."""
         # First get the playbook
         response = await authenticated_client.get(
@@ -172,8 +182,8 @@ class TestIncidentsEndpoint:
         self, authenticated_client: AsyncClient, test_tenant: dict
     ):
         """Test successful incidents retrieval."""
-        start_date = (datetime.now(UTC).date() - timedelta(days=7)).isoformat()
-        end_date = datetime.now(UTC).date().isoformat()
+        start_date = (date.today() - timedelta(days=7)).isoformat()
+        end_date = date.today().isoformat()
 
         response = await authenticated_client.get(
             f"/api/v1/tenants/{test_tenant['id']}/emq/incidents",
@@ -202,10 +212,12 @@ class TestImpactEndpoint:
     """Tests for GET /api/v1/tenants/{tenant_id}/emq/impact"""
 
     @pytest.mark.asyncio
-    async def test_get_impact_success(self, authenticated_client: AsyncClient, test_tenant: dict):
+    async def test_get_impact_success(
+        self, authenticated_client: AsyncClient, test_tenant: dict
+    ):
         """Test successful ROAS impact retrieval."""
-        start_date = (datetime.now(UTC).date() - timedelta(days=30)).isoformat()
-        end_date = datetime.now(UTC).date().isoformat()
+        start_date = (date.today() - timedelta(days=30)).isoformat()
+        end_date = date.today().isoformat()
 
         response = await authenticated_client.get(
             f"/api/v1/tenants/{test_tenant['id']}/emq/impact",

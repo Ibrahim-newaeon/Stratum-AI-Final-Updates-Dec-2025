@@ -6,9 +6,11 @@ Data loader for importing training datasets from various sources.
 Supports CSV files from Kaggle and other public datasets.
 """
 
-from datetime import UTC, datetime, timedelta
+import csv
+import hashlib
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from sqlalchemy import select
@@ -20,6 +22,7 @@ from app.models import (
     Campaign,
     CampaignMetric,
     CampaignStatus,
+    Tenant,
 )
 
 logger = get_logger(__name__)
@@ -84,7 +87,7 @@ class TrainingDataLoader:
         platform: AdPlatform = AdPlatform.META,
         dataset_format: str = "generic",
         create_daily_metrics: bool = True,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Load training data from a CSV file.
 
@@ -114,7 +117,9 @@ class TrainingDataLoader:
         df = self._transform_data(df, platform)
 
         # Load into database
-        stats = await self._load_to_database(df, tenant_id, platform, create_daily_metrics)
+        stats = await self._load_to_database(
+            df, tenant_id, platform, create_daily_metrics
+        )
 
         return {
             "status": "success",
@@ -123,7 +128,7 @@ class TrainingDataLoader:
             **stats,
         }
 
-    def _detect_format(self, df: pd.DataFrame, hint: str) -> dict[str, str]:
+    def _detect_format(self, df: pd.DataFrame, hint: str) -> Dict[str, str]:
         """Detect dataset format based on columns."""
         columns_lower = [c.lower() for c in df.columns]
 
@@ -138,7 +143,7 @@ class TrainingDataLoader:
         # Use hint or generic
         return self.COLUMN_MAPPINGS.get(hint, self.COLUMN_MAPPINGS["generic"])
 
-    def _apply_mapping(self, df: pd.DataFrame, mapping: dict[str, str]) -> pd.DataFrame:
+    def _apply_mapping(self, df: pd.DataFrame, mapping: Dict[str, str]) -> pd.DataFrame:
         """Apply column mapping to standardize column names."""
         # Create case-insensitive mapping
         column_renames = {}
@@ -188,12 +193,14 @@ class TrainingDataLoader:
 
         # Calculate CTR
         df["ctr"] = df.apply(
-            lambda r: (r["clicks"] / r["impressions"] * 100) if r["impressions"] > 0 else 0, axis=1
+            lambda r: (r["clicks"] / r["impressions"] * 100) if r["impressions"] > 0 else 0,
+            axis=1
         )
 
         # Calculate ROAS
         df["roas"] = df.apply(
-            lambda r: (r["revenue_cents"] / r["spend_cents"]) if r["spend_cents"] > 0 else 0, axis=1
+            lambda r: (r["revenue_cents"] / r["spend_cents"]) if r["spend_cents"] > 0 else 0,
+            axis=1
         )
 
         # Generate campaign IDs if not present
@@ -209,7 +216,7 @@ class TrainingDataLoader:
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
         else:
             # Generate dates for time series
-            base_date = datetime.now(UTC).date() - timedelta(days=len(df))
+            base_date = date.today() - timedelta(days=len(df))
             df["date"] = [base_date + timedelta(days=i) for i in range(len(df))]
 
         # Add platform
@@ -223,7 +230,7 @@ class TrainingDataLoader:
         tenant_id: int,
         platform: AdPlatform,
         create_daily_metrics: bool,
-    ) -> dict[str, int]:
+    ) -> Dict[str, int]:
         """Load transformed data into database."""
         if self.db is None:
             logger.warning("no_database_session_skipping_db_load")
@@ -245,9 +252,7 @@ class TrainingDataLoader:
                 "platform": platform,
                 "external_id": str(external_id),
                 "account_id": f"training_account_{tenant_id}",
-                "name": group["name"].iloc[0]
-                if "name" in group.columns
-                else f"Campaign {external_id}",
+                "name": group["name"].iloc[0] if "name" in group.columns else f"Campaign {external_id}",
                 "status": CampaignStatus.COMPLETED,
                 "total_spend_cents": int(group["spend_cents"].sum()),
                 "impressions": int(group["impressions"].sum()),
@@ -260,21 +265,13 @@ class TrainingDataLoader:
             if campaign_data["impressions"] > 0:
                 campaign_data["ctr"] = campaign_data["clicks"] / campaign_data["impressions"] * 100
             if campaign_data["clicks"] > 0:
-                campaign_data["cpc_cents"] = int(
-                    campaign_data["total_spend_cents"] / campaign_data["clicks"]
-                )
+                campaign_data["cpc_cents"] = int(campaign_data["total_spend_cents"] / campaign_data["clicks"])
             if campaign_data["impressions"] > 0:
-                campaign_data["cpm_cents"] = int(
-                    campaign_data["total_spend_cents"] / campaign_data["impressions"] * 1000
-                )
+                campaign_data["cpm_cents"] = int(campaign_data["total_spend_cents"] / campaign_data["impressions"] * 1000)
             if campaign_data["conversions"] > 0:
-                campaign_data["cpa_cents"] = int(
-                    campaign_data["total_spend_cents"] / campaign_data["conversions"]
-                )
+                campaign_data["cpa_cents"] = int(campaign_data["total_spend_cents"] / campaign_data["conversions"])
             if campaign_data["total_spend_cents"] > 0:
-                campaign_data["roas"] = (
-                    campaign_data["revenue_cents"] / campaign_data["total_spend_cents"]
-                )
+                campaign_data["roas"] = campaign_data["revenue_cents"] / campaign_data["total_spend_cents"]
 
             # Check if campaign exists
             result = await self.db.execute(
@@ -327,9 +324,7 @@ class TrainingDataLoader:
             "metrics_created": metrics_created,
         }
 
-    def load_csv_to_dataframe(
-        self, file_path: str, dataset_format: str = "generic"
-    ) -> pd.DataFrame:
+    def load_csv_to_dataframe(self, file_path: str, dataset_format: str = "generic") -> pd.DataFrame:
         """
         Load and transform CSV to DataFrame without database.
         Useful for training directly from files.
@@ -347,7 +342,7 @@ class TrainingDataLoader:
     def generate_sample_data(
         num_campaigns: int = 50,
         days_per_campaign: int = 30,
-        platforms: list[str] = None,
+        platforms: List[str] = None,
     ) -> pd.DataFrame:
         """
         Generate synthetic training data.
@@ -359,7 +354,7 @@ class TrainingDataLoader:
             platforms = ["meta", "google", "tiktok", "snapchat", "linkedin"]
 
         data = []
-        base_date = datetime.now(UTC).date() - timedelta(days=days_per_campaign)
+        base_date = date.today() - timedelta(days=days_per_campaign)
 
         for campaign_idx in range(num_campaigns):
             platform = platforms[campaign_idx % len(platforms)]
@@ -394,19 +389,17 @@ class TrainingDataLoader:
                 avg_order_value = np.random.uniform(30, 150)
                 revenue = conversions * avg_order_value * (1 + np.random.normal(0, 0.1))
 
-                data.append(
-                    {
-                        "date": current_date,
-                        "campaign_id": f"campaign_{campaign_idx}",
-                        "campaign_name": f"{platform.title()} Campaign {campaign_idx}",
-                        "platform": platform,
-                        "spend": round(spend, 2),
-                        "impressions": max(0, impressions),
-                        "clicks": max(0, clicks),
-                        "conversions": max(0, conversions),
-                        "revenue": round(max(0, revenue), 2),
-                    }
-                )
+                data.append({
+                    "date": current_date,
+                    "campaign_id": f"campaign_{campaign_idx}",
+                    "campaign_name": f"{platform.title()} Campaign {campaign_idx}",
+                    "platform": platform,
+                    "spend": round(spend, 2),
+                    "impressions": max(0, impressions),
+                    "clicks": max(0, clicks),
+                    "conversions": max(0, conversions),
+                    "revenue": round(max(0, revenue), 2),
+                })
 
         return pd.DataFrame(data)
 
@@ -414,12 +407,11 @@ class TrainingDataLoader:
 # CLI interface for standalone usage
 if __name__ == "__main__":
     import argparse
+    import asyncio
 
     parser = argparse.ArgumentParser(description="Load training data")
     parser.add_argument("--generate", action="store_true", help="Generate sample data")
-    parser.add_argument(
-        "--output", type=str, default="sample_training_data.csv", help="Output file"
-    )
+    parser.add_argument("--output", type=str, default="sample_training_data.csv", help="Output file")
     parser.add_argument("--campaigns", type=int, default=50, help="Number of campaigns")
     parser.add_argument("--days", type=int, default=30, help="Days per campaign")
 

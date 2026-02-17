@@ -6,29 +6,36 @@ API endpoints for AI-powered analytics.
 Provides recommendations, scoring, and insights based on the Analytics Design System.
 """
 
-from datetime import UTC, datetime
-from typing import Optional
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.analytics.logic.anomalies import detect_anomalies
-from app.analytics.logic.fatigue import creative_fatigue
-from app.analytics.logic.recommend import RecommendationsEngine
-from app.analytics.logic.scoring import scaling_score
-from app.analytics.logic.signal_health import auto_resolve, signal_health
-from app.analytics.logic.types import (
-    BaselineMetrics,
-    EntityLevel,
-    EntityMetrics,
-    Platform,
-)
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models import Campaign
+from app.models import Campaign, CreativeAsset
 from app.schemas import APIResponse
+
+from app.analytics.logic.types import (
+    EntityMetrics,
+    BaselineMetrics,
+    EntityLevel,
+    Platform,
+    ScoringParams,
+    FatigueParams,
+    AnomalyParams,
+    SignalHealthParams,
+)
+from app.analytics.logic.scoring import scaling_score, batch_scaling_scores
+from app.analytics.logic.fatigue import creative_fatigue, batch_creative_fatigue
+from app.analytics.logic.anomalies import detect_anomalies
+from app.analytics.logic.signal_health import signal_health, auto_resolve
+from app.analytics.logic.attribution import attribution_variance, get_attribution_health
+from app.analytics.logic.budget import reallocate_budget, summarize_reallocation
+from app.analytics.logic.recommend import generate_recommendations, RecommendationsEngine
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -84,7 +91,7 @@ class FatigueScoreRequest(BaseModel):
 
 
 class AnomalyDetectionRequest(BaseModel):
-    metrics_history: dict[str, list[float]]
+    metrics_history: dict[str, List[float]]
     current_values: dict[str, float]
 
 
@@ -115,7 +122,7 @@ async def calculate_scaling_score(
         entity_name=request.entity_name,
         entity_level=EntityLevel.CAMPAIGN,
         platform=Platform(request.platform),
-        date=datetime.now(UTC),
+        date=datetime.now(timezone.utc),
         spend=request.spend,
         impressions=request.impressions,
         clicks=request.clicks,
@@ -169,7 +176,7 @@ async def calculate_fatigue_score(
         entity_name=request.creative_name,
         entity_level=EntityLevel.CREATIVE,
         platform=Platform.META,
-        date=datetime.now(UTC),
+        date=datetime.now(timezone.utc),
         ctr=request.ctr,
         roas=request.roas,
         cpa=request.cpa,
@@ -302,7 +309,7 @@ async def get_ai_recommendations(
             entity_name=c.name,
             entity_level=EntityLevel.CAMPAIGN,
             platform=Platform(c.platform.value if c.platform else "meta"),
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             spend=spend,
             impressions=impressions,
             clicks=clicks,

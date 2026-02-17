@@ -7,16 +7,18 @@ API endpoints for uploading training data and managing ML models.
 
 import os
 import shutil
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.db.session import get_async_session
 from app.ml.data_loader import TrainingDataLoader
 from app.ml.train import ModelTrainer
 
@@ -29,48 +31,43 @@ router = APIRouter()
 # =============================================================================
 class TrainingResponse(BaseModel):
     """Response for training operations."""
-
     success: bool
     message: str
-    models_trained: list[str]
+    models_trained: List[str]
     metrics: dict
     training_time_seconds: float
 
 
 class DataUploadResponse(BaseModel):
     """Response for data upload operations."""
-
     success: bool
     message: str
     rows_processed: int
-    columns_detected: list[str]
+    columns_detected: List[str]
     campaigns_created: int
     metrics_created: int
 
 
 class ModelInfo(BaseModel):
     """Information about a trained model."""
-
     name: str
     version: str
     created_at: str
     metrics: dict
-    features: list[str]
+    features: List[str]
 
 
 class ModelsListResponse(BaseModel):
     """Response listing all available models."""
-
-    models: list[ModelInfo]
+    models: List[ModelInfo]
     models_path: str
 
 
 class GenerateSampleRequest(BaseModel):
     """Request to generate sample training data."""
-
     num_campaigns: int = 50
     days_per_campaign: int = 30
-    platforms: Optional[list[str]] = None
+    platforms: Optional[List[str]] = None
 
 
 # =============================================================================
@@ -79,12 +76,8 @@ class GenerateSampleRequest(BaseModel):
 @router.post("/upload", response_model=DataUploadResponse)
 async def upload_training_data(
     file: UploadFile = File(...),
-    platform: str = Query(
-        "meta", description="Ad platform (meta, google, tiktok, snapchat, linkedin)"
-    ),
-    dataset_format: str = Query(
-        "generic", description="Dataset format hint (generic, facebook_kaggle, google_kaggle)"
-    ),
+    platform: str = Query("meta", description="Ad platform (meta, google, tiktok, snapchat, linkedin)"),
+    dataset_format: str = Query("generic", description="Dataset format hint (generic, facebook_kaggle, google_kaggle)"),
     train_after_upload: bool = Query(False, description="Automatically train models after upload"),
 ):
     """
@@ -117,7 +110,7 @@ async def upload_training_data(
         data_dir = Path(settings.ml_models_path).parent / "training_data"
         data_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = data_dir / f"training_data_{timestamp}.csv"
         df.to_csv(output_path, index=False)
 
@@ -142,23 +135,19 @@ async def upload_training_data(
         logger.error("upload_training_data_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process uploaded file: {e!s}",
+            detail=f"Failed to process uploaded file: {str(e)}",
         )
 
     finally:
         # Cleanup temp file
         if "tmp_path" in locals():
-            Path(tmp_path).unlink()
+            os.unlink(tmp_path)
 
 
 @router.post("/train", response_model=TrainingResponse)
 async def train_models(
-    data_file: Optional[str] = Query(
-        None, description="Path to training data CSV (uses latest if not specified)"
-    ),
-    use_sample_data: bool = Query(
-        False, description="Use generated sample data instead of uploaded data"
-    ),
+    data_file: Optional[str] = Query(None, description="Path to training data CSV (uses latest if not specified)"),
+    use_sample_data: bool = Query(False, description="Use generated sample data instead of uploaded data"),
     num_campaigns: int = Query(100, description="Number of campaigns for sample data"),
     days: int = Query(30, description="Days per campaign for sample data"),
 ):
@@ -171,7 +160,6 @@ async def train_models(
     - budget_impact: Predicts revenue changes from budget changes
     """
     import time
-
     start_time = time.time()
 
     try:
@@ -226,7 +214,7 @@ async def train_models(
         logger.error("train_models_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Training failed: {e!s}",
+            detail=f"Training failed: {str(e)}",
         )
 
 
@@ -243,21 +231,17 @@ async def list_models():
     if models_path.exists():
         for metadata_file in models_path.glob("*_metadata.json"):
             try:
-                with metadata_file.open() as f:
+                with open(metadata_file) as f:
                     metadata = json.load(f)
-                    models.append(
-                        ModelInfo(
-                            name=metadata.get("name", metadata_file.stem.replace("_metadata", "")),
-                            version=metadata.get("version", "unknown"),
-                            created_at=metadata.get("created_at", "unknown"),
-                            metrics=metadata.get("metrics", {}),
-                            features=metadata.get("features", []),
-                        )
-                    )
+                    models.append(ModelInfo(
+                        name=metadata.get("name", metadata_file.stem.replace("_metadata", "")),
+                        version=metadata.get("version", "unknown"),
+                        created_at=metadata.get("created_at", "unknown"),
+                        metrics=metadata.get("metrics", {}),
+                        features=metadata.get("features", []),
+                    ))
             except Exception as e:
-                logger.warning(
-                    "failed_to_read_model_metadata", file=str(metadata_file), error=str(e)
-                )
+                logger.warning("failed_to_read_model_metadata", file=str(metadata_file), error=str(e))
 
     return ModelsListResponse(
         models=models,
@@ -310,7 +294,7 @@ async def generate_sample_data(request: GenerateSampleRequest):
     data_dir = Path(settings.ml_models_path).parent / "training_data"
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_path = data_dir / f"sample_data_{timestamp}.csv"
     df.to_csv(output_path, index=False)
 
@@ -338,13 +322,11 @@ async def list_training_data():
     files = []
     for csv_file in sorted(data_dir.glob("*.csv"), key=os.path.getmtime, reverse=True):
         stat = csv_file.stat()
-        files.append(
-            {
-                "name": csv_file.name,
-                "path": str(csv_file),
-                "size_bytes": stat.st_size,
-                "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=UTC).isoformat(),
-            }
-        )
+        files.append({
+            "name": csv_file.name,
+            "path": str(csv_file),
+            "size_bytes": stat.st_size,
+            "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+        })
 
     return {"files": files, "directory": str(data_dir)}

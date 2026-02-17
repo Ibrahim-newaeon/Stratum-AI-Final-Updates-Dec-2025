@@ -12,20 +12,25 @@ Features:
 - Pacing summary snapshots
 """
 
-from datetime import UTC, date, datetime, timedelta
-from typing import Any, Optional
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import and_, select
+from sqlalchemy import select, and_, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.pacing import (
     DailyKPI,
+    Forecast,
+    PacingAlert,
     PacingSummary,
     Target,
     TargetMetric,
     TargetPeriod,
+    AlertSeverity,
+    AlertType,
+    AlertStatus,
 )
 from app.services.pacing.forecasting import ForecastingService
 
@@ -58,7 +63,7 @@ class PacingService:
         self,
         target_id: UUID,
         as_of_date: Optional[date] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Calculate pacing for a specific target.
 
@@ -70,7 +75,7 @@ class PacingService:
             Pacing metrics including MTD, projections, and status
         """
         if as_of_date is None:
-            as_of_date = datetime.now(UTC).date()
+            as_of_date = date.today()
 
         # Load target
         result = await self.db.execute(
@@ -146,8 +151,12 @@ class PacingService:
                 remaining_forecast = sum(
                     f["point_forecast"] for f in forecast.get("daily_forecasts", [])
                 )
-                remaining_lower = sum(f["lower_bound"] for f in forecast.get("daily_forecasts", []))
-                remaining_upper = sum(f["upper_bound"] for f in forecast.get("daily_forecasts", []))
+                remaining_lower = sum(
+                    f["lower_bound"] for f in forecast.get("daily_forecasts", [])
+                )
+                remaining_upper = sum(
+                    f["upper_bound"] for f in forecast.get("daily_forecasts", [])
+                )
 
                 projected_eom = mtd_actual + remaining_forecast
                 projected_lower = mtd_actual + remaining_lower
@@ -166,9 +175,7 @@ class PacingService:
 
         # Daily metrics
         daily_average = mtd_actual / days_elapsed if days_elapsed > 0 else 0
-        daily_needed = (
-            (target.target_value - mtd_actual) / days_remaining if days_remaining > 0 else 0
-        )
+        daily_needed = (target.target_value - mtd_actual) / days_remaining if days_remaining > 0 else 0
 
         # Status determination
         pacing_ratio = pacing_pct / 100
@@ -179,9 +186,7 @@ class PacingService:
         # Determine if projected to miss
         projection_gap_pct = abs(gap_pct)
         will_miss = will_miss or projection_gap_pct > target.critical_threshold_pct
-        at_risk = at_risk or (
-            target.warning_threshold_pct < projection_gap_pct <= target.critical_threshold_pct
-        )
+        at_risk = at_risk or (target.warning_threshold_pct < projection_gap_pct <= target.critical_threshold_pct)
 
         return {
             "status": "success",
@@ -242,7 +247,7 @@ class PacingService:
         metric_type: Optional[TargetMetric] = None,
         platform: Optional[str] = None,
         active_only: bool = True,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get pacing for all targets.
 
@@ -256,7 +261,7 @@ class PacingService:
             List of pacing results for all matching targets
         """
         if as_of_date is None:
-            as_of_date = datetime.now(UTC).date()
+            as_of_date = date.today()
 
         # Build query
         conditions = [Target.tenant_id == self.tenant_id]
@@ -274,7 +279,9 @@ class PacingService:
         conditions.append(Target.period_start <= as_of_date)
         conditions.append(Target.period_end >= as_of_date)
 
-        result = await self.db.execute(select(Target).where(and_(*conditions)))
+        result = await self.db.execute(
+            select(Target).where(and_(*conditions))
+        )
         targets = result.scalars().all()
 
         # Calculate pacing for each target
@@ -322,15 +329,13 @@ class PacingService:
             Created PacingSummary or None if failed
         """
         if as_of_date is None:
-            as_of_date = datetime.now(UTC).date()
+            as_of_date = date.today()
 
         # Get current pacing
         pacing = await self.get_target_pacing(target_id, as_of_date)
 
         if pacing.get("status") != "success":
-            logger.warning(
-                f"Cannot create snapshot for target {target_id}: {pacing.get('message')}"
-            )
+            logger.warning(f"Cannot create snapshot for target {target_id}: {pacing.get('message')}")
             return None
 
         # Check for existing snapshot
@@ -366,7 +371,7 @@ class PacingService:
             existing.on_track = pacing["status_flags"]["on_track"]
             existing.at_risk = pacing["status_flags"]["at_risk"]
             existing.will_miss = pacing["status_flags"]["will_miss"]
-            existing.updated_at = datetime.now(UTC)
+            existing.updated_at = datetime.utcnow()
 
             await self.db.commit()
             return existing
@@ -407,7 +412,7 @@ class PacingService:
     async def create_all_snapshots(
         self,
         as_of_date: Optional[date] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Create pacing snapshots for all active targets.
 
@@ -418,7 +423,7 @@ class PacingService:
             Summary of created snapshots
         """
         if as_of_date is None:
-            as_of_date = datetime.now(UTC).date()
+            as_of_date = date.today()
 
         # Get all active targets
         result = await self.db.execute(
@@ -456,7 +461,7 @@ class PacingService:
         target_id: UUID,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Get historical pacing snapshots for a target.
 
@@ -469,20 +474,18 @@ class PacingService:
             List of historical pacing snapshots
         """
         if end_date is None:
-            end_date = datetime.now(UTC).date()
+            end_date = date.today()
         if start_date is None:
             start_date = end_date - timedelta(days=30)
 
         result = await self.db.execute(
-            select(PacingSummary)
-            .where(
+            select(PacingSummary).where(
                 and_(
                     PacingSummary.target_id == target_id,
                     PacingSummary.snapshot_date >= start_date,
                     PacingSummary.snapshot_date <= end_date,
                 )
-            )
-            .order_by(PacingSummary.snapshot_date)
+            ).order_by(PacingSummary.snapshot_date)
         )
         snapshots = result.scalars().all()
 
@@ -527,7 +530,9 @@ class PacingService:
         else:
             conditions.append(DailyKPI.campaign_id.is_(None))
 
-        result = await self.db.execute(select(DailyKPI).where(and_(*conditions)))
+        result = await self.db.execute(
+            select(DailyKPI).where(and_(*conditions))
+        )
         records = result.scalars().all()
 
         total = 0.0
@@ -565,7 +570,6 @@ class PacingService:
 # Target CRUD Operations
 # =============================================================================
 
-
 class TargetService:
     """Service for managing targets (CRUD operations)."""
 
@@ -593,12 +597,7 @@ class TargetService:
         """Create a new target."""
         # Convert monetary values to cents if applicable
         target_value_cents = None
-        if metric_type in [
-            TargetMetric.SPEND,
-            TargetMetric.REVENUE,
-            TargetMetric.PIPELINE_VALUE,
-            TargetMetric.WON_REVENUE,
-        ]:
+        if metric_type in [TargetMetric.SPEND, TargetMetric.REVENUE, TargetMetric.PIPELINE_VALUE, TargetMetric.WON_REVENUE]:
             target_value_cents = int(target_value * 100)
 
         target = Target(
@@ -645,7 +644,7 @@ class TargetService:
         metric_type: Optional[TargetMetric] = None,
         platform: Optional[str] = None,
         period_type: Optional[TargetPeriod] = None,
-    ) -> list[Target]:
+    ) -> List[Target]:
         """List targets with optional filters."""
         conditions = [Target.tenant_id == self.tenant_id]
 
@@ -662,7 +661,9 @@ class TargetService:
             conditions.append(Target.period_type == period_type)
 
         result = await self.db.execute(
-            select(Target).where(and_(*conditions)).order_by(Target.period_start.desc())
+            select(Target)
+            .where(and_(*conditions))
+            .order_by(Target.period_start.desc())
         )
         return list(result.scalars().all())
 
@@ -678,18 +679,9 @@ class TargetService:
 
         # Update allowed fields
         allowed_fields = [
-            "name",
-            "description",
-            "target_value",
-            "min_value",
-            "max_value",
-            "warning_threshold_pct",
-            "critical_threshold_pct",
-            "is_active",
-            "notify_slack",
-            "notify_email",
-            "notify_whatsapp",
-            "notification_recipients",
+            "name", "description", "target_value", "min_value", "max_value",
+            "warning_threshold_pct", "critical_threshold_pct", "is_active",
+            "notify_slack", "notify_email", "notify_whatsapp", "notification_recipients",
         ]
 
         for field, value in kwargs.items():
@@ -697,15 +689,11 @@ class TargetService:
                 setattr(target, field, value)
 
         # Update target_value_cents if target_value changed
-        if "target_value" in kwargs and target.metric_type in [
-            TargetMetric.SPEND,
-            TargetMetric.REVENUE,
-            TargetMetric.PIPELINE_VALUE,
-            TargetMetric.WON_REVENUE,
-        ]:
-            target.target_value_cents = int(target.target_value * 100)
+        if "target_value" in kwargs:
+            if target.metric_type in [TargetMetric.SPEND, TargetMetric.REVENUE, TargetMetric.PIPELINE_VALUE, TargetMetric.WON_REVENUE]:
+                target.target_value_cents = int(target.target_value * 100)
 
-        target.updated_at = datetime.now(UTC)
+        target.updated_at = datetime.utcnow()
         await self.db.commit()
         await self.db.refresh(target)
 
@@ -718,7 +706,7 @@ class TargetService:
             return False
 
         target.is_active = False
-        target.updated_at = datetime.now(UTC)
+        target.updated_at = datetime.utcnow()
         await self.db.commit()
 
         return True
@@ -727,9 +715,9 @@ class TargetService:
         self,
         metric_type: Optional[TargetMetric] = None,
         platform: Optional[str] = None,
-    ) -> list[Target]:
+    ) -> List[Target]:
         """Get targets that are currently active (period includes today)."""
-        today = datetime.now(UTC).date()
+        today = date.today()
 
         conditions = [
             Target.tenant_id == self.tenant_id,
@@ -744,5 +732,7 @@ class TargetService:
         if platform:
             conditions.append(Target.platform == platform)
 
-        result = await self.db.execute(select(Target).where(and_(*conditions)))
+        result = await self.db.execute(
+            select(Target).where(and_(*conditions))
+        )
         return list(result.scalars().all())

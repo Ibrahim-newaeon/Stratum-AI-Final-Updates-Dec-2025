@@ -8,65 +8,42 @@ Main API router that aggregates all endpoint routers.
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
-    analytics,
-    analytics_ai,
-    # New Settings endpoints
-    api_keys,
-    assets,
-    attribution,
-    audience_sync,
-    audit_services,
     auth,
+    campaigns,
+    assets,
+    rules,
+    competitors,
+    simulator,
+    analytics,
+    gdpr,
+    users,
+    whatsapp,
+    tenants,
+    tenant_dashboard,
+    linkedin,
+    ml_training,
+    predictions,
+    capi,
+    meta_capi,
+    landing_cms,
+    qa_fixes,
+    analytics_ai,
+    superadmin,
+    superadmin_analytics,
     autopilot,
     autopilot_enforcement,
     campaign_builder,
-    campaigns,
-    capi,
-    cdp,
-    changelog,
-    # Client Management (Agency model)
-    clients,
-    # CMS (Content Management System)
-    cms,
-    competitors,
-    dashboard,
-    data_driven_attribution,
-    emq_v2,
     feature_flags,
-    gdpr,
     insights,
-    integrations,
-    knowledge_graph,
-    landing_cms,
-    meta_capi,
-    mfa,
-    ml_training,
-    # Newsletter / Email Campaigns
-    newsletter,
-    notifications,
-    oauth,
-    onboarding,
-    onboarding_agent,
-    pacing,
-    payments,
-    predictions,
-    profit,
-    qa_fixes,
-    reporting,
-    rules,
-    simulator,
-    slack,
-    stripe_webhook,
-    subscription,
-    superadmin,
-    superadmin_analytics,
-    tenant_dashboard,
-    tenants,
-    tier,
     trust_layer,
-    users,
-    webhooks,
-    whatsapp,
+    emq_v2,
+    integrations,
+    pacing,
+    profit,
+    attribution,
+    data_driven_attribution,
+    reporting,
+    audit_services,
 )
 
 api_router = APIRouter()
@@ -76,30 +53,6 @@ api_router.include_router(
     auth.router,
     prefix="/auth",
     tags=["Authentication"],
-)
-
-# OAuth (Ad Platform Connections)
-api_router.include_router(
-    oauth.router,
-    tags=["OAuth"],
-)
-
-# Onboarding Wizard
-api_router.include_router(
-    onboarding.router,
-    tags=["Onboarding"],
-)
-
-# Conversational Onboarding Agent
-api_router.include_router(
-    onboarding_agent.router,
-    tags=["Onboarding Agent"],
-)
-
-# Main Dashboard (Unified dashboard for frontend)
-api_router.include_router(
-    dashboard.router,
-    tags=["Dashboard"],
 )
 
 # User management
@@ -121,13 +74,6 @@ api_router.include_router(
     campaigns.router,
     prefix="/campaigns",
     tags=["Campaigns"],
-)
-
-# Client Management (Agency model)
-api_router.include_router(
-    clients.router,
-    prefix="/clients",
-    tags=["Clients"],
 )
 
 # Creative Assets / DAM (Module B)
@@ -177,6 +123,13 @@ api_router.include_router(
     whatsapp.router,
     prefix="/whatsapp",
     tags=["WhatsApp"],
+)
+
+# LinkedIn Ads Integration
+api_router.include_router(
+    linkedin.router,
+    prefix="/linkedin",
+    tags=["LinkedIn Ads"],
 )
 
 # ML Training & Data Upload
@@ -256,6 +209,7 @@ api_router.include_router(
 # Autopilot Enforcement (Budget/ROAS restrictions)
 api_router.include_router(
     autopilot_enforcement.router,
+    prefix="/autopilot/enforcement",
     tags=["Autopilot Enforcement"],
 )
 
@@ -337,95 +291,4 @@ api_router.include_router(
     audit_services.router,
     prefix="/audit",
     tags=["Audit Services"],
-)
-
-# CDP (Customer Data Platform - Event ingestion, profiles, identity resolution)
-api_router.include_router(
-    cdp.router,
-    tags=["CDP"],
-)
-
-# CDP Audience Sync (Push segments to ad platforms)
-api_router.include_router(
-    audience_sync.router,
-    tags=["CDP Audience Sync"],
-)
-
-# Subscription Tier (Feature access and limits)
-api_router.include_router(
-    tier.router,
-    tags=["Subscription Tier"],
-)
-
-# Subscription Status (Expiry, billing, warnings)
-api_router.include_router(
-    subscription.router,
-    tags=["Subscription"],
-)
-
-# Payment Processing (Stripe integration)
-api_router.include_router(
-    payments.router,
-    tags=["Payments"],
-)
-
-# Stripe Webhooks (public endpoint for Stripe events)
-api_router.include_router(
-    stripe_webhook.router,
-    tags=["Stripe Webhooks"],
-)
-
-# MFA (Two-Factor Authentication)
-api_router.include_router(
-    mfa.router,
-    tags=["MFA"],
-)
-
-# API Keys Management
-api_router.include_router(
-    api_keys.router,
-    tags=["API Keys"],
-)
-
-# Webhooks Management
-api_router.include_router(
-    webhooks.router,
-    tags=["Webhooks"],
-)
-
-# In-App Notifications
-api_router.include_router(
-    notifications.router,
-    tags=["Notifications"],
-)
-
-# Changelog / What's New
-api_router.include_router(
-    changelog.router,
-    tags=["Changelog"],
-)
-
-# Slack Integration
-api_router.include_router(
-    slack.router,
-    tags=["Slack Integration"],
-)
-
-# CMS (Content Management System - Blog, Pages, Contact)
-api_router.include_router(
-    cms.router,
-    tags=["CMS"],
-)
-
-# Newsletter / Email Campaigns
-api_router.include_router(
-    newsletter.router,
-    tags=["Newsletter"],
-)
-
-# Knowledge Graph (Revenue attribution, Trust explainability, Insights)
-api_router.include_router(
-    knowledge_graph.router,
-    prefix="/knowledge-graph",
-    tags=["Knowledge Graph"],
 )

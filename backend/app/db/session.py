@@ -6,8 +6,8 @@ Async and sync database session management with connection pooling.
 Implements proper context management for multi-tenant queries.
 """
 
-from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Generator
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -38,9 +38,6 @@ AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
 )
-
-# Alias for backward compatibility
-async_session_maker = AsyncSessionLocal
 
 
 # =============================================================================
@@ -177,7 +174,9 @@ class TenantAwareSession:
         await self._session.refresh(instance)
 
 
-async def get_tenant_session(session: AsyncSession, tenant_id: int) -> TenantAwareSession:
+async def get_tenant_session(
+    session: AsyncSession, tenant_id: int
+) -> TenantAwareSession:
     """
     Create a tenant-aware session wrapper.
 

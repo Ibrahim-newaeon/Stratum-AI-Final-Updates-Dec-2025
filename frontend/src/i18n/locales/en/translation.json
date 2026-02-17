@@ -21,8 +21,7 @@
     "next": "Next",
     "previous": "Previous",
     "back": "Back",
-    "moreFilters": "More Filters",
-    "viewAll": "View All"
+    "moreFilters": "More Filters"
   },
   "nav": {
     "overview": "Overview",
@@ -36,7 +35,7 @@
     "settings": "Settings",
     "tenants": "Organizations",
     "mlTraining": "ML Training",
-    "integrations": "Integrations",
+    "capiSetup": "CAPI Setup",
     "dataQuality": "Data Quality",
     "emqDashboard": "EMQ Dashboard"
   },
@@ -79,20 +78,7 @@
     "predictedRevenue": "Predicted Revenue",
     "predictedROAS": "Predicted ROAS",
     "runSimulation": "Run Simulation",
-    "confidence": "Confidence",
-    "budget": "Budget",
-    "budgetTooltip": "Adjust the daily or total budget to see projected results",
-    "bid": "Bid",
-    "bidTooltip": "Adjust the bid amount per action or impression",
-    "audience": "Audience",
-    "audienceTooltip": "Change audience size to see its impact on performance",
-    "projectedResults": "Projected Results",
-    "spend": "Spend",
-    "revenue": "Revenue",
-    "impressions": "Impressions",
-    "clicks": "Clicks",
-    "conversions": "Conversions",
-    "adjustSliders": "Adjust the sliders to simulate different scenarios"
+    "confidence": "Confidence"
   },
   "campaigns": {
     "title": "Campaigns",
@@ -122,9 +108,9 @@
       "meta": "Meta",
       "google": "Google",
       "tiktok": "TikTok",
-      "snapchat": "Snapchat"
+      "snapchat": "Snapchat",
+      "linkedin": "LinkedIn"
     },
-    "statusLabel": "Status",
     "status": {
       "active": "Active",
       "paused": "Paused",
@@ -214,15 +200,7 @@
     "performance": "Performance Metrics",
     "insights": "AI Insights",
     "predictions": "Predictions",
-    "optimization": "Optimization Recommendations",
-    "aiInsights": "AI Insights",
-    "revenueForecast": "Revenue Forecast",
-    "forecastDescription": "AI-predicted revenue trajectory based on current performance trends",
-    "forecastedRevenue": "Forecasted Revenue",
-    "confidence": "Confidence",
-    "modelAccuracy": "Model Accuracy",
-    "attributionModel": "Attribution Model",
-    "anomalyDetection": "Anomaly Detection"
+    "optimization": "Optimization Recommendations"
   },
   "benchmarks": {
     "title": "Competitor Intelligence",

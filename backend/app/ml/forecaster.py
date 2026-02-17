@@ -6,8 +6,8 @@ Time-series forecasting for ROAS predictions.
 Uses historical data to forecast future performance.
 """
 
-from datetime import UTC, date, datetime, timedelta
-from typing import Any
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from sqlalchemy import select
@@ -35,12 +35,12 @@ class ROASForecaster:
 
     async def forecast(
         self,
-        campaigns: list[Campaign],
+        campaigns: List[Campaign],
         days_ahead: int = 30,
         granularity: str = "daily",
         tenant_id: int = None,
         db: AsyncSession = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Generate ROAS forecasts for campaigns.
 
@@ -65,7 +65,7 @@ class ROASForecaster:
 
         # Generate forecasts
         predictions = []
-        today = datetime.now(UTC).date()
+        today = date.today()
 
         if granularity == "daily":
             for i in range(1, days_ahead + 1):
@@ -97,10 +97,10 @@ class ROASForecaster:
 
     async def _get_historical_data(
         self,
-        campaigns: list[Campaign],
+        campaigns: List[Campaign],
         tenant_id: int,
         db: AsyncSession,
-    ) -> list[dict]:
+    ) -> List[Dict]:
         """Fetch historical metrics for campaigns."""
         if not db:
             return []
@@ -113,7 +113,7 @@ class ROASForecaster:
             .where(
                 CampaignMetric.campaign_id.in_(campaign_ids),
                 CampaignMetric.tenant_id == tenant_id,
-                CampaignMetric.date >= datetime.now(UTC).date() - timedelta(days=lookback_days),
+                CampaignMetric.date >= date.today() - timedelta(days=lookback_days),
             )
             .order_by(CampaignMetric.date)
         )
@@ -140,7 +140,7 @@ class ROASForecaster:
 
         return list(daily_data.values())
 
-    def _calculate_baseline(self, historical_data: list[dict]) -> dict[str, float]:
+    def _calculate_baseline(self, historical_data: List[Dict]) -> Dict[str, float]:
         """Calculate baseline metrics from historical data."""
         if not historical_data:
             return {
@@ -173,7 +173,7 @@ class ROASForecaster:
             "seasonality_factor": seasonality,
         }
 
-    def _calculate_trend(self, data: list[dict]) -> float:
+    def _calculate_trend(self, data: List[Dict]) -> float:
         """Calculate trend coefficient from historical data."""
         if len(data) < 2:
             return 0
@@ -195,11 +195,11 @@ class ROASForecaster:
 
         # Calculate slope
         n = len(x)
-        slope = (n * np.sum(x * y) - np.sum(x) * np.sum(y)) / (n * np.sum(x**2) - np.sum(x) ** 2)
+        slope = (n * np.sum(x * y) - np.sum(x) * np.sum(y)) / (n * np.sum(x**2) - np.sum(x)**2)
 
         return float(slope)
 
-    def _calculate_seasonality(self, data: list[dict]) -> float:
+    def _calculate_seasonality(self, data: List[Dict]) -> float:
         """Calculate average seasonality effect."""
         # Simplified: return average weekday vs weekend ratio
         weekday_roas = []
@@ -222,9 +222,9 @@ class ROASForecaster:
     async def _predict_day(
         self,
         forecast_date: date,
-        baseline: dict[str, float],
+        baseline: Dict[str, float],
         days_out: int,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Generate prediction for a single day."""
         # Apply trend
         base_roas = baseline["avg_roas"]
@@ -239,7 +239,7 @@ class ROASForecaster:
         # Add some variance
         np.random.seed(int(forecast_date.toordinal()))
         noise = np.random.normal(0, 0.1)
-        predicted_roas *= 1 + noise
+        predicted_roas *= (1 + noise)
 
         # Bound predictions
         predicted_roas = max(0.5, min(5.0, predicted_roas))
@@ -260,9 +260,9 @@ class ROASForecaster:
     async def _predict_week(
         self,
         week_start: date,
-        baseline: dict[str, float],
+        baseline: Dict[str, float],
         weeks_out: int,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Generate prediction for a week."""
         # Weekly aggregation
         weekly_spend = baseline["avg_daily_spend"] * 7
@@ -287,9 +287,9 @@ class ROASForecaster:
     async def _predict_month(
         self,
         month_start: date,
-        baseline: dict[str, float],
+        baseline: Dict[str, float],
         months_out: int,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Generate prediction for a month."""
         monthly_spend = baseline["avg_daily_spend"] * 30
         trend_adjustment = baseline["trend"] * months_out * 30
@@ -314,10 +314,10 @@ class ROASForecaster:
         self,
         days_ahead: int,
         granularity: str,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Generate mock forecast when no historical data available."""
         predictions = []
-        today = datetime.now(UTC).date()
+        today = date.today()
 
         base_roas = 2.0
         base_spend = 500
@@ -330,17 +330,15 @@ class ROASForecaster:
                 roas = base_roas * np.random.uniform(0.9, 1.1)
                 spend = base_spend * np.random.uniform(0.8, 1.2)
 
-                predictions.append(
-                    {
-                        "date": forecast_date.isoformat(),
-                        "predicted_roas": round(roas, 3),
-                        "predicted_spend": round(spend, 2),
-                        "predicted_revenue": round(spend * roas, 2),
-                        "confidence_lower": round(roas * 0.85, 3),
-                        "confidence_upper": round(roas * 1.15, 3),
-                        "confidence": 0.75,
-                    }
-                )
+                predictions.append({
+                    "date": forecast_date.isoformat(),
+                    "predicted_roas": round(roas, 3),
+                    "predicted_spend": round(spend, 2),
+                    "predicted_revenue": round(spend * roas, 2),
+                    "confidence_lower": round(roas * 0.85, 3),
+                    "confidence_upper": round(roas * 1.15, 3),
+                    "confidence": 0.75,
+                })
 
         return {
             "predictions": predictions,

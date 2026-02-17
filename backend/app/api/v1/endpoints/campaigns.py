@@ -6,11 +6,11 @@ Campaign CRUD operations and metrics retrieval.
 Implements Module B: Unified Campaign Model.
 """
 
-from datetime import UTC, date, datetime, timedelta
-from typing import Optional
+from datetime import date, datetime, timedelta, timezone
+from typing import List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -41,7 +41,7 @@ async def list_campaigns(
     platform: Optional[AdPlatform] = None,
     status: Optional[CampaignStatus] = None,
     search: Optional[str] = None,
-    labels: Optional[list[str]] = Query(None),
+    labels: Optional[List[str]] = Query(None),
 ):
     """
     List campaigns with filtering and pagination.
@@ -323,7 +323,7 @@ async def get_campaign_metrics(
 
     # Default date range
     if not end_date:
-        end_date = datetime.now(UTC).date()
+        end_date = date.today()
     if not start_date:
         start_date = end_date - timedelta(days=30)
 
@@ -384,14 +384,11 @@ async def get_campaign_metrics(
 async def trigger_campaign_sync(
     request: Request,
     campaign_id: int,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
-    Trigger a manual sync for a single campaign's platform.
-
-    Uses the sync orchestrator directly via FastAPI BackgroundTasks
-    (no Celery required).
+    Trigger a manual sync for a campaign.
+    Queues a Celery task to fetch latest data from the ad platform.
     """
     tenant_id = getattr(request.state, "tenant_id", None)
 
@@ -410,79 +407,13 @@ async def trigger_campaign_sync(
             detail="Campaign not found",
         )
 
-    # Run sync in background for the campaign's platform
-    background_tasks.add_task(
-        _run_platform_sync,
-        tenant_id=tenant_id,
-        platform=campaign.platform,
-    )
+    # Queue sync task
+    from app.workers.tasks import sync_campaign_data
+
+    task = sync_campaign_data.delay(tenant_id, campaign_id)
 
     return APIResponse(
         success=True,
-        data={"status": "sync_started", "platform": campaign.platform.value},
-        message="Sync started in background",
+        data={"task_id": task.id},
+        message="Sync queued successfully",
     )
-
-
-@router.post("/sync/{platform}")
-async def trigger_platform_sync(
-    request: Request,
-    platform: AdPlatform,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_async_session),
-    days_back: int = Query(default=30, ge=1, le=90),
-):
-    """
-    Trigger a full platform sync for all campaigns.
-
-    Fetches all campaigns and daily metrics from the specified ad platform
-    and upserts them into the database. Runs in background.
-
-    Args:
-        platform: Ad platform to sync (meta, tiktok)
-        days_back: Number of days of historical metrics to fetch (default 30)
-    """
-    tenant_id = getattr(request.state, "tenant_id", None)
-
-    background_tasks.add_task(
-        _run_platform_sync,
-        tenant_id=tenant_id,
-        platform=platform,
-        days_back=days_back,
-    )
-
-    return APIResponse(
-        success=True,
-        data={"status": "sync_started", "platform": platform.value},
-        message=f"Sync started for {platform.value}",
-    )
-
-
-async def _run_platform_sync(
-    tenant_id: int,
-    platform: AdPlatform,
-    days_back: int = 30,
-) -> None:
-    """Background task that runs the sync orchestrator."""
-    from app.db.session import AsyncSessionLocal
-
-    try:
-        async with AsyncSessionLocal() as db:
-            from app.services.sync.orchestrator import PlatformSyncOrchestrator
-
-            orchestrator = PlatformSyncOrchestrator(db)
-            result = await orchestrator.sync_platform(tenant_id, platform, days_back)
-            if result.errors:
-                logger.warning(
-                    "platform_sync_completed_with_errors",
-                    platform=platform.value,
-                    tenant=tenant_id,
-                    errors=result.errors,
-                )
-    except Exception as e:
-        logger.error(
-            "platform_sync_background_error",
-            platform=platform.value,
-            tenant=tenant_id,
-            error=str(e),
-        )

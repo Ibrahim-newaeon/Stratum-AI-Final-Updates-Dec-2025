@@ -5,211 +5,127 @@
 
 # Base models (formerly models.py)
 from app.base_models import (
+    # Enums
+    UserRole,
     AdPlatform,
-    APIKey,
-    AssetType,
-    AuditAction,
-    AuditLog,
-    Campaign,
-    CampaignMetric,
     CampaignStatus,
-    CompetitorBenchmark,
-    CreativeAsset,
-    MLPrediction,
-    NotificationPreference,
-    Rule,
-    RuleAction,
-    RuleExecution,
-    RuleOperator,
+    AssetType,
     RuleStatus,
+    RuleOperator,
+    RuleAction,
+    AuditAction,
+    WhatsAppOptInStatus,
+    WhatsAppMessageDirection,
+    WhatsAppMessageStatus,
+    WhatsAppTemplateStatus,
+    WhatsAppTemplateCategory,
     # Models
     Tenant,
     User,
-    # Enums
-    UserRole,
+    Campaign,
+    CampaignMetric,
+    CreativeAsset,
+    Rule,
+    RuleExecution,
+    CompetitorBenchmark,
+    AuditLog,
+    MLPrediction,
+    NotificationPreference,
+    APIKey,
     WhatsAppContact,
-    WhatsAppConversation,
-    WhatsAppMessage,
-    WhatsAppMessageDirection,
-    WhatsAppMessageStatus,
-    WhatsAppOptInStatus,
     WhatsAppTemplate,
-    WhatsAppTemplateCategory,
-    WhatsAppTemplateStatus,
-)
-
-# Multi-Touch Attribution models
-from app.models.attribution import (
-    AttributionSnapshot,
-    ChannelInteraction,
-    ConversionPath,
-    DailyAttributedRevenue,
-    DataDrivenModelType,
-    ModelStatus,
-    ModelTrainingRun,
-    TrainedAttributionModel,
-)
-
-# Audience Sync models
-from app.models.audience_sync import (
-    AudienceSyncCredential,
-    AudienceSyncJob,
-    AudienceType,
-    PlatformAudience,
-    SyncOperation,
-    SyncPlatform,
-    SyncStatus,
-)
-
-# Autopilot Enforcement models
-from app.models.autopilot import (
-    EnforcementAuditLog,
-    EnforcementMode,
-    InterventionAction,
-    PendingConfirmationToken,
-    TenantEnforcementRule,
-    TenantEnforcementSettings,
-    ViolationType,
-)
-
-# Campaign Builder models
-from app.models.campaign_builder import (
-    CampaignDraft,
-    CampaignPublishLog,
-    ConnectionStatus,
-    DraftStatus,
-    PublishResult,
-    TenantAdAccount,
-    TenantPlatformConnection,
-)
-
-# CDP (Customer Data Platform) models
-from app.models.cdp import (
-    CDPConsent,
-    CDPEvent,
-    CDPProfile,
-    CDPProfileIdentifier,
-    CDPSource,
-    ConsentType,
-    IdentifierType,
-    LifecycleStage,
-    SourceType,
-)
-
-# Client Entity models (Agency model)
-from app.models.client import (
-    Client,
-    ClientAssignment,
-    ClientRequest,
-    ClientRequestStatus,
-    ClientRequestType,
-)
-
-# CMS (Content Management System) models
-from app.models.cms import (
-    CMSAuthor,
-    CMSCategory,
-    CMSContactSubmission,
-    CMSContentType,
-    CMSPage,
-    CMSPageStatus,
-    CMSPost,
-    CMSPostStatus,
-    CMSTag,
-)
-
-# CRM Integration models
-from app.models.crm import (
-    AttributionModel,
-    CRMConnection,
-    CRMConnectionStatus,
-    CRMContact,
-    CRMDeal,
-    CRMProvider,
-    CRMWritebackConfig,
-    CRMWritebackSync,
-    DailyPipelineMetrics,
-    DealStage,
-    Touchpoint,
-    WritebackStatus,
-)
-
-# Onboarding models
-from app.models.onboarding import (
-    AutomationMode,
-    Industry,
-    MonthlyAdSpend,
-    OnboardingStatus,
-    OnboardingStep,
-    PrimaryKPI,
-    TeamSize,
-    TenantOnboarding,
-)
-
-# Pacing & Forecasting models
-from app.models.pacing import (
-    AlertSeverity,
-    AlertStatus,
-    AlertType,
-    DailyKPI,
-    Forecast,
-    PacingAlert,
-    PacingSummary,
-    Target,
-    TargetMetric,
-    TargetPeriod,
-)
-
-# Profit ROAS models
-from app.models.profit import (
-    COGSSource,
-    COGSUpload,
-    DailyProfitMetrics,
-    MarginRule,
-    MarginType,
-    ProductCatalog,
-    ProductMargin,
-    ProductStatus,
-    ProfitROASReport,
-)
-
-# Automated Reporting models
-from app.models.reporting import (
-    DeliveryChannel,
-    DeliveryChannelConfig,
-    DeliveryStatus,
-    ExecutionStatus,
-    ReportDelivery,
-    ReportExecution,
-    ReportFormat,
-    ReportTemplate,
-    ReportType,
-    ScheduledReport,
-    ScheduleFrequency,
-)
-
-# Settings models (Webhooks, Notifications, Changelog, Slack)
-from app.models.settings import (
-    ChangelogEntry,
-    ChangelogReadStatus,
-    ChangelogType,
-    Notification,
-    NotificationCategory,
-    NotificationType,
-    SlackIntegration,
-    Webhook,
-    WebhookDelivery,
-    WebhookEventType,
-    WebhookStatus,
+    WhatsAppMessage,
+    WhatsAppConversation,
 )
 
 # Trust Layer models
 from app.models.trust_layer import (
-    AttributionVarianceStatus,
-    FactActionsQueue,
-    FactAttributionVarianceDaily,
-    FactSignalHealthDaily,
     SignalHealthStatus,
+    AttributionVarianceStatus,
+    FactSignalHealthDaily,
+    FactAttributionVarianceDaily,
+    FactActionsQueue,
+)
+
+# Campaign Builder models
+from app.models.campaign_builder import (
+    ConnectionStatus,
+    DraftStatus,
+    PublishResult,
+    TenantPlatformConnection,
+    TenantAdAccount,
+    CampaignDraft,
+    CampaignPublishLog,
+)
+
+# CRM Integration models
+from app.models.crm import (
+    CRMProvider,
+    CRMConnectionStatus,
+    DealStage,
+    AttributionModel,
+    WritebackStatus,
+    CRMConnection,
+    CRMContact,
+    CRMDeal,
+    Touchpoint,
+    DailyPipelineMetrics,
+    CRMWritebackConfig,
+    CRMWritebackSync,
+)
+
+# Pacing & Forecasting models
+from app.models.pacing import (
+    TargetPeriod,
+    TargetMetric,
+    AlertSeverity,
+    AlertType,
+    AlertStatus,
+    Target,
+    DailyKPI,
+    PacingAlert,
+    Forecast,
+    PacingSummary,
+)
+
+# Profit ROAS models
+from app.models.profit import (
+    MarginType,
+    ProductStatus,
+    COGSSource,
+    ProductCatalog,
+    ProductMargin,
+    MarginRule,
+    DailyProfitMetrics,
+    ProfitROASReport,
+    COGSUpload,
+)
+
+# Multi-Touch Attribution models
+from app.models.attribution import (
+    DailyAttributedRevenue,
+    ConversionPath,
+    AttributionSnapshot,
+    ChannelInteraction,
+    DataDrivenModelType,
+    ModelStatus,
+    TrainedAttributionModel,
+    ModelTrainingRun,
+)
+
+# Automated Reporting models
+from app.models.reporting import (
+    ReportType,
+    ReportFormat,
+    ScheduleFrequency,
+    DeliveryChannel,
+    ExecutionStatus,
+    DeliveryStatus,
+    ReportTemplate,
+    ScheduledReport,
+    ReportExecution,
+    ReportDelivery,
+    DeliveryChannelConfig,
 )
 
 __all__ = [
@@ -312,67 +228,4 @@ __all__ = [
     "ReportExecution",
     "ReportDelivery",
     "DeliveryChannelConfig",
-    # Onboarding
-    "OnboardingStatus",
-    "OnboardingStep",
-    "Industry",
-    "MonthlyAdSpend",
-    "TeamSize",
-    "AutomationMode",
-    "PrimaryKPI",
-    "TenantOnboarding",
-    # Autopilot Enforcement
-    "EnforcementMode",
-    "ViolationType",
-    "InterventionAction",
-    "TenantEnforcementSettings",
-    "TenantEnforcementRule",
-    "EnforcementAuditLog",
-    "PendingConfirmationToken",
-    # CDP (Customer Data Platform)
-    "SourceType",
-    "IdentifierType",
-    "LifecycleStage",
-    "ConsentType",
-    "CDPSource",
-    "CDPProfile",
-    "CDPProfileIdentifier",
-    "CDPEvent",
-    "CDPConsent",
-    # Audience Sync
-    "SyncPlatform",
-    "SyncStatus",
-    "SyncOperation",
-    "AudienceType",
-    "PlatformAudience",
-    "AudienceSyncJob",
-    "AudienceSyncCredential",
-    # Settings (Webhooks, Notifications, Changelog, Slack)
-    "WebhookStatus",
-    "WebhookEventType",
-    "NotificationType",
-    "NotificationCategory",
-    "ChangelogType",
-    "Webhook",
-    "WebhookDelivery",
-    "Notification",
-    "ChangelogEntry",
-    "ChangelogReadStatus",
-    "SlackIntegration",
-    # Client Entity (Agency model)
-    "Client",
-    "ClientAssignment",
-    "ClientRequest",
-    "ClientRequestStatus",
-    "ClientRequestType",
-    # CMS (Content Management System)
-    "CMSPostStatus",
-    "CMSContentType",
-    "CMSPageStatus",
-    "CMSCategory",
-    "CMSTag",
-    "CMSAuthor",
-    "CMSPost",
-    "CMSPage",
-    "CMSContactSubmission",
 ]

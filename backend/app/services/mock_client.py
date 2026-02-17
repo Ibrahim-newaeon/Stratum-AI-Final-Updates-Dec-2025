@@ -9,10 +9,12 @@ Implements Module B: Data Integration.
 """
 
 import hashlib
+import math
 import random
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
-from typing import Any, Optional
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+from enum import Enum
 
 from app.core.logging import get_logger
 from app.models import AdPlatform, CampaignStatus
@@ -53,39 +55,13 @@ LOCATION_COORDINATES = {
 CAMPAIGN_TEMPLATES = {
     AdPlatform.META: {
         "prefixes": ["FB", "IG", "Meta"],
-        "objectives": [
-            "Conversions",
-            "Traffic",
-            "Engagement",
-            "Lead Gen",
-            "Brand Awareness",
-            "App Install",
-        ],
-        "audiences": [
-            "Lookalike 1%",
-            "Lookalike 3%",
-            "Interest - Tech",
-            "Interest - Fashion",
-            "Retargeting",
-            "Broad",
-        ],
+        "objectives": ["Conversions", "Traffic", "Engagement", "Lead Gen", "Brand Awareness", "App Install"],
+        "audiences": ["Lookalike 1%", "Lookalike 3%", "Interest - Tech", "Interest - Fashion", "Retargeting", "Broad"],
     },
     AdPlatform.GOOGLE: {
         "prefixes": ["GGL", "Search", "Display", "YT", "PMax"],
-        "objectives": [
-            "Search - Brand",
-            "Search - NonBrand",
-            "Display - Prospecting",
-            "YouTube - Awareness",
-            "PMax - Sales",
-        ],
-        "audiences": [
-            "Keywords - Exact",
-            "Keywords - Phrase",
-            "In-Market",
-            "Custom Intent",
-            "Remarketing",
-        ],
+        "objectives": ["Search - Brand", "Search - NonBrand", "Display - Prospecting", "YouTube - Awareness", "PMax - Sales"],
+        "audiences": ["Keywords - Exact", "Keywords - Phrase", "In-Market", "Custom Intent", "Remarketing"],
     },
     AdPlatform.TIKTOK: {
         "prefixes": ["TT", "TikTok"],
@@ -107,7 +83,6 @@ LOCATIONS = ["US-CA", "US-TX", "US-NY", "US-FL", "US-IL", "UK-London", "CA-ON", 
 @dataclass
 class MockCampaignData:
     """Generated mock campaign data."""
-
     external_id: str
     account_id: str
     name: str
@@ -120,10 +95,10 @@ class MockCampaignData:
     end_date: Optional[date]
     targeting_age_min: int
     targeting_age_max: int
-    targeting_genders: list[str]
-    targeting_locations: list[dict]
-    metrics: dict[str, Any]
-    demographics: dict[str, Any]
+    targeting_genders: List[str]
+    targeting_locations: List[Dict]
+    metrics: Dict[str, Any]
+    demographics: Dict[str, Any]
 
 
 class MockAdNetwork:
@@ -149,15 +124,15 @@ class MockAdNetwork:
 
     def _seeded_random(self, identifier: str) -> random.Random:
         """Get a seeded random generator based on identifier."""
-        hash_val = int(hashlib.md5(f"{self.seed}:{identifier}".encode()).hexdigest()[:8], 16)  # noqa: S324
+        hash_val = int(hashlib.md5(f"{self.seed}:{identifier}".encode()).hexdigest()[:8], 16)
         return random.Random(hash_val)
 
     def generate_campaigns(
         self,
         tenant_id: int,
         count: int = 20,
-        platforms: Optional[list[AdPlatform]] = None,
-    ) -> list[MockCampaignData]:
+        platforms: Optional[List[AdPlatform]] = None,
+    ) -> List[MockCampaignData]:
         """
         Generate mock campaigns for a tenant.
 
@@ -200,12 +175,7 @@ class MockAdNetwork:
         # Status distribution: 60% active, 20% paused, 15% completed, 5% draft
         status_weights = [0.6, 0.2, 0.15, 0.05]
         status = rng.choices(
-            [
-                CampaignStatus.ACTIVE,
-                CampaignStatus.PAUSED,
-                CampaignStatus.COMPLETED,
-                CampaignStatus.DRAFT,
-            ],
+            [CampaignStatus.ACTIVE, CampaignStatus.PAUSED, CampaignStatus.COMPLETED, CampaignStatus.DRAFT],
             weights=status_weights,
         )[0]
 
@@ -222,7 +192,7 @@ class MockAdNetwork:
 
         # Date range
         days_ago_start = rng.randint(30, 180)
-        start_date = datetime.now(UTC).date() - timedelta(days=days_ago_start)
+        start_date = date.today() - timedelta(days=days_ago_start)
 
         if status == CampaignStatus.COMPLETED:
             campaign_length = rng.randint(14, 60)
@@ -241,12 +211,13 @@ class MockAdNetwork:
             genders = GENDERS
 
         locations = rng.sample(LOCATIONS, k=rng.randint(1, 5))
-        targeting_locations = [{"code": loc, "name": loc.replace("-", " - ")} for loc in locations]
+        targeting_locations = [
+            {"code": loc, "name": loc.replace("-", " - ")}
+            for loc in locations
+        ]
 
         # Generate performance metrics
-        metrics = self._generate_metrics(
-            tenant_id, index, platform, daily_budget, start_date, end_date, rng
-        )
+        metrics = self._generate_metrics(tenant_id, index, platform, daily_budget, start_date, end_date, rng)
 
         # Generate demographics
         demographics = self._generate_demographics(metrics["impressions"], rng)
@@ -279,39 +250,15 @@ class MockAdNetwork:
         start_date: date,
         end_date: Optional[date],
         rng: random.Random,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Generate realistic performance metrics."""
 
         # Platform-specific performance characteristics
         platform_params = {
-            AdPlatform.META: {
-                "cpm_base": 800,
-                "ctr_base": 1.2,
-                "cvr_base": 2.5,
-                "cpm_var": 200,
-                "performance_var": 0.3,
-            },
-            AdPlatform.GOOGLE: {
-                "cpm_base": 1200,
-                "ctr_base": 3.5,
-                "cvr_base": 4.0,
-                "cpm_var": 400,
-                "performance_var": 0.25,
-            },
-            AdPlatform.TIKTOK: {
-                "cpm_base": 600,
-                "ctr_base": 0.8,
-                "cvr_base": 1.5,
-                "cpm_var": 150,
-                "performance_var": 0.4,
-            },
-            AdPlatform.SNAPCHAT: {
-                "cpm_base": 500,
-                "ctr_base": 0.6,
-                "cvr_base": 1.2,
-                "cpm_var": 100,
-                "performance_var": 0.35,
-            },
+            AdPlatform.META: {"cpm_base": 800, "ctr_base": 1.2, "cvr_base": 2.5, "cpm_var": 200, "performance_var": 0.3},
+            AdPlatform.GOOGLE: {"cpm_base": 1200, "ctr_base": 3.5, "cvr_base": 4.0, "cpm_var": 400, "performance_var": 0.25},
+            AdPlatform.TIKTOK: {"cpm_base": 600, "ctr_base": 0.8, "cvr_base": 1.5, "cpm_var": 150, "performance_var": 0.4},
+            AdPlatform.SNAPCHAT: {"cpm_base": 500, "ctr_base": 0.6, "cvr_base": 1.2, "cpm_var": 100, "performance_var": 0.35},
         }
 
         params = platform_params[platform]
@@ -321,7 +268,7 @@ class MockAdNetwork:
         campaign_modifier = max(0.3, min(2.0, campaign_modifier))
 
         # Calculate days active
-        actual_end = end_date or datetime.now(UTC).date()
+        actual_end = end_date or date.today()
         days_active = (actual_end - start_date).days
         days_active = max(1, min(days_active, 180))
 
@@ -352,7 +299,8 @@ class MockAdNetwork:
         # Video metrics (if applicable)
         video_views = None
         video_completions = None
-        if platform in [AdPlatform.META, AdPlatform.TIKTOK, AdPlatform.SNAPCHAT] and rng.random() < 0.6:
+        if platform in [AdPlatform.META, AdPlatform.TIKTOK, AdPlatform.SNAPCHAT]:
+            if rng.random() < 0.6:  # 60% of campaigns have video
                 video_views = int(impressions * rng.uniform(0.3, 0.7))
                 video_completions = int(video_views * rng.uniform(0.15, 0.45))
 
@@ -375,7 +323,7 @@ class MockAdNetwork:
         self,
         total_impressions: int,
         rng: random.Random,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Generate demographic breakdown."""
 
         # Age distribution (weighted towards 25-44)
@@ -441,9 +389,9 @@ class MockAdNetwork:
         campaign_id: str,
         start_date: date,
         end_date: date,
-        base_metrics: dict[str, Any],
+        base_metrics: Dict[str, Any],
         rng: Optional[random.Random] = None,
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Generate daily time-series data for a campaign.
 
@@ -496,13 +444,9 @@ class MockAdNetwork:
                 "date": current_date,
                 "impressions": max(0, int(daily_avg["impressions"] * modifier)),
                 "clicks": max(0, int(daily_avg["clicks"] * modifier)),
-                "conversions": max(
-                    0, int(daily_avg["conversions"] * modifier * rng.uniform(0.7, 1.3))
-                ),
+                "conversions": max(0, int(daily_avg["conversions"] * modifier * rng.uniform(0.7, 1.3))),
                 "spend_cents": max(0, int(daily_avg["spend_cents"] * modifier)),
-                "revenue_cents": max(
-                    0, int(daily_avg["revenue_cents"] * modifier * rng.uniform(0.8, 1.2))
-                ),
+                "revenue_cents": max(0, int(daily_avg["revenue_cents"] * modifier * rng.uniform(0.8, 1.2))),
             }
 
             # Add video metrics if present
@@ -524,7 +468,7 @@ class MockAdNetworkManager:
         self.tenant_id = tenant_id
         self.network = MockAdNetwork(seed=tenant_id)
 
-    async def sync_all_platforms(self) -> dict[str, Any]:
+    async def sync_all_platforms(self) -> Dict[str, Any]:
         """Simulate syncing data from all platforms."""
 
         campaigns = self.network.generate_campaigns(
@@ -541,8 +485,10 @@ class MockAdNetworkManager:
 
         return {
             "campaigns": campaigns,
-            "synced_at": datetime.now(UTC),
-            "platform_status": {platform.value: "success" for platform in AdPlatform},
+            "synced_at": datetime.now(timezone.utc),
+            "platform_status": {
+                platform.value: "success" for platform in AdPlatform
+            },
         }
 
     async def get_campaign_details(self, external_id: str) -> Optional[MockCampaignData]:

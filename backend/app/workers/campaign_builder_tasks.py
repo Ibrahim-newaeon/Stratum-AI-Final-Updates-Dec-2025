@@ -10,24 +10,19 @@ Background tasks for the Campaign Builder feature:
 - connector_health_check: Check platform API connectivity
 """
 
-import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from uuid import UUID
+import logging
 
 from celery import shared_task
-from sqlalchemy import and_, select
+from sqlalchemy import select, and_
+from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models.campaign_builder import (
-    AdPlatform,
-    CampaignDraft,
-    CampaignPublishLog,
-    ConnectionStatus,
-    DraftStatus,
-    PublishResult,
-    TenantAdAccount,
-    TenantPlatformConnection,
+    TenantPlatformConnection, TenantAdAccount, CampaignDraft, CampaignPublishLog,
+    AdPlatform, ConnectionStatus, DraftStatus, PublishResult
 )
 
 logger = logging.getLogger(__name__)
@@ -36,7 +31,6 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # Ad Account Sync Tasks
 # =============================================================================
-
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def sync_ad_accounts(self, tenant_id: int, platform: str):
@@ -102,7 +96,7 @@ def sync_ad_accounts(self, tenant_id: int, platform: str):
                     existing.currency = account_data["currency"]
                     existing.timezone = account_data["timezone"]
                     existing.account_status = account_data["status"]
-                    existing.last_synced_at = datetime.now(UTC)
+                    existing.last_synced_at = datetime.now(timezone.utc)
                     existing.sync_error = None
                 else:
                     # Create new
@@ -116,16 +110,14 @@ def sync_ad_accounts(self, tenant_id: int, platform: str):
                         timezone=account_data["timezone"],
                         account_status=account_data["status"],
                         is_enabled=False,  # Disabled by default
-                        last_synced_at=datetime.now(UTC),
+                        last_synced_at=datetime.now(timezone.utc),
                     )
                     db.add(new_account)
 
                 synced_count += 1
 
             db.commit()
-            logger.info(
-                f"Synced {synced_count} ad accounts for tenant {tenant_id}, platform {platform}"
-            )
+            logger.info(f"Synced {synced_count} ad accounts for tenant {tenant_id}, platform {platform}")
 
             return {"status": "success", "synced_count": synced_count}
 
@@ -146,15 +138,11 @@ def sync_all_ad_accounts(self):
 
     with SessionLocal() as db:
         # Get all active connections
-        connections = (
-            db.execute(
-                select(TenantPlatformConnection).where(
-                    TenantPlatformConnection.status == ConnectionStatus.CONNECTED
-                )
+        connections = db.execute(
+            select(TenantPlatformConnection).where(
+                TenantPlatformConnection.status == ConnectionStatus.CONNECTED
             )
-            .scalars()
-            .all()
-        )
+        ).scalars().all()
 
         for conn in connections:
             sync_ad_accounts.delay(conn.tenant_id, conn.platform.value)
@@ -165,7 +153,6 @@ def sync_all_ad_accounts(self):
 # =============================================================================
 # Token Refresh Tasks
 # =============================================================================
-
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)
 def refresh_tokens(self, tenant_id: int, platform: str):
@@ -193,8 +180,8 @@ def refresh_tokens(self, tenant_id: int, platform: str):
             # In production: new_tokens = refresh_oauth_token(platform, connection.refresh_token_encrypted)
 
             # Update connection
-            connection.last_refreshed_at = datetime.now(UTC)
-            connection.token_expires_at = datetime.now(UTC) + timedelta(hours=1)
+            connection.last_refreshed_at = datetime.now(timezone.utc)
+            connection.token_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
             connection.status = ConnectionStatus.CONNECTED
             connection.last_error = None
             connection.error_count = 0
@@ -221,20 +208,16 @@ def refresh_expiring_tokens(self):
     logger.info("Checking for expiring tokens")
 
     with SessionLocal() as db:
-        expiry_threshold = datetime.now(UTC) + timedelta(hours=24)
+        expiry_threshold = datetime.now(timezone.utc) + timedelta(hours=24)
 
-        connections = (
-            db.execute(
-                select(TenantPlatformConnection).where(
-                    and_(
-                        TenantPlatformConnection.status == ConnectionStatus.CONNECTED,
-                        TenantPlatformConnection.token_expires_at <= expiry_threshold,
-                    )
+        connections = db.execute(
+            select(TenantPlatformConnection).where(
+                and_(
+                    TenantPlatformConnection.status == ConnectionStatus.CONNECTED,
+                    TenantPlatformConnection.token_expires_at <= expiry_threshold,
                 )
             )
-            .scalars()
-            .all()
-        )
+        ).scalars().all()
 
         for conn in connections:
             refresh_tokens.delay(conn.tenant_id, conn.platform.value)
@@ -245,7 +228,6 @@ def refresh_expiring_tokens(self):
 # =============================================================================
 # Campaign Publish Tasks
 # =============================================================================
-
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def publish_campaign(self, draft_id: str, publish_log_id: str):
@@ -302,7 +284,7 @@ def publish_campaign(self, draft_id: str, publish_log_id: str):
             # Update draft
             draft.status = DraftStatus.PUBLISHED
             draft.platform_campaign_id = platform_campaign_id
-            draft.published_at = datetime.now(UTC)
+            draft.published_at = datetime.now(timezone.utc)
 
             # Update publish log
             publish_log.result_status = PublishResult.SUCCESS
@@ -368,7 +350,6 @@ def publish_retry(self, log_id: str):
 # Health Check Tasks
 # =============================================================================
 
-
 @shared_task(bind=True)
 def connector_health_check(self, tenant_id: Optional[int] = None):
     """
@@ -399,37 +380,18 @@ def connector_health_check(self, tenant_id: Optional[int] = None):
                 if healthy:
                     conn.last_error = None
                     conn.error_count = 0
-                    results.append(
-                        {
-                            "tenant_id": conn.tenant_id,
-                            "platform": conn.platform.value,
-                            "healthy": True,
-                        }
-                    )
+                    results.append({"tenant_id": conn.tenant_id, "platform": conn.platform.value, "healthy": True})
                 else:
                     conn.error_count += 1
                     if conn.error_count >= 3:
                         conn.status = ConnectionStatus.ERROR
-                    results.append(
-                        {
-                            "tenant_id": conn.tenant_id,
-                            "platform": conn.platform.value,
-                            "healthy": False,
-                        }
-                    )
+                    results.append({"tenant_id": conn.tenant_id, "platform": conn.platform.value, "healthy": False})
 
             except Exception as e:
                 logger.error(f"Health check failed for connection {conn.id}: {e}")
                 conn.last_error = str(e)
                 conn.error_count += 1
-                results.append(
-                    {
-                        "tenant_id": conn.tenant_id,
-                        "platform": conn.platform.value,
-                        "healthy": False,
-                        "error": str(e),
-                    }
-                )
+                results.append({"tenant_id": conn.tenant_id, "platform": conn.platform.value, "healthy": False, "error": str(e)})
 
         db.commit()
 

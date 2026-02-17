@@ -12,37 +12,27 @@ Models:
 - DailyPipelineMetrics: Aggregated pipeline/revenue metrics
 """
 
-import enum
-from datetime import datetime
+from datetime import datetime, date
+from typing import Optional
 from uuid import uuid4
+import enum
 
 from sqlalchemy import (
-    BigInteger,
-    Boolean,
-    Column,
-    Date,
-    DateTime,
-    Enum as SQLEnum,
-    Float,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
+    Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
+    Index, Enum as SQLEnum, Boolean, BigInteger
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
+
 
 # =============================================================================
 # Enums
 # =============================================================================
 
-
 class CRMProvider(str, enum.Enum):
     """Supported CRM providers."""
-
     HUBSPOT = "hubspot"
     SALESFORCE = "salesforce"
     PIPEDRIVE = "pipedrive"
@@ -51,7 +41,6 @@ class CRMProvider(str, enum.Enum):
 
 class CRMConnectionStatus(str, enum.Enum):
     """CRM connection status."""
-
     PENDING = "pending"
     CONNECTED = "connected"
     EXPIRED = "expired"
@@ -61,7 +50,6 @@ class CRMConnectionStatus(str, enum.Enum):
 
 class DealStage(str, enum.Enum):
     """Standard deal stages for pipeline tracking."""
-
     LEAD = "lead"
     MQL = "mql"  # Marketing Qualified Lead
     SQL = "sql"  # Sales Qualified Lead
@@ -74,7 +62,6 @@ class DealStage(str, enum.Enum):
 
 class AttributionModel(str, enum.Enum):
     """Attribution models for touchpoint credit."""
-
     LAST_TOUCH = "last_touch"
     FIRST_TOUCH = "first_touch"
     LINEAR = "linear"
@@ -87,13 +74,11 @@ class AttributionModel(str, enum.Enum):
 # CRM Connection Model
 # =============================================================================
 
-
 class CRMConnection(Base):
     """
     OAuth connections to CRM providers (per tenant).
     Stores encrypted tokens for secure API access.
     """
-
     __tablename__ = "crm_connections"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -113,9 +98,7 @@ class CRMConnection(Base):
     scopes = Column(Text, nullable=True)  # Comma-separated scopes
 
     # Connection status
-    status = Column(
-        SQLEnum(CRMConnectionStatus), nullable=False, default=CRMConnectionStatus.PENDING
-    )
+    status = Column(SQLEnum(CRMConnectionStatus), nullable=False, default=CRMConnectionStatus.PENDING)
     status_message = Column(Text, nullable=True)
 
     # Sync configuration
@@ -133,20 +116,13 @@ class CRMConnection(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
     contacts = relationship("CRMContact", back_populates="connection", cascade="all, delete-orphan")
     deals = relationship("CRMDeal", back_populates="connection", cascade="all, delete-orphan")
-    writeback_config = relationship(
-        "CRMWritebackConfig",
-        back_populates="connection",
-        uselist=False,
-        cascade="all, delete-orphan",
-    )
+    writeback_config = relationship("CRMWritebackConfig", back_populates="connection", uselist=False, cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("ix_crm_connections_tenant_provider", "tenant_id", "provider"),
@@ -158,20 +134,16 @@ class CRMConnection(Base):
 # CRM Contact Model
 # =============================================================================
 
-
 class CRMContact(Base):
     """
     Synced contacts from CRM with identity matching fields.
     Links ad touchpoints to CRM contacts for attribution.
     """
-
     __tablename__ = "crm_contacts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(
-        UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False
-    )
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
 
     # CRM identifiers
     crm_contact_id = Column(String(255), nullable=False)  # HubSpot contact ID
@@ -220,9 +192,7 @@ class CRMContact(Base):
     crm_created_at = Column(DateTime(timezone=True), nullable=True)
     crm_updated_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -244,23 +214,17 @@ class CRMContact(Base):
 # CRM Deal Model
 # =============================================================================
 
-
 class CRMDeal(Base):
     """
     Synced deals from CRM with revenue attribution.
     Enables Pipeline ROAS and Won ROAS calculations.
     """
-
     __tablename__ = "crm_deals"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(
-        UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False
-    )
-    contact_id = Column(
-        UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True
-    )
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True)
 
     # CRM identifiers
     crm_deal_id = Column(String(255), nullable=False)
@@ -295,9 +259,7 @@ class CRMDeal(Base):
     attribution_confidence = Column(Float, nullable=True)  # 0-1
 
     # Attribution touchpoint link
-    attributed_touchpoint_id = Column(
-        UUID(as_uuid=True), ForeignKey("touchpoints.id", ondelete="SET NULL"), nullable=True
-    )
+    attributed_touchpoint_id = Column(UUID(as_uuid=True), ForeignKey("touchpoints.id", ondelete="SET NULL"), nullable=True)
 
     # Raw CRM data
     raw_properties = Column(JSONB, nullable=True)
@@ -306,9 +268,7 @@ class CRMDeal(Base):
     crm_created_at = Column(DateTime(timezone=True), nullable=True)
     crm_updated_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -329,22 +289,18 @@ class CRMDeal(Base):
 # Touchpoint Model
 # =============================================================================
 
-
 class Touchpoint(Base):
     """
     Ad touchpoints for multi-touch attribution.
     Captures every ad interaction that can be linked to a conversion.
     """
-
     __tablename__ = "touchpoints"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     # Contact link (if matched)
-    contact_id = Column(
-        UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True
-    )
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True)
 
     # Touchpoint timing
     event_ts = Column(DateTime(timezone=True), nullable=False)
@@ -429,13 +385,11 @@ class Touchpoint(Base):
 # Daily Pipeline Metrics (Aggregated)
 # =============================================================================
 
-
 class DailyPipelineMetrics(Base):
     """
     Aggregated daily metrics combining ad spend with CRM pipeline data.
     Enables Pipeline ROAS and Won ROAS calculations.
     """
-
     __tablename__ = "daily_pipeline_metrics"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -489,9 +443,7 @@ class DailyPipelineMetrics(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -504,61 +456,11 @@ class DailyPipelineMetrics(Base):
 
 
 # =============================================================================
-# CRM Sync Log Model
-# =============================================================================
-
-
-class CRMSyncLog(Base):
-    """
-    Log of CRM synchronization operations.
-    Tracks sync history for auditing and troubleshooting.
-    """
-
-    __tablename__ = "crm_sync_logs"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-
-    # Sync details
-    provider = Column(SQLEnum(CRMProvider), nullable=False)
-    sync_type = Column(String(50), nullable=False)  # full, incremental, manual
-    status = Column(String(50), nullable=False)  # success, failed, partial
-
-    # Timing
-    started_at = Column(DateTime(timezone=True), nullable=False)
-    completed_at = Column(DateTime(timezone=True), nullable=True)
-    duration_ms = Column(Integer, nullable=True)
-
-    # Results
-    records_processed = Column(Integer, default=0)
-    records_created = Column(Integer, default=0)
-    records_updated = Column(Integer, default=0)
-    records_failed = Column(Integer, default=0)
-
-    # Error details
-    error_message = Column(Text, nullable=True)
-    sync_metadata = Column(JSONB, nullable=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-
-    # Relationships
-    tenant = relationship("Tenant", foreign_keys=[tenant_id])
-
-    __table_args__ = (
-        Index("ix_crm_sync_logs_tenant_date", "tenant_id", "started_at"),
-        Index("ix_crm_sync_logs_provider", "tenant_id", "provider"),
-    )
-
-
-# =============================================================================
 # Writeback Status Enum
 # =============================================================================
 
-
 class WritebackStatus(str, enum.Enum):
     """Writeback operation status."""
-
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -570,20 +472,16 @@ class WritebackStatus(str, enum.Enum):
 # CRM Writeback Configuration
 # =============================================================================
 
-
 class CRMWritebackConfig(Base):
     """
     Configuration for CRM writeback operations.
     Controls what data is pushed back to the CRM.
     """
-
     __tablename__ = "crm_writeback_configs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(
-        UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False
-    )
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
 
     # Writeback toggles
     enabled = Column(Boolean, default=False, nullable=False)
@@ -615,35 +513,31 @@ class CRMWritebackConfig(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
     connection = relationship("CRMConnection", back_populates="writeback_config")
 
-    __table_args__ = (Index("ix_writeback_config_tenant", "tenant_id"),)
+    __table_args__ = (
+        Index("ix_writeback_config_tenant", "tenant_id"),
+    )
 
 
 # =============================================================================
 # CRM Writeback Sync History
 # =============================================================================
 
-
 class CRMWritebackSync(Base):
     """
     History of CRM writeback sync operations.
     Tracks each sync run for auditing and troubleshooting.
     """
-
     __tablename__ = "crm_writeback_syncs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(
-        UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False
-    )
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
 
     # Sync details
     sync_type = Column(String(50), nullable=False)  # full, incremental, manual, scheduled
@@ -672,9 +566,7 @@ class CRMWritebackSync(Base):
     error_details = Column(JSONB, nullable=True)
 
     # Triggered by
-    triggered_by_user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

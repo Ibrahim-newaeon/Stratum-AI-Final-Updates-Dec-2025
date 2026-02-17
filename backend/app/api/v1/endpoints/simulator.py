@@ -6,7 +6,8 @@ What-If Simulator and ML prediction endpoints.
 Implements Module A: Intelligence Engine.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -172,7 +173,7 @@ async def forecast_roas(
         data=ROASForecastResponse(
             forecasts=forecasts["predictions"],
             model_version=forecasts["model_version"],
-            generated_at=datetime.now(UTC),
+            generated_at=datetime.now(timezone.utc),
         ),
     )
 

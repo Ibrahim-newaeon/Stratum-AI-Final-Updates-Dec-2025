@@ -1,7 +1,7 @@
 """Add CAPI delivery logging and DLQ tables (P0 Gap Fix)
 
 Revision ID: 20260107_000001
-Revises: 020_autopilot_enforcement
+Revises: 20260107_000000_020_add_autopilot_enforcement_tables
 Create Date: 2026-01-07
 
 This migration adds tables for:
@@ -16,7 +16,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '20260107_000001'
-down_revision = '020_autopilot_enforcement'
+down_revision = '20260107_000000_020'
 branch_labels = None
 depends_on = None
 

@@ -4,30 +4,31 @@
  * Manages targets, pacing status, forecasts, and alerts.
  */
 
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import {
-  useAcknowledgeAlert,
-  useAlertStats,
-  useAllPacingStatus,
-  usePacingAlerts,
-  usePacingSummary,
-  useResolveAlert,
   useTargets,
-} from '@/api/hooks';
+  useAllPacingStatus,
+  usePacingSummary,
+  usePacingAlerts,
+  useAlertStats,
+  useAcknowledgeAlert,
+  useResolveAlert,
+  useCreateTarget,
+} from '@/api/hooks'
 import {
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon,
-  BellAlertIcon,
-  CalendarIcon,
   ChartBarIcon,
+  BellAlertIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   PlusIcon,
-} from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+  CalendarIcon,
+} from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils'
 
-type TabType = 'overview' | 'targets' | 'alerts' | 'forecasts';
+type TabType = 'overview' | 'targets' | 'alerts' | 'forecasts'
 
 const statusColors = {
   on_track: 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
@@ -35,27 +36,27 @@ const statusColors = {
   behind: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
   at_risk: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
   missed: 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
-};
+}
 
 export default function Pacing() {
-  useParams<{ tenantId: string }>();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [, setShowNewTargetModal] = useState(false);
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [showNewTargetModal, setShowNewTargetModal] = useState(false)
 
-  const { data: targets } = useTargets();
-  const { data: pacingStatus } = useAllPacingStatus();
-  const { data: summary } = usePacingSummary();
-  const { data: alerts } = usePacingAlerts({ status: 'active' });
-  const { data: alertStats } = useAlertStats();
-  const acknowledgeAlert = useAcknowledgeAlert();
-  const resolveAlert = useResolveAlert();
+  const { data: targets } = useTargets()
+  const { data: pacingStatus } = useAllPacingStatus()
+  const { data: summary } = usePacingSummary()
+  const { data: alerts } = usePacingAlerts({ status: 'active' })
+  const { data: alertStats } = useAlertStats()
+  const acknowledgeAlert = useAcknowledgeAlert()
+  const resolveAlert = useResolveAlert()
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
     { id: 'targets' as TabType, label: 'Targets' },
     { id: 'alerts' as TabType, label: 'Alerts', badge: alertStats?.active },
     { id: 'forecasts' as TabType, label: 'Forecasts' },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
@@ -136,9 +137,7 @@ export default function Pacing() {
               <div key={status.targetId} className="rounded-xl border bg-card p-6 shadow-card">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-medium truncate">{status.targetName}</h3>
-                  <span
-                    className={cn('px-2 py-1 rounded-full text-xs', statusColors[status.status])}
-                  >
+                  <span className={cn('px-2 py-1 rounded-full text-xs', statusColors[status.status])}>
                     {status.status.replace('_', ' ')}
                   </span>
                 </div>
@@ -234,8 +233,8 @@ export default function Pacing() {
                     {target.metricType === 'spend' || target.metricType === 'revenue'
                       ? `$${target.targetValue.toLocaleString()}`
                       : target.metricType === 'roas'
-                        ? `${target.targetValue}x`
-                        : target.targetValue.toLocaleString()}
+                      ? `${target.targetValue}x`
+                      : target.targetValue.toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {target.isActive ? (
@@ -270,12 +269,9 @@ export default function Pacing() {
                 key={alert.id}
                 className={cn(
                   'rounded-xl border p-4 flex items-start justify-between gap-4',
-                  alert.severity === 'critical' &&
-                    'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20',
-                  alert.severity === 'warning' &&
-                    'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20',
-                  alert.severity === 'info' &&
-                    'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20'
+                  alert.severity === 'critical' && 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20',
+                  alert.severity === 'warning' && 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20',
+                  alert.severity === 'info' && 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20'
                 )}
               >
                 <div className="flex items-start gap-3">
@@ -289,9 +285,8 @@ export default function Pacing() {
                   <div>
                     <p className="font-medium">{alert.message}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Deviation: {alert.deviationPct.toFixed(1)}% | Expected:{' '}
-                      {alert.expectedValue.toLocaleString()} | Actual:{' '}
-                      {alert.currentValue.toLocaleString()}
+                      Deviation: {alert.deviationPct.toFixed(1)}% | Expected: {alert.expectedValue.toLocaleString()} |
+                      Actual: {alert.currentValue.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {new Date(alert.triggeredAt).toLocaleString()}
@@ -330,22 +325,20 @@ export default function Pacing() {
             trained on your historical data to predict future performance.
           </p>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {targets
-              ?.filter((t) => t.isActive)
-              .map((target) => (
-                <button
-                  key={target.id}
-                  className="p-4 rounded-lg border text-left hover:bg-muted/50 transition-colors"
-                >
-                  <p className="font-medium">{target.name}</p>
-                  <p className="text-sm text-muted-foreground capitalize">
-                    {target.metricType} | {target.periodType}
-                  </p>
-                </button>
-              ))}
+            {targets?.filter((t) => t.isActive).map((target) => (
+              <button
+                key={target.id}
+                className="p-4 rounded-lg border text-left hover:bg-muted/50 transition-colors"
+              >
+                <p className="font-medium">{target.name}</p>
+                <p className="text-sm text-muted-foreground capitalize">
+                  {target.metricType} | {target.periodType}
+                </p>
+              </button>
+            ))}
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

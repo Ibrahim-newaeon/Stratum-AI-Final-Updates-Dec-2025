@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { Calculator, TrendingUp } from 'lucide-react';
-import { cn, formatCurrency } from '@/lib/utils';
+import { useState } from 'react'
+import { Calculator, TrendingUp } from 'lucide-react'
+import { cn, formatCurrency } from '@/lib/utils'
 
 interface SimulatorWidgetProps {
-  className?: string;
+  className?: string
 }
 
 export function SimulatorWidget({ className }: SimulatorWidgetProps) {
-  const [budgetChange, setBudgetChange] = useState(0);
-  const currentBudget = 50000;
-  const currentROAS = 3.5;
+  const [budgetChange, setBudgetChange] = useState(0)
+  const currentBudget = 50000
+  const currentROAS = 3.5
 
-  const newBudget = currentBudget * (1 + budgetChange / 100);
-  const predictedROAS = currentROAS * (1 - budgetChange * 0.005);
-  const predictedRevenue = newBudget * predictedROAS;
+  const newBudget = currentBudget * (1 + budgetChange / 100)
+  const predictedROAS = currentROAS * (1 - budgetChange * 0.005)
+  const predictedRevenue = newBudget * predictedROAS
 
   return (
     <div className={cn('h-full p-4 flex flex-col', className)}>
@@ -24,10 +24,7 @@ export function SimulatorWidget({ className }: SimulatorWidgetProps) {
 
       <div className="flex-1 space-y-4">
         <div>
-          <label className="text-sm text-muted-foreground">
-            Budget Change: {budgetChange > 0 ? '+' : ''}
-            {budgetChange}%
-          </label>
+          <label className="text-sm text-muted-foreground">Budget Change: {budgetChange > 0 ? '+' : ''}{budgetChange}%</label>
           <input
             type="range"
             min="-50"
@@ -50,12 +47,10 @@ export function SimulatorWidget({ className }: SimulatorWidgetProps) {
           </div>
           <div className="p-3 rounded-lg bg-muted/50">
             <p className="text-xs text-muted-foreground">Predicted ROAS</p>
-            <p
-              className={cn(
-                'text-lg font-bold',
-                predictedROAS >= currentROAS ? 'text-green-500' : 'text-amber-500'
-              )}
-            >
+            <p className={cn(
+              'text-lg font-bold',
+              predictedROAS >= currentROAS ? 'text-green-500' : 'text-amber-500'
+            )}>
               {predictedROAS.toFixed(2)}x
             </p>
           </div>
@@ -70,5 +65,5 @@ export function SimulatorWidget({ className }: SimulatorWidgetProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

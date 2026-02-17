@@ -9,13 +9,13 @@ Authentication and authorization components including:
 """
 
 from app.auth.permissions import (
-    ROLE_PERMISSIONS,
     Permission,
-    get_user_permissions,
-    has_permission,
+    ROLE_PERMISSIONS,
     require_permissions,
     require_role,
     require_super_admin,
+    has_permission,
+    get_user_permissions,
 )
 
 __all__ = [

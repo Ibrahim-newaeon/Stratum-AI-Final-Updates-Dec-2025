@@ -11,12 +11,12 @@ Aggregates touchpoint data into journey paths for analysis:
 - Time-to-conversion metrics
 """
 
-from collections import defaultdict
-from datetime import datetime
-from typing import Any, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
+from collections import defaultdict
 
-from sqlalchemy import and_, select
+from sqlalchemy import select, and_, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -24,6 +24,7 @@ from app.models.crm import (
     CRMContact,
     CRMDeal,
     Touchpoint,
+    AttributionModel,
 )
 
 logger = get_logger(__name__)
@@ -33,7 +34,6 @@ logger = get_logger(__name__)
 # Journey Aggregator
 # =============================================================================
 
-
 class JourneyAggregator:
     """
     Aggregates journey patterns for analysis.
@@ -42,7 +42,7 @@ class JourneyAggregator:
     """
 
     @staticmethod
-    def path_to_string(touchpoints: list[Touchpoint], by: str = "platform") -> str:
+    def path_to_string(touchpoints: List[Touchpoint], by: str = "platform") -> str:
         """Convert touchpoint sequence to a path string."""
         if by == "platform":
             elements = [tp.source or "unknown" for tp in touchpoints]
@@ -61,9 +61,9 @@ class JourneyAggregator:
 
     @staticmethod
     def calculate_path_metrics(
-        touchpoints: list[Touchpoint],
+        touchpoints: List[Touchpoint],
         conversion_time: Optional[datetime] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Calculate metrics for a single journey path."""
         if not touchpoints:
             return {
@@ -75,7 +75,7 @@ class JourneyAggregator:
 
         first_touch = touchpoints[0]
         last_touch = touchpoints[-1]
-        unique_channels = len({tp.source for tp in touchpoints if tp.source})
+        unique_channels = len(set(tp.source for tp in touchpoints if tp.source))
 
         first_to_last_hours = None
         if len(touchpoints) > 1:
@@ -90,9 +90,7 @@ class JourneyAggregator:
         return {
             "touch_count": len(touchpoints),
             "unique_channels": unique_channels,
-            "time_to_conversion_hours": round(time_to_conversion_hours, 2)
-            if time_to_conversion_hours
-            else None,
+            "time_to_conversion_hours": round(time_to_conversion_hours, 2) if time_to_conversion_hours else None,
             "first_to_last_hours": round(first_to_last_hours, 2) if first_to_last_hours else None,
         }
 
@@ -100,7 +98,6 @@ class JourneyAggregator:
 # =============================================================================
 # Journey Service
 # =============================================================================
-
 
 class JourneyService:
     """
@@ -115,7 +112,7 @@ class JourneyService:
         self,
         contact_id: UUID,
         include_deals: bool = True,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get complete journey for a single contact.
         """
@@ -135,96 +132,82 @@ class JourneyService:
 
         # Get touchpoints
         touchpoint_result = await self.db.execute(
-            select(Touchpoint)
-            .where(
+            select(Touchpoint).where(
                 and_(
                     Touchpoint.contact_id == contact_id,
                     Touchpoint.tenant_id == self.tenant_id,
                 )
-            )
-            .order_by(Touchpoint.event_ts)
+            ).order_by(Touchpoint.event_ts)
         )
         touchpoints = touchpoint_result.scalars().all()
 
         # Build timeline
         timeline = []
         for tp in touchpoints:
-            timeline.append(
-                {
-                    "type": "touchpoint",
-                    "timestamp": tp.event_ts.isoformat(),
-                    "event_type": tp.event_type,
-                    "source": tp.source,
-                    "campaign_id": tp.campaign_id,
-                    "campaign_name": tp.campaign_name,
-                    "adset_name": tp.adset_name,
-                    "ad_name": tp.ad_name,
-                    "utm_source": tp.utm_source,
-                    "utm_medium": tp.utm_medium,
-                    "utm_campaign": tp.utm_campaign,
-                    "landing_page": tp.landing_page_url,
-                    "is_first_touch": tp.is_first_touch,
-                    "is_last_touch": tp.is_last_touch,
-                    "is_converting_touch": tp.is_converting_touch,
-                    "attribution_weight": tp.attribution_weight,
-                }
-            )
+            timeline.append({
+                "type": "touchpoint",
+                "timestamp": tp.event_ts.isoformat(),
+                "event_type": tp.event_type,
+                "source": tp.source,
+                "campaign_id": tp.campaign_id,
+                "campaign_name": tp.campaign_name,
+                "adset_name": tp.adset_name,
+                "ad_name": tp.ad_name,
+                "utm_source": tp.utm_source,
+                "utm_medium": tp.utm_medium,
+                "utm_campaign": tp.utm_campaign,
+                "landing_page": tp.landing_page_url,
+                "is_first_touch": tp.is_first_touch,
+                "is_last_touch": tp.is_last_touch,
+                "is_converting_touch": tp.is_converting_touch,
+                "attribution_weight": tp.attribution_weight,
+            })
 
         # Get deals if requested
         deals = []
         if include_deals:
             deal_result = await self.db.execute(
-                select(CRMDeal)
-                .where(
+                select(CRMDeal).where(
                     and_(
                         CRMDeal.contact_id == contact_id,
                         CRMDeal.tenant_id == self.tenant_id,
                     )
-                )
-                .order_by(CRMDeal.crm_created_at)
+                ).order_by(CRMDeal.crm_created_at)
             )
             deals_data = deal_result.scalars().all()
 
             for deal in deals_data:
-                deals.append(
-                    {
-                        "id": str(deal.id),
-                        "crm_deal_id": deal.crm_deal_id,
-                        "name": deal.deal_name,
-                        "stage": deal.stage,
-                        "amount": deal.amount,
-                        "is_won": deal.is_won,
-                        "won_at": deal.won_at.isoformat() if deal.won_at else None,
-                        "attributed_platform": deal.attributed_platform,
-                        "attributed_campaign": deal.attributed_campaign_id,
-                        "attribution_model": deal.attribution_model.value
-                        if deal.attribution_model
-                        else None,
-                        "attribution_confidence": deal.attribution_confidence,
-                    }
-                )
+                deals.append({
+                    "id": str(deal.id),
+                    "crm_deal_id": deal.crm_deal_id,
+                    "name": deal.deal_name,
+                    "stage": deal.stage,
+                    "amount": deal.amount,
+                    "is_won": deal.is_won,
+                    "won_at": deal.won_at.isoformat() if deal.won_at else None,
+                    "attributed_platform": deal.attributed_platform,
+                    "attributed_campaign": deal.attributed_campaign_id,
+                    "attribution_model": deal.attribution_model.value if deal.attribution_model else None,
+                    "attribution_confidence": deal.attribution_confidence,
+                })
 
                 # Add deal events to timeline
                 if deal.crm_created_at:
-                    timeline.append(
-                        {
-                            "type": "deal_created",
-                            "timestamp": deal.crm_created_at.isoformat(),
-                            "deal_id": str(deal.id),
-                            "deal_name": deal.deal_name,
-                            "amount": deal.amount,
-                        }
-                    )
+                    timeline.append({
+                        "type": "deal_created",
+                        "timestamp": deal.crm_created_at.isoformat(),
+                        "deal_id": str(deal.id),
+                        "deal_name": deal.deal_name,
+                        "amount": deal.amount,
+                    })
                 if deal.won_at:
-                    timeline.append(
-                        {
-                            "type": "deal_won",
-                            "timestamp": deal.won_at.isoformat(),
-                            "deal_id": str(deal.id),
-                            "deal_name": deal.deal_name,
-                            "amount": deal.amount,
-                        }
-                    )
+                    timeline.append({
+                        "type": "deal_won",
+                        "timestamp": deal.won_at.isoformat(),
+                        "deal_id": str(deal.id),
+                        "deal_name": deal.deal_name,
+                        "amount": deal.amount,
+                    })
 
         # Sort timeline by timestamp
         timeline.sort(key=lambda x: x["timestamp"])
@@ -240,9 +223,7 @@ class JourneyService:
             "contact_id": str(contact_id),
             "crm_contact_id": contact.crm_contact_id,
             "lifecycle_stage": contact.lifecycle_stage,
-            "first_touch_ts": contact.first_touch_ts.isoformat()
-            if contact.first_touch_ts
-            else None,
+            "first_touch_ts": contact.first_touch_ts.isoformat() if contact.first_touch_ts else None,
             "last_touch_ts": contact.last_touch_ts.isoformat() if contact.last_touch_ts else None,
             "touch_count": contact.touch_count,
             "path": JourneyAggregator.path_to_string(touchpoints, by="platform"),
@@ -258,7 +239,7 @@ class JourneyService:
         limit: int = 20,
         min_conversions: int = 2,
         path_by: str = "platform",  # platform or campaign
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Get most common paths that lead to conversions.
         """
@@ -277,19 +258,17 @@ class JourneyService:
         deals = deal_result.scalars().all()
 
         # Aggregate paths
-        path_stats: dict[str, dict[str, Any]] = {}
+        path_stats: Dict[str, Dict[str, Any]] = {}
 
         for deal in deals:
             # Get touchpoints for this deal's contact
             touchpoint_result = await self.db.execute(
-                select(Touchpoint)
-                .where(
+                select(Touchpoint).where(
                     and_(
                         Touchpoint.contact_id == deal.contact_id,
                         Touchpoint.event_ts <= deal.won_at,
                     )
-                )
-                .order_by(Touchpoint.event_ts)
+                ).order_by(Touchpoint.event_ts)
             )
             touchpoints = touchpoint_result.scalars().all()
 
@@ -322,23 +301,19 @@ class JourneyService:
             if stats["conversions"] < min_conversions:
                 continue
 
-            results.append(
-                {
-                    "path": path,
-                    "conversions": stats["conversions"],
-                    "total_revenue": round(stats["total_revenue"], 2),
-                    "avg_revenue": round(stats["total_revenue"] / stats["conversions"], 2),
-                    "avg_touches": round(stats["total_touches"] / stats["conversions"], 1),
-                    "avg_time_to_conversion_hours": round(
-                        stats["total_time_hours"] / stats["conversions"], 1
-                    )
-                    if stats["total_time_hours"] > 0
-                    else None,
-                    "avg_unique_channels": round(
-                        stats["unique_channels_sum"] / stats["conversions"], 1
-                    ),
-                }
-            )
+            results.append({
+                "path": path,
+                "conversions": stats["conversions"],
+                "total_revenue": round(stats["total_revenue"], 2),
+                "avg_revenue": round(stats["total_revenue"] / stats["conversions"], 2),
+                "avg_touches": round(stats["total_touches"] / stats["conversions"], 1),
+                "avg_time_to_conversion_hours": round(
+                    stats["total_time_hours"] / stats["conversions"], 1
+                ) if stats["total_time_hours"] > 0 else None,
+                "avg_unique_channels": round(
+                    stats["unique_channels_sum"] / stats["conversions"], 1
+                ),
+            })
 
         # Sort by conversions
         results.sort(key=lambda x: x["conversions"], reverse=True)
@@ -350,7 +325,7 @@ class JourneyService:
         start_date: datetime,
         end_date: datetime,
         min_transitions: int = 5,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Analyze channel transitions (Sankey diagram data).
 
@@ -370,19 +345,17 @@ class JourneyService:
         contact_ids = [row[0] for row in contact_result.fetchall()]
 
         # Count transitions between channels
-        transitions: dict[tuple[str, str], int] = defaultdict(int)
-        channel_totals: dict[str, int] = defaultdict(int)
+        transitions: Dict[Tuple[str, str], int] = defaultdict(int)
+        channel_totals: Dict[str, int] = defaultdict(int)
 
         for contact_id in contact_ids:
             touchpoint_result = await self.db.execute(
-                select(Touchpoint)
-                .where(
+                select(Touchpoint).where(
                     and_(
                         Touchpoint.contact_id == contact_id,
                         Touchpoint.tenant_id == self.tenant_id,
                     )
-                )
-                .order_by(Touchpoint.event_ts)
+                ).order_by(Touchpoint.event_ts)
             )
             touchpoints = touchpoint_result.scalars().all()
 
@@ -397,22 +370,23 @@ class JourneyService:
                 channel_totals[from_channel] += 1
 
         # Build Sankey-style data
-        nodes = list(set([t[0] for t in transitions] + [t[1] for t in transitions]))
+        nodes = list(set(
+            [t[0] for t in transitions.keys()] +
+            [t[1] for t in transitions.keys()]
+        ))
         node_index = {node: i for i, node in enumerate(nodes)}
 
         links = []
         for (from_channel, to_channel), count in transitions.items():
             if count >= min_transitions:
-                links.append(
-                    {
-                        "source": node_index[from_channel],
-                        "target": node_index[to_channel],
-                        "source_name": from_channel,
-                        "target_name": to_channel,
-                        "value": count,
-                        "percentage": round(count / channel_totals[from_channel] * 100, 1),
-                    }
-                )
+                links.append({
+                    "source": node_index[from_channel],
+                    "target": node_index[to_channel],
+                    "source_name": from_channel,
+                    "target_name": to_channel,
+                    "value": count,
+                    "percentage": round(count / channel_totals[from_channel] * 100, 1),
+                })
 
         # Sort links by value
         links.sort(key=lambda x: x["value"], reverse=True)
@@ -428,7 +402,7 @@ class JourneyService:
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get aggregate journey metrics for the tenant.
         """
@@ -454,14 +428,12 @@ class JourneyService:
 
         for deal in deals:
             touchpoint_result = await self.db.execute(
-                select(Touchpoint)
-                .where(
+                select(Touchpoint).where(
                     and_(
                         Touchpoint.contact_id == deal.contact_id,
                         Touchpoint.event_ts <= deal.won_at,
                     )
-                )
-                .order_by(Touchpoint.event_ts)
+                ).order_by(Touchpoint.event_ts)
             )
             touchpoints = touchpoint_result.scalars().all()
 
@@ -504,13 +476,11 @@ class JourneyService:
                 "avg_channels_per_journey": round(avg_channels, 1),
             },
             "touch_distribution": touch_distribution,
-            "platform_contribution": dict(
-                sorted(
-                    platforms_seen.items(),
-                    key=lambda x: x[1],
-                    reverse=True,
-                )
-            ),
+            "platform_contribution": dict(sorted(
+                platforms_seen.items(),
+                key=lambda x: x[1],
+                reverse=True,
+            )),
         }
 
     async def get_assisted_conversions(
@@ -518,7 +488,7 @@ class JourneyService:
         start_date: datetime,
         end_date: datetime,
         group_by: str = "platform",  # platform, campaign
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """
         Get assisted conversion metrics (touchpoints that assisted but weren't last touch).
         """
@@ -537,18 +507,16 @@ class JourneyService:
         deals = deal_result.scalars().all()
 
         # Track assists and last-touches
-        stats: dict[str, dict[str, Any]] = {}
+        stats: Dict[str, Dict[str, Any]] = {}
 
         for deal in deals:
             touchpoint_result = await self.db.execute(
-                select(Touchpoint)
-                .where(
+                select(Touchpoint).where(
                     and_(
                         Touchpoint.contact_id == deal.contact_id,
                         Touchpoint.event_ts <= deal.won_at,
                     )
-                )
-                .order_by(Touchpoint.event_ts)
+                ).order_by(Touchpoint.event_ts)
             )
             touchpoints = touchpoint_result.scalars().all()
 
@@ -590,17 +558,16 @@ class JourneyService:
         for key, data in stats.items():
             total_conversions = data["last_touch_conversions"] + data["assisted_conversions"]
             assist_ratio = (
-                data["assisted_conversions"] / total_conversions if total_conversions > 0 else 0
+                data["assisted_conversions"] / total_conversions
+                if total_conversions > 0 else 0
             )
 
-            results.append(
-                {
-                    **data,
-                    "total_conversions": total_conversions,
-                    "total_revenue": data["last_touch_revenue"] + data["assisted_revenue"],
-                    "assist_ratio": round(assist_ratio, 2),
-                }
-            )
+            results.append({
+                **data,
+                "total_conversions": total_conversions,
+                "total_revenue": data["last_touch_revenue"] + data["assisted_revenue"],
+                "assist_ratio": round(assist_ratio, 2),
+            })
 
         return sorted(results, key=lambda x: x["total_touches"], reverse=True)
 
@@ -608,7 +575,7 @@ class JourneyService:
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Analyze time lag between touchpoints and conversion.
         """
@@ -641,15 +608,12 @@ class JourneyService:
         for deal in deals:
             # Get first touchpoint
             touchpoint_result = await self.db.execute(
-                select(Touchpoint)
-                .where(
+                select(Touchpoint).where(
                     and_(
                         Touchpoint.contact_id == deal.contact_id,
                         Touchpoint.event_ts <= deal.won_at,
                     )
-                )
-                .order_by(Touchpoint.event_ts)
-                .limit(1)
+                ).order_by(Touchpoint.event_ts).limit(1)
             )
             first_touch = touchpoint_result.scalar_one_or_none()
 
@@ -694,9 +658,7 @@ class JourneyService:
                     "label": data["label"],
                     "conversions": data["count"],
                     "revenue": round(data["revenue"], 2),
-                    "percentage": round(data["count"] / total_conversions * 100, 1)
-                    if total_conversions > 0
-                    else 0,
+                    "percentage": round(data["count"] / total_conversions * 100, 1) if total_conversions > 0 else 0,
                 }
                 for key, data in buckets.items()
             ],

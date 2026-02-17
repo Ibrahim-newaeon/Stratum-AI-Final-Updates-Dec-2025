@@ -13,20 +13,23 @@ Features:
 - Margin trending
 """
 
-from datetime import UTC, date, datetime
-from typing import Any, Optional
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
+from decimal import Decimal
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import select, and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.profit import (
-    DailyProfitMetrics,
-    MarginRule,
     ProductCatalog,
     ProductMargin,
+    MarginRule,
+    DailyProfitMetrics,
     ProfitROASReport,
+    MarginType,
+    COGSSource,
 )
 
 logger = get_logger(__name__)
@@ -54,7 +57,7 @@ class ProfitCalculationService:
         platform: Optional[str] = None,
         campaign_id: Optional[str] = None,
         product_id: Optional[UUID] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Calculate Profit ROAS for a date range.
 
@@ -161,9 +164,7 @@ class ProfitCalculationService:
             "breakeven": {
                 "breakeven_roas": round(breakeven_roas, 2) if breakeven_roas else None,
                 "above_breakeven": above_breakeven,
-                "margin_of_safety": round(revenue_roas - breakeven_roas, 2)
-                if breakeven_roas
-                else None,
+                "margin_of_safety": round(revenue_roas - breakeven_roas, 2) if breakeven_roas else None,
             },
         }
 
@@ -177,7 +178,7 @@ class ProfitCalculationService:
         campaign_id: Optional[str] = None,
         units_sold: int = 1,
         calculation_date: Optional[date] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Calculate profit metrics for a single transaction/day.
 
@@ -197,7 +198,7 @@ class ProfitCalculationService:
             Calculated profit metrics
         """
         if calculation_date is None:
-            calculation_date = datetime.now(UTC).date()
+            calculation_date = date.today()
 
         # Get COGS
         cogs_result = await self._get_cogs(
@@ -248,7 +249,7 @@ class ProfitCalculationService:
         platform: Optional[str] = None,
         campaign_id: Optional[str] = None,
         granularity: str = "daily",
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get profit ROAS trend over time.
 
@@ -274,7 +275,9 @@ class ProfitCalculationService:
             conditions.append(DailyProfitMetrics.campaign_id == campaign_id)
 
         result = await self.db.execute(
-            select(DailyProfitMetrics).where(and_(*conditions)).order_by(DailyProfitMetrics.date)
+            select(DailyProfitMetrics)
+            .where(and_(*conditions))
+            .order_by(DailyProfitMetrics.date)
         )
         records = result.scalars().all()
 
@@ -303,23 +306,17 @@ class ProfitCalculationService:
         trend = []
         for date_key, data in sorted(daily_data.items()):
             ad_spend = data["ad_spend"]
-            trend.append(
-                {
-                    "date": data["date"],
-                    "revenue": round(data["revenue"], 2),
-                    "gross_profit": round(data["gross_profit"], 2),
-                    "net_profit": round(data["net_profit"], 2),
-                    "ad_spend": round(ad_spend, 2),
-                    "revenue_roas": round(data["revenue"] / ad_spend, 2) if ad_spend > 0 else 0,
-                    "gross_profit_roas": round(data["gross_profit"] / ad_spend, 2)
-                    if ad_spend > 0
-                    else 0,
-                    "net_profit_roas": round(data["net_profit"] / ad_spend, 2)
-                    if ad_spend > 0
-                    else 0,
-                    "units": data["units"],
-                }
-            )
+            trend.append({
+                "date": data["date"],
+                "revenue": round(data["revenue"], 2),
+                "gross_profit": round(data["gross_profit"], 2),
+                "net_profit": round(data["net_profit"], 2),
+                "ad_spend": round(ad_spend, 2),
+                "revenue_roas": round(data["revenue"] / ad_spend, 2) if ad_spend > 0 else 0,
+                "gross_profit_roas": round(data["gross_profit"] / ad_spend, 2) if ad_spend > 0 else 0,
+                "net_profit_roas": round(data["net_profit"] / ad_spend, 2) if ad_spend > 0 else 0,
+                "units": data["units"],
+            })
 
         return {
             "status": "success",
@@ -339,7 +336,7 @@ class ProfitCalculationService:
         platform: Optional[str] = None,
         limit: int = 20,
         sort_by: str = "gross_profit",
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get profitability by product.
 
@@ -395,32 +392,24 @@ class ProfitCalculationService:
             gross_profit = (r.gross_profit or 0) / 100
             net_profit = (r.net_profit or 0) / 100
 
-            product_data.append(
-                {
-                    "product_id": str(r.product_id),
-                    "sku": product.sku if product else "Unknown",
-                    "name": product.name if product else "Unknown Product",
-                    "category": product.category if product else None,
-                    "units": r.units or 0,
-                    "revenue": round(revenue, 2),
-                    "cogs": round(cogs, 2),
-                    "gross_profit": round(gross_profit, 2),
-                    "net_profit": round(net_profit, 2),
-                    "ad_spend": round(ad_spend, 2),
-                    "gross_margin_pct": round(
-                        (gross_profit / revenue * 100) if revenue > 0 else 0, 1
-                    ),
-                    "gross_profit_roas": round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0,
-                    "net_profit_roas": round(net_profit / ad_spend, 2) if ad_spend > 0 else 0,
-                }
-            )
+            product_data.append({
+                "product_id": str(r.product_id),
+                "sku": product.sku if product else "Unknown",
+                "name": product.name if product else "Unknown Product",
+                "category": product.category if product else None,
+                "units": r.units or 0,
+                "revenue": round(revenue, 2),
+                "cogs": round(cogs, 2),
+                "gross_profit": round(gross_profit, 2),
+                "net_profit": round(net_profit, 2),
+                "ad_spend": round(ad_spend, 2),
+                "gross_margin_pct": round((gross_profit / revenue * 100) if revenue > 0 else 0, 1),
+                "gross_profit_roas": round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0,
+                "net_profit_roas": round(net_profit / ad_spend, 2) if ad_spend > 0 else 0,
+            })
 
         # Sort
-        sort_key = (
-            sort_by
-            if sort_by in ["gross_profit", "net_profit", "gross_profit_roas"]
-            else "gross_profit"
-        )
+        sort_key = sort_by if sort_by in ["gross_profit", "net_profit", "gross_profit_roas"] else "gross_profit"
         product_data.sort(key=lambda x: x[sort_key], reverse=True)
 
         return {
@@ -438,7 +427,7 @@ class ProfitCalculationService:
         start_date: date,
         end_date: date,
         platform: Optional[str] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get profitability by campaign.
 
@@ -483,24 +472,22 @@ class ProfitCalculationService:
             breakeven_roas = 1 / (gross_margin_pct / 100) if gross_margin_pct > 0 else None
             revenue_roas = revenue / ad_spend if ad_spend > 0 else 0
 
-            campaigns.append(
-                {
-                    "platform": r.platform,
-                    "campaign_id": r.campaign_id,
-                    "units": r.units or 0,
-                    "revenue": round(revenue, 2),
-                    "cogs": round((r.cogs or 0) / 100, 2),
-                    "gross_profit": round(gross_profit, 2),
-                    "net_profit": round(net_profit, 2),
-                    "ad_spend": round(ad_spend, 2),
-                    "revenue_roas": round(revenue_roas, 2),
-                    "gross_profit_roas": round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0,
-                    "net_profit_roas": round(net_profit / ad_spend, 2) if ad_spend > 0 else 0,
-                    "gross_margin_pct": round(gross_margin_pct, 1),
-                    "breakeven_roas": round(breakeven_roas, 2) if breakeven_roas else None,
-                    "above_breakeven": revenue_roas > breakeven_roas if breakeven_roas else None,
-                }
-            )
+            campaigns.append({
+                "platform": r.platform,
+                "campaign_id": r.campaign_id,
+                "units": r.units or 0,
+                "revenue": round(revenue, 2),
+                "cogs": round((r.cogs or 0) / 100, 2),
+                "gross_profit": round(gross_profit, 2),
+                "net_profit": round(net_profit, 2),
+                "ad_spend": round(ad_spend, 2),
+                "revenue_roas": round(revenue_roas, 2),
+                "gross_profit_roas": round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0,
+                "net_profit_roas": round(net_profit / ad_spend, 2) if ad_spend > 0 else 0,
+                "gross_margin_pct": round(gross_margin_pct, 1),
+                "breakeven_roas": round(breakeven_roas, 2) if breakeven_roas else None,
+                "above_breakeven": revenue_roas > breakeven_roas if breakeven_roas else None,
+            })
 
         # Sort by gross profit
         campaigns.sort(key=lambda x: x["gross_profit"], reverse=True)
@@ -606,7 +593,7 @@ class ProfitCalculationService:
         revenue_cents: int,
         units_sold: int,
         effective_date: date,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get COGS for a product/transaction.
 
@@ -728,6 +715,9 @@ class ProfitCalculationService:
             conditions.append(or_(*match_conditions))
 
         result = await self.db.execute(
-            select(MarginRule).where(and_(*conditions)).order_by(MarginRule.priority).limit(1)
+            select(MarginRule)
+            .where(and_(*conditions))
+            .order_by(MarginRule.priority)
+            .limit(1)
         )
         return result.scalar_one_or_none()

@@ -9,7 +9,7 @@ request processing, including tenant_id, user_id, role, and workspace.
 """
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import Request
@@ -38,7 +38,7 @@ class TenantContext:
 
     # Request metadata
     request_id: Optional[str] = None
-    request_time: datetime = field(default_factory=lambda: datetime.now(UTC))
+    request_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
     def is_super_admin(self) -> bool:

@@ -4,43 +4,39 @@
  * Comprehensive A/B testing framework with power analysis, LTV impact, and statistical results.
  */
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import {
-  ABTest,
-  CreateTestParams,
-  TestStatus,
-  TestType,
+  useABTests,
   useABTest,
   useABTestResults,
-  useABTests,
   useCreateABTest,
-  useLTVImpact,
-  usePauseABTest,
-  usePowerAnalysis,
   useStartABTest,
+  usePauseABTest,
   useStopABTest,
-} from '@/api/abTesting';
+  usePowerAnalysis,
+  useLTVImpact,
+  TestStatus,
+  TestType,
+  ABTest,
+} from '@/api/abTesting'
 import {
-  ArrowTrendingUpIcon,
   BeakerIcon,
-  CalculatorIcon,
+  PlayIcon,
+  PauseIcon,
+  StopIcon,
+  PlusIcon,
   ChartBarIcon,
   CheckCircleIcon,
-  LightBulbIcon,
-  MinusCircleIcon,
-  PauseIcon,
-  PlayIcon,
-  PlusCircleIcon,
-  PlusIcon,
-  SparklesIcon,
-  StopIcon,
   XCircleIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
+  ArrowTrendingUpIcon,
+  LightBulbIcon,
+  CalculatorIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils'
 
-type TabType = 'active' | 'completed' | 'drafts' | 'power-analysis';
+type TabType = 'active' | 'completed' | 'drafts' | 'power-analysis'
 
 const statusColors: Record<TestStatus, string> = {
   draft: 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
@@ -48,7 +44,7 @@ const statusColors: Record<TestStatus, string> = {
   paused: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
   completed: 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
   stopped: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-};
+}
 
 const testTypeLabels: Record<TestType, string> = {
   campaign: 'Campaign',
@@ -56,116 +52,42 @@ const testTypeLabels: Record<TestType, string> = {
   audience: 'Audience',
   landing_page: 'Landing Page',
   bid_strategy: 'Bid Strategy',
-};
+}
 
 export default function ABTesting() {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<TabType>('active');
-  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-  const [showNewTestModal, setShowNewTestModal] = useState(false);
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const [activeTab, setActiveTab] = useState<TabType>('active')
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null)
+  const [showNewTestModal, setShowNewTestModal] = useState(false)
   const [powerAnalysisParams, setPowerAnalysisParams] = useState({
     baselineConversionRate: 2.5,
     minimumDetectableEffect: 10,
-    confidenceLevel: 0.95 as 0.9 | 0.95 | 0.99,
+    confidenceLevel: 0.95 as const,
     dailyTraffic: 10000,
-  });
-  const [newTestForm, setNewTestForm] = useState({
-    name: '',
-    hypothesis: '',
-    testType: 'campaign' as TestType,
-    primaryMetric: 'conversion_rate',
-    confidenceLevel: 0.95 as 0.9 | 0.95 | 0.99,
-    variants: [
-      { name: 'Control', description: '', isControl: true, trafficAllocation: 50 },
-      { name: 'Variant B', description: '', isControl: false, trafficAllocation: 50 },
-    ],
-  });
+  })
 
-  const { data: activeTests } = useABTests({ status: 'running' });
-  const { data: completedTests } = useABTests({ status: 'completed' });
-  const { data: draftTests } = useABTests({ status: 'draft' });
-  const { data: selectedTest } = useABTest(selectedTestId || '');
-  const { data: testResults } = useABTestResults(selectedTestId || '');
-  const { data: ltvImpact } = useLTVImpact(selectedTestId || '');
+  const { data: activeTests } = useABTests({ status: 'running' })
+  const { data: completedTests } = useABTests({ status: 'completed' })
+  const { data: draftTests } = useABTests({ status: 'draft' })
+  const { data: selectedTest } = useABTest(selectedTestId || '')
+  const { data: testResults } = useABTestResults(selectedTestId || '')
+  const { data: ltvImpact } = useLTVImpact(selectedTestId || '')
 
-  const createTest = useCreateABTest();
-  const startTest = useStartABTest();
-  const pauseTest = usePauseABTest();
-  const stopTest = useStopABTest();
-  const powerAnalysis = usePowerAnalysis();
-
-  const resetNewTestForm = useCallback(() => {
-    setNewTestForm({
-      name: '',
-      hypothesis: '',
-      testType: 'campaign',
-      primaryMetric: 'conversion_rate',
-      confidenceLevel: 0.95,
-      variants: [
-        { name: 'Control', description: '', isControl: true, trafficAllocation: 50 },
-        { name: 'Variant B', description: '', isControl: false, trafficAllocation: 50 },
-      ],
-    });
-  }, []);
-
-  const handleCreateTest = useCallback(async () => {
-    if (!newTestForm.name.trim() || !newTestForm.hypothesis.trim()) return;
-
-    const params: CreateTestParams = {
-      name: newTestForm.name,
-      testType: newTestForm.testType,
-      hypothesis: newTestForm.hypothesis,
-      primaryMetric: newTestForm.primaryMetric,
-      confidenceLevel: newTestForm.confidenceLevel,
-      variants: newTestForm.variants,
-    };
-
-    try {
-      await createTest.mutateAsync(params);
-      toast({ title: 'Test created', description: `"${newTestForm.name}" has been created as a draft.` });
-      setShowNewTestModal(false);
-      resetNewTestForm();
-      setActiveTab('drafts');
-    } catch {
-      toast({ title: 'Error', description: 'Failed to create test.', variant: 'destructive' });
-    }
-  }, [newTestForm, createTest, toast, resetNewTestForm]);
-
-  const addVariant = useCallback(() => {
-    const count = newTestForm.variants.length;
-    const letters = 'BCDEFGHIJ';
-    const allocation = Math.floor(100 / (count + 1));
-    setNewTestForm(f => ({
-      ...f,
-      variants: [
-        ...f.variants.map(v => ({ ...v, trafficAllocation: allocation })),
-        { name: `Variant ${letters[count - 1] || count + 1}`, description: '', isControl: false, trafficAllocation: allocation },
-      ],
-    }));
-  }, [newTestForm.variants.length]);
-
-  const removeVariant = useCallback((index: number) => {
-    if (newTestForm.variants.length <= 2) return;
-    setNewTestForm(f => {
-      const updated = f.variants.filter((_, i) => i !== index);
-      const allocation = Math.floor(100 / updated.length);
-      return { ...f, variants: updated.map(v => ({ ...v, trafficAllocation: allocation })) };
-    });
-  }, [newTestForm.variants.length]);
-
-  // Suppress unused variable warning
-  void selectedTest;
+  const startTest = useStartABTest()
+  const pauseTest = usePauseABTest()
+  const stopTest = useStopABTest()
+  const powerAnalysis = usePowerAnalysis()
 
   const tabs = [
     { id: 'active' as TabType, label: 'Active Tests', count: activeTests?.length || 0 },
     { id: 'completed' as TabType, label: 'Completed', count: completedTests?.length || 0 },
     { id: 'drafts' as TabType, label: 'Drafts', count: draftTests?.length || 0 },
     { id: 'power-analysis' as TabType, label: 'Power Analysis' },
-  ];
+  ]
 
   const runPowerAnalysis = () => {
-    powerAnalysis.mutate(powerAnalysisParams);
-  };
+    powerAnalysis.mutate(powerAnalysisParams)
+  }
 
   const renderTestCard = (test: ABTest) => (
     <div
@@ -179,7 +101,9 @@ export default function ABTesting() {
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="font-semibold">{test.name}</h3>
-          <p className="text-sm text-muted-foreground">{testTypeLabels[test.testType]} Test</p>
+          <p className="text-sm text-muted-foreground">
+            {testTypeLabels[test.testType]} Test
+          </p>
         </div>
         <span className={cn('px-2 py-1 rounded-full text-xs', statusColors[test.status])}>
           {test.status}
@@ -224,8 +148,8 @@ export default function ABTesting() {
         <div className="flex gap-2">
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              pauseTest.mutate(test.id);
+              e.stopPropagation()
+              pauseTest.mutate(test.id)
             }}
             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg border hover:bg-muted text-sm"
           >
@@ -234,8 +158,8 @@ export default function ABTesting() {
           </button>
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              stopTest.mutate({ testId: test.id });
+              e.stopPropagation()
+              stopTest.mutate({ testId: test.id })
             }}
             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm"
           >
@@ -248,8 +172,8 @@ export default function ABTesting() {
       {test.status === 'paused' && (
         <button
           onClick={(e) => {
-            e.stopPropagation();
-            startTest.mutate(test.id);
+            e.stopPropagation()
+            startTest.mutate(test.id)
           }}
           className="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm"
         >
@@ -261,8 +185,8 @@ export default function ABTesting() {
       {test.status === 'draft' && (
         <button
           onClick={(e) => {
-            e.stopPropagation();
-            startTest.mutate(test.id);
+            e.stopPropagation()
+            startTest.mutate(test.id)
           }}
           className="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm"
         >
@@ -271,7 +195,7 @@ export default function ABTesting() {
         </button>
       )}
     </div>
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -308,7 +232,9 @@ export default function ABTesting() {
             >
               {tab.label}
               {tab.count !== undefined && tab.count > 0 && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-muted">{tab.count}</span>
+                <span className="px-2 py-0.5 text-xs rounded-full bg-muted">
+                  {tab.count}
+                </span>
               )}
             </button>
           ))}
@@ -346,9 +272,7 @@ export default function ABTesting() {
                   {testResults.isSignificant ? (
                     <>
                       <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
-                      <span className="text-emerald-600 font-medium">
-                        Statistically Significant
-                      </span>
+                      <span className="text-emerald-600 font-medium">Statistically Significant</span>
                     </>
                   ) : (
                     <>
@@ -368,12 +292,10 @@ export default function ABTesting() {
                     <span className="font-medium">Conversion Uplift</span>
                   </div>
                   <p className="text-3xl font-bold text-primary">
-                    {testResults.uplift > 0 ? '+' : ''}
-                    {testResults.uplift.toFixed(1)}%
+                    {testResults.uplift > 0 ? '+' : ''}{testResults.uplift.toFixed(1)}%
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    95% CI: [{testResults.upliftRange.lower.toFixed(1)}%,{' '}
-                    {testResults.upliftRange.upper.toFixed(1)}%]
+                    95% CI: [{testResults.upliftRange.lower.toFixed(1)}%, {testResults.upliftRange.upper.toFixed(1)}%]
                   </p>
                 </div>
 
@@ -384,8 +306,7 @@ export default function ABTesting() {
                       key={variant.variantId}
                       className={cn(
                         'rounded-lg border p-4',
-                        variant.isWinner &&
-                          'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
+                        variant.isWinner && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -417,13 +338,8 @@ export default function ABTesting() {
                       </div>
                       {variant.relativeUplift !== undefined && !variant.isControl && (
                         <p className="text-sm mt-2">
-                          <span
-                            className={
-                              variant.relativeUplift > 0 ? 'text-emerald-600' : 'text-red-600'
-                            }
-                          >
-                            {variant.relativeUplift > 0 ? '+' : ''}
-                            {variant.relativeUplift.toFixed(1)}%
+                          <span className={variant.relativeUplift > 0 ? 'text-emerald-600' : 'text-red-600'}>
+                            {variant.relativeUplift > 0 ? '+' : ''}{variant.relativeUplift.toFixed(1)}%
                           </span>
                           <span className="text-muted-foreground"> vs control</span>
                         </p>
@@ -605,9 +521,7 @@ export default function ABTesting() {
 
               <div className="space-y-4">
                 <div className="rounded-lg bg-primary/10 p-4">
-                  <p className="text-sm text-muted-foreground">
-                    Required Sample Size (per variant)
-                  </p>
+                  <p className="text-sm text-muted-foreground">Required Sample Size (per variant)</p>
                   <p className="text-3xl font-bold text-primary">
                     {powerAnalysis.data.requiredSampleSize.toLocaleString()}
                   </p>
@@ -620,9 +534,7 @@ export default function ABTesting() {
                   </div>
                   <div className="rounded-lg bg-muted/50 p-4">
                     <p className="text-sm text-muted-foreground">Statistical Power</p>
-                    <p className="text-xl font-bold">
-                      {(powerAnalysis.data.currentPower * 100).toFixed(0)}%
-                    </p>
+                    <p className="text-xl font-bold">{(powerAnalysis.data.currentPower * 100).toFixed(0)}%</p>
                   </div>
                 </div>
 
@@ -645,182 +557,6 @@ export default function ABTesting() {
           )}
         </div>
       )}
-
-      {/* New Test Modal */}
-      {showNewTestModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background rounded-xl w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 bg-background p-6 pb-4 border-b flex items-center justify-between">
-              <h2 className="text-xl font-bold">Create New A/B Test</h2>
-              <button
-                onClick={() => { setShowNewTestModal(false); resetNewTestForm(); }}
-                className="p-2 rounded-lg hover:bg-muted"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium mb-1">Test Name</label>
-                <input
-                  type="text"
-                  value={newTestForm.name}
-                  onChange={(e) => setNewTestForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border bg-background"
-                  placeholder="e.g., Holiday Campaign Creative Test"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Hypothesis</label>
-                <textarea
-                  value={newTestForm.hypothesis}
-                  onChange={(e) => setNewTestForm(f => ({ ...f, hypothesis: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border bg-background"
-                  rows={2}
-                  placeholder="e.g., Using video creatives will increase conversion rate by at least 15%"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Test Type</label>
-                  <select
-                    value={newTestForm.testType}
-                    onChange={(e) => setNewTestForm(f => ({ ...f, testType: e.target.value as TestType }))}
-                    className="w-full px-3 py-2 rounded-lg border bg-background"
-                  >
-                    {Object.entries(testTypeLabels).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Primary Metric</label>
-                  <select
-                    value={newTestForm.primaryMetric}
-                    onChange={(e) => setNewTestForm(f => ({ ...f, primaryMetric: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border bg-background"
-                  >
-                    <option value="conversion_rate">Conversion Rate</option>
-                    <option value="ctr">Click-Through Rate</option>
-                    <option value="cpa">Cost Per Acquisition</option>
-                    <option value="roas">ROAS</option>
-                    <option value="revenue">Revenue</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Confidence Level</label>
-                <select
-                  value={newTestForm.confidenceLevel}
-                  onChange={(e) => setNewTestForm(f => ({ ...f, confidenceLevel: parseFloat(e.target.value) as 0.9 | 0.95 | 0.99 }))}
-                  className="w-full px-3 py-2 rounded-lg border bg-background"
-                >
-                  <option value={0.9}>90%</option>
-                  <option value={0.95}>95% (Recommended)</option>
-                  <option value={0.99}>99%</option>
-                </select>
-              </div>
-
-              {/* Variants */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-medium">Variants</label>
-                  <button
-                    onClick={addVariant}
-                    disabled={newTestForm.variants.length >= 5}
-                    className="flex items-center gap-1 text-sm text-primary hover:underline disabled:opacity-50 disabled:no-underline"
-                  >
-                    <PlusCircleIcon className="h-4 w-4" />
-                    Add Variant
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {newTestForm.variants.map((variant, idx) => (
-                    <div key={idx} className="rounded-lg border p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{variant.isControl ? 'Control' : `Variant ${idx}`}</span>
-                          {variant.isControl && (
-                            <span className="px-2 py-0.5 text-xs rounded bg-muted">Control</span>
-                          )}
-                        </div>
-                        {!variant.isControl && newTestForm.variants.length > 2 && (
-                          <button
-                            onClick={() => removeVariant(idx)}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-500"
-                          >
-                            <MinusCircleIcon className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <input
-                            type="text"
-                            value={variant.name}
-                            onChange={(e) => {
-                              const updated = [...newTestForm.variants];
-                              updated[idx] = { ...updated[idx], name: e.target.value };
-                              setNewTestForm(f => ({ ...f, variants: updated }));
-                            }}
-                            className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
-                            placeholder="Variant name"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              value={variant.trafficAllocation}
-                              onChange={(e) => {
-                                const updated = [...newTestForm.variants];
-                                updated[idx] = { ...updated[idx], trafficAllocation: parseInt(e.target.value) || 0 };
-                                setNewTestForm(f => ({ ...f, variants: updated }));
-                              }}
-                              className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
-                              min={1}
-                              max={99}
-                            />
-                            <span className="text-sm text-muted-foreground">%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {newTestForm.variants.reduce((sum, v) => sum + v.trafficAllocation, 0) !== 100 && (
-                  <p className="text-xs text-amber-500 mt-2">
-                    Traffic allocation should sum to 100% (currently {newTestForm.variants.reduce((sum, v) => sum + v.trafficAllocation, 0)}%)
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 bg-background p-6 pt-4 border-t flex justify-end gap-3">
-              <button
-                onClick={() => { setShowNewTestModal(false); resetNewTestForm(); }}
-                className="px-4 py-2 rounded-lg border hover:bg-muted"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateTest}
-                disabled={createTest.isPending || !newTestForm.name.trim() || !newTestForm.hypothesis.trim()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                {createTest.isPending && (
-                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                )}
-                Create Test
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  );
+  )
 }

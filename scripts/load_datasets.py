@@ -9,18 +9,18 @@ import os
 import sys
 
 # Fix Windows console encoding
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-
-from pathlib import Path
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 import pandas as pd
+from pathlib import Path
 from sqlalchemy import create_engine, text
+from datetime import datetime
 
 # Database connection
 DATABASE_URL = os.environ.get(
     "DATABASE_URL_SYNC",
-    "postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai",
+    "postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
 )
 
 # Datasets base path
@@ -42,29 +42,29 @@ def infer_sql_type(dtype, col_name):
     col_lower = col_name.lower()
 
     # Check column name patterns first
-    if "date" in col_lower:
-        return "DATE"
-    if col_lower in ["id", "tenant_id"]:
-        return "INTEGER"
-    if "_id" in col_lower:
-        return "VARCHAR(100)"
-    if "name" in col_lower or "type" in col_lower:
-        return "VARCHAR(500)"
+    if 'date' in col_lower:
+        return 'DATE'
+    if col_lower in ['id', 'tenant_id']:
+        return 'INTEGER'
+    if '_id' in col_lower:
+        return 'VARCHAR(100)'
+    if 'name' in col_lower or 'type' in col_lower:
+        return 'VARCHAR(500)'
 
     # Check dtype
-    if "int" in dtype_str:
-        return "BIGINT"
-    elif "float" in dtype_str:
-        return "DECIMAL(15,4)"
-    elif "bool" in dtype_str:
-        return "BOOLEAN"
-    elif "datetime" in dtype_str:
-        return "TIMESTAMP"
+    if 'int' in dtype_str:
+        return 'BIGINT'
+    elif 'float' in dtype_str:
+        return 'DECIMAL(15,4)'
+    elif 'bool' in dtype_str:
+        return 'BOOLEAN'
+    elif 'datetime' in dtype_str:
+        return 'TIMESTAMP'
     else:
-        return "TEXT"
+        return 'TEXT'
 
 
-def create_table_from_df(engine, df, table_name, schema="warehouse"):
+def create_table_from_df(engine, df, table_name, schema='warehouse'):
     """Create table based on DataFrame structure."""
     columns = []
     for col in df.columns:
@@ -72,7 +72,7 @@ def create_table_from_df(engine, df, table_name, schema="warehouse"):
         columns.append(f'"{col}" {sql_type}')
 
     # Add ID and created_at
-    column_defs = ",\n        ".join(columns)
+    column_defs = ',\n        '.join(columns)
 
     ddl = f"""
     DROP TABLE IF EXISTS {schema}.{table_name} CASCADE;
@@ -101,16 +101,16 @@ def load_csv_to_table(engine, csv_path: Path, table_name: str, schema: str = "wa
         df = pd.read_csv(csv_path, low_memory=False)
 
         # Clean column names (remove spaces, lowercase)
-        df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+        df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
 
         # Add tenant_id if not present
-        if "tenant_id" not in df.columns:
-            df["tenant_id"] = 1
+        if 'tenant_id' not in df.columns:
+            df['tenant_id'] = 1
 
         # Handle date columns
-        date_cols = [c for c in df.columns if "date" in c.lower()]
+        date_cols = [c for c in df.columns if 'date' in c.lower()]
         for col in date_cols:
-            df[col] = pd.to_datetime(df[col], errors="coerce")
+            df[col] = pd.to_datetime(df[col], errors='coerce')
 
         # Create table dynamically
         create_table_from_df(engine, df, table_name, schema)
@@ -120,14 +120,17 @@ def load_csv_to_table(engine, csv_path: Path, table_name: str, schema: str = "wa
         chunk_size = 5000
 
         for i in range(0, row_count, chunk_size):
-            chunk = df.iloc[i : i + chunk_size]
+            chunk = df.iloc[i:i+chunk_size]
             chunk.to_sql(
-                table_name, engine, schema=schema, if_exists="append", index=False, method="multi"
+                table_name,
+                engine,
+                schema=schema,
+                if_exists='append',
+                index=False,
+                method='multi'
             )
             if row_count > chunk_size:
-                print(
-                    f"   ... loaded {min(i+chunk_size, row_count):,}/{row_count:,} rows", end="\r"
-                )
+                print(f"   ... loaded {min(i+chunk_size, row_count):,}/{row_count:,} rows", end='\r')
 
         print(f"   ✅ Loaded {row_count:,} rows into {schema}.{table_name}      ")
         return row_count
@@ -151,7 +154,7 @@ def create_indexes(engine):
         for idx in indexes:
             try:
                 conn.execute(text(idx))
-            except Exception:
+            except Exception as e:
                 pass  # Index might already exist or column missing
         conn.commit()
 
@@ -167,13 +170,13 @@ def main():
     print()
 
     # Connect to database
-    print("📡 Connecting to database...")
+    print(f"📡 Connecting to database...")
     try:
         engine = create_engine(DATABASE_URL)
         with engine.connect() as conn:
             result = conn.execute(text("SELECT version()"))
             version = result.scalar()
-            print("   ✅ Connected to PostgreSQL")
+            print(f"   ✅ Connected to PostgreSQL")
     except Exception as e:
         print(f"   ❌ Connection failed: {e}")
         sys.exit(1)
@@ -205,19 +208,19 @@ def main():
         print("-" * 70)
 
         # Get all CSV files
-        csv_files = list(dataset_dir.glob("*.csv"))
+        csv_files = list(dataset_dir.glob('*.csv'))
 
         for csv_file in csv_files:
             # Determine table name from filename
             base_name = csv_file.stem.lower()
 
             # Skip data dictionary
-            if "dictionary" in base_name:
+            if 'dictionary' in base_name:
                 continue
 
             # For regional fact tables, consolidate into fact_daily
-            if base_name.startswith("fact_daily"):
-                table_name = "fact_daily"
+            if base_name.startswith('fact_daily'):
+                table_name = 'fact_daily'
             else:
                 table_name = base_name
 

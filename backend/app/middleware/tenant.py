@@ -6,8 +6,7 @@ Middleware that extracts and validates tenant context from requests.
 Implements Row-Level Security at the application level.
 """
 
-from collections.abc import Callable
-from typing import Optional
+from typing import Callable, Optional
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
@@ -53,10 +52,6 @@ class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Extract and validate tenant context."""
 
-        # Always pass through OPTIONS preflight requests (handled by CORSMiddleware)
-        if request.method == "OPTIONS":
-            return await call_next(request)
-
         # Skip public endpoints
         if self._is_public_endpoint(request.url.path):
             return await call_next(request)
@@ -67,11 +62,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
         role = await self._extract_role(request)
 
         if tenant_id is None:
-            # Superadmins can operate without a specific tenant context
-            if role == "superadmin":
-                logger.debug("superadmin_no_tenant_context")
-            # For development, use a default tenant for non-superadmin users
-            elif settings.is_development:
+            # For development, use a default tenant
+            if settings.is_development:
                 tenant_id = 1
                 logger.debug("using_default_tenant", tenant_id=tenant_id)
             else:
@@ -92,7 +84,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # Bind to structured logging context
         import structlog
 
-        structlog.contextvars.bind_contextvars(tenant_id=tenant_id, user_id=user_id, role=role)
+        structlog.contextvars.bind_contextvars(
+            tenant_id=tenant_id, user_id=user_id, role=role
+        )
 
         return await call_next(request)
 

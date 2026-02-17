@@ -9,13 +9,11 @@ venv/
 dist/
 build/
 *.egg-info/
-.vite/
 
-# Environment files (keep .env.example and .env.production.example)
+# Environment files (keep .env.example)
 .env
 .env.local
 .env.*.local
-.env.production
 
 # IDE
 .idea/
@@ -54,25 +52,3 @@ sample_training_data.csv
 # Claude Code
 CLAUDE.local.md
 .claude/state/
-.claude/settings.local.json
-tmpclaude-*
-
-# Variates / scratch
-VARIATES/
-
-# SSL certificates (server-side only)
-/etc/letsencrypt/
-
-# Backup files
-*.bak
-backup_*/
-
-# Celery
-celerybeat-schedule
-celerybeat-schedule.db
-celerybeat.pid
-
-# Session exports
-session-*-export.*
-SESSION-INDEX.md
-convert_session.py

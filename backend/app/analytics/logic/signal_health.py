@@ -14,8 +14,7 @@ Thresholds:
 - healthy: otherwise
 """
 
-from typing import Optional
-
+from typing import Optional, List
 from app.analytics.logic.types import (
     SignalHealthParams,
     SignalHealthResult,
@@ -65,22 +64,16 @@ def signal_health(
     # Check EMQ score
     if emq_score is not None:
         if emq_score < params.emq_risk:
-            issues.append(
-                f"EMQ score critically low: {emq_score:.1f} (target: {params.emq_healthy})"
-            )
+            issues.append(f"EMQ score critically low: {emq_score:.1f} (target: {params.emq_healthy})")
         elif emq_score < params.emq_healthy:
             issues.append(f"EMQ score below target: {emq_score:.1f} (target: {params.emq_healthy})")
 
     # Check event loss
     if event_loss_pct is not None:
         if event_loss_pct > params.event_loss_risk:
-            issues.append(
-                f"High event loss: {event_loss_pct:.1f}% (max: {params.event_loss_risk}%)"
-            )
+            issues.append(f"High event loss: {event_loss_pct:.1f}% (max: {params.event_loss_risk}%)")
         elif event_loss_pct > params.event_loss_healthy:
-            issues.append(
-                f"Event loss above target: {event_loss_pct:.1f}% (target: <{params.event_loss_healthy}%)"
-            )
+            issues.append(f"Event loss above target: {event_loss_pct:.1f}% (target: <{params.event_loss_healthy}%)")
 
     # Determine status
     emq_ok = emq_score is None or emq_score >= params.emq_risk
@@ -135,16 +128,12 @@ def auto_resolve(
         actions_taken.append("suspend_automation")
 
         # Create alert
-        alerts_created.append(
-            {
-                "type": "emq_degraded",
-                "severity": "high"
-                if health_result.status == SignalHealthStatus.DEGRADED
-                else "critical",
-                "message": f"Signal health: {health_result.status.value}. Issues: {', '.join(health_result.issues)}",
-                "recommended_actions": health_result.actions,
-            }
-        )
+        alerts_created.append({
+            "type": "emq_degraded",
+            "severity": "high" if health_result.status == SignalHealthStatus.DEGRADED else "critical",
+            "message": f"Signal health: {health_result.status.value}. Issues: {', '.join(health_result.issues)}",
+            "recommended_actions": health_result.actions,
+        })
 
         # Run diagnostics
         actions_taken.append("run_diagnostics_playbook")
@@ -155,14 +144,12 @@ def auto_resolve(
 
     elif health_result.status == SignalHealthStatus.RISK:
         # Create warning alert
-        alerts_created.append(
-            {
-                "type": "emq_risk",
-                "severity": "medium",
-                "message": f"Signal health at risk. Issues: {', '.join(health_result.issues)}",
-                "recommended_actions": health_result.actions,
-            }
-        )
+        alerts_created.append({
+            "type": "emq_risk",
+            "severity": "medium",
+            "message": f"Signal health at risk. Issues: {', '.join(health_result.issues)}",
+            "recommended_actions": health_result.actions,
+        })
 
     return {
         "status": health_result.status.value,
@@ -191,8 +178,8 @@ def should_suspend_automation(health_result: SignalHealthResult) -> bool:
 def get_health_color(status: SignalHealthStatus) -> str:
     """Get color code for health status visualization."""
     colors = {
-        SignalHealthStatus.HEALTHY: "#22C55E",  # Green
-        SignalHealthStatus.RISK: "#FACC15",  # Yellow
+        SignalHealthStatus.HEALTHY: "#22C55E",   # Green
+        SignalHealthStatus.RISK: "#FACC15",      # Yellow
         SignalHealthStatus.DEGRADED: "#F97316",  # Orange
         SignalHealthStatus.CRITICAL: "#EF4444",  # Red
     }

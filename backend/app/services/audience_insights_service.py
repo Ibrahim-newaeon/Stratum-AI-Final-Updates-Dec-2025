@@ -12,11 +12,12 @@ Provides:
 - Audience expansion suggestions
 """
 
-import statistics
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-from typing import Any, Optional
+import statistics
+import math
 
 from app.core.logging import get_logger
 
@@ -25,7 +26,6 @@ logger = get_logger(__name__)
 
 class AudienceType(str, Enum):
     """Types of audiences."""
-
     CUSTOM = "custom"
     LOOKALIKE = "lookalike"
     INTEREST = "interest"
@@ -38,7 +38,6 @@ class AudienceType(str, Enum):
 
 class AudienceQuality(str, Enum):
     """Quality rating for audiences."""
-
     EXCELLENT = "excellent"
     GOOD = "good"
     MODERATE = "moderate"
@@ -48,7 +47,6 @@ class AudienceQuality(str, Enum):
 
 class ExpansionPotential(str, Enum):
     """Potential for audience expansion."""
-
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -58,7 +56,6 @@ class ExpansionPotential(str, Enum):
 @dataclass
 class AudienceMetrics:
     """Performance metrics for an audience."""
-
     reach: int = 0
     impressions: int = 0
     clicks: int = 0
@@ -90,15 +87,12 @@ class AudienceMetrics:
             self.cpa = self.spend / self.conversions
         if self.reach > 0:
             self.frequency = self.impressions / self.reach
-            self.unique_reach_percent = (
-                (self.reach / self.impressions) * 100 if self.impressions else 0
-            )
+            self.unique_reach_percent = (self.reach / self.impressions) * 100 if self.impressions else 0
 
 
 @dataclass
 class Audience:
     """Represents an audience for analysis."""
-
     audience_id: str
     tenant_id: str
     platform: str
@@ -109,8 +103,8 @@ class Audience:
 
     # Configuration
     lookalike_percent: Optional[float] = None  # 1-10% for lookalikes
-    interest_categories: list[str] = field(default_factory=list)
-    demographics: dict[str, Any] = field(default_factory=dict)
+    interest_categories: List[str] = field(default_factory=list)
+    demographics: Dict[str, Any] = field(default_factory=dict)
 
     # Performance
     metrics: AudienceMetrics = field(default_factory=AudienceMetrics)
@@ -126,7 +120,6 @@ class Audience:
 @dataclass
 class AudienceOverlap:
     """Overlap between two audiences."""
-
     audience_id_1: str
     audience_id_2: str
     overlap_percent: float  # Percentage of audience_1 that overlaps with audience_2
@@ -137,7 +130,6 @@ class AudienceOverlap:
 @dataclass
 class AudienceInsight:
     """Insight about an audience."""
-
     audience_id: str
     insight_type: str  # performance, saturation, expansion, targeting
     severity: str  # info, warning, critical
@@ -150,13 +142,12 @@ class AudienceInsight:
 @dataclass
 class AudienceRecommendation:
     """Recommendation for audience optimization."""
-
     audience_id: Optional[str]
     action: str  # expand, narrow, pause, test, create_lookalike
     priority: str  # high, medium, low
     title: str
     description: str
-    expected_impact: dict[str, float]
+    expected_impact: Dict[str, float]
 
 
 class AudienceInsightsService:
@@ -180,8 +171,8 @@ class AudienceInsightsService:
     """
 
     def __init__(self):
-        self._audiences: dict[str, Audience] = {}
-        self._by_tenant: dict[str, list[str]] = {}
+        self._audiences: Dict[str, Audience] = {}
+        self._by_tenant: Dict[str, List[str]] = {}
 
     def register_audience(
         self,
@@ -370,7 +361,7 @@ class AudienceInsightsService:
 
         return round((conversion_confidence * 0.6 + spend_confidence * 0.4), 2)
 
-    def get_insights(self, audience_id: str) -> list[AudienceInsight]:
+    def get_insights(self, audience_id: str) -> List[AudienceInsight]:
         """Get insights for an audience."""
         audience = self._audiences.get(audience_id)
         if not audience:
@@ -381,83 +372,68 @@ class AudienceInsightsService:
 
         # Saturation insight
         if metrics.frequency > 8:
-            insights.append(
-                AudienceInsight(
-                    audience_id=audience_id,
-                    insight_type="saturation",
-                    severity="critical",
-                    title="High Frequency Detected",
-                    description=f"Average frequency of {metrics.frequency:.1f} indicates audience fatigue",
-                    recommendation="Consider expanding audience or rotating creatives",
-                    expected_impact="Could improve CTR by 15-25%",
-                )
-            )
+            insights.append(AudienceInsight(
+                audience_id=audience_id,
+                insight_type="saturation",
+                severity="critical",
+                title="High Frequency Detected",
+                description=f"Average frequency of {metrics.frequency:.1f} indicates audience fatigue",
+                recommendation="Consider expanding audience or rotating creatives",
+                expected_impact="Could improve CTR by 15-25%",
+            ))
         elif metrics.frequency > 5:
-            insights.append(
-                AudienceInsight(
-                    audience_id=audience_id,
-                    insight_type="saturation",
-                    severity="warning",
-                    title="Moderate Frequency",
-                    description=f"Frequency of {metrics.frequency:.1f} approaching saturation levels",
-                    recommendation="Monitor performance and prepare expansion options",
-                )
-            )
+            insights.append(AudienceInsight(
+                audience_id=audience_id,
+                insight_type="saturation",
+                severity="warning",
+                title="Moderate Frequency",
+                description=f"Frequency of {metrics.frequency:.1f} approaching saturation levels",
+                recommendation="Monitor performance and prepare expansion options",
+            ))
 
         # Performance insights
         if audience.quality == AudienceQuality.EXCELLENT:
-            insights.append(
-                AudienceInsight(
-                    audience_id=audience_id,
-                    insight_type="performance",
-                    severity="info",
-                    title="Top Performing Audience",
-                    description=f"This audience has a quality score of {audience.quality_score}",
-                    recommendation="Consider increasing budget allocation and creating lookalikes",
-                    expected_impact="Potential for 20%+ more conversions",
-                )
-            )
+            insights.append(AudienceInsight(
+                audience_id=audience_id,
+                insight_type="performance",
+                severity="info",
+                title="Top Performing Audience",
+                description=f"This audience has a quality score of {audience.quality_score}",
+                recommendation="Consider increasing budget allocation and creating lookalikes",
+                expected_impact="Potential for 20%+ more conversions",
+            ))
         elif audience.quality == AudienceQuality.POOR:
-            insights.append(
-                AudienceInsight(
-                    audience_id=audience_id,
-                    insight_type="performance",
-                    severity="critical",
-                    title="Underperforming Audience",
-                    description=f"Quality score of {audience.quality_score} is below threshold",
-                    recommendation="Review targeting criteria or pause audience",
-                )
-            )
+            insights.append(AudienceInsight(
+                audience_id=audience_id,
+                insight_type="performance",
+                severity="critical",
+                title="Underperforming Audience",
+                description=f"Quality score of {audience.quality_score} is below threshold",
+                recommendation="Review targeting criteria or pause audience",
+            ))
 
         # Expansion insights
         if audience.expansion_potential == ExpansionPotential.HIGH:
-            insights.append(
-                AudienceInsight(
-                    audience_id=audience_id,
-                    insight_type="expansion",
-                    severity="info",
-                    title="High Expansion Potential",
-                    description="This audience can support increased budget",
-                    recommendation="Test 20-30% budget increase gradually",
-                )
-            )
+            insights.append(AudienceInsight(
+                audience_id=audience_id,
+                insight_type="expansion",
+                severity="info",
+                title="High Expansion Potential",
+                description="This audience can support increased budget",
+                recommendation="Test 20-30% budget increase gradually",
+            ))
 
         # Lookalike insights
-        if (
-            audience.audience_type == AudienceType.LOOKALIKE
-            and audience.lookalike_percent
-            and audience.lookalike_percent > 5
-        ):
-                insights.append(
-                    AudienceInsight(
-                        audience_id=audience_id,
-                        insight_type="targeting",
-                        severity="warning",
-                        title="Wide Lookalike Range",
-                        description=f"{audience.lookalike_percent}% lookalike may include lower-quality users",
-                        recommendation="Test tighter 1-3% lookalike for better conversion rates",
-                    )
-                )
+        if audience.audience_type == AudienceType.LOOKALIKE:
+            if audience.lookalike_percent and audience.lookalike_percent > 5:
+                insights.append(AudienceInsight(
+                    audience_id=audience_id,
+                    insight_type="targeting",
+                    severity="warning",
+                    title="Wide Lookalike Range",
+                    description=f"{audience.lookalike_percent}% lookalike may include lower-quality users",
+                    recommendation="Test tighter 1-3% lookalike for better conversion rates",
+                ))
 
         return insights
 
@@ -465,7 +441,7 @@ class AudienceInsightsService:
         self,
         tenant_id: str,
         limit: int = 10,
-    ) -> list[AudienceRecommendation]:
+    ) -> List[AudienceRecommendation]:
         """Get audience recommendations for a tenant."""
         audience_ids = self._by_tenant.get(tenant_id, [])
         audiences = [self._audiences[aid] for aid in audience_ids if aid in self._audiences]
@@ -476,75 +452,67 @@ class AudienceInsightsService:
         top_performers = sorted(
             [a for a in audiences if a.quality_score > 60],
             key=lambda a: a.quality_score,
-            reverse=True,
+            reverse=True
         )[:3]
 
         for audience in top_performers:
             if audience.audience_type in [AudienceType.CUSTOM, AudienceType.FIRST_PARTY]:
-                recommendations.append(
-                    AudienceRecommendation(
-                        audience_id=audience.audience_id,
-                        action="create_lookalike",
-                        priority="high",
-                        title=f"Create Lookalike from {audience.name}",
-                        description=f"High-performing audience (score: {audience.quality_score}) is ideal for lookalike creation",
-                        expected_impact={
-                            "estimated_roas": audience.predicted_roas * 0.9,
-                            "reach_multiplier": 10,
-                        },
-                    )
-                )
+                recommendations.append(AudienceRecommendation(
+                    audience_id=audience.audience_id,
+                    action="create_lookalike",
+                    priority="high",
+                    title=f"Create Lookalike from {audience.name}",
+                    description=f"High-performing audience (score: {audience.quality_score}) is ideal for lookalike creation",
+                    expected_impact={
+                        "estimated_roas": audience.predicted_roas * 0.9,
+                        "reach_multiplier": 10,
+                    },
+                ))
 
         # Find underperformers to pause
         poor_performers = [a for a in audiences if a.quality == AudienceQuality.POOR]
         for audience in poor_performers[:2]:
-            recommendations.append(
-                AudienceRecommendation(
-                    audience_id=audience.audience_id,
-                    action="pause",
-                    priority="high",
-                    title=f"Consider Pausing {audience.name}",
-                    description=f"Low quality score ({audience.quality_score}) with ROAS of {audience.metrics.roas:.2f}",
-                    expected_impact={
-                        "budget_saved": audience.metrics.spend * 0.5,
-                        "efficiency_gain": 15,
-                    },
-                )
-            )
+            recommendations.append(AudienceRecommendation(
+                audience_id=audience.audience_id,
+                action="pause",
+                priority="high",
+                title=f"Consider Pausing {audience.name}",
+                description=f"Low quality score ({audience.quality_score}) with ROAS of {audience.metrics.roas:.2f}",
+                expected_impact={
+                    "budget_saved": audience.metrics.spend * 0.5,
+                    "efficiency_gain": 15,
+                },
+            ))
 
         # Find expansion opportunities
         expansion_candidates = [
-            a
-            for a in audiences
-            if a.expansion_potential == ExpansionPotential.HIGH and a.quality_score >= 50
+            a for a in audiences
+            if a.expansion_potential == ExpansionPotential.HIGH
+            and a.quality_score >= 50
         ]
         for audience in expansion_candidates[:2]:
-            recommendations.append(
-                AudienceRecommendation(
-                    audience_id=audience.audience_id,
-                    action="expand",
-                    priority="medium",
-                    title=f"Expand {audience.name}",
-                    description="Low saturation with good performance supports budget increase",
-                    expected_impact={
-                        "additional_conversions": audience.metrics.conversions * 0.3,
-                        "expected_roas": audience.predicted_roas,
-                    },
-                )
-            )
+            recommendations.append(AudienceRecommendation(
+                audience_id=audience.audience_id,
+                action="expand",
+                priority="medium",
+                title=f"Expand {audience.name}",
+                description=f"Low saturation with good performance supports budget increase",
+                expected_impact={
+                    "additional_conversions": audience.metrics.conversions * 0.3,
+                    "expected_roas": audience.predicted_roas,
+                },
+            ))
 
         # General recommendations
         if not recommendations:
-            recommendations.append(
-                AudienceRecommendation(
-                    audience_id=None,
-                    action="test",
-                    priority="medium",
-                    title="Test New Audience Types",
-                    description="Consider testing interest-based or behavioral audiences",
-                    expected_impact={},
-                )
-            )
+            recommendations.append(AudienceRecommendation(
+                audience_id=None,
+                action="test",
+                priority="medium",
+                title="Test New Audience Types",
+                description="Consider testing interest-based or behavioral audiences",
+                expected_impact={},
+            ))
 
         return recommendations[:limit]
 
@@ -555,7 +523,7 @@ class AudienceInsightsService:
         platform: str,
         budget: float,
         lookalike_percent: Optional[float] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Predict performance for a new audience configuration.
 
@@ -575,6 +543,7 @@ class AudienceInsightsService:
             "google": 15.0,
             "tiktok": 8.0,
             "snapchat": 10.0,
+            "linkedin": 25.0,
         }
 
         # Base CTR estimates by audience type
@@ -657,13 +626,13 @@ class AudienceInsightsService:
 
     def detect_overlap(
         self,
-        audience_ids: list[str],
-    ) -> list[AudienceOverlap]:
+        audience_ids: List[str],
+    ) -> List[AudienceOverlap]:
         """Detect overlap between audiences."""
         overlaps = []
 
         for i, aid1 in enumerate(audience_ids):
-            for aid2 in audience_ids[i + 1 :]:
+            for aid2 in audience_ids[i+1:]:
                 audience1 = self._audiences.get(aid1)
                 audience2 = self._audiences.get(aid2)
 
@@ -681,15 +650,13 @@ class AudienceInsightsService:
                 else:
                     recommendation = "Low overlap - safe to run simultaneously"
 
-                overlaps.append(
-                    AudienceOverlap(
-                        audience_id_1=aid1,
-                        audience_id_2=aid2,
-                        overlap_percent=round(overlap_percent, 1),
-                        overlap_size=overlap_size,
-                        recommendation=recommendation,
-                    )
-                )
+                overlaps.append(AudienceOverlap(
+                    audience_id_1=aid1,
+                    audience_id_2=aid2,
+                    overlap_percent=round(overlap_percent, 1),
+                    overlap_size=overlap_size,
+                    recommendation=recommendation,
+                ))
 
         return overlaps
 
@@ -731,7 +698,7 @@ class AudienceInsightsService:
         """Get an audience by ID."""
         return self._audiences.get(audience_id)
 
-    def get_summary(self, tenant_id: str) -> dict[str, Any]:
+    def get_summary(self, tenant_id: str) -> Dict[str, Any]:
         """Get summary of audiences for a tenant."""
         audience_ids = self._by_tenant.get(tenant_id, [])
         audiences = [self._audiences[aid] for aid in audience_ids if aid in self._audiences]
@@ -771,14 +738,13 @@ audience_service = AudienceInsightsService()
 # Convenience Functions
 # =============================================================================
 
-
 def predict_audience_performance(
     audience_type: str,
     size: int,
     platform: str,
     budget: float,
     lookalike_percent: Optional[float] = None,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Predict performance for an audience configuration.
 
@@ -799,7 +765,7 @@ def predict_audience_performance(
     )
 
 
-def get_audience_recommendations(tenant_id: str) -> list[dict[str, Any]]:
+def get_audience_recommendations(tenant_id: str) -> List[Dict[str, Any]]:
     """Get audience recommendations for a tenant."""
     recommendations = audience_service.get_recommendations(tenant_id)
 
@@ -820,11 +786,9 @@ def get_audience_recommendations(tenant_id: str) -> list[dict[str, Any]]:
 # Advanced Audience Insights Features (P2 Enhancement)
 # =============================================================================
 
-
 @dataclass
 class AudienceLTVPrediction:
     """LTV prediction for an audience segment."""
-
     audience_id: str
     predicted_avg_ltv: float
     ltv_range_low: float
@@ -837,7 +801,6 @@ class AudienceLTVPrediction:
 @dataclass
 class AudienceDecayPrediction:
     """Prediction of audience performance decay."""
-
     audience_id: str
     current_performance_score: float
     predicted_score_30d: float
@@ -845,18 +808,17 @@ class AudienceDecayPrediction:
     predicted_score_90d: float
     decay_rate: float  # % per month
     time_to_refresh_days: int
-    factors: list[str]
+    factors: List[str]
 
 
 @dataclass
 class AudienceCluster:
     """Cluster of similar audiences."""
-
     cluster_id: str
     cluster_name: str
-    audiences: list[str]
-    common_traits: list[str]
-    avg_performance: dict[str, float]
+    audiences: List[str]
+    common_traits: List[str]
+    avg_performance: Dict[str, float]
     recommendation: str
 
 
@@ -881,7 +843,7 @@ class AudienceLTVPredictor:
     }
 
     def __init__(self):
-        self._baseline_ltv: dict[str, float] = {}
+        self._baseline_ltv: Dict[str, float] = {}
 
     def set_baseline_ltv(self, tenant_id: str, baseline: float):
         """Set baseline LTV for a tenant."""
@@ -892,7 +854,7 @@ class AudienceLTVPredictor:
         audience_id: str,
         audience_type: AudienceType,
         tenant_id: str,
-        historical_performance: Optional[dict[str, float]] = None,
+        historical_performance: Optional[Dict[str, float]] = None,
     ) -> AudienceLTVPrediction:
         """Predict LTV for an audience."""
         baseline = self._baseline_ltv.get(tenant_id, 100)
@@ -966,22 +928,20 @@ class AudienceDecayPredictor:
     }
 
     def __init__(self):
-        self._performance_history: dict[str, list[tuple[datetime, float]]] = {}
+        self._performance_history: Dict[str, List[Tuple[datetime, float]]] = {}
 
     def record_performance(self, audience_id: str, score: float):
         """Record audience performance for decay tracking."""
         if audience_id not in self._performance_history:
             self._performance_history[audience_id] = []
 
-        self._performance_history[audience_id].append(
-            (
-                datetime.now(UTC),
-                score,
-            )
-        )
+        self._performance_history[audience_id].append((
+            datetime.now(timezone.utc),
+            score,
+        ))
 
         # Keep last 180 days
-        cutoff = datetime.now(UTC) - timedelta(days=180)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=180)
         self._performance_history[audience_id] = [
             (t, s) for t, s in self._performance_history[audience_id] if t > cutoff
         ]
@@ -1018,7 +978,10 @@ class AudienceDecayPredictor:
         score_90d = current_score * (1 - adjusted_decay * 3)
 
         # Determine time to refresh (when score drops below 50% of current)
-        time_to_refresh = int(0.5 / adjusted_decay * 30) if adjusted_decay > 0 else 365
+        if adjusted_decay > 0:
+            time_to_refresh = int(0.5 / adjusted_decay * 30)
+        else:
+            time_to_refresh = 365
 
         # Identify factors
         factors = []
@@ -1054,21 +1017,21 @@ class AudienceClusterAnalyzer:
     """
 
     def __init__(self):
-        self._audience_features: dict[str, dict[str, float]] = {}
+        self._audience_features: Dict[str, Dict[str, float]] = {}
 
     def record_audience_features(
         self,
         audience_id: str,
-        features: dict[str, float],
+        features: Dict[str, float],
     ):
         """Record features for an audience."""
         self._audience_features[audience_id] = features
 
     def cluster_audiences(
         self,
-        audience_ids: list[str],
+        audience_ids: List[str],
         n_clusters: int = 4,
-    ) -> list[AudienceCluster]:
+    ) -> List[AudienceCluster]:
         """Cluster audiences into groups."""
         if len(audience_ids) < n_clusters:
             n_clusters = len(audience_ids)
@@ -1088,7 +1051,7 @@ class AudienceClusterAnalyzer:
 
         # Simple k-means-style clustering
         # In production, would use sklearn or similar
-        clusters: dict[int, list[str]] = {i: [] for i in range(n_clusters)}
+        clusters: Dict[int, List[str]] = {i: [] for i in range(n_clusters)}
 
         # Initial assignment based on performance buckets
         sorted_audiences = sorted(
@@ -1130,25 +1093,21 @@ class AudienceClusterAnalyzer:
                 cluster_idx, n_clusters, avg_performance
             )
 
-            result.append(
-                AudienceCluster(
-                    cluster_id=f"cluster_{cluster_idx}",
-                    cluster_name=cluster_names[cluster_idx]
-                    if cluster_idx < len(cluster_names)
-                    else f"Cluster {cluster_idx + 1}",
-                    audiences=audience_list,
-                    common_traits=common_traits,
-                    avg_performance=avg_performance,
-                    recommendation=recommendation,
-                )
-            )
+            result.append(AudienceCluster(
+                cluster_id=f"cluster_{cluster_idx}",
+                cluster_name=cluster_names[cluster_idx] if cluster_idx < len(cluster_names) else f"Cluster {cluster_idx + 1}",
+                audiences=audience_list,
+                common_traits=common_traits,
+                avg_performance=avg_performance,
+                recommendation=recommendation,
+            ))
 
         return result
 
     def _identify_common_traits(
         self,
-        features: list[dict[str, float]],
-    ) -> list[str]:
+        features: List[Dict[str, float]],
+    ) -> List[str]:
         """Identify common traits in cluster."""
         if not features:
             return []
@@ -1182,7 +1141,7 @@ class AudienceClusterAnalyzer:
         self,
         cluster_idx: int,
         n_clusters: int,
-        performance: dict[str, float],
+        performance: Dict[str, float],
     ) -> str:
         """Generate recommendation for cluster."""
         if cluster_idx >= n_clusters - 1:  # Top cluster
@@ -1197,9 +1156,9 @@ class AudienceClusterAnalyzer:
     def find_similar_audiences(
         self,
         target_audience_id: str,
-        candidate_ids: list[str],
+        candidate_ids: List[str],
         top_n: int = 5,
-    ) -> list[dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """Find audiences similar to target."""
         target_features = self._audience_features.get(target_audience_id)
         if not target_features:
@@ -1217,13 +1176,11 @@ class AudienceClusterAnalyzer:
 
             # Calculate similarity
             similarity = self._calculate_similarity(target_features, features)
-            similarities.append(
-                {
-                    "audience_id": aid,
-                    "similarity_score": round(similarity, 3),
-                    "features": features,
-                }
-            )
+            similarities.append({
+                "audience_id": aid,
+                "similarity_score": round(similarity, 3),
+                "features": features,
+            })
 
         # Sort by similarity
         similarities.sort(key=lambda x: x["similarity_score"], reverse=True)
@@ -1232,8 +1189,8 @@ class AudienceClusterAnalyzer:
 
     def _calculate_similarity(
         self,
-        features_a: dict[str, float],
-        features_b: dict[str, float],
+        features_a: Dict[str, float],
+        features_b: Dict[str, float],
     ) -> float:
         """Calculate similarity between feature sets."""
         common_keys = set(features_a.keys()) & set(features_b.keys())

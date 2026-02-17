@@ -4,63 +4,63 @@
  * Manages HubSpot and other CRM connections, contacts, deals, and writeback settings.
  */
 
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import {
   useCRMConnections,
+  useTriggerCRMSync,
   useCRMContacts,
   useCRMDeals,
   usePipelineSummary,
-  useTriggerCRMSync,
-  useUpdateWritebackConfig,
   useWritebackConfig,
-} from '@/api/hooks';
+  useUpdateWritebackConfig,
+} from '@/api/hooks'
 import {
   ArrowPathIcon,
-  CheckCircleIcon,
-  CurrencyDollarIcon,
-  ExclamationTriangleIcon,
   LinkIcon,
   UserGroupIcon,
+  CurrencyDollarIcon,
+  CheckCircleIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils'
 
-type TabType = 'overview' | 'contacts' | 'deals' | 'writeback';
+type TabType = 'overview' | 'contacts' | 'deals' | 'writeback'
 
 export default function Integrations() {
-  useParams<{ tenantId: string }>();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const [activeTab, setActiveTab] = useState<TabType>('overview')
 
-  const { data: connections, isLoading: loadingConnections } = useCRMConnections();
-  const { data: pipelineSummary } = usePipelineSummary();
-  const { data: contacts } = useCRMContacts({ limit: 10 });
-  const { data: deals } = useCRMDeals({ limit: 10 });
-  const { data: writebackConfig } = useWritebackConfig();
-  const triggerSync = useTriggerCRMSync();
-  const updateWriteback = useUpdateWritebackConfig();
+  const { data: connections, isLoading: loadingConnections } = useCRMConnections()
+  const { data: pipelineSummary } = usePipelineSummary()
+  const { data: contacts } = useCRMContacts({ limit: 10 })
+  const { data: deals } = useCRMDeals({ limit: 10 })
+  const { data: writebackConfig } = useWritebackConfig()
+  const triggerSync = useTriggerCRMSync()
+  const updateWriteback = useUpdateWritebackConfig()
 
-  const hubspotConnection = connections?.find((c) => c.provider === 'hubspot');
+  const hubspotConnection = connections?.find((c) => c.provider === 'hubspot')
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
     { id: 'contacts' as TabType, label: 'Contacts' },
     { id: 'deals' as TabType, label: 'Deals' },
     { id: 'writeback' as TabType, label: 'Writeback' },
-  ];
+  ]
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'connected':
-        return <CheckCircleIcon className="h-5 w-5 text-emerald-500" />;
+        return <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
       case 'error':
-        return <XCircleIcon className="h-5 w-5 text-red-500" />;
+        return <XCircleIcon className="h-5 w-5 text-red-500" />
       case 'syncing':
-        return <ArrowPathIcon className="h-5 w-5 text-blue-500 animate-spin" />;
+        return <ArrowPathIcon className="h-5 w-5 text-blue-500 animate-spin" />
       default:
-        return <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" />;
+        return <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" />
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -151,9 +151,7 @@ export default function Integrations() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Contacts</p>
-                    <p className="text-2xl font-bold">
-                      {hubspotConnection.totalContacts.toLocaleString()}
-                    </p>
+                    <p className="text-2xl font-bold">{hubspotConnection.totalContacts.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -164,9 +162,7 @@ export default function Integrations() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Deals</p>
-                    <p className="text-2xl font-bold">
-                      {hubspotConnection.totalDeals.toLocaleString()}
-                    </p>
+                    <p className="text-2xl font-bold">{hubspotConnection.totalDeals.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -195,21 +191,15 @@ export default function Integrations() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Value</p>
-                  <p className="text-xl font-bold">
-                    ${pipelineSummary.totalValue.toLocaleString()}
-                  </p>
+                  <p className="text-xl font-bold">${pipelineSummary.totalValue.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Avg Deal Size</p>
-                  <p className="text-xl font-bold">
-                    ${pipelineSummary.avgDealSize.toLocaleString()}
-                  </p>
+                  <p className="text-xl font-bold">${pipelineSummary.avgDealSize.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                  <p className="text-xl font-bold">
-                    {(pipelineSummary.conversionRate * 100).toFixed(1)}%
-                  </p>
+                  <p className="text-xl font-bold">{(pipelineSummary.conversionRate * 100).toFixed(1)}%</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Deals</p>
@@ -285,12 +275,9 @@ export default function Integrations() {
                     <span
                       className={cn(
                         'px-2 py-1 rounded-full text-xs',
-                        deal.stage === 'won' &&
-                          'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                        deal.stage === 'lost' &&
-                          'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-                        !['won', 'lost'].includes(deal.stage) &&
-                          'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                        deal.stage === 'won' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+                        deal.stage === 'lost' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
+                        !['won', 'lost'].includes(deal.stage) && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                       )}
                     >
                       {deal.stage}
@@ -356,8 +343,7 @@ export default function Integrations() {
                   <div className="flex items-center gap-2">
                     <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
                     <span className="text-sm">
-                      Last synced:{' '}
-                      {writebackConfig.lastSyncAt
+                      Last synced: {writebackConfig.lastSyncAt
                         ? new Date(writebackConfig.lastSyncAt).toLocaleString()
                         : 'Never'}
                     </span>
@@ -374,5 +360,5 @@ export default function Integrations() {
         </div>
       )}
     </div>
-  );
+  )
 }

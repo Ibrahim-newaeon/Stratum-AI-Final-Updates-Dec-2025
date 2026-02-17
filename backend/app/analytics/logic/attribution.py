@@ -12,6 +12,7 @@ Use:
 - If abs(rev_var_pct) > 30% consistently: show an "Attribution Noise" banner.
 """
 
+from typing import Optional
 from app.analytics.logic.types import AttributionVarianceResult
 
 
@@ -55,7 +56,8 @@ def attribution_variance(
 
     # Check for significant variance
     has_significant_variance = (
-        abs(rev_var_pct) > variance_threshold_pct or abs(conv_var_pct) > variance_threshold_pct
+        abs(rev_var_pct) > variance_threshold_pct or
+        abs(conv_var_pct) > variance_threshold_pct
     )
 
     # Generate warning message

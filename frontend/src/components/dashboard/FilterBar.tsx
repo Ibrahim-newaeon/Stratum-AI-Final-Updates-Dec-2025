@@ -3,11 +3,11 @@
  * Responsive collapsible filter controls for dashboard with global region support
  */
 
-import React, { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp, Globe, Search, SlidersHorizontal, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { DashboardFilters } from '@/types/dashboard';
+import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Filter, X, ChevronDown, ChevronUp, Search, Globe, SlidersHorizontal } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { DashboardFilters } from '@/types/dashboard'
 
 // Global regions organized by continent
 export const GLOBAL_REGIONS = {
@@ -27,8 +27,12 @@ export const GLOBAL_REGIONS = {
     'Yemen',
     'Syria',
   ],
-  'North America': ['United States', 'Canada', 'Mexico'],
-  Europe: [
+  'North America': [
+    'United States',
+    'Canada',
+    'Mexico',
+  ],
+  'Europe': [
     'United Kingdom',
     'Germany',
     'France',
@@ -80,7 +84,7 @@ export const GLOBAL_REGIONS = {
     'Costa Rica',
     'Panama',
   ],
-  Africa: [
+  'Africa': [
     'South Africa',
     'Nigeria',
     'Kenya',
@@ -91,19 +95,19 @@ export const GLOBAL_REGIONS = {
     'Algeria',
     'Tunisia',
   ],
-};
+}
 
 // Flatten all regions for easy access
-export const ALL_REGIONS = Object.values(GLOBAL_REGIONS).flat();
+export const ALL_REGIONS = Object.values(GLOBAL_REGIONS).flat()
 
 interface FilterBarProps {
-  filters: DashboardFilters;
-  onChange: (filters: Partial<DashboardFilters>) => void;
-  platforms: string[];
-  regions?: string[];
-  useGlobalRegions?: boolean;
-  className?: string;
-  defaultExpanded?: boolean;
+  filters: DashboardFilters
+  onChange: (filters: Partial<DashboardFilters>) => void
+  platforms: string[]
+  regions?: string[]
+  useGlobalRegions?: boolean
+  className?: string
+  defaultExpanded?: boolean
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -115,125 +119,127 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   className = '',
   defaultExpanded = false,
 }) => {
-  const { t } = useTranslation();
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [regionSearch, setRegionSearch] = useState('');
-  const [expandedContinents, setExpandedContinents] = useState<string[]>(['Middle East']);
+  const { t } = useTranslation()
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const [regionSearch, setRegionSearch] = useState('')
+  const [expandedContinents, setExpandedContinents] = useState<string[]>(['Middle East'])
 
-  // Use global regions or provided regions - stored for filter logic
-  useMemo(() => {
+  // Use global regions or provided regions
+  const availableRegions = useMemo(() => {
     if (useGlobalRegions) {
-      return ALL_REGIONS;
+      return ALL_REGIONS
     }
-    return regions || [];
-  }, [useGlobalRegions, regions]);
+    return regions || []
+  }, [useGlobalRegions, regions])
 
   // Filter regions by search
   const filteredGlobalRegions = useMemo(() => {
-    if (!regionSearch) return GLOBAL_REGIONS;
+    if (!regionSearch) return GLOBAL_REGIONS
 
-    const search = regionSearch.toLowerCase();
-    const filtered: Record<string, string[]> = {};
+    const search = regionSearch.toLowerCase()
+    const filtered: Record<string, string[]> = {}
 
     Object.entries(GLOBAL_REGIONS).forEach(([continent, countries]) => {
-      const matchingCountries = countries.filter((country) =>
+      const matchingCountries = countries.filter(country =>
         country.toLowerCase().includes(search)
-      );
+      )
       if (matchingCountries.length > 0) {
-        filtered[continent] = matchingCountries;
+        filtered[continent] = matchingCountries
       }
-    });
+    })
 
-    return filtered;
-  }, [regionSearch]);
+    return filtered
+  }, [regionSearch])
 
   // Toggle continent expansion
   const toggleContinent = (continent: string) => {
-    setExpandedContinents((prev) =>
-      prev.includes(continent) ? prev.filter((c) => c !== continent) : [...prev, continent]
-    );
-  };
+    setExpandedContinents(prev =>
+      prev.includes(continent)
+        ? prev.filter(c => c !== continent)
+        : [...prev, continent]
+    )
+  }
 
   // Select all countries in a continent
   const selectContinent = (continent: string) => {
-    const continentCountries = GLOBAL_REGIONS[continent as keyof typeof GLOBAL_REGIONS] || [];
-    const newRegions = [...new Set([...filters.regions, ...continentCountries])];
-    onChange({ regions: newRegions });
-  };
+    const continentCountries = GLOBAL_REGIONS[continent as keyof typeof GLOBAL_REGIONS] || []
+    const newRegions = [...new Set([...filters.regions, ...continentCountries])]
+    onChange({ regions: newRegions })
+  }
 
   // Clear all countries in a continent
   const clearContinent = (continent: string) => {
-    const continentCountries = GLOBAL_REGIONS[continent as keyof typeof GLOBAL_REGIONS] || [];
-    const newRegions = filters.regions.filter((r) => !continentCountries.includes(r));
-    onChange({ regions: newRegions });
-  };
+    const continentCountries = GLOBAL_REGIONS[continent as keyof typeof GLOBAL_REGIONS] || []
+    const newRegions = filters.regions.filter(r => !continentCountries.includes(r))
+    onChange({ regions: newRegions })
+  }
 
   // Check if all countries in a continent are selected
   const isContinentFullySelected = (continent: string) => {
-    const continentCountries = GLOBAL_REGIONS[continent as keyof typeof GLOBAL_REGIONS] || [];
-    return continentCountries.every((c) => filters.regions.includes(c));
-  };
+    const continentCountries = GLOBAL_REGIONS[continent as keyof typeof GLOBAL_REGIONS] || []
+    return continentCountries.every(c => filters.regions.includes(c))
+  }
 
   // Handle date range change
   const handleDateChange = (type: 'start' | 'end', value: string) => {
-    const newDateRange = { ...filters.dateRange };
-    newDateRange[type] = new Date(value);
-    onChange({ dateRange: newDateRange });
-  };
+    const newDateRange = { ...filters.dateRange }
+    newDateRange[type] = new Date(value)
+    onChange({ dateRange: newDateRange })
+  }
 
   // Handle platform toggle
   const togglePlatform = (platform: string) => {
     const newPlatforms = filters.platforms.includes(platform)
       ? filters.platforms.filter((p) => p !== platform)
-      : [...filters.platforms, platform];
-    onChange({ platforms: newPlatforms });
-  };
+      : [...filters.platforms, platform]
+    onChange({ platforms: newPlatforms })
+  }
 
   // Handle region toggle
   const toggleRegion = (region: string) => {
     const newRegions = filters.regions.includes(region)
       ? filters.regions.filter((r) => r !== region)
-      : [...filters.regions, region];
-    onChange({ regions: newRegions });
-  };
+      : [...filters.regions, region]
+    onChange({ regions: newRegions })
+  }
 
   // Select all / clear all
-  const selectAllPlatforms = () => onChange({ platforms });
-  const clearAllPlatforms = () => onChange({ platforms: [] });
-  const clearAllRegions = () => onChange({ regions: [] });
+  const selectAllPlatforms = () => onChange({ platforms })
+  const clearAllPlatforms = () => onChange({ platforms: [] })
+  const clearAllRegions = () => onChange({ regions: [] })
 
   // Quick date presets
   const applyDatePreset = (preset: string) => {
-    const end = new Date();
-    let start = new Date();
+    const end = new Date()
+    let start = new Date()
 
     switch (preset) {
       case 'today':
-        start = new Date();
-        break;
+        start = new Date()
+        break
       case '7days':
-        start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        break;
+        start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        break
       case '30days':
-        start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        break;
+        start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        break
       case '90days':
-        start = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-        break;
+        start = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+        break
       case 'thisMonth':
-        start = new Date(end.getFullYear(), end.getMonth(), 1);
-        break;
+        start = new Date(end.getFullYear(), end.getMonth(), 1)
+        break
       case 'lastMonth':
-        start = new Date(end.getFullYear(), end.getMonth() - 1, 1);
-        end.setDate(0);
-        break;
+        start = new Date(end.getFullYear(), end.getMonth() - 1, 1)
+        end.setDate(0)
+        break
     }
 
-    onChange({ dateRange: { start, end } });
-  };
+    onChange({ dateRange: { start, end } })
+  }
 
   // Calculate active filters count
-  const activeFiltersCount = filters.platforms.length + filters.regions.length;
+  const activeFiltersCount = filters.platforms.length + filters.regions.length
 
   return (
     <div className={cn('bg-card border rounded-lg shadow-sm', className)}>
@@ -253,8 +259,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <p className="text-xs text-muted-foreground">
               {activeFiltersCount > 0 ? (
                 <>
-                  <span className="font-medium text-primary">{activeFiltersCount}</span> active
-                  filters
+                  <span className="font-medium text-primary">{activeFiltersCount}</span> active filters
                 </>
               ) : (
                 'No filters applied'
@@ -278,12 +283,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               )}
             </div>
           )}
-          <div
-            className={cn(
-              'p-2 rounded-full transition-colors',
-              isExpanded ? 'bg-primary/10' : 'bg-muted'
-            )}
-          >
+          <div className={cn(
+            'p-2 rounded-full transition-colors',
+            isExpanded ? 'bg-primary/10' : 'bg-muted'
+          )}>
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 text-primary" />
             ) : (
@@ -309,11 +312,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <label className="block text-sm font-medium text-foreground mb-2">Date Range</label>
 
               {/* Quick Presets */}
-              <div
-                className="flex flex-wrap gap-2 mb-3"
-                role="group"
-                aria-label="Date range presets"
-              >
+              <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Date range presets">
                 {['7days', '30days', '90days'].map((preset) => (
                   <button
                     key={preset}
@@ -415,10 +414,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
               {/* Region Search */}
               <div className="relative mb-3">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-                  aria-hidden="true"
-                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <input
                   type="text"
                   placeholder="Search countries..."
@@ -440,8 +436,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
               {/* Selected Count */}
               <div className="text-xs text-muted-foreground mb-2">
-                <span className="font-semibold text-primary">{filters.regions.length}</span> of{' '}
-                {ALL_REGIONS.length} countries selected
+                <span className="font-semibold text-primary">{filters.regions.length}</span> of {ALL_REGIONS.length} countries selected
               </div>
 
               {/* Continent Groups */}
@@ -462,15 +457,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         />
                         <span className="font-medium text-sm text-foreground">{continent}</span>
                         <span className="ml-2 text-xs text-muted-foreground">
-                          ({countries.filter((c) => filters.regions.includes(c)).length}/
-                          {countries.length})
+                          ({countries.filter(c => filters.regions.includes(c)).length}/{countries.length})
                         </span>
                       </div>
                       <div className="flex gap-1">
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
-                            selectContinent(continent);
+                            e.stopPropagation()
+                            selectContinent(continent)
                           }}
                           className={cn(
                             'px-2 py-0.5 text-xs rounded transition-colors',
@@ -483,8 +477,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         </button>
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
-                            clearContinent(continent);
+                            e.stopPropagation()
+                            clearContinent(continent)
                           }}
                           className="px-2 py-0.5 text-xs bg-muted text-muted-foreground rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
                         >
@@ -534,13 +528,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   (filters.dateRange.end.getTime() - filters.dateRange.start.getTime()) /
                     (1000 * 60 * 60 * 24)
                 )}
-              </span>{' '}
-              days
+              </span> days
             </div>
             <button
               onClick={() => {
-                clearAllPlatforms();
-                clearAllRegions();
+                clearAllPlatforms()
+                clearAllRegions()
               }}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Clear all filters"
@@ -552,7 +545,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default FilterBar;
+export default FilterBar

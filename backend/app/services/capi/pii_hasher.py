@@ -8,9 +8,9 @@ Ensures compliance with platform requirements and privacy regulations.
 
 import hashlib
 import re
+from typing import Any, Dict, List, Optional, Set
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
 
 from app.core.logging import get_logger
 
@@ -19,7 +19,6 @@ logger = get_logger(__name__)
 
 class PIIField(str, Enum):
     """Standard PII fields recognized by ad platforms."""
-
     EMAIL = "em"
     PHONE = "ph"
     FIRST_NAME = "fn"
@@ -42,7 +41,6 @@ class PIIField(str, Enum):
 @dataclass
 class PIIDetectionResult:
     """Result of PII detection in data."""
-
     field_name: str
     original_key: str
     detected_type: PIIField
@@ -65,38 +63,46 @@ class PIIHasher:
     # Field name patterns for PII detection
     FIELD_PATTERNS = {
         PIIField.EMAIL: [
-            r"email",
-            r"e[-_]?mail",
-            r"user[-_]?email",
-            r"customer[-_]?email",
-            r"contact[-_]?email",
-            r"mail",
+            r"email", r"e[-_]?mail", r"user[-_]?email", r"customer[-_]?email",
+            r"contact[-_]?email", r"mail"
         ],
         PIIField.PHONE: [
-            r"phone",
-            r"tel",
-            r"mobile",
-            r"cell",
-            r"phone[-_]?number",
-            r"contact[-_]?number",
-            r"telephone",
+            r"phone", r"tel", r"mobile", r"cell", r"phone[-_]?number",
+            r"contact[-_]?number", r"telephone"
         ],
-        PIIField.FIRST_NAME: [r"first[-_]?name", r"fname", r"given[-_]?name", r"forename"],
-        PIIField.LAST_NAME: [r"last[-_]?name", r"lname", r"surname", r"family[-_]?name"],
-        PIIField.DATE_OF_BIRTH: [r"dob", r"date[-_]?of[-_]?birth", r"birth[-_]?date", r"birthday"],
-        PIIField.GENDER: [r"gender", r"sex"],
-        PIIField.CITY: [r"city", r"town", r"locality"],
-        PIIField.STATE: [r"state", r"province", r"region"],
-        PIIField.ZIP_CODE: [r"zip", r"zip[-_]?code", r"postal", r"postal[-_]?code", r"postcode"],
-        PIIField.COUNTRY: [r"country", r"country[-_]?code", r"nation"],
+        PIIField.FIRST_NAME: [
+            r"first[-_]?name", r"fname", r"given[-_]?name", r"forename"
+        ],
+        PIIField.LAST_NAME: [
+            r"last[-_]?name", r"lname", r"surname", r"family[-_]?name"
+        ],
+        PIIField.DATE_OF_BIRTH: [
+            r"dob", r"date[-_]?of[-_]?birth", r"birth[-_]?date", r"birthday"
+        ],
+        PIIField.GENDER: [
+            r"gender", r"sex"
+        ],
+        PIIField.CITY: [
+            r"city", r"town", r"locality"
+        ],
+        PIIField.STATE: [
+            r"state", r"province", r"region"
+        ],
+        PIIField.ZIP_CODE: [
+            r"zip", r"zip[-_]?code", r"postal", r"postal[-_]?code", r"postcode"
+        ],
+        PIIField.COUNTRY: [
+            r"country", r"country[-_]?code", r"nation"
+        ],
         PIIField.EXTERNAL_ID: [
-            r"external[-_]?id",
-            r"user[-_]?id",
-            r"customer[-_]?id",
-            r"client[-_]?id",
+            r"external[-_]?id", r"user[-_]?id", r"customer[-_]?id", r"client[-_]?id"
         ],
-        PIIField.CLIENT_IP: [r"ip", r"ip[-_]?address", r"client[-_]?ip", r"user[-_]?ip"],
-        PIIField.CLIENT_USER_AGENT: [r"user[-_]?agent", r"ua", r"browser"],
+        PIIField.CLIENT_IP: [
+            r"ip", r"ip[-_]?address", r"client[-_]?ip", r"user[-_]?ip"
+        ],
+        PIIField.CLIENT_USER_AGENT: [
+            r"user[-_]?agent", r"ua", r"browser"
+        ],
         PIIField.FBC: [r"fbc", r"fb[-_]?click[-_]?id"],
         PIIField.FBP: [r"fbp", r"fb[-_]?browser[-_]?id"],
         PIIField.GCLID: [r"gclid", r"google[-_]?click[-_]?id"],
@@ -112,40 +118,30 @@ class PIIHasher:
 
     # Fields that require hashing
     HASHABLE_FIELDS = {
-        PIIField.EMAIL,
-        PIIField.PHONE,
-        PIIField.FIRST_NAME,
-        PIIField.LAST_NAME,
-        PIIField.DATE_OF_BIRTH,
-        PIIField.GENDER,
-        PIIField.CITY,
-        PIIField.STATE,
-        PIIField.ZIP_CODE,
-        PIIField.COUNTRY,
-        PIIField.EXTERNAL_ID,
+        PIIField.EMAIL, PIIField.PHONE, PIIField.FIRST_NAME, PIIField.LAST_NAME,
+        PIIField.DATE_OF_BIRTH, PIIField.GENDER, PIIField.CITY, PIIField.STATE,
+        PIIField.ZIP_CODE, PIIField.COUNTRY, PIIField.EXTERNAL_ID
     }
 
     # Fields that should NOT be hashed
     NON_HASHABLE_FIELDS = {
-        PIIField.CLIENT_IP,
-        PIIField.CLIENT_USER_AGENT,
-        PIIField.FBC,
-        PIIField.FBP,
-        PIIField.GCLID,
-        PIIField.TTCLID,
+        PIIField.CLIENT_IP, PIIField.CLIENT_USER_AGENT,
+        PIIField.FBC, PIIField.FBP, PIIField.GCLID, PIIField.TTCLID
     }
 
     def __init__(self):
         """Initialize the PII hasher."""
-        self._compiled_patterns: dict[PIIField, list[re.Pattern]] = {}
+        self._compiled_patterns: Dict[PIIField, List[re.Pattern]] = {}
         self._compile_patterns()
 
     def _compile_patterns(self):
         """Compile regex patterns for performance."""
         for field, patterns in self.FIELD_PATTERNS.items():
-            self._compiled_patterns[field] = [re.compile(p, re.IGNORECASE) for p in patterns]
+            self._compiled_patterns[field] = [
+                re.compile(p, re.IGNORECASE) for p in patterns
+            ]
 
-    def detect_pii_fields(self, data: dict[str, Any]) -> list[PIIDetectionResult]:
+    def detect_pii_fields(self, data: Dict[str, Any]) -> List[PIIDetectionResult]:
         """
         Detect PII fields in the given data dictionary.
 
@@ -277,7 +273,7 @@ class PIIHasher:
         else:
             return value.lower().strip()
 
-    def hash_data(self, data: dict[str, Any]) -> dict[str, Any]:
+    def hash_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Automatically detect and hash all PII fields in the data.
 
@@ -304,8 +300,8 @@ class PIIHasher:
         return result
 
     def get_missing_fields(
-        self, data: dict[str, Any], required_fields: set[PIIField]
-    ) -> list[PIIField]:
+        self, data: Dict[str, Any], required_fields: Set[PIIField]
+    ) -> List[PIIField]:
         """
         Identify which required PII fields are missing from the data.
 
@@ -322,14 +318,14 @@ class PIIHasher:
         return [f for f in required_fields if f not in detected_types]
 
     def calculate_data_completeness(
-        self, data: dict[str, Any], platform: str = "meta"
-    ) -> dict[str, Any]:
+        self, data: Dict[str, Any], platform: str = "meta"
+    ) -> Dict[str, Any]:
         """
         Calculate data completeness score for a platform.
 
         Args:
             data: Data dictionary to analyze
-            platform: Target platform (meta, google, tiktok, snapchat)
+            platform: Target platform (meta, google, tiktok, snapchat, linkedin)
 
         Returns:
             Completeness analysis with score and missing fields
@@ -339,83 +335,61 @@ class PIIHasher:
             "meta": {
                 "required": {PIIField.EMAIL},
                 "optional": {
-                    PIIField.PHONE,
-                    PIIField.FIRST_NAME,
-                    PIIField.LAST_NAME,
-                    PIIField.CITY,
-                    PIIField.STATE,
-                    PIIField.ZIP_CODE,
-                    PIIField.COUNTRY,
-                    PIIField.EXTERNAL_ID,
-                    PIIField.FBC,
-                    PIIField.FBP,
+                    PIIField.PHONE, PIIField.FIRST_NAME, PIIField.LAST_NAME,
+                    PIIField.CITY, PIIField.STATE, PIIField.ZIP_CODE,
+                    PIIField.COUNTRY, PIIField.EXTERNAL_ID, PIIField.FBC, PIIField.FBP
                 },
                 "weights": {
-                    PIIField.EMAIL: 30,
-                    PIIField.PHONE: 20,
-                    PIIField.EXTERNAL_ID: 15,
-                    PIIField.FIRST_NAME: 10,
-                    PIIField.LAST_NAME: 10,
-                    PIIField.FBC: 5,
-                    PIIField.FBP: 5,
-                    PIIField.CLIENT_IP: 5,
-                },
+                    PIIField.EMAIL: 30, PIIField.PHONE: 20, PIIField.EXTERNAL_ID: 15,
+                    PIIField.FIRST_NAME: 10, PIIField.LAST_NAME: 10,
+                    PIIField.FBC: 5, PIIField.FBP: 5, PIIField.CLIENT_IP: 5
+                }
             },
             "google": {
                 "required": set(),
                 "optional": {
-                    PIIField.EMAIL,
-                    PIIField.PHONE,
-                    PIIField.FIRST_NAME,
-                    PIIField.LAST_NAME,
-                    PIIField.CITY,
-                    PIIField.STATE,
-                    PIIField.ZIP_CODE,
-                    PIIField.COUNTRY,
-                    PIIField.GCLID,
+                    PIIField.EMAIL, PIIField.PHONE, PIIField.FIRST_NAME,
+                    PIIField.LAST_NAME, PIIField.CITY, PIIField.STATE,
+                    PIIField.ZIP_CODE, PIIField.COUNTRY, PIIField.GCLID
                 },
                 "weights": {
-                    PIIField.EMAIL: 25,
-                    PIIField.PHONE: 20,
-                    PIIField.GCLID: 20,
-                    PIIField.FIRST_NAME: 10,
-                    PIIField.LAST_NAME: 10,
-                    PIIField.ZIP_CODE: 10,
-                    PIIField.COUNTRY: 5,
-                },
+                    PIIField.EMAIL: 25, PIIField.PHONE: 20, PIIField.GCLID: 20,
+                    PIIField.FIRST_NAME: 10, PIIField.LAST_NAME: 10,
+                    PIIField.ZIP_CODE: 10, PIIField.COUNTRY: 5
+                }
             },
             "tiktok": {
                 "required": set(),
                 "optional": {
-                    PIIField.EMAIL,
-                    PIIField.PHONE,
-                    PIIField.EXTERNAL_ID,
-                    PIIField.TTCLID,
-                    PIIField.CLIENT_IP,
-                    PIIField.CLIENT_USER_AGENT,
+                    PIIField.EMAIL, PIIField.PHONE, PIIField.EXTERNAL_ID,
+                    PIIField.TTCLID, PIIField.CLIENT_IP, PIIField.CLIENT_USER_AGENT
                 },
                 "weights": {
-                    PIIField.EMAIL: 30,
-                    PIIField.PHONE: 25,
-                    PIIField.TTCLID: 20,
-                    PIIField.EXTERNAL_ID: 15,
-                    PIIField.CLIENT_IP: 10,
-                },
+                    PIIField.EMAIL: 30, PIIField.PHONE: 25, PIIField.TTCLID: 20,
+                    PIIField.EXTERNAL_ID: 15, PIIField.CLIENT_IP: 10
+                }
             },
             "snapchat": {
                 "required": set(),
                 "optional": {
-                    PIIField.EMAIL,
-                    PIIField.PHONE,
-                    PIIField.EXTERNAL_ID,
-                    PIIField.CLIENT_IP,
+                    PIIField.EMAIL, PIIField.PHONE, PIIField.EXTERNAL_ID,
+                    PIIField.CLIENT_IP
                 },
                 "weights": {
-                    PIIField.EMAIL: 35,
-                    PIIField.PHONE: 30,
-                    PIIField.EXTERNAL_ID: 20,
-                    PIIField.CLIENT_IP: 15,
+                    PIIField.EMAIL: 35, PIIField.PHONE: 30,
+                    PIIField.EXTERNAL_ID: 20, PIIField.CLIENT_IP: 15
+                }
+            },
+            "linkedin": {
+                "required": set(),
+                "optional": {
+                    PIIField.EMAIL, PIIField.FIRST_NAME, PIIField.LAST_NAME,
+                    PIIField.EXTERNAL_ID
                 },
+                "weights": {
+                    PIIField.EMAIL: 40, PIIField.FIRST_NAME: 20,
+                    PIIField.LAST_NAME: 20, PIIField.EXTERNAL_ID: 20
+                }
             },
         }
 
@@ -437,11 +411,7 @@ class PIIHasher:
         all_fields = config["required"] | config["optional"]
         missing = all_fields - detected_types
         missing_with_weights = [
-            {
-                "field": f.value,
-                "weight": config["weights"].get(f, 0),
-                "impact": "high" if f in config["required"] else "medium",
-            }
+            {"field": f.value, "weight": config["weights"].get(f, 0), "impact": "high" if f in config["required"] else "medium"}
             for f in missing
             if f in config["weights"]
         ]
@@ -456,7 +426,9 @@ class PIIHasher:
             "recommendation": self._get_recommendation(score, missing_with_weights),
         }
 
-    def _get_recommendation(self, score: float, missing_fields: list[dict]) -> str:
+    def _get_recommendation(
+        self, score: float, missing_fields: List[Dict]
+    ) -> str:
         """Generate recommendation based on completeness score."""
         if score >= 90:
             return "Excellent! Your data is well-matched for high ROAS."

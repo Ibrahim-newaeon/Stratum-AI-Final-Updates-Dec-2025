@@ -102,9 +102,9 @@ class LoggerContextManager:
 
     def __init__(self, **kwargs: Any):
         self.context = kwargs
-        self._token: Any = None
+        self._token = None
 
-    def __enter__(self) -> "LoggerContextManager":
+    def __enter__(self):
         self._token = structlog.contextvars.bind_contextvars(**self.context)
         return self
 

@@ -5,90 +5,88 @@
  * Shows "what changed", timeline, blocked actions, and fix playbook
  */
 
-import { useCallback, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 import {
-  type AutopilotMode,
-  EmqFixPlaybookPanel,
+  TrustStatusHeader,
   EmqScoreCard,
   EmqTimeline,
-  type Kpi,
+  EmqFixPlaybookPanel,
   KpiStrip,
-  type PlaybookItem,
   type TimelineEvent,
-  TrustStatusHeader,
-} from '@/components/shared';
+  type PlaybookItem,
+  type AutopilotMode,
+  type Kpi,
+} from '@/components/shared'
 import {
-  useAutopilotState,
-  useEmqIncidents,
-  useEmqPlaybook,
-  useEmqScore,
   useTenant,
-} from '@/api/hooks';
+  useEmqScore,
+  useAutopilotState,
+  useEmqPlaybook,
+  useEmqIncidents,
+} from '@/api/hooks'
 import {
   ArrowLeftIcon,
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon,
-  CalendarIcon,
-  ClockIcon,
   DocumentArrowDownIcon,
   EnvelopeIcon,
   PhoneIcon,
+  CalendarIcon,
   ShieldCheckIcon,
+  ExclamationTriangleIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  CheckCircleIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline';
+  ClockIcon,
+  ChartBarIcon,
+} from '@heroicons/react/24/outline'
 
 interface BlockedAction {
-  id: string;
-  type: 'opportunity' | 'risk' | 'fix';
-  title: string;
-  reason: string;
-  estimatedImpact: string;
-  blockedAt: Date;
+  id: string
+  type: 'opportunity' | 'risk' | 'fix'
+  title: string
+  reason: string
+  estimatedImpact: string
+  blockedAt: Date
 }
 
 interface RecoveryMetric {
-  label: string;
-  value: number;
-  unit: string;
-  trend: number;
-  isPositive: boolean;
+  label: string
+  value: number
+  unit: string
+  trend: number
+  isPositive: boolean
 }
 
 export default function TenantNarrative() {
-  const { tenantId } = useParams<{ tenantId: string }>();
-  const tid = parseInt(tenantId || '1', 10);
-  const { toast } = useToast();
-  const [selectedPlaybookItem, setSelectedPlaybookItem] = useState<PlaybookItem | null>(null);
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const tid = parseInt(tenantId || '1', 10)
 
-  const [activeTab, setActiveTab] = useState<'summary' | 'timeline' | 'blocked' | 'playbook'>(
-    'summary'
-  );
+  const [activeTab, setActiveTab] = useState<'summary' | 'timeline' | 'blocked' | 'playbook'>('summary')
 
   // Date range
   const dateRange = {
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
-  };
+  }
 
   // Fetch data
-  const { data: tenantData } = useTenant(Number(tenantId) || 0);
-  const { data: emqData } = useEmqScore(tid);
-  const { data: autopilotData } = useAutopilotState(tid);
-  const { data: playbookData } = useEmqPlaybook(tid);
-  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end);
+  const { data: tenantData } = useTenant(tenantId || '')
+  const { data: emqData } = useEmqScore(tid)
+  const { data: autopilotData } = useAutopilotState(tid)
+  const { data: playbookData } = useEmqPlaybook(tid)
+  const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
 
-  const emqScore = emqData?.score ?? 65;
-  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'cuts_only';
-  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 12000;
+  const emqScore = emqData?.score ?? 65
+  const autopilotMode: AutopilotMode = autopilotData?.mode ?? 'cuts_only'
+  const budgetAtRisk = autopilotData?.budgetAtRisk ?? 12000
 
   // Sample tenant details
   const tenant = {
     id: tenantId,
     name: tenantData?.name ?? 'Fashion Forward',
-    industry: (tenantData as { industry?: string } | undefined)?.industry ?? 'Retail',
+    industry: tenantData?.industry ?? 'Retail',
     plan: 'Pro',
     primaryContact: {
       name: 'Jennifer Smith',
@@ -97,7 +95,7 @@ export default function TenantNarrative() {
     },
     lastContact: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  };
+  }
 
   const kpis: Kpi[] = [
     {
@@ -133,14 +131,14 @@ export default function TenantNarrative() {
       trendIsPositive: false,
       confidence: emqScore,
     },
-  ];
+  ]
 
   const recoveryMetrics: RecoveryMetric[] = [
     { label: 'EMQ Recovery', value: 8, unit: 'pts', trend: 12, isPositive: true },
     { label: 'ROAS Impact', value: -15, unit: '%', trend: -15, isPositive: false },
     { label: 'MTTR', value: 18, unit: 'hrs', trend: -25, isPositive: true },
     { label: 'Blocked Actions', value: 5, unit: '', trend: 0, isPositive: false },
-  ];
+  ]
 
   const blockedActions: BlockedAction[] = [
     {
@@ -167,7 +165,7 @@ export default function TenantNarrative() {
       estimatedImpact: '+$8,500 revenue',
       blockedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
     },
-  ];
+  ]
 
   const playbook: PlaybookItem[] = playbookData ?? [
     {
@@ -206,7 +204,7 @@ export default function TenantNarrative() {
       status: 'pending',
       actionUrl: null,
     },
-  ];
+  ]
 
   const timeline: TimelineEvent[] = incidentsData?.map((i) => ({
     id: i.id,
@@ -255,82 +253,22 @@ export default function TenantNarrative() {
       timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
       severity: 'low',
     },
-  ];
+  ]
 
   const tabs = [
     { id: 'summary' as const, label: 'Client Summary' },
     { id: 'timeline' as const, label: 'What Changed' },
     { id: 'blocked' as const, label: 'What We Blocked' },
     { id: 'playbook' as const, label: 'Fix Playbook' },
-  ];
+  ]
 
-  const handleExportPDF = useCallback(() => {
-    const lines: string[] = [];
-    lines.push('CLIENT NARRATIVE REPORT');
-    lines.push(`Generated: ${new Date().toLocaleDateString()}`);
-    lines.push('');
-    lines.push(`Client: ${tenant.name}`);
-    lines.push(`Industry: ${tenant.industry}`);
-    lines.push(`Plan: ${tenant.plan}`);
-    lines.push(`Primary Contact: ${tenant.primaryContact.name} (${tenant.primaryContact.email})`);
-    lines.push('');
+  const handleExportPDF = () => {
+    console.log('Exporting client-safe narrative PDF...')
+  }
 
-    lines.push('--- TRUST STATUS ---');
-    lines.push(`EMQ Score: ${emqScore}/100`);
-    lines.push(`Autopilot Mode: ${autopilotMode}`);
-    lines.push(`Budget at Risk: $${budgetAtRisk.toLocaleString()}`);
-    lines.push('');
-
-    lines.push('--- KEY PERFORMANCE INDICATORS ---');
-    kpis.forEach((kpi) => {
-      const val = typeof kpi.value === 'number' ? kpi.value : parseFloat(kpi.value) || 0;
-      const prev = kpi.previousValue ?? 0;
-      const change = prev ? (((val - prev) / prev) * 100).toFixed(1) : 'N/A';
-      const prefix = kpi.format === 'currency' ? '$' : '';
-      const suffix = kpi.format === 'multiplier' ? 'x' : '';
-      lines.push(`${kpi.label}: ${prefix}${val.toLocaleString()}${suffix} (${change}% vs prior)`);
-    });
-    lines.push('');
-
-    lines.push('--- RECOVERY METRICS ---');
-    recoveryMetrics.forEach((m) => {
-      lines.push(`${m.label}: ${m.value >= 0 ? '+' : ''}${m.value}${m.unit}`);
-    });
-    lines.push('');
-
-    lines.push('--- BLOCKED ACTIONS ---');
-    blockedActions.forEach((a) => {
-      lines.push(`[${a.type.toUpperCase()}] ${a.title}`);
-      lines.push(`  Reason: ${a.reason}`);
-      lines.push(`  Estimated Impact: ${a.estimatedImpact}`);
-    });
-    lines.push('');
-
-    lines.push('--- FIX PLAYBOOK ---');
-    playbook.forEach((item) => {
-      lines.push(`[${item.priority.toUpperCase()}] ${item.title} - ${item.status}`);
-      lines.push(`  ${item.description}`);
-      lines.push(`  Owner: ${item.owner || 'Unassigned'} | Est. Impact: +${item.estimatedImpact} EMQ pts | Time: ${item.estimatedTime}`);
-    });
-
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `narrative-${tenant.name.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [tenant, emqScore, autopilotMode, budgetAtRisk, kpis, recoveryMetrics, blockedActions, playbook]);
-
-  const handleScheduleCall = useCallback(() => {
-    const subject = encodeURIComponent(`Stratum AI - ${tenant.name} Account Review`);
-    const body = encodeURIComponent(
-      `Hi ${tenant.primaryContact.name},\n\nI'd like to schedule a call to review your account performance.\n\nKey topics:\n- EMQ Score: ${emqScore}/100\n- ${blockedActions.length} blocked actions to discuss\n- Recovery playbook status\n\nPlease let me know your availability.\n\nBest regards`
-    );
-    window.open(`mailto:${tenant.primaryContact.email}?subject=${subject}&body=${body}`, '_blank');
-  }, [tenant, emqScore, blockedActions.length]);
+  const handleScheduleCall = () => {
+    console.log('Opening calendar...')
+  }
 
   return (
     <div data-tour="tenant-narrative" className="space-y-6">
@@ -377,10 +315,7 @@ export default function TenantNarrative() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-stratum-500/20 flex items-center justify-center">
             <span className="text-stratum-400 font-semibold">
-              {tenant.primaryContact.name
-                .split(' ')
-                .map((n) => n[0])
-                .join('')}
+              {tenant.primaryContact.name.split(' ').map(n => n[0]).join('')}
             </span>
           </div>
           <div>
@@ -400,8 +335,7 @@ export default function TenantNarrative() {
           <div>
             <span className="text-text-muted">Last Contact:</span>
             <span className="text-white ml-2">
-              {Math.floor((Date.now() - tenant.lastContact.getTime()) / (24 * 60 * 60 * 1000))} days
-              ago
+              {Math.floor((Date.now() - tenant.lastContact.getTime()) / (24 * 60 * 60 * 1000))} days ago
             </span>
           </div>
           <div>
@@ -425,29 +359,20 @@ export default function TenantNarrative() {
       {/* Recovery Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {recoveryMetrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="p-4 rounded-xl bg-surface-secondary border border-white/10"
-          >
+          <div key={metric.label} className="p-4 rounded-xl bg-surface-secondary border border-white/10">
             <div className="text-text-muted text-sm mb-1">{metric.label}</div>
             <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  'text-2xl font-bold',
-                  metric.isPositive ? 'text-success' : 'text-danger'
-                )}
-              >
-                {metric.value >= 0 ? (metric.value > 0 ? '+' : '') : ''}
-                {metric.value}
-                {metric.unit}
+              <span className={cn(
+                'text-2xl font-bold',
+                metric.isPositive ? 'text-success' : 'text-danger'
+              )}>
+                {metric.value >= 0 ? (metric.value > 0 ? '+' : '') : ''}{metric.value}{metric.unit}
               </span>
               {metric.trend !== 0 && (
-                <span
-                  className={cn(
-                    'flex items-center text-xs',
-                    metric.isPositive ? 'text-success' : 'text-danger'
-                  )}
-                >
+                <span className={cn(
+                  'flex items-center text-xs',
+                  metric.isPositive ? 'text-success' : 'text-danger'
+                )}>
                   {metric.isPositive ? (
                     <ArrowTrendingUpIcon className="w-3 h-3" />
                   ) : (
@@ -546,21 +471,17 @@ export default function TenantNarrative() {
                         <span className="text-success">{action.estimatedImpact} missed</span>
                         <span className="flex items-center gap-1 text-text-muted">
                           <ClockIcon className="w-3 h-3" />
-                          Blocked{' '}
-                          {Math.floor((Date.now() - action.blockedAt.getTime()) / (60 * 60 * 1000))}
-                          h ago
+                          Blocked {Math.floor((Date.now() - action.blockedAt.getTime()) / (60 * 60 * 1000))}h ago
                         </span>
                       </div>
                     </div>
                   </div>
-                  <span
-                    className={cn(
-                      'px-2 py-1 rounded text-xs',
-                      action.type === 'opportunity' && 'bg-success/10 text-success',
-                      action.type === 'risk' && 'bg-warning/10 text-warning',
-                      action.type === 'fix' && 'bg-stratum-500/10 text-stratum-400'
-                    )}
-                  >
+                  <span className={cn(
+                    'px-2 py-1 rounded text-xs',
+                    action.type === 'opportunity' && 'bg-success/10 text-success',
+                    action.type === 'risk' && 'bg-warning/10 text-warning',
+                    action.type === 'fix' && 'bg-stratum-500/10 text-stratum-400'
+                  )}>
                     {action.type}
                   </span>
                 </div>
@@ -570,75 +491,22 @@ export default function TenantNarrative() {
 
           <div className="p-4 rounded-xl bg-surface-tertiary border border-white/5 text-center">
             <p className="text-text-muted">
-              These actions will automatically resume once EMQ recovers above 75 and autopilot
-              returns to normal mode.
+              These actions will automatically resume once EMQ recovers above 75 and autopilot returns to normal mode.
             </p>
           </div>
         </div>
       )}
 
       {activeTab === 'playbook' && (
-        <div data-tour="fix-playbook" className="space-y-4">
+        <div data-tour="fix-playbook">
           <EmqFixPlaybookPanel
             items={playbook}
-            onItemClick={(item) => setSelectedPlaybookItem(item)}
-            onAssign={(item) => {
-              toast({
-                title: 'Assignment requested',
-                description: `"${item.title}" has been flagged for assignment. The ${item.owner || 'team'} will be notified.`,
-              });
-            }}
+            onItemClick={(item) => console.log('Clicked:', item)}
+            onAssign={(item) => console.log('Assign:', item)}
             maxItems={10}
           />
-
-          {/* Playbook Item Detail Panel */}
-          {selectedPlaybookItem && (
-            <div className="p-5 rounded-xl bg-surface-secondary border border-white/10">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-white">{selectedPlaybookItem.title}</h3>
-                <button
-                  onClick={() => setSelectedPlaybookItem(null)}
-                  className="text-text-muted hover:text-white transition-colors text-sm"
-                >
-                  Close
-                </button>
-              </div>
-              <p className="text-text-secondary mb-4">{selectedPlaybookItem.description}</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-text-muted">Priority</span>
-                  <p className={cn(
-                    'font-medium capitalize',
-                    selectedPlaybookItem.priority === 'critical' && 'text-danger',
-                    selectedPlaybookItem.priority === 'high' && 'text-warning',
-                    selectedPlaybookItem.priority === 'medium' && 'text-stratum-400',
-                  )}>
-                    {selectedPlaybookItem.priority}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-text-muted">Owner</span>
-                  <p className="text-white font-medium">{selectedPlaybookItem.owner || 'Unassigned'}</p>
-                </div>
-                <div>
-                  <span className="text-text-muted">Est. Impact</span>
-                  <p className="text-success font-medium">+{selectedPlaybookItem.estimatedImpact} EMQ pts</p>
-                </div>
-                <div>
-                  <span className="text-text-muted">Est. Time</span>
-                  <p className="text-white font-medium">{selectedPlaybookItem.estimatedTime}</p>
-                </div>
-              </div>
-              {selectedPlaybookItem.platform && (
-                <div className="mt-3 text-sm">
-                  <span className="text-text-muted">Platform: </span>
-                  <span className="text-white">{selectedPlaybookItem.platform}</span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>
-  );
+  )
 }

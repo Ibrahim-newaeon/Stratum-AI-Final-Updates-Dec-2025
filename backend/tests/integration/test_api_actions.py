@@ -12,10 +12,10 @@ Tests cover:
 - Bulk operations
 """
 
-from datetime import UTC, datetime
-
 import pytest
+from datetime import date
 from httpx import AsyncClient
+
 
 pytestmark = pytest.mark.integration
 
@@ -64,14 +64,13 @@ class TestActionsQueue:
         db_session,
     ):
         """Test action dismissal."""
-        import json
-
         from app.models.trust_layer import FactActionsQueue
+        import json
 
         # Create a new action to dismiss
         action = FactActionsQueue(
             tenant_id=test_tenant["id"],
-            date=datetime.now(UTC).date(),
+            date=date.today(),
             action_type="pause_campaign",
             entity_type="campaign",
             entity_id="campaign_456",
@@ -99,16 +98,15 @@ class TestActionsQueue:
         db_session,
     ):
         """Test bulk action approval."""
-        import json
-
         from app.models.trust_layer import FactActionsQueue
+        import json
 
         # Create multiple actions
         action_ids = []
         for i in range(3):
             action = FactActionsQueue(
                 tenant_id=test_tenant["id"],
-                date=datetime.now(UTC).date(),
+                date=date.today(),
                 action_type="budget_increase",
                 entity_type="campaign",
                 entity_id=f"campaign_bulk_{i}",
@@ -142,14 +140,13 @@ class TestActionValidation:
         db_session,
     ):
         """Test that actions respect budget change caps."""
-        import json
-
         from app.models.trust_layer import FactActionsQueue
+        import json
 
         # Create an action that exceeds caps
         large_action = FactActionsQueue(
             tenant_id=test_tenant["id"],
-            date=datetime.now(UTC).date(),
+            date=date.today(),
             action_type="budget_increase",
             entity_type="campaign",
             entity_id="campaign_large",
@@ -179,18 +176,17 @@ class TestActionValidation:
         db_session,
     ):
         """Test that actions are blocked when signal health is degraded."""
-        import json
-
         from app.models.trust_layer import (
             FactActionsQueue,
             FactSignalHealthDaily,
             SignalHealthStatus,
         )
+        import json
 
         # Set signal health to degraded
         health = FactSignalHealthDaily(
             tenant_id=test_tenant["id"],
-            date=datetime.now(UTC).date(),
+            date=date.today(),
             platform="meta",
             emq_score=65.0,  # Below threshold
             event_loss_pct=15.0,  # High loss
@@ -201,7 +197,7 @@ class TestActionValidation:
         # Create an action
         action = FactActionsQueue(
             tenant_id=test_tenant["id"],
-            date=datetime.now(UTC).date(),
+            date=date.today(),
             action_type="budget_increase",
             entity_type="campaign",
             entity_id="campaign_blocked",

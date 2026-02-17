@@ -3,35 +3,33 @@
  * Displays prediction-based alerts for campaign performance
  */
 
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
-  AlertCircle,
-  AlertTriangle,
-  ArrowRight,
   Bell,
+  AlertTriangle,
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  ArrowRight,
+  RefreshCw,
   CheckCircle,
   Info,
-  RefreshCw,
-  TrendingUp,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface PredictionAlert {
-  campaign_id: number;
-  campaign_name: string;
-  type: string;
-  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
-  message: string;
-  recommendation: string;
+  campaign_id: number
+  campaign_name: string
+  type: string
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info'
+  message: string
+  recommendation: string
 }
 
 interface ROASAlertsWidgetProps {
-  className?: string;
-  limit?: number;
+  className?: string
+  limit?: number
 }
 
 // Analytics Design System severity config
@@ -76,55 +74,51 @@ const severityConfig = {
     label: 'Opportunity',
     motion: 'motion-enter',
   },
-};
+}
 
 export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps) {
-  const { t: _t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [alerts, setAlerts] = useState<PredictionAlert[]>([]);
-  const [filter, setFilter] = useState<string>('all');
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation()
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [alerts, setAlerts] = useState<PredictionAlert[]>([])
+  const [filter, setFilter] = useState<string>('all')
+  const [error, setError] = useState<string | null>(null)
 
   const fetchAlerts = async () => {
     try {
-      setRefreshing(true);
-      const response = await fetch(`${API_BASE}/predictions/alerts`);
-      const data = await response.json();
+      setRefreshing(true)
+      const response = await fetch('/api/v1/predictions/alerts')
+      const data = await response.json()
 
       if (data.success && data.data?.alerts) {
-        setAlerts(data.data.alerts);
-        setError(null);
+        setAlerts(data.data.alerts)
+        setError(null)
       }
     } catch (err) {
-      // Error displayed via setError below
-      setError('Failed to load alerts');
+      console.error('Failed to fetch alerts:', err)
+      setError('Failed to load alerts')
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setLoading(false)
+      setRefreshing(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchAlerts();
+    fetchAlerts()
     // Refresh every 2 minutes
-    const interval = setInterval(fetchAlerts, 2 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(fetchAlerts, 2 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
-  const filteredAlerts = alerts
-    .filter((alert) => {
-      if (filter === 'all') return true;
-      if (filter === 'critical') return alert.severity === 'critical' || alert.severity === 'high';
-      if (filter === 'opportunities') return alert.type === 'scaling_opportunity';
-      return alert.severity === filter;
-    })
-    .slice(0, limit);
+  const filteredAlerts = alerts.filter((alert) => {
+    if (filter === 'all') return true
+    if (filter === 'critical') return alert.severity === 'critical' || alert.severity === 'high'
+    if (filter === 'opportunities') return alert.type === 'scaling_opportunity'
+    return alert.severity === filter
+  }).slice(0, limit)
 
-  const criticalCount = alerts.filter(
-    (a) => a.severity === 'critical' || a.severity === 'high'
-  ).length;
-  const opportunityCount = alerts.filter((a) => a.type === 'scaling_opportunity').length;
+  const criticalCount = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length
+  const opportunityCount = alerts.filter(a => a.type === 'scaling_opportunity').length
 
   if (loading) {
     return (
@@ -138,16 +132,11 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div
-      className={cn(
-        'rounded-lg border bg-card overflow-hidden motion-enter shadow-card',
-        className
-      )}
-    >
+    <div className={cn('rounded-lg border bg-card overflow-hidden motion-enter shadow-card', className)}>
       {/* Header */}
       <div className="px-6 py-4 border-b">
         <div className="flex items-center justify-between">
@@ -162,7 +151,9 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
             </div>
             <div>
               <h3 className="font-semibold text-foreground">ROAS Alerts</h3>
-              <p className="text-xs text-muted-foreground">{alerts.length} active alerts</p>
+              <p className="text-xs text-muted-foreground">
+                {alerts.length} active alerts
+              </p>
             </div>
           </div>
           <button
@@ -212,8 +203,8 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
           </div>
         ) : (
           filteredAlerts.map((alert, index) => {
-            const config = severityConfig[alert.severity] || severityConfig.medium;
-            const Icon = config.icon;
+            const config = severityConfig[alert.severity] || severityConfig.medium
+            const Icon = config.icon
 
             return (
               <div
@@ -240,7 +231,9 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
                     <p className="font-medium text-sm text-foreground truncate">
                       {alert.campaign_name}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {alert.message}
+                    </p>
                     {alert.recommendation && (
                       <div className="flex items-center gap-1 mt-2 text-xs text-primary">
                         <ArrowRight className="w-3 h-3" />
@@ -250,7 +243,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
                   </div>
                 </div>
               </div>
-            );
+            )
           })
         )}
       </div>
@@ -265,7 +258,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default ROASAlertsWidget;
+export default ROASAlertsWidget

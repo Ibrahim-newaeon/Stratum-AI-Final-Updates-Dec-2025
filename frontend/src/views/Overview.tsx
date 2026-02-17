@@ -12,62 +12,50 @@
  * - Full accessibility support
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useToast } from '@/components/ui/use-toast';
-import { motion } from 'framer-motion';
-import { listItem, staggerContainer } from '@/lib/animations';
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
-  AlertTriangle,
-  ArrowRight,
-  BarChart3,
-  Bell,
-  CheckCircle,
-  DollarSign,
-  Download,
-  Eye,
-  Info,
-  Keyboard,
-  Link2,
-  MousePointerClick,
   RefreshCw,
-  ShoppingCart,
-  Target,
+  Download,
+  Bell,
+  AlertTriangle,
+  CheckCircle,
+  Info,
   TrendingUp,
-  Users,
-  Zap,
-} from 'lucide-react';
-import { cn, formatCompactNumber, formatCurrency } from '@/lib/utils';
-import { KPICard } from '@/components/dashboard/KPICard';
-import { CampaignTable } from '@/components/dashboard/CampaignTable';
-import { FilterBar } from '@/components/dashboard/FilterBar';
-import { SimulateSlider } from '@/components/widgets/SimulateSlider';
-import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget';
-import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget';
-import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget';
+  DollarSign,
+  Target,
+  MousePointerClick,
+  Eye,
+  ShoppingCart,
+  BarChart3,
+  Keyboard,
+} from 'lucide-react'
+import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
+import { KPICard } from '@/components/dashboard/KPICard'
+import { CampaignTable } from '@/components/dashboard/CampaignTable'
+import { FilterBar } from '@/components/dashboard/FilterBar'
+import { SimulateSlider } from '@/components/widgets/SimulateSlider'
+import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget'
+import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget'
+import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget'
 import {
-  DailyTrendChart,
   PlatformPerformanceChart,
-  RegionalBreakdownChart,
   ROASByPlatformChart,
-} from '@/components/charts';
-import { AlertSkeleton, TableSkeleton } from '@/components/ui/Skeleton';
-import { NoFilterResultsState } from '@/components/ui/EmptyState';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+  DailyTrendChart,
+  RegionalBreakdownChart,
+} from '@/components/charts'
+import { KPICardSkeleton, TableSkeleton, AlertSkeleton } from '@/components/ui/Skeleton'
+import { NoFilterResultsState } from '@/components/ui/EmptyState'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import {
   Campaign,
-  DailyPerformance,
   DashboardFilters,
   KPIMetrics,
   PlatformSummary,
-} from '@/types/dashboard';
-import { useAnomalies, useCampaigns, useTenantOverview } from '@/api/hooks';
-import { ExportFormat, useExportDashboard } from '@/api/dashboard';
-import { useTenantStore } from '@/stores/tenantStore';
-import { useAuth } from '@/contexts/AuthContext';
-import { useDemoMode } from '@/hooks/useDemoMode';
-import { OnboardingDemoBanner } from '@/components/demo/OnboardingDemoBanner';
+  DailyPerformance,
+} from '@/types/dashboard'
+import { useCampaigns, useAnomalies, useTenantOverview } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
 // Mock data for demonstration
 const mockCampaigns: Campaign[] = [
@@ -161,54 +149,37 @@ const mockCampaigns: Campaign[] = [
     status: 'Active',
     start_date: '2024-11-15',
   },
-];
+  {
+    campaign_id: '6',
+    campaign_name: 'LinkedIn B2B Lead Gen',
+    platform: 'LinkedIn Ads',
+    region: 'United States',
+    campaign_type: 'Lead Generation',
+    spend: 9800,
+    revenue: 39200,
+    conversions: 196,
+    impressions: 420000,
+    clicks: 8400,
+    ctr: 2.0,
+    cpm: 23.33,
+    cpa: 50.0,
+    roas: 4.0,
+    status: 'Active',
+    start_date: '2024-10-20',
+  },
+]
 
 const mockPlatformSummary: PlatformSummary[] = [
-  {
-    platform: 'Meta Ads',
-    spend: 18100,
-    revenue: 67400,
-    conversions: 770,
-    roas: 3.72,
-    cpa: 23.51,
-    impressions: 1810000,
-    clicks: 36200,
-  },
-  {
-    platform: 'Google Ads',
-    spend: 8200,
-    revenue: 28700,
-    conversions: 287,
-    roas: 3.5,
-    cpa: 28.57,
-    impressions: 980000,
-    clicks: 19600,
-  },
-  {
-    platform: 'TikTok Ads',
-    spend: 15000,
-    revenue: 37500,
-    conversions: 500,
-    roas: 2.5,
-    cpa: 30.0,
-    impressions: 2500000,
-    clicks: 50000,
-  },
-  {
-    platform: 'Snapchat Ads',
-    spend: 4500,
-    revenue: 11250,
-    conversions: 150,
-    roas: 2.5,
-    cpa: 30.0,
-    impressions: 750000,
-    clicks: 15000,
-  },
-];
+  { platform: 'Meta Ads', spend: 18100, revenue: 67400, conversions: 770, roas: 3.72, cpa: 23.51, impressions: 1810000, clicks: 36200 },
+  { platform: 'Google Ads', spend: 8200, revenue: 28700, conversions: 287, roas: 3.5, cpa: 28.57, impressions: 980000, clicks: 19600 },
+  { platform: 'TikTok Ads', spend: 15000, revenue: 37500, conversions: 500, roas: 2.5, cpa: 30.0, impressions: 2500000, clicks: 50000 },
+  { platform: 'Snapchat Ads', spend: 4500, revenue: 11250, conversions: 150, roas: 2.5, cpa: 30.0, impressions: 750000, clicks: 15000 },
+  { platform: 'LinkedIn Ads', spend: 9800, revenue: 39200, conversions: 196, roas: 4.0, cpa: 50.0, impressions: 420000, clicks: 8400 },
+]
 
 const mockDailyPerformance: DailyPerformance[] = Array.from({ length: 30 }, (_, i) => {
-  const date = new Date();
-  date.setDate(date.getDate() - (29 - i));
+  const date = new Date()
+  date.setDate(date.getDate() - (29 - i))
   return {
     date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     spend: 1200 + Math.random() * 800 + i * 20,
@@ -219,8 +190,8 @@ const mockDailyPerformance: DailyPerformance[] = Array.from({ length: 30 }, (_, 
     cpa: 25 + Math.random() * 15,
     impressions: 120000 + Math.random() * 50000 + i * 2000,
     clicks: 2400 + Math.floor(Math.random() * 1000) + i * 40,
-  };
-});
+  }
+})
 
 const mockAlerts = [
   {
@@ -244,7 +215,7 @@ const mockAlerts = [
     message: 'AI detected underperforming keywords in 3 campaigns',
     time: '3 hours ago',
   },
-];
+]
 
 // Regional data for pie chart
 const regionalData = [
@@ -253,62 +224,22 @@ const regionalData = [
   { name: 'Qatar', value: 10 },
   { name: 'Kuwait', value: 8 },
   { name: 'Other', value: 7 },
-];
+]
 
 export function Overview() {
-  const { t } = useTranslation();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [showKeyboardHints, setShowKeyboardHints] = useState(false);
-
-  const { user } = useAuth();
-
-  // Welcome Hero: show only on the very first login, never again on re-login.
-  // Uses a user-specific localStorage key + login counter to survive browser resets.
-  const [showWelcome, setShowWelcome] = useState(() => {
-    // Legacy key — if already dismissed, respect it
-    if (localStorage.getItem('stratum_welcome_dismissed') === 'true') {
-      return false;
-    }
-    // User-specific key
-    const userId = user?.id || user?.email || 'default';
-    const dismissedKey = `stratum_welcome_dismissed_${userId}`;
-    if (localStorage.getItem(dismissedKey) === 'true') {
-      return false;
-    }
-    // Track login sessions — only show on first login (count === 0)
-    const loginCountKey = `stratum_login_count_${userId}`;
-    const loginCount = parseInt(localStorage.getItem(loginCountKey) || '0', 10);
-    localStorage.setItem(loginCountKey, (loginCount + 1).toString());
-    if (loginCount > 0) {
-      // Not the first login — auto-dismiss permanently
-      localStorage.setItem(dismissedKey, 'true');
-      return false;
-    }
-    return true;
-  });
+  const { t } = useTranslation()
+  const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [showKeyboardHints, setShowKeyboardHints] = useState(false)
 
   // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1;
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch data from API with fallback to mock data
-  const {
-    data: campaignsData,
-    isLoading: campaignsLoading,
-    refetch: refetchCampaigns,
-  } = useCampaigns();
-  const { data: overviewData } = useTenantOverview(tenantId);
-  const { data: _anomaliesData } = useAnomalies(tenantId);
-
-  // Demo mode: show mock data on first visit, real data after dismissal
-  const hasRealData = !!(campaignsData?.items && campaignsData.items.length > 0);
-  const { showDemoData, showDemoBanner, dismissDemo } = useDemoMode(hasRealData);
-
-  // Export mutation
-  const exportMutation = useExportDashboard();
+  const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns(tenantId)
+  const { data: overviewData } = useTenantOverview(tenantId)
+  const { data: anomaliesData } = useAnomalies(tenantId)
 
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -316,12 +247,12 @@ export function Overview() {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
       end: new Date(),
     },
-    platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads'],
+    platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads', 'LinkedIn Ads'],
     regions: ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq'],
     campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
-  });
+  })
 
-  // Use API campaigns, demo mock data for first-time users, or empty for returning users
+  // Use API campaigns or fall back to mock data
   const campaigns = useMemo(() => {
     if (campaignsData?.items && campaignsData.items.length > 0) {
       return campaignsData.items.map((c: any) => ({
@@ -341,18 +272,16 @@ export function Overview() {
         roas: c.roas || 0,
         status: c.status || 'Active',
         start_date: c.start_date || c.startDate || new Date().toISOString(),
-      })) as Campaign[];
+      })) as Campaign[]
     }
-    // First-time user: show demo data; returning user: show empty
-    return showDemoData ? mockCampaigns : [];
-  }, [campaignsData, showDemoData]);
+    return mockCampaigns
+  }, [campaignsData])
 
   // Memoized: Calculate KPI metrics from campaigns (API or mock)
   const kpis = useMemo((): KPIMetrics => {
     // Use API overview data if available
     if (overviewData?.kpis) {
-      // Cast to allow access to both snake_case and camelCase properties
-      const apiKpis = overviewData.kpis as Record<string, number | undefined>;
+      const apiKpis = overviewData.kpis
       return {
         totalSpend: apiKpis.total_spend ?? apiKpis.totalSpend ?? 0,
         totalRevenue: apiKpis.total_revenue ?? apiKpis.totalRevenue ?? 0,
@@ -367,21 +296,19 @@ export function Overview() {
         revenueDelta: apiKpis.revenueDelta ?? 23.4,
         roasDelta: apiKpis.roasDelta ?? 9.7,
         conversionsDelta: apiKpis.conversionsDelta ?? 21.5,
-      };
+      }
     }
 
     // Fall back to calculating from campaigns
-    const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0);
-    const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0);
-    const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0);
-    const overallROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-    const overallCPA = totalConversions > 0 ? totalSpend / totalConversions : 0;
-    const avgCTR =
-      campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length : 0;
-    const avgCPM =
-      campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.cpm, 0) / campaigns.length : 0;
-    const totalImpressions = campaigns.reduce((sum, c) => sum + c.impressions, 0);
-    const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0);
+    const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0)
+    const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0)
+    const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0)
+    const overallROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0
+    const overallCPA = totalConversions > 0 ? totalSpend / totalConversions : 0
+    const avgCTR = campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length : 0
+    const avgCPM = campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.cpm, 0) / campaigns.length : 0
+    const totalImpressions = campaigns.reduce((sum, c) => sum + c.impressions, 0)
+    const totalClicks = campaigns.reduce((sum, c) => sum + c.clicks, 0)
 
     return {
       totalSpend,
@@ -397,51 +324,41 @@ export function Overview() {
       revenueDelta: 23.4,
       roasDelta: 9.7,
       conversionsDelta: 21.5,
-    };
-  }, [campaigns, overviewData]);
+    }
+  }, [campaigns, overviewData])
 
   // Memoized: Filter campaigns based on current filters
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter((campaign) => {
       if (filters.platforms.length > 0 && !filters.platforms.includes(campaign.platform)) {
-        return false;
+        return false
       }
       if (filters.regions.length > 0 && !filters.regions.includes(campaign.region)) {
-        return false;
+        return false
       }
-      if (
-        filters.campaignTypes.length > 0 &&
-        !filters.campaignTypes.includes(campaign.campaign_type)
-      ) {
-        return false;
+      if (filters.campaignTypes.length > 0 && !filters.campaignTypes.includes(campaign.campaign_type)) {
+        return false
       }
-      return true;
-    });
-  }, [filters, campaigns]);
+      return true
+    })
+  }, [filters, campaigns])
 
   // Check if filters resulted in empty data
-  const hasNoFilterResults = filteredCampaigns.length === 0 && campaigns.length > 0;
+  const hasNoFilterResults = filteredCampaigns.length === 0 && campaigns.length > 0
 
   // Refresh data
   const handleRefresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      await refetchCampaigns();
-    } catch {
-      // API may be unavailable — that's OK, demo data still shows
-    }
-    setLastUpdated(new Date());
-    setLoading(false);
-    toast({
-      title: 'Dashboard refreshed',
-      description: `Data updated at ${new Date().toLocaleTimeString()}`,
-    });
-  }, [refetchCampaigns, toast]);
+    setLoading(true)
+    // Refetch API data
+    await refetchCampaigns()
+    setLastUpdated(new Date())
+    setLoading(false)
+  }, [refetchCampaigns])
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: Partial<DashboardFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  }, []);
+    setFilters((prev) => ({ ...prev, ...newFilters }))
+  }, [])
 
   // Clear all filters
   const handleClearFilters = useCallback(() => {
@@ -450,99 +367,79 @@ export function Overview() {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         end: new Date(),
       },
-      platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads'],
+      platforms: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads', 'LinkedIn Ads'],
       regions: ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq'],
       campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
-    });
-  }, []);
+    })
+  }, [])
 
   // Export handler
-  const handleExport = useCallback(
-    (format: ExportFormat = 'csv') => {
-      exportMutation.mutate({
-        format,
-        period: '30d',
-        include_campaigns: true,
-        include_metrics: true,
-        include_recommendations: true,
-      });
-    },
-    [exportMutation]
-  );
+  const handleExport = useCallback(() => {
+    // TODO: Implement export functionality
+    console.log('Exporting dashboard data...')
+  }, [])
 
   // KPI action handlers
   const handleViewDetails = useCallback((metric: string) => {
-    const metricRoutes: Record<string, string> = {
-      spend: '/dashboard/campaigns',
-      revenue: '/dashboard/campaigns',
-      roas: '/dashboard/campaigns',
-      conversions: '/dashboard/campaigns',
-      ctr: '/dashboard/campaigns',
-      impressions: '/dashboard/campaigns',
-    };
-    const route = metricRoutes[metric.toLowerCase()] || '/dashboard/campaigns';
-    navigate(route);
-  }, [navigate]);
+    console.log('View details for:', metric)
+  }, [])
 
   const handleSetAlert = useCallback((metric: string) => {
-    toast({
-      title: 'Alert configured',
-      description: `You'll be notified when ${metric} changes significantly.`,
-    });
-  }, [toast]);
+    console.log('Set alert for:', metric)
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger shortcuts when typing in inputs
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
+        return
       }
 
       switch (e.key.toLowerCase()) {
         case 'r':
           if (!e.ctrlKey && !e.metaKey) {
-            e.preventDefault();
-            handleRefresh();
+            e.preventDefault()
+            handleRefresh()
           }
-          break;
+          break
         case 'e':
           if (!e.ctrlKey && !e.metaKey) {
-            e.preventDefault();
-            handleExport('csv');
+            e.preventDefault()
+            handleExport()
           }
-          break;
+          break
         case '?':
-          e.preventDefault();
-          setShowKeyboardHints((prev) => !prev);
-          break;
+          e.preventDefault()
+          setShowKeyboardHints((prev) => !prev)
+          break
         case 'escape':
-          setShowKeyboardHints(false);
-          break;
+          setShowKeyboardHints(false)
+          break
       }
-    };
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleRefresh, handleExport]);
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleRefresh, handleExport])
 
   // Set initial loading based on API loading state
   useEffect(() => {
     if (!campaignsLoading) {
-      setInitialLoading(false);
+      setInitialLoading(false)
     }
-  }, [campaignsLoading]);
+  }, [campaignsLoading])
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
-    const interval = setInterval(handleRefresh, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [handleRefresh]);
+    const interval = setInterval(handleRefresh, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [handleRefresh])
 
   // Calculate active filter count
   const activeFilterCount =
     (filters.platforms.length < 4 ? 4 - filters.platforms.length : 0) +
-    (filters.regions.length < 6 ? 6 - filters.regions.length : 0);
+    (filters.regions.length < 6 ? 6 - filters.regions.length : 0)
 
   return (
     <div className="space-y-6">
@@ -579,97 +476,12 @@ export function Overview() {
         </div>
       )}
 
-      {/* Welcome Hero - for first-time users */}
-      {showWelcome && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-6 lg:p-8"
-        >
-          {/* Dismiss button */}
-          <button
-            onClick={() => {
-              setShowWelcome(false);
-              localStorage.setItem('stratum_welcome_dismissed', 'true');
-              // Also persist with user-specific key
-              const userId = user?.id || user?.email || 'default';
-              localStorage.setItem(`stratum_welcome_dismissed_${userId}`, 'true');
-            }}
-            className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-            title="Dismiss"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-            {/* Left: Welcome text */}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Getting Started</span>
-              </div>
-              <h2 className="text-xl lg:text-2xl font-bold mb-2">
-                Welcome{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! Your Revenue OS is ready.
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                Connect your ad platforms to unlock real-time ROAS tracking, AI-powered optimizations, and trust-gated automation. Below is sample data showing what your dashboard will look like.
-              </p>
-            </div>
-
-            {/* Right: Quick action cards */}
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:w-72">
-              <button
-                onClick={() => navigate('/dashboard/integrations')}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/20 transition-all group text-left"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors">
-                  <Link2 className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">Connect a Platform</p>
-                  <p className="text-xs text-muted-foreground">Meta, Google, TikTok, Snapchat</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-              </button>
-              <button
-                onClick={() => navigate('/dashboard/cdp')}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-card hover:bg-accent/50 border border-border/50 transition-all group text-left"
-              >
-                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-accent transition-colors">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">Explore CDP</p>
-                  <p className="text-xs text-muted-foreground">Profiles, segments, audiences</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-              </button>
-            </div>
-          </div>
-
-          {/* Sample data notice */}
-          <div className="mt-5 pt-4 border-t border-border/50 flex items-center gap-2">
-            <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              The data below is sample data for demonstration. Connect your platforms to see real metrics.
-            </p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Onboarding Demo Banner - shown to first-time users with demo data */}
-      {showDemoBanner && !showWelcome && (
-        <OnboardingDemoBanner onDismiss={dismissDemo} />
-      )}
-
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{t('overview.title')}</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+            {t('overview.title')}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Last updated: {lastUpdated.toLocaleString()} | Stratum AI
           </p>
@@ -706,22 +518,12 @@ export function Overview() {
           </button>
 
           <button
-            onClick={() => handleExport('csv')}
-            disabled={exportMutation.isPending}
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            onClick={handleExport}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             aria-label="Export dashboard (E)"
           >
-            {exportMutation.isPending ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                {t('common.export')}
-              </>
-            )}
+            <Download className="w-4 h-4 mr-2" />
+            {t('common.export')}
           </button>
         </div>
       </div>
@@ -730,165 +532,137 @@ export function Overview() {
       <FilterBar
         filters={filters}
         onChange={handleFilterChange}
-        platforms={['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads']}
+        platforms={['Meta Ads', 'Google Ads', 'TikTok Ads', 'Snapchat Ads', 'LinkedIn Ads']}
         regions={['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Jordan', 'Iraq']}
       />
 
       {/* Primary KPI Cards */}
-      <motion.div
-        className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={listItem} className="metric-card premium">
-          <KPICard
-            title="Total Spend"
-            value={formatCurrency(kpis.totalSpend)}
-            numericValue={kpis.totalSpend}
-            prefix="$"
-            delta={kpis.spendDelta}
-            deltaText="vs last period"
-            trend={kpis.spendDelta && kpis.spendDelta > 0 ? 'up' : 'down'}
-            icon={<DollarSign className="w-5 h-5" />}
-            loading={initialLoading}
-            onViewDetails={() => handleViewDetails('spend')}
-            onSetAlert={() => handleSetAlert('spend')}
-          />
-        </motion.div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <KPICard
+          title="Total Spend"
+          value={formatCurrency(kpis.totalSpend)}
+          numericValue={kpis.totalSpend}
+          prefix="$"
+          delta={kpis.spendDelta}
+          deltaText="vs last period"
+          trend={kpis.spendDelta && kpis.spendDelta > 0 ? 'up' : 'down'}
+          icon={<DollarSign className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('spend')}
+          onSetAlert={() => handleSetAlert('spend')}
+        />
 
-        <motion.div variants={listItem} className="metric-card success">
-          <KPICard
-            title="Total Revenue"
-            value={formatCurrency(kpis.totalRevenue)}
-            numericValue={kpis.totalRevenue}
-            prefix="$"
-            delta={kpis.revenueDelta}
-            deltaText="vs last period"
-            trend={kpis.revenueDelta && kpis.revenueDelta > 0 ? 'up' : 'down'}
-            trendIsGood={true}
-            icon={<TrendingUp className="w-5 h-5" />}
-            loading={initialLoading}
-            onViewDetails={() => handleViewDetails('revenue')}
-            onSetAlert={() => handleSetAlert('revenue')}
-          />
-        </motion.div>
+        <KPICard
+          title="Total Revenue"
+          value={formatCurrency(kpis.totalRevenue)}
+          numericValue={kpis.totalRevenue}
+          prefix="$"
+          delta={kpis.revenueDelta}
+          deltaText="vs last period"
+          trend={kpis.revenueDelta && kpis.revenueDelta > 0 ? 'up' : 'down'}
+          trendIsGood={true}
+          icon={<TrendingUp className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('revenue')}
+          onSetAlert={() => handleSetAlert('revenue')}
+        />
 
-        <motion.div variants={listItem} className="metric-card active">
-          <KPICard
-            title="ROAS"
-            value={`${kpis.overallROAS.toFixed(2)}x`}
-            numericValue={kpis.overallROAS}
-            suffix="x"
-            decimals={2}
-            delta={kpis.roasDelta}
-            deltaText="vs target"
-            trend={kpis.roasDelta && kpis.roasDelta > 0 ? 'up' : 'down'}
-            trendIsGood={true}
-            highlight={kpis.overallROAS >= 3.0}
-            icon={<Target className="w-5 h-5" />}
-            loading={initialLoading}
-            onViewDetails={() => handleViewDetails('roas')}
-            onSetAlert={() => handleSetAlert('roas')}
-          />
-        </motion.div>
+        <KPICard
+          title="ROAS"
+          value={`${kpis.overallROAS.toFixed(2)}x`}
+          numericValue={kpis.overallROAS}
+          suffix="x"
+          decimals={2}
+          delta={kpis.roasDelta}
+          deltaText="vs target"
+          trend={kpis.roasDelta && kpis.roasDelta > 0 ? 'up' : 'down'}
+          trendIsGood={true}
+          highlight={kpis.overallROAS >= 3.0}
+          icon={<Target className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('roas')}
+          onSetAlert={() => handleSetAlert('roas')}
+        />
 
-        <motion.div variants={listItem} className="metric-card warning">
-          <KPICard
-            title="Total Conversions"
-            value={kpis.totalConversions.toLocaleString('en-US')}
-            numericValue={kpis.totalConversions}
-            delta={kpis.conversionsDelta}
-            deltaText="vs last period"
-            trend={kpis.conversionsDelta && kpis.conversionsDelta > 0 ? 'up' : 'down'}
-            trendIsGood={true}
-            icon={<ShoppingCart className="w-5 h-5" />}
-            loading={initialLoading}
-            onViewDetails={() => handleViewDetails('conversions')}
-            onSetAlert={() => handleSetAlert('conversions')}
-          />
-        </motion.div>
-      </motion.div>
+        <KPICard
+          title="Total Conversions"
+          value={kpis.totalConversions.toLocaleString('en-US')}
+          numericValue={kpis.totalConversions}
+          delta={kpis.conversionsDelta}
+          deltaText="vs last period"
+          trend={kpis.conversionsDelta && kpis.conversionsDelta > 0 ? 'up' : 'down'}
+          trendIsGood={true}
+          icon={<ShoppingCart className="w-5 h-5" />}
+          loading={initialLoading}
+          onViewDetails={() => handleViewDetails('conversions')}
+          onSetAlert={() => handleSetAlert('conversions')}
+        />
+      </div>
 
       {/* Secondary KPI Cards */}
-      <motion.div
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={listItem} className="metric-card error">
-          <KPICard
-            title="CPA"
-            value={formatCurrency(kpis.overallCPA)}
-            numericValue={kpis.overallCPA}
-            prefix="$"
-            decimals={2}
-            size="small"
-            icon={<DollarSign className="w-4 h-4" />}
-            loading={initialLoading}
-          />
-        </motion.div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <KPICard
+          title="CPA"
+          value={formatCurrency(kpis.overallCPA)}
+          numericValue={kpis.overallCPA}
+          prefix="$"
+          decimals={2}
+          size="small"
+          icon={<DollarSign className="w-4 h-4" />}
+          loading={initialLoading}
+        />
 
-        <motion.div variants={listItem} className="metric-card success">
-          <KPICard
-            title="CTR"
-            value={`${kpis.avgCTR.toFixed(2)}%`}
-            numericValue={kpis.avgCTR}
-            suffix="%"
-            decimals={2}
-            size="small"
-            icon={<MousePointerClick className="w-4 h-4" />}
-            loading={initialLoading}
-          />
-        </motion.div>
+        <KPICard
+          title="CTR"
+          value={`${kpis.avgCTR.toFixed(2)}%`}
+          numericValue={kpis.avgCTR}
+          suffix="%"
+          decimals={2}
+          size="small"
+          icon={<MousePointerClick className="w-4 h-4" />}
+          loading={initialLoading}
+        />
 
-        <motion.div variants={listItem} className="metric-card premium">
-          <KPICard
-            title="CPM"
-            value={formatCurrency(kpis.avgCPM)}
-            numericValue={kpis.avgCPM}
-            prefix="$"
-            decimals={2}
-            size="small"
-            icon={<BarChart3 className="w-4 h-4" />}
-            loading={initialLoading}
-          />
-        </motion.div>
+        <KPICard
+          title="CPM"
+          value={formatCurrency(kpis.avgCPM)}
+          numericValue={kpis.avgCPM}
+          prefix="$"
+          decimals={2}
+          size="small"
+          icon={<BarChart3 className="w-4 h-4" />}
+          loading={initialLoading}
+        />
 
-        <motion.div variants={listItem} className="metric-card info">
-          <KPICard
-            title="Impressions"
-            value={formatCompactNumber(kpis.totalImpressions)}
-            numericValue={kpis.totalImpressions}
-            size="small"
-            icon={<Eye className="w-4 h-4" />}
-            loading={initialLoading}
-          />
-        </motion.div>
+        <KPICard
+          title="Impressions"
+          value={formatCompactNumber(kpis.totalImpressions)}
+          numericValue={kpis.totalImpressions}
+          size="small"
+          icon={<Eye className="w-4 h-4" />}
+          loading={initialLoading}
+        />
 
-        <motion.div variants={listItem} className="metric-card active">
-          <KPICard
-            title="Clicks"
-            value={formatCompactNumber(kpis.totalClicks)}
-            numericValue={kpis.totalClicks}
-            size="small"
-            icon={<MousePointerClick className="w-4 h-4" />}
-            loading={initialLoading}
-          />
-        </motion.div>
-      </motion.div>
+        <KPICard
+          title="Clicks"
+          value={formatCompactNumber(kpis.totalClicks)}
+          numericValue={kpis.totalClicks}
+          size="small"
+          icon={<MousePointerClick className="w-4 h-4" />}
+          loading={initialLoading}
+        />
+      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PlatformPerformanceChart
-          data={showDemoData ? mockPlatformSummary : []}
+          data={mockPlatformSummary}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
 
         <ROASByPlatformChart
-          data={showDemoData ? mockPlatformSummary : []}
+          data={mockPlatformSummary}
           loading={initialLoading}
           targetROAS={3.0}
           onRefresh={handleRefresh}
@@ -899,14 +673,14 @@ export function Overview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <DailyTrendChart
-            data={showDemoData ? mockDailyPerformance : []}
+            data={mockDailyPerformance}
             loading={initialLoading}
             onRefresh={handleRefresh}
           />
         </div>
 
         <RegionalBreakdownChart
-          data={showDemoData ? regionalData : []}
+          data={regionalData}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
@@ -919,8 +693,8 @@ export function Overview() {
           {initialLoading ? (
             <TableSkeleton rows={5} columns={7} />
           ) : hasNoFilterResults ? (
-            <div className="metric-card premium overflow-hidden">
-              <div className="px-6 py-4 border-b border-purple-500/20">
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
               </div>
               <NoFilterResultsState
@@ -929,15 +703,15 @@ export function Overview() {
               />
             </div>
           ) : (
-            <div className="metric-card premium overflow-hidden">
-              <div className="px-6 py-4 border-b border-purple-500/20">
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
               </div>
               <ErrorBoundary>
                 <CampaignTable
                   campaigns={filteredCampaigns}
                   onCampaignClick={(campaignId) => {
-                    navigate(`/dashboard/campaigns?id=${campaignId}`);
+                    console.log('Navigate to campaign:', campaignId)
                   }}
                 />
               </ErrorBoundary>
@@ -967,7 +741,7 @@ export function Overview() {
       </div>
 
       {/* Alerts Section */}
-      <div className="metric-card success p-6">
+      <div className="rounded-xl border bg-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Bell className="w-5 h-5" />
@@ -983,65 +757,37 @@ export function Overview() {
             ))}
           </div>
         ) : (
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-4"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {(showDemoData ? mockAlerts : []).map((alert) => (
-              <motion.div
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {mockAlerts.map((alert) => (
+              <div
                 key={alert.id}
-                variants={listItem}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
                 className={cn(
-                  'p-4 rounded-lg border-l-4 transition-colors cursor-pointer',
-                  alert.severity === 'warning' &&
-                    'bg-amber-500/10 border-amber-500 hover:bg-amber-500/15',
-                  alert.severity === 'good' &&
-                    'bg-green-500/10 border-green-500 hover:bg-green-500/15',
-                  alert.severity === 'critical' &&
-                    'bg-red-500/10 border-red-500 hover:bg-red-500/15'
+                  'p-4 rounded-lg border-l-4 transition-all hover:shadow-md cursor-pointer',
+                  alert.severity === 'warning' && 'bg-amber-500/10 border-amber-500 hover:bg-amber-500/15',
+                  alert.severity === 'good' && 'bg-green-500/10 border-green-500 hover:bg-green-500/15',
+                  alert.severity === 'critical' && 'bg-red-500/10 border-red-500 hover:bg-red-500/15'
                 )}
                 role="button"
                 tabIndex={0}
                 aria-label={`${alert.severity} alert: ${alert.title}`}
               >
                 <div className="flex items-start gap-3">
-                  {alert.severity === 'warning' && (
-                    <AlertTriangle
-                      className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                  )}
-                  {alert.severity === 'good' && (
-                    <CheckCircle
-                      className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                  )}
-                  {alert.severity === 'critical' && (
-                    <Info
-                      className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                  )}
+                  {alert.severity === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'good' && <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'critical' && <Info className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-foreground">{alert.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {alert.message}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{alert.message}</p>
                     <p className="text-xs text-muted-foreground mt-2">{alert.time}</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default Overview;
+export default Overview

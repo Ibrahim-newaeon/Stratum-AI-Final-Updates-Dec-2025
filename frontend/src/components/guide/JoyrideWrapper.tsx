@@ -1,135 +1,127 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import Joyride, { ACTIONS, CallBackProps, EVENTS, STATUS } from 'react-joyride';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
+import Joyride, { CallBackProps, STATUS, ACTIONS, EVENTS } from 'react-joyride'
 import {
-  getAllTours,
+  TourRole,
+  TourConfig,
   getTourByRole,
+  getAllTours,
   hasTourCompleted,
   markTourCompleted,
-  resetAllTours,
   resetTour,
-  TourConfig,
-  TourRole,
-} from './tours';
+  resetAllTours,
+} from './tours'
 
 interface JoyrideContextType {
-  startTour: (role?: TourRole) => void;
-  startTourById: (tourId: string) => void;
-  skipTour: () => void;
-  resetCurrentTour: () => void;
-  resetAllTours: () => void;
-  isRunning: boolean;
-  currentTour: TourConfig | null;
-  availableTours: TourConfig[];
-  completedTours: string[];
+  startTour: (role?: TourRole) => void
+  startTourById: (tourId: string) => void
+  skipTour: () => void
+  resetCurrentTour: () => void
+  resetAllTours: () => void
+  isRunning: boolean
+  currentTour: TourConfig | null
+  availableTours: TourConfig[]
+  completedTours: string[]
 }
 
-const JoyrideContext = createContext<JoyrideContextType | undefined>(undefined);
+const JoyrideContext = createContext<JoyrideContextType | undefined>(undefined)
 
 export function useJoyride() {
-  const context = useContext(JoyrideContext);
+  const context = useContext(JoyrideContext)
   if (!context) {
-    throw new Error('useJoyride must be used within a JoyrideProvider');
+    throw new Error('useJoyride must be used within a JoyrideProvider')
   }
-  return context;
+  return context
 }
 
 interface JoyrideProviderProps {
-  children: ReactNode;
-  userRole?: TourRole;
-  autoStart?: boolean;
+  children: ReactNode
+  userRole?: TourRole
+  autoStart?: boolean
 }
 
-export function JoyrideProvider({
-  children,
-  userRole = 'general',
-  autoStart = false,
-}: JoyrideProviderProps) {
-  const [run, setRun] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [currentTour, setCurrentTour] = useState<TourConfig | null>(null);
-  const [completedTours, setCompletedTours] = useState<string[]>([]);
+export function JoyrideProvider({ children, userRole = 'general', autoStart = false }: JoyrideProviderProps) {
+  const [run, setRun] = useState(false)
+  const [stepIndex, setStepIndex] = useState(0)
+  const [currentTour, setCurrentTour] = useState<TourConfig | null>(null)
+  const [completedTours, setCompletedTours] = useState<string[]>([])
 
   // Load completed tours from localStorage
   useEffect(() => {
-    const allTours = getAllTours();
-    const completed = allTours.filter((tour) => hasTourCompleted(tour.id)).map((tour) => tour.id);
-    setCompletedTours(completed);
-  }, []);
+    const allTours = getAllTours()
+    const completed = allTours
+      .filter(tour => hasTourCompleted(tour.id))
+      .map(tour => tour.id)
+    setCompletedTours(completed)
+  }, [])
 
   // Auto-start tour for new users
   useEffect(() => {
     if (autoStart && userRole) {
-      const tour = getTourByRole(userRole);
+      const tour = getTourByRole(userRole)
       if (!hasTourCompleted(tour.id)) {
         const timer = setTimeout(() => {
-          setCurrentTour(tour);
-          setStepIndex(0);
-          setRun(true);
-        }, 1500);
-        return () => clearTimeout(timer);
+          setCurrentTour(tour)
+          setStepIndex(0)
+          setRun(true)
+        }, 1500)
+        return () => clearTimeout(timer)
       }
     }
-  }, [autoStart, userRole]);
+  }, [autoStart, userRole])
 
-  const handleJoyrideCallback = useCallback(
-    (data: CallBackProps) => {
-      const { action, index, status, type } = data;
+  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+    const { action, index, status, type } = data
 
-      if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type as typeof EVENTS.STEP_AFTER)) {
-        setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type as typeof EVENTS.STEP_AFTER)) {
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1))
+    }
+
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as typeof STATUS.FINISHED)) {
+      setRun(false)
+      setStepIndex(0)
+      if (currentTour) {
+        markTourCompleted(currentTour.id)
+        setCompletedTours(prev => [...prev, currentTour.id])
       }
+    }
+  }, [currentTour])
 
-      if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as typeof STATUS.FINISHED)) {
-        setRun(false);
-        setStepIndex(0);
-        if (currentTour) {
-          markTourCompleted(currentTour.id);
-          setCompletedTours((prev) => [...prev, currentTour.id]);
-        }
-      }
-    },
-    [currentTour]
-  );
-
-  const startTour = useCallback(
-    (role: TourRole = userRole) => {
-      const tour = getTourByRole(role);
-      setCurrentTour(tour);
-      setStepIndex(0);
-      setRun(true);
-    },
-    [userRole]
-  );
+  const startTour = useCallback((role: TourRole = userRole) => {
+    const tour = getTourByRole(role)
+    setCurrentTour(tour)
+    setStepIndex(0)
+    setRun(true)
+  }, [userRole])
 
   const startTourById = useCallback((tourId: string) => {
-    const tour = getAllTours().find((t) => t.id === tourId);
+    const tour = getAllTours().find(t => t.id === tourId)
     if (tour) {
-      setCurrentTour(tour);
-      setStepIndex(0);
-      setRun(true);
+      setCurrentTour(tour)
+      setStepIndex(0)
+      setRun(true)
     }
-  }, []);
+  }, [])
 
   const skipTour = useCallback(() => {
-    setRun(false);
-    setStepIndex(0);
+    setRun(false)
+    setStepIndex(0)
     if (currentTour) {
-      markTourCompleted(currentTour.id);
-      setCompletedTours((prev) => [...prev, currentTour.id]);
+      markTourCompleted(currentTour.id)
+      setCompletedTours(prev => [...prev, currentTour.id])
     }
-  }, [currentTour]);
+  }, [currentTour])
 
   const resetCurrentTour = useCallback(() => {
     if (currentTour) {
-      resetTour(currentTour.id);
-      setCompletedTours((prev) => prev.filter((id) => id !== currentTour.id));
+      resetTour(currentTour.id)
+      setCompletedTours(prev => prev.filter(id => id !== currentTour.id))
     }
-  }, [currentTour]);
+  }, [currentTour])
 
   const handleResetAllTours = useCallback(() => {
-    resetAllTours();
-    setCompletedTours([]);
-  }, []);
+    resetAllTours()
+    setCompletedTours([])
+  }, [])
 
   return (
     <JoyrideContext.Provider
@@ -214,7 +206,7 @@ export function JoyrideProvider({
         />
       )}
     </JoyrideContext.Provider>
-  );
+  )
 }
 
-export default JoyrideProvider;
+export default JoyrideProvider

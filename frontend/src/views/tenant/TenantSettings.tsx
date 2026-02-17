@@ -4,24 +4,24 @@
  * Configuration settings for the current tenant.
  */
 
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useTenantStore } from '@/stores/tenantStore';
-import { useTestSlackWebhook, useUpdateTenantSettings } from '@/api/hooks';
-import { useToast } from '@/components/ui/use-toast';
+import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useTenantStore } from '@/stores/tenantStore'
+import { useUpdateTenantSettings } from '@/api/hooks'
+import { useToast } from '@/components/ui/use-toast'
 import {
-  BellIcon,
   CogIcon,
-  CurrencyDollarIcon,
+  BellIcon,
   ShieldCheckIcon,
+  CurrencyDollarIcon,
   UserGroupIcon,
-} from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+} from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils'
 
 interface SettingsSection {
-  id: string;
-  name: string;
-  icon: React.ComponentType<{ className?: string }>;
+  id: string
+  name: string
+  icon: React.ComponentType<{ className?: string }>
 }
 
 const sections: SettingsSection[] = [
@@ -30,14 +30,14 @@ const sections: SettingsSection[] = [
   { id: 'notifications', name: 'Notifications', icon: BellIcon },
   { id: 'permissions', name: 'Permissions', icon: ShieldCheckIcon },
   { id: 'team', name: 'Team Access', icon: UserGroupIcon },
-];
+]
 
 export default function TenantSettings() {
-  const { tenantId } = useParams<{ tenantId: string }>();
-  const navigate = useNavigate();
-  const { tenant } = useTenantStore();
-  const { toast } = useToast();
-  const [activeSection, setActiveSection] = useState('general');
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const navigate = useNavigate()
+  const { tenant } = useTenantStore()
+  const { toast } = useToast()
+  const [activeSection, setActiveSection] = useState('general')
   const [settings, setSettings] = useState({
     name: tenant?.name || '',
     timezone: 'Asia/Riyadh',
@@ -49,38 +49,10 @@ export default function TenantSettings() {
     slackNotifications: false,
     slackWebhook: '',
     approvalRequired: true,
-  });
+  })
 
-  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0;
-  const updateSettingsMutation = useUpdateTenantSettings(tenantIdNum);
-  const testSlackMutation = useTestSlackWebhook();
-
-  const handleTestSlack = async () => {
-    if (!settings.slackWebhook) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a Slack webhook URL first',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      await testSlackMutation.mutateAsync({
-        webhookUrl: settings.slackWebhook,
-      });
-      toast({
-        title: 'Success',
-        description: 'Test message sent to Slack successfully!',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to send test message',
-        variant: 'destructive',
-      });
-    }
-  };
+  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
+  const updateSettingsMutation = useUpdateTenantSettings(tenantIdNum)
 
   const handleSave = async () => {
     if (!tenantIdNum) {
@@ -88,8 +60,8 @@ export default function TenantSettings() {
         title: 'Error',
         description: 'Invalid tenant ID',
         variant: 'destructive',
-      });
-      return;
+      })
+      return
     }
 
     try {
@@ -98,19 +70,19 @@ export default function TenantSettings() {
         currency: settings.currency,
         email_notifications: settings.emailNotifications,
         slack_notifications: settings.slackNotifications,
-      });
+      })
       toast({
         title: 'Success',
         description: 'Settings saved successfully',
-      });
+      })
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to save settings',
         variant: 'destructive',
-      });
+      })
     }
-  };
+  }
 
   const renderContent = () => {
     switch (activeSection) {
@@ -153,7 +125,7 @@ export default function TenantSettings() {
               </select>
             </div>
           </div>
-        );
+        )
 
       case 'budget':
         return (
@@ -165,9 +137,7 @@ export default function TenantSettings() {
               <input
                 type="number"
                 value={settings.maxDailyBudget}
-                onChange={(e) =>
-                  setSettings({ ...settings, maxDailyBudget: Number(e.target.value) })
-                }
+                onChange={(e) => setSettings({ ...settings, maxDailyBudget: Number(e.target.value) })}
                 className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -181,9 +151,7 @@ export default function TenantSettings() {
               <input
                 type="number"
                 value={settings.requireApprovalOver}
-                onChange={(e) =>
-                  setSettings({ ...settings, requireApprovalOver: Number(e.target.value) })
-                }
+                onChange={(e) => setSettings({ ...settings, requireApprovalOver: Number(e.target.value) })}
                 className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -213,7 +181,7 @@ export default function TenantSettings() {
               </button>
             </div>
           </div>
-        );
+        )
 
       case 'notifications':
         return (
@@ -226,9 +194,7 @@ export default function TenantSettings() {
                 </p>
               </div>
               <button
-                onClick={() =>
-                  setSettings({ ...settings, emailNotifications: !settings.emailNotifications })
-                }
+                onClick={() => setSettings({ ...settings, emailNotifications: !settings.emailNotifications })}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
                   settings.emailNotifications ? 'bg-primary' : 'bg-muted'
@@ -245,12 +211,12 @@ export default function TenantSettings() {
             <div className="flex items-center justify-between p-4 rounded-lg border">
               <div>
                 <p className="font-medium">Slack Notifications</p>
-                <p className="text-sm text-muted-foreground">Send alerts to a Slack channel</p>
+                <p className="text-sm text-muted-foreground">
+                  Send alerts to a Slack channel
+                </p>
               </div>
               <button
-                onClick={() =>
-                  setSettings({ ...settings, slackNotifications: !settings.slackNotifications })
-                }
+                onClick={() => setSettings({ ...settings, slackNotifications: !settings.slackNotifications })}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
                   settings.slackNotifications ? 'bg-primary' : 'bg-muted'
@@ -265,34 +231,19 @@ export default function TenantSettings() {
               </button>
             </div>
             {settings.slackNotifications && (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Slack Webhook URL</label>
-                  <input
-                    type="text"
-                    value={settings.slackWebhook}
-                    onChange={(e) => setSettings({ ...settings, slackWebhook: e.target.value })}
-                    placeholder="https://hooks.slack.com/services/..."
-                    className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleTestSlack}
-                  disabled={testSlackMutation.isPending || !settings.slackWebhook}
-                  className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    settings.slackWebhook
-                      ? 'bg-green-600 text-white hover:bg-green-700'
-                      : 'bg-muted text-muted-foreground cursor-not-allowed'
-                  )}
-                >
-                  {testSlackMutation.isPending ? 'Sending...' : 'Test Connection'}
-                </button>
+              <div>
+                <label className="block text-sm font-medium mb-2">Slack Webhook URL</label>
+                <input
+                  type="text"
+                  value={settings.slackWebhook}
+                  onChange={(e) => setSettings({ ...settings, slackWebhook: e.target.value })}
+                  placeholder="https://hooks.slack.com/services/..."
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
               </div>
             )}
           </div>
-        );
+        )
 
       case 'permissions':
         return (
@@ -305,9 +256,7 @@ export default function TenantSettings() {
                 </p>
               </div>
               <button
-                onClick={() =>
-                  setSettings({ ...settings, approvalRequired: !settings.approvalRequired })
-                }
+                onClick={() => setSettings({ ...settings, approvalRequired: !settings.approvalRequired })}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
                   settings.approvalRequired ? 'bg-primary' : 'bg-muted'
@@ -323,12 +272,11 @@ export default function TenantSettings() {
             </div>
             <div className="p-4 rounded-lg bg-muted/50">
               <p className="text-sm text-muted-foreground">
-                Additional permission settings can be configured in the main dashboard under
-                Settings &rarr; Permissions.
+                Additional permission settings can be configured in the main dashboard under Settings &rarr; Permissions.
               </p>
             </div>
           </div>
-        );
+        )
 
       case 'team':
         return (
@@ -347,12 +295,12 @@ export default function TenantSettings() {
               </button>
             </div>
           </div>
-        );
+        )
 
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -369,7 +317,7 @@ export default function TenantSettings() {
         {/* Sidebar */}
         <div className="md:w-64 space-y-1">
           {sections.map((section) => {
-            const Icon = section.icon;
+            const Icon = section.icon
             return (
               <button
                 key={section.id}
@@ -384,7 +332,7 @@ export default function TenantSettings() {
                 <Icon className="h-5 w-5" />
                 {section.name}
               </button>
-            );
+            )
           })}
         </div>
 
@@ -392,7 +340,7 @@ export default function TenantSettings() {
         <div className="flex-1">
           <div className="rounded-xl border bg-card p-6 shadow-card">
             <h2 className="text-lg font-semibold mb-6">
-              {sections.find((s) => s.id === activeSection)?.name}
+              {sections.find(s => s.id === activeSection)?.name}
             </h2>
             {renderContent()}
           </div>
@@ -415,5 +363,5 @@ export default function TenantSettings() {
         </div>
       </div>
     </div>
-  );
+  )
 }

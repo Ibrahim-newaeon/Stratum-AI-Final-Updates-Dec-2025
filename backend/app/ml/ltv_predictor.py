@@ -12,13 +12,12 @@ Provides:
 - Budget optimization based on predicted LTV
 """
 
-import statistics
-from dataclasses import dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
-
+import json
 import numpy as np
 import pandas as pd
 
@@ -28,11 +27,10 @@ logger = get_logger(__name__)
 
 # Try to import ML libraries
 try:
-    import joblib
-    from sklearn.ensemble import GradientBoostingRegressor
-    from sklearn.model_selection import train_test_split
+    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
     from sklearn.preprocessing import StandardScaler
-
+    from sklearn.model_selection import train_test_split
+    import joblib
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
@@ -41,7 +39,6 @@ except ImportError:
 
 class CustomerSegment(str, Enum):
     """Customer value segments."""
-
     VIP = "vip"  # Top 5%
     HIGH_VALUE = "high_value"  # Top 25%
     MEDIUM_VALUE = "medium_value"  # 25-75%
@@ -51,7 +48,6 @@ class CustomerSegment(str, Enum):
 
 class LTVTimeframe(str, Enum):
     """LTV prediction timeframes."""
-
     DAYS_30 = "30_day"
     DAYS_90 = "90_day"
     DAYS_180 = "180_day"
@@ -62,7 +58,6 @@ class LTVTimeframe(str, Enum):
 @dataclass
 class CustomerBehavior:
     """Early customer behavior for LTV prediction."""
-
     customer_id: str
     acquisition_date: datetime
     acquisition_channel: str
@@ -95,7 +90,6 @@ class CustomerBehavior:
 @dataclass
 class LTVPrediction:
     """LTV prediction result."""
-
     customer_id: str
     predicted_ltv_30d: float
     predicted_ltv_90d: float
@@ -118,7 +112,6 @@ class LTVPrediction:
 @dataclass
 class CohortAnalysis:
     """LTV analysis by cohort."""
-
     cohort_month: str
     customers: int
     total_revenue: float
@@ -127,7 +120,7 @@ class CohortAnalysis:
     ltv_p90: float
     avg_orders: float
     avg_retention_days: float
-    segment_distribution: dict[str, int]
+    segment_distribution: Dict[str, int]
 
 
 class LTVPredictor:
@@ -156,7 +149,7 @@ class LTVPredictor:
         self.models_path = Path(models_path)
         self.model = None
         self.scaler = None
-        self.feature_names: list[str] = []
+        self.feature_names: List[str] = []
 
         # LTV multipliers by timeframe (based on typical retention curves)
         self.ltv_multipliers = {
@@ -310,7 +303,9 @@ class LTVPredictor:
             engagement_score += 0.1
 
         # Channel quality
-        channel_multiplier = self.channel_quality.get(behavior.acquisition_channel.lower(), 1.0)
+        channel_multiplier = self.channel_quality.get(
+            behavior.acquisition_channel.lower(), 1.0
+        )
 
         # Historical behavior (if available)
         historical_multiplier = 1.0
@@ -328,7 +323,11 @@ class LTVPredictor:
 
         # Calculate 30-day LTV
         ltv_30d = (
-            base_ltv * engagement_score * channel_multiplier * historical_multiplier * aov_factor
+            base_ltv
+            * engagement_score
+            * channel_multiplier
+            * historical_multiplier
+            * aov_factor
         )
 
         return max(0, ltv_30d)
@@ -340,9 +339,9 @@ class LTVPredictor:
 
         # Engagement factor
         engagement = (
-            behavior.sessions_first_week * 0.1
-            + behavior.email_opens_first_week * 0.15
-            + behavior.email_clicks_first_week * 0.2
+            behavior.sessions_first_week * 0.1 +
+            behavior.email_opens_first_week * 0.15 +
+            behavior.email_clicks_first_week * 0.2
         )
 
         # Quick conversion bonus
@@ -354,9 +353,9 @@ class LTVPredictor:
 
         # Predict annual orders
         predicted_annual = (
-            current_orders
-            + (engagement * conversion_factor * 2)
-            + (current_orders * 0.5)  # Repeat rate estimate
+            current_orders +
+            (engagement * conversion_factor * 2) +
+            (current_orders * 0.5)  # Repeat rate estimate
         )
 
         return min(predicted_annual, 24)  # Cap at 2 orders/month
@@ -425,8 +424,8 @@ class LTVPredictor:
 
     def segment_customers(
         self,
-        customers: list[CustomerBehavior],
-    ) -> dict[str, Any]:
+        customers: List[CustomerBehavior],
+    ) -> Dict[str, Any]:
         """
         Segment customers by predicted LTV.
 
@@ -472,7 +471,7 @@ class LTVPredictor:
         predicted_ltv: float,
         target_ratio: float = 3.0,
         margin_percent: float = 30.0,
-    ) -> dict[str, float]:
+    ) -> Dict[str, float]:
         """
         Calculate maximum allowable CAC based on LTV.
 
@@ -502,15 +501,15 @@ class LTVPredictor:
 
     def analyze_cohort(
         self,
-        customers: list[CustomerBehavior],
-    ) -> list[CohortAnalysis]:
+        customers: List[CustomerBehavior],
+    ) -> List[CohortAnalysis]:
         """
         Analyze LTV by acquisition cohort.
 
         Groups customers by acquisition month and calculates LTV metrics.
         """
         # Group by cohort month
-        cohorts: dict[str, list[CustomerBehavior]] = {}
+        cohorts: Dict[str, List[CustomerBehavior]] = {}
 
         for customer in customers:
             cohort_key = customer.acquisition_date.strftime("%Y-%m")
@@ -531,31 +530,27 @@ class LTVPredictor:
             for seg in CustomerSegment:
                 segment_dist[seg.value] = sum(1 for s in segments if s == seg)
 
-            analyses.append(
-                CohortAnalysis(
-                    cohort_month=cohort_month,
-                    customers=len(cohort_customers),
-                    total_revenue=sum(c.total_revenue for c in cohort_customers),
-                    avg_ltv=round(sum(ltv_values) / len(ltv_values), 2),
-                    median_ltv=round(sorted(ltv_values)[len(ltv_values) // 2], 2),
-                    ltv_p90=round(sorted(ltv_values)[int(len(ltv_values) * 0.9)], 2)
-                    if len(ltv_values) > 1
-                    else ltv_values[0],
-                    avg_orders=round(
-                        sum(c.total_orders for c in cohort_customers) / len(cohort_customers), 1
-                    ),
-                    avg_retention_days=round(
-                        sum((datetime.now(UTC) - c.acquisition_date).days for c in cohort_customers)
-                        / len(cohort_customers),
-                        0,
-                    ),
-                    segment_distribution=segment_dist,
-                )
-            )
+            analyses.append(CohortAnalysis(
+                cohort_month=cohort_month,
+                customers=len(cohort_customers),
+                total_revenue=sum(c.total_revenue for c in cohort_customers),
+                avg_ltv=round(sum(ltv_values) / len(ltv_values), 2),
+                median_ltv=round(sorted(ltv_values)[len(ltv_values) // 2], 2),
+                ltv_p90=round(sorted(ltv_values)[int(len(ltv_values) * 0.9)], 2) if len(ltv_values) > 1 else ltv_values[0],
+                avg_orders=round(sum(c.total_orders for c in cohort_customers) / len(cohort_customers), 1),
+                avg_retention_days=round(
+                    sum(
+                        (datetime.now(timezone.utc) - c.acquisition_date).days
+                        for c in cohort_customers
+                    ) / len(cohort_customers),
+                    0
+                ),
+                segment_distribution=segment_dist,
+            ))
 
         return analyses
 
-    def train(self, training_data: pd.DataFrame) -> dict[str, float]:
+    def train(self, training_data: pd.DataFrame) -> Dict[str, float]:
         """
         Train the LTV prediction model.
 
@@ -591,7 +586,9 @@ class LTVPredictor:
         y = training_data["actual_ltv_365d"].values
 
         # Train-test split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         # Scale features
         self.scaler = StandardScaler()
@@ -636,7 +633,6 @@ ltv_predictor = LTVPredictor()
 # Convenience Functions
 # =============================================================================
 
-
 def predict_customer_ltv(
     customer_id: str,
     first_order_value: float,
@@ -645,7 +641,7 @@ def predict_customer_ltv(
     days_to_first_purchase: int = 0,
     sessions_first_week: int = 1,
     **kwargs,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Predict LTV for a customer.
 
@@ -654,7 +650,7 @@ def predict_customer_ltv(
     """
     behavior = CustomerBehavior(
         customer_id=customer_id,
-        acquisition_date=datetime.now(UTC),
+        acquisition_date=datetime.now(timezone.utc),
         acquisition_channel=acquisition_channel,
         first_order_value=first_order_value,
         first_order_items=first_order_items,
@@ -700,11 +696,9 @@ def get_ltv_based_max_cac(
 # Advanced LTV Features (P2 Enhancement)
 # =============================================================================
 
-
 @dataclass
 class SurvivalPrediction:
     """Customer survival (retention) prediction."""
-
     customer_id: str
     survival_probability_30d: float
     survival_probability_90d: float
@@ -712,30 +706,28 @@ class SurvivalPrediction:
     survival_probability_365d: float
     median_lifetime_days: int
     risk_level: str  # low, medium, high
-    factors: list[str]
+    factors: List[str]
 
 
 @dataclass
 class LTVConfidenceInterval:
     """LTV prediction with uncertainty quantification."""
-
     point_estimate: float
     lower_bound_90: float
     upper_bound_90: float
     lower_bound_95: float
     upper_bound_95: float
     confidence_level: float
-    uncertainty_factors: list[str]
+    uncertainty_factors: List[str]
 
 
 @dataclass
 class CohortLTVTrajectory:
     """LTV trajectory for a customer cohort."""
-
     cohort_id: str
     acquisition_period: str
     customer_count: int
-    ltv_by_month: dict[int, float]  # month -> cumulative LTV
+    ltv_by_month: Dict[int, float]  # month -> cumulative LTV
     projected_ltv: float
     actual_vs_projected: Optional[float]
 
@@ -757,7 +749,7 @@ class ParetoNBDModel:
         self.s = 0.5  # Shape parameter for dropout
         self.beta = 10.0  # Scale parameter for dropout
 
-    def fit(self, transactions: list[dict[str, Any]]):
+    def fit(self, transactions: List[Dict[str, Any]]):
         """Fit model parameters from transaction data."""
         # In production, this would use MLE or MCMC
         # Simplified: adjust parameters based on data characteristics
@@ -845,20 +837,20 @@ class SurvivalAnalyzer:
     """
 
     def __init__(self):
-        self._survival_curves: dict[str, list[tuple[int, float]]] = {}
+        self._survival_curves: Dict[str, List[Tuple[int, float]]] = {}
 
     def build_survival_curve(
         self,
         segment: str,
-        customer_lifetimes: list[int],  # Days until churn (or censored)
-        is_churned: list[bool],
+        customer_lifetimes: List[int],  # Days until churn (or censored)
+        is_churned: List[bool],
     ):
         """Build survival curve from historical data."""
         if len(customer_lifetimes) != len(is_churned):
             return
 
         # Sort by lifetime
-        data = sorted(zip(customer_lifetimes, is_churned, strict=False))
+        data = sorted(zip(customer_lifetimes, is_churned))
 
         n = len(data)
         at_risk = n
@@ -903,7 +895,7 @@ class SurvivalAnalyzer:
                 if day >= days_from_now:
                     if i == 0:
                         return prob
-                    prev_day, prev_prob = curve[i - 1]
+                    prev_day, prev_prob = curve[i-1]
                     # Linear interpolation
                     ratio = (days_from_now - prev_day) / max(1, day - prev_day)
                     return prev_prob - ratio * (prev_prob - prob)
@@ -959,7 +951,7 @@ class LTVUncertaintyQuantifier:
     """
 
     def __init__(self):
-        self._prediction_errors: list[float] = []
+        self._prediction_errors: List[float] = []
 
     def record_prediction_error(self, predicted: float, actual: float):
         """Record prediction error for calibration."""
@@ -1036,13 +1028,13 @@ class CohortLTVTracker:
     """
 
     def __init__(self):
-        self._cohort_data: dict[str, dict[int, list[float]]] = {}
+        self._cohort_data: Dict[str, Dict[int, List[float]]] = {}
 
     def record_cohort_ltv(
         self,
         cohort_id: str,
         month_number: int,
-        ltv_values: list[float],
+        ltv_values: List[float],
     ):
         """Record LTV values for a cohort at a specific month."""
         if cohort_id not in self._cohort_data:
@@ -1080,7 +1072,7 @@ class CohortLTVTracker:
             months = sorted(ltv_by_month.keys())
             recent_growth = []
             for i in range(1, min(4, len(months))):
-                m1, m2 = months[i - 1], months[i]
+                m1, m2 = months[i-1], months[i]
                 if ltv_by_month[m1] > 0:
                     growth = (ltv_by_month[m2] - ltv_by_month[m1]) / ltv_by_month[m1]
                     recent_growth.append(growth)
@@ -1103,9 +1095,9 @@ class CohortLTVTracker:
 
     def compare_cohorts(
         self,
-        cohort_ids: list[str],
+        cohort_ids: List[str],
         at_month: int = 6,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Compare LTV across cohorts at a specific month."""
         comparison = {}
 
@@ -1128,8 +1120,7 @@ class CohortLTVTracker:
                 "cohorts": comparison,
                 "best_performer": best_cohort,
                 "worst_performer": worst_cohort,
-                "ltv_range": comparison[best_cohort]["avg_ltv"]
-                - comparison[worst_cohort]["avg_ltv"],
+                "ltv_range": comparison[best_cohort]["avg_ltv"] - comparison[worst_cohort]["avg_ltv"],
             }
 
         return {"month": at_month, "cohorts": {}, "message": "No data available"}

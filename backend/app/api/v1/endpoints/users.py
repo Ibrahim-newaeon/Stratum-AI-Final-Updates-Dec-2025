@@ -5,44 +5,33 @@
 User profile and management endpoints.
 """
 
-import secrets
-from datetime import UTC, datetime
-from typing import Optional
+from typing import List, Optional
+from datetime import datetime, timezone
 
-import redis.asyncio as redis
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.security import decrypt_pii, encrypt_pii, get_password_hash, hash_pii_for_lookup
 from app.db.session import get_async_session
-from app.models import Tenant, User, UserRole
+from app.models import User, UserRole
 from app.schemas import APIResponse, UserProfileResponse, UserResponse, UserUpdate
-from app.services.email_service import get_email_service
-
-# Redis key prefix for invite tokens
-INVITE_TOKEN_PREFIX = "user_invite:"
-INVITE_TOKEN_EXPIRY = 7 * 24 * 3600  # 7 days
 
 
 class InviteUserRequest(BaseModel):
     """Request schema for inviting a new user."""
-
     email: EmailStr
     full_name: Optional[str] = None
-    role: str = Field(default="analyst", description="User role: admin, manager, analyst, viewer")
+    role: str = Field(default="user", description="User role: admin, manager, user")
 
 
 class UpdateUserRequest(BaseModel):
     """Request schema for admin updating a user."""
-
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
-
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -124,9 +113,9 @@ async def update_current_user(
     update_dict = update_data.model_dump(exclude_unset=True)
 
     # Encrypt PII fields
-    if update_dict.get("full_name"):
+    if "full_name" in update_dict and update_dict["full_name"]:
         update_dict["full_name"] = encrypt_pii(update_dict["full_name"])
-    if update_dict.get("phone"):
+    if "phone" in update_dict and update_dict["phone"]:
         update_dict["phone"] = encrypt_pii(update_dict["phone"])
 
     for field, value in update_dict.items():
@@ -161,7 +150,7 @@ async def update_current_user(
     )
 
 
-@router.get("", response_model=APIResponse[list[UserResponse]])
+@router.get("", response_model=APIResponse[List[UserResponse]])
 async def list_users(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -209,17 +198,14 @@ async def list_users(
 async def invite_user(
     request: Request,
     invite_data: InviteUserRequest,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
     Invite a new user to the tenant.
     Requires admin role.
-    Sends an invite email with a link to set up their account.
     """
     tenant_id = getattr(request.state, "tenant_id", None)
     requester_role = getattr(request.state, "role", None)
-    requester_user_id = getattr(request.state, "user_id", None)
 
     # Only admins can invite users
     if requester_role not in ["admin", "superadmin"]:
@@ -242,29 +228,16 @@ async def invite_user(
             detail="User with this email already exists",
         )
 
-    # Get tenant name for invite email
-    tenant_result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
-    tenant = tenant_result.scalar_one_or_none()
-    tenant_name = tenant.name if tenant else "Stratum AI"
-
-    # Get inviter's name
-    inviter_name = "An administrator"
-    if requester_user_id:
-        inviter_result = await db.execute(select(User).where(User.id == requester_user_id))
-        inviter = inviter_result.scalar_one_or_none()
-        if inviter and inviter.full_name:
-            inviter_name = decrypt_pii(inviter.full_name)
-
     # Map role string to enum
     role_map = {
         "admin": UserRole.ADMIN,
         "manager": UserRole.MANAGER,
-        "analyst": UserRole.ANALYST,
-        "viewer": UserRole.VIEWER,
+        "user": UserRole.USER,
     }
-    user_role = role_map.get(invite_data.role.lower(), UserRole.ANALYST)
+    user_role = role_map.get(invite_data.role.lower(), UserRole.USER)
 
     # Create user with temporary password (will need to set password on first login)
+    import secrets
     temp_password = secrets.token_urlsafe(16)
 
     user = User(
@@ -282,34 +255,7 @@ async def invite_user(
     await db.commit()
     await db.refresh(user)
 
-    # Generate invite token and store in Redis
-    invite_token = secrets.token_urlsafe(32)
-    try:
-        redis_client = redis.from_url(settings.redis_url, decode_responses=True)
-        token_key = f"{INVITE_TOKEN_PREFIX}{invite_token}"
-        token_data = f"{user.id}:{tenant_id}:{invite_data.email.lower()}"
-        await redis_client.setex(token_key, INVITE_TOKEN_EXPIRY, token_data)
-        await redis_client.close()
-    except Exception as e:
-        logger.error(f"Redis error storing invite token: {e}")
-        # Continue anyway - user can request password reset
-
-    # Send invite email in background
-    async def send_invite():
-        try:
-            email_service = get_email_service()
-            email_service.send_user_invite_email(
-                to_email=invite_data.email.lower(),
-                inviter_name=inviter_name,
-                tenant_name=tenant_name,
-                invite_token=invite_token,
-                role=invite_data.role,
-            )
-            logger.info(f"Invite email sent to {invite_data.email[:10]}...")
-        except Exception as e:
-            logger.error(f"Error sending invite email: {e}")
-
-    background_tasks.add_task(send_invite)
+    # TODO: Send invite email with password reset link
 
     logger.info(f"Invited user {user.id} to tenant {tenant_id}")
 
@@ -370,25 +316,11 @@ async def update_user(
             detail="User not found",
         )
 
-    # Check if user is protected (root admin)
-    if user.is_protected:
-        # Protected users cannot have their role changed or be deactivated
-        if update_data.role is not None and update_data.role.lower() != user.role.value:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot change role of protected admin account",
-            )
-        if update_data.is_active is not None and not update_data.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot deactivate protected admin account",
-            )
-
     # Update fields
     if update_data.full_name is not None:
         user.full_name = encrypt_pii(update_data.full_name) if update_data.full_name else None
 
-    if update_data.role is not None and not user.is_protected:
+    if update_data.role is not None:
         role_map = {
             "admin": UserRole.ADMIN,
             "manager": UserRole.MANAGER,
@@ -396,7 +328,7 @@ async def update_user(
         }
         user.role = role_map.get(update_data.role.lower(), user.role)
 
-    if update_data.is_active is not None and not user.is_protected:
+    if update_data.is_active is not None:
         user.is_active = update_data.is_active
 
     await db.commit()
@@ -468,17 +400,10 @@ async def delete_user(
             detail="User not found",
         )
 
-    # Cannot delete protected users (root admin)
-    if user.is_protected:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot remove protected admin account",
-        )
-
     # Soft delete
     user.is_deleted = True
     user.is_active = False
-    user.deleted_at = datetime.now(UTC)
+    user.deleted_at = datetime.now(timezone.utc)
 
     await db.commit()
 

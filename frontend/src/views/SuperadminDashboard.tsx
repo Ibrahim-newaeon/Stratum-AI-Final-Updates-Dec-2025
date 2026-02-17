@@ -4,212 +4,222 @@
  * Blends MRR/ARR metrics, churn prediction, system health, and tenant management
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
-  Activity,
-  AlertCircle,
-  AlertTriangle,
-  ArrowDownRight,
-  ArrowUpRight,
-  Ban,
-  BarChart3,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Cpu,
-  CreditCard,
-  Crown,
-  Database,
-  DollarSign,
-  Edit,
-  Eye,
-  FileText,
-  Globe,
-  HardDrive,
-  Key,
-  Loader2,
-  Package,
-  PieChart,
-  Plus,
-  Receipt,
-  RefreshCw,
-  Search,
-  Server,
-  Settings,
-  Shield,
-  TrendingUp,
   Users,
-  XCircle,
+  Building2,
+  Server,
+  Activity,
+  DollarSign,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  Shield,
+  Clock,
+  Globe,
+  Database,
+  Cpu,
+  HardDrive,
   Zap,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
+  RefreshCw,
+  Plus,
+  Search,
+  MoreVertical,
+  CheckCircle2,
+  XCircle,
+  Eye,
+  Edit,
+  Trash2,
+  Ban,
+  Settings,
+  Key,
+  CreditCard,
+  BarChart3,
+  PieChart,
+  ArrowUpRight,
+  ArrowDownRight,
+  AlertCircle,
+  Loader2,
+  Crown,
+  FileText,
+  Receipt,
+  Package,
+  Calendar,
+  Filter,
+} from 'lucide-react'
+import { cn, getPlatformColor } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
+import axios from 'axios'
 
-const runtimeUrl = (window as unknown as { __RUNTIME_CONFIG__?: { VITE_API_URL?: string } }).__RUNTIME_CONFIG__?.VITE_API_URL;
-const API_BASE_URL = runtimeUrl || import.meta.env.VITE_API_URL || '/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 // =============================================================================
 // Types
 // =============================================================================
 interface RevenueMetrics {
-  mrr: number;
-  arr: number;
-  mrr_growth_pct: number;
-  gross_margin_pct: number;
-  arpa: number;
-  nrr: number;
-  churn_rate: number;
-  active_tenants: number;
-  trial_tenants: number;
-  total_tenants: number;
+  mrr: number
+  arr: number
+  mrr_growth_pct: number
+  gross_margin_pct: number
+  arpa: number
+  nrr: number
+  churn_rate: number
+  active_tenants: number
+  trial_tenants: number
+  total_tenants: number
 }
 
 interface TenantPortfolioItem {
-  id: number;
-  name: string;
-  slug: string;
-  plan: string;
-  status: string;
-  mrr: number;
-  users_count: number;
-  users_limit: number;
-  campaigns_count: number;
-  connectors: string[];
-  signal_health: string;
-  churn_risk: number | null;
-  last_admin_login: string | null;
-  created_at: string;
+  id: number
+  name: string
+  slug: string
+  plan: string
+  status: string
+  mrr: number
+  users_count: number
+  users_limit: number
+  campaigns_count: number
+  connectors: string[]
+  signal_health: string
+  churn_risk: number | null
+  last_admin_login: string | null
+  created_at: string
 }
 
 interface ChurnRisk {
-  tenant_id: number;
-  tenant_name: string;
-  plan: string;
-  risk_score: number;
-  risk_factors: string[];
-  recommended_actions: string[];
-  mrr_at_risk: number;
+  tenant_id: number
+  tenant_name: string
+  plan: string
+  risk_score: number
+  risk_factors: string[]
+  recommended_actions: string[]
+  mrr_at_risk: number
 }
 
 interface SystemHealth {
-  pipeline: { success_rate_24h: number; jobs_total_24h: number; jobs_failed_24h: number };
-  api: {
-    requests_24h: number;
-    error_rate: number;
-    latency_p50_ms: number;
-    latency_p99_ms?: number;
-  };
-  platforms: Record<string, { status: string; success_rate: number }>;
-  resources: { cpu_percent: number; memory_percent: number; disk_percent: number };
+  pipeline: { success_rate_24h: number; jobs_total_24h: number; jobs_failed_24h: number }
+  api: { requests_24h: number; error_rate: number; latency_p50_ms: number; latency_p99_ms?: number }
+  platforms: Record<string, { status: string; success_rate: number }>
+  resources: { cpu_percent: number; memory_percent: number; disk_percent: number }
 }
+
+interface SystemAlert {
+  id: string
+  type: 'error' | 'warning' | 'info'
+  message: string
+  component: string
+  timestamp: string
+}
+
+// =============================================================================
+// Mock data for features not yet connected
+// =============================================================================
+const mockAlerts: SystemAlert[] = [
+  { id: '1', type: 'warning', message: 'High API latency detected on Meta endpoints', component: 'API Gateway', timestamp: '5 mins ago' },
+  { id: '2', type: 'info', message: 'Database backup completed successfully', component: 'Database', timestamp: '30 mins ago' },
+  { id: '3', type: 'error', message: 'Failed to sync TikTok campaigns for 3 tenants', component: 'Sync Service', timestamp: '1 hour ago' },
+  { id: '4', type: 'info', message: 'New version v2.4.1 deployed successfully', component: 'Deployment', timestamp: '2 hours ago' },
+]
 
 // =============================================================================
 // Main Component
 // =============================================================================
 export default function SuperadminDashboard() {
-  const { user } = useAuth();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'tenants' | 'system' | 'churn' | 'billing' | 'audit'
-  >('overview');
-  const [billingSubTab, setBillingSubTab] = useState<
-    'overview' | 'plans' | 'invoices' | 'subscriptions'
-  >('overview');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [auditFilter, setAuditFilter] = useState({ action: '', tenant_id: '' });
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'system' | 'churn' | 'billing' | 'audit'>('overview')
+  const [billingSubTab, setBillingSubTab] = useState<'overview' | 'plans' | 'invoices' | 'subscriptions'>('overview')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [auditFilter, setAuditFilter] = useState({ action: '', tenant_id: '' })
 
   // API Data
-  const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetrics | null>(null);
-  const [tenants, setTenants] = useState<TenantPortfolioItem[]>([]);
-  const [churnRisks, setChurnRisks] = useState<ChurnRisk[]>([]);
-  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
-  const [plans, setPlans] = useState<any[]>([]);
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetrics | null>(null)
+  const [tenants, setTenants] = useState<TenantPortfolioItem[]>([])
+  const [churnRisks, setChurnRisks] = useState<ChurnRisk[]>([])
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
+  const [plans, setPlans] = useState<any[]>([])
+  const [invoices, setInvoices] = useState<any[]>([])
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('access_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+    const token = localStorage.getItem('access_token')
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
 
   const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
-      const [revenueRes, tenantsRes, healthRes, churnRes, plansRes, invoicesRes, auditRes] =
-        await Promise.allSettled([
-          axios.get(`${API_BASE_URL}/superadmin/revenue`, { headers: getAuthHeaders() }),
-          axios.get(`${API_BASE_URL}/superadmin/tenants/portfolio`, {
-            headers: getAuthHeaders(),
-          }),
-          axios.get(`${API_BASE_URL}/superadmin/system/health`, {
-            headers: getAuthHeaders(),
-          }),
-          axios.get(`${API_BASE_URL}/superadmin/churn/risks`, { headers: getAuthHeaders() }),
-          axios.get(`${API_BASE_URL}/superadmin/billing/plans`, {
-            headers: getAuthHeaders(),
-          }),
-          axios.get(`${API_BASE_URL}/superadmin/billing/invoices`, {
-            headers: getAuthHeaders(),
-          }),
-          axios.get(`${API_BASE_URL}/superadmin/audit?limit=100`, {
-            headers: getAuthHeaders(),
-          }),
-        ]);
+      const [revenueRes, tenantsRes, healthRes, churnRes, plansRes, invoicesRes, auditRes] = await Promise.allSettled([
+        axios.get(`${API_BASE_URL}/api/v1/superadmin/revenue`, { headers: getAuthHeaders() }),
+        axios.get(`${API_BASE_URL}/api/v1/superadmin/tenants/portfolio`, { headers: getAuthHeaders() }),
+        axios.get(`${API_BASE_URL}/api/v1/superadmin/system/health`, { headers: getAuthHeaders() }),
+        axios.get(`${API_BASE_URL}/api/v1/superadmin/churn/risks`, { headers: getAuthHeaders() }),
+        axios.get(`${API_BASE_URL}/api/v1/superadmin/billing/plans`, { headers: getAuthHeaders() }),
+        axios.get(`${API_BASE_URL}/api/v1/superadmin/billing/invoices`, { headers: getAuthHeaders() }),
+        axios.get(`${API_BASE_URL}/api/v1/superadmin/audit?limit=100`, { headers: getAuthHeaders() }),
+      ])
 
       // Handle each response individually
       if (revenueRes.status === 'fulfilled' && revenueRes.value.data.success) {
-        setRevenueMetrics(revenueRes.value.data.data);
+        setRevenueMetrics(revenueRes.value.data.data)
       }
       if (tenantsRes.status === 'fulfilled' && tenantsRes.value.data.success) {
-        setTenants(tenantsRes.value.data.data.tenants || []);
+        setTenants(tenantsRes.value.data.data.tenants || [])
       }
       if (healthRes.status === 'fulfilled' && healthRes.value.data.success) {
-        setSystemHealth(healthRes.value.data.data);
+        setSystemHealth(healthRes.value.data.data)
       }
       if (churnRes.status === 'fulfilled' && churnRes.value.data.success) {
-        setChurnRisks(churnRes.value.data.data.at_risk_tenants || []);
+        setChurnRisks(churnRes.value.data.data.at_risk_tenants || [])
       }
       if (plansRes.status === 'fulfilled' && plansRes.value.data.success) {
-        setPlans(plansRes.value.data.data.plans || []);
+        setPlans(plansRes.value.data.data.plans || [])
       }
       if (invoicesRes.status === 'fulfilled' && invoicesRes.value.data.success) {
-        setInvoices(invoicesRes.value.data.data.invoices || []);
+        setInvoices(invoicesRes.value.data.data.invoices || [])
       }
       if (auditRes.status === 'fulfilled' && auditRes.value.data.success) {
-        setAuditLogs(auditRes.value.data.data.logs || []);
+        setAuditLogs(auditRes.value.data.data.logs || [])
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load dashboard data');
+      setError(err.response?.data?.detail || 'Failed to load dashboard data')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData()
+  }, [fetchData])
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchData().finally(() => setIsRefreshing(false));
-  };
+    setIsRefreshing(true)
+    fetchData().finally(() => setIsRefreshing(false))
+  }
 
   const filteredTenants = useMemo(() => {
-    if (!searchQuery) return tenants;
-    const query = searchQuery.toLowerCase();
+    if (!searchQuery) return tenants
+    const query = searchQuery.toLowerCase()
     return tenants.filter(
       (t) =>
         t.name.toLowerCase().includes(query) ||
         t.slug.toLowerCase().includes(query) ||
         t.plan.toLowerCase().includes(query)
-    );
-  }, [tenants, searchQuery]);
+    )
+  }, [tenants, searchQuery])
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+    return num.toString()
+  }
 
   const formatCurrency = (num: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -217,8 +227,8 @@ export default function SuperadminDashboard() {
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(num);
-  };
+    }).format(num)
+  }
 
   if (isLoading) {
     return (
@@ -226,7 +236,7 @@ export default function SuperadminDashboard() {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="ml-3 text-muted-foreground">Loading Super Admin Dashboard...</span>
       </div>
-    );
+    )
   }
 
   return (
@@ -275,7 +285,7 @@ export default function SuperadminDashboard() {
           { id: 'churn', label: 'Churn Risk', icon: AlertTriangle },
           { id: 'billing', label: 'Billing', icon: CreditCard },
           { id: 'audit', label: 'Audit Log', icon: FileText },
-        ].map((tab) => (
+        ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
@@ -361,15 +371,12 @@ export default function SuperadminDashboard() {
                 Tenants at Churn Risk
                 {churnRisks.length > 0 && (
                   <span className="ml-auto text-sm font-normal text-amber-500">
-                    ${churnRisks.reduce((sum, r) => sum + r.mrr_at_risk, 0).toLocaleString()}/mo at
-                    risk
+                    ${churnRisks.reduce((sum, r) => sum + r.mrr_at_risk, 0).toLocaleString()}/mo at risk
                   </span>
                 )}
               </h3>
               {churnRisks.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-center">
-                  No tenants at high churn risk 🎉
-                </p>
+                <p className="text-muted-foreground py-4 text-center">No tenants at high churn risk 🎉</p>
               ) : (
                 <div className="space-y-3">
                   {churnRisks.slice(0, 5).map((risk, idx) => (
@@ -383,16 +390,10 @@ export default function SuperadminDashboard() {
                         <p className="text-xs text-muted-foreground">{risk.risk_factors[0]}</p>
                       </div>
                       <div className="text-right">
-                        <p
-                          className={cn(
-                            'font-bold',
-                            risk.risk_score >= 0.7
-                              ? 'text-red-500'
-                              : risk.risk_score >= 0.5
-                                ? 'text-amber-500'
-                                : 'text-green-500'
-                          )}
-                        >
+                        <p className={cn(
+                          'font-bold',
+                          risk.risk_score >= 0.7 ? 'text-red-500' : risk.risk_score >= 0.5 ? 'text-amber-500' : 'text-green-500'
+                        )}>
                           {(risk.risk_score * 100).toFixed(0)}% risk
                         </p>
                         <p className="text-xs text-muted-foreground">${risk.mrr_at_risk}/mo</p>
@@ -444,9 +445,30 @@ export default function SuperadminDashboard() {
               <AlertCircle className="w-5 h-5 text-primary" />
               System Alerts
             </h3>
-            <p className="text-muted-foreground text-center py-4">
-              No active alerts
-            </p>
+            <div className="space-y-3">
+              {mockAlerts.map((alert, idx) => (
+                <div
+                  key={alert.id}
+                  className={cn(
+                    'flex items-start gap-3 p-3 rounded-lg border motion-enter',
+                    alert.type === 'error' && 'bg-red-500/5 border-red-500/20',
+                    alert.type === 'warning' && 'bg-amber-500/5 border-amber-500/20',
+                    alert.type === 'info' && 'bg-blue-500/5 border-blue-500/20'
+                  )}
+                  style={{ animationDelay: `${idx * 30}ms` }}
+                >
+                  {alert.type === 'error' && <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />}
+                  {alert.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />}
+                  {alert.type === 'info' && <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{alert.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {alert.component} • {alert.timestamp}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Usage Limits & Overage Warnings */}
@@ -460,72 +482,56 @@ export default function SuperadminDashboard() {
             </h3>
             {(() => {
               // Calculate tenants near limits
-              const tenantsNearLimits = tenants.filter((t) => {
-                const usersPct = (t.users_count / t.users_limit) * 100;
-                return usersPct >= 75;
-              });
+              const tenantsNearLimits = tenants.filter(t => {
+                const usersPct = (t.users_count / t.users_limit) * 100
+                return usersPct >= 75
+              })
 
               if (tenantsNearLimits.length === 0) {
                 return (
                   <p className="text-muted-foreground text-center py-4">
                     All tenants are within their usage limits
                   </p>
-                );
+                )
               }
 
               return (
                 <div className="space-y-3">
                   {tenantsNearLimits.slice(0, 5).map((tenant, idx) => {
-                    const usersPct = (tenant.users_count / tenant.users_limit) * 100;
-                    const isOverLimit = usersPct >= 100;
-                    const isNearLimit = usersPct >= 90;
+                    const usersPct = (tenant.users_count / tenant.users_limit) * 100
+                    const isOverLimit = usersPct >= 100
+                    const isNearLimit = usersPct >= 90
 
                     return (
                       <div
                         key={tenant.id}
                         className={cn(
                           'flex items-center justify-between p-3 rounded-lg border motion-enter',
-                          isOverLimit
-                            ? 'bg-red-500/5 border-red-500/20'
-                            : isNearLimit
-                              ? 'bg-amber-500/5 border-amber-500/20'
-                              : 'bg-blue-500/5 border-blue-500/20'
+                          isOverLimit ? 'bg-red-500/5 border-red-500/20' :
+                          isNearLimit ? 'bg-amber-500/5 border-amber-500/20' :
+                          'bg-blue-500/5 border-blue-500/20'
                         )}
                         style={{ animationDelay: `${idx * 40}ms` }}
                       >
                         <div className="flex items-center gap-3">
-                          <div
-                            className={cn(
-                              'w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs',
-                              isOverLimit
-                                ? 'bg-red-500'
-                                : isNearLimit
-                                  ? 'bg-amber-500'
-                                  : 'bg-blue-500'
-                            )}
-                          >
+                          <div className={cn(
+                            'w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs',
+                            isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-blue-500'
+                          )}>
                             {tenant.name.charAt(0)}
                           </div>
                           <div>
                             <p className="font-medium">{tenant.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                              {tenant.plan} plan
-                            </p>
+                            <p className="text-xs text-muted-foreground capitalize">{tenant.plan} plan</p>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-muted-foreground" />
-                            <span
-                              className={cn(
-                                'font-medium',
-                                isOverLimit
-                                  ? 'text-red-500'
-                                  : isNearLimit
-                                    ? 'text-amber-500'
-                                    : 'text-blue-500'
-                              )}
-                            >
+                            <span className={cn(
+                              'font-medium',
+                              isOverLimit ? 'text-red-500' : isNearLimit ? 'text-amber-500' : 'text-blue-500'
+                            )}>
                               {tenant.users_count}/{tenant.users_limit}
                             </span>
                           </div>
@@ -533,18 +539,14 @@ export default function SuperadminDashboard() {
                             <div
                               className={cn(
                                 'h-full rounded-full transition-all',
-                                isOverLimit
-                                  ? 'bg-red-500'
-                                  : isNearLimit
-                                    ? 'bg-amber-500'
-                                    : 'bg-blue-500'
+                                isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-blue-500'
                               )}
                               style={{ width: `${Math.min(100, usersPct)}%` }}
                             />
                           </div>
                         </div>
                       </div>
-                    );
+                    )
                   })}
                   {tenantsNearLimits.length > 5 && (
                     <button
@@ -555,7 +557,7 @@ export default function SuperadminDashboard() {
                     </button>
                   )}
                 </div>
-              );
+              )
             })()}
           </div>
         </div>
@@ -640,22 +642,15 @@ export default function SuperadminDashboard() {
                       </td>
                       <td className="text-center py-3 px-4">
                         <div className="flex items-center justify-center gap-2">
-                          <span>
-                            {tenant.users_count}/{tenant.users_limit}
-                          </span>
+                          <span>{tenant.users_count}/{tenant.users_limit}</span>
                           <div className="w-12 h-1.5 bg-muted rounded-full">
                             <div
                               className={cn(
                                 'h-full rounded-full',
-                                tenant.users_count / tenant.users_limit >= 0.9
-                                  ? 'bg-red-500'
-                                  : tenant.users_count / tenant.users_limit >= 0.7
-                                    ? 'bg-amber-500'
-                                    : 'bg-green-500'
+                                (tenant.users_count / tenant.users_limit) >= 0.9 ? 'bg-red-500' :
+                                (tenant.users_count / tenant.users_limit) >= 0.7 ? 'bg-amber-500' : 'bg-green-500'
                               )}
-                              style={{
-                                width: `${Math.min(100, (tenant.users_count / tenant.users_limit) * 100)}%`,
-                              }}
+                              style={{ width: `${Math.min(100, (tenant.users_count / tenant.users_limit) * 100)}%` }}
                             />
                           </div>
                         </div>
@@ -665,16 +660,11 @@ export default function SuperadminDashboard() {
                       </td>
                       <td className="text-center py-3 px-4">
                         {tenant.churn_risk !== null ? (
-                          <span
-                            className={cn(
-                              'font-medium',
-                              tenant.churn_risk >= 0.7
-                                ? 'text-red-500'
-                                : tenant.churn_risk >= 0.4
-                                  ? 'text-amber-500'
-                                  : 'text-green-500'
-                            )}
-                          >
+                          <span className={cn(
+                            'font-medium',
+                            tenant.churn_risk >= 0.7 ? 'text-red-500' :
+                            tenant.churn_risk >= 0.4 ? 'text-amber-500' : 'text-green-500'
+                          )}>
                             {(tenant.churn_risk * 100).toFixed(0)}%
                           </span>
                         ) : (
@@ -689,10 +679,7 @@ export default function SuperadminDashboard() {
                           <button className="p-1.5 rounded hover:bg-muted" title="Edit">
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button
-                            className="p-1.5 rounded hover:bg-muted text-red-500"
-                            title="Suspend"
-                          >
+                          <button className="p-1.5 rounded hover:bg-muted text-red-500" title="Suspend">
                             <Ban className="w-4 h-4" />
                           </button>
                         </div>
@@ -740,12 +727,11 @@ export default function SuperadminDashboard() {
               </h3>
               <div className="space-y-4">
                 {[
-                  {
-                    name: 'API Server',
-                    status: 'healthy',
-                    cpu: systemHealth?.resources.cpu_percent ?? 0,
-                    memory: systemHealth?.resources.memory_percent ?? 0,
-                  },
+                  { name: 'API Server', status: 'healthy', cpu: systemHealth?.resources.cpu_percent || 45, memory: systemHealth?.resources.memory_percent || 62 },
+                  { name: 'Worker Nodes', status: 'healthy', cpu: 78, memory: 84 },
+                  { name: 'Database', status: 'healthy', cpu: 23, memory: 56 },
+                  { name: 'Redis Cache', status: 'healthy', cpu: 12, memory: 45 },
+                  { name: 'ML Service', status: 'healthy', cpu: 67, memory: 71 },
                 ].map((service, idx) => (
                   <div
                     key={idx}
@@ -753,12 +739,7 @@ export default function SuperadminDashboard() {
                     style={{ animationDelay: `${idx * 30}ms` }}
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'w-2 h-2 rounded-full',
-                          service.status === 'healthy' ? 'bg-green-500' : 'bg-red-500'
-                        )}
-                      />
+                      <div className={cn('w-2 h-2 rounded-full', service.status === 'healthy' ? 'bg-green-500' : 'bg-red-500')} />
                       <span className="font-medium">{service.name}</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
@@ -785,48 +766,24 @@ export default function SuperadminDashboard() {
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="p-4 rounded-lg bg-muted/30">
-                    <p className="text-2xl font-bold">
-                      {systemHealth.api.requests_24h.toLocaleString()}
-                    </p>
+                    <p className="text-2xl font-bold">{systemHealth.api.requests_24h.toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground">Total Requests</p>
                   </div>
                   <div className="p-4 rounded-lg bg-muted/30">
-                    <p
-                      className={cn(
-                        'text-2xl font-bold',
-                        systemHealth.api.error_rate < 1 ? 'text-green-500' : 'text-red-500'
-                      )}
-                    >
+                    <p className={cn(
+                      'text-2xl font-bold',
+                      systemHealth.api.error_rate < 1 ? 'text-green-500' : 'text-red-500'
+                    )}>
                       {systemHealth.api.error_rate}%
                     </p>
                     <p className="text-xs text-muted-foreground">Error Rate</p>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <ResourceBar
-                    label="Latency p50"
-                    value={systemHealth.api.latency_p50_ms}
-                    max={500}
-                    unit="ms"
-                  />
-                  <ResourceBar
-                    label="CPU"
-                    value={systemHealth.resources.cpu_percent}
-                    max={100}
-                    unit="%"
-                  />
-                  <ResourceBar
-                    label="Memory"
-                    value={systemHealth.resources.memory_percent}
-                    max={100}
-                    unit="%"
-                  />
-                  <ResourceBar
-                    label="Disk"
-                    value={systemHealth.resources.disk_percent}
-                    max={100}
-                    unit="%"
-                  />
+                  <ResourceBar label="Latency p50" value={systemHealth.api.latency_p50_ms} max={500} unit="ms" />
+                  <ResourceBar label="CPU" value={systemHealth.resources.cpu_percent} max={100} unit="%" />
+                  <ResourceBar label="Memory" value={systemHealth.resources.memory_percent} max={100} unit="%" />
+                  <ResourceBar label="Disk" value={systemHealth.resources.disk_percent} max={100} unit="%" />
                 </div>
               </div>
             )}
@@ -881,12 +838,8 @@ export default function SuperadminDashboard() {
               <p className="text-muted-foreground text-sm mb-2">Avg Risk Score</p>
               <p className="text-3xl font-bold">
                 {churnRisks.length > 0
-                  ? (
-                      (churnRisks.reduce((sum, r) => sum + r.risk_score, 0) / churnRisks.length) *
-                      100
-                    ).toFixed(0)
-                  : 0}
-                %
+                  ? (churnRisks.reduce((sum, r) => sum + r.risk_score, 0) / churnRisks.length * 100).toFixed(0)
+                  : 0}%
               </p>
             </div>
           </div>
@@ -896,9 +849,7 @@ export default function SuperadminDashboard() {
             <div className="rounded-xl border bg-card p-8 text-center shadow-card motion-card">
               <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
               <p className="text-lg font-medium">All Clear!</p>
-              <p className="text-muted-foreground">
-                No tenants are at high churn risk at this time.
-              </p>
+              <p className="text-muted-foreground">No tenants are at high churn risk at this time.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -914,21 +865,13 @@ export default function SuperadminDashboard() {
                       <p className="text-sm text-muted-foreground">{risk.plan} plan</p>
                     </div>
                     <div className="text-right">
-                      <p
-                        className={cn(
-                          'text-2xl font-bold motion-delta',
-                          risk.risk_score >= 0.7
-                            ? 'text-red-500'
-                            : risk.risk_score >= 0.5
-                              ? 'text-amber-500'
-                              : 'text-green-500'
-                        )}
-                      >
+                      <p className={cn(
+                        'text-2xl font-bold motion-delta',
+                        risk.risk_score >= 0.7 ? 'text-red-500' : risk.risk_score >= 0.5 ? 'text-amber-500' : 'text-green-500'
+                      )}>
                         {(risk.risk_score * 100).toFixed(0)}%
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatCurrency(risk.mrr_at_risk)}/mo at risk
-                      </p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(risk.mrr_at_risk)}/mo at risk</p>
                     </div>
                   </div>
 
@@ -937,11 +880,7 @@ export default function SuperadminDashboard() {
                       <p className="text-sm font-medium text-muted-foreground mb-2">Risk Factors</p>
                       <ul className="space-y-2">
                         {risk.risk_factors.map((factor, i) => (
-                          <li
-                            key={i}
-                            className="flex items-center gap-2 text-sm motion-enter"
-                            style={{ animationDelay: `${i * 30}ms` }}
-                          >
+                          <li key={i} className="flex items-center gap-2 text-sm motion-enter" style={{ animationDelay: `${i * 30}ms` }}>
                             <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
                             {factor}
                           </li>
@@ -949,16 +888,10 @@ export default function SuperadminDashboard() {
                       </ul>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">
-                        Recommended Actions
-                      </p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Recommended Actions</p>
                       <ul className="space-y-2">
                         {risk.recommended_actions.map((action, i) => (
-                          <li
-                            key={i}
-                            className="flex items-center gap-2 text-sm motion-enter"
-                            style={{ animationDelay: `${i * 30}ms` }}
-                          >
+                          <li key={i} className="flex items-center gap-2 text-sm motion-enter" style={{ animationDelay: `${i * 30}ms` }}>
                             <ChevronRight className="w-4 h-4 text-primary flex-shrink-0" />
                             {action}
                           </li>
@@ -985,7 +918,7 @@ export default function SuperadminDashboard() {
               { id: 'plans', label: 'Plans Catalog', icon: Package },
               { id: 'invoices', label: 'Invoices', icon: Receipt },
               { id: 'subscriptions', label: 'Subscriptions', icon: Calendar },
-            ].map((tab) => (
+            ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setBillingSubTab(tab.id as any)}
@@ -1012,7 +945,8 @@ export default function SuperadminDashboard() {
                     {revenueMetrics ? formatCurrency(revenueMetrics.mrr) : '$0'}
                   </p>
                   <p className="text-xs text-green-600 flex items-center gap-1 mt-2">
-                    <TrendingUp className="w-3 h-3" />+{revenueMetrics?.mrr_growth_pct || 0}% growth
+                    <TrendingUp className="w-3 h-3" />
+                    +{revenueMetrics?.mrr_growth_pct || 0}% growth
                   </p>
                 </div>
                 <div className="p-5 rounded-xl bg-purple-500/10 border border-purple-500/20 shadow-card motion-card">
@@ -1024,27 +958,19 @@ export default function SuperadminDashboard() {
                 <div className="p-5 rounded-xl bg-blue-500/10 border border-blue-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">Pending</p>
                   <p className="text-3xl font-bold text-blue-500">
-                    {formatCurrency(
-                      invoices
-                        .filter((i) => i.status === 'pending')
-                        .reduce((s, i) => s + i.total, 0)
-                    )}
+                    {formatCurrency(invoices.filter(i => i.status === 'pending').reduce((s, i) => s + i.total, 0))}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {invoices.filter((i) => i.status === 'pending').length} invoices
+                    {invoices.filter(i => i.status === 'pending').length} invoices
                   </p>
                 </div>
                 <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">Overdue</p>
                   <p className="text-3xl font-bold text-amber-500">
-                    {formatCurrency(
-                      invoices
-                        .filter((i) => i.status === 'overdue')
-                        .reduce((s, i) => s + i.total, 0)
-                    )}
+                    {formatCurrency(invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.total, 0))}
                   </p>
                   <p className="text-xs text-amber-600 mt-2">
-                    {invoices.filter((i) => i.status === 'overdue').length} invoices
+                    {invoices.filter(i => i.status === 'overdue').length} invoices
                   </p>
                 </div>
               </div>
@@ -1057,30 +983,19 @@ export default function SuperadminDashboard() {
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {plans.map((plan, idx) => (
-                    <div
-                      key={plan.id}
-                      className="p-4 rounded-lg bg-muted/30 motion-enter"
-                      style={{ animationDelay: `${idx * 50}ms` }}
-                    >
+                    <div key={plan.id} className="p-4 rounded-lg bg-muted/30 motion-enter" style={{ animationDelay: `${idx * 50}ms` }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div
-                          className={cn(
-                            'w-3 h-3 rounded-full',
-                            plan.tier === 'enterprise'
-                              ? 'bg-purple-500'
-                              : plan.tier === 'professional'
-                                ? 'bg-blue-500'
-                                : plan.tier === 'starter'
-                                  ? 'bg-green-500'
-                                  : 'bg-gray-500'
-                          )}
-                        />
+                        <div className={cn(
+                          'w-3 h-3 rounded-full',
+                          plan.tier === 'enterprise' ? 'bg-purple-500' :
+                          plan.tier === 'professional' ? 'bg-blue-500' :
+                          plan.tier === 'starter' ? 'bg-green-500' : 'bg-gray-500'
+                        )} />
                         <span className="font-medium">{plan.display_name || plan.name}</span>
                       </div>
                       <p className="text-xl font-bold">{formatCurrency(plan.price || 0)}/mo</p>
                       <p className="text-xs text-muted-foreground">
-                        {plan.limits?.max_users || 0} users, {plan.limits?.max_campaigns || 0}{' '}
-                        campaigns
+                        {plan.limits?.max_users || 0} users, {plan.limits?.max_campaigns || 0} campaigns
                       </p>
                     </div>
                   ))}
@@ -1114,35 +1029,23 @@ export default function SuperadminDashboard() {
                 </thead>
                 <tbody className="divide-y">
                   {plans.map((plan, idx) => (
-                    <tr
-                      key={plan.id}
-                      className="hover:bg-muted/30 motion-enter"
-                      style={{ animationDelay: `${idx * 20}ms` }}
-                    >
+                    <tr key={plan.id} className="hover:bg-muted/30 motion-enter" style={{ animationDelay: `${idx * 20}ms` }}>
                       <td className="py-3 px-4 font-medium">{plan.display_name || plan.name}</td>
                       <td className="py-3 px-4">
                         <PlanBadge plan={plan.tier} />
                       </td>
                       <td className="py-3 px-4 text-right font-medium">
                         {formatCurrency(plan.price || 0)}
-                        <span className="text-muted-foreground text-xs">
-                          /{plan.billing_period || 'mo'}
-                        </span>
+                        <span className="text-muted-foreground text-xs">/{plan.billing_period || 'mo'}</span>
                       </td>
                       <td className="py-3 px-4 text-center">{plan.limits?.max_users || '-'}</td>
                       <td className="py-3 px-4 text-center">{plan.limits?.max_campaigns || '-'}</td>
+                      <td className="py-3 px-4 text-center">{plan.limits?.max_connectors || '-'}</td>
                       <td className="py-3 px-4 text-center">
-                        {plan.limits?.max_connectors || '-'}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span
-                          className={cn(
-                            'px-2 py-1 rounded-full text-xs',
-                            plan.is_active !== false
-                              ? 'bg-green-500/10 text-green-500'
-                              : 'bg-gray-500/10 text-gray-500'
-                          )}
-                        >
+                        <span className={cn(
+                          'px-2 py-1 rounded-full text-xs',
+                          plan.is_active !== false ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'
+                        )}>
                           {plan.is_active !== false ? 'Active' : 'Inactive'}
                         </span>
                       </td>
@@ -1194,26 +1097,18 @@ export default function SuperadminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {invoices.map((inv) => (
+                    {invoices.map((inv, idx) => (
                       <tr key={inv.id} className="hover:bg-muted/30">
                         <td className="py-3 px-4 font-medium">{inv.invoice_number}</td>
                         <td className="py-3 px-4">{inv.tenant_name}</td>
-                        <td className="py-3 px-4 text-right font-medium">
-                          {formatCurrency(inv.total)}
-                        </td>
+                        <td className="py-3 px-4 text-right font-medium">{formatCurrency(inv.total)}</td>
                         <td className="py-3 px-4 text-center">
-                          <span
-                            className={cn(
-                              'px-2 py-1 rounded-full text-xs',
-                              inv.status === 'paid'
-                                ? 'bg-green-500/10 text-green-500'
-                                : inv.status === 'pending'
-                                  ? 'bg-blue-500/10 text-blue-500'
-                                  : inv.status === 'overdue'
-                                    ? 'bg-red-500/10 text-red-500'
-                                    : 'bg-gray-500/10 text-gray-500'
-                            )}
-                          >
+                          <span className={cn(
+                            'px-2 py-1 rounded-full text-xs',
+                            inv.status === 'paid' ? 'bg-green-500/10 text-green-500' :
+                            inv.status === 'pending' ? 'bg-blue-500/10 text-blue-500' :
+                            inv.status === 'overdue' ? 'bg-red-500/10 text-red-500' : 'bg-gray-500/10 text-gray-500'
+                          )}>
                             {inv.status}
                           </span>
                         </td>
@@ -1236,8 +1131,7 @@ export default function SuperadminDashboard() {
             <div className="rounded-xl border bg-card p-6 shadow-card">
               <h3 className="font-semibold mb-4">Active Subscriptions</h3>
               <p className="text-muted-foreground text-center py-8">
-                Subscription management coming soon. View and manage tenant subscriptions, trials,
-                and upgrades.
+                Subscription management coming soon. View and manage tenant subscriptions, trials, and upgrades.
               </p>
             </div>
           )}
@@ -1257,20 +1151,18 @@ export default function SuperadminDashboard() {
                 type="text"
                 placeholder="Search actions..."
                 value={auditFilter.action}
-                onChange={(e) => setAuditFilter((f) => ({ ...f, action: e.target.value }))}
+                onChange={(e) => setAuditFilter(f => ({ ...f, action: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <select
               className="px-3 py-2 rounded-lg border bg-background"
               value={auditFilter.tenant_id}
-              onChange={(e) => setAuditFilter((f) => ({ ...f, tenant_id: e.target.value }))}
+              onChange={(e) => setAuditFilter(f => ({ ...f, tenant_id: e.target.value }))}
             >
               <option value="">All Tenants</option>
-              {tenants.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
+              {tenants.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
             <button
@@ -1301,34 +1193,18 @@ export default function SuperadminDashboard() {
                     <td colSpan={6} className="py-8 text-center text-muted-foreground">
                       <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No audit logs found</p>
-                      <p className="text-xs mt-1">
-                        Admin actions will appear here after the database migration
-                      </p>
+                      <p className="text-xs mt-1">Admin actions will appear here after the database migration</p>
                     </td>
                   </tr>
                 ) : (
                   auditLogs
-                    .filter((log) => {
-                      if (
-                        auditFilter.action &&
-                        !log.action?.toLowerCase().includes(auditFilter.action.toLowerCase())
-                      ) {
-                        return false;
-                      }
-                      if (
-                        auditFilter.tenant_id &&
-                        log.tenant_id !== parseInt(auditFilter.tenant_id)
-                      ) {
-                        return false;
-                      }
-                      return true;
+                    .filter(log => {
+                      if (auditFilter.action && !log.action?.toLowerCase().includes(auditFilter.action.toLowerCase())) return false
+                      if (auditFilter.tenant_id && log.tenant_id !== parseInt(auditFilter.tenant_id)) return false
+                      return true
                     })
                     .map((log, idx) => (
-                      <tr
-                        key={log.id}
-                        className="hover:bg-muted/30 motion-enter"
-                        style={{ animationDelay: `${idx * 10}ms` }}
-                      >
+                      <tr key={log.id} className="hover:bg-muted/30 motion-enter" style={{ animationDelay: `${idx * 10}ms` }}>
                         <td className="py-3 px-4 text-muted-foreground">
                           {log.timestamp ? new Date(log.timestamp).toLocaleString() : '-'}
                         </td>
@@ -1363,7 +1239,7 @@ export default function SuperadminDashboard() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // =============================================================================
@@ -1378,13 +1254,13 @@ function KPICard({
   subValue,
   color = 'blue',
 }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string | number;
-  delta?: number;
-  deltaLabel?: string;
-  subValue?: string;
-  color?: 'blue' | 'green' | 'amber' | 'red' | 'purple';
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string | number
+  delta?: number
+  deltaLabel?: string
+  subValue?: string
+  color?: 'blue' | 'green' | 'amber' | 'red' | 'purple'
 }) {
   const colorClasses = {
     blue: 'bg-blue-500/10 text-blue-500',
@@ -1392,7 +1268,7 @@ function KPICard({
     amber: 'bg-amber-500/10 text-amber-500',
     red: 'bg-red-500/10 text-red-500',
     purple: 'bg-purple-500/10 text-purple-500',
-  };
+  }
 
   return (
     <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-card-hover transition-all motion-card">
@@ -1410,18 +1286,15 @@ function KPICard({
           ) : (
             <ArrowDownRight className="w-4 h-4 text-red-500" />
           )}
-          <span
-            className={cn('text-sm font-medium', delta >= 0 ? 'text-green-500' : 'text-red-500')}
-          >
-            {delta >= 0 ? '+' : ''}
-            {delta}%
+          <span className={cn('text-sm font-medium', delta >= 0 ? 'text-green-500' : 'text-red-500')}>
+            {delta >= 0 ? '+' : ''}{delta}%
           </span>
           {deltaLabel && <span className="text-xs text-muted-foreground">{deltaLabel}</span>}
         </div>
       )}
       {subValue && <p className="text-sm text-muted-foreground mt-1">{subValue}</p>}
     </div>
-  );
+  )
 }
 
 function MetricCard({
@@ -1429,23 +1302,23 @@ function MetricCard({
   value,
   status,
 }: {
-  label: string;
-  value: string | number;
-  status: 'green' | 'amber' | 'red' | 'blue';
+  label: string
+  value: string | number
+  status: 'green' | 'amber' | 'red' | 'blue'
 }) {
   const statusColors = {
     green: 'text-green-500',
     amber: 'text-amber-500',
     red: 'text-red-500',
     blue: 'text-blue-500',
-  };
+  }
 
   return (
     <div className="rounded-xl border bg-card p-4 shadow-card motion-card">
       <p className="text-sm text-muted-foreground mb-1">{label}</p>
       <p className={cn('text-xl font-bold', statusColors[status])}>{value}</p>
     </div>
-  );
+  )
 }
 
 function HealthRow({
@@ -1453,15 +1326,15 @@ function HealthRow({
   value,
   status,
 }: {
-  label: string;
-  value: string;
-  status: 'green' | 'amber' | 'red';
+  label: string
+  value: string
+  status: 'green' | 'amber' | 'red'
 }) {
   const icons = {
     green: <CheckCircle2 className="w-4 h-4 text-green-500" />,
     amber: <AlertCircle className="w-4 h-4 text-amber-500" />,
     red: <AlertTriangle className="w-4 h-4 text-red-500" />,
-  };
+  }
 
   return (
     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
@@ -1471,7 +1344,7 @@ function HealthRow({
         {icons[status]}
       </div>
     </div>
-  );
+  )
 }
 
 function PlanBadge({ plan }: { plan: string }) {
@@ -1481,18 +1354,13 @@ function PlanBadge({ plan }: { plan: string }) {
     starter: 'bg-green-500/10 text-green-500',
     professional: 'bg-blue-500/10 text-blue-500',
     enterprise: 'bg-purple-500/10 text-purple-500',
-  };
+  }
 
   return (
-    <span
-      className={cn(
-        'px-2 py-1 rounded-md text-xs font-medium capitalize',
-        colors[plan] || colors.free
-      )}
-    >
+    <span className={cn('px-2 py-1 rounded-md text-xs font-medium capitalize', colors[plan] || colors.free)}>
       {plan}
     </span>
-  );
+  )
 }
 
 function HealthBadge({ status }: { status: string }) {
@@ -1501,26 +1369,21 @@ function HealthBadge({ status }: { status: string }) {
     risk: 'bg-amber-500/10 text-amber-500',
     degraded: 'bg-orange-500/10 text-orange-500',
     critical: 'bg-red-500/10 text-red-500',
-  };
+  }
 
   const icons: Record<string, React.ReactNode> = {
     healthy: <CheckCircle2 className="w-3 h-3" />,
     risk: <AlertCircle className="w-3 h-3" />,
     degraded: <AlertTriangle className="w-3 h-3" />,
     critical: <XCircle className="w-3 h-3" />,
-  };
+  }
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium capitalize',
-        colors[status] || colors.healthy
-      )}
-    >
+    <span className={cn('inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium capitalize', colors[status] || colors.healthy)}>
       {icons[status]}
       {status}
     </span>
-  );
+  )
 }
 
 function ResourceBar({
@@ -1529,26 +1392,23 @@ function ResourceBar({
   max = 100,
   unit = '%',
 }: {
-  label: string;
-  value: number;
-  max?: number;
-  unit?: string;
+  label: string
+  value: number
+  max?: number
+  unit?: string
 }) {
-  const percentage = (value / max) * 100;
+  const percentage = (value / max) * 100
   const getColor = (v: number) => {
-    if (v >= 80) return 'bg-red-500';
-    if (v >= 60) return 'bg-amber-500';
-    return 'bg-green-500';
-  };
+    if (v >= 80) return 'bg-red-500'
+    if (v >= 60) return 'bg-amber-500'
+    return 'bg-green-500'
+  }
 
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium">
-          {value}
-          {unit}
-        </span>
+        <span className="font-medium">{value}{unit}</span>
       </div>
       <div className="w-full h-2 bg-muted rounded-full">
         <div
@@ -1557,5 +1417,5 @@ function ResourceBar({
         />
       </div>
     </div>
-  );
+  )
 }

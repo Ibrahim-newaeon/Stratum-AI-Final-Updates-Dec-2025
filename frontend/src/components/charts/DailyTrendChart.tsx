@@ -4,30 +4,30 @@
  */
 
 import {
-  Area,
   AreaChart,
-  Brush,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
+  Area,
   XAxis,
   YAxis,
-} from 'recharts';
-import { chartFormatters, chartTheme } from '@/lib/chartTheme';
-import { DailyPerformance } from '@/types/dashboard';
-import { AreaChartSkeleton } from '@/components/ui/Skeleton';
-import { NoChartDataState } from '@/components/ui/EmptyState';
-import { ChartErrorFallback, ErrorBoundary } from '@/components/ui/ErrorBoundary';
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  Brush,
+} from 'recharts'
+import { chartTheme, chartFormatters } from '@/lib/chartTheme'
+import { DailyPerformance } from '@/types/dashboard'
+import { AreaChartSkeleton } from '@/components/ui/Skeleton'
+import { NoChartDataState } from '@/components/ui/EmptyState'
+import { ErrorBoundary, ChartErrorFallback } from '@/components/ui/ErrorBoundary'
 
 interface DailyTrendChartProps {
-  data: DailyPerformance[];
-  loading?: boolean;
-  height?: number;
-  title?: string;
-  showBrush?: boolean;
-  metrics?: ('revenue' | 'spend' | 'conversions')[];
-  onRefresh?: () => void;
+  data: DailyPerformance[]
+  loading?: boolean
+  height?: number
+  title?: string
+  showBrush?: boolean
+  metrics?: ('revenue' | 'spend' | 'conversions')[]
+  onRefresh?: () => void
 }
 
 function DailyTrendChartInner({
@@ -38,7 +38,7 @@ function DailyTrendChartInner({
   metrics = ['revenue', 'spend'],
 }: Omit<DailyTrendChartProps, 'loading' | 'onRefresh'>) {
   if (!data || data.length === 0) {
-    return <NoChartDataState />;
+    return <NoChartDataState />
   }
 
   const metricConfig = {
@@ -57,7 +57,7 @@ function DailyTrendChartInner({
       gradientId: 'colorConversions',
       name: 'Conversions',
     },
-  };
+  }
 
   return (
     <div className="rounded-xl border bg-card p-6">
@@ -104,13 +104,16 @@ function DailyTrendChartInner({
             />
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
-              formatter={((value: number, name: string) => {
-                if (name === 'Conversions') return [value.toLocaleString(), name];
-                return [chartFormatters.currency(value), name];
-              }) as any}
+              formatter={(value: number, name: string) => {
+                if (name === 'Conversions') return [value.toLocaleString(), name]
+                return [chartFormatters.currency(value), name]
+              }}
               cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
             />
-            <Legend wrapperStyle={chartTheme.legend.wrapperStyle} iconType="circle" />
+            <Legend
+              wrapperStyle={chartTheme.legend.wrapperStyle}
+              iconType="circle"
+            />
             {metrics.map((metric) => (
               <Area
                 key={metric}
@@ -137,19 +140,26 @@ function DailyTrendChartInner({
         </ResponsiveContainer>
       </div>
     </div>
-  );
+  )
 }
 
-export function DailyTrendChart({ data, loading, onRefresh, ...props }: DailyTrendChartProps) {
+export function DailyTrendChart({
+  data,
+  loading,
+  onRefresh,
+  ...props
+}: DailyTrendChartProps) {
   if (loading) {
-    return <AreaChartSkeleton height={props.height} />;
+    return <AreaChartSkeleton height={props.height} />
   }
 
   return (
-    <ErrorBoundary fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}>
+    <ErrorBoundary
+      fallback={<ChartErrorFallback onRetry={onRefresh} height={props.height} />}
+    >
       <DailyTrendChartInner data={data} {...props} />
     </ErrorBoundary>
-  );
+  )
 }
 
-export default DailyTrendChart;
+export default DailyTrendChart

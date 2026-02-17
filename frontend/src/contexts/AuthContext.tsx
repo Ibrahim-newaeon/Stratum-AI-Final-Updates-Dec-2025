@@ -3,321 +3,116 @@
  * Manages user authentication state across the application
  */
 
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import { useTenantStore } from '@/stores/tenantStore';
-import { useIdleTimeout } from '@/hooks/useIdleTimeout';
-import IdleTimeoutWarning from '@/components/auth/IdleTimeoutWarning';
-
-const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
-
-/** Known demo credentials for client-side fallback when backend is unavailable */
-const DEMO_CREDENTIALS: Record<string, { email: string; password: string; user: User }> = {
-  superadmin: {
-    email: 'ibrahim@new-aeon.com',
-    password: 'Newaeon@2025',
-    user: {
-      id: 'demo-sa-001',
-      email: 'ibrahim@new-aeon.com',
-      name: 'Ibrahim (Super Admin)',
-      role: 'superadmin',
-      organization: 'New Aeon',
-      permissions: ['all'],
-      tenant_id: 1,
-    },
-  },
-  admin: {
-    email: 'demo@stratum.ai',
-    password: 'demo1234',
-    user: {
-      id: 'demo-admin-001',
-      email: 'demo@stratum.ai',
-      name: 'Demo Admin',
-      role: 'admin',
-      organization: 'Acme Commerce',
-      permissions: ['all'],
-      tenant_id: 1,
-    },
-  },
-  user: {
-    email: 'demo@stratum.ai',
-    password: 'demo1234',
-    user: {
-      id: 'demo-user-001',
-      email: 'demo@stratum.ai',
-      name: 'Demo Viewer',
-      role: 'user',
-      organization: 'Acme Commerce',
-      permissions: ['read'],
-      tenant_id: 1,
-    },
-  },
-};
-
-/** Decode JWT payload without a library */
-function decodeJwtPayload(token: string): Record<string, unknown> {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64));
-  } catch {
-    return {};
-  }
-}
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'superadmin' | 'admin' | 'user';
-  avatar?: string;
-  organization?: string;
-  permissions: string[];
-  tenant_id?: number | null;
+  id: string
+  email: string
+  name: string
+  role: 'superadmin' | 'admin' | 'user'
+  avatar?: string
+  organization?: string
+  permissions: string[]
 }
 
 interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  isDemoSession: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  demoLogin: (role: 'superadmin' | 'admin' | 'user') => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
+  user: User | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => void
+  updateUser: (userData: Partial<User>) => void
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const AUTH_STORAGE_KEY = 'stratum_auth';
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+// Mock users for demo
+const MOCK_USERS: Record<string, { password: string; user: User }> = {
+  'superadmin@stratum.ai': {
+    password: 'admin123',
+    user: {
+      id: '1',
+      email: 'superadmin@stratum.ai',
+      name: 'Super Admin',
+      role: 'superadmin',
+      permissions: ['all'],
+    },
+  },
+  'admin@company.com': {
+    password: 'admin123',
+    user: {
+      id: '2',
+      email: 'admin@company.com',
+      name: 'Company Admin',
+      role: 'admin',
+      organization: 'Acme Corp',
+      permissions: ['campaigns', 'analytics', 'users'],
+    },
+  },
+  'user@company.com': {
+    password: 'user123',
+    user: {
+      id: '3',
+      email: 'user@company.com',
+      name: 'Regular User',
+      role: 'user',
+      organization: 'Acme Corp',
+      permissions: ['campaigns', 'analytics'],
+    },
+  },
+}
+
+const AUTH_STORAGE_KEY = 'stratum_auth'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDemoSession, setIsDemoSession] = useState(false);
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Check for existing session on mount and sync tenant store
+  // Check for existing session on mount
   useEffect(() => {
-    const isDemo = localStorage.getItem('stratum_demo_mode') === 'true';
-    setIsDemoSession(isDemo);
-
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY)
     if (stored) {
       try {
-        const parsedUser = JSON.parse(stored) as User;
-        setUser(parsedUser);
-
-        // Sync tenant context to Zustand store on session restore
-        const tenantStore = useTenantStore.getState();
-        if (parsedUser.tenant_id && !tenantStore.tenantId) {
-          tenantStore.setTenantId(parsedUser.tenant_id);
-        }
+        const parsedUser = JSON.parse(stored)
+        setUser(parsedUser)
       } catch (e) {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem(AUTH_STORAGE_KEY)
       }
     }
-    setIsLoading(false);
-  }, []);
+    setIsLoading(false)
+  }, [])
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      // Call the actual backend API
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-      const data = await response.json();
+    const mockUser = MOCK_USERS[email.toLowerCase()]
 
-      if (!response.ok) {
-        // Handle Pydantic validation errors (array of {type, loc, msg, input, ctx})
-        let errorMessage = 'Login failed';
-        if (data.detail) {
-          if (typeof data.detail === 'string') {
-            errorMessage = data.detail;
-          } else if (Array.isArray(data.detail) && data.detail.length > 0) {
-            // Extract message from first validation error
-            errorMessage = data.detail[0].msg || data.detail[0].message || 'Validation error';
-          } else if (typeof data.detail === 'object' && data.detail.msg) {
-            errorMessage = data.detail.msg;
-          }
-        }
-        return { success: false, error: errorMessage };
-      }
-
-      // Store tokens
-      if (data.data?.access_token) {
-        localStorage.setItem(ACCESS_TOKEN_KEY, data.data.access_token);
-      }
-      if (data.data?.refresh_token) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
-      }
-
-      // Extract tenant_id from JWT so we can sync it to the tenant store
-      const jwtPayload = data.data?.access_token
-        ? decodeJwtPayload(data.data.access_token)
-        : {};
-      const jwtTenantId = jwtPayload.tenant_id as number | undefined;
-
-      // Fetch user profile
-      const userResponse = await fetch(`${API_BASE}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${data.data.access_token}`,
-        },
-      });
-
-      let userInfo: User;
-
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        const tenantId = userData.data.tenant_id ?? jwtTenantId ?? null;
-        userInfo = {
-          id: String(userData.data.id),
-          email: userData.data.email,
-          name: userData.data.full_name || userData.data.email,
-          role: userData.data.role || 'user',
-          permissions: ['all'],
-          tenant_id: tenantId,
-        };
-      } else {
-        // Fallback if /me fails - create user from token claims
-        userInfo = {
-          id: String(jwtPayload.sub ?? '1'),
-          email: email,
-          name: email.split('@')[0],
-          role: (jwtPayload.role as User['role']) ?? 'admin',
-          permissions: ['all'],
-          tenant_id: jwtTenantId ?? null,
-        };
-      }
-
-      setUser(userInfo);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userInfo));
-
-      // Sync tenant context to Zustand store so other components pick it up
-      const tenantStore = useTenantStore.getState();
-      if (userInfo.tenant_id) {
-        tenantStore.setTenantId(userInfo.tenant_id);
-      }
-      // Also sync user to tenant store for role-based features
-      tenantStore.setUser({
-        id: Number(userInfo.id),
-        email: userInfo.email,
-        full_name: userInfo.name,
-        role: userInfo.role,
-        avatar_url: userInfo.avatar ?? null,
-        locale: 'en',
-        timezone: 'UTC',
-        is_active: true,
-        is_verified: true,
-        last_login_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      });
-
-      return { success: true };
-    } catch (error) {
-      // Error returned in result object
-      return { success: false, error: 'Network error. Please try again.' };
+    if (!mockUser) {
+      return { success: false, error: 'User not found' }
     }
-  };
 
-  /** Client-side demo login — creates a mock session without hitting the backend */
-  const demoLogin = useCallback(
-    async (role: 'superadmin' | 'admin' | 'user'): Promise<{ success: boolean; error?: string }> => {
-      const demo = DEMO_CREDENTIALS[role];
-      if (!demo) return { success: false, error: 'Unknown demo role' };
+    if (mockUser.password !== password) {
+      return { success: false, error: 'Invalid password' }
+    }
 
-      // First try the real backend
-      try {
-        const result = await login(demo.email, demo.password);
-        if (result.success) return result;
-      } catch {
-        // Backend unavailable — fall through to client-side fallback
-      }
-
-      // Client-side fallback: set user directly without API
-      const demoUser = { ...demo.user };
-      // Assign different user for 'user' role vs 'admin' role (both use same email)
-      if (role === 'user') {
-        demoUser.id = 'demo-user-001';
-        demoUser.name = 'Demo Viewer';
-        demoUser.role = 'user';
-        demoUser.permissions = ['read'];
-      }
-
-      setUser(demoUser);
-      setIsDemoSession(true);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(demoUser));
-      localStorage.setItem('stratum_demo_mode', 'true');
-
-      // Set a placeholder token so the API interceptor doesn't redirect
-      localStorage.setItem(ACCESS_TOKEN_KEY, 'demo-token');
-      localStorage.setItem(REFRESH_TOKEN_KEY, 'demo-refresh-token');
-
-      // Sync tenant store
-      const tenantStore = useTenantStore.getState();
-      if (demoUser.tenant_id) {
-        tenantStore.setTenantId(demoUser.tenant_id);
-      }
-      tenantStore.setUser({
-        id: Number(demoUser.id.replace(/\D/g, '')) || 1,
-        email: demoUser.email,
-        full_name: demoUser.name,
-        role: demoUser.role,
-        avatar_url: null,
-        locale: 'en',
-        timezone: 'UTC',
-        is_active: true,
-        is_verified: true,
-        last_login_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      });
-
-      return { success: true };
-    },
-    [login]
-  );
+    setUser(mockUser.user)
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(mockUser.user))
+    return { success: true }
+  }
 
   const logout = () => {
-    setUser(null);
-    setIsDemoSession(false);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem('stratum_demo_mode');
-    // BUG-023: Clean up all onboarding-related localStorage keys on logout
-    localStorage.removeItem('stratum_onboarding_progress');
-    localStorage.removeItem('stratum_onboarding_dismissed');
-    localStorage.removeItem('stratum_onboarding_skipped');
-    localStorage.removeItem('stratum_onboarding_demo_dismissed');
-    // Clear Zustand tenant store on logout
-    useTenantStore.getState().logout();
-  };
+    setUser(null)
+    localStorage.removeItem(AUTH_STORAGE_KEY)
+  }
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+      const updatedUser = { ...user, ...userData }
+      setUser(updatedUser)
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser))
     }
-  };
-
-  // BUG-014: Session idle timeout — auto-logout after 30 min of inactivity
-  const { isWarning, secondsLeft, resetTimer } = useIdleTimeout({
-    timeout: 30 * 60 * 1000, // 30 minutes
-    warningDuration: 60 * 1000, // 60-second warning
-    onTimeout: () => {
-      logout();
-      window.location.href = '/login?reason=idle';
-    },
-    enabled: !!user, // Only active when logged in
-  });
+  }
 
   return (
     <AuthContext.Provider
@@ -325,25 +120,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
-        isDemoSession,
         login,
-        demoLogin,
         logout,
         updateUser,
       }}
     >
       {children}
-      {isWarning && (
-        <IdleTimeoutWarning secondsLeft={secondsLeft} onStay={resetTimer} />
-      )}
     </AuthContext.Provider>
-  );
+  )
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
+  return context
 }

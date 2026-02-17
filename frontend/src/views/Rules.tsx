@@ -1,57 +1,53 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
-  Bell,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  Copy,
-  DollarSign,
-  Edit,
-  Loader2,
-  MessageCircle,
-  Pause,
-  Play,
-  Plus,
   Search,
-  Settings,
-  Tag,
+  Plus,
+  MoreHorizontal,
+  Play,
+  Pause,
+  Edit,
   Trash2,
-  X,
+  Copy,
   Zap,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useRules, useToggleRule, useCreateRule, useUpdateRule, useDeleteRule } from '@/api/hooks';
-import { useToast } from '@/components/ui/use-toast';
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ChevronRight,
+  AlertTriangle,
+  Bell,
+  Tag,
+  DollarSign,
+  Settings,
+  MessageCircle,
+  Loader2,
+} from 'lucide-react'
+import { cn, formatCompactNumber } from '@/lib/utils'
+import { useRules, useToggleRule, useDeleteRule, useCreateRule } from '@/api/hooks'
+import { useTenantStore } from '@/stores/tenantStore'
 
-type RuleStatus = 'active' | 'paused' | 'draft';
-type RuleAction =
-  | 'apply_label'
-  | 'send_alert'
-  | 'pause_campaign'
-  | 'adjust_budget'
-  | 'notify_slack'
-  | 'notify_whatsapp';
+type RuleStatus = 'active' | 'paused' | 'draft'
+type RuleAction = 'apply_label' | 'send_alert' | 'pause_campaign' | 'adjust_budget' | 'notify_slack' | 'notify_whatsapp'
 
 interface Rule {
-  id: number;
-  name: string;
-  description: string;
-  status: RuleStatus;
+  id: number
+  name: string
+  description: string
+  status: RuleStatus
   condition: {
-    field: string;
-    operator: string;
-    value: string;
-  };
+    field: string
+    operator: string
+    value: string
+  }
   action: {
-    type: RuleAction;
-    config: Record<string, any>;
-  };
-  appliesTo: string[];
-  triggerCount: number;
-  lastTriggered: string | null;
-  cooldownHours: number;
-  createdAt: string;
+    type: RuleAction
+    config: Record<string, any>
+  }
+  appliesTo: string[]
+  triggerCount: number
+  lastTriggered: string | null
+  cooldownHours: number
+  createdAt: string
 }
 
 const mockRules: Rule[] = [
@@ -61,10 +57,7 @@ const mockRules: Rule[] = [
     description: 'Send WhatsApp notification when campaign spends over 80% of budget',
     status: 'active',
     condition: { field: 'spend', operator: 'greater_than', value: '800' },
-    action: {
-      type: 'notify_whatsapp',
-      config: { contact_ids: [1, 2], template_name: 'rule_alert' },
-    },
+    action: { type: 'notify_whatsapp', config: { contact_ids: [1, 2], template_name: 'rule_alert' } },
     appliesTo: ['Summer Sale 2024', 'Brand Awareness Q4'],
     triggerCount: 7,
     lastTriggered: '2024-12-06T08:00:00Z',
@@ -136,7 +129,7 @@ const mockRules: Rule[] = [
     cooldownHours: 24,
     createdAt: '2024-11-28',
   },
-];
+]
 
 const operators = [
   { value: 'equals', label: '=' },
@@ -145,142 +138,24 @@ const operators = [
   { value: 'less_than', label: '<' },
   { value: 'greater_than_or_equal', label: '≥' },
   { value: 'less_than_or_equal', label: '≤' },
-];
+]
 
-const fields = [
-  'roas',
-  'ctr',
-  'cpc',
-  'cpa',
-  'spend',
-  'impressions',
-  'clicks',
-  'conversions',
-  'fatigue_score',
-];
+const fields = ['roas', 'ctr', 'cpc', 'cpa', 'spend', 'impressions', 'clicks', 'conversions', 'fatigue_score']
 
 export function Rules() {
-  const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { t } = useTranslation()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
-  const { toast } = useToast();
-
-  // Modal state
-  const [editingRule, setEditingRule] = useState<Rule | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<Rule | null>(null);
-  const [ruleForm, setRuleForm] = useState({
-    name: '',
-    description: '',
-    conditionField: 'roas',
-    conditionOperator: 'less_than',
-    conditionValue: '',
-    actionType: 'send_alert' as RuleAction,
-    actionConfig: {} as Record<string, any>,
-    cooldownHours: 24,
-  });
+  // Get tenant ID from tenant store
+  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch rules from API
-  const { data: rulesData, isLoading } = useRules();
-  const toggleRule = useToggleRule();
-  const createRule = useCreateRule();
-  const updateRule = useUpdateRule();
-  const deleteRule = useDeleteRule();
-
-  const resetForm = useCallback(() => {
-    setRuleForm({
-      name: '',
-      description: '',
-      conditionField: 'roas',
-      conditionOperator: 'less_than',
-      conditionValue: '',
-      actionType: 'send_alert',
-      actionConfig: {},
-      cooldownHours: 24,
-    });
-    setEditingRule(null);
-  }, []);
-
-  const openCreateModal = useCallback(() => {
-    resetForm();
-    setShowCreateModal(true);
-  }, [resetForm]);
-
-  const openEditModal = useCallback((rule: Rule) => {
-    setEditingRule(rule);
-    setRuleForm({
-      name: rule.name,
-      description: rule.description,
-      conditionField: rule.condition.field,
-      conditionOperator: rule.condition.operator,
-      conditionValue: rule.condition.value,
-      actionType: rule.action.type,
-      actionConfig: rule.action.config || {},
-      cooldownHours: rule.cooldownHours,
-    });
-    setShowCreateModal(true);
-  }, []);
-
-  const handleDuplicate = useCallback(async (rule: Rule) => {
-    try {
-      await createRule.mutateAsync({
-        name: `${rule.name} (Copy)`,
-        description: rule.description,
-        condition_field: rule.condition.field,
-        condition_operator: rule.condition.operator,
-        condition_value: rule.condition.value,
-        condition_duration_hours: 24,
-        action_type: rule.action.type,
-        action_config: rule.action.config || {},
-        cooldown_hours: rule.cooldownHours,
-        status: 'draft',
-      } as any);
-      toast({ title: 'Rule duplicated', description: `"${rule.name}" has been duplicated as a draft.` });
-    } catch {
-      toast({ title: 'Error', description: 'Failed to duplicate rule.', variant: 'destructive' });
-    }
-  }, [createRule, toast]);
-
-  const handleSaveRule = useCallback(async () => {
-    if (!ruleForm.name.trim() || !ruleForm.conditionValue.trim()) return;
-
-    const payload = {
-      name: ruleForm.name,
-      description: ruleForm.description,
-      condition_field: ruleForm.conditionField,
-      condition_operator: ruleForm.conditionOperator,
-      condition_value: ruleForm.conditionValue,
-      condition_duration_hours: 24,
-      action_type: ruleForm.actionType,
-      action_config: ruleForm.actionConfig,
-      cooldown_hours: ruleForm.cooldownHours,
-    };
-
-    try {
-      if (editingRule) {
-        await updateRule.mutateAsync({ id: editingRule.id.toString(), data: payload as any });
-        toast({ title: 'Rule updated', description: `"${ruleForm.name}" has been updated.` });
-      } else {
-        await createRule.mutateAsync(payload as any);
-        toast({ title: 'Rule created', description: `"${ruleForm.name}" has been created.` });
-      }
-      setShowCreateModal(false);
-      resetForm();
-    } catch {
-      toast({ title: 'Error', description: `Failed to ${editingRule ? 'update' : 'create'} rule.`, variant: 'destructive' });
-    }
-  }, [ruleForm, editingRule, createRule, updateRule, toast, resetForm]);
-
-  const handleDeleteRule = useCallback(async (rule: Rule) => {
-    try {
-      await deleteRule.mutateAsync(rule.id.toString());
-      toast({ title: 'Rule deleted', description: `"${rule.name}" has been deleted.` });
-      setShowDeleteConfirm(null);
-    } catch {
-      toast({ title: 'Error', description: 'Failed to delete rule.', variant: 'destructive' });
-    }
-  }, [deleteRule, toast]);
+  const { data: rulesData, isLoading } = useRules(tenantId)
+  const toggleRule = useToggleRule(tenantId)
+  const deleteRule = useDeleteRule(tenantId)
+  const createRule = useCreateRule(tenantId)
 
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
@@ -290,70 +165,65 @@ export function Rules() {
         name: r.name || '',
         description: r.description || '',
         status: r.status || r.is_active ? 'active' : 'paused',
-        condition: r.condition ||
-          r.conditions?.[0] || { field: 'roas', operator: 'less_than', value: '2.0' },
+        condition: r.condition || r.conditions?.[0] || { field: 'roas', operator: 'less_than', value: '2.0' },
         action: r.action || r.actions?.[0] || { type: 'send_alert', config: {} },
         appliesTo: r.applies_to || r.campaigns || [],
         triggerCount: r.trigger_count || r.triggerCount || 0,
         lastTriggered: r.last_triggered || r.lastTriggered || null,
         cooldownHours: r.cooldown_hours || r.cooldownHours || 24,
         createdAt: r.created_at || r.createdAt || new Date().toISOString(),
-      }));
+      }))
     }
-    return mockRules;
-  }, [rulesData]);
+    return mockRules
+  }, [rulesData])
 
   // Handle toggle rule status
-  const handleToggleRule = async (ruleId: number, _currentStatus: RuleStatus) => {
-    await toggleRule.mutateAsync(ruleId.toString());
-  };
+  const handleToggleRule = async (ruleId: number, currentStatus: RuleStatus) => {
+    const enabled = currentStatus !== 'active'
+    await toggleRule.mutateAsync({ ruleId: ruleId.toString(), enabled })
+  }
 
   const filteredRules = rules.filter((rule) => {
     if (searchQuery && !rule.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+      return false
     }
     if (statusFilter !== 'all' && rule.status !== statusFilter) {
-      return false;
+      return false
     }
-    return true;
-  });
+    return true
+  })
 
   const getStatusBadge = (status: RuleStatus) => {
     const config = {
       active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
       paused: { color: 'bg-amber-500/10 text-amber-500', icon: Pause, label: 'Paused' },
       draft: { color: 'bg-gray-500/10 text-gray-500', icon: Edit, label: 'Draft' },
-    };
-    const { color, icon: Icon, label } = config[status];
+    }
+    const { color, icon: Icon, label } = config[status]
     return (
-      <span
-        className={cn(
-          'px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1',
-          color
-        )}
-      >
+      <span className={cn('px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', color)}>
         <Icon className="w-3 h-3" />
         {label}
       </span>
-    );
-  };
+    )
+  }
 
   const getActionIcon = (action: RuleAction) => {
     switch (action) {
       case 'apply_label':
-        return <Tag className="w-4 h-4 text-blue-500" />;
+        return <Tag className="w-4 h-4 text-blue-500" />
       case 'send_alert':
-        return <Bell className="w-4 h-4 text-amber-500" />;
+        return <Bell className="w-4 h-4 text-amber-500" />
       case 'pause_campaign':
-        return <Pause className="w-4 h-4 text-red-500" />;
+        return <Pause className="w-4 h-4 text-red-500" />
       case 'adjust_budget':
-        return <DollarSign className="w-4 h-4 text-green-500" />;
+        return <DollarSign className="w-4 h-4 text-green-500" />
       case 'notify_slack':
-        return <Settings className="w-4 h-4 text-purple-500" />;
+        return <Settings className="w-4 h-4 text-purple-500" />
       case 'notify_whatsapp':
-        return <MessageCircle className="w-4 h-4 text-green-600" />;
+        return <MessageCircle className="w-4 h-4 text-green-600" />
     }
-  };
+  }
 
   const getActionLabel = (action: RuleAction) => {
     const labels = {
@@ -363,25 +233,25 @@ export function Rules() {
       adjust_budget: 'Adjust Budget',
       notify_slack: 'Notify Slack',
       notify_whatsapp: 'Notify WhatsApp',
-    };
-    return labels[action];
-  };
+    }
+    return labels[action]
+  }
 
   const getOperatorLabel = (operator: string) => {
-    return operators.find((op) => op.value === operator)?.label || operator;
-  };
+    return operators.find((op) => op.value === operator)?.label || operator
+  }
 
   const formatLastTriggered = (date: string | null) => {
-    if (!date) return 'Never';
-    const d = new Date(date);
-    const now = new Date();
-    const diffHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60));
+    if (!date) return 'Never'
+    const d = new Date(date)
+    const now = new Date()
+    const diffHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60))
 
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffHours < 48) return 'Yesterday';
-    return d.toLocaleDateString();
-  };
+    if (diffHours < 1) return 'Just now'
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffHours < 48) return 'Yesterday'
+    return d.toLocaleDateString()
+  }
 
   return (
     <div className="space-y-6">
@@ -396,7 +266,7 @@ export function Rules() {
         </div>
 
         <button
-          onClick={openCreateModal}
+          onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -406,21 +276,21 @@ export function Rules() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="metric-card info p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.totalRules')}</p>
           <p className="text-2xl font-bold">{isLoading ? '...' : rules.length}</p>
         </div>
-        <div className="metric-card success p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.activeRules')}</p>
           <p className="text-2xl font-bold text-green-500">
             {isLoading ? '...' : rules.filter((r) => r.status === 'active').length}
           </p>
         </div>
-        <div className="metric-card active p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.triggersToday')}</p>
           <p className="text-2xl font-bold text-primary">23</p>
         </div>
-        <div className="metric-card premium p-4">
+        <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm text-muted-foreground mb-1">{t('rules.actionsExecuted')}</p>
           <p className="text-2xl font-bold">
             {isLoading ? '...' : rules.reduce((acc, r) => acc + r.triggerCount, 0)}
@@ -482,11 +352,7 @@ export function Rules() {
                     className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                     title="Pause"
                   >
-                    {toggleRule.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Pause className="w-4 h-4" />
-                    )}
+                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
                   </button>
                 ) : (
                   <button
@@ -495,34 +361,17 @@ export function Rules() {
                     className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                     title="Activate"
                   >
-                    {toggleRule.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Play className="w-4 h-4" />
-                    )}
+                    {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                   </button>
                 )}
-                <button
-                  onClick={() => openEditModal(rule)}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors"
-                  title="Edit"
-                >
+                <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Edit">
                   <Edit className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => handleDuplicate(rule)}
-                  disabled={createRule.isPending}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-                  title="Duplicate"
-                >
+                <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Duplicate">
                   <Copy className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(rule)}
-                  className="p-2 rounded-lg hover:bg-muted hover:text-red-500 transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
+                <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                  <MoreHorizontal className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -533,7 +382,9 @@ export function Rules() {
               <span className="px-2 py-1 rounded bg-background text-sm font-mono">
                 {rule.condition.field}
               </span>
-              <span className="text-sm font-bold">{getOperatorLabel(rule.condition.operator)}</span>
+              <span className="text-sm font-bold">
+                {getOperatorLabel(rule.condition.operator)}
+              </span>
               <span className="px-2 py-1 rounded bg-background text-sm font-mono">
                 {rule.condition.value}
               </span>
@@ -577,7 +428,7 @@ export function Rules() {
           <Zap className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">{t('rules.noRules')}</p>
           <button
-            onClick={openCreateModal}
+            onClick={() => setShowCreateModal(true)}
             className="mt-4 text-primary hover:underline"
           >
             {t('rules.createFirst')}
@@ -585,29 +436,17 @@ export function Rules() {
         </div>
       )}
 
-      {/* Create/Edit Rule Modal */}
+      {/* Create Rule Modal Placeholder */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">
-                {editingRule ? 'Edit Rule' : t('rules.createRule')}
-              </h2>
-              <button
-                onClick={() => { setShowCreateModal(false); resetForm(); }}
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="bg-background rounded-xl p-6 w-full max-w-2xl mx-4">
+            <h2 className="text-xl font-bold mb-4">{t('rules.createRule')}</h2>
 
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-1 block">{t('rules.ruleName')}</label>
                 <input
                   type="text"
-                  value={ruleForm.name}
-                  onChange={(e) => setRuleForm(f => ({ ...f, name: e.target.value }))}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
                   placeholder="e.g., Pause Low Performers"
                 />
@@ -616,8 +455,6 @@ export function Rules() {
               <div>
                 <label className="text-sm font-medium mb-1 block">{t('rules.description')}</label>
                 <textarea
-                  value={ruleForm.description}
-                  onChange={(e) => setRuleForm(f => ({ ...f, description: e.target.value }))}
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
                   rows={2}
                   placeholder="Describe what this rule does..."
@@ -627,22 +464,14 @@ export function Rules() {
               <div className="p-4 rounded-lg bg-muted/50">
                 <p className="text-sm font-medium mb-3">{t('rules.condition')}</p>
                 <div className="flex gap-2">
-                  <select
-                    value={ruleForm.conditionField}
-                    onChange={(e) => setRuleForm(f => ({ ...f, conditionField: e.target.value }))}
-                    className="flex-1 px-3 py-2 rounded-lg border bg-background"
-                  >
+                  <select className="flex-1 px-3 py-2 rounded-lg border bg-background">
                     {fields.map((field) => (
                       <option key={field} value={field}>
                         {field.toUpperCase()}
                       </option>
                     ))}
                   </select>
-                  <select
-                    value={ruleForm.conditionOperator}
-                    onChange={(e) => setRuleForm(f => ({ ...f, conditionOperator: e.target.value }))}
-                    className="w-24 px-3 py-2 rounded-lg border bg-background"
-                  >
+                  <select className="w-24 px-3 py-2 rounded-lg border bg-background">
                     {operators.map((op) => (
                       <option key={op.value} value={op.value}>
                         {op.label}
@@ -651,31 +480,15 @@ export function Rules() {
                   </select>
                   <input
                     type="text"
-                    value={ruleForm.conditionValue}
-                    onChange={(e) => setRuleForm(f => ({ ...f, conditionValue: e.target.value }))}
                     className="w-32 px-3 py-2 rounded-lg border bg-background"
                     placeholder="Value"
                   />
                 </div>
               </div>
 
-              <div className="p-4 rounded-lg bg-muted/50 space-y-3">
-                <p className="text-sm font-medium">{t('rules.action')}</p>
-                <select
-                  value={ruleForm.actionType}
-                  onChange={(e) => {
-                    const newType = e.target.value as RuleAction;
-                    const defaultConfig = newType === 'notify_whatsapp'
-                      ? { contact_ids: [], template_name: 'rule_alert' }
-                      : newType === 'notify_slack'
-                        ? { webhook_url: '' }
-                        : newType === 'adjust_budget'
-                          ? { adjustment_type: 'decrease', adjustment_value: 10 }
-                          : {};
-                    setRuleForm(f => ({ ...f, actionType: newType, actionConfig: defaultConfig }));
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border bg-background"
-                >
+              <div className="p-4 rounded-lg bg-muted/50">
+                <p className="text-sm font-medium mb-3">{t('rules.action')}</p>
+                <select className="w-full px-3 py-2 rounded-lg border bg-background">
                   <option value="apply_label">Apply Label</option>
                   <option value="send_alert">Send Alert</option>
                   <option value="pause_campaign">Pause Campaign</option>
@@ -683,144 +496,25 @@ export function Rules() {
                   <option value="notify_slack">Notify Slack</option>
                   <option value="notify_whatsapp">Notify WhatsApp</option>
                 </select>
-
-                {/* WhatsApp Config */}
-                {ruleForm.actionType === 'notify_whatsapp' && (
-                  <div className="space-y-3 pt-2 border-t">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Contact IDs (comma-separated)</label>
-                      <input
-                        type="text"
-                        value={(ruleForm.actionConfig.contact_ids || []).join(', ')}
-                        onChange={(e) => {
-                          const ids = e.target.value.split(',').map(s => s.trim()).filter(Boolean).map(Number).filter(n => !isNaN(n));
-                          setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, contact_ids: ids } }));
-                        }}
-                        placeholder="1, 2, 3"
-                        className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">IDs of opted-in WhatsApp contacts to notify</p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Message Template</label>
-                      <select
-                        value={ruleForm.actionConfig.template_name || 'rule_alert'}
-                        onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, template_name: e.target.value } }))}
-                        className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
-                      >
-                        <option value="rule_alert">Rule Alert (default)</option>
-                        <option value="budget_alert">Budget Alert</option>
-                        <option value="performance_alert">Performance Alert</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {/* Slack Config */}
-                {ruleForm.actionType === 'notify_slack' && (
-                  <div className="pt-2 border-t">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Slack Webhook URL</label>
-                    <input
-                      type="url"
-                      value={ruleForm.actionConfig.webhook_url || ''}
-                      onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, webhook_url: e.target.value } }))}
-                      placeholder="https://hooks.slack.com/services/..."
-                      className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                )}
-
-                {/* Budget Adjust Config */}
-                {ruleForm.actionType === 'adjust_budget' && (
-                  <div className="space-y-3 pt-2 border-t">
-                    <div className="flex gap-3">
-                      <select
-                        value={ruleForm.actionConfig.adjustment_type || 'decrease'}
-                        onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, adjustment_type: e.target.value } }))}
-                        className="px-3 py-2 rounded-lg border bg-background text-sm"
-                      >
-                        <option value="decrease">Decrease by</option>
-                        <option value="increase">Increase by</option>
-                      </select>
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          value={ruleForm.actionConfig.adjustment_value || 10}
-                          onChange={(e) => setRuleForm(f => ({ ...f, actionConfig: { ...f.actionConfig, adjustment_value: parseInt(e.target.value) || 0 } }))}
-                          className="w-20 px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          min={1}
-                          max={100}
-                        />
-                        <span className="text-sm text-muted-foreground">%</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-1 block">Cooldown (hours)</label>
-                <input
-                  type="number"
-                  value={ruleForm.cooldownHours}
-                  onChange={(e) => setRuleForm(f => ({ ...f, cooldownHours: parseInt(e.target.value) || 1 }))}
-                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  min={1}
-                  max={168}
-                />
-                <p className="text-xs text-muted-foreground mt-1">Minimum time between rule triggers</p>
               </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => { setShowCreateModal(false); resetForm(); }}
+                onClick={() => setShowCreateModal(false)}
                 className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
               >
                 {t('common.cancel')}
               </button>
-              <button
-                onClick={handleSaveRule}
-                disabled={createRule.isPending || updateRule.isPending || !ruleForm.name.trim() || !ruleForm.conditionValue.trim()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                {(createRule.isPending || updateRule.isPending) && <Loader2 className="w-4 h-4 animate-spin" />}
-                {editingRule ? 'Update Rule' : t('rules.createRule')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-bold mb-2">Delete Rule</h2>
-            <p className="text-muted-foreground mb-4">
-              Are you sure you want to delete &quot;{showDeleteConfirm.name}&quot;? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteRule(showDeleteConfirm)}
-                disabled={deleteRule.isPending}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                {deleteRule.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Delete
+              <button className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                {t('rules.createRule')}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default Rules;
+export default Rules

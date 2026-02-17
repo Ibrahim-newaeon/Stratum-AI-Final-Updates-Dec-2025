@@ -1,19 +1,9 @@
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { cn } from '@/lib/utils';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { cn } from '@/lib/utils'
 
 interface ChartWidgetProps {
-  type: 'revenue' | 'spend' | 'performance';
-  className?: string;
+  type: 'revenue' | 'spend' | 'performance'
+  className?: string
 }
 
 const mockRevenueData = [
@@ -24,7 +14,7 @@ const mockRevenueData = [
   { name: 'Fri', value: 35000 },
   { name: 'Sat', value: 29000 },
   { name: 'Sun', value: 31000 },
-];
+]
 
 const mockSpendData = [
   { name: 'Mon', value: 6500 },
@@ -34,7 +24,7 @@ const mockSpendData = [
   { name: 'Fri', value: 8500 },
   { name: 'Sat', value: 7000 },
   { name: 'Sun', value: 7800 },
-];
+]
 
 const mockPerformanceData = [
   { name: 'Mon', clicks: 3400, conversions: 240 },
@@ -44,7 +34,7 @@ const mockPerformanceData = [
   { name: 'Fri', clicks: 4500, conversions: 350 },
   { name: 'Sat', clicks: 3700, conversions: 260 },
   { name: 'Sun', clicks: 4000, conversions: 290 },
-];
+]
 
 // Analytics Design System chart styling
 const chartStyle = {
@@ -55,7 +45,7 @@ const chartStyle = {
     border: '1px solid rgba(255,255,255,0.10)',
     borderRadius: '12px',
   },
-};
+}
 
 export function ChartWidget({ type, className }: ChartWidgetProps) {
   if (type === 'performance') {
@@ -72,11 +62,11 @@ export function ChartWidget({ type, className }: ChartWidgetProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-    );
+    )
   }
 
-  const data = type === 'revenue' ? mockRevenueData : mockSpendData;
-  const color = type === 'revenue' ? '#22C55E' : '#a855f7';
+  const data = type === 'revenue' ? mockRevenueData : mockSpendData
+  const color = type === 'revenue' ? '#22C55E' : '#a855f7'
 
   return (
     <div className={cn('h-full p-4 motion-chart-sweep', className)}>
@@ -93,10 +83,7 @@ export function ChartWidget({ type, className }: ChartWidgetProps) {
           <YAxis tick={chartStyle.axis} tickLine={false} axisLine={false} />
           <Tooltip
             contentStyle={chartStyle.tooltip}
-            formatter={((value: number) => [
-              `$${value.toLocaleString()}`,
-              type === 'revenue' ? 'Revenue' : 'Spend',
-            ]) as any}
+            formatter={(value: number) => [`$${value.toLocaleString()}`, type === 'revenue' ? 'Revenue' : 'Spend']}
           />
           <Area
             type="monotone"
@@ -108,5 +95,5 @@ export function ChartWidget({ type, className }: ChartWidgetProps) {
         </AreaChart>
       </ResponsiveContainer>
     </div>
-  );
+  )
 }

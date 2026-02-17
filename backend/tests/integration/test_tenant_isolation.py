@@ -14,6 +14,7 @@ Ensures that:
 import pytest
 from httpx import AsyncClient
 
+
 pytestmark = pytest.mark.integration
 
 
@@ -34,13 +35,16 @@ class TestTenantDataIsolation:
         other_tenant = Tenant(
             name="Other Tenant",
             slug="other-tenant",
+            is_active=True,
             plan="professional",
         )
         db_session.add(other_tenant)
         await db_session.flush()
 
         # Try to access the other tenant's EMQ score
-        response = await authenticated_client.get(f"/api/v1/tenants/{other_tenant.id}/emq/score")
+        response = await authenticated_client.get(
+            f"/api/v1/tenants/{other_tenant.id}/emq/score"
+        )
 
         # Should be forbidden
         assert response.status_code == 403
@@ -52,7 +56,9 @@ class TestTenantDataIsolation:
         test_tenant: dict,
     ):
         """Test that a user can access their own tenant's data."""
-        response = await authenticated_client.get(f"/api/v1/tenants/{test_tenant['id']}/emq/score")
+        response = await authenticated_client.get(
+            f"/api/v1/tenants/{test_tenant['id']}/emq/score"
+        )
 
         assert response.status_code == 200
 
@@ -72,6 +78,7 @@ class TestTenantDataIsolation:
         other_tenant = Tenant(
             name="Other Tenant",
             slug="other-tenant-2",
+            is_active=True,
         )
         db_session.add(other_tenant)
         await db_session.flush()
@@ -81,7 +88,8 @@ class TestTenantDataIsolation:
             name="Other Tenant Campaign",
             status="draft",
             platform="meta",
-            draft_json={"objective": "conversions", "daily_budget": 200.0},
+            objective="conversions",
+            daily_budget=200.0,
         )
         db_session.add(other_campaign)
         await db_session.flush()
@@ -107,7 +115,9 @@ class TestTenantDataIsolation:
         test_action: dict,
     ):
         """Test that action queue queries are scoped to tenant."""
-        response = await authenticated_client.get(f"/api/v1/tenants/{test_tenant['id']}/actions")
+        response = await authenticated_client.get(
+            f"/api/v1/tenants/{test_tenant['id']}/actions"
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -127,22 +137,22 @@ class TestTenantDataIsolation:
         db_session,
     ):
         """Test that signal health queries are scoped to tenant."""
-        from datetime import UTC, datetime
-
         from app.base_models import Tenant
         from app.models.trust_layer import FactSignalHealthDaily, SignalHealthStatus
+        from datetime import date
 
         # Create signal health for another tenant
         other_tenant = Tenant(
             name="Other Tenant Health",
             slug="other-tenant-health",
+            is_active=True,
         )
         db_session.add(other_tenant)
         await db_session.flush()
 
         other_health = FactSignalHealthDaily(
             tenant_id=other_tenant.id,
-            date=datetime.now(UTC).date(),
+            date=date.today(),
             platform="google",
             emq_score=95.0,
             status=SignalHealthStatus.OK,
@@ -151,7 +161,9 @@ class TestTenantDataIsolation:
         await db_session.flush()
 
         # Query EMQ - should use test_tenant's data
-        response = await authenticated_client.get(f"/api/v1/tenants/{test_tenant['id']}/emq/score")
+        response = await authenticated_client.get(
+            f"/api/v1/tenants/{test_tenant['id']}/emq/score"
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -226,7 +238,9 @@ class TestPathTenantValidation:
         # Try to access a different tenant ID than in token
         wrong_tenant_id = test_tenant["id"] + 999
 
-        response = await authenticated_client.get(f"/api/v1/tenants/{wrong_tenant_id}/emq/score")
+        response = await authenticated_client.get(
+            f"/api/v1/tenants/{wrong_tenant_id}/emq/score"
+        )
 
         assert response.status_code == 403
 
@@ -236,7 +250,9 @@ class TestPathTenantValidation:
         authenticated_client: AsyncClient,
     ):
         """Test handling of invalid tenant ID format."""
-        response = await authenticated_client.get("/api/v1/tenants/invalid/emq/score")
+        response = await authenticated_client.get(
+            "/api/v1/tenants/invalid/emq/score"
+        )
 
         assert response.status_code == 422  # Validation error
 
@@ -246,6 +262,8 @@ class TestPathTenantValidation:
         authenticated_client: AsyncClient,
     ):
         """Test handling of non-existent tenant ID."""
-        response = await authenticated_client.get("/api/v1/tenants/99999/emq/score")
+        response = await authenticated_client.get(
+            "/api/v1/tenants/99999/emq/score"
+        )
 
         assert response.status_code in [403, 404]

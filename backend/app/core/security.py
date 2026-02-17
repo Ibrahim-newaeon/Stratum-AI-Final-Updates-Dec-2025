@@ -9,26 +9,29 @@ Implements GDPR-compliant encryption for sensitive data.
 import base64
 import hashlib
 import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 
-import bcrypt
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 from app.core.config import settings
 
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash using bcrypt directly."""
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    """Verify a password against its hash."""
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Generate password hash using bcrypt directly."""
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    """Generate password hash using bcrypt."""
+    return pwd_context.hash(password)
 
 
 def create_access_token(
@@ -48,21 +51,25 @@ def create_access_token(
         Encoded JWT token string
     """
     if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.access_token_expire_minutes
+        )
 
     to_encode = {
         "sub": str(subject),
         "exp": expire,
-        "iat": datetime.now(UTC),
+        "iat": datetime.now(timezone.utc),
         "type": "access",
     }
 
     if additional_claims:
         to_encode.update(additional_claims)
 
-    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 def create_refresh_token(
@@ -80,19 +87,23 @@ def create_refresh_token(
         Encoded JWT refresh token string
     """
     if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(days=settings.refresh_token_expire_days)
+        expire = datetime.now(timezone.utc) + timedelta(
+            days=settings.refresh_token_expire_days
+        )
 
     to_encode = {
         "sub": str(subject),
         "exp": expire,
-        "iat": datetime.now(UTC),
+        "iat": datetime.now(timezone.utc),
         "type": "refresh",
         "jti": secrets.token_urlsafe(32),  # Unique token ID for revocation
     }
 
-    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 def decode_token(token: str) -> Optional[dict[str, Any]]:
@@ -106,7 +117,9 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
         Decoded token payload or None if invalid
     """
     try:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         return payload
     except JWTError:
         return None
@@ -116,49 +129,25 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
 # PII Encryption (GDPR Compliance)
 # =============================================================================
 
-
-def _get_pii_salt() -> bytes:
-    """
-    Get PII encryption salt from environment or derive from secret key.
-
-    Security: In production, set PII_ENCRYPTION_SALT environment variable
-    to a unique 32+ byte value per deployment. This prevents rainbow table
-    attacks if the encryption key is compromised.
-    """
-    import os
-
-    # Check for explicit salt in environment (recommended for production)
-    env_salt = os.getenv("PII_ENCRYPTION_SALT")
-    if env_salt and len(env_salt) >= 16:
-        return env_salt.encode()
-
-    # Derive salt from secret_key (fallback - still unique per deployment)
-    # This ensures different deployments have different salts
-    derived = hashlib.sha256(
-        f"stratum_pii_salt:{settings.secret_key}".encode()
-    ).digest()
-    return derived
-
-
 def _get_fernet_key() -> bytes:
     """
     Derive a Fernet-compatible key from the encryption key setting.
-    Uses PBKDF2 for key derivation with environment-specific salt.
-
-    Security improvements:
-    - Salt is derived from deployment-specific secret key (or explicit env var)
-    - Iterations increased to 200,000 per OWASP 2024 recommendations
+    Uses PBKDF2 for key derivation.
     """
-    salt = _get_pii_salt()
+    # Use a fixed salt for deterministic key derivation
+    # In production, consider using a per-tenant salt stored securely
+    salt = b"stratum_ai_pii_salt_v1"
 
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
         salt=salt,
-        iterations=200000,  # Increased from 100k per OWASP 2024 guidelines
+        iterations=100000,
     )
 
-    key = base64.urlsafe_b64encode(kdf.derive(settings.pii_encryption_key.encode()))
+    key = base64.urlsafe_b64encode(
+        kdf.derive(settings.pii_encryption_key.encode())
+    )
     return key
 
 
@@ -209,7 +198,7 @@ def hash_pii_for_lookup(value: str) -> str:
     Returns:
         Hex-encoded SHA256 hash
     """
-    salted = f"{settings.pii_encryption_key}:{value}".encode()
+    salted = f"{settings.pii_encryption_key}:{value}".encode("utf-8")
     return hashlib.sha256(salted).hexdigest()
 
 
@@ -248,8 +237,7 @@ def hash_api_key(api_key: str) -> str:
 # Permission Decorator
 # =============================================================================
 
-
-def require_permission(permission: str) -> Any:
+def require_permission(permission: str):
     """
     Dependency factory that checks if the current user has the required permission.
 
@@ -261,7 +249,7 @@ def require_permission(permission: str) -> Any:
     """
     from fastapi import Depends, HTTPException, Request
 
-    async def permission_checker(request: Request) -> bool:
+    async def permission_checker(request: Request):
         # Get user permissions from request state (set by auth middleware)
         user_permissions = getattr(request.state, "permissions", [])
         user_role = getattr(request.state, "role", None)
@@ -272,7 +260,10 @@ def require_permission(permission: str) -> Any:
 
         # Check if user has the required permission
         if permission not in user_permissions:
-            raise HTTPException(status_code=403, detail=f"Permission denied: {permission} required")
+            raise HTTPException(
+                status_code=403,
+                detail=f"Permission denied: {permission} required"
+            )
 
         return True
 

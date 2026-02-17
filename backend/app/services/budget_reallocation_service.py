@@ -12,12 +12,12 @@ Provides:
 - Rollback capabilities
 """
 
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
+from enum import Enum
 import statistics
 import uuid
-from dataclasses import dataclass
-from datetime import UTC, datetime
-from enum import Enum
-from typing import Any, Optional
 
 from app.core.logging import get_logger
 
@@ -26,7 +26,6 @@ logger = get_logger(__name__)
 
 class ReallocationStrategy(str, Enum):
     """Budget reallocation strategies."""
-
     ROAS_MAXIMIZATION = "roas_maximization"
     VOLUME_MAXIMIZATION = "volume_maximization"
     PROFIT_MAXIMIZATION = "profit_maximization"
@@ -36,7 +35,6 @@ class ReallocationStrategy(str, Enum):
 
 class ReallocationStatus(str, Enum):
     """Status of a reallocation."""
-
     PROPOSED = "proposed"
     APPROVED = "approved"
     EXECUTING = "executing"
@@ -47,7 +45,6 @@ class ReallocationStatus(str, Enum):
 
 class GuardrailViolation(str, Enum):
     """Types of guardrail violations."""
-
     MAX_CHANGE_EXCEEDED = "max_change_exceeded"
     MIN_BUDGET_VIOLATED = "min_budget_violated"
     MAX_BUDGET_VIOLATED = "max_budget_violated"
@@ -58,20 +55,18 @@ class GuardrailViolation(str, Enum):
 @dataclass
 class CampaignBudgetState:
     """Current budget state for a campaign."""
-
     campaign_id: str
     campaign_name: str
     platform: str
     current_daily_budget: float
     current_spend: float  # Actual spend in period
-    performance_metrics: dict[str, float]  # roas, ctr, cvr, cpa
+    performance_metrics: Dict[str, float]  # roas, ctr, cvr, cpa
     data_quality_score: float  # 0-1, based on EMQ and data freshness
 
 
 @dataclass
 class BudgetChange:
     """A proposed budget change."""
-
     campaign_id: str
     campaign_name: str
     platform: str
@@ -80,23 +75,21 @@ class BudgetChange:
     change_amount: float
     change_percent: float
     reason: str
-    expected_impact: dict[str, float]  # Expected change in metrics
+    expected_impact: Dict[str, float]  # Expected change in metrics
 
 
 @dataclass
 class GuardrailCheck:
     """Result of a guardrail check."""
-
     passed: bool
-    violations: list[GuardrailViolation]
-    warnings: list[str]
-    details: dict[str, Any]
+    violations: List[GuardrailViolation]
+    warnings: List[str]
+    details: Dict[str, Any]
 
 
 @dataclass
 class ReallocationConfig:
     """Configuration for budget reallocation."""
-
     strategy: ReallocationStrategy = ReallocationStrategy.BALANCED
     total_budget: Optional[float] = None  # If None, keep current total
     max_change_percent: float = 30.0  # Max budget change per campaign
@@ -110,7 +103,6 @@ class ReallocationConfig:
 @dataclass
 class ReallocationPlan:
     """A complete budget reallocation plan."""
-
     plan_id: str
     tenant_id: str
     created_at: datetime
@@ -122,7 +114,7 @@ class ReallocationPlan:
     total_new_budget: float
 
     # Proposed changes
-    changes: list[BudgetChange]
+    changes: List[BudgetChange]
 
     # Guardrail results
     guardrail_check: GuardrailCheck
@@ -137,17 +129,16 @@ class ReallocationPlan:
     approved_at: Optional[datetime] = None
     approved_by: Optional[str] = None
     executed_at: Optional[datetime] = None
-    rollback_plan: Optional[dict[str, float]] = None  # campaign_id -> original budget
+    rollback_plan: Optional[Dict[str, float]] = None  # campaign_id -> original budget
 
 
 @dataclass
 class ReallocationResult:
     """Result of executing a reallocation."""
-
     plan_id: str
     success: bool
-    changes_applied: list[BudgetChange]
-    changes_failed: list[tuple[BudgetChange, str]]  # (change, error message)
+    changes_applied: List[BudgetChange]
+    changes_failed: List[Tuple[BudgetChange, str]]  # (change, error message)
     execution_time: datetime
 
 
@@ -178,13 +169,13 @@ class BudgetReallocationService:
     """
 
     def __init__(self):
-        self._plans: dict[str, ReallocationPlan] = {}
-        self._execution_history: list[ReallocationResult] = []
+        self._plans: Dict[str, ReallocationPlan] = {}
+        self._execution_history: List[ReallocationResult] = []
 
     def create_plan(
         self,
         tenant_id: str,
-        campaigns: list[CampaignBudgetState],
+        campaigns: List[CampaignBudgetState],
         config: Optional[ReallocationConfig] = None,
     ) -> ReallocationPlan:
         """
@@ -205,7 +196,8 @@ class BudgetReallocationService:
 
         # Filter campaigns by data quality
         eligible_campaigns = [
-            c for c in campaigns if c.data_quality_score >= config.min_data_quality
+            c for c in campaigns
+            if c.data_quality_score >= config.min_data_quality
         ]
 
         if not eligible_campaigns:
@@ -233,7 +225,7 @@ class BudgetReallocationService:
         plan = ReallocationPlan(
             plan_id=plan_id,
             tenant_id=tenant_id,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             strategy=config.strategy,
             config=config,
             total_current_budget=total_current,
@@ -255,11 +247,11 @@ class BudgetReallocationService:
 
     def _calculate_allocation(
         self,
-        campaigns: list[CampaignBudgetState],
+        campaigns: List[CampaignBudgetState],
         total_budget: float,
         strategy: ReallocationStrategy,
         config: ReallocationConfig,
-    ) -> list[BudgetChange]:
+    ) -> List[BudgetChange]:
         """Calculate optimal budget allocation."""
         changes = []
 
@@ -298,35 +290,29 @@ class BudgetReallocationService:
             new_budget = round(new_budget, 2)
 
             change_amount = new_budget - campaign.current_daily_budget
-            change_percent = (
-                (change_amount / campaign.current_daily_budget * 100)
-                if campaign.current_daily_budget > 0
-                else 0
-            )
+            change_percent = (change_amount / campaign.current_daily_budget * 100) if campaign.current_daily_budget > 0 else 0
 
             reason = self._generate_change_reason(campaign, scores[campaign.campaign_id], strategy)
 
             expected_impact = self._estimate_impact(campaign, change_percent)
 
-            changes.append(
-                BudgetChange(
-                    campaign_id=campaign.campaign_id,
-                    campaign_name=campaign.campaign_name,
-                    platform=campaign.platform,
-                    current_budget=campaign.current_daily_budget,
-                    new_budget=new_budget,
-                    change_amount=round(change_amount, 2),
-                    change_percent=round(change_percent, 1),
-                    reason=reason,
-                    expected_impact=expected_impact,
-                )
-            )
+            changes.append(BudgetChange(
+                campaign_id=campaign.campaign_id,
+                campaign_name=campaign.campaign_name,
+                platform=campaign.platform,
+                current_budget=campaign.current_daily_budget,
+                new_budget=new_budget,
+                change_amount=round(change_amount, 2),
+                change_percent=round(change_percent, 1),
+                reason=reason,
+                expected_impact=expected_impact,
+            ))
 
         return changes
 
     def _calculate_campaign_score(
         self,
-        metrics: dict[str, float],
+        metrics: Dict[str, float],
         strategy: ReallocationStrategy,
     ) -> float:
         """Calculate campaign score based on strategy."""
@@ -341,7 +327,7 @@ class BudgetReallocationService:
 
         elif strategy == ReallocationStrategy.VOLUME_MAXIMIZATION:
             # Prioritize conversion volume
-            return (volume**0.5) * 0.6 + (100 / (cpa + 1)) * 0.4
+            return (volume ** 0.5) * 0.6 + (100 / (cpa + 1)) * 0.4
 
         elif strategy == ReallocationStrategy.PROFIT_MAXIMIZATION:
             # Balance ROAS and volume
@@ -375,7 +361,7 @@ class BudgetReallocationService:
         self,
         campaign: CampaignBudgetState,
         change_percent: float,
-    ) -> dict[str, float]:
+    ) -> Dict[str, float]:
         """Estimate impact of budget change."""
         # Simplified diminishing returns model
         metrics = campaign.performance_metrics
@@ -395,7 +381,7 @@ class BudgetReallocationService:
 
     def _check_guardrails(
         self,
-        changes: list[BudgetChange],
+        changes: List[BudgetChange],
         config: ReallocationConfig,
     ) -> GuardrailCheck:
         """Check all guardrails for the reallocation plan."""
@@ -421,9 +407,7 @@ class BudgetReallocationService:
 
             # Warnings for significant changes
             if abs(change.change_percent) > 20:
-                warnings.append(
-                    f"Large change ({change.change_percent:+.1f}%) for {change.campaign_name}"
-                )
+                warnings.append(f"Large change ({change.change_percent:+.1f}%) for {change.campaign_name}")
 
         return GuardrailCheck(
             passed=len(violations) == 0,
@@ -434,9 +418,9 @@ class BudgetReallocationService:
 
     def _calculate_expected_outcomes(
         self,
-        changes: list[BudgetChange],
-        campaigns: list[CampaignBudgetState],
-    ) -> dict[str, float]:
+        changes: List[BudgetChange],
+        campaigns: List[CampaignBudgetState],
+    ) -> Dict[str, float]:
         """Calculate expected outcomes of the reallocation."""
         campaign_map = {c.campaign_id: c for c in campaigns}
 
@@ -467,7 +451,7 @@ class BudgetReallocationService:
             "spend_change": round(total_spend_change, 2),
         }
 
-    def simulate(self, plan_id: str) -> dict[str, Any]:
+    def simulate(self, plan_id: str) -> Dict[str, Any]:
         """
         Simulate the impact of a reallocation plan.
 
@@ -530,7 +514,7 @@ class BudgetReallocationService:
             return False
 
         plan.status = ReallocationStatus.APPROVED
-        plan.approved_at = datetime.now(UTC)
+        plan.approved_at = datetime.now(timezone.utc)
         plan.approved_by = approved_by
 
         logger.info(f"Plan {plan_id} approved by {approved_by}")
@@ -551,7 +535,7 @@ class BudgetReallocationService:
                 success=False,
                 changes_applied=[],
                 changes_failed=[(None, "Plan not found")],
-                execution_time=datetime.now(UTC),
+                execution_time=datetime.now(timezone.utc),
             )
 
         if plan.status != ReallocationStatus.APPROVED:
@@ -560,7 +544,7 @@ class BudgetReallocationService:
                 success=False,
                 changes_applied=[],
                 changes_failed=[(None, "Plan not approved")],
-                execution_time=datetime.now(UTC),
+                execution_time=datetime.now(timezone.utc),
             )
 
         plan.status = ReallocationStatus.EXECUTING
@@ -582,14 +566,14 @@ class BudgetReallocationService:
                 failed.append((change, str(e)))
 
         plan.status = ReallocationStatus.COMPLETED if not failed else ReallocationStatus.FAILED
-        plan.executed_at = datetime.now(UTC)
+        plan.executed_at = datetime.now(timezone.utc)
 
         result = ReallocationResult(
             plan_id=plan_id,
             success=len(failed) == 0,
             changes_applied=applied,
             changes_failed=failed,
-            execution_time=datetime.now(UTC),
+            execution_time=datetime.now(timezone.utc),
         )
 
         self._execution_history.append(result)
@@ -608,7 +592,7 @@ class BudgetReallocationService:
                 success=False,
                 changes_applied=[],
                 changes_failed=[(None, "Plan not found")],
-                execution_time=datetime.now(UTC),
+                execution_time=datetime.now(timezone.utc),
             )
 
         if not plan.rollback_plan:
@@ -617,7 +601,7 @@ class BudgetReallocationService:
                 success=False,
                 changes_applied=[],
                 changes_failed=[(None, "No rollback data available")],
-                execution_time=datetime.now(UTC),
+                execution_time=datetime.now(timezone.utc),
             )
 
         applied = []
@@ -627,19 +611,17 @@ class BudgetReallocationService:
             try:
                 # In production, this would call the platform API
                 logger.info(f"Rolling back {campaign_id} to ${original_budget:.2f}")
-                applied.append(
-                    BudgetChange(
-                        campaign_id=campaign_id,
-                        campaign_name="",
-                        platform="",
-                        current_budget=0,
-                        new_budget=original_budget,
-                        change_amount=0,
-                        change_percent=0,
-                        reason="Rollback",
-                        expected_impact={},
-                    )
-                )
+                applied.append(BudgetChange(
+                    campaign_id=campaign_id,
+                    campaign_name="",
+                    platform="",
+                    current_budget=0,
+                    new_budget=original_budget,
+                    change_amount=0,
+                    change_percent=0,
+                    reason="Rollback",
+                    expected_impact={},
+                ))
             except Exception as e:
                 failed.append((None, str(e)))
 
@@ -650,7 +632,7 @@ class BudgetReallocationService:
             success=len(failed) == 0,
             changes_applied=applied,
             changes_failed=failed,
-            execution_time=datetime.now(UTC),
+            execution_time=datetime.now(timezone.utc),
         )
 
     def get_plan(self, plan_id: str) -> Optional[ReallocationPlan]:
@@ -661,7 +643,7 @@ class BudgetReallocationService:
         self,
         tenant_id: Optional[str] = None,
         status: Optional[ReallocationStatus] = None,
-    ) -> list[ReallocationPlan]:
+    ) -> List[ReallocationPlan]:
         """List reallocation plans with optional filtering."""
         plans = list(self._plans.values())
 
@@ -682,13 +664,12 @@ reallocation_service = BudgetReallocationService()
 # Convenience Functions
 # =============================================================================
 
-
 def create_reallocation_plan(
     tenant_id: str,
-    campaigns: list[dict[str, Any]],
+    campaigns: List[Dict[str, Any]],
     strategy: str = "balanced",
     max_change_percent: float = 25.0,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Create a budget reallocation plan.
 
@@ -762,12 +743,10 @@ def create_reallocation_plan(
 # Advanced Budget Reallocation Features (P2 Enhancement)
 # =============================================================================
 
-
 @dataclass
 class ParetoAllocation:
     """Point on Pareto frontier for multi-objective optimization."""
-
-    allocation: dict[str, float]  # campaign_id -> budget
+    allocation: Dict[str, float]  # campaign_id -> budget
     expected_roas: float
     expected_volume: float
     expected_profit: float
@@ -777,8 +756,7 @@ class ParetoAllocation:
 @dataclass
 class PortfolioAllocation:
     """Portfolio theory-based allocation."""
-
-    allocations: dict[str, float]
+    allocations: Dict[str, float]
     expected_return: float
     portfolio_risk: float
     sharpe_ratio: float
@@ -788,11 +766,10 @@ class PortfolioAllocation:
 @dataclass
 class AllocationLearning:
     """Learning from historical allocations."""
-
     recommendation: str
     confidence: float
-    supporting_evidence: list[str]
-    similar_past_allocations: list[dict[str, Any]]
+    supporting_evidence: List[str]
+    similar_past_allocations: List[Dict[str, Any]]
 
 
 class MultiObjectiveOptimizer:
@@ -809,10 +786,10 @@ class MultiObjectiveOptimizer:
 
     def optimize(
         self,
-        campaigns: list[CampaignBudgetState],
+        campaigns: List[CampaignState],
         total_budget: float,
-        objectives: list[str] = None,
-    ) -> list[ParetoAllocation]:
+        objectives: List[str] = None,
+    ) -> List[ParetoAllocation]:
         """Find Pareto-optimal allocations."""
         if objectives is None:
             objectives = ["roas", "volume", "profit"]
@@ -837,23 +814,21 @@ class MultiObjectiveOptimizer:
                     break
 
             if not is_dominated:
-                pareto_frontier.append(
-                    ParetoAllocation(
-                        allocation=alloc,
-                        expected_roas=metrics["roas"],
-                        expected_volume=metrics["volume"],
-                        expected_profit=metrics["profit"],
-                        trade_off_description=self._describe_trade_off(metrics, objectives),
-                    )
-                )
+                pareto_frontier.append(ParetoAllocation(
+                    allocation=alloc,
+                    expected_roas=metrics["roas"],
+                    expected_volume=metrics["volume"],
+                    expected_profit=metrics["profit"],
+                    trade_off_description=self._describe_trade_off(metrics, objectives),
+                ))
 
         return pareto_frontier[:5]  # Top 5 Pareto-optimal solutions
 
     def _generate_scenarios(
         self,
-        campaigns: list[CampaignBudgetState],
+        campaigns: List[CampaignState],
         total_budget: float,
-    ) -> list[dict[str, float]]:
+    ) -> List[Dict[str, float]]:
         """Generate allocation scenarios to evaluate."""
         scenarios = []
 
@@ -879,15 +854,16 @@ class MultiObjectiveOptimizer:
         total_conv = sum(c.performance_metrics.get("conversions", 1) for c in campaigns)
         if total_conv > 0:
             volume_weighted = {
-                c.campaign_id: c.performance_metrics.get("conversions", 1)
-                / total_conv
-                * total_budget
+                c.campaign_id: c.performance_metrics.get("conversions", 1) / total_conv * total_budget
                 for c in campaigns
             }
             scenarios.append(volume_weighted)
 
         # Scenario 4: Equal split
-        equal_split = {c.campaign_id: total_budget / len(campaigns) for c in campaigns}
+        equal_split = {
+            c.campaign_id: total_budget / len(campaigns)
+            for c in campaigns
+        }
         scenarios.append(equal_split)
 
         # Scenario 5: Top performers only (top 3 by ROAS)
@@ -906,9 +882,9 @@ class MultiObjectiveOptimizer:
 
     def _evaluate_allocation(
         self,
-        campaigns: list[CampaignBudgetState],
-        allocation: dict[str, float],
-    ) -> dict[str, float]:
+        campaigns: List[CampaignState],
+        allocation: Dict[str, float],
+    ) -> Dict[str, float]:
         """Evaluate expected metrics for an allocation."""
         total_spend = sum(allocation.values())
         total_revenue = 0
@@ -934,9 +910,9 @@ class MultiObjectiveOptimizer:
 
     def _dominates(
         self,
-        metrics_a: dict[str, float],
-        metrics_b: dict[str, float],
-        objectives: list[str],
+        metrics_a: Dict[str, float],
+        metrics_b: Dict[str, float],
+        objectives: List[str],
     ) -> bool:
         """Check if metrics_a dominates metrics_b."""
         at_least_one_better = False
@@ -949,8 +925,8 @@ class MultiObjectiveOptimizer:
 
     def _describe_trade_off(
         self,
-        metrics: dict[str, float],
-        objectives: list[str],
+        metrics: Dict[str, float],
+        objectives: List[str],
     ) -> str:
         """Describe the trade-off of this allocation."""
         descriptions = []
@@ -980,7 +956,7 @@ class PortfolioAllocator:
     """
 
     def __init__(self):
-        self._historical_returns: dict[str, list[float]] = {}
+        self._historical_returns: Dict[str, List[float]] = {}
 
     def record_return(self, campaign_id: str, roas: float):
         """Record historical ROAS for a campaign."""
@@ -995,7 +971,7 @@ class PortfolioAllocator:
 
     def optimize_portfolio(
         self,
-        campaigns: list[CampaignBudgetState],
+        campaigns: List[CampaignState],
         total_budget: float,
         risk_tolerance: float = 0.5,  # 0 = conservative, 1 = aggressive
     ) -> PortfolioAllocation:
@@ -1036,21 +1012,19 @@ class PortfolioAllocator:
 
         # Calculate portfolio metrics
         portfolio_return = sum(
-            allocations[cid] / total_budget * campaign_stats[cid]["expected"] for cid in allocations
+            allocations[cid] / total_budget * campaign_stats[cid]["expected"]
+            for cid in allocations
         )
 
         # Portfolio risk (simplified - ignores correlation)
-        portfolio_risk = (
-            sum(
-                (allocations[cid] / total_budget) ** 2 * campaign_stats[cid]["risk"] ** 2
-                for cid in allocations
-            )
-            ** 0.5
-        )
+        portfolio_risk = sum(
+            (allocations[cid] / total_budget) ** 2 * campaign_stats[cid]["risk"] ** 2
+            for cid in allocations
+        ) ** 0.5
 
         # Diversification score
         weights = [allocations[cid] / total_budget for cid in allocations]
-        herfindahl = sum(w**2 for w in weights)
+        herfindahl = sum(w ** 2 for w in weights)
         diversification = 1 - herfindahl  # Higher = more diversified
 
         return PortfolioAllocation(
@@ -1073,25 +1047,23 @@ class AllocationLearner:
     """
 
     def __init__(self):
-        self._allocation_history: list[dict[str, Any]] = []
+        self._allocation_history: List[Dict[str, Any]] = []
 
     def record_allocation(
         self,
         plan_id: str,
-        allocations: dict[str, float],
-        context: dict[str, Any],
-        outcome: dict[str, float],  # actual results
+        allocations: Dict[str, float],
+        context: Dict[str, Any],
+        outcome: Dict[str, float],  # actual results
     ):
         """Record allocation outcome for learning."""
-        self._allocation_history.append(
-            {
-                "plan_id": plan_id,
-                "timestamp": datetime.now(UTC),
-                "allocations": allocations,
-                "context": context,
-                "outcome": outcome,
-            }
-        )
+        self._allocation_history.append({
+            "plan_id": plan_id,
+            "timestamp": datetime.now(timezone.utc),
+            "allocations": allocations,
+            "context": context,
+            "outcome": outcome,
+        })
 
         # Keep last 200 allocations
         if len(self._allocation_history) > 200:
@@ -1099,8 +1071,8 @@ class AllocationLearner:
 
     def get_recommendation(
         self,
-        proposed_allocation: dict[str, float],
-        context: dict[str, Any],
+        proposed_allocation: Dict[str, float],
+        context: Dict[str, Any],
     ) -> AllocationLearning:
         """Get recommendation based on historical learning."""
         if len(self._allocation_history) < 5:
@@ -1129,9 +1101,7 @@ class AllocationLearner:
 
         # Generate recommendation
         if success_rate > 0.7:
-            recommendation = (
-                "Similar allocations performed well historically - recommended to proceed"
-            )
+            recommendation = "Similar allocations performed well historically - recommended to proceed"
             confidence = 0.8
         elif success_rate > 0.4:
             recommendation = "Mixed results from similar allocations - moderate confidence"
@@ -1155,21 +1125,23 @@ class AllocationLearner:
 
     def _find_similar_allocations(
         self,
-        allocation: dict[str, float],
-        context: dict[str, Any],
-    ) -> list[dict[str, Any]]:
+        allocation: Dict[str, float],
+        context: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
         """Find historically similar allocations."""
         similar = []
 
         total_budget = sum(allocation.values())
         allocation_weights = {
-            k: v / total_budget if total_budget > 0 else 0 for k, v in allocation.items()
+            k: v / total_budget if total_budget > 0 else 0
+            for k, v in allocation.items()
         }
 
         for hist in self._allocation_history:
             hist_total = sum(hist["allocations"].values())
             hist_weights = {
-                k: v / hist_total if hist_total > 0 else 0 for k, v in hist["allocations"].items()
+                k: v / hist_total if hist_total > 0 else 0
+                for k, v in hist["allocations"].items()
             }
 
             # Calculate similarity (simplified cosine similarity)
@@ -1178,7 +1150,8 @@ class AllocationLearner:
                 continue
 
             similarity = sum(
-                allocation_weights.get(k, 0) * hist_weights.get(k, 0) for k in common_keys
+                allocation_weights.get(k, 0) * hist_weights.get(k, 0)
+                for k in common_keys
             )
 
             # Context similarity
@@ -1187,12 +1160,10 @@ class AllocationLearner:
             combined_similarity = similarity * 0.6 + context_match * 0.4
 
             if combined_similarity > 0.5:
-                similar.append(
-                    {
-                        **hist,
-                        "similarity_score": round(combined_similarity, 3),
-                    }
-                )
+                similar.append({
+                    **hist,
+                    "similarity_score": round(combined_similarity, 3),
+                })
 
         # Sort by similarity
         similar.sort(key=lambda x: x["similarity_score"], reverse=True)
@@ -1201,8 +1172,8 @@ class AllocationLearner:
 
     def _context_similarity(
         self,
-        context_a: dict[str, Any],
-        context_b: dict[str, Any],
+        context_a: Dict[str, Any],
+        context_b: Dict[str, Any],
     ) -> float:
         """Calculate context similarity."""
         if not context_a or not context_b:

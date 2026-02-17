@@ -5,55 +5,55 @@
  * Allows filtering and sorting by various metrics
  */
 
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 import {
-  type AutopilotMode,
+  ConfidenceBandBadge,
   AutopilotModeBanner,
   BudgetAtRiskChip,
-  ConfidenceBandBadge,
-} from '@/components/shared';
-import { useSuperAdminTenants } from '@/api/hooks';
+  type AutopilotMode,
+} from '@/components/shared'
+import { useSuperAdminTenants } from '@/api/hooks'
 import {
+  MagnifyingGlassIcon,
+  FunnelIcon,
   ArrowsUpDownIcon,
   BuildingOfficeIcon,
-  CheckCircleIcon,
-  ChevronRightIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
+  CheckCircleIcon,
+  ClockIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline'
 
-type EmqStatus = 'ok' | 'risk' | 'degraded' | 'critical';
-type SortField = 'name' | 'emq' | 'budgetAtRisk' | 'activeIncidents' | 'lastActivity';
-type SortDirection = 'asc' | 'desc';
+type EmqStatus = 'ok' | 'risk' | 'degraded' | 'critical'
+type SortField = 'name' | 'emq' | 'budgetAtRisk' | 'activeIncidents' | 'lastActivity'
+type SortDirection = 'asc' | 'desc'
 
 interface TenantListItem {
-  id: string;
-  name: string;
-  industry: string;
-  emqScore: number;
-  emqStatus: EmqStatus;
-  autopilotMode: AutopilotMode;
-  budgetAtRisk: number;
-  activeIncidents: number;
-  totalSpend: number;
-  platforms: string[];
-  lastActivity: Date;
-  accountManager: string | null;
+  id: string
+  name: string
+  industry: string
+  emqScore: number
+  emqStatus: EmqStatus
+  autopilotMode: AutopilotMode
+  budgetAtRisk: number
+  activeIncidents: number
+  totalSpend: number
+  platforms: string[]
+  lastActivity: Date
+  accountManager: string | null
 }
 
 export default function TenantsList() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<EmqStatus | 'all'>('all');
-  const [modeFilter, setModeFilter] = useState<AutopilotMode | 'all'>('all');
-  const [sortField, setSortField] = useState<SortField>('emq');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<EmqStatus | 'all'>('all')
+  const [modeFilter, setModeFilter] = useState<AutopilotMode | 'all'>('all')
+  const [sortField, setSortField] = useState<SortField>('emq')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   // Fetch tenants from superadmin API
-  const { data: tenantsData } = useSuperAdminTenants();
+  const { data: tenantsData, isLoading } = useSuperAdminTenants()
 
   // Default mock tenants
   const mockTenants: TenantListItem[] = [
@@ -127,126 +127,134 @@ export default function TenantsList() {
       lastActivity: new Date(Date.now() - 1 * 60 * 60 * 1000),
       accountManager: 'Mike Chen',
     },
-  ];
+  ]
 
   // Helper to determine EMQ status from score
   const getEmqStatus = (score: number | null): EmqStatus => {
-    if (score === null) return 'risk';
-    if (score >= 80) return 'ok';
-    if (score >= 60) return 'risk';
-    if (score >= 40) return 'degraded';
-    return 'critical';
-  };
+    if (score === null) return 'risk'
+    if (score >= 80) return 'ok'
+    if (score >= 60) return 'risk'
+    if (score >= 40) return 'degraded'
+    return 'critical'
+  }
 
   // Helper to determine autopilot mode from churn risk
   const getAutopilotMode = (churnRisk: number): AutopilotMode => {
-    if (churnRisk >= 0.8) return 'frozen';
-    if (churnRisk >= 0.6) return 'cuts_only';
-    if (churnRisk >= 0.4) return 'limited';
-    return 'normal';
-  };
+    if (churnRisk >= 0.8) return 'frozen'
+    if (churnRisk >= 0.6) return 'cuts_only'
+    if (churnRisk >= 0.4) return 'limited'
+    return 'normal'
+  }
 
   // Map API data to tenant list items
-  const tenants: TenantListItem[] =
-    tenantsData?.items?.map((t) => ({
-      id: String(t.id),
-      name: t.name,
-      industry: 'E-commerce', // Not in API, use default
-      emqScore: t.emqScore ?? 0,
-      emqStatus: getEmqStatus(t.emqScore),
-      autopilotMode: getAutopilotMode(t.churnRisk),
-      budgetAtRisk: t.budgetAtRisk,
-      activeIncidents: t.activeIncidents,
-      totalSpend: t.monthlySpend,
-      platforms: ['Meta', 'Google'], // Not in API, use defaults
-      lastActivity: t.lastActivityAt ? new Date(t.lastActivityAt) : new Date(),
-      accountManager: null, // Not in API
-    })) ?? mockTenants;
+  const tenants: TenantListItem[] = tenantsData?.items?.map((t) => ({
+    id: String(t.id),
+    name: t.name,
+    industry: 'E-commerce', // Not in API, use default
+    emqScore: t.emqScore ?? 0,
+    emqStatus: getEmqStatus(t.emqScore),
+    autopilotMode: getAutopilotMode(t.churnRisk),
+    budgetAtRisk: t.budgetAtRisk,
+    activeIncidents: t.activeIncidents,
+    totalSpend: t.monthlySpend,
+    platforms: ['Meta', 'Google'], // Not in API, use defaults
+    lastActivity: t.lastActivityAt ? new Date(t.lastActivityAt) : new Date(),
+    accountManager: null, // Not in API
+  })) ?? mockTenants
 
   // Filter and sort tenants
   const filteredTenants = useMemo(() => {
-    let result = [...tenants];
+    let result = [...tenants]
 
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(query) ||
           t.industry.toLowerCase().includes(query) ||
           t.accountManager?.toLowerCase().includes(query)
-      );
+      )
     }
 
     // Status filter
     if (statusFilter !== 'all') {
-      result = result.filter((t) => t.emqStatus === statusFilter);
+      result = result.filter((t) => t.emqStatus === statusFilter)
     }
 
     // Mode filter
     if (modeFilter !== 'all') {
-      result = result.filter((t) => t.autopilotMode === modeFilter);
+      result = result.filter((t) => t.autopilotMode === modeFilter)
     }
 
     // Sort
     result.sort((a, b) => {
-      let comparison = 0;
+      let comparison = 0
       switch (sortField) {
         case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
+          comparison = a.name.localeCompare(b.name)
+          break
         case 'emq':
-          comparison = a.emqScore - b.emqScore;
-          break;
+          comparison = a.emqScore - b.emqScore
+          break
         case 'budgetAtRisk':
-          comparison = a.budgetAtRisk - b.budgetAtRisk;
-          break;
+          comparison = a.budgetAtRisk - b.budgetAtRisk
+          break
         case 'activeIncidents':
-          comparison = a.activeIncidents - b.activeIncidents;
-          break;
+          comparison = a.activeIncidents - b.activeIncidents
+          break
         case 'lastActivity':
-          comparison = a.lastActivity.getTime() - b.lastActivity.getTime();
-          break;
+          comparison = a.lastActivity.getTime() - b.lastActivity.getTime()
+          break
       }
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
 
-    return result;
-  }, [tenants, searchQuery, statusFilter, modeFilter, sortField, sortDirection]);
+    return result
+  }, [tenants, searchQuery, statusFilter, modeFilter, sortField, sortDirection])
 
   const getStatusColor = (status: EmqStatus) => {
     switch (status) {
       case 'ok':
-        return 'text-success bg-success/10';
+        return 'text-success bg-success/10'
       case 'risk':
-        return 'text-warning bg-warning/10';
+        return 'text-warning bg-warning/10'
       case 'degraded':
-        return 'text-orange-400 bg-orange-400/10';
+        return 'text-orange-400 bg-orange-400/10'
       case 'critical':
-        return 'text-danger bg-danger/10';
+        return 'text-danger bg-danger/10'
     }
-  };
+  }
 
   const getStatusLabel = (status: EmqStatus) => {
     switch (status) {
       case 'ok':
-        return 'Healthy';
+        return 'Healthy'
       case 'risk':
-        return 'At Risk';
+        return 'At Risk'
       case 'degraded':
-        return 'Degraded';
+        return 'Degraded'
       case 'critical':
-        return 'Critical';
+        return 'Critical'
     }
-  };
+  }
 
   const formatLastActivity = (date: Date) => {
-    const mins = Math.floor((Date.now() - date.getTime()) / 60000);
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  };
+    const mins = Math.floor((Date.now() - date.getTime()) / 60000)
+    if (mins < 60) return `${mins}m ago`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `${hours}h ago`
+    return `${Math.floor(hours / 24)}d ago`
+  }
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
 
   // Summary stats
   const stats = {
@@ -255,7 +263,7 @@ export default function TenantsList() {
     atRisk: tenants.filter((t) => t.emqStatus !== 'ok').length,
     totalBudgetAtRisk: tenants.reduce((sum, t) => sum + t.budgetAtRisk, 0),
     totalIncidents: tenants.reduce((sum, t) => sum + t.activeIncidents, 0),
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -395,12 +403,15 @@ export default function TenantsList() {
               <th className="text-left p-4 text-text-muted font-medium">Budget at Risk</th>
               <th className="text-left p-4 text-text-muted font-medium">Incidents</th>
               <th className="text-left p-4 text-text-muted font-medium">Last Activity</th>
-              <th className="text-left p-4 text-text-muted font-medium" />
+              <th className="text-left p-4 text-text-muted font-medium"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {filteredTenants.map((tenant) => (
-              <tr key={tenant.id} className="hover:bg-white/5 transition-colors">
+              <tr
+                key={tenant.id}
+                className="hover:bg-white/5 transition-colors"
+              >
                 <td className="p-4">
                   <div>
                     <div className="font-medium text-white">{tenant.name}</div>
@@ -420,8 +431,8 @@ export default function TenantsList() {
                         tenant.emqScore >= 80
                           ? 'text-success'
                           : tenant.emqScore >= 60
-                            ? 'text-warning'
-                            : 'text-danger'
+                          ? 'text-warning'
+                          : 'text-danger'
                       )}
                     >
                       {tenant.emqScore}
@@ -489,5 +500,5 @@ export default function TenantsList() {
         )}
       </div>
     </div>
-  );
+  )
 }

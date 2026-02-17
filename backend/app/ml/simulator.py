@@ -6,7 +6,10 @@ What-If Simulator for budget impact prediction.
 Uses the hybrid ML strategy to predict outcomes based on budget changes.
 """
 
-from typing import Any
+import hashlib
+import json
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
 import numpy as np
 
@@ -31,11 +34,11 @@ class WhatIfSimulator:
 
     async def predict_budget_impact(
         self,
-        current_metrics: dict[str, Any],
+        current_metrics: Dict[str, Any],
         budget_change_percent: float,
         days_ahead: int = 30,
         include_confidence: bool = True,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Predict the impact of a budget change on campaign performance.
 
@@ -77,9 +80,7 @@ class WhatIfSimulator:
 
         # Get conversion prediction
         conversion_features = {**features, "predicted_spend": new_spend}
-        conversion_prediction = await self.registry.predict(
-            "conversion_predictor", conversion_features
-        )
+        conversion_prediction = await self.registry.predict("conversion_predictor", conversion_features)
 
         # Calculate predicted metrics
         predicted_roas = roas_prediction.get("value", current_metrics.get("roas", 1.5))
@@ -159,8 +160,8 @@ class WhatIfSimulator:
         # Diminishing returns for increases
         # factor = 1 + log(ratio) * coefficient
         coefficients = {
-            "impressions": 0.9,  # Impressions scale well
-            "clicks": 0.85,  # Clicks slightly less
+            "impressions": 0.9,   # Impressions scale well
+            "clicks": 0.85,       # Clicks slightly less
             "conversions": 0.75,  # Conversions have more diminishing returns
         }
 
@@ -169,10 +170,10 @@ class WhatIfSimulator:
 
     def _calculate_confidence_intervals(
         self,
-        predicted_metrics: dict[str, Any],
+        predicted_metrics: Dict[str, Any],
         base_confidence: float,
         budget_change_percent: float,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Calculate confidence intervals for predictions.
 
@@ -212,9 +213,9 @@ class ScenarioAnalyzer:
 
     async def analyze_scenarios(
         self,
-        current_metrics: dict[str, Any],
+        current_metrics: Dict[str, Any],
         scenarios: list[float] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Run multiple budget scenarios and compare results.
 
@@ -238,18 +239,14 @@ class ScenarioAnalyzer:
                 include_confidence=True,
             )
 
-            results.append(
-                {
-                    "budget_change_percent": change_pct,
-                    "predicted_spend": prediction["predicted_metrics"]["spend"],
-                    "predicted_revenue": prediction["predicted_metrics"]["revenue"],
-                    "predicted_roas": prediction["predicted_metrics"]["roas"],
-                    "predicted_conversions": prediction["predicted_metrics"]["conversions"],
-                    "confidence": prediction.get("confidence_interval", {})
-                    .get("roas", {})
-                    .get("confidence", 0.8),
-                }
-            )
+            results.append({
+                "budget_change_percent": change_pct,
+                "predicted_spend": prediction["predicted_metrics"]["spend"],
+                "predicted_revenue": prediction["predicted_metrics"]["revenue"],
+                "predicted_roas": prediction["predicted_metrics"]["roas"],
+                "predicted_conversions": prediction["predicted_metrics"]["conversions"],
+                "confidence": prediction.get("confidence_interval", {}).get("roas", {}).get("confidence", 0.8),
+            })
 
         # Find optimal scenario (highest ROAS above minimum threshold)
         min_roas_threshold = 1.5

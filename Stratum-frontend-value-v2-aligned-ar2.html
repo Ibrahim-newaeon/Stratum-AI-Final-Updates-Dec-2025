@@ -1,0 +1,4077 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="description" content="Stratum AI — منصة ذكاء الإيرادات وطبقة الثقة لتحسين العائد الإعلاني واكتشاف الحقيقة خلف الإنفاق عبر Meta وGoogle وTikTok وSnapchat وLinkedIn في السعودية.">
+    <meta name="keywords" content="تحليلات الإعلانات, ذكاء تسويقي, تحسين ROAS, قياس الإسناد, بيانات الإعلانات, ستـراتوم, السعودية">
+    <meta property="og:locale" content="ar_SA">
+<title>Stratum AI - ذكاء الإيرادات + طبقة الثقة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Dark Theme (default) */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            --gradient-glow: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(139, 92, 246, 0.5) 100%);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(0, 0, 0, 0.02);
+            --bg-glass: rgba(0, 0, 0, 0.03);
+            --border-glass: rgba(0, 0, 0, 0.1);
+            --text-primary: #0f172a;
+            --text-secondary: rgba(15, 23, 42, 0.7);
+            --text-muted: rgba(15, 23, 42, 0.5);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* Animated Background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            transition: opacity 0.5s ease;
+        }
+
+        [data-theme="light"] .bg-gradient {
+            opacity: 0.5;
+        }
+
+        .bg-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: orbFloat 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: rgba(59, 130, 246, 0.3);
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: rgba(139, 92, 246, 0.3);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: rgba(236, 72, 153, 0.2);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.95); }
+            75% { transform: translate(30px, 50px) scale(1.05); }
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(1deg); }
+            66% { transform: translate(-2%, 1%) rotate(-1deg); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            background: var(--bg-primary);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 0.75rem 2rem;
+            box-shadow: 0 4px 30px var(--shadow-color);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: logoShine 3s ease-in-out infinite;
+        }
+
+        @keyframes logoShine {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 56px;
+            height: 28px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent-purple);
+        }
+
+        .theme-toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        [data-theme="light"] .theme-toggle-slider {
+            transform: translateX(28px);
+        }
+
+        .theme-toggle-slider::before {
+            content: '🌙';
+        }
+
+        [data-theme="light"] .theme-toggle-slider::before {
+            content: '☀️';
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+        }
+
+        .hero-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+            animation-delay: 0.2s;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .hero h1 {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+            animation-delay: 0.4s;
+        }
+
+        .hero h1 span {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: gradientFlow 3s ease infinite;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+            100% { background-position: 0% center; }
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 500px;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+            animation-delay: 0.6s;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+            animation-delay: 0.8s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-glass);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-glass);
+            border-color: var(--accent-purple);
+            transform: translateY(-3px);
+        }
+
+        .btn svg {
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover svg {
+            transform: translateX(4px);
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            perspective: 1000px;
+            opacity: 0;
+            animation: fadeInRight 1s ease forwards;
+            animation-delay: 0.5s;
+        }
+
+        .dashboard-preview {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            transform: rotateY(-5deg) rotateX(5deg);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 50px var(--shadow-color);
+        }
+
+        .dashboard-preview:hover {
+            transform: rotateY(0) rotateX(0) translateY(-10px);
+            box-shadow: 0 35px 60px var(--shadow-color);
+        }
+
+        .dashboard-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .dashboard-preview:hover .dashboard-dot {
+            animation: dotBounce 0.5s ease;
+        }
+
+        .dashboard-preview:hover .dashboard-dot:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .dashboard-preview:hover .dashboard-dot:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes dotBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .dashboard-dot:nth-child(1) { background: #ef4444; }
+        .dashboard-dot:nth-child(2) { background: #f59e0b; }
+        .dashboard-dot:nth-child(3) { background: #10b981; }
+
+        .dashboard-content {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .mini-metric {
+            background: var(--bg-glass);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .mini-metric:hover {
+            transform: translateY(-5px);
+            background: var(--bg-card);
+        }
+
+        .mini-metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mini-metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .chart-placeholder {
+            height: 150px;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 20%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-primary);
+            clip-path: polygon(0 100%, 5% 80%, 15% 90%, 25% 60%, 35% 70%, 45% 40%, 55% 50%, 65% 30%, 75% 45%, 85% 20%, 95% 35%, 100% 10%, 100% 100%);
+            animation: chartDraw 2s ease-out forwards;
+            animation-delay: 1.5s;
+            opacity: 0;
+        }
+
+        @keyframes chartDraw {
+            from {
+                opacity: 0;
+                clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%, 0 100%);
+            }
+            to {
+                opacity: 1;
+                clip-path: polygon(0 100%, 5% 80%, 15% 90%, 25% 60%, 35% 70%, 45% 40%, 55% 50%, 65% 30%, 75% 45%, 85% 20%, 95% 35%, 100% 10%, 100% 100%);
+            }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: particleFloat 10s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 4rem 2rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-glass);
+            border-bottom: 1px solid var(--border-glass);
+            transition: background 0.5s ease;
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .stat-item.animate {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .stat-value {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        /* Scroll reveal animation class */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-left.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-right.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-scale.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Value Proposition */
+        .value-prop {
+            padding: 8rem 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+        }
+
+        .section-label {
+            color: var(--accent-purple);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .value-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .value-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .value-card.animate {
+            animation: cardReveal 0.6s ease forwards;
+        }
+
+        @keyframes cardReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .value-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .value-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .value-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px var(--shadow-color);
+        }
+
+        .value-card:hover::before {
+            opacity: 1;
+        }
+
+        .value-card:hover::after {
+            opacity: 1;
+        }
+
+        .value-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .value-card:hover .value-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 20px var(--shadow-color);
+        }
+
+        .value-icon.blue { background: rgba(59, 130, 246, 0.2); }
+        .value-icon.purple { background: rgba(139, 92, 246, 0.2); }
+        .value-icon.cyan { background: rgba(6, 182, 212, 0.2); }
+        .value-icon.green { background: rgba(16, 185, 129, 0.2); }
+        .value-icon.orange { background: rgba(245, 158, 11, 0.2); }
+        .value-icon.pink { background: rgba(236, 72, 153, 0.2); }
+
+        .value-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .value-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .value-metric {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .value-metric-number {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .value-metric-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        
+        /* Platform Capabilities (Redesigned) helpers */
+        .module-features {
+            list-style: none;
+            margin-top: 0.9rem;
+        }
+        .module-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.4rem 0;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+        .module-features li::before {
+            content: '•';
+            color: var(--accent-green);
+            font-weight: 900;
+        }
+
+
+        /* Platform Modules */
+        .modules {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+            transition: background 0.5s ease;
+        }
+
+        .modules-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .module-showcase {
+            position: relative;
+        }
+
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--gradient-primary);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .module-card.active::before,
+        .module-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .module-card.active {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+            transform: translateX(10px);
+        }
+
+        .module-card:hover {
+            border-color: var(--accent-purple);
+            transform: translateX(10px);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .module-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .module-card:hover .module-icon {
+            transform: scale(1.2);
+        }
+
+        .module-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .module-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .module-visual {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2rem;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s ease;
+        }
+
+        .visual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .visual-title {
+            font-weight: 600;
+        }
+
+        .visual-badge {
+            padding: 0.25rem 0.75rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Progress bars animation */
+        .progress-bar-animated {
+            width: 0%;
+            transition: width 1s ease-out;
+        }
+
+        .progress-bar-animated.animate {
+            width: var(--target-width);
+        }
+
+        /* Intelligence Section */
+        .intelligence {
+            padding: 8rem 2rem;
+            position: relative;
+        }
+
+        .intel-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .intel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+        }
+
+        .intel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .intel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px var(--shadow-color);
+        }
+
+        .intel-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            transition: transform 0.5s ease;
+        }
+
+        .intel-card:hover::after {
+            transform: translate(-20%, 20%);
+        }
+
+        .intel-number {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .intel-card:hover .intel-number {
+            opacity: 1;
+        }
+
+        .intel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .intel-desc {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .intel-features {
+            list-style: none;
+        }
+
+        .intel-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .intel-features li:hover {
+            color: var(--text-primary);
+            transform: translateX(5px);
+        }
+
+        .intel-features li::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        /* Integration Ecosystem */
+        .integrations {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+            transition: background 0.5s ease;
+        }
+
+        .integration-logos {
+            max-width: 1000px;
+            margin: 3rem auto 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .integration-logo {
+            width: 120px;
+            height: 80px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .integration-logo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .integration-logo:hover::before {
+            left: 100%;
+        }
+
+        .integration-logo:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 15px 30px var(--shadow-color);
+            color: var(--text-primary);
+        }
+
+        /* ROI Calculator */
+        .roi-section {
+            padding: 8rem 2rem;
+        }
+
+        .roi-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 32px;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .roi-container:hover {
+            box-shadow: 0 30px 60px var(--shadow-color);
+        }
+
+        .roi-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .roi-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .roi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .roi-input-group {
+            text-align: center;
+        }
+
+        .roi-input-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .roi-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: center;
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .roi-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+            transform: scale(1.02);
+        }
+
+        .roi-results {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .roi-result {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg-glass);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .roi-result:hover {
+            transform: scale(1.05);
+        }
+
+        .roi-result-value {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .roi-result-label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Testimonials / Social Proof */
+        .proof {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+            transition: background 0.5s ease;
+        }
+
+        .proof-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .proof-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2rem;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .proof-card::before {
+            content: '"';
+            position: absolute;
+            top: 1rem;
+            left: 1.5rem;
+            font-size: 4rem;
+            font-family: Georgia, serif;
+            color: var(--accent-purple);
+            opacity: 0.3;
+            line-height: 1;
+        }
+
+        .proof-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px var(--shadow-color);
+        }
+
+        .proof-quote {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+
+        .proof-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .proof-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .proof-card:hover .proof-avatar {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .proof-name {
+            font-weight: 600;
+        }
+
+        .proof-role {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 8rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta h2 {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta p {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border-glass);
+            transition: border-color 0.5s ease;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-logo {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent-purple);
+            transition: width 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Cursor glow effect */
+        .cursor-glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        body:hover .cursor-glow {
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .hero-description {
+                margin: 0 auto 2rem;
+            }
+
+            .hero-cta {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .value-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .intel-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .roi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .proof-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 2.5rem;
+            }
+
+            .cta h2 {
+                font-size: 2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .footer-container {
+                flex-direction: column;
+                gap: 2rem;
+                text-align: center;
+            }
+
+            .cursor-glow {
+                display: none;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-glass);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-purple);
+        }
+
+        /* Page transition */
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            z-index: 10000;
+            pointer-events: none;
+            animation: pageLoad 0.8s ease-out forwards;
+        }
+
+        @keyframes pageLoad {
+            0% {
+                transform: scaleY(1);
+                transform-origin: top;
+            }
+            100% {
+                transform: scaleY(0);
+                transform-origin: top;
+            }
+        }
+
+        /* Typing animation for hero */
+        .typing-text {
+            display: inline;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1em;
+            background: var(--accent-purple);
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Magnetic button effect */
+        .magnetic {
+            transition: transform 0.3s ease;
+        }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: rippleEffect 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes rippleEffect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Tooltip */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-5px);
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-10px);
+        }
+
+        /* Number counter animation */
+        .count-up {
+            display: inline-block;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+            transition: background 0.5s ease;
+        }
+
+        .pricing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .launch-banner {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+            border: 2px solid var(--accent-purple);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .launch-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            animation: orbFloat 15s ease-in-out infinite;
+        }
+
+        .launch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            background: var(--gradient-primary);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .launch-title {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .launch-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .subscribe-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+        }
+
+        .subscribe-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .subscribe-btn {
+            padding: 1rem 2rem;
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .subscribe-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+        }
+
+        .subscribe-note {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .early-benefits {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-glass);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .benefit-item:hover {
+            transform: translateY(-3px);
+            background: var(--bg-card);
+        }
+
+        .benefit-icon {
+            font-size: 1.5rem;
+        }
+
+        .benefit-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px var(--shadow-color);
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent-purple);
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.1) 0%, var(--bg-card) 100%);
+        }
+
+        .pricing-card.featured::before {
+            content: 'الأكثر شيوعًا';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1.25rem;
+            background: var(--gradient-primary);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .pricing-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            font-weight: 500;
+            -webkit-text-fill-color: var(--text-muted);
+        }
+
+        .pricing-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-glass);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        /* Trust Badges */
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-glass);
+            border-radius: 16px;
+        }
+
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .trust-badge:hover {
+            border-color: var(--accent-purple);
+            color: var(--text-primary);
+        }
+
+        /* Countdown timer */
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .countdown-item {
+            text-align: center;
+        }
+
+        .countdown-value {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .countdown-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .subscribe-form {
+                flex-direction: column;
+            }
+
+            .early-benefits {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .launch-title {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* ===== Feature Explorer / Interactive Showcase ===== */
+        .feature-explorer {
+            padding: 8rem 2rem;
+            background: var(--bg-secondary);
+            transition: background 0.5s ease;
+        }
+
+        .feature-explorer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Horizontal Pill Tab Navigation */
+        .feature-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            margin: 0 auto 4rem;
+            max-width: fit-content;
+            flex-wrap: wrap;
+        }
+
+        .feature-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 100px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+
+        .feature-tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-glass);
+        }
+
+        .feature-tab.active {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+
+        /* Feature Content Area */
+        .feature-content {
+            display: grid;
+            grid-template-columns: 55% 45%;
+            gap: 3rem;
+            align-items: center;
+            min-height: 520px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Left: Interactive UI Mockup */
+        .feature-mockup {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Right: Storytelling Content Container */
+        .feature-stories {
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        .mockup-window {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px var(--shadow-color);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mockup-window:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 35px 60px var(--shadow-color);
+        }
+
+        .mockup-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.25rem;
+            background: var(--bg-glass);
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .mockup-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .mockup-dot:nth-child(1) { background: #ef4444; }
+        .mockup-dot:nth-child(2) { background: #f59e0b; }
+        .mockup-dot:nth-child(3) { background: #10b981; }
+
+        .mockup-title {
+            margin-left: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .mockup-body {
+            padding: 1.5rem;
+            min-height: 400px;
+        }
+
+        /* Feature Panel (hidden/shown) */
+        .feature-panel {
+            display: none;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-panel.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+            animation: featureFadeIn 0.5s ease forwards;
+        }
+
+        @keyframes featureFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Right: Storytelling Content */
+        .feature-story {
+            display: none;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-story.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+            animation: storyFadeIn 0.6s ease forwards;
+        }
+
+        @keyframes storyFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feature-story-title {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.25;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .feature-story-desc {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-benefits {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-benefits li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .feature-benefits li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-benefits li::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 0.05rem;
+        }
+
+        .feature-metric {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1.25rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+        }
+
+        .feature-metric-value {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .feature-metric-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Mockup Internal Styles */
+        .mockup-sidebar {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .mockup-nav {
+            width: 50px;
+            background: var(--bg-glass);
+            border-radius: 12px;
+            padding: 1rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .mockup-nav-item {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .mockup-nav-item.active,
+        .mockup-nav-item:hover {
+            opacity: 1;
+            background: var(--bg-card);
+        }
+
+        .mockup-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mockup-card {
+            background: var(--bg-glass);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mockup-card:hover {
+            background: var(--bg-card);
+        }
+
+        .mockup-stat {
+            text-align: center;
+        }
+
+        .mockup-stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .mockup-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .mockup-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .mockup-alert {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        .mockup-alert.warn {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .mockup-alert.info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.22);
+        }
+
+        .mockup-alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.22);
+        }
+
+        .mockup-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .mockup-table th,
+        .mockup-table td {
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .mockup-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .mockup-progress {
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .mockup-progress-bar {
+            height: 100%;
+            border-radius: 100px;
+            transition: width 1s ease;
+        }
+
+        /* Journey indicator */
+        .journey-step {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.85rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .journey-step span {
+            color: var(--accent-purple);
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .feature-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .feature-mockup {
+                order: 1;
+            }
+
+            .feature-stories {
+                order: 2;
+            }
+
+            .feature-story-title {
+                font-size: 1.75rem;
+            }
+
+            .feature-tabs {
+                padding: 0.35rem;
+            }
+
+            .feature-tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .feature-explorer {
+                padding: 4rem 1rem;
+            }
+
+            .feature-tabs {
+                flex-wrap: wrap;
+                border-radius: 16px;
+                gap: 0.35rem;
+            }
+
+            .feature-tab {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .mockup-body {
+                padding: 1rem;
+                min-height: 280px;
+            }
+
+            .feature-story-title {
+                font-size: 1.5rem;
+            }
+
+            .feature-story-desc {
+                font-size: 1rem;
+            }
+
+            .feature-benefits li {
+                font-size: 0.9rem;
+            }
+
+            .feature-metric {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+    
+        /* ===== Arabic (KSA) RTL Overrides ===== */
+        html[dir="rtl"] body {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Keep brand/logo in Latin with Space Grotesk */
+        html[dir="rtl"] .logo,
+        html[dir="rtl"] .footer-logo {
+            font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+            letter-spacing: 0.02em;
+        }
+
+        /* Navigation underline from the right */
+        html[dir="rtl"] .nav-links a::after,
+        html[dir="rtl"] .footer-links a::after {
+            left: auto;
+            right: 0;
+        }
+
+        html[dir="rtl"] .nav-links {
+            flex-direction: row-reverse;
+        }
+
+        /* Hero: place copy on the right, visual on the left */
+        html[dir="rtl"] .hero-container {
+            grid-template-columns: 1fr 1fr;
+        }
+        html[dir="rtl"] .hero-content {
+            grid-column: 2;
+        }
+        html[dir="rtl"] .hero-visual {
+            grid-column: 1;
+        }
+        html[dir="rtl"] .hero-description {
+            margin-right: 0;
+            margin-left: auto;
+        }
+
+        /* Module cards: indicator on the right + hover direction */
+        html[dir="rtl"] .module-card::before {
+            left: auto;
+            right: 0;
+        }
+        html[dir="rtl"] .module-card.active,
+        html[dir="rtl"] .module-card:hover {
+            transform: translateX(-10px);
+        }
+
+        /* Feature Explorer: swap columns */
+        html[dir="rtl"] .feature-content {
+            grid-template-columns: 45% 55%;
+        }
+        html[dir="rtl"] .feature-mockup {
+            grid-column: 2;
+        }
+        html[dir="rtl"] .feature-stories {
+            grid-column: 1;
+            padding-left: 0;
+            padding-right: 1rem;
+        }
+
+        /* Mockup header title spacing */
+        html[dir="rtl"] .mockup-title {
+            margin-left: 0;
+            margin-right: 1rem;
+        }
+
+        /* Tables and lists align right */
+        html[dir="rtl"] .mockup-table th,
+        html[dir="rtl"] .mockup-table td {
+            text-align: right;
+        }
+
+        /* Inputs (text) align right, keep numeric centered */
+        html[dir="rtl"] .subscribe-input {
+            text-align: right;
+        }
+        html[dir="rtl"] .roi-input {
+            text-align: center;
+        }
+
+        /* Micro interactions: translateX should feel natural in RTL */
+        html[dir="rtl"] .intel-features li:hover {
+            transform: translateX(-5px);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-transition"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+    <div class="bg-gradient">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="logo">STRATUM AI</div>
+            <ul class="nav-links">
+                <li><a href="#value">القيمة</a></li>
+                <li><a href="#trust">الثقة</a></li>
+                <li><a href="#platform">المنصة</a></li>
+                <li><a href="#intelligence">الذكاء</a></li>
+                <li><a href="#integrations">التكاملات</a></li>
+                <li><a href="#roi">العائد</a></li>
+                <li>
+                    <div class="theme-toggle" id="themeToggle" data-tooltip="تبديل المظهر">
+                        <div class="theme-toggle-slider"></div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    موثوق من أكثر من ١٥٠ فريق نمو
+                </div>
+                <h1>توقف عن خسارة <span class="typing-text" id="typingText">٢٣٪ من ميزانية الإعلانات</span><span class="typing-cursor"></span> بسبب ضعف الإسناد</h1>
+                <p class="hero-description">
+                    العلامات التي تستخدم Stratum AI تستعيد في المتوسط <strong>٢٤ ألف دولار شهريًا</strong> من الإنفاق المُهدَر خلال أول ٣٠ يومًا.
+                    شاهد الربح الحقيقي—not مجرد مؤشرات سطحية—عبر Meta وGoogle وTikTok وSnapchat وLinkedIn.
+                </p>
+                <div class="hero-cta">
+                    <a href="#pricing" class="btn btn-primary magnetic">
+                        Start 14-Day Free Trial
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <a href="#demo" class="btn btn-secondary magnetic">Book Demo (No Card Required)</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="dashboard-preview">
+                    <div class="dashboard-header">
+                        <div class="dashboard-dot"></div>
+                        <div class="dashboard-dot"></div>
+                        <div class="dashboard-dot"></div>
+                    </div>
+                    <div class="dashboard-content">
+                        <div class="metric-row">
+                            <div class="mini-metric">
+                                <div class="mini-metric-value"><span class="count-up" data-target="4.2">0</span>x</div>
+                                <div class="mini-metric-label">Profit ROAS</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value"><span class="count-up" data-target="92">0</span></div>
+                                <div class="mini-metric-label">Signal Health</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">+<span class="count-up" data-target="23">0</span>%</div>
+                                <div class="mini-metric-label">vs Last Month</div>
+                            </div>
+                        </div>
+                        <div class="chart-placeholder">
+                            <div class="chart-line"></div>
+                        </div>
+                        <div class="metric-row">
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">$<span class="count-up" data-target="1.2">0</span>M</div>
+                                <div class="mini-metric-label">Revenue</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">$<span class="count-up" data-target="285">0</span>K</div>
+                                <div class="mini-metric-label">Ad Spend</div>
+                            </div>
+                            <div class="mini-metric">
+                                <div class="mini-metric-value">$<span class="count-up" data-target="312">0</span>K</div>
+                                <div class="mini-metric-label">Profit</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-value">$<span class="count-up" data-target="12">0</span>M+</div>
+                <div class="stat-label">Revenue Recovered for Clients</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value"><span class="count-up" data-target="4.2">0</span>x</div>
+                <div class="stat-label">Average Profit ROAS</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value"><span class="count-up" data-target="23">0</span>%</div>
+                <div class="stat-label">Avg Wasted Spend Eliminated</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value"><span class="count-up" data-target="150">0</span>+</div>
+                <div class="stat-label">Active Growth Teams</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Value Proposition -->
+    <section class="value-prop" id="value">
+        <div class="section-header reveal">
+            <div class="section-label">Why Stratum AI</div>
+            <h2 class="section-title">Every Day Without True Profit Visibility Costs You Money</h2>
+            <p class="section-description">
+                The average brand wastes <strong>23% of ad budget</strong> on campaigns that look profitable but aren't.
+                Stratum AI fixes that in your first week—<strong>guaranteed or your money back</strong>.
+            </p>
+        </div>
+
+        <div class="value-grid">
+            <div class="value-card" style="--delay: 0.1s;">
+                <div class="value-icon blue">💰</div>
+                <h3>True Profit Tracking</h3>
+                <p>Know your real ROAS after COGS, overhead, and operational costs. Not vanity metrics - actual profit per campaign.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">+34%</span>
+                    <span class="value-metric-label">profit visibility increase</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.2s;">
+                <div class="value-icon purple">🎯</div>
+                <h3>Multi-Touch Attribution</h3>
+                <p>Markov Chain & Shapley models reveal the true value of each touchpoint. Stop over-crediting last-click.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">-28%</span>
+                    <span class="value-metric-label">wasted ad spend</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.3s;">
+                <div class="value-icon cyan">📊</div>
+                <h3>Signal Health & Event Quality</h3>
+                <p>A unified Signal Health score that combines <strong>Meta EMQ</strong> with cross‑platform diagnostics (coverage, freshness, latency). Fix gaps before they cost conversions.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">+45%</span>
+                    <span class="value-metric-label">better signal quality</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.4s;">
+                <div class="value-icon green">🤖</div>
+                <h3>AI Budget Optimization</h3>
+                <p>ML models predict performance and recommend budget shifts. Simulate scenarios before spending a dollar.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">+18%</span>
+                    <span class="value-metric-label">ROAS improvement</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.5s;">
+                <div class="value-icon orange">⚡</div>
+                <h3>Automated Pacing</h3>
+                <p>Never overspend or underspend again. Smart alerts and auto-actions keep budgets on track 24/7.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">99.2%</span>
+                    <span class="value-metric-label">budget accuracy</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.6s;">
+                <div class="value-icon pink">📱</div>
+                <h3>WhatsApp Alerts</h3>
+                <p>Critical updates delivered instantly to your phone. Performance drops, budget alerts, daily digests.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">&lt;5min</span>
+                    <span class="value-metric-label">response time</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Trust Layer (Agreed North Star) -->
+    <section class="value-prop" id="trust" style="padding-top: 0;">
+        <div class="section-header reveal">
+            <div class="section-label">Trust Layer</div>
+            <h2 class="section-title">Know What’s True Before You Optimize</h2>
+            <p class="section-description">
+                Stratum AI doesn’t just report results. It shows <strong>data freshness</strong>, <strong>signal coverage</strong>,
+                and <strong>what’s broken</strong>—then guides the fix. <span style="color: var(--text-muted);">No fake data, no hardcoded confidence.</span>
+            </p>
+        </div>
+
+        <div class="value-grid">
+            <div class="value-card" style="--delay: 0.1s;">
+                <div class="value-icon green">🔌</div>
+                <h3>Connection Health Center</h3>
+                <p>See what’s connected, what’s partial, and what’s broken—plus missing permissions and last successful sync.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">✅/⚠️/❌</span>
+                    <span class="value-metric-label">clear connector status</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.2s;">
+                <div class="value-icon cyan">📡</div>
+                <h3>Signal Quality Timeline</h3>
+                <p>Track measured inputs over time: coverage, freshness, latency, and dedupe—so KPI shifts are explainable.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">24/7</span>
+                    <span class="value-metric-label">signal monitoring</span>
+                </div>
+            </div>
+
+            <div class="value-card" style="--delay: 0.3s;">
+                <div class="value-icon purple">🛡️</div>
+                <h3>Actions With Guardrails</h3>
+                <p>Use playbooks, approvals, audit logs, and rollback so automation is safe—not risky.</p>
+                <div class="value-metric">
+                    <span class="value-metric-number">1‑Click</span>
+                    <span class="value-metric-label">apply with controls</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="max-width: 1000px; margin: 2.5rem auto 0; padding: 1.25rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px;">
+            <div style="display:flex; gap: 1rem; align-items:flex-start;">
+                <div style="font-size: 1.5rem;">✅</div>
+                <div>
+                    <div style="font-weight: 700; margin-bottom: 0.25rem;">Principle: “No Fake Data”</div>
+                    <div style="color: var(--text-secondary);">
+                        If data is missing, show <strong>Data Unavailable</strong> + a <strong>Remediation Checklist</strong> (permissions, token refresh, event delivery, diagnostics)—not placeholder values.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    
+    <!-- Platform Capabilities - Interactive Feature Explorer -->
+    <section class="feature-explorer" id="platform">
+        <div class="feature-explorer-container">
+            <div class="section-header reveal">
+                <div class="section-label">Platform Capabilities</div>
+                <h2 class="section-title">See How Growth Teams Win With Stratum AI</h2>
+                <p class="section-description">
+                    Explore each capability through real scenarios. Click a feature to see how it transforms your workflow.
+                </p>
+            </div>
+
+            <!-- Horizontal Pill Tab Navigation -->
+            <div class="feature-tabs" id="featureTabs">
+                <button class="feature-tab active" data-feature="overview">Overview</button>
+                <button class="feature-tab" data-feature="insights">Insights</button>
+                <button class="feature-tab" data-feature="attribution">Attribution</button>
+                <button class="feature-tab" data-feature="signal">Signal Quality</button>
+                <button class="feature-tab" data-feature="activation">Activation</button>
+                <button class="feature-tab" data-feature="admin">Admin</button>
+            </div>
+
+            <!-- Feature Content Area -->
+            <div class="feature-content">
+                <!-- Left: Interactive UI Mockup -->
+                <div class="feature-mockup">
+                    <div class="mockup-window">
+                        <div class="mockup-header">
+                            <div class="mockup-dot"></div>
+                            <div class="mockup-dot"></div>
+                            <div class="mockup-dot"></div>
+                            <span class="mockup-title" id="mockupTitle">Stratum AI - Overview</span>
+                        </div>
+                        <div class="mockup-body" id="mockupBody">
+                            <!-- Overview Panel -->
+                            <div class="feature-panel active" data-panel="overview">
+                                <div class="mockup-sidebar">
+                                    <div class="mockup-nav">
+                                        <div class="mockup-nav-item active">🧭</div>
+                                        <div class="mockup-nav-item">🔎</div>
+                                        <div class="mockup-nav-item">🧬</div>
+                                        <div class="mockup-nav-item">📡</div>
+                                        <div class="mockup-nav-item">⚡</div>
+                                    </div>
+                                    <div class="mockup-main">
+                                        <div class="mockup-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                                            <div class="mockup-card mockup-stat">
+                                                <div class="mockup-stat-value" style="color: var(--accent-green);">3.9x</div>
+                                                <div class="mockup-stat-label">Profit ROAS</div>
+                                            </div>
+                                            <div class="mockup-card mockup-stat">
+                                                <div class="mockup-stat-value">88</div>
+                                                <div class="mockup-stat-label">Signal Health</div>
+                                            </div>
+                                            <div class="mockup-card mockup-stat">
+                                                <div class="mockup-stat-value" style="color: var(--accent-orange);">6</div>
+                                                <div class="mockup-stat-label">Alerts</div>
+                                            </div>
+                                        </div>
+                                        <div class="mockup-card" style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.75rem; font-size: 0.85rem;">Alert Inbox</div>
+                                            <div class="mockup-alert warn" style="margin-bottom: 0.5rem;">
+                                                <span>Meta EMQ degraded</span>
+                                                <span style="color: var(--accent-orange);">Resolve →</span>
+                                            </div>
+                                            <div class="mockup-alert info">
+                                                <span>ROAS anomaly: Snapchat -28%</span>
+                                                <span style="color: var(--accent-blue);">Investigate →</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Insights Panel -->
+                            <div class="feature-panel" data-panel="insights">
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div class="mockup-card">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                            <span style="font-weight: 600; font-size: 0.85rem;">Top Movers (7d)</span>
+                                            <span style="color: var(--text-muted); font-size: 0.75rem;">Explainable drivers</span>
+                                        </div>
+                                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                            <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: rgba(16,185,129,0.08); border-radius: 8px;">
+                                                <span style="font-size: 0.85rem;">Meta • Prospecting</span>
+                                                <span style="color: var(--accent-green); font-weight: 700;">+18% ROAS</span>
+                                            </div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted); padding-left: 0.5rem;">Driver: CPM ↓ • CVR ↑ • Fresh signal ✅</div>
+                                            <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: rgba(245,158,11,0.08); border-radius: 8px; margin-top: 0.25rem;">
+                                                <span style="font-size: 0.85rem;">Google • PMax B</span>
+                                                <span style="color: var(--accent-orange); font-weight: 700;">-11% ROAS</span>
+                                            </div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted); padding-left: 0.5rem;">Driver: CTR ↓ • Feed issues ⚠️</div>
+                                        </div>
+                                    </div>
+                                    <div class="mockup-card">
+                                        <table class="mockup-table">
+                                            <thead><tr><th>Campaign</th><th>Spend</th><th>ROAS</th><th>Signal</th></tr></thead>
+                                            <tbody>
+                                                <tr><td>Meta • Prospecting</td><td>$42.1K</td><td>3.4x</td><td style="color: var(--accent-green);">Good</td></tr>
+                                                <tr><td>Snap • Retargeting</td><td>$9.8K</td><td>2.1x</td><td style="color: var(--accent-orange);">Warn</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Attribution Panel -->
+                            <div class="feature-panel" data-panel="attribution">
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Platform vs GA4 Variance</div>
+                                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                                <div>
+                                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;"><span>Meta</span><span>+9%</span></div>
+                                                    <div class="mockup-progress"><div class="mockup-progress-bar" style="width: 40%; background: linear-gradient(90deg, #10b981, #06b6d4);"></div></div>
+                                                </div>
+                                                <div>
+                                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;"><span>TikTok</span><span style="color: var(--accent-orange);">+18%</span></div>
+                                                    <div class="mockup-progress"><div class="mockup-progress-bar" style="width: 70%; background: linear-gradient(90deg, #f59e0b, #ec4899);"></div></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Model Selection</div>
+                                            <div style="padding: 0.6rem; background: rgba(139,92,246,0.12); border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid rgba(139,92,246,0.25);">
+                                                <div style="font-weight: 700; font-size: 0.85rem;">Markov Chain</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">Data-driven path weighting</div>
+                                            </div>
+                                            <div style="padding: 0.6rem; background: var(--bg-glass); border-radius: 8px;">
+                                                <div style="font-weight: 700; font-size: 0.85rem;">Shapley</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">Fair value distribution</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mockup-card">
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; text-align: center;">
+                                            <div style="padding: 0.75rem; background: var(--bg-glass); border-radius: 10px;">
+                                                <div style="font-size: 0.7rem; color: var(--text-muted);">TOF</div>
+                                                <div style="font-size: 1.25rem; font-weight: 800;">34%</div>
+                                            </div>
+                                            <div style="padding: 0.75rem; background: var(--bg-glass); border-radius: 10px;">
+                                                <div style="font-size: 0.7rem; color: var(--text-muted);">MOF</div>
+                                                <div style="font-size: 1.25rem; font-weight: 800;">41%</div>
+                                            </div>
+                                            <div style="padding: 0.75rem; background: var(--bg-glass); border-radius: 10px;">
+                                                <div style="font-size: 0.7rem; color: var(--text-muted);">BOF</div>
+                                                <div style="font-size: 1.25rem; font-weight: 800;">25%</div>
+                                            </div>
+                                            <div style="padding: 0.75rem; background: rgba(245,158,11,0.1); border-radius: 10px;">
+                                                <div style="font-size: 0.7rem; color: var(--text-muted);">Variance</div>
+                                                <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-orange);">+18%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Signal Quality Panel -->
+                            <div class="feature-panel" data-panel="signal">
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Connector Status</div>
+                                            <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+                                                <div style="display: flex; justify-content: space-between;"><span>Meta</span><span style="color: var(--accent-green);">✅ 23m</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Google</span><span style="color: var(--accent-green);">✅ 41m</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>TikTok</span><span style="color: var(--accent-orange);">⚠️ 6h</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Snapchat</span><span style="color: var(--accent-pink);">❌ auth</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Health Drivers</div>
+                                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                                <div>
+                                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><span>Coverage</span><span>92%</span></div>
+                                                    <div class="mockup-progress" style="margin-top: 0.25rem;"><div class="mockup-progress-bar" style="width: 92%; background: linear-gradient(90deg, #10b981, #06b6d4);"></div></div>
+                                                </div>
+                                                <div>
+                                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><span>Freshness</span><span>Good</span></div>
+                                                    <div class="mockup-progress" style="margin-top: 0.25rem;"><div class="mockup-progress-bar" style="width: 78%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);"></div></div>
+                                                </div>
+                                                <div>
+                                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><span>Latency</span><span style="color: var(--accent-orange);">Warn</span></div>
+                                                    <div class="mockup-progress" style="margin-top: 0.25rem;"><div class="mockup-progress-bar" style="width: 55%; background: linear-gradient(90deg, #f59e0b, #ec4899);"></div></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mockup-card">
+                                        <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Signal Timeline</div>
+                                        <div class="mockup-alert success" style="margin-bottom: 0.5rem;"><span><strong>12:40</strong> • Meta event delivery OK</span><span style="color: var(--accent-green);">Recovered</span></div>
+                                        <div class="mockup-alert warn" style="margin-bottom: 0.5rem;"><span><strong>09:10</strong> • TikTok freshness degraded</span><span style="color: var(--accent-orange);">Warn</span></div>
+                                        <div class="mockup-alert" style="background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.22);"><span><strong>03:20</strong> • Snapchat auth expired</span><span style="color: var(--accent-pink);">Broken</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activation Panel -->
+                            <div class="feature-panel" data-panel="activation">
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Recommended Actions</div>
+                                            <div style="padding: 0.75rem; background: rgba(59,130,246,0.1); border-radius: 8px; border: 1px solid rgba(59,130,246,0.22); margin-bottom: 0.5rem;">
+                                                <div style="font-weight: 700; font-size: 0.85rem;">Increase Meta Prospecting +12%</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">Confidence: Medium • Guardrail: max +15%</div>
+                                            </div>
+                                            <div style="padding: 0.75rem; background: rgba(245,158,11,0.1); border-radius: 8px; border: 1px solid rgba(245,158,11,0.22);">
+                                                <div style="font-weight: 700; font-size: 0.85rem;">Pause Snapchat Ad Set</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">Requires approval • Rollback available</div>
+                                            </div>
+                                        </div>
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Guardrails</div>
+                                            <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+                                                <div style="display: flex; justify-content: space-between;"><span>Max daily change</span><span style="font-weight: 700;">15%</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Approval required</span><span style="font-weight: 700; color: var(--accent-orange);">Med/High</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Rollback window</span><span style="font-weight: 700;">24h</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mockup-card">
+                                        <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Audit Log</div>
+                                        <div style="display: flex; justify-content: space-between; padding: 0.6rem; background: var(--bg-glass); border-radius: 8px; font-size: 0.8rem; margin-bottom: 0.4rem;">
+                                            <span><strong>Budget +12%</strong> • Meta Prospecting</span><span style="color: var(--text-muted);">by AM • 2h ago</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; padding: 0.6rem; background: var(--bg-glass); border-radius: 8px; font-size: 0.8rem;">
+                                            <span><strong>Token refreshed</strong> • Google Ads</span><span style="color: var(--text-muted);">System • 5h ago</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Admin Panel -->
+                            <div class="feature-panel" data-panel="admin">
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Connector Health Center</div>
+                                            <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+                                                <div style="display: flex; justify-content: space-between;"><span>Meta</span><span style="color: var(--accent-green);">✅ OK</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Google</span><span style="color: var(--accent-green);">✅ OK</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>TikTok</span><span style="color: var(--accent-orange);">⚠️ Limited</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Snapchat</span><span style="color: var(--accent-pink);">❌ Reconnect</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="mockup-card">
+                                            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Roles & Governance</div>
+                                            <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.8rem;">
+                                                <div style="display: flex; justify-content: space-between;"><span>Super Admin</span><span>All tenants</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Tenant Admin</span><span>Users + connectors</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Account Manager</span><span>Insights + actions</span></div>
+                                                <div style="display: flex; justify-content: space-between;"><span>Viewer</span><span>Read-only</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mockup-card">
+                                        <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem;">Feature Flags</div>
+                                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                                            <div style="padding: 0.75rem; background: rgba(16,185,129,0.1); border-radius: 8px; text-align: center;">
+                                                <div style="font-weight: 700; font-size: 0.85rem;">Attribution</div>
+                                                <div style="font-size: 0.75rem; color: var(--accent-green);">Enabled</div>
+                                            </div>
+                                            <div style="padding: 0.75rem; background: rgba(245,158,11,0.1); border-radius: 8px; text-align: center;">
+                                                <div style="font-weight: 700; font-size: 0.85rem;">Autopilot</div>
+                                                <div style="font-size: 0.75rem; color: var(--accent-orange);">Approval req.</div>
+                                            </div>
+                                            <div style="padding: 0.75rem; background: var(--bg-glass); border-radius: 8px; text-align: center;">
+                                                <div style="font-weight: 700; font-size: 0.85rem;">Offline</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">Coming soon</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Storytelling Content -->
+                <div class="feature-stories">
+                    <!-- Overview Story -->
+                    <div class="feature-story active" data-story="overview">
+                        <div class="journey-step"><span>Step 1</span> Start Your Morning Check</div>
+                        <h3 class="feature-story-title">Your Morning Briefing in 30 Seconds</h3>
+                        <p class="feature-story-desc">
+                            Sarah, a performance marketer, opens Stratum AI at 8:15 AM. Instead of logging into 5 platforms and building spreadsheets,
+                            she sees her <strong>Profit ROAS</strong>, <strong>Signal Health</strong>, and prioritized alerts—all in one glance.
+                            The system already flagged a Meta EMQ issue before her coffee got cold.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li>Executive KPIs with freshness indicators showing data age</li>
+                            <li>Smart alert inbox prioritized by revenue impact</li>
+                            <li>One-click access to any issue with root cause context</li>
+                        </ul>
+                        <div class="feature-metric">
+                            <span class="feature-metric-value">23 min</span>
+                            <span class="feature-metric-label">Average time saved per day</span>
+                        </div>
+                    </div>
+
+                    <!-- Insights Story -->
+                    <div class="feature-story" data-story="insights">
+                        <div class="journey-step"><span>Step 2</span> Understand What's Really Happening</div>
+                        <h3 class="feature-story-title">See the "Why" Behind Every Metric Shift</h3>
+                        <p class="feature-story-desc">
+                            When Sarah notices her Meta Prospecting campaign jumped +18% ROAS, she doesn't just see the number—she sees <em>why</em>:
+                            CPM dropped, conversion rate increased, and signal quality is confirmed fresh. No more guessing if it's real or a data glitch.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li>Explainable drivers for every performance change</li>
+                            <li>Creative fatigue detection with frequency + CTR trends</li>
+                            <li>Drill-down from account → campaign → ad set → creative</li>
+                        </ul>
+                        <div class="feature-metric">
+                            <span class="feature-metric-value">+34%</span>
+                            <span class="feature-metric-label">Faster anomaly identification</span>
+                        </div>
+                    </div>
+
+                    <!-- Attribution Story -->
+                    <div class="feature-story" data-story="attribution">
+                        <div class="journey-step"><span>Step 3</span> Know Your True Credit Assignment</div>
+                        <h3 class="feature-story-title">End the Platform vs Analytics War</h3>
+                        <p class="feature-story-desc">
+                            Sarah's CMO asks why Meta reports 120 conversions but GA4 shows 95. With Stratum AI, she shows the <strong>variance analysis</strong>:
+                            Meta is +9% (acceptable), but TikTok is +18% (investigate). She picks the Markov Chain model to fairly distribute credit across the funnel.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li>Platform vs GA4 variance with confidence bands</li>
+                            <li>Multi-touch models: Markov Chain, Shapley, and custom</li>
+                            <li>Funnel contribution: TOF → MOF → BOF breakdown</li>
+                        </ul>
+                        <div class="feature-metric">
+                            <span class="feature-metric-value">18%</span>
+                            <span class="feature-metric-label">Avg variance identified</span>
+                        </div>
+                    </div>
+
+                    <!-- Signal Quality Story -->
+                    <div class="feature-story" data-story="signal">
+                        <div class="journey-step"><span>Step 4</span> Trust Before You Act</div>
+                        <h3 class="feature-story-title">Know When to Trust Your Data</h3>
+                        <p class="feature-story-desc">
+                            Before Sarah makes any budget decision, she checks Signal Quality. Meta's connector synced 23 minutes ago ✅, but Snapchat's auth expired ❌.
+                            She <em>knows</em> not to trust yesterday's Snapchat numbers—and the system won't let her make blind decisions.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li>Real-time connector status with freshness timestamps</li>
+                            <li>Health drivers: coverage, freshness, latency scores</li>
+                            <li>Signal timeline showing incidents and recoveries</li>
+                        </ul>
+                        <div class="feature-metric">
+                            <span class="feature-metric-value">92%</span>
+                            <span class="feature-metric-label">Signal coverage maintained</span>
+                        </div>
+                    </div>
+
+                    <!-- Activation Story -->
+                    <div class="feature-story" data-story="activation">
+                        <div class="journey-step"><span>Step 5</span> Act with Confidence</div>
+                        <h3 class="feature-story-title">Make Changes Without Fear</h3>
+                        <p class="feature-story-desc">
+                            Stratum AI recommends increasing Meta Prospecting by +12% based on strong performance. Sarah clicks "Apply"—but the system has <strong>guardrails</strong>:
+                            max +15% daily change, approval required for medium/high risk actions, and a 24-hour rollback window. Every action is logged for the audit trail.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li>AI-powered recommendations with confidence scores</li>
+                            <li>Guardrails prevent runaway budget changes</li>
+                            <li>Full audit log: who did what, when, and why</li>
+                        </ul>
+                        <div class="feature-metric">
+                            <span class="feature-metric-value">24h</span>
+                            <span class="feature-metric-label">Rollback window on all actions</span>
+                        </div>
+                    </div>
+
+                    <!-- Admin Story -->
+                    <div class="feature-story" data-story="admin">
+                        <div class="journey-step"><span>Admin</span> Control Everything</div>
+                        <h3 class="feature-story-title">Governance Without the Headache</h3>
+                        <p class="feature-story-desc">
+                            Sarah's team lead needs to onboard a new analyst with read-only access, fix Snapchat's broken auth, and enable the new Attribution feature for their tenant.
+                            Admin Center handles it all—connector health, role management, and feature flags—in one place.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li>Connector Health Center with permission diagnostics</li>
+                            <li>Multi-tenant RBAC: Super Admin, Tenant Admin, AM, Viewer</li>
+                            <li>Feature flags per tenant for controlled rollouts</li>
+                        </ul>
+                        <div class="feature-metric">
+                            <span class="feature-metric-value">4</span>
+                            <span class="feature-metric-label">Role levels for granular access</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Explorer JavaScript -->
+        <script>
+            (function() {
+                const tabs = document.querySelectorAll('.feature-tab');
+                const panels = document.querySelectorAll('.feature-panel');
+                const stories = document.querySelectorAll('.feature-story');
+                const mockupTitle = document.getElementById('mockupTitle');
+
+                const featureNames = {
+                    overview: 'Stratum AI - Overview',
+                    insights: 'Stratum AI - Insights',
+                    attribution: 'Stratum AI - Attribution',
+                    signal: 'Stratum AI - Signal Quality',
+                    activation: 'Stratum AI - Activation',
+                    admin: 'Stratum AI - Admin'
+                };
+
+                function setActiveFeature(featureKey) {
+                    // Update tabs
+                    tabs.forEach(tab => {
+                        tab.classList.toggle('active', tab.dataset.feature === featureKey);
+                    });
+
+                    // Update mockup panels
+                    panels.forEach(panel => {
+                        if (panel.dataset.panel === featureKey) {
+                            panel.classList.add('active');
+                        } else {
+                            panel.classList.remove('active');
+                        }
+                    });
+
+                    // Update stories
+                    stories.forEach(story => {
+                        if (story.dataset.story === featureKey) {
+                            story.classList.add('active');
+                        } else {
+                            story.classList.remove('active');
+                        }
+                    });
+
+                    // Update mockup title
+                    if (mockupTitle) {
+                        mockupTitle.textContent = featureNames[featureKey] || 'Stratum AI';
+                    }
+                }
+
+                // Add click handlers to tabs
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        setActiveFeature(tab.dataset.feature);
+                    });
+                });
+
+                // Auto-rotate features every 8 seconds (optional)
+                let autoRotate = true;
+                let currentIndex = 0;
+                const featureOrder = ['overview', 'insights', 'attribution', 'signal', 'activation', 'admin'];
+
+                function rotateFeature() {
+                    if (autoRotate) {
+                        currentIndex = (currentIndex + 1) % featureOrder.length;
+                        setActiveFeature(featureOrder[currentIndex]);
+                    }
+                }
+
+                // Pause auto-rotate on user interaction
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        autoRotate = false;
+                        currentIndex = featureOrder.indexOf(tab.dataset.feature);
+                    });
+                });
+
+                // Start auto-rotate after 10 seconds of no interaction
+                let rotateInterval = setInterval(rotateFeature, 8000);
+
+                // Initialize
+                setActiveFeature('overview');
+            })();
+        </script>
+    </section>
+
+
+    <!-- Intelligence Section -->
+    <section class="intelligence" id="intelligence">
+        <div class="intel-container">
+            <div class="section-header reveal">
+                <div class="section-label">AI-Powered Intelligence</div>
+                <h2 class="section-title">Machine Learning You Can Trust</h2>
+                <p class="section-description">
+                    Production ML where it’s ready today—and a transparent roadmap where it’s still improving.
+                </p>
+            </div>
+
+            <div class="intel-grid">
+                <div class="intel-card reveal">
+                    <div class="intel-number">01</div>
+                    <h3 class="intel-title">Conversion Prediction</h3>
+                    <p class="intel-desc">Conversion predictor (R² ≈ 0.57) for forecasting conversion volume and pacing scenarios.</p>
+                    <ul class="intel-features">
+                        <li>CTR-weighted predictions</li>
+                        <li>Platform-specific baselines</li>
+                        <li>Daily recalculation</li>
+                        <li>Confidence scoring</li>
+                    </ul>
+                </div>
+
+                <div class="intel-card reveal">
+                    <div class="intel-number">02</div>
+                    <h3 class="intel-title">Budget Impact Analysis</h3>
+                    <p class="intel-desc">Budget impact model estimates diminishing returns to support allocation decisions (best used with guardrails).</p>
+                    <ul class="intel-features">
+                        <li>What-if scenarios</li>
+                        <li>Diminishing returns modeling</li>
+                        <li>Cross-campaign optimization</li>
+                        <li>Reallocation recommendations</li>
+                    </ul>
+                </div>
+
+                <div class="intel-card reveal">
+                    <div class="intel-number">03</div>
+                    <h3 class="intel-title">Anomaly Detection</h3>
+                    <p class="intel-desc">Always-on monitoring flags performance drops early with automated alerts and playbook guidance.</p>
+                    <ul class="intel-features">
+                        <li>20% ROAS drop alerts</li>
+                        <li>30% conversion drop alerts</li>
+                        <li>50% spend spike detection</li>
+                        <li>Instant WhatsApp notifications</li>
+                    </ul>
+                </div>
+
+                <div class="intel-card reveal">
+                    <div class="intel-number">04</div>
+                    <h3 class="intel-title">Campaign Health Scoring</h3>
+                    <p class="intel-desc">0-100 health scores combine performance + pacing + signal quality into actionable insights.</p>
+                    <ul class="intel-features">
+                        <li>Automated recommendations</li>
+                        <li>Scale/pause triggers</li>
+                        <li>Creative improvement suggestions</li>
+                        <li>Portfolio optimization</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations -->
+    <section class="integrations" id="integrations">
+        <div class="section-header reveal">
+            <div class="section-label">Ecosystem</div>
+            <h2 class="section-title">Connect Everything. Control Everything.</h2>
+            <p class="section-description">
+                Native integrations with major advertising platforms. OAuth-based, secure sync with health checks and clear error states.
+            </p>
+        </div>
+
+        <div class="integration-logos">
+            <div class="integration-logo reveal-scale">META</div>
+            <div class="integration-logo reveal-scale">GOOGLE</div>
+            <div class="integration-logo reveal-scale">TIKTOK</div>
+            <div class="integration-logo reveal-scale">SNAPCHAT</div>
+            <div class="integration-logo reveal-scale">LINKEDIN</div>
+            <div class="integration-logo reveal-scale">WHATSAPP</div>
+            <div class="integration-logo reveal-scale">GA4</div>
+            <div class="integration-logo reveal-scale">WEBHOOK</div>
+        </div>
+
+        <div style="max-width: 1000px; margin: 2.5rem auto 0; padding: 1.25rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px;">
+            <div style="display:flex; gap: 1rem; align-items:flex-start;">
+                <div style="font-size: 1.5rem;">ℹ️</div>
+                <div style="color: var(--text-secondary);">
+                    <strong>Note:</strong> “EMQ” is Meta-specific. For other platforms, Stratum AI tracks signal health using measurable diagnostics (coverage, freshness, latency, delivery errors).
+                    Conversions API (CAPI) support requires correct permissions and production connector hardening.
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ROI Calculator -->
+    <section class="roi-section" id="roi">
+        <div class="roi-container reveal-scale">
+            <div class="roi-header">
+                <div class="section-label">ROI Calculator</div>
+                <h2 class="section-title">See Your Potential Returns</h2>
+                
+                <p class="section-description">Enter your current metrics to estimate Stratum AI's impact.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+                    Estimates are directional. Real outcomes depend on baseline performance, signal quality, and implementation.
+                </p>
+
+            </div>
+
+            <div class="roi-grid">
+                <div class="roi-input-group">
+                    <label>Monthly Ad Spend</label>
+                    <input type="text" class="roi-input" id="adSpend" value="$100,000" oninput="calculateROI()">
+                </div>
+                <div class="roi-input-group">
+                    <label>Current ROAS</label>
+                    <input type="text" class="roi-input" id="currentRoas" value="2.5x" oninput="calculateROI()">
+                </div>
+                <div class="roi-input-group">
+                    <label>Gross Margin</label>
+                    <input type="text" class="roi-input" id="margin" value="40%" oninput="calculateROI()">
+                </div>
+            </div>
+
+            <div class="roi-results">
+                <div class="roi-result">
+                    <div class="roi-result-value" id="additionalRevenue">$45,000</div>
+                    <div class="roi-result-label">Additional Monthly Revenue</div>
+                </div>
+                <div class="roi-result">
+                    <div class="roi-result-value" id="additionalProfit">$18,000</div>
+                    <div class="roi-result-label">Additional Monthly Profit</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="proof">
+        <div class="section-header reveal">
+            <div class="section-label">Built for Scale</div>
+            <h2 class="section-title">Enterprise-Grade Platform</h2>
+        </div>
+
+        <div class="proof-grid">
+            <div class="proof-card reveal">
+                <div class="proof-quote">
+                    "Finally, a platform that shows us real profit, not just revenue. We discovered that some 'profitable' campaigns were losing money after COGS."
+                </div>
+                <div class="proof-author">
+                    <div class="proof-avatar">M</div>
+                    <div>
+                        <div class="proof-name">Marketing Director</div>
+                        <div class="proof-role">E-commerce, $5M/year spend</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proof-card reveal">
+                <div class="proof-quote">
+                    "The multi-touch attribution changed everything. We were over-investing in bottom-funnel and starving our prospecting campaigns."
+                </div>
+                <div class="proof-author">
+                    <div class="proof-avatar">S</div>
+                    <div>
+                        <div class="proof-name">Performance Lead</div>
+                        <div class="proof-role">DTC Brand, GCC Region</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proof-card reveal">
+                <div class="proof-quote">
+                    "WhatsApp alerts helped us catch issues fast—before they became expensive. A campaign went sideways at 2 AM and we caught it before breakfast."
+                </div>
+                <div class="proof-author">
+                    <div class="proof-avatar">A</div>
+                    <div>
+                        <div class="proof-name">Agency Owner</div>
+                        <div class="proof-role">Performance Agency, 20+ clients</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing / Launch Section -->
+    <section class="pricing" id="pricing">
+        <div class="pricing-container">
+            <!-- Launching Soon Banner -->
+            <div class="launch-banner reveal-scale">
+                <div class="launch-badge">
+                    <span>🚀</span> LAUNCHING SOON
+                </div>
+                <h2 class="launch-title">Be First to Access Stratum AI</h2>
+                <p class="launch-subtitle">
+                    اشترك now to secure your spot in our exclusive early access program.
+                    <strong>First 100 subscribers get 3 months free.</strong>
+                </p>
+
+                <div class="countdown" id="launchCountdown">
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="days">14</div>
+                        <div class="countdown-label">Days</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="hours">08</div>
+                        <div class="countdown-label">Hours</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="minutes">42</div>
+                        <div class="countdown-label">Minutes</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="seconds">17</div>
+                        <div class="countdown-label">Seconds</div>
+                    </div>
+                </div>
+
+                <form class="subscribe-form" id="subscribeForm">
+                    <input type="email" class="subscribe-input" placeholder="Enter your work email" required>
+                    <button type="submit" class="subscribe-btn">Get Early Access →</button>
+                </form>
+                <p class="subscribe-note">No credit card required • Be notified at launch • Cancel anytime</p>
+
+                <div class="early-benefits">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🎁</span>
+                        <span class="benefit-text">3 Months Free</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">⚡</span>
+                        <span class="benefit-text">Priority Onboarding</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">💬</span>
+                        <span class="benefit-text">Direct Founder Access</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Plans Preview -->
+            <div class="section-header reveal">
+                <div class="section-label">Pricing Preview</div>
+                <h2 class="section-title">Simple, Transparent Pricing</h2>
+                <p class="section-description">
+                    Choose the plan that fits your ad spend. All plans include full access to core features.
+                </p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Growth Plan -->
+                <div class="pricing-card reveal">
+                    <div class="pricing-name">Growth</div>
+                    <div class="pricing-price">$499<span>/mo</span></div>
+                    <div class="pricing-desc">Up to $100K monthly ad spend</div>
+                    <ul class="pricing-features">
+                        <li>5 ad accounts</li>
+                        <li>Multi-touch attribution</li>
+                        <li>Signal health monitoring</li>
+                        <li>WhatsApp alerts</li>
+                        <li>Email support</li>
+                    </ul>
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="document.querySelector('.subscribe-input').focus()">Join Waitlist</button>
+                </div>
+
+                <!-- Scale Plan (Featured) -->
+                <div class="pricing-card featured reveal">
+                    <div class="pricing-name">Scale</div>
+                    <div class="pricing-price">$999<span>/mo</span></div>
+                    <div class="pricing-desc">Up to $500K monthly ad spend</div>
+                    <ul class="pricing-features">
+                        <li>15 ad accounts</li>
+                        <li>Everything in Growth</li>
+                        <li>AI budget optimization</li>
+                        <li>Profit ROAS tracking</li>
+                        <li>Priority support</li>
+                    </ul>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="document.querySelector('.subscribe-input').focus()">Join Waitlist</button>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="pricing-card reveal">
+                    <div class="pricing-name">Enterprise</div>
+                    <div class="pricing-price">Custom</div>
+                    <div class="pricing-desc">Unlimited ad spend</div>
+                    <ul class="pricing-features">
+                        <li>Unlimited ad accounts</li>
+                        <li>Everything in Scale</li>
+                        <li>Custom integrations</li>
+                        <li>Dedicated CSM</li>
+                        <li>SLA guarantee</li>
+                    </ul>
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="document.querySelector('.subscribe-input').focus()">تواصل مع المبيعات</button>
+                </div>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="trust-badges reveal">
+                <div class="trust-badge">🔒 SOC 2 Compliant</div>
+                <div class="trust-badge">🛡️ GDPR Ready</div>
+                <div class="trust-badge">💳 No Card for Trial</div>
+                <div class="trust-badge">🔄 Cancel Anytime</div>
+                <div class="trust-badge">💰 30-Day Money Back</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="demo">
+        <div class="cta-container reveal">
+            <h2>Don't Wait—Every Day Costs You Money</h2>
+            <p><strong>Limited spots available.</strong> Join 150+ growth teams who stopped guessing and started knowing their true profit.</p>
+            <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 2rem; display: inline-block;">
+                <span style="color: var(--accent-orange); font-weight: 700;">🔥 Only <span id="spotsRemaining">23</span> early access spots remaining</span>
+            </div>
+            <div class="cta-buttons">
+                <a href="#pricing" class="btn btn-primary magnetic">
+                    Claim Your Spot Now
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="#" class="btn btn-secondary magnetic">احجز عرضًا توضيحيًا Call</a>
+            </div>
+            <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                ✓ No credit card required &nbsp;&nbsp; ✓ Setup in 24 hours &nbsp;&nbsp; ✓ 30-day money-back guarantee
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">STRATUM AI</div>
+            <div class="footer-links">
+                <a href="#">المنصة</a>
+                <a href="#">Documentation</a>
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Cursor Glow Effect
+        const cursorGlow = document.getElementById('cursorGlow');
+        let mouseX = 0, mouseY = 0;
+        let glowX = 0, glowY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            glowX += (mouseX - glowX) * 0.1;
+            glowY += (mouseY - glowY) * 0.1;
+            cursorGlow.style.left = glowX + 'px';
+            cursorGlow.style.top = glowY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Create Particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 10 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Scroll Reveal Animation
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+
+        const revealOnScroll = () => {
+            revealElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('active');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+
+        // Value Cards Animation
+        const valueCards = document.querySelectorAll('.value-card');
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '0px'
+        };
+
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('animate');
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+
+        valueCards.forEach(card => cardObserver.observe(card));
+
+        // Stat items animation
+        const statItems = document.querySelectorAll('.stat-item');
+        const statObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('animate');
+                    }, index * 150);
+                }
+            });
+        }, observerOptions);
+
+        statItems.forEach(item => statObserver.observe(item));
+
+        // Progress bars animation
+        const progressBars = document.querySelectorAll('.progress-bar-animated');
+        const progressObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('animate');
+                    }, 500);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        progressBars.forEach(bar => progressObserver.observe(bar));
+
+        // Count Up Animation
+        const countUpElements = document.querySelectorAll('.count-up');
+
+        const countUp = (element) => {
+            const target = parseFloat(element.getAttribute('data-target'));
+            const duration = 2000;
+            const start = 0;
+            const startTime = performance.now();
+
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Easing function
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = start + (target - start) * easeOut;
+
+                if (target % 1 !== 0) {
+                    element.textContent = current.toFixed(1);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    if (target % 1 !== 0) {
+                        element.textContent = target.toFixed(1);
+                    } else {
+                        element.textContent = target;
+                    }
+                }
+            };
+
+            requestAnimationFrame(animate);
+        };
+
+        const countObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    countUp(entry.target);
+                    countObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        countUpElements.forEach(el => countObserver.observe(el));
+
+        // ROI Calculator
+        function calculateROI() {
+            const spend = parseFloat(document.getElementById('adSpend').value.replace(/[$,]/g, '')) || 100000;
+            const roas = parseFloat(document.getElementById('currentRoas').value.replace('x', '')) || 2.5;
+            const margin = parseFloat(document.getElementById('margin').value.replace('%', '')) / 100 || 0.4;
+
+            const roasImprovement = 0.12;
+            const newRoas = roas * (1 + roasImprovement);
+
+            const currentRevenue = spend * roas;
+            const newRevenue = spend * newRoas;
+            const additionalRevenue = newRevenue - currentRevenue;
+            const additionalProfit = additionalRevenue * margin;
+
+            animateValue('additionalRevenue', additionalRevenue);
+            animateValue('additionalProfit', additionalProfit);
+        }
+
+        function animateValue(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const startValue = parseFloat(element.textContent.replace(/[$,]/g, '')) || 0;
+            const duration = 500;
+            const startTime = performance.now();
+
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = startValue + (targetValue - startValue) * easeOut;
+
+                element.textContent = '$' + Math.round(current).toLocaleString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            };
+
+            requestAnimationFrame(animate);
+        }
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        // Module interactions are handled inside the Platform Capabilities section script (scoped + visual switching)
+// Mouse tracking for value cards
+        document.querySelectorAll('.value-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                card.style.setProperty('--mouse-x', x + '%');
+                card.style.setProperty('--mouse-y', y + '%');
+            });
+        });
+
+        // Magnetic button effect
+        document.querySelectorAll('.magnetic').forEach(button => {
+            button.addEventListener('mousemove', (e) => {
+                const rect = button.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                button.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
+            });
+
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'translate(0, 0)';
+            });
+        });
+
+        // Ripple effect on buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+                ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Typing animation
+        const typingTexts = ['23% of Ad Spend', 'Money to Bad Data', 'Revenue to Guesswork', 'Profit to Blind Spots'];
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typingElement = document.getElementById('typingText');
+
+        function typeText() {
+            const currentText = typingTexts[textIndex];
+
+            if (isDeleting) {
+                typingElement.textContent = currentText.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typingElement.textContent = currentText.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 50 : 100;
+
+            if (!isDeleting && charIndex === currentText.length) {
+                typeSpeed = 2000;
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                textIndex = (textIndex + 1) % typingTexts.length;
+                typeSpeed = 500;
+            }
+
+            setTimeout(typeText, typeSpeed);
+        }
+
+        // Start typing animation after page load
+        setTimeout(typeText, 2000);
+
+        // Initialize ROI calculator
+        calculateROI();
+
+        // Hover lift effect
+        document.querySelectorAll('.hover-lift').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                el.style.transform = 'translateY(-5px)';
+                el.style.boxShadow = '0 10px 30px var(--shadow-color)';
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'translateY(0)';
+                el.style.boxShadow = 'none';
+            });
+        });
+
+        // Countdown Timer for Launch
+        (function initCountdown() {
+            // Set launch date to 14 days from now
+            const launchDate = new Date();
+            launchDate.setDate(launchDate.getDate() + 14);
+            launchDate.setHours(9, 0, 0, 0); // 9 AM launch
+
+            function updateCountdown() {
+                const now = new Date();
+                const diff = launchDate - now;
+
+                if (diff <= 0) {
+                    document.getElementById('days').textContent = '00';
+                    document.getElementById('hours').textContent = '00';
+                    document.getElementById('minutes').textContent = '00';
+                    document.getElementById('seconds').textContent = '00';
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('days').textContent = days.toString().padStart(2, '0');
+                document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        })();
+
+        // اشترك Form Handler
+        const subscribeForm = document.getElementById('subscribeForm');
+        if (subscribeForm) {
+            subscribeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const emailInput = this.querySelector('.subscribe-input');
+                const email = emailInput.value.trim();
+                const submitBtn = this.querySelector('.subscribe-btn');
+
+                if (email && email.includes('@')) {
+                    // Store email (in production, send to backend)
+                    const subscribers = JSON.parse(localStorage.getItem('stratum_subscribers') || '[]');
+                    if (!subscribers.includes(email)) {
+                        subscribers.push(email);
+                        localStorage.setItem('stratum_subscribers', JSON.stringify(subscribers));
+                    }
+
+                    // Success feedback
+                    submitBtn.textContent = '✓ You\'re on the list!';
+                    submitBtn.style.background = 'var(--accent-green)';
+                    emailInput.value = '';
+                    emailInput.placeholder = 'Check your inbox for confirmation';
+
+                    // Update spots remaining
+                    const spotsEl = document.getElementById('spotsRemaining');
+                    if (spotsEl) {
+                        const current = parseInt(spotsEl.textContent);
+                        spotsEl.textContent = Math.max(1, current - 1);
+                    }
+
+                    // Reset button after delay
+                    setTimeout(() => {
+                        submitBtn.textContent = 'Get Early Access →';
+                        submitBtn.style.background = '';
+                    }, 3000);
+                } else {
+                    // Error feedback
+                    emailInput.style.borderColor = '#ef4444';
+                    emailInput.placeholder = 'Please enter a valid email';
+                    setTimeout(() => {
+                        emailInput.style.borderColor = '';
+                        emailInput.placeholder = 'Enter your work email';
+                    }, 2000);
+                }
+            });
+        }
+
+        // Periodically decrease spots remaining (creates urgency)
+        (function updateSpots() {
+            const spotsEl = document.getElementById('spotsRemaining');
+            if (spotsEl) {
+                // Randomly decrease spots every 30-90 seconds
+                const decreaseSpot = () => {
+                    const current = parseInt(spotsEl.textContent);
+                    if (current > 5) {
+                        spotsEl.textContent = current - 1;
+                        spotsEl.style.transform = 'scale(1.2)';
+                        setTimeout(() => spotsEl.style.transform = 'scale(1)', 300);
+                    }
+                };
+
+                // Random interval between 30-90 seconds
+                const scheduleNext = () => {
+                    const delay = Math.random() * 60000 + 30000;
+                    setTimeout(() => {
+                        decreaseSpot();
+                        scheduleNext();
+                    }, delay);
+                };
+
+                scheduleNext();
+            }
+        })();
+    </script>
+</body>
+</html>

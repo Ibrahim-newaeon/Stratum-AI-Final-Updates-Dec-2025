@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   # ===========================================================================
   # PostgreSQL 16 Database
@@ -20,7 +22,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
     networks:
       - stratum_network
 
@@ -70,9 +71,6 @@ services:
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=${LOG_FORMAT:-json}
-      # Slack Integration
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
-      - SLACK_CHANNEL=${SLACK_CHANNEL:-#stratum-alerts}
     volumes:
       - ./backend:/app
       - ./ml_service/models:/app/ml_service/models:ro
@@ -114,9 +112,6 @@ services:
       - ML_MODELS_PATH=/app/ml_service/models
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      # Slack Integration (for background alerts)
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
-      - SLACK_CHANNEL=${SLACK_CHANNEL:-#stratum-alerts}
     volumes:
       - ./backend:/app
       - ./ml_service/models:/app/ml_service/models:ro
@@ -127,12 +122,6 @@ services:
         condition: service_healthy
       api:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
     networks:
       - stratum_network
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
@@ -156,15 +145,9 @@ services:
       - ./backend:/app
     depends_on:
       - worker
-    healthcheck:
-      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/tmp/celerybeat-schedule') else 1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     networks:
       - stratum_network
-    command: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
+    command: celery -A app.workers.celery_app beat --loglevel=info
 
   # ===========================================================================
   # React Frontend (Vite)
@@ -177,11 +160,9 @@ services:
     container_name: stratum_frontend
     restart: unless-stopped
     environment:
-      - DOCKER_ENV=true
       - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
       - VITE_DEFAULT_LOCALE=${VITE_DEFAULT_LOCALE:-en}
-      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
     volumes:
       - ./frontend:/app
       - /app/node_modules

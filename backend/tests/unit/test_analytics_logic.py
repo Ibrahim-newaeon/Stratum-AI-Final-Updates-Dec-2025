@@ -12,41 +12,45 @@ Unit tests for analytics logic modules:
 Each module has 5+ test cases covering core functionality.
 """
 
-from datetime import UTC, datetime
-
 import pytest
+from datetime import datetime, timezone
+from typing import List, Dict
 
+from app.analytics.logic.types import (
+    EntityMetrics,
+    BaselineMetrics,
+    Platform,
+    EntityLevel,
+    ScoringParams,
+    FatigueParams,
+    AnomalyParams,
+    SignalHealthParams,
+    ScalingAction,
+    FatigueState,
+    SignalHealthStatus,
+    AlertSeverity,
+)
+from app.analytics.logic.scoring import scaling_score, batch_scaling_scores
+from app.analytics.logic.fatigue import creative_fatigue, batch_creative_fatigue
 from app.analytics.logic.anomalies import (
     anomaly_zscore,
     detect_anomalies,
     get_severity,
 )
-from app.analytics.logic.fatigue import batch_creative_fatigue, creative_fatigue
+from app.analytics.logic.signal_health import (
+    signal_health,
+    should_suspend_automation,
+    auto_resolve,
+)
 from app.analytics.logic.recommend import (
     RecommendationsEngine,
     generate_recommendations,
 )
-from app.analytics.logic.scoring import batch_scaling_scores, scaling_score
-from app.analytics.logic.signal_health import (
-    auto_resolve,
-    should_suspend_automation,
-    signal_health,
-)
-from app.analytics.logic.types import (
-    AlertSeverity,
-    BaselineMetrics,
-    EntityLevel,
-    EntityMetrics,
-    FatigueState,
-    Platform,
-    ScalingAction,
-    SignalHealthStatus,
-)
+
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
-
 
 @pytest.fixture
 def sample_entity_metrics() -> EntityMetrics:
@@ -56,7 +60,7 @@ def sample_entity_metrics() -> EntityMetrics:
         entity_name="Test Campaign",
         entity_level=EntityLevel.CAMPAIGN,
         platform=Platform.META,
-        date=datetime.now(UTC),
+        date=datetime.now(timezone.utc),
         spend=1000.0,
         impressions=50000,
         clicks=500,
@@ -99,7 +103,7 @@ def high_performing_metrics() -> EntityMetrics:
         entity_name="High Performer",
         entity_level=EntityLevel.CAMPAIGN,
         platform=Platform.META,
-        date=datetime.now(UTC),
+        date=datetime.now(timezone.utc),
         spend=2000.0,
         impressions=100000,
         clicks=2000,
@@ -123,15 +127,15 @@ def low_performing_metrics() -> EntityMetrics:
         entity_name="Low Performer",
         entity_level=EntityLevel.CAMPAIGN,
         platform=Platform.META,
-        date=datetime.now(UTC),
+        date=datetime.now(timezone.utc),
         spend=500.0,
         impressions=25000,
         clicks=100,
         conversions=5,
         revenue=500.0,
         cpa=100.0,  # 150% worse than baseline
-        roas=1.0,  # 75% worse than baseline
-        cvr=0.02,  # 60% worse
+        roas=1.0,   # 75% worse than baseline
+        cvr=0.02,   # 60% worse
         ctr=0.004,  # 60% worse
         cpm=20.0,
         frequency=5.0,  # High frequency penalty
@@ -147,7 +151,7 @@ def fatigued_creative_metrics() -> EntityMetrics:
         entity_name="Fatigued Ad Creative",
         entity_level=EntityLevel.CREATIVE,
         platform=Platform.META,
-        date=datetime.now(UTC),
+        date=datetime.now(timezone.utc),
         spend=500.0,
         impressions=50000,
         clicks=200,  # CTR down
@@ -165,7 +169,6 @@ def fatigued_creative_metrics() -> EntityMetrics:
 # =============================================================================
 # Scaling Score Tests (scoring.py)
 # =============================================================================
-
 
 class TestScalingScore:
     """Tests for scaling score calculation."""
@@ -217,7 +220,7 @@ class TestScalingScore:
             entity_name="High Frequency",
             entity_level=EntityLevel.CAMPAIGN,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             spend=1000.0,
             roas=5.0,
             cpa=40.0,
@@ -231,7 +234,7 @@ class TestScalingScore:
             entity_name="Low Frequency",
             entity_level=EntityLevel.CAMPAIGN,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             spend=1000.0,
             roas=5.0,
             cpa=40.0,
@@ -255,7 +258,7 @@ class TestScalingScore:
             entity_name="Good EMQ",
             entity_level=EntityLevel.CAMPAIGN,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             spend=1000.0,
             roas=5.0,
             cpa=40.0,
@@ -269,7 +272,7 @@ class TestScalingScore:
             entity_name="Bad EMQ",
             entity_level=EntityLevel.CAMPAIGN,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             spend=1000.0,
             roas=5.0,
             cpa=40.0,
@@ -309,7 +312,6 @@ class TestScalingScore:
 # Creative Fatigue Tests (fatigue.py)
 # =============================================================================
 
-
 class TestCreativeFatigue:
     """Tests for creative fatigue detection."""
 
@@ -320,10 +322,10 @@ class TestCreativeFatigue:
             entity_name="Healthy Creative",
             entity_level=EntityLevel.CREATIVE,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             ctr=0.015,  # Above baseline
-            roas=5.0,  # Above baseline
-            cpa=35.0,  # Below baseline
+            roas=5.0,   # Above baseline
+            cpa=35.0,   # Below baseline
             frequency=1.5,  # Low frequency
         )
 
@@ -352,10 +354,10 @@ class TestCreativeFatigue:
             entity_name="Watch Creative",
             entity_level=EntityLevel.CREATIVE,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             ctr=0.008,  # Slightly down
-            roas=3.5,  # Slightly down
-            cpa=45.0,  # Slightly up
+            roas=3.5,   # Slightly down
+            cpa=45.0,   # Slightly up
             frequency=3.5,  # Moderate frequency
         )
 
@@ -373,9 +375,9 @@ class TestCreativeFatigue:
             entity_name="Severe Fatigue",
             entity_level=EntityLevel.CREATIVE,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             ctr=0.003,  # Severely down
-            roas=1.0,  # Severely down
+            roas=1.0,   # Severely down
             cpa=100.0,  # Severely up
             frequency=8.0,  # Very high frequency
         )
@@ -395,7 +397,7 @@ class TestCreativeFatigue:
                 entity_name=f"Creative {i}",
                 entity_level=EntityLevel.CREATIVE,
                 platform=Platform.META,
-                date=datetime.now(UTC),
+                date=datetime.now(timezone.utc),
                 ctr=0.01 - (i * 0.002),  # Decreasing CTR
                 roas=4.0 - (i * 0.5),
                 cpa=40.0 + (i * 10),
@@ -417,7 +419,6 @@ class TestCreativeFatigue:
 # Anomaly Detection Tests (anomalies.py)
 # =============================================================================
 
-
 class TestAnomalyDetection:
     """Tests for z-score anomaly detection."""
 
@@ -438,11 +439,7 @@ class TestAnomalyDetection:
         zscore = anomaly_zscore(series, current)
 
         assert zscore > 2.5, "High value should have positive z-score"
-        assert get_severity(zscore) in [
-            AlertSeverity.MEDIUM,
-            AlertSeverity.HIGH,
-            AlertSeverity.CRITICAL,
-        ]
+        assert get_severity(zscore) in [AlertSeverity.MEDIUM, AlertSeverity.HIGH, AlertSeverity.CRITICAL]
 
     def test_low_anomaly_detected(self):
         """Abnormally low value should trigger anomaly."""
@@ -470,8 +467,8 @@ class TestAnomalyDetection:
 
         current_values = {
             "spend": 1010.0,  # Normal
-            "roas": 2.0,  # Anomaly - way down
-            "cpa": 80.0,  # Anomaly - way up
+            "roas": 2.0,      # Anomaly - way down
+            "cpa": 80.0,      # Anomaly - way up
         }
 
         results = detect_anomalies(metrics_history, current_values)
@@ -486,7 +483,6 @@ class TestAnomalyDetection:
 # =============================================================================
 # Signal Health Tests (signal_health.py)
 # =============================================================================
-
 
 class TestSignalHealth:
     """Tests for EMQ/signal health checks."""
@@ -569,7 +565,6 @@ class TestSignalHealth:
 # Recommendations Engine Tests (recommend.py)
 # =============================================================================
 
-
 class TestRecommendationsEngine:
     """Tests for the recommendations engine."""
 
@@ -596,17 +591,15 @@ class TestRecommendationsEngine:
 
     def test_automation_blocked_on_degraded_health(self):
         """Degraded health should block automation."""
-        entities = [
-            EntityMetrics(
-                entity_id="test",
-                entity_name="Test",
-                entity_level=EntityLevel.CAMPAIGN,
-                platform=Platform.META,
-                date=datetime.now(UTC),
-                roas=4.0,
-                cpa=40.0,
-            )
-        ]
+        entities = [EntityMetrics(
+            entity_id="test",
+            entity_name="Test",
+            entity_level=EntityLevel.CAMPAIGN,
+            platform=Platform.META,
+            date=datetime.now(timezone.utc),
+            roas=4.0,
+            cpa=40.0,
+        )]
         baselines = {"test": BaselineMetrics(roas=4.0, cpa=40.0)}
 
         result = generate_recommendations(
@@ -639,9 +632,7 @@ class TestRecommendationsEngine:
         )
 
         summary = result["scaling_summary"]
-        total = (
-            summary["scale_candidates"] + summary["fix_candidates"] + summary["watch_candidates"]
-        )
+        total = summary["scale_candidates"] + summary["fix_candidates"] + summary["watch_candidates"]
 
         assert total == 3, "All entities should be classified"
 
@@ -652,7 +643,7 @@ class TestRecommendationsEngine:
             entity_name="Fatigued Creative",
             entity_level=EntityLevel.CREATIVE,
             platform=Platform.META,
-            date=datetime.now(UTC),
+            date=datetime.now(timezone.utc),
             ctr=0.002,
             roas=1.0,
             cpa=100.0,
@@ -679,17 +670,15 @@ class TestRecommendationsEngine:
 
     def test_anomaly_alerts_generated(self):
         """Anomalies should generate alerts."""
-        entities = [
-            EntityMetrics(
-                entity_id="test",
-                entity_name="Test",
-                entity_level=EntityLevel.CAMPAIGN,
-                platform=Platform.META,
-                date=datetime.now(UTC),
-                roas=4.0,
-                cpa=40.0,
-            )
-        ]
+        entities = [EntityMetrics(
+            entity_id="test",
+            entity_name="Test",
+            entity_level=EntityLevel.CAMPAIGN,
+            platform=Platform.META,
+            date=datetime.now(timezone.utc),
+            roas=4.0,
+            cpa=40.0,
+        )]
         baselines = {"test": BaselineMetrics(roas=4.0, cpa=40.0)}
 
         metrics_history = {
@@ -718,7 +707,6 @@ class TestRecommendationsEngine:
 # Integration Tests
 # =============================================================================
 
-
 class TestAnalyticsIntegration:
     """Integration tests for analytics pipeline."""
 
@@ -731,7 +719,7 @@ class TestAnalyticsIntegration:
                 entity_name=f"Campaign {i}",
                 entity_level=EntityLevel.CAMPAIGN,
                 platform=Platform.META,
-                date=datetime.now(UTC),
+                date=datetime.now(timezone.utc),
                 spend=1000.0 * (i + 1),
                 roas=4.0 + (i - 2) * 0.5,  # Varying performance
                 cpa=40.0 - (i - 2) * 5,
@@ -742,7 +730,8 @@ class TestAnalyticsIntegration:
         ]
 
         baselines = {
-            e.entity_id: BaselineMetrics(roas=4.0, cpa=40.0, cvr=0.05, ctr=0.01) for e in entities
+            e.entity_id: BaselineMetrics(roas=4.0, cpa=40.0, cvr=0.05, ctr=0.01)
+            for e in entities
         }
 
         creatives = [
@@ -751,7 +740,7 @@ class TestAnalyticsIntegration:
                 entity_name=f"Creative {i}",
                 entity_level=EntityLevel.CREATIVE,
                 platform=Platform.META,
-                date=datetime.now(UTC),
+                date=datetime.now(timezone.utc),
                 ctr=0.01 - (i * 0.002),
                 roas=4.0 - (i * 0.5),
                 cpa=40.0 + (i * 10),
@@ -803,6 +792,8 @@ class TestAnalyticsIntegration:
 
         # Should have some recommendations or insights
         total_items = (
-            len(result["recommendations"]) + len(result["actions"]) + len(result["insights"])
+            len(result["recommendations"]) +
+            len(result["actions"]) +
+            len(result["insights"])
         )
         assert total_items > 0, "Should generate some recommendations"

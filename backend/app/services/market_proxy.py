@@ -16,8 +16,8 @@ import hashlib
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import UTC, datetime
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 import httpx
@@ -32,19 +32,18 @@ logger = get_logger(__name__)
 @dataclass
 class CompetitorData:
     """Standardized competitor data format."""
-
     domain: str
     meta_title: Optional[str] = None
     meta_description: Optional[str] = None
-    meta_keywords: Optional[list[str]] = None
-    social_links: Optional[dict[str, str]] = None
+    meta_keywords: Optional[List[str]] = None
+    social_links: Optional[Dict[str, str]] = None
     estimated_traffic: Optional[int] = None
     traffic_trend: Optional[str] = None
-    top_keywords: Optional[list[dict]] = None
+    top_keywords: Optional[List[Dict]] = None
     paid_keywords_count: Optional[int] = None
     organic_keywords_count: Optional[int] = None
     estimated_ad_spend_cents: Optional[int] = None
-    detected_ad_platforms: Optional[list[str]] = None
+    detected_ad_platforms: Optional[List[str]] = None
     data_source: str = "unknown"
     fetched_at: datetime = None
     error: Optional[str] = None
@@ -123,7 +122,7 @@ class MetadataScraper(MarketDataProvider):
                 meta_keywords=meta_keywords,
                 social_links=social_links,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
             )
 
         except httpx.HTTPError as e:
@@ -131,19 +130,19 @@ class MetadataScraper(MarketDataProvider):
             return CompetitorData(
                 domain=domain,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
-                error=f"HTTP error: {e!s}",
+                fetched_at=datetime.now(timezone.utc),
+                error=f"HTTP error: {str(e)}",
             )
         except Exception as e:
             logger.error("metadata_scrape_error", domain=domain, error=str(e))
             return CompetitorData(
                 domain=domain,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
                 error=str(e),
             )
 
-    def _extract_social_links(self, soup: BeautifulSoup, domain: str) -> dict[str, str]:
+    def _extract_social_links(self, soup: BeautifulSoup, domain: str) -> Dict[str, str]:
         """Extract social media links from page."""
         social_platforms = {
             "facebook.com": "facebook",
@@ -197,7 +196,7 @@ class SerpApiProvider(MarketDataProvider):
             return CompetitorData(
                 domain=domain,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
                 error="SerpApi key not configured",
             )
 
@@ -231,7 +230,10 @@ class SerpApiProvider(MarketDataProvider):
 
             # Extract top keywords from related searches
             related = organic_data.get("related_searches", [])
-            top_keywords = [{"keyword": r.get("query"), "type": "organic"} for r in related[:10]]
+            top_keywords = [
+                {"keyword": r.get("query"), "type": "organic"}
+                for r in related[:10]
+            ]
 
             # Check for ads presence
             ads = ads_data.get("ads", [])
@@ -243,7 +245,7 @@ class SerpApiProvider(MarketDataProvider):
                 top_keywords=top_keywords,
                 detected_ad_platforms=detected_platforms,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
             )
 
         except Exception as e:
@@ -251,7 +253,7 @@ class SerpApiProvider(MarketDataProvider):
             return CompetitorData(
                 domain=domain,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
                 error=str(e),
             )
 
@@ -280,7 +282,7 @@ class DataForSEOProvider(MarketDataProvider):
             return CompetitorData(
                 domain=domain,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
                 error="DataForSEO credentials not configured",
             )
 
@@ -298,14 +300,7 @@ class DataForSEOProvider(MarketDataProvider):
                 # Get keywords
                 keywords_response = await client.post(
                     f"{self.base_url}/dataforseo_labs/google/ranked_keywords/live",
-                    json=[
-                        {
-                            "target": domain,
-                            "language_code": "en",
-                            "location_code": 2840,
-                            "limit": 20,
-                        }
-                    ],
+                    json=[{"target": domain, "language_code": "en", "location_code": 2840, "limit": 20}],
                 )
                 keywords_data = keywords_response.json()
 
@@ -325,16 +320,9 @@ class DataForSEOProvider(MarketDataProvider):
                     top_keywords = [
                         {
                             "keyword": item.get("keyword_data", {}).get("keyword"),
-                            "position": item.get("ranked_serp_element", {})
-                            .get("serp_item", {})
-                            .get("rank_absolute"),
-                            "type": "organic"
-                            if item.get("ranked_serp_element", {}).get("serp_item", {}).get("type")
-                            == "organic"
-                            else "paid",
-                            "volume": item.get("keyword_data", {})
-                            .get("keyword_info", {})
-                            .get("search_volume"),
+                            "position": item.get("ranked_serp_element", {}).get("serp_item", {}).get("rank_absolute"),
+                            "type": "organic" if item.get("ranked_serp_element", {}).get("serp_item", {}).get("type") == "organic" else "paid",
+                            "volume": item.get("keyword_data", {}).get("keyword_info", {}).get("search_volume"),
                         }
                         for item in items[:20]
                     ]
@@ -346,7 +334,7 @@ class DataForSEOProvider(MarketDataProvider):
                 paid_keywords_count=metrics.get("metrics", {}).get("paid", {}).get("count"),
                 top_keywords=top_keywords,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
             )
 
         except Exception as e:
@@ -354,7 +342,7 @@ class DataForSEOProvider(MarketDataProvider):
             return CompetitorData(
                 domain=domain,
                 data_source=self.get_provider_name(),
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.now(timezone.utc),
                 error=str(e),
             )
 
@@ -374,8 +362,8 @@ class MockMarketService(MarketDataProvider):
     async def get_competitor_data(self, domain: str) -> CompetitorData:
         """Generate mock competitor data."""
 
-        # Use domain as seed for consistent data (MD5 for determinism, not security)
-        seed = int(hashlib.md5(domain.encode()).hexdigest()[:8], 16)  # noqa: S324
+        # Use domain as seed for consistent data
+        seed = int(hashlib.md5(domain.encode()).hexdigest()[:8], 16)
         rng = random.Random(seed)
 
         # Generate realistic company name from domain
@@ -385,26 +373,11 @@ class MockMarketService(MarketDataProvider):
         meta_title = f"{company_name} | {rng.choice(['Leading', 'Premier', 'Top', 'Best'])} {rng.choice(['Marketing', 'Technology', 'Solutions', 'Services', 'Platform'])}"
         meta_description = f"{company_name} provides {rng.choice(['innovative', 'cutting-edge', 'enterprise-grade', 'AI-powered'])} solutions for {rng.choice(['businesses', 'enterprises', 'teams', 'organizations'])}."
 
-        meta_keywords = rng.sample(
-            [
-                "marketing",
-                "analytics",
-                "AI",
-                "automation",
-                "growth",
-                "digital",
-                "platform",
-                "software",
-                "SaaS",
-                "enterprise",
-                "solutions",
-                "advertising",
-                "data",
-                "insights",
-                "ROI",
-            ],
-            k=rng.randint(5, 10),
-        )
+        meta_keywords = rng.sample([
+            "marketing", "analytics", "AI", "automation", "growth",
+            "digital", "platform", "software", "SaaS", "enterprise",
+            "solutions", "advertising", "data", "insights", "ROI",
+        ], k=rng.randint(5, 10))
 
         # Mock social links
         social_links = {}
@@ -440,15 +413,13 @@ class MockMarketService(MarketDataProvider):
 
         top_keywords = []
         for i, kw in enumerate(keyword_templates[:10]):
-            top_keywords.append(
-                {
-                    "keyword": kw,
-                    "position": rng.randint(1, 50),
-                    "type": rng.choice(["organic", "paid"]),
-                    "volume": rng.randint(100, 50000),
-                    "cpc_cents": rng.randint(50, 2000),
-                }
-            )
+            top_keywords.append({
+                "keyword": kw,
+                "position": rng.randint(1, 50),
+                "type": rng.choice(["organic", "paid"]),
+                "volume": rng.randint(100, 50000),
+                "cpc_cents": rng.randint(50, 2000),
+            })
 
         # Mock paid keyword counts
         paid_keywords = rng.randint(50, 5000) if rng.random() < 0.7 else 0
@@ -480,7 +451,7 @@ class MockMarketService(MarketDataProvider):
             estimated_ad_spend_cents=estimated_ad_spend,
             detected_ad_platforms=platforms,
             data_source=self.get_provider_name(),
-            fetched_at=datetime.now(UTC),
+            fetched_at=datetime.now(timezone.utc),
         )
 
 
@@ -496,7 +467,7 @@ class MarketIntelligenceService:
     """
 
     def __init__(self):
-        self.providers: dict[str, MarketDataProvider] = {
+        self.providers: Dict[str, MarketDataProvider] = {
             "mock": MockMarketService(),
             "scraper": MetadataScraper(),
             "serpapi": SerpApiProvider(),
@@ -513,20 +484,12 @@ class MarketIntelligenceService:
         Falls back to scraper + mock if primary provider fails.
         """
         # Normalize domain
-        domain = (
-            domain.lower()
-            .replace("https://", "")
-            .replace("http://", "")
-            .replace("www.", "")
-            .rstrip("/")
-        )
+        domain = domain.lower().replace("https://", "").replace("http://", "").replace("www.", "").rstrip("/")
 
         # Try primary provider
         provider = self.providers.get(self.primary_provider, self.providers["mock"])
 
-        logger.info(
-            "fetching_competitor_data", domain=domain, provider=provider.get_provider_name()
-        )
+        logger.info("fetching_competitor_data", domain=domain, provider=provider.get_provider_name())
 
         data = await provider.get_competitor_data(domain)
 
@@ -556,7 +519,7 @@ class MarketIntelligenceService:
 
         return data
 
-    async def get_share_of_voice(self, domains: list[str]) -> dict[str, float]:
+    async def get_share_of_voice(self, domains: List[str]) -> Dict[str, float]:
         """
         Calculate share of voice across multiple competitors.
 

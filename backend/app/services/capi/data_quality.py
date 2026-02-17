@@ -6,22 +6,20 @@ AI-powered data quality analysis for Conversion APIs.
 Identifies data gaps and provides recommendations to improve Event Match Quality.
 """
 
-from collections import defaultdict
-from dataclasses import dataclass
-from datetime import UTC, datetime
+from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any
+from collections import defaultdict
 
 from app.core.logging import get_logger
-
-from .pii_hasher import PIIField, PIIHasher
+from .pii_hasher import PIIHasher, PIIField
 
 logger = get_logger(__name__)
 
 
 class DataGapSeverity(str, Enum):
     """Severity level of data gaps."""
-
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -31,7 +29,6 @@ class DataGapSeverity(str, Enum):
 @dataclass
 class DataGap:
     """Identified data gap."""
-
     field: str
     severity: DataGapSeverity
     impact_percent: float
@@ -43,26 +40,24 @@ class DataGap:
 @dataclass
 class PlatformQualityScore:
     """Quality score for a specific platform."""
-
     platform: str
     score: float  # 0-100
     event_match_quality: str  # Poor, Fair, Good, Excellent
-    data_gaps: list[DataGap]
+    data_gaps: List[DataGap]
     potential_roas_lift: float  # Percentage
     events_analyzed: int
-    fields_present: list[str]
-    fields_missing: list[str]
+    fields_present: List[str]
+    fields_missing: List[str]
 
 
 @dataclass
 class QualityReport:
     """Overall data quality report."""
-
     overall_score: float
-    platform_scores: dict[str, PlatformQualityScore]
-    top_recommendations: list[dict[str, Any]]
+    platform_scores: Dict[str, PlatformQualityScore]
+    top_recommendations: List[Dict[str, Any]]
     estimated_roas_improvement: float
-    data_gaps_summary: dict[str, int]
+    data_gaps_summary: Dict[str, int]
     trend: str  # improving, stable, declining
     generated_at: str
 
@@ -114,6 +109,12 @@ class DataQualityAnalyzer:
             PIIField.EXTERNAL_ID: 20,
             PIIField.CLIENT_IP: 15,
         },
+        "linkedin": {
+            PIIField.EMAIL: 45,
+            PIIField.FIRST_NAME: 20,
+            PIIField.LAST_NAME: 20,
+            PIIField.EXTERNAL_ID: 15,
+        },
     }
 
     # ROAS impact per match quality level
@@ -127,9 +128,9 @@ class DataQualityAnalyzer:
     def __init__(self):
         """Initialize the data quality analyzer."""
         self.hasher = PIIHasher()
-        self._event_history: list[dict[str, Any]] = []
+        self._event_history: List[Dict[str, Any]] = []
 
-    def analyze_event(self, event: dict[str, Any]) -> dict[str, Any]:
+    def analyze_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """
         Analyze a single event for data quality.
 
@@ -143,7 +144,7 @@ class DataQualityAnalyzer:
 
         # Analyze for all platforms
         platform_results = {}
-        for platform in self.FIELD_WEIGHTS:
+        for platform in self.FIELD_WEIGHTS.keys():
             completeness = self.hasher.calculate_data_completeness(user_data, platform)
             platform_results[platform] = completeness
 
@@ -158,7 +159,7 @@ class DataQualityAnalyzer:
         }
 
     def analyze_batch(
-        self, events: list[dict[str, Any]], platforms: list[str] = None
+        self, events: List[Dict[str, Any]], platforms: List[str] = None
     ) -> QualityReport:
         """
         Analyze a batch of events for data quality patterns.
@@ -173,7 +174,9 @@ class DataQualityAnalyzer:
         platforms = platforms or list(self.FIELD_WEIGHTS.keys())
 
         # Track field presence across all events
-        field_presence: dict[str, dict[PIIField, int]] = {p: defaultdict(int) for p in platforms}
+        field_presence: Dict[str, Dict[PIIField, int]] = {
+            p: defaultdict(int) for p in platforms
+        }
         total_events = len(events)
 
         # Analyze each event
@@ -183,7 +186,7 @@ class DataQualityAnalyzer:
             detected_types = {d.detected_type for d in detections}
 
             for platform in platforms:
-                for field in self.FIELD_WEIGHTS.get(platform, {}):
+                for field in self.FIELD_WEIGHTS.get(platform, {}).keys():
                     if field in detected_types:
                         field_presence[platform][field] += 1
 
@@ -202,12 +205,8 @@ class DataQualityAnalyzer:
 
             # Get field lists
             weights = self.FIELD_WEIGHTS.get(platform, {})
-            present = [
-                f.value for f in weights if field_presence[platform].get(f, 0) > total_events * 0.5
-            ]
-            missing = [
-                f.value for f in weights if field_presence[platform].get(f, 0) < total_events * 0.3
-            ]
+            present = [f.value for f in weights.keys() if field_presence[platform].get(f, 0) > total_events * 0.5]
+            missing = [f.value for f in weights.keys() if field_presence[platform].get(f, 0) < total_events * 0.3]
 
             platform_scores[platform] = PlatformQualityScore(
                 platform=platform,
@@ -228,38 +227,28 @@ class DataQualityAnalyzer:
 
         # Data gaps summary
         gaps_summary = {
-            DataGapSeverity.CRITICAL.value: sum(
-                1 for g in all_gaps if g.severity == DataGapSeverity.CRITICAL
-            ),
-            DataGapSeverity.HIGH.value: sum(
-                1 for g in all_gaps if g.severity == DataGapSeverity.HIGH
-            ),
-            DataGapSeverity.MEDIUM.value: sum(
-                1 for g in all_gaps if g.severity == DataGapSeverity.MEDIUM
-            ),
-            DataGapSeverity.LOW.value: sum(
-                1 for g in all_gaps if g.severity == DataGapSeverity.LOW
-            ),
+            DataGapSeverity.CRITICAL.value: sum(1 for g in all_gaps if g.severity == DataGapSeverity.CRITICAL),
+            DataGapSeverity.HIGH.value: sum(1 for g in all_gaps if g.severity == DataGapSeverity.HIGH),
+            DataGapSeverity.MEDIUM.value: sum(1 for g in all_gaps if g.severity == DataGapSeverity.MEDIUM),
+            DataGapSeverity.LOW.value: sum(1 for g in all_gaps if g.severity == DataGapSeverity.LOW),
         }
 
         # Estimate overall ROAS improvement potential
-        avg_current_lift = sum(ps.potential_roas_lift for ps in platform_scores.values()) / len(
-            platform_scores
-        )
+        avg_current_lift = sum(ps.potential_roas_lift for ps in platform_scores.values()) / len(platform_scores)
 
         return QualityReport(
             overall_score=round(overall_score, 1),
-            platform_scores=dict(platform_scores.items()),
+            platform_scores={p: ps for p, ps in platform_scores.items()},
             top_recommendations=top_recs,
             estimated_roas_improvement=round(avg_current_lift, 1),
             data_gaps_summary=gaps_summary,
             trend="stable",  # Would calculate from historical data
-            generated_at=datetime.now(UTC).isoformat(),
+            generated_at=datetime.now(timezone.utc).isoformat(),
         )
 
     def _calculate_platform_score(
-        self, platform: str, field_counts: dict[PIIField, int], total_events: int
-    ) -> tuple[float, list[DataGap]]:
+        self, platform: str, field_counts: Dict[PIIField, int], total_events: int
+    ) -> Tuple[float, List[DataGap]]:
         """Calculate quality score and identify gaps for a platform."""
         weights = self.FIELD_WEIGHTS.get(platform, {})
         total_weight = sum(weights.values())
@@ -279,16 +268,14 @@ class DataQualityAnalyzer:
                 severity = self._get_gap_severity(weight, presence_rate)
                 impact = weight * (1 - presence_rate)
 
-                gaps.append(
-                    DataGap(
-                        field=field.value,
-                        severity=severity,
-                        impact_percent=round(impact, 1),
-                        affected_events=total_events - count,
-                        recommendation=self._get_field_recommendation(field, platform),
-                        how_to_fix=self._get_fix_instructions(field),
-                    )
-                )
+                gaps.append(DataGap(
+                    field=field.value,
+                    severity=severity,
+                    impact_percent=round(impact, 1),
+                    affected_events=total_events - count,
+                    recommendation=self._get_field_recommendation(field, platform),
+                    how_to_fix=self._get_fix_instructions(field),
+                ))
 
         score = (achieved_weight / total_weight * 100) if total_weight > 0 else 0
         return round(score, 1), gaps
@@ -353,13 +340,11 @@ class DataQualityAnalyzer:
             PIIField.CLIENT_IP: "Get from request headers (X-Forwarded-For or CF-Connecting-IP).",
             PIIField.CLIENT_USER_AGENT: "Get from request headers (User-Agent).",
         }
-        return instructions.get(
-            field, f"Collect {field.value} from your data source and include in event data."
-        )
+        return instructions.get(field, f"Collect {field.value} from your data source and include in event data.")
 
     def _generate_top_recommendations(
-        self, gaps: list[DataGap], platform_scores: dict[str, PlatformQualityScore]
-    ) -> list[dict[str, Any]]:
+        self, gaps: List[DataGap], platform_scores: Dict[str, PlatformQualityScore]
+    ) -> List[Dict[str, Any]]:
         """Generate top actionable recommendations."""
         # Sort gaps by impact
         sorted_gaps = sorted(gaps, key=lambda g: g.impact_percent, reverse=True)
@@ -375,26 +360,25 @@ class DataQualityAnalyzer:
         recommendations = []
         for i, gap in enumerate(unique_gaps[:5]):
             affected_platforms = [
-                p for p, ps in platform_scores.items() if gap.field in ps.fields_missing
+                p for p, ps in platform_scores.items()
+                if gap.field in ps.fields_missing
             ]
 
-            recommendations.append(
-                {
-                    "priority": i + 1,
-                    "field": gap.field,
-                    "action": gap.recommendation,
-                    "how_to_fix": gap.how_to_fix,
-                    "impact": f"+{gap.impact_percent}% match quality",
-                    "affected_platforms": affected_platforms,
-                    "severity": gap.severity.value,
-                }
-            )
+            recommendations.append({
+                "priority": i + 1,
+                "field": gap.field,
+                "action": gap.recommendation,
+                "how_to_fix": gap.how_to_fix,
+                "impact": f"+{gap.impact_percent}% match quality",
+                "affected_platforms": affected_platforms,
+                "severity": gap.severity.value,
+            })
 
         return recommendations
 
     def get_live_insights(
-        self, recent_events: list[dict[str, Any]], platform: str = "meta"
-    ) -> dict[str, Any]:
+        self, recent_events: List[Dict[str, Any]], platform: str = "meta"
+    ) -> Dict[str, Any]:
         """
         Get live insights for recent events.
 
@@ -439,7 +423,9 @@ class DataQualityAnalyzer:
             "action_required": platform_score.score < 70,
         }
 
-    def _calculate_trend(self, events: list[dict[str, Any]], platform: str) -> str:
+    def _calculate_trend(
+        self, events: List[Dict[str, Any]], platform: str
+    ) -> str:
         """Calculate quality trend from events."""
         if len(events) < 10:
             return "insufficient_data"

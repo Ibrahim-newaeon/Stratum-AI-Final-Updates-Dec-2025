@@ -9,8 +9,9 @@ their own conftest.py in the integration/ directory.
 """
 
 import os
-
 import pytest
+from datetime import datetime, date, timezone
+
 
 # Set test environment variables before any imports
 os.environ["APP_ENV"] = "development"
@@ -21,21 +22,25 @@ os.environ["DEBUG"] = "true"
 # Markers Configuration
 # =============================================================================
 
-
 def pytest_configure(config):
     """Configure custom pytest markers."""
-    config.addinivalue_line("markers", "unit: mark test as a unit test")
+    config.addinivalue_line(
+        "markers", "unit: mark test as a unit test"
+    )
     config.addinivalue_line(
         "markers", "integration: mark test as an integration test (requires database)"
     )
-    config.addinivalue_line("markers", "e2e: mark test as an end-to-end test")
-    config.addinivalue_line("markers", "slow: mark test as slow running")
+    config.addinivalue_line(
+        "markers", "e2e: mark test as an end-to-end test"
+    )
+    config.addinivalue_line(
+        "markers", "slow: mark test as slow running"
+    )
 
 
 # =============================================================================
 # Mock Data Fixtures (No Database Required)
 # =============================================================================
-
 
 @pytest.fixture
 def sample_emq_metrics():

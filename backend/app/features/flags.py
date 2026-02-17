@@ -15,23 +15,20 @@ Feature Flags:
 - superadmin_profitability: Platform owner profitability views
 """
 
+from typing import Dict, Any, Optional, List
 from enum import Enum
-from typing import Any, Optional
-
 from pydantic import BaseModel, Field
 
 
 class AutopilotLevel(int, Enum):
     """Autopilot automation levels."""
-
-    SUGGEST_ONLY = 0  # No automatic writes, only suggestions
-    GUARDED_AUTO = 1  # Safe actions within caps, requires signal health OK
+    SUGGEST_ONLY = 0      # No automatic writes, only suggestions
+    GUARDED_AUTO = 1      # Safe actions within caps, requires signal health OK
     APPROVAL_REQUIRED = 2  # All actions require approval before execution
 
 
 class PlanTier(str, Enum):
     """Subscription plan tiers."""
-
     FREE = "free"
     STARTER = "starter"
     PROFESSIONAL = "professional"
@@ -43,7 +40,7 @@ class PlanTier(str, Enum):
 # Default Feature Flags by Plan
 # =============================================================================
 
-DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
+DEFAULT_FEATURES_BY_PLAN: Dict[str, Dict[str, Any]] = {
     PlanTier.FREE: {
         "signal_health": False,
         "attribution_variance": False,
@@ -56,7 +53,6 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "max_campaigns": 5,
         "max_users": 2,
         "data_retention_days": 30,
-        "show_price_metrics": True,
     },
     PlanTier.STARTER: {
         "signal_health": True,
@@ -70,28 +66,6 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "max_campaigns": 20,
         "max_users": 5,
         "data_retention_days": 90,
-        # CDP Enhancements
-        "rfm_analysis": True,
-        "funnel_builder": False,
-        "computed_traits": False,
-        "consent_management": False,
-        "realtime_streaming": False,
-        "predictive_churn": False,
-        # Trust Engine
-        "signal_health_history": True,
-        "trust_audit_logs": False,
-        "custom_autopilot_rules": False,
-        "action_dry_run": False,
-        # Integrations
-        "slack_notifications": True,
-        "crm_salesforce": False,
-        "crm_pipedrive": False,
-        "linkedin_leadgen": False,
-        # Dashboard
-        "dashboard_export": True,
-        "dashboard_customization": False,
-        "custom_reports": False,
-        "show_price_metrics": True,
     },
     PlanTier.PROFESSIONAL: {
         "signal_health": True,
@@ -105,28 +79,6 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "max_campaigns": 100,
         "max_users": 20,
         "data_retention_days": 365,
-        # CDP Enhancements
-        "rfm_analysis": True,
-        "funnel_builder": True,
-        "computed_traits": True,
-        "consent_management": False,
-        "realtime_streaming": False,
-        "predictive_churn": False,
-        # Trust Engine
-        "signal_health_history": True,
-        "trust_audit_logs": True,
-        "custom_autopilot_rules": False,
-        "action_dry_run": True,
-        # Integrations
-        "slack_notifications": True,
-        "crm_salesforce": False,
-        "crm_pipedrive": True,
-        "linkedin_leadgen": False,
-        # Dashboard
-        "dashboard_export": True,
-        "dashboard_customization": False,
-        "custom_reports": False,
-        "show_price_metrics": True,
     },
     PlanTier.ENTERPRISE: {
         "signal_health": True,
@@ -140,28 +92,6 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "max_campaigns": -1,  # Unlimited
         "max_users": -1,  # Unlimited
         "data_retention_days": -1,  # Unlimited
-        # CDP Enhancements
-        "rfm_analysis": True,
-        "funnel_builder": True,
-        "computed_traits": True,
-        "consent_management": True,
-        "realtime_streaming": True,
-        "predictive_churn": True,
-        # Trust Engine
-        "signal_health_history": True,
-        "trust_audit_logs": True,
-        "custom_autopilot_rules": True,
-        "action_dry_run": True,
-        # Integrations
-        "slack_notifications": True,
-        "crm_salesforce": True,
-        "crm_pipedrive": True,
-        "linkedin_leadgen": True,
-        # Dashboard
-        "dashboard_export": True,
-        "dashboard_customization": True,
-        "custom_reports": True,
-        "show_price_metrics": True,
     },
     PlanTier.CUSTOM: {
         # Custom plans inherit enterprise defaults, overridden per tenant
@@ -176,28 +106,6 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
         "max_campaigns": -1,
         "max_users": -1,
         "data_retention_days": -1,
-        # CDP Enhancements
-        "rfm_analysis": True,
-        "funnel_builder": True,
-        "computed_traits": True,
-        "consent_management": True,
-        "realtime_streaming": True,
-        "predictive_churn": True,
-        # Trust Engine
-        "signal_health_history": True,
-        "trust_audit_logs": True,
-        "custom_autopilot_rules": True,
-        "action_dry_run": True,
-        # Integrations
-        "slack_notifications": True,
-        "crm_salesforce": True,
-        "crm_pipedrive": True,
-        "linkedin_leadgen": True,
-        # Dashboard
-        "dashboard_export": True,
-        "dashboard_customization": True,
-        "custom_reports": True,
-        "show_price_metrics": True,
     },
 }
 
@@ -205,7 +113,6 @@ DEFAULT_FEATURES_BY_PLAN: dict[str, dict[str, Any]] = {
 # =============================================================================
 # Feature Flag Models
 # =============================================================================
-
 
 class FeatureFlags(BaseModel):
     """Complete feature flags configuration for a tenant."""
@@ -224,40 +131,12 @@ class FeatureFlags(BaseModel):
     autopilot_level: int = Field(default=0, ge=0, le=2, description="Autopilot automation level")
 
     # Platform
-    superadmin_profitability: bool = Field(
-        default=False, description="Superadmin profitability views"
-    )
+    superadmin_profitability: bool = Field(default=False, description="Superadmin profitability views")
 
     # Limits
     max_campaigns: int = Field(default=20, description="Maximum number of campaigns")
     max_users: int = Field(default=5, description="Maximum number of users")
     data_retention_days: int = Field(default=90, description="Data retention in days")
-
-    # CDP Enhancements
-    rfm_analysis: bool = Field(default=False, description="RFM analysis dashboard")
-    funnel_builder: bool = Field(default=False, description="Conversion funnel builder")
-    computed_traits: bool = Field(default=False, description="Computed traits UI")
-    consent_management: bool = Field(default=False, description="Privacy consent management")
-    realtime_streaming: bool = Field(default=False, description="Real-time event streaming")
-    predictive_churn: bool = Field(default=False, description="Predictive churn modeling")
-
-    # Trust Engine
-    signal_health_history: bool = Field(default=False, description="Signal health history tracking")
-    trust_audit_logs: bool = Field(default=False, description="Trust gate audit logging")
-    custom_autopilot_rules: bool = Field(default=False, description="Custom autopilot rules")
-    action_dry_run: bool = Field(default=False, description="Action dry-run mode")
-
-    # Integrations
-    slack_notifications: bool = Field(default=False, description="Slack notification integration")
-    crm_salesforce: bool = Field(default=False, description="Salesforce CRM integration")
-    crm_pipedrive: bool = Field(default=False, description="Pipedrive CRM integration")
-    linkedin_leadgen: bool = Field(default=False, description="LinkedIn Lead Gen integration")
-
-    # Dashboard
-    dashboard_export: bool = Field(default=False, description="Dashboard export functionality")
-    dashboard_customization: bool = Field(default=False, description="Dashboard customization")
-    custom_reports: bool = Field(default=False, description="Custom report builder")
-    show_price_metrics: bool = Field(default=True, description="Show price metrics (spend, revenue, ROAS, CPA) in dashboard")
 
     class Config:
         use_enum_values = True
@@ -265,7 +144,6 @@ class FeatureFlags(BaseModel):
 
 class FeatureFlagsUpdate(BaseModel):
     """Request model for updating feature flags."""
-
     signal_health: Optional[bool] = None
     attribution_variance: Optional[bool] = None
     ai_recommendations: Optional[bool] = None
@@ -277,36 +155,13 @@ class FeatureFlagsUpdate(BaseModel):
     max_campaigns: Optional[int] = None
     max_users: Optional[int] = None
     data_retention_days: Optional[int] = None
-    # CDP Enhancements
-    rfm_analysis: Optional[bool] = None
-    funnel_builder: Optional[bool] = None
-    computed_traits: Optional[bool] = None
-    consent_management: Optional[bool] = None
-    realtime_streaming: Optional[bool] = None
-    predictive_churn: Optional[bool] = None
-    # Trust Engine
-    signal_health_history: Optional[bool] = None
-    trust_audit_logs: Optional[bool] = None
-    custom_autopilot_rules: Optional[bool] = None
-    action_dry_run: Optional[bool] = None
-    # Integrations
-    slack_notifications: Optional[bool] = None
-    crm_salesforce: Optional[bool] = None
-    crm_pipedrive: Optional[bool] = None
-    linkedin_leadgen: Optional[bool] = None
-    # Dashboard
-    dashboard_export: Optional[bool] = None
-    dashboard_customization: Optional[bool] = None
-    custom_reports: Optional[bool] = None
-    show_price_metrics: Optional[bool] = None
 
 
 # =============================================================================
 # Feature Flag Helpers
 # =============================================================================
 
-
-def get_default_features(plan: str) -> dict[str, Any]:
+def get_default_features(plan: str) -> Dict[str, Any]:
     """
     Get default feature flags for a plan tier.
 
@@ -323,7 +178,7 @@ def get_default_features(plan: str) -> dict[str, Any]:
     return DEFAULT_FEATURES_BY_PLAN[PlanTier.STARTER].copy()
 
 
-def merge_features(defaults: dict[str, Any], overrides: Optional[dict[str, Any]]) -> dict[str, Any]:
+def merge_features(defaults: Dict[str, Any], overrides: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Merge default features with tenant-specific overrides.
 
@@ -344,7 +199,7 @@ def merge_features(defaults: dict[str, Any], overrides: Optional[dict[str, Any]]
     return merged
 
 
-def can(features: dict[str, Any], feature_name: str) -> bool:
+def can(features: Dict[str, Any], feature_name: str) -> bool:
     """
     Check if a feature is enabled.
 
@@ -365,7 +220,7 @@ def can(features: dict[str, Any], feature_name: str) -> bool:
     return bool(value)
 
 
-def get_autopilot_caps() -> dict[str, Any]:
+def get_autopilot_caps() -> Dict[str, Any]:
     """
     Get default caps for autopilot actions.
 
@@ -377,12 +232,12 @@ def get_autopilot_caps() -> dict[str, Any]:
     """
     return {
         "max_daily_budget_change": 500.0,  # Max $500 per day
-        "max_budget_pct_change": 30.0,  # Max 30% change per action
-        "max_actions_per_day": 10,  # Max 10 automated actions per day
+        "max_budget_pct_change": 30.0,     # Max 30% change per action
+        "max_actions_per_day": 10,         # Max 10 automated actions per day
     }
 
 
-def get_autopilot_level(features: dict[str, Any]) -> AutopilotLevel:
+def get_autopilot_level(features: Dict[str, Any]) -> AutopilotLevel:
     """
     Get the autopilot level from features.
 
@@ -399,7 +254,7 @@ def get_autopilot_level(features: dict[str, Any]) -> AutopilotLevel:
         return AutopilotLevel.SUGGEST_ONLY
 
 
-def is_autopilot_blocked(features: dict[str, Any], signal_health_status: str) -> bool:
+def is_autopilot_blocked(features: Dict[str, Any], signal_health_status: str) -> bool:
     """
     Check if autopilot should be blocked due to signal health.
 
@@ -424,7 +279,7 @@ def is_autopilot_blocked(features: dict[str, Any], signal_health_status: str) ->
 
 
 def validate_action_within_caps(
-    features: dict[str, Any],
+    features: Dict[str, Any],
     action_type: str,
     change_pct: float,
 ) -> tuple[bool, Optional[str]]:
@@ -463,49 +318,17 @@ FEATURE_CATEGORIES = {
     "trust_layer": {
         "name": "Trust Layer",
         "description": "Data quality and transparency features",
-        "features": [
-            "signal_health",
-            "attribution_variance",
-            "signal_health_history",
-            "trust_audit_logs",
-            "action_dry_run",
-        ],
+        "features": ["signal_health", "attribution_variance"],
     },
     "intelligence_layer": {
         "name": "Intelligence Layer",
         "description": "AI-powered insights and recommendations",
-        "features": [
-            "ai_recommendations",
-            "anomaly_alerts",
-            "creative_fatigue",
-            "predictive_churn",
-        ],
+        "features": ["ai_recommendations", "anomaly_alerts", "creative_fatigue"],
     },
     "execution_layer": {
         "name": "Execution Layer",
         "description": "Campaign building and automation",
-        "features": ["campaign_builder", "autopilot_level", "custom_autopilot_rules"],
-    },
-    "cdp": {
-        "name": "Customer Data Platform",
-        "description": "CDP features for customer analytics",
-        "features": [
-            "rfm_analysis",
-            "funnel_builder",
-            "computed_traits",
-            "consent_management",
-            "realtime_streaming",
-        ],
-    },
-    "integrations": {
-        "name": "Integrations",
-        "description": "Third-party platform integrations",
-        "features": ["slack_notifications", "crm_salesforce", "crm_pipedrive", "linkedin_leadgen"],
-    },
-    "dashboard": {
-        "name": "Dashboard & Reports",
-        "description": "Dashboard customization and reporting",
-        "features": ["dashboard_export", "dashboard_customization", "custom_reports", "show_price_metrics"],
+        "features": ["campaign_builder", "autopilot_level"],
     },
     "platform": {
         "name": "Platform Features",
@@ -532,26 +355,4 @@ FEATURE_DESCRIPTIONS = {
     "max_campaigns": "Maximum number of active campaigns",
     "max_users": "Maximum number of team members",
     "data_retention_days": "How long historical data is kept",
-    # CDP Enhancements
-    "rfm_analysis": "RFM customer segmentation and analysis dashboard",
-    "funnel_builder": "Build and analyze conversion funnels",
-    "computed_traits": "Define and manage computed profile traits",
-    "consent_management": "Privacy consent and GDPR/CCPA compliance management",
-    "realtime_streaming": "Real-time event streaming and processing",
-    "predictive_churn": "ML-powered customer churn prediction",
-    # Trust Engine
-    "signal_health_history": "Historical signal health tracking and trends",
-    "trust_audit_logs": "Audit logs for trust gate decisions",
-    "custom_autopilot_rules": "Create custom autopilot rules and conditions",
-    "action_dry_run": "Test automation actions without execution",
-    # Integrations
-    "slack_notifications": "Send alerts and notifications to Slack",
-    "crm_salesforce": "Salesforce CRM data sync and enrichment",
-    "crm_pipedrive": "Pipedrive CRM data sync and enrichment",
-    "linkedin_leadgen": "LinkedIn Lead Gen form integration",
-    # Dashboard
-    "dashboard_export": "Export dashboard data to CSV/JSON",
-    "dashboard_customization": "Customize dashboard layout and widgets",
-    "custom_reports": "Build custom reports with drag-and-drop",
-    "show_price_metrics": "Toggle visibility of spend, revenue, ROAS, and CPA across dashboard views",
 }

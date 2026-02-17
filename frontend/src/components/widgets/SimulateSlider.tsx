@@ -1,47 +1,47 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Calculator,
-  DollarSign,
-  Info,
-  RefreshCw,
-  Target,
-  TrendingDown,
   TrendingUp,
-} from 'lucide-react';
-import { cn, formatCompactNumber, formatCurrency, formatPercent } from '@/lib/utils';
-import { SmartTooltip } from '../guide/SmartTooltip';
+  TrendingDown,
+  DollarSign,
+  Target,
+  RefreshCw,
+  Info,
+} from 'lucide-react'
+import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
+import { SmartTooltip } from '../guide/SmartTooltip'
 
 interface SimulationInput {
-  budgetChange: number; // -50 to +100 percent
-  bidChange: number; // -30 to +50 percent
-  targetAudienceChange: number; // -50 to +100 percent
+  budgetChange: number // -50 to +100 percent
+  bidChange: number // -30 to +50 percent
+  targetAudienceChange: number // -50 to +100 percent
 }
 
 interface SimulationResult {
-  estimatedSpend: number;
-  estimatedRevenue: number;
-  estimatedROAS: number;
-  estimatedImpressions: number;
-  estimatedClicks: number;
-  estimatedConversions: number;
-  confidence: number;
+  estimatedSpend: number
+  estimatedRevenue: number
+  estimatedROAS: number
+  estimatedImpressions: number
+  estimatedClicks: number
+  estimatedConversions: number
+  confidence: number
 }
 
 interface CampaignBaseline {
-  name: string;
-  currentSpend: number;
-  currentRevenue: number;
-  currentROAS: number;
-  currentImpressions: number;
-  currentClicks: number;
-  currentConversions: number;
+  name: string
+  currentSpend: number
+  currentRevenue: number
+  currentROAS: number
+  currentImpressions: number
+  currentClicks: number
+  currentConversions: number
 }
 
 interface SimulateSliderProps {
-  campaign?: CampaignBaseline;
-  onSimulate?: (input: SimulationInput, result: SimulationResult) => void;
-  className?: string;
+  campaign?: CampaignBaseline
+  onSimulate?: (input: SimulationInput, result: SimulationResult) => void
+  className?: string
 }
 
 const DEFAULT_CAMPAIGN: CampaignBaseline = {
@@ -52,65 +52,62 @@ const DEFAULT_CAMPAIGN: CampaignBaseline = {
   currentImpressions: 2500000,
   currentClicks: 75000,
   currentConversions: 1875,
-};
+}
 
 export function SimulateSlider({
   campaign = DEFAULT_CAMPAIGN,
   onSimulate,
   className,
 }: SimulateSliderProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   const [inputs, setInputs] = useState<SimulationInput>({
     budgetChange: 0,
     bidChange: 0,
     targetAudienceChange: 0,
-  });
-  const [result, setResult] = useState<SimulationResult | null>(null);
-  const [isSimulating, setIsSimulating] = useState(false);
+  })
+  const [result, setResult] = useState<SimulationResult | null>(null)
+  const [isSimulating, setIsSimulating] = useState(false)
 
   // Simulate effect of changes using a simplified model
   const runSimulation = useCallback(() => {
-    setIsSimulating(true);
+    setIsSimulating(true)
 
     // Simulated delay for realism
     setTimeout(() => {
-      const { budgetChange, bidChange, targetAudienceChange } = inputs;
+      const { budgetChange, bidChange, targetAudienceChange } = inputs
 
       // Calculate multipliers
-      const budgetMultiplier = 1 + budgetChange / 100;
-      const bidMultiplier = 1 + bidChange / 100;
-      const audienceMultiplier = 1 + targetAudienceChange / 100;
+      const budgetMultiplier = 1 + budgetChange / 100
+      const bidMultiplier = 1 + bidChange / 100
+      const audienceMultiplier = 1 + targetAudienceChange / 100
 
       // Budget increases spend linearly
-      const newSpend = campaign.currentSpend * budgetMultiplier;
+      const newSpend = campaign.currentSpend * budgetMultiplier
 
       // Impressions scale with budget and audience, diminishing returns
-      const impressionGrowth = Math.pow(budgetMultiplier, 0.7) * Math.pow(audienceMultiplier, 0.5);
-      const newImpressions = campaign.currentImpressions * impressionGrowth;
+      const impressionGrowth = Math.pow(budgetMultiplier, 0.7) * Math.pow(audienceMultiplier, 0.5)
+      const newImpressions = campaign.currentImpressions * impressionGrowth
 
       // Higher bids improve position but have diminishing returns
-      const bidEfficiency = bidMultiplier > 1 ? Math.pow(bidMultiplier, 0.6) : bidMultiplier;
-      const ctrImprovement = bidEfficiency;
+      const bidEfficiency = bidMultiplier > 1 ? Math.pow(bidMultiplier, 0.6) : bidMultiplier
+      const ctrImprovement = bidEfficiency
 
       // Clicks depend on impressions and CTR (influenced by bid)
-      const newClicks =
-        newImpressions * (campaign.currentClicks / campaign.currentImpressions) * ctrImprovement;
+      const newClicks = newImpressions * (campaign.currentClicks / campaign.currentImpressions) * ctrImprovement
 
       // Conversions scale with clicks and slight efficiency loss at higher volumes
-      const conversionEfficiency = Math.pow(budgetMultiplier, -0.1); // diminishing returns
-      const newConversions =
-        newClicks * (campaign.currentConversions / campaign.currentClicks) * conversionEfficiency;
+      const conversionEfficiency = Math.pow(budgetMultiplier, -0.1) // diminishing returns
+      const newConversions = newClicks * (campaign.currentConversions / campaign.currentClicks) * conversionEfficiency
 
       // Revenue scales with conversions
-      const newRevenue = newConversions * (campaign.currentRevenue / campaign.currentConversions);
+      const newRevenue = newConversions * (campaign.currentRevenue / campaign.currentConversions)
 
       // Calculate new ROAS
-      const newROAS = newSpend > 0 ? newRevenue / newSpend : 0;
+      const newROAS = newSpend > 0 ? newRevenue / newSpend : 0
 
       // Confidence decreases with larger changes
-      const changesMagnitude =
-        Math.abs(budgetChange) + Math.abs(bidChange) + Math.abs(targetAudienceChange);
-      const confidence = Math.max(60, 95 - changesMagnitude * 0.3);
+      const changesMagnitude = Math.abs(budgetChange) + Math.abs(bidChange) + Math.abs(targetAudienceChange)
+      const confidence = Math.max(60, 95 - changesMagnitude * 0.3)
 
       const simulationResult: SimulationResult = {
         estimatedSpend: newSpend,
@@ -120,34 +117,33 @@ export function SimulateSlider({
         estimatedClicks: Math.round(newClicks),
         estimatedConversions: Math.round(newConversions),
         confidence: Math.round(confidence),
-      };
+      }
 
-      setResult(simulationResult);
-      onSimulate?.(inputs, simulationResult);
-      setIsSimulating(false);
-    }, 500);
-  }, [inputs, campaign, onSimulate]);
+      setResult(simulationResult)
+      onSimulate?.(inputs, simulationResult)
+      setIsSimulating(false)
+    }, 500)
+  }, [inputs, campaign, onSimulate])
 
   // Run simulation when inputs change
   useEffect(() => {
-    const hasChanges =
-      inputs.budgetChange !== 0 || inputs.bidChange !== 0 || inputs.targetAudienceChange !== 0;
+    const hasChanges = inputs.budgetChange !== 0 || inputs.bidChange !== 0 || inputs.targetAudienceChange !== 0
     if (hasChanges) {
-      const timer = setTimeout(runSimulation, 300);
-      return () => clearTimeout(timer);
+      const timer = setTimeout(runSimulation, 300)
+      return () => clearTimeout(timer)
     } else {
-      setResult(null);
+      setResult(null)
     }
-  }, [inputs, runSimulation]);
+  }, [inputs, runSimulation])
 
   const resetInputs = () => {
     setInputs({
       budgetChange: 0,
       bidChange: 0,
       targetAudienceChange: 0,
-    });
-    setResult(null);
-  };
+    })
+    setResult(null)
+  }
 
   const renderSlider = (
     label: string,
@@ -189,11 +185,11 @@ export function SimulateSlider({
         <span>{max}%</span>
       </div>
     </div>
-  );
+  )
 
   const getChangeIndicator = (current: number, estimated: number) => {
-    const change = ((estimated - current) / current) * 100;
-    if (Math.abs(change) < 0.5) return null;
+    const change = ((estimated - current) / current) * 100
+    if (Math.abs(change) < 0.5) return null
 
     return (
       <span
@@ -206,11 +202,14 @@ export function SimulateSlider({
         {change > 0 ? '+' : ''}
         {formatPercent(change)}
       </span>
-    );
-  };
+    )
+  }
 
   return (
-    <div id="simulator-widget" className={cn('rounded-xl border bg-card p-5', className)}>
+    <div
+      id="simulator-widget"
+      className={cn('rounded-xl border bg-card p-5', className)}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
@@ -343,7 +342,7 @@ export function SimulateSlider({
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default SimulateSlider;
+export default SimulateSlider

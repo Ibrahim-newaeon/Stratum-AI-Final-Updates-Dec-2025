@@ -3,24 +3,23 @@
 Test ML model predictions with sample data.
 """
 
+import os
 import sys
 from pathlib import Path
 
 # Fix Windows encoding
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 # Add backend to path
 backend_path = Path(__file__).parent.parent / "backend"
 sys.path.insert(0, str(backend_path))
 
 import json
-
-import joblib
 import numpy as np
+import joblib
 
 MODELS_PATH = backend_path / "models"
-
 
 def load_model_and_scaler(model_name):
     """Load model and its scaler."""
@@ -33,7 +32,6 @@ def load_model_and_scaler(model_name):
         metadata = json.load(f)
 
     return model, scaler, metadata
-
 
 def predict_roas(spend, impressions, clicks, platform="Meta"):
     """Predict ROAS for a campaign."""
@@ -61,7 +59,6 @@ def predict_roas(spend, impressions, clicks, platform="Meta"):
     prediction = model.predict(X)[0]
     return max(0, prediction)  # ROAS can't be negative
 
-
 def predict_conversions(spend, impressions, clicks, platform="Meta"):
     """Predict conversions for a campaign."""
     model, scaler, metadata = load_model_and_scaler("conversion_predictor")
@@ -88,7 +85,6 @@ def predict_conversions(spend, impressions, clicks, platform="Meta"):
     prediction = model.predict(X)[0]
     return max(0, int(round(prediction)))  # Conversions must be non-negative integer
 
-
 def predict_budget_impact(current_spend, new_spend):
     """Predict revenue change from budget change."""
     model, scaler, metadata = load_model_and_scaler("budget_impact")
@@ -104,11 +100,8 @@ def predict_budget_impact(current_spend, new_spend):
         "current_revenue": max(0, current_revenue),
         "new_revenue": max(0, new_revenue),
         "revenue_change": new_revenue - current_revenue,
-        "revenue_change_pct": ((new_revenue - current_revenue) / current_revenue * 100)
-        if current_revenue > 0
-        else 0,
+        "revenue_change_pct": ((new_revenue - current_revenue) / current_revenue * 100) if current_revenue > 0 else 0
     }
-
 
 def main():
     print("=" * 70)
@@ -118,41 +111,11 @@ def main():
 
     # Test scenarios
     test_campaigns = [
-        {
-            "name": "Meta - Small Budget",
-            "spend": 500,
-            "impressions": 50000,
-            "clicks": 750,
-            "platform": "Meta",
-        },
-        {
-            "name": "Meta - Medium Budget",
-            "spend": 2000,
-            "impressions": 200000,
-            "clicks": 3000,
-            "platform": "Meta",
-        },
-        {
-            "name": "Google - High Intent",
-            "spend": 1500,
-            "impressions": 30000,
-            "clicks": 1500,
-            "platform": "Google Ads",
-        },
-        {
-            "name": "TikTok - Awareness",
-            "spend": 1000,
-            "impressions": 150000,
-            "clicks": 1200,
-            "platform": "TikTok",
-        },
-        {
-            "name": "Snapchat - Youth",
-            "spend": 800,
-            "impressions": 100000,
-            "clicks": 800,
-            "platform": "Snapchat",
-        },
+        {"name": "Meta - Small Budget", "spend": 500, "impressions": 50000, "clicks": 750, "platform": "Meta"},
+        {"name": "Meta - Medium Budget", "spend": 2000, "impressions": 200000, "clicks": 3000, "platform": "Meta"},
+        {"name": "Google - High Intent", "spend": 1500, "impressions": 30000, "clicks": 1500, "platform": "Google Ads"},
+        {"name": "TikTok - Awareness", "spend": 1000, "impressions": 150000, "clicks": 1200, "platform": "TikTok"},
+        {"name": "Snapchat - Youth", "spend": 800, "impressions": 100000, "clicks": 800, "platform": "Snapchat"},
     ]
 
     print("-" * 70)
@@ -164,9 +127,7 @@ def main():
 
     for camp in test_campaigns:
         roas = predict_roas(camp["spend"], camp["impressions"], camp["clicks"], camp["platform"])
-        print(
-            f"{camp['name']:<25} ${camp['spend']:>9,} {camp['impressions']:>12,} {camp['clicks']:>8,} {roas:>10.2f}x"
-        )
+        print(f"{camp['name']:<25} ${camp['spend']:>9,} {camp['impressions']:>12,} {camp['clicks']:>8,} {roas:>10.2f}x")
 
     print()
     print("-" * 70)
@@ -177,13 +138,9 @@ def main():
     print("-" * 70)
 
     for camp in test_campaigns:
-        conversions = predict_conversions(
-            camp["spend"], camp["impressions"], camp["clicks"], camp["platform"]
-        )
+        conversions = predict_conversions(camp["spend"], camp["impressions"], camp["clicks"], camp["platform"])
         ctr = camp["clicks"] / camp["impressions"] * 100
-        print(
-            f"{camp['name']:<25} ${camp['spend']:>9,} {camp['clicks']:>8,} {ctr:>7.2f}% {conversions:>10,}"
-        )
+        print(f"{camp['name']:<25} ${camp['spend']:>9,} {camp['clicks']:>8,} {ctr:>7.2f}% {conversions:>10,}")
 
     print()
     print("-" * 70)
@@ -203,15 +160,12 @@ def main():
 
     for scenario in budget_scenarios:
         impact = predict_budget_impact(scenario["current"], scenario["new"])
-        print(
-            f"{scenario['label']:<25} ${scenario['current']:>11,} ${scenario['new']:>11,} ${impact['revenue_change']:>14,.2f} {impact['revenue_change_pct']:>9.1f}%"
-        )
+        print(f"{scenario['label']:<25} ${scenario['current']:>11,} ${scenario['new']:>11,} ${impact['revenue_change']:>14,.2f} {impact['revenue_change_pct']:>9.1f}%")
 
     print()
     print("=" * 70)
     print("All predictions completed successfully!")
     print("=" * 70)
-
 
 if __name__ == "__main__":
     main()

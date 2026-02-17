@@ -14,13 +14,12 @@ Interpretation:
 """
 
 from typing import Optional
-
 from app.analytics.logic.types import (
-    BaselineMetrics,
     EntityMetrics,
-    ScalingAction,
-    ScalingScoreResult,
+    BaselineMetrics,
     ScoringParams,
+    ScalingScoreResult,
+    ScalingAction,
 )
 
 
@@ -84,7 +83,10 @@ def scaling_score(
 
     # Volume penalty (insufficient conversions)
     min_conversions = params.min_conversions
-    vol_penalty = clamp01(min_conversions / today.conversions) if today.conversions > 0 else 1.0
+    if today.conversions > 0:
+        vol_penalty = clamp01(min_conversions / today.conversions)
+    else:
+        vol_penalty = 1.0  # No conversions = max penalty
 
     # Score components (weights tuned for e-commerce ROAS)
     score = 0.0
@@ -113,7 +115,7 @@ def scaling_score(
     # Generate recommendations
     recommendations = []
     if action == ScalingAction.SCALE:
-        recommendations.append("Consider increasing budget by 20-30%")
+        recommendations.append(f"Consider increasing budget by 20-30%")
         recommendations.append(f"ROAS improved {d_roas*100:.1f}% vs baseline")
     elif action == ScalingAction.FIX:
         if d_roas < -0.2:

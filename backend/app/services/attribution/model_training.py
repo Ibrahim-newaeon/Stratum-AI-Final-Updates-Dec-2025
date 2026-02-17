@@ -11,20 +11,22 @@ Supports:
 - Scheduled retraining
 """
 
-from datetime import datetime
-from typing import Any, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+from uuid import UUID
+import json
 
-from sqlalchemy import and_, select
+from sqlalchemy import select, and_, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.services.attribution.markov_attribution import (
-    MarkovAttributionService,
     MarkovChainModel,
+    MarkovAttributionService,
 )
 from app.services.attribution.shapley_attribution import (
-    ShapleyAttributionService,
     ShapleyValueModel,
+    ShapleyAttributionService,
 )
 
 logger = get_logger(__name__)
@@ -32,7 +34,6 @@ logger = get_logger(__name__)
 
 class DataDrivenModelType:
     """Available data-driven model types."""
-
     MARKOV_CHAIN = "markov_chain"
     SHAPLEY_VALUE = "shapley_value"
 
@@ -55,7 +56,7 @@ class ModelTrainingService:
         include_non_converting: bool = True,
         min_journeys: int = 100,
         model_name: Optional[str] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Train a data-driven attribution model.
 
@@ -101,7 +102,7 @@ class ModelTrainingService:
         channel_type: str = "platform",
         include_non_converting: bool = True,
         min_journeys: int = 100,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Train all available model types and compare results.
 
@@ -155,8 +156,8 @@ class ModelTrainingService:
 
     def _calculate_consensus_weights(
         self,
-        weights_by_model: dict[str, dict[str, float]],
-    ) -> dict[str, float]:
+        weights_by_model: Dict[str, Dict[str, float]],
+    ) -> Dict[str, float]:
         """
         Calculate consensus weights by averaging across models.
         """
@@ -171,7 +172,10 @@ class ModelTrainingService:
         # Average weights
         consensus = {}
         for channel in all_channels:
-            values = [weights.get(channel, 0.0) for weights in weights_by_model.values()]
+            values = [
+                weights.get(channel, 0.0)
+                for weights in weights_by_model.values()
+            ]
             consensus[channel] = sum(values) / len(values) if values else 0.0
 
         # Normalize
@@ -183,17 +187,18 @@ class ModelTrainingService:
 
     async def compare_with_rule_based(
         self,
-        data_driven_weights: dict[str, float],
+        data_driven_weights: Dict[str, float],
         start_date: datetime,
         end_date: datetime,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Compare data-driven weights with rule-based attribution models.
         """
-        from app.models.crm import AttributionModel
         from app.services.attribution.attribution_service import (
             AttributionService,
+            AttributionCalculator,
         )
+        from app.models.crm import AttributionModel
 
         attribution_service = AttributionService(self.db, self.tenant_id)
 
@@ -218,7 +223,8 @@ class ModelTrainingService:
             total_revenue = sum(item["attributed_revenue"] for item in summary)
             if total_revenue > 0:
                 rule_based[model.value] = {
-                    item["key"]: item["attributed_revenue"] / total_revenue for item in summary
+                    item["key"]: item["attributed_revenue"] / total_revenue
+                    for item in summary
                 }
             else:
                 rule_based[model.value] = {}
@@ -242,8 +248,8 @@ class ModelTrainingService:
 
     def _calculate_weight_correlation(
         self,
-        weights1: dict[str, float],
-        weights2: dict[str, float],
+        weights1: Dict[str, float],
+        weights2: Dict[str, float],
     ) -> float:
         """
         Calculate correlation between two weight distributions.
@@ -260,9 +266,9 @@ class ModelTrainingService:
         vec2 = [weights2.get(c, 0.0) for c in all_channels]
 
         # Cosine similarity
-        dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
-        norm1 = sum(a**2 for a in vec1) ** 0.5
-        norm2 = sum(b**2 for b in vec2) ** 0.5
+        dot_product = sum(a * b for a, b in zip(vec1, vec2))
+        norm1 = sum(a ** 2 for a in vec1) ** 0.5
+        norm2 = sum(b ** 2 for b in vec2) ** 0.5
 
         if norm1 == 0 or norm2 == 0:
             return 0.0
@@ -274,7 +280,7 @@ class ModelTrainingService:
         start_date: datetime,
         end_date: datetime,
         channel_type: str = "platform",
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get model recommendation based on data characteristics.
 
@@ -284,7 +290,7 @@ class ModelTrainingService:
         - Conversion rate
         - Data volume
         """
-        from app.models.crm import CRMContact, CRMDeal
+        from app.models.crm import CRMDeal, CRMContact
 
         # Get journey statistics
         deal_result = await self.db.execute(
@@ -363,11 +369,11 @@ class ModelTrainingService:
 
     async def validate_model(
         self,
-        model_data: dict[str, Any],
+        model_data: Dict[str, Any],
         model_type: str,
         validation_start: datetime,
         validation_end: datetime,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Validate a trained model on holdout data.
 

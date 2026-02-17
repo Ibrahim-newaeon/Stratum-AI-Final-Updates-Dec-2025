@@ -1,15 +1,15 @@
-import { ComputerDesktopIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
-import { useTheme } from '@/contexts/ThemeContext';
-import { cn } from '@/lib/utils';
+import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline'
+import { useTheme } from '@/contexts/ThemeContext'
+import { cn } from '@/lib/utils'
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme()
 
   const options = [
     { value: 'light' as const, icon: SunIcon, label: 'Light' },
     { value: 'dark' as const, icon: MoonIcon, label: 'Dark' },
     { value: 'system' as const, icon: ComputerDesktopIcon, label: 'System' },
-  ];
+  ]
 
   return (
     <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/50">
@@ -24,12 +24,10 @@ export function ThemeToggle() {
               : 'text-muted-foreground hover:text-foreground'
           )}
           title={option.label}
-          aria-label={`Switch to ${option.label} theme`}
-          aria-pressed={theme === option.value}
         >
-          <option.icon className="h-4 w-4" aria-hidden="true" />
+          <option.icon className="h-4 w-4" />
         </button>
       ))}
     </div>
-  );
+  )
 }

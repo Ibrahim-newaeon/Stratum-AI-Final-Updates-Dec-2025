@@ -12,38 +12,27 @@ Models:
 - ProfitROASReport: Aggregated profit ROAS reports
 """
 
-import enum
-from datetime import datetime
+from datetime import datetime, date
+from typing import Optional
 from uuid import uuid4
+import enum
 
 from sqlalchemy import (
-    BigInteger,
-    Boolean,
-    Column,
-    Date,
-    DateTime,
-    Enum as SQLEnum,
-    Float,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
+    Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
+    Index, Enum as SQLEnum, Boolean, BigInteger, UniqueConstraint
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
+
 
 # =============================================================================
 # Enums
 # =============================================================================
 
-
 class MarginType(str, enum.Enum):
     """How margin/COGS is specified."""
-
     FIXED_AMOUNT = "fixed_amount"  # Fixed dollar amount per unit
     PERCENTAGE = "percentage"  # Percentage of revenue
     TIERED = "tiered"  # Different rates at different volumes
@@ -51,7 +40,6 @@ class MarginType(str, enum.Enum):
 
 class ProductStatus(str, enum.Enum):
     """Product status."""
-
     ACTIVE = "active"
     INACTIVE = "inactive"
     DISCONTINUED = "discontinued"
@@ -59,7 +47,6 @@ class ProductStatus(str, enum.Enum):
 
 class COGSSource(str, enum.Enum):
     """Source of COGS data."""
-
     MANUAL = "manual"  # Manually entered
     CSV_UPLOAD = "csv_upload"  # Uploaded via CSV
     API_SYNC = "api_sync"  # Synced from external system
@@ -72,13 +59,11 @@ class COGSSource(str, enum.Enum):
 # Product Catalog Model
 # =============================================================================
 
-
 class ProductCatalog(Base):
     """
     Product catalog with SKU and category information.
     Used for matching conversions to products for profit calculation.
     """
-
     __tablename__ = "product_catalog"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -110,9 +95,7 @@ class ProductCatalog(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -129,20 +112,16 @@ class ProductCatalog(Base):
 # Product Margin Model (Time-Series)
 # =============================================================================
 
-
 class ProductMargin(Base):
     """
     COGS and margin data per product.
     Supports time-series for historical margin changes.
     """
-
     __tablename__ = "product_margins"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(
-        UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="CASCADE"), nullable=False
-    )
+    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="CASCADE"), nullable=False)
 
     # Effective period
     effective_date = Column(Date, nullable=False)
@@ -172,9 +151,7 @@ class ProductMargin(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
@@ -192,13 +169,11 @@ class ProductMargin(Base):
 # Margin Rule Model (Default Rules)
 # =============================================================================
 
-
 class MarginRule(Base):
     """
     Default margin rules by category, platform, or campaign.
     Used when specific product margin is not available.
     """
-
     __tablename__ = "margin_rules"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -229,9 +204,7 @@ class MarginRule(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -246,13 +219,11 @@ class MarginRule(Base):
 # Daily Profit Metrics Model
 # =============================================================================
 
-
 class DailyProfitMetrics(Base):
     """
     Daily profit calculations aggregated by campaign/product.
     Materialized table for fast profit ROAS queries.
     """
-
     __tablename__ = "daily_profit_metrics"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -264,9 +235,7 @@ class DailyProfitMetrics(Base):
     campaign_id = Column(String(255), nullable=True)
     adset_id = Column(String(255), nullable=True)
     ad_id = Column(String(255), nullable=True)
-    product_id = Column(
-        UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="SET NULL"), nullable=True
-    )
+    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="SET NULL"), nullable=True)
 
     # Revenue metrics
     units_sold = Column(Integer, default=0, nullable=False)
@@ -286,9 +255,7 @@ class DailyProfitMetrics(Base):
 
     # Profit calculations
     gross_profit_cents = Column(BigInteger, default=0, nullable=False)  # Revenue - COGS
-    contribution_margin_cents = Column(
-        BigInteger, default=0, nullable=False
-    )  # Gross profit - variable costs
+    contribution_margin_cents = Column(BigInteger, default=0, nullable=False)  # Gross profit - variable costs
     net_profit_cents = Column(BigInteger, default=0, nullable=False)  # After ad spend
 
     # ROAS metrics
@@ -304,16 +271,12 @@ class DailyProfitMetrics(Base):
 
     # Data quality
     cogs_source = Column(SQLEnum(COGSSource), nullable=True)
-    margin_rule_id = Column(
-        UUID(as_uuid=True), ForeignKey("margin_rules.id", ondelete="SET NULL"), nullable=True
-    )
+    margin_rule_id = Column(UUID(as_uuid=True), ForeignKey("margin_rules.id", ondelete="SET NULL"), nullable=True)
     is_estimated = Column(Boolean, default=False, nullable=False)  # True if using default margins
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -324,14 +287,7 @@ class DailyProfitMetrics(Base):
         Index("ix_daily_profit_tenant_date", "tenant_id", "date"),
         Index("ix_daily_profit_tenant_campaign", "tenant_id", "campaign_id", "date"),
         Index("ix_daily_profit_tenant_product", "tenant_id", "product_id", "date"),
-        UniqueConstraint(
-            "tenant_id",
-            "date",
-            "platform",
-            "campaign_id",
-            "product_id",
-            name="uq_daily_profit_scope",
-        ),
+        UniqueConstraint("tenant_id", "date", "platform", "campaign_id", "product_id", name="uq_daily_profit_scope"),
     )
 
 
@@ -339,13 +295,11 @@ class DailyProfitMetrics(Base):
 # Profit ROAS Report Model
 # =============================================================================
 
-
 class ProfitROASReport(Base):
     """
     Aggregated profit ROAS reports for dashboard/export.
     Stores pre-calculated summaries for different time periods.
     """
-
     __tablename__ = "profit_roas_reports"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -393,9 +347,7 @@ class ProfitROASReport(Base):
 
     # Report metadata
     generated_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    generated_by_user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    generated_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -411,12 +363,10 @@ class ProfitROASReport(Base):
 # COGS Upload History
 # =============================================================================
 
-
 class COGSUpload(Base):
     """
     History of COGS data uploads for audit trail.
     """
-
     __tablename__ = "cogs_uploads"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -441,12 +391,12 @@ class COGSUpload(Base):
     # Timestamps
     uploaded_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     processed_at = Column(DateTime(timezone=True), nullable=True)
-    uploaded_by_user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    uploaded_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
     uploaded_by = relationship("User", foreign_keys=[uploaded_by_user_id])
 
-    __table_args__ = (Index("ix_cogs_uploads_tenant_date", "tenant_id", "uploaded_at"),)
+    __table_args__ = (
+        Index("ix_cogs_uploads_tenant_date", "tenant_id", "uploaded_at"),
+    )

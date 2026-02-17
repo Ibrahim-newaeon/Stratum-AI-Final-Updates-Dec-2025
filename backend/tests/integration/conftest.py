@@ -13,71 +13,47 @@ NOTE: These tests require a running PostgreSQL database.
 Set TEST_DATABASE_URL environment variable or use default test database.
 """
 
+import asyncio
 import os
-from collections.abc import AsyncGenerator, Generator
-from datetime import UTC, datetime
-from pathlib import Path
+from datetime import datetime, date, timezone
+from typing import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
-# =============================================================================
-# Database URL Configuration
-# =============================================================================
-# Auto-detect Docker environment and use appropriate database hostname.
-# When running inside Docker, use 'db' (service name). When running locally, use 'localhost'.
-
-
-def _is_running_in_docker() -> bool:
-    """Detect if we're running inside a Docker container."""
-    # Check for .dockerenv file (most reliable)
-    if Path("/.dockerenv").exists():
-        return True
-    # Check for Docker-specific cgroup
-    try:
-        with Path("/proc/1/cgroup").open() as f:
-            return "docker" in f.read()
-    except (FileNotFoundError, PermissionError):
-        pass
-    # Check for explicit environment variable
-    return os.environ.get("IN_DOCKER", "").lower() in ("true", "1", "yes")
-
-
-def _get_db_host() -> str:
-    """Get the appropriate database host based on environment."""
-    # Allow explicit override via environment variable
-    if os.environ.get("TEST_DB_HOST"):
-        return os.environ["TEST_DB_HOST"]
-    # Auto-detect Docker environment
-    return "db" if _is_running_in_docker() else "localhost"
-
-
-_db_host = _get_db_host()
-_db_user = os.environ.get("POSTGRES_USER", "stratum")
-_db_pass = os.environ.get("POSTGRES_PASSWORD", "stratum_secure_password_2024")
-_db_name = os.environ.get("POSTGRES_DB", "stratum_ai")
 
 # Set database URLs for tests
 os.environ["DATABASE_URL"] = os.environ.get(
-    "TEST_DATABASE_URL", f"postgresql+asyncpg://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://stratum:stratum_dev@localhost:5432/stratum_ai_test"
 )
 os.environ["DATABASE_URL_SYNC"] = os.environ.get(
-    "TEST_DATABASE_URL_SYNC", f"postgresql://{_db_user}:{_db_pass}@{_db_host}:5432/{_db_name}"
+    "TEST_DATABASE_URL_SYNC",
+    "postgresql://stratum:stratum_dev@localhost:5432/stratum_ai_test"
 )
+
+
+# =============================================================================
+# Async Event Loop Configuration
+# =============================================================================
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an event loop for the entire test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 
 # =============================================================================
 # Database Fixtures
 # =============================================================================
-# Note: Event loop is managed by pytest-asyncio with function scope
-# (configured in pytest.ini via asyncio_default_fixture_loop_scope = function)
 
-
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def sync_engine():
     """Create a sync database engine for setup/teardown."""
     from app.core.config import settings
@@ -91,9 +67,9 @@ def sync_engine():
     engine.dispose()
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope="session")
 async def async_engine():
-    """Create an async database engine for tests (function-scoped to match event loop)."""
+    """Create an async database engine for tests."""
     from app.core.config import settings
 
     engine = create_async_engine(
@@ -110,7 +86,7 @@ async def db_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
     """
     Create a database session for each test.
 
-    Uses savepoint for isolation - allows nested transactions from API calls.
+    Uses transaction rollback for isolation between tests.
     """
     async_session_factory = async_sessionmaker(
         bind=async_engine,
@@ -119,16 +95,12 @@ async def db_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
         autoflush=False,
     )
 
-    async with async_engine.connect() as connection:
-        # Start a transaction that we'll rollback at the end
-        transaction = await connection.begin()
-
-        # Create session bound to this connection
-        async with async_session_factory(bind=connection) as session:
+    async with async_session_factory() as session:
+        # Start a transaction
+        async with session.begin():
             yield session
-
-        # Rollback the transaction to reset state
-        await transaction.rollback()
+            # Rollback at the end to reset state
+            await session.rollback()
 
 
 @pytest.fixture(scope="function")
@@ -147,7 +119,6 @@ def sync_db_session(sync_engine) -> Generator[Session, None, None]:
 # =============================================================================
 # Application and Client Fixtures
 # =============================================================================
-
 
 @pytest_asyncio.fixture(scope="function")
 async def app():
@@ -188,15 +159,15 @@ async def authenticated_client(client, test_user, test_tenant) -> AsyncClient:
     """
     Create an authenticated client with JWT token.
     """
-    from app.core.security import create_access_token
+    from app.auth.jwt import create_access_token
 
     token = create_access_token(
-        subject=test_user["id"],
-        additional_claims={
+        data={
+            "sub": str(test_user["id"]),
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
-        },
+        }
     )
 
     client.headers["Authorization"] = f"Bearer {token}"
@@ -209,7 +180,6 @@ async def authenticated_client(client, test_user, test_tenant) -> AsyncClient:
 # Test Data Factories
 # =============================================================================
 
-
 @pytest_asyncio.fixture(scope="function")
 async def test_tenant(db_session) -> dict:
     """Create a test tenant."""
@@ -218,6 +188,7 @@ async def test_tenant(db_session) -> dict:
     tenant = Tenant(
         name="Test Tenant",
         slug="test-tenant",
+        is_active=True,
         plan="professional",
         max_users=10,
         max_campaigns=100,
@@ -238,7 +209,7 @@ async def test_tenant(db_session) -> dict:
 async def test_user(db_session, test_tenant) -> dict:
     """Create a test user."""
     from app.base_models import User, UserRole
-    from app.core.security import get_password_hash
+    from app.auth.security import get_password_hash
 
     user = User(
         tenant_id=test_tenant["id"],
@@ -268,18 +239,14 @@ async def test_campaign(db_session, test_tenant) -> dict:
     """Create a test campaign."""
     from app.models.campaign_builder import CampaignDraft
 
-    draft_json = {
-        "objective": "conversions",
-        "daily_budget": 100.0,
-        "currency": "USD",
-    }
-
     campaign = CampaignDraft(
         tenant_id=test_tenant["id"],
         name="Test Campaign",
         status="draft",
         platform="meta",
-        draft_json=draft_json,
+        objective="conversions",
+        daily_budget=100.0,
+        currency="USD",
     )
 
     db_session.add(campaign)
@@ -290,7 +257,7 @@ async def test_campaign(db_session, test_tenant) -> dict:
         "name": campaign.name,
         "status": campaign.status,
         "platform": campaign.platform,
-        "daily_budget": draft_json["daily_budget"],
+        "daily_budget": campaign.daily_budget,
     }
 
 
@@ -301,7 +268,7 @@ async def test_signal_health(db_session, test_tenant) -> dict:
 
     record = FactSignalHealthDaily(
         tenant_id=test_tenant["id"],
-        date=datetime.now(UTC).date(),
+        date=date.today(),
         platform="meta",
         emq_score=85.0,
         event_loss_pct=3.5,
@@ -325,13 +292,12 @@ async def test_signal_health(db_session, test_tenant) -> dict:
 @pytest_asyncio.fixture(scope="function")
 async def test_action(db_session, test_tenant, test_user) -> dict:
     """Create a test action queue item."""
-    import json
-
     from app.models.trust_layer import FactActionsQueue
+    import json
 
     action = FactActionsQueue(
         tenant_id=test_tenant["id"],
-        date=datetime.now(UTC).date(),
+        date=date.today(),
         action_type="budget_increase",
         entity_type="campaign",
         entity_id="campaign_123",
@@ -358,19 +324,18 @@ async def test_action(db_session, test_tenant, test_user) -> dict:
 # Utility Fixtures
 # =============================================================================
 
-
 @pytest.fixture
 def auth_headers(test_user, test_tenant):
     """Generate authentication headers for API requests."""
-    from app.core.security import create_access_token
+    from app.auth.jwt import create_access_token
 
     token = create_access_token(
-        subject=test_user["id"],
-        additional_claims={
+        data={
+            "sub": str(test_user["id"]),
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
-        },
+        }
     )
 
     return {
@@ -382,14 +347,14 @@ def auth_headers(test_user, test_tenant):
 @pytest.fixture
 def superadmin_headers():
     """Generate superadmin authentication headers."""
-    from app.core.security import create_access_token
+    from app.auth.jwt import create_access_token
 
     token = create_access_token(
-        subject=1,
-        additional_claims={
+        data={
+            "sub": "1",
             "email": "admin@stratum.ai",
             "role": "superadmin",
-        },
+        }
     )
 
     return {
@@ -401,43 +366,27 @@ def superadmin_headers():
 # Database Setup/Teardown
 # =============================================================================
 
-
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_database():
+def setup_test_database(sync_engine):
     """
     Set up the test database before running tests.
 
-    Creates all tables using a dedicated session-scoped engine.
+    Creates all tables and runs migrations if needed.
     """
-    # Import all models to register them with Base.metadata
-    # This ensures all tables and enum types are created
-    import app.base_models
-    import app.models  # noqa: F401
-    from app.core.config import settings
     from app.db.base_class import Base
 
-    # Create a dedicated engine for setup (session-scoped)
-    setup_engine = create_engine(
-        settings.database_url_sync,
-        echo=False,
-        pool_pre_ping=True,
-    )
-
-    # Create all tables and enum types
-    Base.metadata.create_all(bind=setup_engine)
+    # Create all tables
+    Base.metadata.create_all(bind=sync_engine)
 
     yield
 
-    # Cleanup
-    setup_engine.dispose()
     # Optionally drop tables after tests (comment out to preserve data for debugging)
-    # Base.metadata.drop_all(bind=setup_engine)
+    # Base.metadata.drop_all(bind=sync_engine)
 
 
 # =============================================================================
 # Sample Data Fixtures
 # =============================================================================
-
 
 @pytest.fixture
 def sample_platform_metrics():
@@ -458,5 +407,5 @@ def sample_platform_metrics():
         ga4_conversions=520,
         platform_revenue=50000.0,
         ga4_revenue=52000.0,
-        last_event_at=datetime.now(UTC),
+        last_event_at=datetime.now(timezone.utc),
     )

@@ -12,35 +12,25 @@ Models:
 - TrainedAttributionModel: Stored data-driven models (Markov/Shapley)
 """
 
-import enum
-from datetime import datetime
+from datetime import datetime, date
+from typing import Optional
 from uuid import uuid4
+import enum
 
 from sqlalchemy import (
-    BigInteger,
-    Boolean,
-    Column,
-    Date,
-    DateTime,
-    Enum as SQLEnum,
-    Float,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
+    Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
+    Index, Enum as SQLEnum, Boolean, BigInteger, UniqueConstraint
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 from app.models.crm import AttributionModel
 
+
 # =============================================================================
 # Daily Attributed Revenue (Pre-calculated)
 # =============================================================================
-
 
 class DailyAttributedRevenue(Base):
     """
@@ -49,7 +39,6 @@ class DailyAttributedRevenue(Base):
     Enables fast reporting without recalculating attribution on every request.
     Updated daily via scheduled job.
     """
-
     __tablename__ = "daily_attributed_revenue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -86,9 +75,7 @@ class DailyAttributedRevenue(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -96,20 +83,10 @@ class DailyAttributedRevenue(Base):
     __table_args__ = (
         Index("ix_daily_attributed_rev_tenant_date", "tenant_id", "date"),
         Index("ix_daily_attributed_rev_model", "tenant_id", "attribution_model", "date"),
-        Index(
-            "ix_daily_attributed_rev_dimension",
-            "tenant_id",
-            "dimension_type",
-            "dimension_id",
-            "date",
-        ),
+        Index("ix_daily_attributed_rev_dimension", "tenant_id", "dimension_type", "dimension_id", "date"),
         UniqueConstraint(
-            "tenant_id",
-            "date",
-            "attribution_model",
-            "dimension_type",
-            "dimension_id",
-            name="uq_daily_attributed_rev",
+            "tenant_id", "date", "attribution_model", "dimension_type", "dimension_id",
+            name="uq_daily_attributed_rev"
         ),
     )
 
@@ -118,14 +95,12 @@ class DailyAttributedRevenue(Base):
 # Conversion Path Statistics
 # =============================================================================
 
-
 class ConversionPath(Base):
     """
     Aggregated statistics for conversion paths.
 
     Tracks which sequences of touchpoints lead to conversions.
     """
-
     __tablename__ = "conversion_paths"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -158,9 +133,7 @@ class ConversionPath(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -170,12 +143,8 @@ class ConversionPath(Base):
         Index("ix_conversion_paths_hash", "tenant_id", "path_hash"),
         Index("ix_conversion_paths_conversions", "tenant_id", "conversions"),
         UniqueConstraint(
-            "tenant_id",
-            "path_hash",
-            "path_type",
-            "period_start",
-            "period_end",
-            name="uq_conversion_path",
+            "tenant_id", "path_hash", "path_type", "period_start", "period_end",
+            name="uq_conversion_path"
         ),
     )
 
@@ -184,14 +153,12 @@ class ConversionPath(Base):
 # Attribution Snapshot (Historical Comparison)
 # =============================================================================
 
-
 class AttributionSnapshot(Base):
     """
     Point-in-time snapshot of attribution for historical comparison.
 
     Allows comparing how attribution has changed over time.
     """
-
     __tablename__ = "attribution_snapshots"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -235,11 +202,8 @@ class AttributionSnapshot(Base):
         Index("ix_attribution_snapshot_tenant_date", "tenant_id", "snapshot_date"),
         Index("ix_attribution_snapshot_model", "tenant_id", "attribution_model", "snapshot_date"),
         UniqueConstraint(
-            "tenant_id",
-            "snapshot_date",
-            "snapshot_type",
-            "attribution_model",
-            name="uq_attribution_snapshot",
+            "tenant_id", "snapshot_date", "snapshot_type", "attribution_model",
+            name="uq_attribution_snapshot"
         ),
     )
 
@@ -248,14 +212,12 @@ class AttributionSnapshot(Base):
 # Channel Interaction Matrix
 # =============================================================================
 
-
 class ChannelInteraction(Base):
     """
     Tracks channel-to-channel transitions for Sankey visualization.
 
     Pre-aggregated for performance.
     """
-
     __tablename__ = "channel_interactions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -279,9 +241,7 @@ class ChannelInteraction(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -290,13 +250,8 @@ class ChannelInteraction(Base):
         Index("ix_channel_interaction_tenant_period", "tenant_id", "period_start", "period_end"),
         Index("ix_channel_interaction_from", "tenant_id", "from_channel"),
         UniqueConstraint(
-            "tenant_id",
-            "period_start",
-            "period_end",
-            "from_channel",
-            "to_channel",
-            "transition_type",
-            name="uq_channel_interaction",
+            "tenant_id", "period_start", "period_end", "from_channel", "to_channel", "transition_type",
+            name="uq_channel_interaction"
         ),
     )
 
@@ -305,17 +260,14 @@ class ChannelInteraction(Base):
 # Data-Driven Model Type Enum
 # =============================================================================
 
-
 class DataDrivenModelType(str, enum.Enum):
     """Types of data-driven attribution models."""
-
     MARKOV_CHAIN = "markov_chain"
     SHAPLEY_VALUE = "shapley_value"
 
 
 class ModelStatus(str, enum.Enum):
     """Status of trained models."""
-
     TRAINING = "training"
     ACTIVE = "active"
     ARCHIVED = "archived"
@@ -326,7 +278,6 @@ class ModelStatus(str, enum.Enum):
 # Trained Attribution Model Storage
 # =============================================================================
 
-
 class TrainedAttributionModel(Base):
     """
     Stores trained data-driven attribution models.
@@ -334,7 +285,6 @@ class TrainedAttributionModel(Base):
     Models can be trained periodically and stored for fast attribution
     without recomputing from scratch.
     """
-
     __tablename__ = "trained_attribution_models"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -380,9 +330,7 @@ class TrainedAttributionModel(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -399,21 +347,15 @@ class TrainedAttributionModel(Base):
 # Model Training History
 # =============================================================================
 
-
 class ModelTrainingRun(Base):
     """
     History of model training runs for auditing and debugging.
     """
-
     __tablename__ = "model_training_runs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    model_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("trained_attribution_models.id", ondelete="CASCADE"),
-        nullable=True,
-    )
+    model_id = Column(UUID(as_uuid=True), ForeignKey("trained_attribution_models.id", ondelete="CASCADE"), nullable=True)
 
     # Run details
     model_type = Column(SQLEnum(DataDrivenModelType), nullable=False)
@@ -443,9 +385,7 @@ class ModelTrainingRun(Base):
     error_details = Column(JSONB, nullable=True)
 
     # Triggered by
-    triggered_by_user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
+    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

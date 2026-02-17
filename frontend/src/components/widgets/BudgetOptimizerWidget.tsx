@@ -3,83 +3,81 @@
  * Displays AI-powered budget reallocation recommendations
  */
 
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
-  ArrowDownRight,
-  ArrowUpRight,
-  ChevronRight,
-  MinusCircle,
-  RefreshCw,
-  Sparkles,
-  TrendingUp,
   Wallet,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+  RefreshCw,
+  ArrowUpRight,
+  ArrowDownRight,
+  MinusCircle,
+  TrendingUp,
+  Sparkles,
+  ChevronRight,
+  DollarSign,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface BudgetReallocation {
-  campaign_id: number;
-  campaign_name: string;
-  platform: string;
-  current_roas: number;
-  current_budget: number;
-  recommended_budget: number;
-  change_percent: number;
-  action: 'increase' | 'decrease' | 'maintain';
-  reason: string;
+  campaign_id: number
+  campaign_name: string
+  platform: string
+  current_roas: number
+  current_budget: number
+  recommended_budget: number
+  change_percent: number
+  action: 'increase' | 'decrease' | 'maintain'
+  reason: string
 }
 
 interface PotentialUplift {
-  expected: number;
-  conservative: number;
-  optimistic: number;
+  expected: number
+  conservative: number
+  optimistic: number
 }
 
 interface BudgetOptimizerWidgetProps {
-  className?: string;
+  className?: string
 }
 
 export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps) {
-  const { t: _t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [reallocations, setReallocations] = useState<BudgetReallocation[]>([]);
-  const [potentialUplift, setPotentialUplift] = useState<PotentialUplift | null>(null);
-  const [topPerformers, setTopPerformers] = useState<any[]>([]);
-  const [bottomPerformers, setBottomPerformers] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation()
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [reallocations, setReallocations] = useState<BudgetReallocation[]>([])
+  const [potentialUplift, setPotentialUplift] = useState<PotentialUplift | null>(null)
+  const [topPerformers, setTopPerformers] = useState<any[]>([])
+  const [bottomPerformers, setBottomPerformers] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const fetchOptimization = async () => {
     try {
-      setRefreshing(true);
-      const response = await fetch(`${API_BASE}/predictions/optimize/budget`);
-      const data = await response.json();
+      setRefreshing(true)
+      const response = await fetch('/api/v1/predictions/optimize/budget')
+      const data = await response.json()
 
       if (data.success && data.data) {
-        setReallocations(data.data.budget_reallocation || []);
-        setPotentialUplift(data.data.potential_uplift || null);
-        setTopPerformers(data.data.top_performers || []);
-        setBottomPerformers(data.data.bottom_performers || []);
-        setError(null);
+        setReallocations(data.data.budget_reallocation || [])
+        setPotentialUplift(data.data.potential_uplift || null)
+        setTopPerformers(data.data.top_performers || [])
+        setBottomPerformers(data.data.bottom_performers || [])
+        setError(null)
       }
     } catch (err) {
-      // Error displayed via setError below
-      setError('Failed to load optimization data');
+      console.error('Failed to fetch optimization:', err)
+      setError('Failed to load optimization data')
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setLoading(false)
+      setRefreshing(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchOptimization();
+    fetchOptimization()
     // Refresh every 10 minutes
-    const interval = setInterval(fetchOptimization, 10 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(fetchOptimization, 10 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -87,11 +85,11 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value);
-  };
+    }).format(value)
+  }
 
-  const increaseCount = reallocations.filter((r) => r.action === 'increase').length;
-  const decreaseCount = reallocations.filter((r) => r.action === 'decrease').length;
+  const increaseCount = reallocations.filter(r => r.action === 'increase').length
+  const decreaseCount = reallocations.filter(r => r.action === 'decrease').length
 
   if (loading) {
     return (
@@ -106,7 +104,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -120,7 +118,9 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
             </div>
             <div>
               <h3 className="font-semibold text-foreground">Budget Optimizer</h3>
-              <p className="text-xs text-muted-foreground">AI-powered allocation recommendations</p>
+              <p className="text-xs text-muted-foreground">
+                AI-powered allocation recommendations
+              </p>
             </div>
           </div>
           <button
@@ -184,32 +184,27 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
 
             {/* Reallocation Recommendations */}
             <div>
-              <h4 className="text-sm font-medium text-foreground mb-3">Budget Recommendations</h4>
+              <h4 className="text-sm font-medium text-foreground mb-3">
+                Budget Recommendations
+              </h4>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {reallocations.slice(0, 6).map((item, index) => (
                   <div
                     key={`${item.campaign_id}-${index}`}
                     className={cn(
                       'p-3 rounded-lg transition-colors hover:shadow-md cursor-pointer',
-                      item.action === 'increase'
-                        ? 'bg-green-500/5 hover:bg-green-500/10'
-                        : item.action === 'decrease'
-                          ? 'bg-amber-500/5 hover:bg-amber-500/10'
-                          : 'bg-muted/50 hover:bg-muted'
+                      item.action === 'increase' ? 'bg-green-500/5 hover:bg-green-500/10' :
+                      item.action === 'decrease' ? 'bg-amber-500/5 hover:bg-amber-500/10' :
+                      'bg-muted/50 hover:bg-muted'
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={cn(
-                            'p-1.5 rounded-lg',
-                            item.action === 'increase'
-                              ? 'bg-green-500/10'
-                              : item.action === 'decrease'
-                                ? 'bg-amber-500/10'
-                                : 'bg-muted'
-                          )}
-                        >
+                        <div className={cn(
+                          'p-1.5 rounded-lg',
+                          item.action === 'increase' ? 'bg-green-500/10' :
+                          item.action === 'decrease' ? 'bg-amber-500/10' : 'bg-muted'
+                        )}>
                           {item.action === 'increase' ? (
                             <ArrowUpRight className="w-4 h-4 text-green-500" />
                           ) : item.action === 'decrease' ? (
@@ -228,27 +223,22 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div
-                          className={cn(
-                            'text-sm font-semibold',
-                            item.action === 'increase'
-                              ? 'text-green-500'
-                              : item.action === 'decrease'
-                                ? 'text-amber-500'
-                                : 'text-muted-foreground'
-                          )}
-                        >
-                          {item.change_percent > 0 ? '+' : ''}
-                          {item.change_percent.toFixed(0)}%
+                        <div className={cn(
+                          'text-sm font-semibold',
+                          item.action === 'increase' ? 'text-green-500' :
+                          item.action === 'decrease' ? 'text-amber-500' : 'text-muted-foreground'
+                        )}>
+                          {item.change_percent > 0 ? '+' : ''}{item.change_percent.toFixed(0)}%
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {formatCurrency(item.current_budget)} →{' '}
-                          {formatCurrency(item.recommended_budget)}
+                          {formatCurrency(item.current_budget)} → {formatCurrency(item.recommended_budget)}
                         </div>
                       </div>
                     </div>
                     {item.reason && (
-                      <p className="text-xs text-muted-foreground mt-2 pl-10">{item.reason}</p>
+                      <p className="text-xs text-muted-foreground mt-2 pl-10">
+                        {item.reason}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -300,7 +290,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
         </button>
       </div>
     </div>
-  );
+  )
 }
 
-export default BudgetOptimizerWidget;
+export default BudgetOptimizerWidget

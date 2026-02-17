@@ -4,31 +4,31 @@
  * Manage team members and their access to the tenant.
  */
 
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useInviteUser, useDeleteUser, useTenantUsers, useUpdateUser, type UserRole } from '@/api/admin';
-import { useToast } from '@/components/ui/use-toast';
+import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useTenantUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/api/admin'
+import { useToast } from '@/components/ui/use-toast'
 import {
-  ArrowLeftIcon,
-  CheckCircleIcon,
-  EnvelopeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  ShieldCheckIcon,
-  TrashIcon,
   UserPlusIcon,
+  PencilIcon,
+  TrashIcon,
+  MagnifyingGlassIcon,
+  ArrowLeftIcon,
+  ShieldCheckIcon,
+  EnvelopeIcon,
+  CheckCircleIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+} from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils'
 
 interface TeamMember {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
-  isActive: boolean;
-  lastLoginAt: string | null;
-  createdAt: string;
+  id: number
+  email: string
+  full_name: string
+  role: string
+  is_active: boolean
+  last_login_at: string | null
+  created_at: string
 }
 
 const ROLES = [
@@ -36,40 +36,37 @@ const ROLES = [
   { value: 'manager', label: 'Manager', description: 'Manage campaigns and team' },
   { value: 'analyst', label: 'Analyst', description: 'View reports and analytics' },
   { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
-];
-
-type TeamTab = 'members' | 'roles';
+]
 
 export default function TeamManagement() {
-  const { tenantId } = useParams<{ tenantId: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<TeamTab>('members');
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const navigate = useNavigate()
+  const { toast } = useToast()
 
-  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0;
+  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
 
-  const { data: usersData, isLoading, refetch } = useTenantUsers(tenantIdNum);
-  const inviteUserMutation = useInviteUser();
-  const updateUserMutation = useUpdateUser();
-  const deleteUserMutation = useDeleteUser();
+  const { data: usersData, isLoading, refetch } = useTenantUsers(tenantIdNum)
+  const createUserMutation = useCreateUser()
+  const updateUserMutation = useUpdateUser()
+  const deleteUserMutation = useDeleteUser()
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null)
   const [newUser, setNewUser] = useState({
     email: '',
-    name: '',
-    role: 'analyst',
-  });
+    full_name: '',
+    role: 'viewer',
+  })
 
-  const users: TeamMember[] = usersData || [];
+  const users: TeamMember[] = usersData?.data || []
 
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const handleInvite = async () => {
     if (!newUser.email) {
@@ -77,101 +74,102 @@ export default function TeamManagement() {
         title: 'Error',
         description: 'Email is required',
         variant: 'destructive',
-      });
-      return;
+      })
+      return
     }
 
     try {
-      await inviteUserMutation.mutateAsync({
+      await createUserMutation.mutateAsync({
+        tenant_id: tenantIdNum,
         email: newUser.email,
-        full_name: newUser.name || undefined,
-        role: newUser.role as UserRole,
-      });
+        full_name: newUser.full_name,
+        role: newUser.role,
+      })
       toast({
         title: 'Success',
-        description: 'Invitation sent successfully',
-      });
-      setShowInviteModal(false);
-      setNewUser({ email: '', name: '', role: 'analyst' });
-      refetch();
+        description: 'Team member invited successfully',
+      })
+      setShowInviteModal(false)
+      setNewUser({ email: '', full_name: '', role: 'viewer' })
+      refetch()
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to invite team member',
         variant: 'destructive',
-      });
+      })
     }
-  };
+  }
 
   const handleUpdateRole = async (userId: number, newRole: string) => {
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
-        data: { role: newRole as UserRole },
-      });
+        role: newRole,
+      })
       toast({
         title: 'Success',
         description: 'Role updated successfully',
-      });
-      refetch();
+      })
+      refetch()
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to update role',
         variant: 'destructive',
-      });
+      })
     }
-  };
+  }
 
   const handleRemoveUser = async (userId: number, userName: string) => {
     if (!confirm(`Are you sure you want to remove ${userName} from the team?`)) {
-      return;
+      return
     }
 
     try {
-      await deleteUserMutation.mutateAsync(userId);
+      await deleteUserMutation.mutateAsync(userId)
       toast({
         title: 'Success',
         description: 'Team member removed successfully',
-      });
-      refetch();
+      })
+      refetch()
     } catch (error) {
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to remove team member',
         variant: 'destructive',
-      });
+      })
     }
-  };
+  }
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
       case 'manager':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
       case 'analyst':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
     }
-  };
+  }
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    });
-  };
+    })
+  }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
-    );
+    )
   }
 
   return (
@@ -201,35 +199,6 @@ export default function TeamManagement() {
         </button>
       </div>
 
-      {/* Tab Switcher */}
-      <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/10 w-fit">
-        <button
-          onClick={() => setActiveTab('members')}
-          className={cn(
-            'px-4 py-2 text-sm rounded-md transition-colors',
-            activeTab === 'members'
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
-        >
-          Team Members
-        </button>
-        <button
-          onClick={() => setActiveTab('roles')}
-          className={cn(
-            'px-4 py-2 text-sm rounded-md transition-colors',
-            activeTab === 'roles'
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
-        >
-          Roles & Permissions
-        </button>
-      </div>
-
-      {activeTab === 'roles' && <RBACRolesTab />}
-
-      {activeTab === 'members' && <>
       {/* Search */}
       <div className="relative">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -268,9 +237,7 @@ export default function TeamManagement() {
             {filteredUsers.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                  {searchQuery
-                    ? 'No team members found matching your search.'
-                    : 'No team members yet. Invite your first team member!'}
+                  {searchQuery ? 'No team members found matching your search.' : 'No team members yet. Invite your first team member!'}
                 </td>
               </tr>
             ) : (
@@ -280,11 +247,11 @@ export default function TeamManagement() {
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-sm font-medium text-primary">
-                          {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                          {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium">{user.name || 'No name'}</p>
+                        <p className="font-medium">{user.full_name || 'No name'}</p>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
@@ -307,7 +274,7 @@ export default function TeamManagement() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      {user.isActive ? (
+                      {user.is_active ? (
                         <>
                           <CheckCircleIcon className="h-5 w-5 text-green-500" />
                           <span className="text-sm text-green-600 dark:text-green-400">Active</span>
@@ -321,14 +288,14 @@ export default function TeamManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {formatDate(user.lastLoginAt)}
+                    {formatDate(user.last_login_at)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => {
-                          setSelectedUser(user);
-                          setShowEditModal(true);
+                          setSelectedUser(user)
+                          setShowEditModal(true)
                         }}
                         className="p-2 rounded-lg hover:bg-accent transition-colors"
                         title="Edit member"
@@ -336,7 +303,7 @@ export default function TeamManagement() {
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleRemoveUser(user.id, user.name || user.email)}
+                        onClick={() => handleRemoveUser(user.id, user.full_name || user.email)}
                         className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition-colors"
                         title="Remove member"
                       >
@@ -360,12 +327,7 @@ export default function TeamManagement() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {ROLES.map((role) => (
             <div key={role.value} className="p-4 rounded-lg bg-muted/50">
-              <span
-                className={cn(
-                  'px-2 py-1 rounded-full text-xs font-medium',
-                  getRoleBadgeColor(role.value)
-                )}
-              >
+              <span className={cn('px-2 py-1 rounded-full text-xs font-medium', getRoleBadgeColor(role.value))}>
                 {role.label}
               </span>
               <p className="text-sm text-muted-foreground mt-2">{role.description}</p>
@@ -373,12 +335,14 @@ export default function TeamManagement() {
           ))}
         </div>
       </div>
-      </>}
 
       {/* Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowInviteModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowInviteModal(false)}
+          />
           <div className="relative z-10 w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
             <h2 className="text-lg font-semibold mb-4">Invite Team Member</h2>
             <div className="space-y-4">
@@ -399,8 +363,8 @@ export default function TeamManagement() {
                 <label className="block text-sm font-medium mb-2">Full Name</label>
                 <input
                   type="text"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
                   placeholder="John Doe"
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
@@ -429,10 +393,10 @@ export default function TeamManagement() {
               </button>
               <button
                 onClick={handleInvite}
-                disabled={inviteUserMutation.isPending}
+                disabled={createUserMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {inviteUserMutation.isPending ? 'Inviting...' : 'Send Invite'}
+                {createUserMutation.isPending ? 'Inviting...' : 'Send Invite'}
               </button>
             </div>
           </div>
@@ -442,7 +406,10 @@ export default function TeamManagement() {
       {/* Edit Modal */}
       {showEditModal && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowEditModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowEditModal(false)}
+          />
           <div className="relative z-10 w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
             <h2 className="text-lg font-semibold mb-4">Edit Team Member</h2>
             <div className="space-y-4">
@@ -459,8 +426,10 @@ export default function TeamManagement() {
                 <label className="block text-sm font-medium mb-2">Full Name</label>
                 <input
                   type="text"
-                  value={selectedUser.name || ''}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
+                  value={selectedUser.full_name || ''}
+                  onChange={(e) =>
+                    setSelectedUser({ ...selectedUser, full_name: e.target.value })
+                  }
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
@@ -468,7 +437,9 @@ export default function TeamManagement() {
                 <label className="block text-sm font-medium mb-2">Role</label>
                 <select
                   value={selectedUser.role}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
+                  onChange={(e) =>
+                    setSelectedUser({ ...selectedUser, role: e.target.value })
+                  }
                   className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   {ROLES.map((role) => (
@@ -488,8 +459,8 @@ export default function TeamManagement() {
               </button>
               <button
                 onClick={async () => {
-                  await handleUpdateRole(selectedUser.id, selectedUser.role);
-                  setShowEditModal(false);
+                  await handleUpdateRole(selectedUser.id, selectedUser.role)
+                  setShowEditModal(false)
                 }}
                 disabled={updateUserMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
@@ -501,95 +472,5 @@ export default function TeamManagement() {
         </div>
       )}
     </div>
-  );
-}
-
-// RBAC Roles & Permissions Tab
-function RBACRolesTab() {
-  const rbacRoles = [
-    {
-      name: 'Administrator',
-      description: 'Full platform access including billing and team management',
-      userCount: 2,
-      permissions: ['read', 'write', 'delete', 'admin'],
-      color: 'border-red-500/30 bg-red-500/5',
-      badgeColor: 'bg-red-500/10 text-red-400',
-    },
-    {
-      name: 'Manager',
-      description: 'Manage campaigns, budgets, and view all reports',
-      userCount: 3,
-      permissions: ['read', 'write', 'delete'],
-      color: 'border-blue-500/30 bg-blue-500/5',
-      badgeColor: 'bg-blue-500/10 text-blue-400',
-    },
-    {
-      name: 'Analyst',
-      description: 'View reports, analytics, and export data',
-      userCount: 4,
-      permissions: ['read', 'write'],
-      color: 'border-green-500/30 bg-green-500/5',
-      badgeColor: 'bg-green-500/10 text-green-400',
-    },
-    {
-      name: 'Viewer',
-      description: 'Read-only access to dashboards and reports',
-      userCount: 6,
-      permissions: ['read'],
-      color: 'border-gray-500/30 bg-gray-500/5',
-      badgeColor: 'bg-gray-500/10 text-gray-400',
-    },
-  ];
-
-  const permissionLabels: Record<string, { label: string; color: string }> = {
-    read: { label: 'Read', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
-    write: { label: 'Write', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    delete: { label: 'Delete', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
-    admin: { label: 'Admin', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-  };
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Define what each role can do within your organization. Assign roles to team members in the
-        Members tab.
-      </p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {rbacRoles.map((role) => (
-          <div
-            key={role.name}
-            className={cn('rounded-xl border p-5 transition-all', role.color)}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="font-semibold text-lg">{role.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
-              </div>
-              <span className={cn('px-2.5 py-1 rounded-full text-xs font-medium', role.badgeColor)}>
-                {role.userCount} user{role.userCount !== 1 ? 's' : ''}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mt-4">
-              {role.permissions.map((perm) => {
-                const pl = permissionLabels[perm];
-                return (
-                  <span
-                    key={perm}
-                    className={cn(
-                      'px-2.5 py-1 rounded-full text-xs font-medium border',
-                      pl.color
-                    )}
-                  >
-                    {pl.label}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  )
 }

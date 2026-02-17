@@ -3,92 +3,90 @@
  * Displays real-time ML predictions and portfolio health
  */
 
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
+  Brain,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
   Activity,
   AlertCircle,
-  Brain,
   CheckCircle,
-  RefreshCw,
-  TrendingDown,
-  TrendingUp,
   Zap,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CampaignAnalysis {
-  campaign_id: number;
-  campaign_name: string;
-  platform: string;
-  health_score: number;
-  status: string;
-  current_roas: number;
+  campaign_id: number
+  campaign_name: string
+  platform: string
+  health_score: number
+  status: string
+  current_roas: number
   recommendations: Array<{
-    type: string;
-    action: string;
-    priority: string;
-    expected_impact: string;
-  }>;
+    type: string
+    action: string
+    priority: string
+    expected_impact: string
+  }>
 }
 
 interface PortfolioAnalysis {
-  portfolio_roas: number;
-  avg_health_score: number;
-  campaign_count: number;
-  total_spend: number;
-  total_revenue: number;
+  portfolio_roas: number
+  avg_health_score: number
+  campaign_count: number
+  total_spend: number
+  total_revenue: number
   potential_uplift?: {
-    optimistic: number;
-    conservative: number;
-    expected: number;
-  };
+    optimistic: number
+    conservative: number
+    expected: number
+  }
 }
 
 interface LivePredictionsWidgetProps {
-  className?: string;
+  className?: string
 }
 
 const getHealthColor = (score: number) => {
-  if (score >= 70) return 'text-green-500';
-  if (score >= 40) return 'text-amber-500';
-  return 'text-red-500';
-};
+  if (score >= 70) return 'text-green-500'
+  if (score >= 40) return 'text-amber-500'
+  return 'text-red-500'
+}
 
 const getHealthBg = (score: number) => {
-  if (score >= 70) return 'bg-green-500/10';
-  if (score >= 40) return 'bg-amber-500/10';
-  return 'bg-red-500/10';
-};
+  if (score >= 70) return 'bg-green-500/10'
+  if (score >= 40) return 'bg-amber-500/10'
+  return 'bg-red-500/10'
+}
 
 const getHealthStatus = (score: number) => {
-  if (score >= 70) return 'Healthy';
-  if (score >= 40) return 'Needs Attention';
-  return 'Critical';
-};
+  if (score >= 70) return 'Healthy'
+  if (score >= 40) return 'Needs Attention'
+  return 'Critical'
+}
 
 export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps) {
-  const { t: _t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [portfolio, setPortfolio] = useState<PortfolioAnalysis | null>(null);
-  const [campaigns, setCampaigns] = useState<CampaignAnalysis[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const { t } = useTranslation()
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [portfolio, setPortfolio] = useState<PortfolioAnalysis | null>(null)
+  const [campaigns, setCampaigns] = useState<CampaignAnalysis[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   const fetchPredictions = async (forceRefresh = false) => {
     try {
       if (forceRefresh) {
-        setRefreshing(true);
+        setRefreshing(true)
       }
 
-      const response = await fetch(
-        `/api/v1/predictions/live${forceRefresh ? '?refresh=true' : ''}`
-      );
-      const data = await response.json();
+      const response = await fetch(`/api/v1/predictions/live${forceRefresh ? '?refresh=true' : ''}`)
+      const data = await response.json()
 
       if (data.success && data.data?.prediction) {
-        const prediction = data.data.prediction;
+        const prediction = data.data.prediction
         setPortfolio({
           portfolio_roas: prediction.portfolio_roas || 0,
           avg_health_score: prediction.avg_health_score || 0,
@@ -96,34 +94,34 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
           total_spend: prediction.total_spend || 0,
           total_revenue: prediction.total_revenue || 0,
           potential_uplift: prediction.potential_uplift,
-        });
-        setCampaigns(prediction.campaign_analyses || []);
-        setLastUpdated(new Date(data.data.generated_at));
-        setError(null);
+        })
+        setCampaigns(prediction.campaign_analyses || [])
+        setLastUpdated(new Date(data.data.generated_at))
+        setError(null)
       } else if (data.data?.message === 'No campaigns found') {
-        setPortfolio(null);
-        setCampaigns([]);
-        setError(null);
+        setPortfolio(null)
+        setCampaigns([])
+        setError(null)
       }
     } catch (err) {
-      // Error displayed via setError below
-      setError('Failed to load predictions');
+      console.error('Failed to fetch predictions:', err)
+      setError('Failed to load predictions')
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setLoading(false)
+      setRefreshing(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchPredictions();
+    fetchPredictions()
     // Refresh every 5 minutes
-    const interval = setInterval(() => fetchPredictions(), 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(() => fetchPredictions(), 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleRefresh = () => {
-    fetchPredictions(true);
-  };
+    fetchPredictions(true)
+  }
 
   if (loading) {
     return (
@@ -134,7 +132,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
           <div className="h-32 bg-muted rounded" />
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -149,9 +147,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
             <div>
               <h3 className="font-semibold text-foreground">Live Predictions</h3>
               <p className="text-xs text-muted-foreground">
-                {lastUpdated
-                  ? `Updated ${lastUpdated.toLocaleTimeString()}`
-                  : 'AI-powered insights'}
+                {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'AI-powered insights'}
               </p>
             </div>
           </div>
@@ -187,17 +183,10 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
                   <span className="text-sm text-muted-foreground">Portfolio Health</span>
                   <Activity className={cn('w-4 h-4', getHealthColor(portfolio.avg_health_score))} />
                 </div>
-                <div
-                  className={cn('text-2xl font-bold', getHealthColor(portfolio.avg_health_score))}
-                >
+                <div className={cn('text-2xl font-bold', getHealthColor(portfolio.avg_health_score))}>
                   {portfolio.avg_health_score.toFixed(0)}%
                 </div>
-                <div
-                  className={cn(
-                    'text-xs font-medium mt-1',
-                    getHealthColor(portfolio.avg_health_score)
-                  )}
-                >
+                <div className={cn('text-xs font-medium mt-1', getHealthColor(portfolio.avg_health_score))}>
                   {getHealthStatus(portfolio.avg_health_score)}
                 </div>
               </div>
@@ -260,16 +249,11 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
                     className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={cn(
-                          'w-2 h-2 rounded-full flex-shrink-0',
-                          campaign.health_score >= 70
-                            ? 'bg-green-500'
-                            : campaign.health_score >= 40
-                              ? 'bg-amber-500'
-                              : 'bg-red-500'
-                        )}
-                      />
+                      <div className={cn(
+                        'w-2 h-2 rounded-full flex-shrink-0',
+                        campaign.health_score >= 70 ? 'bg-green-500' :
+                        campaign.health_score >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                      )} />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
                           {campaign.campaign_name}
@@ -280,9 +264,10 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span
-                        className={cn('text-sm font-medium', getHealthColor(campaign.health_score))}
-                      >
+                      <span className={cn(
+                        'text-sm font-medium',
+                        getHealthColor(campaign.health_score)
+                      )}>
                         {campaign.health_score.toFixed(0)}%
                       </span>
                       {campaign.health_score >= 70 ? (
@@ -301,7 +286,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default LivePredictionsWidget;
+export default LivePredictionsWidget

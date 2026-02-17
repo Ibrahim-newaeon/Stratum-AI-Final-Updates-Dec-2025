@@ -10,16 +10,18 @@ Unit tests for critical audit items:
 5. Offline conversion upload service
 """
 
-from datetime import UTC, datetime, timedelta
-
-import numpy as np
-import pandas as pd
 import pytest
+import asyncio
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Any, List
+from unittest.mock import AsyncMock, MagicMock, patch
+import pandas as pd
+import numpy as np
+
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
-
 
 @pytest.fixture
 def sample_event():
@@ -27,7 +29,7 @@ def sample_event():
     return {
         "event_id": "test_123",
         "event_name": "Purchase",
-        "event_time": int(datetime.now(UTC).timestamp()),
+        "event_time": int(datetime.now(timezone.utc).timestamp()),
         "user_data": {
             "email": "test@example.com",
             "phone": "+1234567890",
@@ -76,7 +78,7 @@ def sample_offline_conversions():
             email="customer1@example.com",
             phone="+1234567890",
             event_name="Purchase",
-            event_time=datetime.now(UTC),
+            event_time=datetime.now(timezone.utc),
             conversion_value=149.99,
             currency="USD",
             order_id="ORD-001",
@@ -87,7 +89,7 @@ def sample_offline_conversions():
             platform="meta",
             email="customer2@example.com",
             event_name="Purchase",
-            event_time=datetime.now(UTC) - timedelta(hours=2),
+            event_time=datetime.now(timezone.utc) - timedelta(hours=2),
             conversion_value=299.99,
             currency="USD",
             order_id="ORD-002",
@@ -99,7 +101,6 @@ def sample_offline_conversions():
 # =============================================================================
 # 1. CAPI Connector Tests
 # =============================================================================
-
 
 class TestCircuitBreaker:
     """Tests for circuit breaker implementation."""
@@ -139,9 +140,8 @@ class TestCircuitBreaker:
 
     def test_circuit_half_open_after_timeout(self):
         """Circuit should go half-open after recovery timeout."""
-        import time
-
         from app.services.capi.platform_connectors import CircuitBreaker, CircuitState
+        import time
 
         cb = CircuitBreaker(failure_threshold=2, recovery_timeout=1)
 
@@ -188,16 +188,16 @@ class TestEventDeliveryLog:
     def test_log_event_delivery(self):
         """Should log event delivery for EMQ measurement."""
         from app.services.capi.platform_connectors import (
-            EventDeliveryLog,
-            get_event_delivery_logs,
             log_event_delivery,
+            get_event_delivery_logs,
+            EventDeliveryLog,
         )
 
         log = EventDeliveryLog(
             event_id="test_event_123",
             platform="meta",
             event_name="Purchase",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             success=True,
             latency_ms=150.0,
         )
@@ -206,7 +206,7 @@ class TestEventDeliveryLog:
 
         logs = get_event_delivery_logs(platform="meta")
         assert len(logs) > 0
-        assert any(log.event_id == "test_event_123" for log in logs)
+        assert any(l.event_id == "test_event_123" for l in logs)
 
 
 class TestMetaCAPIConnector:
@@ -215,7 +215,7 @@ class TestMetaCAPIConnector:
     @pytest.mark.asyncio
     async def test_connect_validates_credentials(self):
         """Should validate credentials on connect."""
-        from app.services.capi.platform_connectors import ConnectionStatus, MetaCAPIConnector
+        from app.services.capi.platform_connectors import MetaCAPIConnector, ConnectionStatus
 
         connector = MetaCAPIConnector()
 
@@ -242,7 +242,7 @@ class TestGoogleCAPIConnector:
     @pytest.mark.asyncio
     async def test_connect_requires_credentials(self):
         """Should require customer_id and developer_token."""
-        from app.services.capi.platform_connectors import ConnectionStatus, GoogleCAPIConnector
+        from app.services.capi.platform_connectors import GoogleCAPIConnector, ConnectionStatus
 
         connector = GoogleCAPIConnector()
 
@@ -254,7 +254,6 @@ class TestGoogleCAPIConnector:
 # =============================================================================
 # 2. Enhanced ML Training Tests
 # =============================================================================
-
 
 class TestEnhancedMLTraining:
     """Tests for enhanced ROAS model with creative/audience features."""
@@ -333,9 +332,8 @@ class TestEnhancedMLTraining:
 
     def test_train_roas_predictor_returns_metrics(self, sample_training_data):
         """ROAS predictor training should return metrics."""
-        import tempfile
-
         from app.ml.train import ModelTrainer
+        import tempfile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             trainer = ModelTrainer(models_path=tmpdir)
@@ -354,7 +352,6 @@ class TestEnhancedMLTraining:
 # 3. Retraining Pipeline Tests
 # =============================================================================
 
-
 class TestRetrainingPipeline:
     """Tests for model retraining pipeline."""
 
@@ -370,28 +367,23 @@ class TestRetrainingPipeline:
 
     def test_check_retraining_needed_new_model(self):
         """Should need retraining if model doesn't exist."""
-        import tempfile
-
         from app.ml.retraining_pipeline import RetrainingPipeline, RetrainingTrigger
+        import tempfile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             pipeline = RetrainingPipeline(
-                config=type(
-                    "Config",
-                    (),
-                    {
-                        "models_path": tmpdir,
-                        "archive_path": f"{tmpdir}/archive",
-                        "staging_path": f"{tmpdir}/staging",
-                        "retrain_interval_days": 7,
-                        "min_samples_for_retrain": 1000,
-                        "min_r2_improvement": 0.02,
-                        "max_r2_degradation": 0.05,
-                        "drift_detection_window_days": 7,
-                        "max_model_versions": 5,
-                        "staging_validation_hours": 24,
-                    },
-                )()
+                config=type('Config', (), {
+                    'models_path': tmpdir,
+                    'archive_path': f"{tmpdir}/archive",
+                    'staging_path': f"{tmpdir}/staging",
+                    'retrain_interval_days': 7,
+                    'min_samples_for_retrain': 1000,
+                    'min_r2_improvement': 0.02,
+                    'max_r2_degradation': 0.05,
+                    'drift_detection_window_days': 7,
+                    'max_model_versions': 5,
+                    'staging_validation_hours': 24,
+                })()
             )
 
             needs, trigger, reason = pipeline.check_retraining_needed("nonexistent_model")
@@ -402,12 +394,12 @@ class TestRetrainingPipeline:
 
     def test_model_version_tracking(self):
         """Should track model versions in history."""
-        from app.ml.retraining_pipeline import ModelStatus, ModelVersion, RetrainingTrigger
+        from app.ml.retraining_pipeline import ModelVersion, ModelStatus, RetrainingTrigger
 
         version = ModelVersion(
             version_id="20240101_120000",
             model_name="roas_predictor",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             metrics={"r2": 0.75, "mae": 0.5},
             status=ModelStatus.ACTIVE,
             trigger=RetrainingTrigger.SCHEDULED,
@@ -424,23 +416,22 @@ class TestRetrainingPipeline:
 # 4. Real EMQ Measurement Tests
 # =============================================================================
 
-
 class TestRealEMQMeasurement:
     """Tests for real EMQ measurement service."""
 
     def test_record_pixel_event(self):
         """Should record pixel events for matching."""
         from app.services.emq_measurement_service import (
+            record_pixel_event,
             PixelEvent,
             _pixel_events,
-            record_pixel_event,
         )
 
         event = PixelEvent(
             event_id="pixel_test_123",
             platform="meta",
             event_name="Purchase",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         initial_count = len(_pixel_events)
@@ -451,21 +442,19 @@ class TestRealEMQMeasurement:
     def test_real_emq_metrics_calculation(self):
         """Should calculate real EMQ metrics from data."""
         from app.services.emq_measurement_service import (
-            PixelEvent,
             calculate_real_emq_metrics,
             record_pixel_event,
+            PixelEvent,
         )
 
         # Record some test events
         for i in range(5):
-            record_pixel_event(
-                PixelEvent(
-                    event_id=f"test_pixel_{i}",
-                    platform="meta",
-                    event_name="Purchase",
-                    timestamp=datetime.now(UTC),
-                )
-            )
+            record_pixel_event(PixelEvent(
+                event_id=f"test_pixel_{i}",
+                platform="meta",
+                event_name="Purchase",
+                timestamp=datetime.now(timezone.utc),
+            ))
 
         metrics = calculate_real_emq_metrics("meta", period_hours=1)
 
@@ -481,8 +470,8 @@ class TestRealEMQMeasurement:
 
         real = RealEMQMetrics(
             platform="meta",
-            period_start=datetime.now(UTC) - timedelta(hours=24),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(hours=24),
+            period_end=datetime.now(timezone.utc),
             pixel_events_count=1000,
             capi_events_count=950,
             matched_events_count=900,
@@ -519,7 +508,6 @@ class TestRealEMQMeasurement:
 # =============================================================================
 # 5. Offline Conversion Upload Tests
 # =============================================================================
-
 
 class TestOfflineConversionService:
     """Tests for offline conversion upload service."""
@@ -629,45 +617,40 @@ test@example.com,,99.99
 # Integration Tests
 # =============================================================================
 
-
 class TestCriticalFeaturesIntegration:
     """Integration tests for critical features."""
 
     def test_emq_measurement_with_capi_logs(self):
         """EMQ measurement should use CAPI delivery logs."""
         from app.services.capi.platform_connectors import (
-            EventDeliveryLog,
             log_event_delivery,
+            EventDeliveryLog,
         )
         from app.services.emq_measurement_service import (
-            PixelEvent,
             calculate_real_emq_metrics,
             record_pixel_event,
+            PixelEvent,
         )
 
         # Simulate CAPI events
         for i in range(10):
-            log_event_delivery(
-                EventDeliveryLog(
-                    event_id=f"integration_test_{i}",
-                    platform="tiktok",
-                    event_name="Purchase",
-                    timestamp=datetime.now(UTC),
-                    success=i < 9,  # 90% success rate
-                    latency_ms=100 + i * 10,
-                )
-            )
+            log_event_delivery(EventDeliveryLog(
+                event_id=f"integration_test_{i}",
+                platform="tiktok",
+                event_name="Purchase",
+                timestamp=datetime.now(timezone.utc),
+                success=i < 9,  # 90% success rate
+                latency_ms=100 + i * 10,
+            ))
 
         # Simulate pixel events
         for i in range(10):
-            record_pixel_event(
-                PixelEvent(
-                    event_id=f"integration_test_{i}",
-                    platform="tiktok",
-                    event_name="Purchase",
-                    timestamp=datetime.now(UTC),
-                )
-            )
+            record_pixel_event(PixelEvent(
+                event_id=f"integration_test_{i}",
+                platform="tiktok",
+                event_name="Purchase",
+                timestamp=datetime.now(timezone.utc),
+            ))
 
         # Calculate EMQ
         metrics = calculate_real_emq_metrics("tiktok", period_hours=1)
@@ -677,14 +660,12 @@ class TestCriticalFeaturesIntegration:
 
     def test_ml_training_end_to_end(self, sample_training_data):
         """End-to-end ML training test."""
-        import tempfile
-        from pathlib import Path
-
         from app.ml.train import ModelTrainer
+        import tempfile
+        import os
 
         with tempfile.TemporaryDirectory() as tmpdir:
             trainer = ModelTrainer(models_path=tmpdir)
-            tmpdir_path = Path(tmpdir)
 
             # Train all models
             results = trainer.train_all(sample_training_data, include_platform_models=False)
@@ -694,8 +675,8 @@ class TestCriticalFeaturesIntegration:
             assert "budget_impact" in results
 
             # Check files were created
-            assert (tmpdir_path / "roas_predictor.pkl").exists()
-            assert (tmpdir_path / "roas_predictor_metadata.json").exists()
+            assert os.path.exists(os.path.join(tmpdir, "roas_predictor.pkl"))
+            assert os.path.exists(os.path.join(tmpdir, "roas_predictor_metadata.json"))
 
 
 # =============================================================================

@@ -6,12 +6,11 @@ Synchronizes contacts and deals from HubSpot to Stratum AI.
 Supports scheduled syncs and real-time webhook updates.
 """
 
-import contextlib
-from datetime import UTC, datetime
-from typing import Any, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import and_, select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -22,6 +21,8 @@ from app.models.crm import (
     CRMDeal,
     CRMProvider,
     DealStage,
+    Touchpoint,
+    DailyPipelineMetrics,
 )
 from app.services.crm.hubspot_client import HubSpotClient, hash_email, hash_phone
 from app.services.crm.identity_matching import IdentityMatcher
@@ -69,7 +70,7 @@ class HubSpotSyncService:
         self.client = HubSpotClient(db, tenant_id)
         self.identity_matcher = IdentityMatcher(db, tenant_id)
 
-    async def sync_all(self, full_sync: bool = False) -> dict[str, Any]:
+    async def sync_all(self, full_sync: bool = False) -> Dict[str, Any]:
         """
         Synchronize all HubSpot data.
 
@@ -104,25 +105,21 @@ class HubSpotSyncService:
         try:
             # Sync contacts
             contact_results = await self._sync_contacts(connection, updated_after)
-            results.update(
-                {
-                    "contacts_synced": contact_results["synced"],
-                    "contacts_created": contact_results["created"],
-                    "contacts_updated": contact_results["updated"],
-                }
-            )
+            results.update({
+                "contacts_synced": contact_results["synced"],
+                "contacts_created": contact_results["created"],
+                "contacts_updated": contact_results["updated"],
+            })
             if contact_results.get("errors"):
                 results["errors"].extend(contact_results["errors"])
 
             # Sync deals
             deal_results = await self._sync_deals(connection, updated_after)
-            results.update(
-                {
-                    "deals_synced": deal_results["synced"],
-                    "deals_created": deal_results["created"],
-                    "deals_updated": deal_results["updated"],
-                }
-            )
+            results.update({
+                "deals_synced": deal_results["synced"],
+                "deals_created": deal_results["created"],
+                "deals_updated": deal_results["updated"],
+            })
             if deal_results.get("errors"):
                 results["errors"].extend(deal_results["errors"])
 
@@ -130,7 +127,7 @@ class HubSpotSyncService:
             await self.identity_matcher.match_contacts_to_touchpoints()
 
             # Update connection status
-            connection.last_sync_at = datetime.now(UTC)
+            connection.last_sync_at = datetime.now(timezone.utc)
             connection.last_sync_status = "success" if not results["errors"] else "partial"
             connection.last_sync_contacts_count = results["contacts_synced"]
             connection.last_sync_deals_count = results["deals_synced"]
@@ -158,31 +155,18 @@ class HubSpotSyncService:
         self,
         connection: CRMConnection,
         updated_after: Optional[datetime] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Sync contacts from HubSpot."""
         results = {"synced": 0, "created": 0, "updated": 0, "errors": []}
         after = None
 
         properties = [
-            "email",
-            "phone",
-            "mobilephone",
-            "firstname",
-            "lastname",
-            "lifecyclestage",
-            "hs_lead_status",
-            "lead_source",
-            "utm_source",
-            "utm_medium",
-            "utm_campaign",
-            "utm_content",
-            "utm_term",
-            "hs_analytics_source",
-            "hs_analytics_first_url",
-            "gclid",
-            "hs_google_click_id",
-            "createdate",
-            "lastmodifieddate",
+            "email", "phone", "mobilephone", "firstname", "lastname",
+            "lifecyclestage", "hs_lead_status", "lead_source",
+            "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+            "hs_analytics_source", "hs_analytics_first_url",
+            "gclid", "hs_google_click_id",
+            "createdate", "lastmodifieddate",
         ]
 
         async with self.client:
@@ -209,7 +193,7 @@ class HubSpotSyncService:
                         elif updated:
                             results["updated"] += 1
                     except Exception as e:
-                        results["errors"].append(f"Contact {contact_data.get('id')}: {e!s}")
+                        results["errors"].append(f"Contact {contact_data.get('id')}: {str(e)}")
 
                 # Check for more pages
                 paging = response.get("paging", {})
@@ -228,8 +212,8 @@ class HubSpotSyncService:
     async def _upsert_contact(
         self,
         connection_id: UUID,
-        contact_data: dict[str, Any],
-    ) -> tuple[bool, bool]:
+        contact_data: Dict[str, Any],
+    ) -> Tuple[bool, bool]:
         """
         Insert or update a contact.
 
@@ -261,15 +245,19 @@ class HubSpotSyncService:
         crm_created = None
         crm_updated = None
         if properties.get("createdate"):
-            with contextlib.suppress(ValueError, TypeError):
+            try:
                 crm_created = datetime.fromisoformat(
                     properties["createdate"].replace("Z", "+00:00")
                 )
+            except (ValueError, TypeError):
+                pass
         if properties.get("lastmodifieddate"):
-            with contextlib.suppress(ValueError, TypeError):
+            try:
                 crm_updated = datetime.fromisoformat(
                     properties["lastmodifieddate"].replace("Z", "+00:00")
                 )
+            except (ValueError, TypeError):
+                pass
 
         contact_fields = {
             "crm_owner_id": properties.get("hubspot_owner_id"),
@@ -293,7 +281,7 @@ class HubSpotSyncService:
             for key, value in contact_fields.items():
                 if value is not None:
                     setattr(existing, key, value)
-            existing.updated_at = datetime.now(UTC)
+            existing.updated_at = datetime.now(timezone.utc)
             return False, True
         else:
             # Create new contact
@@ -310,23 +298,16 @@ class HubSpotSyncService:
         self,
         connection: CRMConnection,
         updated_after: Optional[datetime] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Sync deals from HubSpot."""
         results = {"synced": 0, "created": 0, "updated": 0, "errors": []}
         after = None
 
         properties = [
-            "dealname",
-            "amount",
-            "dealstage",
-            "pipeline",
-            "closedate",
-            "hs_is_closed_won",
-            "hs_is_closed",
-            "hubspot_owner_id",
-            "hs_analytics_source",
-            "createdate",
-            "hs_lastmodifieddate",
+            "dealname", "amount", "dealstage", "pipeline",
+            "closedate", "hs_is_closed_won", "hs_is_closed",
+            "hubspot_owner_id", "hs_analytics_source",
+            "createdate", "hs_lastmodifieddate",
         ]
 
         async with self.client:
@@ -353,7 +334,7 @@ class HubSpotSyncService:
                         elif updated:
                             results["updated"] += 1
                     except Exception as e:
-                        results["errors"].append(f"Deal {deal_data.get('id')}: {e!s}")
+                        results["errors"].append(f"Deal {deal_data.get('id')}: {str(e)}")
 
                 # Check for more pages
                 paging = response.get("paging", {})
@@ -376,8 +357,8 @@ class HubSpotSyncService:
     async def _upsert_deal(
         self,
         connection_id: UUID,
-        deal_data: dict[str, Any],
-    ) -> tuple[bool, bool]:
+        deal_data: Dict[str, Any],
+    ) -> Tuple[bool, bool]:
         """
         Insert or update a deal.
 
@@ -418,10 +399,12 @@ class HubSpotSyncService:
         # Parse close date
         close_date = None
         if properties.get("closedate"):
-            with contextlib.suppress(ValueError, TypeError):
+            try:
                 close_date = datetime.fromisoformat(
                     properties["closedate"].replace("Z", "+00:00")
                 ).date()
+            except (ValueError, TypeError):
+                pass
 
         # Parse won/closed flags
         is_won = str(properties.get("hs_is_closed_won", "")).lower() == "true"
@@ -431,15 +414,19 @@ class HubSpotSyncService:
         crm_created = None
         crm_updated = None
         if properties.get("createdate"):
-            with contextlib.suppress(ValueError, TypeError):
+            try:
                 crm_created = datetime.fromisoformat(
                     properties["createdate"].replace("Z", "+00:00")
                 )
+            except (ValueError, TypeError):
+                pass
         if properties.get("hs_lastmodifieddate"):
-            with contextlib.suppress(ValueError, TypeError):
+            try:
                 crm_updated = datetime.fromisoformat(
                     properties["hs_lastmodifieddate"].replace("Z", "+00:00")
                 )
+            except (ValueError, TypeError):
+                pass
 
         deal_fields = {
             "crm_pipeline_id": properties.get("pipeline"),
@@ -462,7 +449,7 @@ class HubSpotSyncService:
             deal_fields["won_at"] = datetime.combine(
                 close_date,
                 datetime.min.time(),
-                tzinfo=UTC,
+                tzinfo=timezone.utc,
             )
 
         if existing:
@@ -470,7 +457,7 @@ class HubSpotSyncService:
             for key, value in deal_fields.items():
                 if value is not None:
                     setattr(existing, key, value)
-            existing.updated_at = datetime.now(UTC)
+            existing.updated_at = datetime.now(timezone.utc)
             return False, True
         else:
             # Create new deal
@@ -550,7 +537,7 @@ class HubSpotSyncService:
 
         await self.db.commit()
 
-    async def process_webhook(self, event_type: str, data: dict[str, Any]) -> dict[str, Any]:
+    async def process_webhook(self, event_type: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process incoming webhook from HubSpot.
 
@@ -609,7 +596,7 @@ class HubSpotSyncService:
         )
         return result.scalar_one_or_none()
 
-    async def get_pipeline_summary(self) -> dict[str, Any]:
+    async def get_pipeline_summary(self) -> Dict[str, Any]:
         """
         Get summary of CRM pipeline metrics.
 
@@ -656,7 +643,5 @@ class HubSpotSyncService:
             "total_pipeline_value": sum(stage_values.values()),
             "total_won_value": sum(d.amount or 0 for d in won_deals),
             "won_deal_count": len(won_deals),
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection.last_sync_at
-            else None,
+            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
         }

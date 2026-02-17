@@ -13,16 +13,15 @@ Handles:
 """
 
 import asyncio
-import contextlib
 import json
+from datetime import datetime
+from typing import Dict, Set, Optional, Any, List
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Optional
 
-import redis.asyncio as redis
-from fastapi import WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
+import redis.asyncio as redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -32,7 +31,6 @@ logger = get_logger(__name__)
 
 class MessageType(str, Enum):
     """WebSocket message types."""
-
     # EMQ updates
     EMQ_UPDATE = "emq_update"
     EMQ_DRIVER_UPDATE = "emq_driver_update"
@@ -59,19 +57,16 @@ class MessageType(str, Enum):
 @dataclass
 class WebSocketMessage:
     """WebSocket message structure."""
-
     type: str
     payload: Any
-    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat() + "Z")
+    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
 
     def to_json(self) -> str:
-        return json.dumps(
-            {
-                "type": self.type,
-                "payload": self.payload,
-                "timestamp": self.timestamp,
-            }
-        )
+        return json.dumps({
+            "type": self.type,
+            "payload": self.payload,
+            "timestamp": self.timestamp,
+        })
 
     @classmethod
     def from_json(cls, data: str) -> "WebSocketMessage":
@@ -79,18 +74,17 @@ class WebSocketMessage:
         return cls(
             type=parsed.get("type", "unknown"),
             payload=parsed.get("payload", {}),
-            timestamp=parsed.get("timestamp", datetime.now(UTC).isoformat() + "Z"),
+            timestamp=parsed.get("timestamp", datetime.utcnow().isoformat() + "Z"),
         )
 
 
 @dataclass
 class ConnectedClient:
     """Represents a connected WebSocket client."""
-
     websocket: WebSocket
     tenant_id: Optional[int] = None
     user_id: Optional[int] = None
-    subscribed_channels: set[str] = field(default_factory=set)
+    subscribed_channels: Set[str] = field(default_factory=set)
     connected_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -107,9 +101,9 @@ class WebSocketManager:
     """
 
     def __init__(self):
-        self._connections: dict[str, ConnectedClient] = {}
-        self._tenant_connections: dict[int, set[str]] = {}
-        self._channel_subscriptions: dict[str, set[str]] = {}
+        self._connections: Dict[str, ConnectedClient] = {}
+        self._tenant_connections: Dict[int, Set[str]] = {}
+        self._channel_subscriptions: Dict[str, Set[str]] = {}
         self._redis: Optional[redis.Redis] = None
         self._pubsub_task: Optional[asyncio.Task] = None
         self._heartbeat_task: Optional[asyncio.Task] = None
@@ -137,13 +131,17 @@ class WebSocketManager:
 
         if self._pubsub_task:
             self._pubsub_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
+            try:
                 await self._pubsub_task
+            except asyncio.CancelledError:
+                pass
 
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
+            try:
                 await self._heartbeat_task
+            except asyncio.CancelledError:
+                pass
 
         # Close all connections
         for client_id in list(self._connections.keys()):
@@ -157,7 +155,6 @@ class WebSocketManager:
     def _generate_client_id(self) -> str:
         """Generate a unique client ID."""
         import uuid
-
         return str(uuid.uuid4())
 
     async def connect(
@@ -197,7 +194,7 @@ class WebSocketManager:
 
         return client_id
 
-    async def disconnect(self, client_id: str) -> None:
+    async def disconnect(self, client_id: str):
         """Disconnect and cleanup a WebSocket client."""
         client = self._connections.pop(client_id, None)
         if not client:
@@ -213,8 +210,6 @@ class WebSocketManager:
         for channel in client.subscribed_channels:
             if channel in self._channel_subscriptions:
                 self._channel_subscriptions[channel].discard(client_id)
-                if not self._channel_subscriptions[channel]:
-                    del self._channel_subscriptions[channel]
 
         # Close the connection
         try:
@@ -229,7 +224,7 @@ class WebSocketManager:
             tenant_id=client.tenant_id,
         )
 
-    async def subscribe(self, client_id: str, channel: str) -> None:
+    async def subscribe(self, client_id: str, channel: str):
         """Subscribe a client to a channel."""
         client = self._connections.get(client_id)
         if not client:
@@ -247,7 +242,7 @@ class WebSocketManager:
             channel=channel,
         )
 
-    async def unsubscribe(self, client_id: str, channel: str) -> None:
+    async def unsubscribe(self, client_id: str, channel: str):
         """Unsubscribe a client from a channel."""
         client = self._connections.get(client_id)
         if not client:
@@ -257,10 +252,8 @@ class WebSocketManager:
 
         if channel in self._channel_subscriptions:
             self._channel_subscriptions[channel].discard(client_id)
-            if not self._channel_subscriptions[channel]:
-                del self._channel_subscriptions[channel]
 
-    async def send_to_client(self, client_id: str, message: WebSocketMessage) -> None:
+    async def send_to_client(self, client_id: str, message: WebSocketMessage):
         """Send a message to a specific client."""
         client = self._connections.get(client_id)
         if not client:
@@ -281,7 +274,7 @@ class WebSocketManager:
         tenant_id: int,
         message_type: str,
         payload: Any,
-    ) -> None:
+    ):
         """Broadcast a message to all clients of a specific tenant."""
         message = WebSocketMessage(type=message_type, payload=payload)
 
@@ -297,7 +290,7 @@ class WebSocketManager:
         channel: str,
         message_type: str,
         payload: Any,
-    ) -> None:
+    ):
         """Broadcast a message to all clients subscribed to a channel."""
         message = WebSocketMessage(type=message_type, payload=payload)
 
@@ -308,14 +301,14 @@ class WebSocketManager:
         # Also publish to Redis
         await self._publish_to_redis(f"channel:{channel}", message)
 
-    async def broadcast_all(self, message_type: str, payload: Any) -> None:
+    async def broadcast_all(self, message_type: str, payload: Any):
         """Broadcast a message to all connected clients."""
         message = WebSocketMessage(type=message_type, payload=payload)
 
         for client_id in list(self._connections.keys()):
             await self.send_to_client(client_id, message)
 
-    async def _publish_to_redis(self, channel: str, message: WebSocketMessage) -> None:
+    async def _publish_to_redis(self, channel: str, message: WebSocketMessage):
         """Publish a message to Redis for multi-instance support."""
         if not self._redis:
             return
@@ -351,7 +344,7 @@ class WebSocketManager:
             await pubsub.punsubscribe("ws:*")
             await pubsub.close()
 
-    async def _handle_redis_message(self, message: dict) -> None:
+    async def _handle_redis_message(self, message: Dict):
         """Handle a message received from Redis."""
         try:
             channel = message["channel"].decode("utf-8")
@@ -390,7 +383,7 @@ class WebSocketManager:
         except asyncio.CancelledError:
             pass
 
-    async def handle_client_message(self, client_id: str, data: str) -> None:
+    async def handle_client_message(self, client_id: str, data: str):
         """Handle an incoming message from a client."""
         try:
             message = WebSocketMessage.from_json(data)
@@ -419,14 +412,15 @@ class WebSocketManager:
             )
             await self.send_to_client(client_id, error_msg)
 
-    def get_stats(self) -> dict[str, Any]:
+    def get_stats(self) -> Dict[str, Any]:
         """Get WebSocket connection statistics."""
         return {
             "total_connections": len(self._connections),
             "tenants_connected": len(self._tenant_connections),
             "channels_active": len(self._channel_subscriptions),
             "connections_by_tenant": {
-                tid: len(clients) for tid, clients in self._tenant_connections.items()
+                tid: len(clients)
+                for tid, clients in self._tenant_connections.items()
             },
         }
 
@@ -439,14 +433,13 @@ ws_manager = WebSocketManager()
 # Helper Functions for Publishing Events
 # =============================================================================
 
-
 async def publish_action_status_update(
     tenant_id: int,
     action_id: str,
     status: str,
     before_value: Optional[Any] = None,
     after_value: Optional[Any] = None,
-) -> None:
+):
     """Publish an action status update to relevant clients."""
     await ws_manager.broadcast_to_tenant(
         tenant_id=tenant_id,
@@ -466,7 +459,7 @@ async def publish_emq_update(
     score: float,
     previous_score: Optional[float] = None,
     confidence_band: Optional[str] = None,
-) -> None:
+):
     """Publish an EMQ score update to relevant clients."""
     await ws_manager.broadcast_to_tenant(
         tenant_id=tenant_id,
@@ -487,7 +480,7 @@ async def publish_incident(
     title: str,
     severity: str,
     platform: Optional[str] = None,
-) -> None:
+):
     """Publish an incident notification to relevant clients."""
     message_type = (
         MessageType.INCIDENT_OPENED.value
@@ -512,7 +505,7 @@ async def publish_autopilot_mode_change(
     tenant_id: int,
     mode: str,
     reason: str,
-) -> None:
+):
     """Publish an autopilot mode change notification."""
     await ws_manager.broadcast_to_tenant(
         tenant_id=tenant_id,

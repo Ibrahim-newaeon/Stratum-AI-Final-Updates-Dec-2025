@@ -1,47 +1,50 @@
-import { useMemo, useState } from 'react';
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
-  AlertTriangle,
   Building2,
-  Calendar,
-  ChevronDown,
-  Crown,
-  Edit,
-  Filter,
-  Globe,
-  MoreHorizontal,
   Plus,
   Search,
-  Settings,
-  Shield,
+  Edit,
   Trash2,
   Users,
+  Crown,
+  ChevronDown,
+  MoreHorizontal,
+  Check,
   X,
+  AlertTriangle,
+  Calendar,
+  Settings,
+  Shield,
+  RefreshCw,
+  Filter,
+  Globe,
   Zap,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 // Types
 interface Tenant {
-  id: number;
-  name: string;
-  slug: string;
-  domain: string | null;
-  plan: 'free' | 'starter' | 'professional' | 'enterprise';
-  plan_expires_at: string | null;
-  max_users: number;
-  max_campaigns: number;
-  settings: Record<string, unknown>;
-  feature_flags: Record<string, boolean>;
-  created_at: string;
-  updated_at: string;
-  user_count?: number;
+  id: number
+  name: string
+  slug: string
+  domain: string | null
+  plan: 'free' | 'starter' | 'professional' | 'enterprise'
+  plan_expires_at: string | null
+  max_users: number
+  max_campaigns: number
+  settings: Record<string, unknown>
+  feature_flags: Record<string, boolean>
+  created_at: string
+  updated_at: string
+  user_count?: number
 }
 
 interface TenantFormData {
-  name: string;
-  slug: string;
-  domain: string;
-  plan: 'free' | 'starter' | 'professional' | 'enterprise';
+  name: string
+  slug: string
+  domain: string
+  plan: 'free' | 'starter' | 'professional' | 'enterprise'
 }
 
 // Mock data for demonstration
@@ -106,83 +109,73 @@ const mockTenants: Tenant[] = [
     updated_at: '2024-08-01T11:00:00Z',
     user_count: 2,
   },
-];
+]
 
 const planConfig = {
   free: { color: 'bg-gray-500', label: 'Free', limits: { users: 5, campaigns: 10 } },
   starter: { color: 'bg-blue-500', label: 'Starter', limits: { users: 10, campaigns: 50 } },
-  professional: {
-    color: 'bg-purple-500',
-    label: 'Professional',
-    limits: { users: 25, campaigns: 200 },
-  },
-  enterprise: {
-    color: 'bg-amber-500',
-    label: 'Enterprise',
-    limits: { users: 100, campaigns: 1000 },
-  },
-};
+  professional: { color: 'bg-purple-500', label: 'Professional', limits: { users: 25, campaigns: 200 } },
+  enterprise: { color: 'bg-amber-500', label: 'Enterprise', limits: { users: 100, campaigns: 1000 } },
+}
 
 const featureFlags = [
-  {
-    key: 'advanced_analytics',
-    label: 'Advanced Analytics',
-    description: 'Deep dive analytics and custom reports',
-  },
+  { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Deep dive analytics and custom reports' },
   { key: 'ai_insights', label: 'AI Insights', description: 'AI-powered campaign recommendations' },
   { key: 'white_label', label: 'White Label', description: 'Custom branding and domain' },
   { key: 'api_access', label: 'API Access', description: 'Full REST API access' },
   { key: 'sso', label: 'Single Sign-On', description: 'SAML/OAuth SSO integration' },
   { key: 'audit_logs', label: 'Audit Logs', description: 'Detailed activity logging' },
-];
+]
 
 export function Tenants() {
-  const [tenants, setTenants] = useState<Tenant[]>(mockTenants);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [planFilter, setPlanFilter] = useState<string>('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showFeaturesModal, setShowFeaturesModal] = useState(false);
-  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-  const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'user_count'>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const { t } = useTranslation()
+  const [tenants, setTenants] = useState<Tenant[]>(mockTenants)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [planFilter, setPlanFilter] = useState<string>('all')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showFeaturesModal, setShowFeaturesModal] = useState(false)
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'user_count'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
   // Filter and sort tenants
   const filteredTenants = useMemo(() => {
-    let result = [...tenants];
+    let result = [...tenants]
 
     // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(query) ||
           t.slug.toLowerCase().includes(query) ||
           t.domain?.toLowerCase().includes(query)
-      );
+      )
     }
 
     // Apply plan filter
     if (planFilter !== 'all') {
-      result = result.filter((t) => t.plan === planFilter);
+      result = result.filter((t) => t.plan === planFilter)
     }
 
     // Apply sorting
     result.sort((a, b) => {
-      let comparison = 0;
+      let comparison = 0
       if (sortBy === 'name') {
-        comparison = a.name.localeCompare(b.name);
+        comparison = a.name.localeCompare(b.name)
       } else if (sortBy === 'created_at') {
-        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       } else if (sortBy === 'user_count') {
-        comparison = (a.user_count || 0) - (b.user_count || 0);
+        comparison = (a.user_count || 0) - (b.user_count || 0)
       }
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
 
-    return result;
-  }, [tenants, searchQuery, planFilter, sortBy, sortOrder]);
+    return result
+  }, [tenants, searchQuery, planFilter, sortBy, sortOrder])
 
   // Stats
   const stats = useMemo(() => {
@@ -193,17 +186,14 @@ export function Tenants() {
       starter: tenants.filter((t) => t.plan === 'starter').length,
       free: tenants.filter((t) => t.plan === 'free').length,
       totalUsers: tenants.reduce((sum, t) => sum + (t.user_count || 0), 0),
-    };
-  }, [tenants]);
+    }
+  }, [tenants])
 
   const handleCreateTenant = (data: TenantFormData) => {
     const newTenant: Tenant = {
       id: Date.now(),
       ...data,
-      plan_expires_at:
-        data.plan === 'free'
-          ? null
-          : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      plan_expires_at: data.plan === 'free' ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
       max_users: planConfig[data.plan].limits.users,
       max_campaigns: planConfig[data.plan].limits.campaigns,
       settings: {},
@@ -211,13 +201,13 @@ export function Tenants() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       user_count: 0,
-    };
-    setTenants([...tenants, newTenant]);
-    setShowCreateModal(false);
-  };
+    }
+    setTenants([...tenants, newTenant])
+    setShowCreateModal(false)
+  }
 
   const handleUpdateTenant = (data: TenantFormData) => {
-    if (!selectedTenant) return;
+    if (!selectedTenant) return
     setTenants(
       tenants.map((t) =>
         t.id === selectedTenant.id
@@ -230,30 +220,30 @@ export function Tenants() {
             }
           : t
       )
-    );
-    setShowEditModal(false);
-    setSelectedTenant(null);
-  };
+    )
+    setShowEditModal(false)
+    setSelectedTenant(null)
+  }
 
   const handleDeleteTenant = () => {
-    if (!selectedTenant) return;
-    setTenants(tenants.filter((t) => t.id !== selectedTenant.id));
-    setShowDeleteModal(false);
-    setSelectedTenant(null);
-  };
+    if (!selectedTenant) return
+    setTenants(tenants.filter((t) => t.id !== selectedTenant.id))
+    setShowDeleteModal(false)
+    setSelectedTenant(null)
+  }
 
   const handleUpdateFeatures = (features: Record<string, boolean>) => {
-    if (!selectedTenant) return;
+    if (!selectedTenant) return
     setTenants(
       tenants.map((t) =>
         t.id === selectedTenant.id
           ? { ...t, feature_flags: features, updated_at: new Date().toISOString() }
           : t
       )
-    );
-    setShowFeaturesModal(false);
-    setSelectedTenant(null);
-  };
+    )
+    setShowFeaturesModal(false)
+    setSelectedTenant(null)
+  }
 
   return (
     <div className="space-y-6">
@@ -327,9 +317,7 @@ export function Tenants() {
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
             className="p-2 rounded-lg border hover:bg-muted transition-colors"
           >
-            <ChevronDown
-              className={cn('h-4 w-4 transition-transform', sortOrder === 'asc' && 'rotate-180')}
-            />
+            <ChevronDown className={cn('h-4 w-4 transition-transform', sortOrder === 'asc' && 'rotate-180')} />
           </button>
         </div>
       </div>
@@ -353,16 +341,16 @@ export function Tenants() {
                 key={tenant.id}
                 tenant={tenant}
                 onEdit={() => {
-                  setSelectedTenant(tenant);
-                  setShowEditModal(true);
+                  setSelectedTenant(tenant)
+                  setShowEditModal(true)
                 }}
                 onDelete={() => {
-                  setSelectedTenant(tenant);
-                  setShowDeleteModal(true);
+                  setSelectedTenant(tenant)
+                  setShowDeleteModal(true)
                 }}
                 onManageFeatures={() => {
-                  setSelectedTenant(tenant);
-                  setShowFeaturesModal(true);
+                  setSelectedTenant(tenant)
+                  setShowFeaturesModal(true)
                 }}
               />
             ))}
@@ -392,8 +380,8 @@ export function Tenants() {
           title="Edit Tenant"
           tenant={selectedTenant}
           onClose={() => {
-            setShowEditModal(false);
-            setSelectedTenant(null);
+            setShowEditModal(false)
+            setSelectedTenant(null)
           }}
           onSubmit={handleUpdateTenant}
         />
@@ -404,8 +392,8 @@ export function Tenants() {
         <DeleteConfirmModal
           tenant={selectedTenant}
           onClose={() => {
-            setShowDeleteModal(false);
-            setSelectedTenant(null);
+            setShowDeleteModal(false)
+            setSelectedTenant(null)
           }}
           onConfirm={handleDeleteTenant}
         />
@@ -416,14 +404,14 @@ export function Tenants() {
         <FeaturesModal
           tenant={selectedTenant}
           onClose={() => {
-            setShowFeaturesModal(false);
-            setSelectedTenant(null);
+            setShowFeaturesModal(false)
+            setSelectedTenant(null)
           }}
           onSave={handleUpdateFeatures}
         />
       )}
     </div>
-  );
+  )
 }
 
 // Stats Card Component
@@ -433,10 +421,10 @@ function StatsCard({
   value,
   color = 'primary',
 }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  color?: string;
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: number
+  color?: string
 }) {
   const colorClasses: Record<string, string> = {
     primary: 'bg-primary/10 text-primary',
@@ -445,7 +433,7 @@ function StatsCard({
     blue: 'bg-blue-500/10 text-blue-500',
     gray: 'bg-gray-500/10 text-gray-500',
     green: 'bg-green-500/10 text-green-500',
-  };
+  }
 
   return (
     <div className="p-4 rounded-xl border bg-card">
@@ -459,7 +447,7 @@ function StatsCard({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Tenant Row Component
@@ -469,14 +457,14 @@ function TenantRow({
   onDelete,
   onManageFeatures,
 }: {
-  tenant: Tenant;
-  onEdit: () => void;
-  onDelete: () => void;
-  onManageFeatures: () => void;
+  tenant: Tenant
+  onEdit: () => void
+  onDelete: () => void
+  onManageFeatures: () => void
 }) {
-  const [showMenu, setShowMenu] = useState(false);
-  const plan = planConfig[tenant.plan];
-  const enabledFeatures = Object.values(tenant.feature_flags).filter(Boolean).length;
+  const [showMenu, setShowMenu] = useState(false)
+  const plan = planConfig[tenant.plan]
+  const enabledFeatures = Object.values(tenant.feature_flags).filter(Boolean).length
 
   return (
     <tr className="hover:bg-muted/30 transition-colors">
@@ -512,17 +500,12 @@ function TenantRow({
         <div className="w-24 h-1.5 bg-muted rounded-full mt-1">
           <div
             className="h-full bg-primary rounded-full"
-            style={{
-              width: `${Math.min(100, ((tenant.user_count || 0) / tenant.max_users) * 100)}%`,
-            }}
+            style={{ width: `${Math.min(100, ((tenant.user_count || 0) / tenant.max_users) * 100)}%` }}
           />
         </div>
       </td>
       <td className="px-4 py-4">
-        <button
-          onClick={onManageFeatures}
-          className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-        >
+        <button onClick={onManageFeatures} className="flex items-center gap-2 text-sm hover:text-primary transition-colors">
           <Zap className="h-4 w-4" />
           {enabledFeatures} enabled
         </button>
@@ -547,8 +530,8 @@ function TenantRow({
               <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border bg-card shadow-lg z-20">
                 <button
                   onClick={() => {
-                    setShowMenu(false);
-                    onEdit();
+                    setShowMenu(false)
+                    onEdit()
                   }}
                   className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
                 >
@@ -557,8 +540,8 @@ function TenantRow({
                 </button>
                 <button
                   onClick={() => {
-                    setShowMenu(false);
-                    onManageFeatures();
+                    setShowMenu(false)
+                    onManageFeatures()
                   }}
                   className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
                 >
@@ -568,8 +551,8 @@ function TenantRow({
                 <hr className="my-1" />
                 <button
                   onClick={() => {
-                    setShowMenu(false);
-                    onDelete();
+                    setShowMenu(false)
+                    onDelete()
                   }}
                   className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                 >
@@ -582,7 +565,7 @@ function TenantRow({
         </div>
       </td>
     </tr>
-  );
+  )
 }
 
 // Tenant Form Modal
@@ -592,51 +575,51 @@ function TenantFormModal({
   onClose,
   onSubmit,
 }: {
-  title: string;
-  tenant?: Tenant;
-  onClose: () => void;
-  onSubmit: (data: TenantFormData) => void;
+  title: string
+  tenant?: Tenant
+  onClose: () => void
+  onSubmit: (data: TenantFormData) => void
 }) {
   const [formData, setFormData] = useState<TenantFormData>({
     name: tenant?.name || '',
     slug: tenant?.slug || '',
     domain: tenant?.domain || '',
     plan: tenant?.plan || 'free',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
+      .replace(/^-|-$/g, '')
+  }
 
   const handleNameChange = (name: string) => {
     setFormData({
       ...formData,
       name,
       slug: tenant ? formData.slug : generateSlug(name),
-    });
-  };
+    })
+  }
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.slug.trim()) newErrors.slug = 'Slug is required';
+    const newErrors: Record<string, string> = {}
+    if (!formData.name.trim()) newErrors.name = 'Name is required'
+    if (!formData.slug.trim()) newErrors.slug = 'Slug is required'
     if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens';
+      newErrors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens'
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (validate()) {
-      onSubmit(formData);
+      onSubmit(formData)
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -677,9 +660,7 @@ function TenantFormModal({
               placeholder="acme-corp"
             />
             {errors.slug && <p className="text-xs text-red-500 mt-1">{errors.slug}</p>}
-            <p className="text-xs text-muted-foreground mt-1">
-              Used in URLs: {formData.slug || 'slug'}.stratum.ai
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Used in URLs: {formData.slug || 'slug'}.stratum.ai</p>
           </div>
 
           <div>
@@ -696,27 +677,29 @@ function TenantFormModal({
           <div>
             <label className="block text-sm font-medium mb-2">Subscription Plan</label>
             <div className="grid grid-cols-2 gap-2">
-              {(
-                Object.entries(planConfig) as [keyof typeof planConfig, typeof planConfig.free][]
-              ).map(([key, config]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, plan: key })}
-                  className={cn(
-                    'p-3 rounded-lg border text-left transition-colors',
-                    formData.plan === key ? 'border-primary bg-primary/10' : 'hover:bg-muted'
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={cn('w-2 h-2 rounded-full', config.color)} />
-                    <span className="font-medium">{config.label}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {config.limits.users} users, {config.limits.campaigns} campaigns
-                  </p>
-                </button>
-              ))}
+              {(Object.entries(planConfig) as [keyof typeof planConfig, typeof planConfig.free][]).map(
+                ([key, config]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, plan: key })}
+                    className={cn(
+                      'p-3 rounded-lg border text-left transition-colors',
+                      formData.plan === key
+                        ? 'border-primary bg-primary/10'
+                        : 'hover:bg-muted'
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={cn('w-2 h-2 rounded-full', config.color)} />
+                      <span className="font-medium">{config.label}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {config.limits.users} users, {config.limits.campaigns} campaigns
+                    </p>
+                  </button>
+                )
+              )}
             </div>
           </div>
 
@@ -738,7 +721,7 @@ function TenantFormModal({
         </form>
       </div>
     </div>
-  );
+  )
 }
 
 // Delete Confirmation Modal
@@ -747,11 +730,11 @@ function DeleteConfirmModal({
   onClose,
   onConfirm,
 }: {
-  tenant: Tenant;
-  onClose: () => void;
-  onConfirm: () => void;
+  tenant: Tenant
+  onClose: () => void
+  onConfirm: () => void
 }) {
-  const [confirmText, setConfirmText] = useState('');
+  const [confirmText, setConfirmText] = useState('')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -762,8 +745,8 @@ function DeleteConfirmModal({
           </div>
           <h2 className="text-lg font-semibold mb-2">Delete Tenant</h2>
           <p className="text-muted-foreground mb-4">
-            Are you sure you want to delete <strong>{tenant.name}</strong>? This action cannot be
-            undone and will delete all associated data.
+            Are you sure you want to delete <strong>{tenant.name}</strong>? This action cannot be undone and will delete
+            all associated data.
           </p>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1 text-left">
@@ -795,7 +778,7 @@ function DeleteConfirmModal({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Features Modal
@@ -804,9 +787,9 @@ function FeaturesModal({
   onClose,
   onSave,
 }: {
-  tenant: Tenant;
-  onClose: () => void;
-  onSave: (features: Record<string, boolean>) => void;
+  tenant: Tenant
+  onClose: () => void
+  onSave: (features: Record<string, boolean>) => void
 }) {
   const [features, setFeatures] = useState<Record<string, boolean>>(
     featureFlags.reduce(
@@ -816,11 +799,11 @@ function FeaturesModal({
       }),
       {}
     )
-  );
+  )
 
   const toggleFeature = (key: string) => {
-    setFeatures({ ...features, [key]: !features[key] });
-  };
+    setFeatures({ ...features, [key]: !features[key] })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -879,7 +862,7 @@ function FeaturesModal({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default Tenants;
+export default Tenants

@@ -1,7 +1,7 @@
 # =============================================================================
 # Stratum AI - Backend Dockerfile
 # =============================================================================
-FROM python:3.14-slim-bookworm
+FROM python:3.11-slim-bookworm
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -14,9 +14,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
-    libxml2-dev \
-    libxslt-dev \
-    zlib1g-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -44,13 +41,12 @@ RUN mkdir -p /app/ml_service/training_data /app/uploads /app/temp && \
 # Switch to non-root user
 USER appuser
 
-# Expose port (Railway sets PORT env var)
-EXPOSE 8080
+# Expose port
+EXPOSE 8000
 
-# Health check using liveness endpoint (no dependency checks)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
-    CMD curl -f http://localhost:${PORT:-8080}/health/live || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
-# Default command - run migrations, seed admin, then start server
-# Migrations use sync driver (psycopg2) and are idempotent (safe to run every deploy)
-CMD ["sh", "-c", "echo '=== Running database migrations ===' && alembic upgrade head && echo '=== Migrations complete ===' && (python scripts/seed_superadmin.py || echo '=== Seed script skipped (non-fatal) ===') && echo '=== Starting server ===' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Default command
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

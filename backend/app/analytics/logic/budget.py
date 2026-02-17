@@ -13,17 +13,16 @@ Guardrails:
 - If EMQ degraded (section 6), suspend automation.
 """
 
-from typing import Optional
-
+from typing import List, Optional
 from app.analytics.logic.types import (
-    BudgetAction,
     ScalingScoreResult,
+    BudgetAction,
+    ScalingAction,
 )
 
 
 class BudgetReallocationParams:
     """Configuration for budget reallocation."""
-
     # Thresholds
     scale_threshold: float = 0.25
     fix_threshold: float = -0.25
@@ -39,10 +38,10 @@ class BudgetReallocationParams:
 
 
 def reallocate_budget(
-    scaling_scores: list[ScalingScoreResult],
+    scaling_scores: List[ScalingScoreResult],
     current_spends: dict[str, float],
     params: Optional[BudgetReallocationParams] = None,
-) -> list[BudgetAction]:
+) -> List[BudgetAction]:
     """
     Calculate budget reallocation based on scaling scores.
 
@@ -113,33 +112,29 @@ def reallocate_budget(
             )
 
             if increase > 0:
-                actions.append(
-                    BudgetAction(
-                        entity_id=score_result.entity_id,
-                        entity_name=score_result.entity_name,
-                        action="increase_budget",
-                        amount=round(increase, 2),
-                        current_spend=spend,
-                        scaling_score=score_result.score,
-                        reason=f"High ROAS ({score_result.roas_delta*100:+.1f}%), scaling candidate",
-                    )
-                )
+                actions.append(BudgetAction(
+                    entity_id=score_result.entity_id,
+                    entity_name=score_result.entity_name,
+                    action="increase_budget",
+                    amount=round(increase, 2),
+                    current_spend=spend,
+                    scaling_score=score_result.score,
+                    reason=f"High ROAS ({score_result.roas_delta*100:+.1f}%), scaling candidate",
+                ))
 
     # Add loser decreases
     for score_result, spend in losers:
         decrease = loser_decreases.get(score_result.entity_id, 0)
         if decrease > 0:
-            actions.append(
-                BudgetAction(
-                    entity_id=score_result.entity_id,
-                    entity_name=score_result.entity_name,
-                    action="decrease_budget",
-                    amount=round(decrease, 2),
-                    current_spend=spend,
-                    scaling_score=score_result.score,
-                    reason=f"Low ROAS ({score_result.roas_delta*100:+.1f}%), needs optimization",
-                )
-            )
+            actions.append(BudgetAction(
+                entity_id=score_result.entity_id,
+                entity_name=score_result.entity_name,
+                action="decrease_budget",
+                amount=round(decrease, 2),
+                current_spend=spend,
+                scaling_score=score_result.score,
+                reason=f"Low ROAS ({score_result.roas_delta*100:+.1f}%), needs optimization",
+            ))
 
     # Sort by action (increases first, then decreases)
     actions.sort(key=lambda x: (x.action != "increase_budget", -abs(x.amount)))
@@ -147,7 +142,7 @@ def reallocate_budget(
     return actions
 
 
-def summarize_reallocation(actions: list[BudgetAction]) -> dict:
+def summarize_reallocation(actions: List[BudgetAction]) -> dict:
     """
     Summarize budget reallocation actions.
 
@@ -175,9 +170,9 @@ def summarize_reallocation(actions: list[BudgetAction]) -> dict:
 
 
 def validate_reallocation(
-    actions: list[BudgetAction],
+    actions: List[BudgetAction],
     learning_phase_entities: set[str],
-) -> list[BudgetAction]:
+) -> List[BudgetAction]:
     """
     Validate and filter reallocation actions.
     Removes actions for entities in learning phase.

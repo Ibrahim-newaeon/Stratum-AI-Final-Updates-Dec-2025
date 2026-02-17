@@ -1,2 +1,2 @@
-export { CampaignCreateModal } from './CampaignCreateModal';
-export { default } from './CampaignCreateModal';
+export { CampaignCreateModal } from './CampaignCreateModal'
+export { default } from './CampaignCreateModal'

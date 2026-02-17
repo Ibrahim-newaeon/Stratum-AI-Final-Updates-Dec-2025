@@ -1,39 +1,43 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import {
-  Bar,
   BarChart,
-  CartesianGrid,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
+  Bar,
   XAxis,
   YAxis,
-} from 'recharts';
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+} from 'recharts'
 import {
-  Download,
-  ExternalLink,
-  Globe,
-  Info,
-  Plus,
-  RefreshCw,
-  Target,
-  TrendingDown,
-  TrendingUp,
   Trophy,
+  TrendingUp,
+  TrendingDown,
+  Target,
   Users,
-} from 'lucide-react';
-import { cn, formatCompactNumber, formatCurrency, formatPercent } from '@/lib/utils';
-import { SmartTooltip } from '@/components/guide/SmartTooltip';
-import { useCompetitors } from '@/api/hooks';
-import { AddCompetitorModal } from '@/components/competitors/AddCompetitorModal';
+  Globe,
+  Filter,
+  Download,
+  RefreshCw,
+  Info,
+  ExternalLink,
+  Plus,
+} from 'lucide-react'
+import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
+import { SmartTooltip } from '@/components/guide/SmartTooltip'
+import { useCompetitors } from '@/api/hooks'
 
 // Colors for competitors in charts
-const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899'];
+const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899']
 
 // Mock radar data
 const mockRadarData = [
@@ -43,16 +47,16 @@ const mockRadarData = [
   { metric: 'Conv Rate', you: 82, industry: 60 },
   { metric: 'Reach', you: 65, industry: 80 },
   { metric: 'Engagement', you: 90, industry: 72 },
-];
+]
 
-// Mock market share trend - exported for chart components
-export const mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
+// Mock market share trend
+const mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
   month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
   you: 15 + Math.random() * 5 + i * 0.3,
   compA: 22 + Math.random() * 4 - i * 0.2,
   compB: 20 + Math.random() * 3,
   compC: 14 + Math.random() * 4 + i * 0.1,
-}));
+}))
 
 // Mock demographic data for heatmap
 const mockDemographics = [
@@ -60,9 +64,9 @@ const mockDemographics = [
   { age: '25-34', male: 3.5, female: 4.2, ctr: 3.85 },
   { age: '35-44', male: 2.8, female: 3.1, ctr: 2.95 },
   { age: '45-54', male: 1.9, female: 2.2, ctr: 2.05 },
-  { age: '55-64', male: 1.4, female: 1.6, ctr: 1.5 },
-  { age: '65+', male: 0.9, female: 1.1, ctr: 1.0 },
-];
+  { age: '55-64', male: 1.4, female: 1.6, ctr: 1.50 },
+  { age: '65+', male: 0.9, female: 1.1, ctr: 1.00 },
+]
 
 // Mock geographic data
 const mockGeoData = [
@@ -71,26 +75,25 @@ const mockGeoData = [
   { region: 'Texas', impressions: 3200000, ctr: 2.5, roas: 3.2, x: 200, y: 280, z: 32 },
   { region: 'Florida', impressions: 2900000, ctr: 2.7, roas: 3.5, x: 340, y: 320, z: 29 },
   { region: 'Illinois', impressions: 2100000, ctr: 2.3, roas: 3.0, x: 250, y: 180, z: 21 },
-];
+]
 
 export function Benchmarks() {
-  const { t } = useTranslation();
-  const [selectedIndustry, setSelectedIndustry] = useState('ecommerce');
-  const [selectedPlatform, setSelectedPlatform] = useState('all');
-  const [isAddCompetitorModalOpen, setIsAddCompetitorModalOpen] = useState(false);
+  const { t } = useTranslation()
+  const [selectedIndustry, setSelectedIndustry] = useState('ecommerce')
+  const [selectedPlatform, setSelectedPlatform] = useState('all')
 
   // Fetch competitors from API
-  const { data: competitorsData, isLoading: isLoadingCompetitors, refetch: refetchCompetitors } = useCompetitors();
+  const { data: competitorsData, isLoading: isLoadingCompetitors } = useCompetitors()
 
   // Generate Meta Ads Library URL
   const getMetaAdsLibraryUrl = (name: string, country: string = 'SA') => {
-    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`;
-  };
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`
+  }
 
   // Generate Google Ads Transparency URL
   const getGoogleTransparencyUrl = (name: string) => {
-    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`;
-  };
+    return `https://adstransparency.google.com/?query=${encodeURIComponent(name)}`
+  }
 
   // Build competitor data for charts - combine user's competitors with "Your Brand" and "Industry Avg"
   const chartCompetitors = [
@@ -106,19 +109,11 @@ export function Benchmarks() {
       share: 10 + Math.random() * 20,
       color: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length],
     })),
-    {
-      name: 'Industry Avg',
-      roas: 3.0,
-      ctr: 2.4,
-      cpc: 1.3,
-      share: 22,
-      color: '#6b7280',
-      isAvg: true,
-    },
-  ];
+    { name: 'Industry Avg', roas: 3.0, ctr: 2.4, cpc: 1.3, share: 22, color: '#6b7280', isAvg: true },
+  ]
 
   // Check if user has competitors
-  const hasCompetitors = (competitorsData?.items?.length || 0) > 0;
+  const hasCompetitors = (competitorsData?.items?.length || 0) > 0
 
   const benchmarkMetrics = [
     {
@@ -157,13 +152,13 @@ export function Benchmarks() {
       format: 'percent',
       tooltip: t('benchmarks.convRateTooltip'),
     },
-  ];
+  ]
 
   const formatValue = (value: number, format?: string) => {
-    if (format === 'percent') return formatPercent(value);
-    if (format === 'currency') return formatCurrency(value);
-    return value.toFixed(2) + 'x';
-  };
+    if (format === 'percent') return formatPercent(value)
+    if (format === 'currency') return formatCurrency(value)
+    return value.toFixed(2) + 'x'
+  }
 
   return (
     <div className="space-y-6">
@@ -200,13 +195,8 @@ export function Benchmarks() {
             <option value="tiktok">TikTok Ads</option>
           </select>
 
-          <button
-            onClick={() => refetchCompetitors()}
-            disabled={isLoadingCompetitors}
-            className="p-2 rounded-lg border hover:bg-muted transition-colors disabled:opacity-50"
-            title="Refresh competitor data"
-          >
-            <RefreshCw className={cn("w-4 h-4", isLoadingCompetitors && "animate-spin")} />
+          <button className="p-2 rounded-lg border hover:bg-muted transition-colors">
+            <RefreshCw className="w-4 h-4" />
           </button>
 
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
@@ -218,19 +208,14 @@ export function Benchmarks() {
 
       {/* Benchmark Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {benchmarkMetrics.map((metric, index) => {
+        {benchmarkMetrics.map((metric) => {
           const isAboveAvg = metric.invertTrend
             ? metric.yours < metric.industry
-            : metric.yours > metric.industry;
-          const diff = ((metric.yours - metric.industry) / metric.industry) * 100;
-          const variants = ['premium', 'success', 'active', 'warning'];
-          const variant = variants[index % variants.length];
+            : metric.yours > metric.industry
+          const diff = ((metric.yours - metric.industry) / metric.industry) * 100
 
           return (
-            <div
-              key={metric.label}
-              className={cn('metric-card p-4', variant)}
-            >
+            <div key={metric.label} className="p-4 rounded-xl border bg-card">
               <div className="flex items-center justify-between mb-2">
                 <SmartTooltip content={metric.tooltip} position="top">
                   <span className="text-sm text-muted-foreground flex items-center gap-1 cursor-help">
@@ -244,7 +229,9 @@ export function Benchmarks() {
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-2xl font-bold">{formatValue(metric.yours, metric.format)}</p>
+                  <p className="text-2xl font-bold">
+                    {formatValue(metric.yours, metric.format)}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     Industry: {formatValue(metric.industry, metric.format)}
                   </p>
@@ -273,29 +260,29 @@ export function Benchmarks() {
                 />
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
       {/* Your Competitors Section */}
-      <div className="metric-card info p-5">
+      <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <Target className="w-5 h-5 text-indigo-500" />
+              <Target className="w-5 h-5 text-primary" />
               Your Tracked Competitors
             </h3>
             <p className="text-xs text-muted-foreground">
               Click to view their ads in Meta Ads Library or Google Transparency
             </p>
           </div>
-          <button
-            onClick={() => setIsAddCompetitorModalOpen(true)}
+          <Link
+            to="/app/1/competitors"
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Competitor
-          </button>
+          </Link>
         </div>
 
         {isLoadingCompetitors ? (
@@ -303,21 +290,18 @@ export function Benchmarks() {
         ) : !hasCompetitors ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-3">No competitors tracked yet</p>
-            <button
-              onClick={() => setIsAddCompetitorModalOpen(true)}
+            <Link
+              to="/app/1/competitors"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Your First Competitor
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {(competitorsData?.items || []).slice(0, 6).map((competitor) => (
-              <div
-                key={competitor.id}
-                className="metric-card warning p-3"
-              >
+              <div key={competitor.id} className="p-3 rounded-lg border bg-background">
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="font-medium text-sm">{competitor.name}</p>
@@ -355,14 +339,19 @@ export function Benchmarks() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Competitor Comparison */}
-        <div className="metric-card premium p-5">
+        <div className="rounded-xl border bg-card p-5">
           <h3 className="font-semibold mb-4">{t('benchmarks.competitorComparison')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartCompetitors} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={100} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tick={{ fontSize: 12 }}
+                  width={100}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
@@ -374,9 +363,7 @@ export function Benchmarks() {
                   {chartCompetitors.map((entry: any, index: number) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={
-                        entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : entry.color || '#94a3b8'
-                      }
+                      fill={entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : entry.color || '#94a3b8'}
                     />
                   ))}
                 </Bar>
@@ -386,7 +373,7 @@ export function Benchmarks() {
         </div>
 
         {/* Performance Radar */}
-        <div className="metric-card active p-5">
+        <div className="rounded-xl border bg-card p-5">
           <h3 className="font-semibold mb-4">{t('benchmarks.performanceRadar')}</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -394,7 +381,13 @@ export function Benchmarks() {
                 <PolarGrid className="stroke-muted" />
                 <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12 }} />
                 <PolarRadiusAxis tick={{ fontSize: 10 }} domain={[0, 100]} />
-                <Radar name="You" dataKey="you" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.3} />
+                <Radar
+                  name="You"
+                  dataKey="you"
+                  stroke="#0ea5e9"
+                  fill="#0ea5e9"
+                  fillOpacity={0.3}
+                />
                 <Radar
                   name="Industry"
                   dataKey="industry"
@@ -426,11 +419,11 @@ export function Benchmarks() {
       </div>
 
       {/* Demographics Heatmap */}
-      <div className="metric-card success p-5">
+      <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <Users className="w-5 h-5 text-green-500" />
+              <Users className="w-5 h-5 text-primary" />
               {t('benchmarks.demographicsHeatmap')}
             </h3>
             <p className="text-xs text-muted-foreground">{t('benchmarks.ctrBySegment')}</p>
@@ -482,11 +475,11 @@ export function Benchmarks() {
       </div>
 
       {/* Geographic Performance */}
-      <div className="metric-card warning p-5">
+      <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              <Globe className="w-5 h-5 text-orange-500" />
+              <Globe className="w-5 h-5 text-primary" />
               {t('benchmarks.geographicPerformance')}
             </h3>
             <p className="text-xs text-muted-foreground">{t('benchmarks.performanceByRegion')}</p>
@@ -495,10 +488,7 @@ export function Benchmarks() {
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {mockGeoData.map((region) => (
-            <div
-              key={region.region}
-              className="metric-card premium p-4"
-            >
+            <div key={region.region} className="p-4 rounded-lg border bg-background">
               <p className="font-medium text-sm mb-2">{region.region}</p>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
@@ -518,18 +508,11 @@ export function Benchmarks() {
           ))}
         </div>
       </div>
-
-      {/* Add Competitor Modal */}
-      <AddCompetitorModal
-        isOpen={isAddCompetitorModalOpen}
-        onClose={() => setIsAddCompetitorModalOpen(false)}
-        onSuccess={() => refetchCompetitors()}
-      />
     </div>
-  );
+  )
 }
 
-export default Benchmarks;
+export default Benchmarks
 
 // Cell component for BarChart (needed for recharts)
-const Cell = ({ fill, ...props }: any) => <rect fill={fill} {...props} />;
+const Cell = ({ fill, ...props }: any) => <rect fill={fill} {...props} />

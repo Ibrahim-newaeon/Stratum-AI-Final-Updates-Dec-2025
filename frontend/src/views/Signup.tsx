@@ -1,394 +1,532 @@
-/**
- * Signup Page - Stratum AI
- * Split-screen layout: Branding left panel + glass card registration form
- * Cyberpunk Dark theme — midnight navy + spectral pink/orange/gold
- */
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  EnvelopeIcon,
-  ExclamationCircleIcon,
   EyeIcon,
   EyeSlashIcon,
+  EnvelopeIcon,
   LockClosedIcon,
-  BuildingOfficeIcon,
+  UserIcon,
+  PhoneIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useSignup } from '@/api/auth';
-import { pageSEO, SEO } from '@/components/common/SEO';
-import AuthLeftPanel from '@/components/auth/AuthLeftPanel';
-import { authStyles } from '@/components/auth/authStyles';
+import { useSignup, useResendVerification, useSendWhatsAppOTP, useVerifyWhatsAppOTP } from '@/api/auth';
 
-// ---------------------------------------------------------------------------
-// Zod Schema
-// ---------------------------------------------------------------------------
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
-  company: z.string().min(2, 'Company name is required'),
-  website: z.string().min(4, 'Company website is required'),
+  phone: z.string().min(10, 'Please enter a valid phone number with country code'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  termsAccepted: z.literal(true, {
-    errorMap: () => ({ message: 'You must accept the terms to continue' }),
-  }),
+  confirmPassword: z.string(),
+  acceptTerms: z.boolean().refine(val => val === true, 'You must accept the terms'),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
 });
 
 type SignupForm = z.infer<typeof signupSchema>;
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+type SignupStep = 'details' | 'verify-phone' | 'success';
+
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [step, setStep] = useState<SignupStep>('details');
+  const [formData, setFormData] = useState<SignupForm | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [otpCountdown, setOtpCountdown] = useState(0);
 
-  const registerMutation = useSignup();
-  const isLoading = registerMutation.isPending;
-  const apiError = registerMutation.error?.message;
+  const signupMutation = useSignup();
+  const resendMutation = useResendVerification();
+  const sendOTPMutation = useSendWhatsAppOTP();
+  const verifyOTPMutation = useVerifyWhatsAppOTP();
+
+  const isLoading = signupMutation.isPending || sendOTPMutation.isPending;
+  const isSuccess = signupMutation.isSuccess;
+  const apiError = signupMutation.error?.message || sendOTPMutation.error?.message;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
-    setValue,
+    getValues,
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { termsAccepted: false as unknown as true },
   });
 
-  // BUG-005: termsAccepted is now part of Zod schema — validation shows alongside other field errors
-  const termsAccepted = watch('termsAccepted');
+  // Start countdown timer for OTP resend
+  const startOTPCountdown = () => {
+    setOtpCountdown(60);
+    const timer = setInterval(() => {
+      setOtpCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const onSubmit = async (data: SignupForm) => {
-    registerMutation.mutate(
+    setFormData(data);
+    setSubmittedEmail(data.email);
+
+    // Send WhatsApp OTP
+    sendOTPMutation.mutate(
+      { phone_number: data.phone },
       {
-        email: data.email,
-        password: data.password,
-        full_name: data.name,
-        company_name: data.company,
-        company_website: data.website,
-      },
-      {
-        onSuccess: (_data, variables) => {
-          navigate(`/verify-email?email=${encodeURIComponent(variables.email)}`);
+        onSuccess: () => {
+          setStep('verify-phone');
+          startOTPCountdown();
         },
       }
     );
   };
 
-  return (
-    <>
-      <SEO {...pageSEO.signup} url="https://stratum-ai.com/signup" />
-      <style>{authStyles}</style>
+  const handleVerifyOTP = async () => {
+    if (!formData || otpCode.length !== 6) {
+      setOtpError('Please enter a valid 6-digit code');
+      return;
+    }
 
-      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
-        {/* Background effects — cyberpunk mesh */}
-        <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
-          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 140, 0, 0.06), transparent 60%)' }} />
-          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
+    setOtpError('');
+
+    verifyOTPMutation.mutate(
+      { phone_number: formData.phone, otp_code: otpCode },
+      {
+        onSuccess: (response) => {
+          // OTP verified, now complete registration
+          const token = response.verification_token || '';
+          setVerificationToken(token);
+
+          signupMutation.mutate({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+            verification_token: token,
+          });
+        },
+        onError: (error) => {
+          setOtpError(error.message || 'Invalid OTP code');
+        },
+      }
+    );
+  };
+
+  const handleResendOTP = () => {
+    if (formData && otpCountdown === 0) {
+      sendOTPMutation.mutate(
+        { phone_number: formData.phone },
+        {
+          onSuccess: () => {
+            startOTPCountdown();
+            setOtpCode('');
+            setOtpError('');
+          },
+        }
+      );
+    }
+  };
+
+  const handleResendVerification = () => {
+    if (submittedEmail) {
+      resendMutation.mutate({ email: submittedEmail });
+    }
+  };
+
+  // OTP Verification Step
+  if (step === 'verify-phone') {
+    return (
+      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
+        <div className="max-w-md w-full">
+          <div className="motion-enter text-center">
+            <div className="w-20 h-20 rounded-full bg-stratum-500/10 flex items-center justify-center mx-auto mb-6">
+              <PhoneIcon className="w-10 h-10 text-stratum-400" />
+            </div>
+            <h1 className="text-h1 text-white mb-4">Verify your WhatsApp</h1>
+            <p className="text-body text-text-secondary mb-2">
+              We've sent a 6-digit code to your WhatsApp
+            </p>
+            <p className="text-body text-stratum-400 font-medium mb-8">
+              {formData?.phone}
+            </p>
+
+            {/* OTP Input */}
+            <div className="mb-6">
+              <input
+                type="text"
+                value={otpCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setOtpCode(value);
+                  setOtpError('');
+                }}
+                placeholder="Enter 6-digit code"
+                className="w-full text-center text-2xl tracking-[0.5em] py-4 rounded-xl bg-surface-secondary border border-white/10
+                           text-white placeholder-text-muted
+                           focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                           transition-all duration-base outline-none"
+                maxLength={6}
+              />
+              {otpError && (
+                <p className="mt-2 text-meta text-danger">{otpError}</p>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={handleVerifyOTP}
+                disabled={verifyOTPMutation.isPending || otpCode.length !== 6}
+                className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
+                           hover:shadow-glow transition-all duration-base
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {verifyOTPMutation.isPending ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Verifying...
+                  </span>
+                ) : (
+                  'Verify & Create Account'
+                )}
+              </button>
+
+              <button
+                onClick={handleResendOTP}
+                disabled={otpCountdown > 0 || sendOTPMutation.isPending}
+                className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendOTPMutation.isPending ? (
+                  'Sending...'
+                ) : otpCountdown > 0 ? (
+                  `Resend code in ${otpCountdown}s`
+                ) : (
+                  'Resend code'
+                )}
+              </button>
+
+              <button
+                onClick={() => setStep('details')}
+                className="block w-full text-meta text-text-muted hover:text-text-secondary transition-colors"
+              >
+                ← Back to signup
+              </button>
+            </div>
+          </div>
         </div>
-
-        <main className="relative z-10 w-full flex min-h-screen">
-          {/* Left Panel — hidden on mobile */}
-          <AuthLeftPanel className="hidden lg:flex" />
-
-          {/* Right Panel — Form */}
-          <section className="lg:w-5/12 w-full flex flex-col items-center justify-center p-6 lg:p-8 bg-[#0A1628] relative">
-            {/* Mobile logo */}
-            <div className="lg:hidden absolute top-8 left-8 flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#FF1F6D] to-[#FF3D00] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,31,109,0.4)]">
-                <span className="font-display font-bold text-white text-xs -rotate-45">✦</span>
-              </div>
-              <span className="font-display font-bold text-lg tracking-tighter text-white">
-                STRATUM AI
-              </span>
-            </div>
-
-            <div className="w-full max-w-[448px] flex flex-col items-center">
-              <div className="auth-glass-card w-full rounded-xl p-10 space-y-8 relative overflow-hidden auth-fade-up mb-12">
-                {/* Decorative glows */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#00F5FF]/10 rounded-full blur-3xl" style={{ boxShadow: '0 0 15px rgba(0, 245, 255, 0.3)' }} />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#FFD700]/10 rounded-full blur-3xl" style={{ boxShadow: '0 0 15px rgba(255, 215, 0, 0.3)' }} />
-
-                {/* Header */}
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-display font-extrabold tracking-tight text-white uppercase">
-                    Dashboard Registration
-                  </h2>
-                  <p className="text-sm text-slate-400 font-medium">
-                    Provision your secure workspace
-                  </p>
-                </div>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                  {/* API Error Alert */}
-                  {apiError && (
-                    <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">
-                      <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
-                      <span>{apiError}</span>
-                    </div>
-                  )}
-
-                  {/* Full Name */}
-                  <div className="space-y-2 auth-fade-up-d1">
-                    <label
-                      htmlFor="signup-name"
-                      className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1"
-                    >
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <input
-                        {...register('name')}
-                        id="signup-name"
-                        type="text"
-                        autoComplete="name"
-                        placeholder="John Doe"
-                        className="w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0 bg-[rgba(5,11,24,0.6)] border border-white/10 transition-all focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.2)] outline-none text-[14px]"
-                      />
-                      <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                      </svg>
-                    </div>
-                    {errors.name && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.name.message}</p>
-                    )}
-                  </div>
-
-                  {/* Work Identity */}
-                  <div className="space-y-2 auth-fade-up-d1">
-                    <label
-                      htmlFor="signup-email"
-                      className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1"
-                    >
-                      Work Identity
-                    </label>
-                    <div className="relative">
-                      <input
-                        {...register('email')}
-                        id="signup-email"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="name@company.ai"
-                        className="w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0 bg-[rgba(5,11,24,0.6)] border border-white/10 transition-all focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.2)] outline-none text-[14px]"
-                      />
-                      <EnvelopeIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-600" />
-                    </div>
-                    {errors.email && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.email.message}</p>
-                    )}
-                  </div>
-
-                  {/* Organization */}
-                  <div className="space-y-2 auth-fade-up-d2">
-                    <label
-                      htmlFor="signup-company"
-                      className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1"
-                    >
-                      Organization
-                    </label>
-                    <div className="relative">
-                      <input
-                        {...register('company')}
-                        id="signup-company"
-                        type="text"
-                        autoComplete="organization"
-                        placeholder="Company name"
-                        className="w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0 bg-[rgba(5,11,24,0.6)] border border-white/10 transition-all focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.2)] outline-none text-[14px]"
-                      />
-                      <BuildingOfficeIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-600" />
-                    </div>
-                    {errors.company && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.company.message}</p>
-                    )}
-                  </div>
-
-                  {/* Domain / Website */}
-                  <div className="space-y-2 auth-fade-up-d2">
-                    <label
-                      htmlFor="signup-website"
-                      className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1"
-                    >
-                      Domain
-                    </label>
-                    <div className="relative">
-                      <input
-                        {...register('website')}
-                        id="signup-website"
-                        type="url"
-                        autoComplete="url"
-                        placeholder="https://company.com"
-                        className="w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0 bg-[rgba(5,11,24,0.6)] border border-white/10 transition-all focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.2)] outline-none text-[14px]"
-                      />
-                      <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-                      </svg>
-                    </div>
-                    {errors.website && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.website.message}</p>
-                    )}
-                  </div>
-
-                  {/* Encryption Key */}
-                  <div className="space-y-2 auth-fade-up-d2">
-                    <label
-                      htmlFor="signup-password"
-                      className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1"
-                    >
-                      Encryption Key
-                    </label>
-                    <div className="relative">
-                      <input
-                        {...register('password')}
-                        id="signup-password"
-                        type={showPassword ? 'text' : 'password'}
-                        autoComplete="new-password"
-                        placeholder="••••••••••••"
-                        className="w-full h-[44px] px-4 pr-11 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0 bg-[rgba(5,11,24,0.6)] border border-white/10 transition-all focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.2)] outline-none text-[14px] font-mono"
-                      />
-                      <button
-                        type="button"
-                        tabIndex={-1}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white/60 transition-colors"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeSlashIcon className="w-[18px] h-[18px]" />
-                        ) : (
-                          <EyeIcon className="w-[18px] h-[18px]" />
-                        )}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="text-xs text-red-400 mt-1 ml-1">{errors.password.message}</p>
-                    )}
-                  </div>
-
-                  {/* Terms Checkbox — BUG-005: now validated via Zod schema */}
-                  <div className="flex items-start gap-2.5 py-1 auth-fade-up-d3">
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      checked={!!termsAccepted}
-                      onChange={(e) => setValue('termsAccepted', e.target.checked as unknown as true, { shouldValidate: true })}
-                      className="mt-0.5 w-4 h-4 rounded border-white/10 bg-white/5 text-[#FF1F6D] focus:ring-[#FF1F6D] focus:ring-offset-[#0A1628] cursor-pointer"
-                      aria-invalid={!!errors.termsAccepted}
-                      aria-describedby={errors.termsAccepted ? 'terms-error' : undefined}
-                    />
-                    <label
-                      htmlFor="terms"
-                      className="text-[11px] text-slate-400 font-medium leading-relaxed cursor-pointer select-none"
-                    >
-                      I agree to the{' '}
-                      <a href="/terms" className="text-[#FF1F6D] hover:underline">
-                        Terms of Service
-                      </a>{' '}
-                      and{' '}
-                      <a href="/privacy" className="text-[#FF1F6D] hover:underline">
-                        Privacy Policy
-                      </a>
-                      .
-                    </label>
-                  </div>
-                  {errors.termsAccepted && (
-                    <p id="terms-error" className="text-xs text-red-400 -mt-2 ml-1">
-                      {errors.termsAccepted.message}
-                    </p>
-                  )}
-
-                  {/* Submit Button */}
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="auth-fade-up-d3 w-full h-[56px] rounded-xl font-black text-sm tracking-[0.2em] uppercase transition-all duration-300 auth-gradient-btn auth-shimmer-btn text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 hover:translate-y-[-1px]"
-                    >
-                      {isLoading ? (
-                        <span className="flex items-center gap-2">
-                          <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Initializing...
-                        </span>
-                      ) : (
-                        'Initialize Account'
-                      )}
-                    </button>
-                  </div>
-                </form>
-
-                {/* Or connect via divider */}
-                <div className="flex items-center gap-4 py-2">
-                  <div className="h-px bg-white/5 flex-grow" />
-                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">or connect via</span>
-                  <div className="h-px bg-white/5 flex-grow" />
-                </div>
-
-                {/* OAuth Buttons */}
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    className="flex items-center justify-center gap-2 h-[44px] rounded-[12px] border border-white/5 bg-white/5 hover:bg-white/10 transition-colors text-xs font-bold text-slate-300"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.909 3.292-2.09 4.458-1.488 1.489-3.391 2.454-6.09 2.454-4.591 0-8.203-3.666-8.203-8.203s3.612-8.203 8.203-8.203c2.49 0 4.408.981 5.845 2.371l2.307-2.307C18.183 2.503 15.588 1 12.48 1 6.302 1 1.29 6.012 1.29 12.19s5.012 11.19 11.19 11.19c3.3 0 5.803-1.082 7.79-3.15 2.011-2.011 2.651-4.852 2.651-7.151 0-.68-.06-1.32-.18-1.89h-10.27z" /></svg>
-                    Google
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center gap-2 h-[44px] rounded-[12px] border border-white/5 bg-white/5 hover:bg-white/10 transition-colors text-xs font-bold text-slate-300"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.042-1.416-4.042-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" /></svg>
-                    GitHub
-                  </button>
-                </div>
-
-                {/* Already authenticated link */}
-                <p className="text-[10px] text-center text-slate-500 uppercase tracking-widest font-medium">
-                  Already authenticated?{' '}
-                  <Link
-                    to="/login"
-                    className="text-[#FF1F6D] hover:text-[#FF3D00] transition-colors"
-                  >
-                    Resume Session
-                  </Link>
-                </p>
-              </div>
-
-              {/* Structural divider */}
-              <div className="w-full h-px mb-8" style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)' }} />
-
-              {/* Status indicators */}
-              <div className="flex gap-10 items-center justify-center">
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00F5FF] animate-pulse" style={{ boxShadow: '0 0 15px rgba(0, 245, 255, 0.3)' }} />
-                  <span className="text-[9px] font-mono text-slate-400 uppercase tracking-tighter">API: Stable</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700]" style={{ boxShadow: '0 0 15px rgba(255, 215, 0, 0.3)' }} />
-                  <span className="text-[9px] font-mono text-slate-400 uppercase tracking-tighter">Latency: 24ms</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-mono text-slate-600 uppercase tracking-tighter">v2.026.04.12</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer links */}
-            <div className="absolute bottom-6 flex gap-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              <a href="/privacy" className="hover:text-white transition-colors">Privacy Protocol</a>
-              <a href="/terms" className="hover:text-white transition-colors">Service Terms</a>
-              <a href="/support" className="hover:text-white transition-colors">Help Terminal</a>
-            </div>
-          </section>
-        </main>
       </div>
-    </>
+    );
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center">
+          <div className="motion-enter">
+            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
+              <CheckCircleIcon className="w-10 h-10 text-success" />
+            </div>
+            <h1 className="text-h1 text-white mb-4">Account Created!</h1>
+            <p className="text-body text-text-secondary mb-8">
+              Your account has been created successfully. You can now sign in to access Stratum AI.
+            </p>
+            <div className="space-y-4">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
+                           hover:shadow-glow transition-all duration-base"
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-surface-primary flex">
+      {/* Left side - Brand */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-stratum-500/20 via-surface-primary to-cyan-500/10" />
+        <div className="absolute -top-1/4 -left-1/4 w-[600px] h-[600px] rounded-full bg-stratum-500/20 blur-3xl" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[400px] h-[400px] rounded-full bg-cyan-500/15 blur-3xl" />
+
+        <div className="relative z-10 flex flex-col justify-center p-16">
+          <Link to="/" className="flex items-center gap-3 mb-12">
+            <div className="w-12 h-12 rounded-xl bg-gradient-stratum flex items-center justify-center">
+              <span className="text-white font-bold text-h2">S</span>
+            </div>
+            <span className="text-h1 text-white font-semibold">Stratum AI</span>
+          </Link>
+
+          <h2 className="text-[40px] font-bold text-white leading-tight mb-6">
+            Start optimizing your{' '}
+            <span className="bg-gradient-stratum bg-clip-text text-transparent">
+              ad campaigns
+            </span>{' '}
+            today
+          </h2>
+
+          <p className="text-body text-text-secondary max-w-md">
+            Join thousands of marketing teams who trust Stratum AI to deliver better ROAS with confidence.
+          </p>
+
+          <div className="mt-12 space-y-4">
+            {[
+              '14-day free trial, no credit card required',
+              'Connect Meta, Google, TikTok, Snapchat + GA4',
+              'AI-powered recommendations and automation',
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-3">
+                <CheckCircleIcon className="w-5 h-5 text-success" />
+                <span className="text-body text-text-secondary">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - Form */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-16">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-gradient-stratum flex items-center justify-center">
+                <span className="text-white font-bold text-h3">S</span>
+              </div>
+              <span className="text-h2 text-white font-semibold">Stratum AI</span>
+            </Link>
+          </div>
+
+          <div className="motion-enter">
+            <h1 className="text-h1 text-white mb-2">Create your account</h1>
+            <p className="text-body text-text-muted mb-8">
+              Already have an account?{' '}
+              <Link to="/login" className="text-stratum-400 hover:text-stratum-300 transition-colors">
+                Sign in
+              </Link>
+            </p>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              {/* API Error */}
+              {apiError && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-danger/10 text-danger">
+                  <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-meta">{apiError}</span>
+                </div>
+              )}
+
+              {/* Name */}
+              <div>
+                <label className="block text-meta text-text-secondary mb-2">Full name</label>
+                <div className="relative">
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                  <input
+                    {...register('name')}
+                    type="text"
+                    placeholder="John Doe"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-secondary border border-white/10
+                               text-white placeholder-text-muted text-body
+                               focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                               transition-all duration-base outline-none"
+                  />
+                </div>
+                {errors.name && (
+                  <p className="mt-2 text-meta text-danger">{errors.name.message}</p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-meta text-text-secondary mb-2">Email address</label>
+                <div className="relative">
+                  <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                  <input
+                    {...register('email')}
+                    type="email"
+                    placeholder="you@company.com"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-secondary border border-white/10
+                               text-white placeholder-text-muted text-body
+                               focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                               transition-all duration-base outline-none"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="mt-2 text-meta text-danger">{errors.email.message}</p>
+                )}
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-meta text-text-secondary mb-2">WhatsApp number</label>
+                <div className="relative">
+                  <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                  <input
+                    {...register('phone')}
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface-secondary border border-white/10
+                               text-white placeholder-text-muted text-body
+                               focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                               transition-all duration-base outline-none"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-text-muted">Include country code for WhatsApp verification</p>
+                {errors.phone && (
+                  <p className="mt-2 text-meta text-danger">{errors.phone.message}</p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-meta text-text-secondary mb-2">Password</label>
+                <div className="relative">
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                  <input
+                    {...register('password')}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Min. 8 characters"
+                    className="w-full pl-12 pr-12 py-3 rounded-xl bg-surface-secondary border border-white/10
+                               text-white placeholder-text-muted text-body
+                               focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                               transition-all duration-base outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-2 text-meta text-danger">{errors.password.message}</p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-meta text-text-secondary mb-2">Confirm password</label>
+                <div className="relative">
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+                  <input
+                    {...register('confirmPassword')}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm your password"
+                    className="w-full pl-12 pr-12 py-3 rounded-xl bg-surface-secondary border border-white/10
+                               text-white placeholder-text-muted text-body
+                               focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
+                               transition-all duration-base outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="mt-2 text-meta text-danger">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              {/* Terms */}
+              <div className="flex items-start gap-3">
+                <input
+                  {...register('acceptTerms')}
+                  type="checkbox"
+                  id="terms"
+                  className="mt-1 w-4 h-4 rounded border-white/20 bg-surface-secondary
+                             text-stratum-500 focus:ring-stratum-500/20 focus:ring-offset-0"
+                />
+                <label htmlFor="terms" className="text-meta text-text-muted">
+                  I agree to the{' '}
+                  <a href="/terms" className="text-stratum-400 hover:text-stratum-300">Terms of Service</a>
+                  {' '}and{' '}
+                  <a href="/privacy" className="text-stratum-400 hover:text-stratum-300">Privacy Policy</a>
+                </label>
+              </div>
+              {errors.acceptTerms && (
+                <p className="text-meta text-danger">{errors.acceptTerms.message}</p>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
+                           hover:shadow-glow transition-all duration-base
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Creating account...
+                  </span>
+                ) : (
+                  'Create account'
+                )}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-4 bg-surface-primary text-meta text-text-muted">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Social login */}
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-secondary border border-white/10
+                           text-white text-meta font-medium hover:bg-surface-tertiary transition-colors"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Google
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-secondary border border-white/10
+                           text-white text-meta font-medium hover:bg-surface-tertiary transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                Microsoft
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

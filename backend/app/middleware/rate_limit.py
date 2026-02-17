@@ -7,7 +7,7 @@ Prevents API abuse and ensures fair resource usage.
 """
 
 import time
-from collections.abc import Callable
+from typing import Callable, Optional
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
@@ -54,7 +54,7 @@ class TokenBucket:
         self.last_update = now
 
         # Add tokens based on elapsed time
-        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)  # type: ignore[assignment]
+        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
 
         if self.tokens >= tokens:
             self.tokens -= tokens
@@ -94,10 +94,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Apply rate limiting to the request."""
-
-        # Skip OPTIONS preflight requests (handled by CORSMiddleware)
-        if request.method == "OPTIONS":
-            return await call_next(request)
 
         # Get client identifier
         client_id = self._get_client_identifier(request)

@@ -14,15 +14,14 @@ Interpretation:
 """
 
 from typing import Optional
-
-from app.analytics.logic.scoring import clamp01
 from app.analytics.logic.types import (
-    BaselineMetrics,
     EntityMetrics,
+    BaselineMetrics,
     FatigueParams,
     FatigueResult,
     FatigueState,
 )
+from app.analytics.logic.scoring import clamp01
 
 
 def ema(current: float, prev: float, alpha: float = 0.4) -> float:
@@ -55,7 +54,10 @@ def creative_fatigue(
 
     # Calculate signal drops
     # CTR drop
-    ctr_drop = clamp01((baseline.ctr - today.ctr) / baseline.ctr) if baseline.ctr > 0.0001 else 0.0
+    if baseline.ctr > 0.0001:
+        ctr_drop = clamp01((baseline.ctr - today.ctr) / baseline.ctr)
+    else:
+        ctr_drop = 0.0
 
     # ROAS drop
     if baseline.roas > 0.01:
@@ -64,7 +66,10 @@ def creative_fatigue(
         roas_drop = 0.0
 
     # CPA rise (higher is worse)
-    cpa_rise = clamp01((today.cpa - baseline.cpa) / baseline.cpa) if baseline.cpa > 0.01 else 0.0
+    if baseline.cpa > 0.01:
+        cpa_rise = clamp01((today.cpa - baseline.cpa) / baseline.cpa)
+    else:
+        cpa_rise = 0.0
 
     # Exposure factor (frequency based)
     # frequency 2->5 maps to 0..1
@@ -75,14 +80,17 @@ def creative_fatigue(
 
     # Calculate raw fatigue score
     fatigue = (
-        params.ctr_weight * ctr_drop
-        + params.roas_weight * roas_drop
-        + params.cpa_weight * cpa_rise
-        + params.exposure_weight * exposure_factor
+        params.ctr_weight * ctr_drop +
+        params.roas_weight * roas_drop +
+        params.cpa_weight * cpa_rise +
+        params.exposure_weight * exposure_factor
     )
 
     # Smooth with EMA to avoid noise
-    smoothed_fatigue = ema(fatigue, prev_ema, params.ema_alpha) if prev_ema is not None else fatigue
+    if prev_ema is not None:
+        smoothed_fatigue = ema(fatigue, prev_ema, params.ema_alpha)
+    else:
+        smoothed_fatigue = fatigue
 
     # Determine state
     if smoothed_fatigue >= params.refresh_threshold:

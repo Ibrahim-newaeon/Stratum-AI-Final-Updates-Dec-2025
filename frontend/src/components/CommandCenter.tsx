@@ -5,46 +5,46 @@
  * Supports filtering by action type and platform.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react'
 import {
-  AlertTriangle,
-  ArrowDownRight,
-  ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  Filter,
-  Minus,
-  TrendingDown,
   TrendingUp,
-} from 'lucide-react';
-import { type CommandCenterItem, useCommandCenter } from '@/api/hooks/useTenantDashboard';
+  TrendingDown,
+  Eye,
+  AlertTriangle,
+  ChevronUp,
+  ChevronDown,
+  Filter,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+} from 'lucide-react'
+import { useCommandCenter, type CommandCenterItem } from '../api/hooks'
 
 interface CommandCenterProps {
-  tenantId: number;
-  className?: string;
-  onApply?: (item: CommandCenterItem) => void;
-  onDismiss?: (item: CommandCenterItem) => void;
+  tenantId: number
+  className?: string
+  onApply?: (item: CommandCenterItem) => void
+  onDismiss?: (item: CommandCenterItem) => void
 }
 
-type ActionFilter = 'all' | 'scale' | 'watch' | 'fix';
-type SortField = 'scaling_score' | 'roas' | 'spend' | 'conversions';
-type SortDirection = 'asc' | 'desc';
+type ActionFilter = 'all' | 'scale' | 'watch' | 'fix'
+type SortField = 'scaling_score' | 'roas' | 'spend' | 'conversions'
+type SortDirection = 'asc' | 'desc'
 
 const ActionBadge: React.FC<{ action: string }> = ({ action }) => {
   const styles = {
     scale: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
     watch: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     fix: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  };
+  }
 
   const icons = {
     scale: TrendingUp,
     watch: Eye,
     fix: AlertTriangle,
-  };
+  }
 
-  const Icon = icons[action as keyof typeof icons] || Eye;
+  const Icon = icons[action as keyof typeof icons] || Eye
 
   return (
     <span
@@ -55,13 +55,13 @@ const ActionBadge: React.FC<{ action: string }> = ({ action }) => {
       <Icon className="h-3 w-3" />
       {action.charAt(0).toUpperCase() + action.slice(1)}
     </span>
-  );
-};
+  )
+}
 
 const ScoreBar: React.FC<{ score: number }> = ({ score }) => {
   // Score ranges from -1 to +1
-  const percentage = ((score + 1) / 2) * 100;
-  const isPositive = score >= 0;
+  const percentage = ((score + 1) / 2) * 100
+  const isPositive = score >= 0
 
   return (
     <div className="flex items-center gap-2">
@@ -82,56 +82,56 @@ const ScoreBar: React.FC<{ score: number }> = ({ score }) => {
         {score.toFixed(2)}
       </span>
     </div>
-  );
-};
+  )
+}
 
 const SignalIndicator: React.FC<{ value: number; label: string }> = ({ value, label }) => {
-  const Icon = value > 0 ? ArrowUpRight : value < 0 ? ArrowDownRight : Minus;
-  const color = value > 0 ? 'text-emerald-500' : value < 0 ? 'text-red-500' : 'text-gray-400';
+  const Icon = value > 0 ? ArrowUpRight : value < 0 ? ArrowDownRight : Minus
+  const color =
+    value > 0
+      ? 'text-emerald-500'
+      : value < 0
+      ? 'text-red-500'
+      : 'text-gray-400'
 
   return (
     <div className="flex items-center gap-1 text-xs">
       <Icon className={`h-3 w-3 ${color}`} />
       <span className="text-gray-500 dark:text-gray-400">{label}</span>
     </div>
-  );
-};
+  )
+}
 
-export const CommandCenter: React.FC<CommandCenterProps> = ({
-  tenantId,
-  className = '',
-  onApply,
-  onDismiss,
-}) => {
-  const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
-  const [sortField, setSortField] = useState<SortField>('scaling_score');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, className = '', onApply, onDismiss }) => {
+  const [actionFilter, setActionFilter] = useState<ActionFilter>('all')
+  const [sortField, setSortField] = useState<SortField>('scaling_score')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [expandedRow, setExpandedRow] = useState<number | null>(null)
 
   const { data, isLoading, error } = useCommandCenter(
     tenantId,
     actionFilter !== 'all' ? { action: actionFilter } : undefined
-  );
+  )
 
   const sortedItems = useMemo(() => {
-    if (!data?.items) return [];
+    if (!data?.items) return []
 
     return [...data.items].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      const multiplier = sortDirection === 'desc' ? -1 : 1;
-      return (aValue - bValue) * multiplier;
-    });
-  }, [data?.items, sortField, sortDirection]);
+      const aValue = a[sortField]
+      const bValue = b[sortField]
+      const multiplier = sortDirection === 'desc' ? -1 : 1
+      return (aValue - bValue) * multiplier
+    })
+  }, [data?.items, sortField, sortDirection])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
-      setSortField(field);
-      setSortDirection('desc');
+      setSortField(field)
+      setSortDirection('desc')
     }
-  };
+  }
 
   const SortHeader: React.FC<{ field: SortField; label: string }> = ({ field, label }) => (
     <th
@@ -140,15 +140,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     >
       <div className="flex items-center gap-1">
         {label}
-        {sortField === field &&
-          (sortDirection === 'desc' ? (
+        {sortField === field && (
+          sortDirection === 'desc' ? (
             <ChevronDown className="h-4 w-4" />
           ) : (
             <ChevronUp className="h-4 w-4" />
-          ))}
+          )
+        )}
       </div>
     </th>
-  );
+  )
 
   if (isLoading) {
     return (
@@ -162,7 +163,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -170,7 +171,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       <div className={`rounded-xl border bg-card shadow-card p-6 ${className}`}>
         <p className="text-red-500">Failed to load command center data</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -179,7 +180,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Command Center</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Command Center
+            </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Campaign actions based on scaling scores
             </p>
@@ -280,8 +283,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         item.roas >= 2
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : item.roas < 1
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-gray-900 dark:text-white'
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-gray-900 dark:text-white'
                       }`}
                     >
                       {item.roas.toFixed(2)}x
@@ -318,14 +321,12 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div className="flex gap-2">
                           <button
                             className={`px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg transition-opacity ${
-                              onApply
-                                ? 'hover:opacity-90 cursor-pointer'
-                                : 'opacity-50 cursor-not-allowed'
+                              onApply ? 'hover:opacity-90 cursor-pointer' : 'opacity-50 cursor-not-allowed'
                             }`}
                             onClick={(e) => {
-                              e.stopPropagation();
+                              e.stopPropagation()
                               if (onApply) {
-                                onApply(item);
+                                onApply(item)
                               }
                             }}
                             disabled={!onApply}
@@ -335,22 +336,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                           </button>
                           <button
                             className={`px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg transition-colors ${
-                              onDismiss
-                                ? 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
-                                : 'opacity-50 cursor-not-allowed'
+                              onDismiss ? 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer' : 'opacity-50 cursor-not-allowed'
                             }`}
                             onClick={(e) => {
-                              e.stopPropagation();
+                              e.stopPropagation()
                               if (onDismiss) {
-                                onDismiss(item);
+                                onDismiss(item)
                               }
                             }}
                             disabled={!onDismiss}
-                            title={
-                              onDismiss
-                                ? 'Dismiss this recommendation'
-                                : 'Dismiss handler not configured'
-                            }
+                            title={onDismiss ? 'Dismiss this recommendation' : 'Dismiss handler not configured'}
                           >
                             Dismiss
                           </button>
@@ -371,7 +366,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CommandCenter;
+export default CommandCenter

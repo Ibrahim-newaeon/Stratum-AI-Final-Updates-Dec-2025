@@ -5,78 +5,71 @@
  * Shows all assigned tenants with EMQ status, incidents, and health indicators
  */
 
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 import {
-  type AutopilotMode,
+  ConfidenceBandBadge,
   AutopilotModeBanner,
   BudgetAtRiskChip,
-  ConfidenceBandBadge,
-} from '@/components/shared';
-import { useTenants } from '@/api/hooks';
+  type AutopilotMode,
+} from '@/components/shared'
+import { useTenants } from '@/api/hooks'
 import {
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon,
-  BellAlertIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  ChartBarIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ClockIcon,
   ChevronRightIcon,
   DocumentArrowDownIcon,
-  ExclamationTriangleIcon,
+  BellAlertIcon,
   FireIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+} from '@heroicons/react/24/outline'
 
-type EmqStatus = 'ok' | 'risk' | 'degraded' | 'critical';
-type SortField = 'name' | 'emq' | 'budgetAtRisk' | 'renewalDate';
+type EmqStatus = 'ok' | 'risk' | 'degraded' | 'critical'
+type SortField = 'name' | 'emq' | 'budgetAtRisk' | 'renewalDate'
 
 interface TenantPortfolioItem {
-  id: string;
-  name: string;
-  industry: string;
-  emqScore: number;
-  emqStatus: EmqStatus;
-  emqTrend: number;
-  autopilotMode: AutopilotMode;
-  budgetAtRisk: number;
-  activeIncidents: number;
-  incidentOpenTime: number | null; // hours
-  monthlySpend: number;
-  roas: number;
-  roasTrend: number;
-  renewalDate: Date | null;
-  plan: string;
-  lastContact: Date | null;
-  notes: string | null;
+  id: string
+  name: string
+  industry: string
+  emqScore: number
+  emqStatus: EmqStatus
+  emqTrend: number
+  autopilotMode: AutopilotMode
+  budgetAtRisk: number
+  activeIncidents: number
+  incidentOpenTime: number | null // hours
+  monthlySpend: number
+  roas: number
+  roasTrend: number
+  renewalDate: Date | null
+  plan: string
+  lastContact: Date | null
+  notes: string | null
 }
 
 export default function Portfolio() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<EmqStatus | 'all'>('all');
-  const [sortField, setSortField] = useState<SortField>('emq');
-  const [showAtRiskOnly, setShowAtRiskOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<EmqStatus | 'all'>('all')
+  const [sortField, setSortField] = useState<SortField>('emq')
+  const [showAtRiskOnly, setShowAtRiskOnly] = useState(false)
 
-  const { data: tenantsData } = useTenants();
+  const { data: tenantsData } = useTenants()
 
   // Sample portfolio data
-  // Access data from paginated response
-  const tenantsList = Array.isArray(tenantsData)
-    ? tenantsData
-    : (tenantsData as { data?: unknown[] } | undefined)?.data || [];
-  const tenants: TenantPortfolioItem[] = (
-    tenantsList as { id: string; name: string; industry?: string }[]
-  ).map((t) => ({
+  const tenants: TenantPortfolioItem[] = tenantsData?.map((t) => ({
     id: t.id,
     name: t.name,
     industry: t.industry || 'E-commerce',
     emqScore: Math.floor(Math.random() * 40) + 60,
-    emqStatus: (['ok', 'risk', 'degraded', 'critical'] as EmqStatus[])[
-      Math.floor(Math.random() * 4)
-    ],
+    emqStatus: (['ok', 'risk', 'degraded', 'critical'] as EmqStatus[])[Math.floor(Math.random() * 4)],
     emqTrend: Math.floor(Math.random() * 20) - 10,
-    autopilotMode: (['normal', 'limited', 'cuts_only', 'frozen'] as AutopilotMode[])[
-      Math.floor(Math.random() * 4)
-    ],
+    autopilotMode: (['normal', 'limited', 'cuts_only', 'frozen'] as AutopilotMode[])[Math.floor(Math.random() * 4)],
     budgetAtRisk: Math.floor(Math.random() * 15000),
     activeIncidents: Math.floor(Math.random() * 5),
     incidentOpenTime: Math.random() > 0.5 ? Math.floor(Math.random() * 48) : null,
@@ -183,76 +176,72 @@ export default function Portfolio() {
       lastContact: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
       notes: 'Strong performer, upgrade candidate',
     },
-  ];
+  ]
 
   // Filter and sort
   const filteredTenants = useMemo(() => {
-    let result = [...tenants];
+    let result = [...tenants]
 
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       result = result.filter(
-        (t) => t.name.toLowerCase().includes(query) || t.industry.toLowerCase().includes(query)
-      );
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          t.industry.toLowerCase().includes(query)
+      )
     }
 
     if (statusFilter !== 'all') {
-      result = result.filter((t) => t.emqStatus === statusFilter);
+      result = result.filter((t) => t.emqStatus === statusFilter)
     }
 
     if (showAtRiskOnly) {
-      result = result.filter(
-        (t) => t.emqStatus !== 'ok' || t.budgetAtRisk > 0 || t.activeIncidents > 0
-      );
+      result = result.filter((t) => t.emqStatus !== 'ok' || t.budgetAtRisk > 0 || t.activeIncidents > 0)
     }
 
     result.sort((a, b) => {
       switch (sortField) {
         case 'name':
-          return a.name.localeCompare(b.name);
+          return a.name.localeCompare(b.name)
         case 'emq':
-          return a.emqScore - b.emqScore;
+          return a.emqScore - b.emqScore
         case 'budgetAtRisk':
-          return b.budgetAtRisk - a.budgetAtRisk;
+          return b.budgetAtRisk - a.budgetAtRisk
         case 'renewalDate':
-          return (a.renewalDate?.getTime() ?? 0) - (b.renewalDate?.getTime() ?? 0);
+          return (a.renewalDate?.getTime() ?? 0) - (b.renewalDate?.getTime() ?? 0)
         default:
-          return 0;
+          return 0
       }
-    });
+    })
 
-    return result;
-  }, [tenants, searchQuery, statusFilter, sortField, showAtRiskOnly]);
+    return result
+  }, [tenants, searchQuery, statusFilter, sortField, showAtRiskOnly])
 
   const getStatusColor = (status: EmqStatus) => {
     switch (status) {
-      case 'ok':
-        return 'text-success bg-success/10';
-      case 'risk':
-        return 'text-warning bg-warning/10';
-      case 'degraded':
-        return 'text-orange-400 bg-orange-400/10';
-      case 'critical':
-        return 'text-danger bg-danger/10';
+      case 'ok': return 'text-success bg-success/10'
+      case 'risk': return 'text-warning bg-warning/10'
+      case 'degraded': return 'text-orange-400 bg-orange-400/10'
+      case 'critical': return 'text-danger bg-danger/10'
     }
-  };
+  }
 
   const formatDaysUntil = (date: Date | null) => {
-    if (!date) return '-';
-    const days = Math.floor((date.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
-    if (days < 0) return 'Overdue';
-    if (days === 0) return 'Today';
-    if (days === 1) return '1 day';
-    return `${days} days`;
-  };
+    if (!date) return '-'
+    const days = Math.floor((date.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+    if (days < 0) return 'Overdue'
+    if (days === 0) return 'Today'
+    if (days === 1) return '1 day'
+    return `${days} days`
+  }
 
   const formatLastContact = (date: Date | null) => {
-    if (!date) return 'Never';
-    const days = Math.floor((Date.now() - date.getTime()) / (24 * 60 * 60 * 1000));
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
-    return `${days}d ago`;
-  };
+    if (!date) return 'Never'
+    const days = Math.floor((Date.now() - date.getTime()) / (24 * 60 * 60 * 1000))
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    return `${days}d ago`
+  }
 
   // Portfolio stats
   const stats = {
@@ -261,14 +250,9 @@ export default function Portfolio() {
     atRisk: tenants.filter((t) => t.emqStatus !== 'ok').length,
     critical: tenants.filter((t) => t.emqStatus === 'critical').length,
     totalBudgetAtRisk: tenants.reduce((sum, t) => sum + t.budgetAtRisk, 0),
-    totalMRR: tenants.reduce(
-      (sum, t) => sum + (t.plan === 'Enterprise' ? 1999 : t.plan === 'Pro' ? 499 : 99),
-      0
-    ),
-    upcomingRenewals: tenants.filter(
-      (t) => t.renewalDate && t.renewalDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000
-    ).length,
-  };
+    totalMRR: tenants.reduce((sum, t) => sum + (t.plan === 'Enterprise' ? 1999 : t.plan === 'Pro' ? 499 : 99), 0),
+    upcomingRenewals: tenants.filter((t) => t.renewalDate && (t.renewalDate.getTime() - Date.now()) < 30 * 24 * 60 * 60 * 1000).length,
+  }
 
   return (
     <div className="space-y-6">
@@ -279,10 +263,7 @@ export default function Portfolio() {
           <p className="text-text-muted">Manage your assigned tenants</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            data-tour="export-pdf"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
-          >
+          <button data-tour="export-pdf" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors">
             <DocumentArrowDownIcon className="w-4 h-4" />
             Export Summary
           </button>
@@ -309,9 +290,7 @@ export default function Portfolio() {
         </div>
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
           <div className="text-text-muted text-sm mb-1">Budget at Risk</div>
-          <div className="text-2xl font-bold text-danger">
-            ${stats.totalBudgetAtRisk.toLocaleString()}
-          </div>
+          <div className="text-2xl font-bold text-danger">${stats.totalBudgetAtRisk.toLocaleString()}</div>
         </div>
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
           <div className="text-text-muted text-sm mb-1">Portfolio MRR</div>
@@ -325,10 +304,7 @@ export default function Portfolio() {
 
       {/* Priority Alerts */}
       {stats.critical > 0 && (
-        <div
-          data-tour="priority-alerts"
-          className="rounded-xl bg-danger/5 border border-danger/20 p-4"
-        >
+        <div data-tour="priority-alerts" className="rounded-xl bg-danger/5 border border-danger/20 p-4">
           <div className="flex items-center gap-3 mb-3">
             <FireIcon className="w-5 h-5 text-danger" />
             <span className="font-semibold text-danger">Priority Alerts</span>
@@ -430,29 +406,23 @@ export default function Portfolio() {
                 <span
                   className={cn(
                     'text-3xl font-bold',
-                    tenant.emqScore >= 80
-                      ? 'text-success'
-                      : tenant.emqScore >= 60
-                        ? 'text-warning'
-                        : 'text-danger'
+                    tenant.emqScore >= 80 ? 'text-success' :
+                    tenant.emqScore >= 60 ? 'text-warning' : 'text-danger'
                   )}
                 >
                   {tenant.emqScore}
                 </span>
                 <ConfidenceBandBadge score={tenant.emqScore} size="sm" />
-                <div
-                  className={cn(
-                    'flex items-center gap-1 text-xs mt-1',
-                    tenant.emqTrend >= 0 ? 'text-success' : 'text-danger'
-                  )}
-                >
+                <div className={cn(
+                  'flex items-center gap-1 text-xs mt-1',
+                  tenant.emqTrend >= 0 ? 'text-success' : 'text-danger'
+                )}>
                   {tenant.emqTrend >= 0 ? (
                     <ArrowTrendingUpIcon className="w-3 h-3" />
                   ) : (
                     <ArrowTrendingDownIcon className="w-3 h-3" />
                   )}
-                  {tenant.emqTrend >= 0 ? '+' : ''}
-                  {tenant.emqTrend}
+                  {tenant.emqTrend >= 0 ? '+' : ''}{tenant.emqTrend}
                 </div>
               </div>
 
@@ -460,12 +430,10 @@ export default function Portfolio() {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-semibold text-white text-lg">{tenant.name}</h3>
-                  <span
-                    className={cn(
-                      'px-2 py-0.5 rounded-full text-xs',
-                      getStatusColor(tenant.emqStatus)
-                    )}
-                  >
+                  <span className={cn(
+                    'px-2 py-0.5 rounded-full text-xs',
+                    getStatusColor(tenant.emqStatus)
+                  )}>
                     {tenant.emqStatus}
                   </span>
                   <span className="px-2 py-0.5 rounded bg-surface-tertiary text-text-muted text-xs">
@@ -476,7 +444,9 @@ export default function Portfolio() {
                 <div className="flex flex-wrap items-center gap-4 text-sm">
                   <span className="text-text-muted">{tenant.industry}</span>
                   <AutopilotModeBanner mode={tenant.autopilotMode} compact />
-                  {tenant.budgetAtRisk > 0 && <BudgetAtRiskChip amount={tenant.budgetAtRisk} />}
+                  {tenant.budgetAtRisk > 0 && (
+                    <BudgetAtRiskChip amount={tenant.budgetAtRisk} />
+                  )}
                   {tenant.activeIncidents > 0 && (
                     <span className="flex items-center gap-1 text-warning">
                       <ExclamationTriangleIcon className="w-4 h-4" />
@@ -499,34 +469,26 @@ export default function Portfolio() {
                   <div className="text-text-muted">ROAS</div>
                   <div className="flex items-center gap-1">
                     <span className="text-white font-medium">{tenant.roas.toFixed(1)}x</span>
-                    <span
-                      className={cn(
-                        'text-xs',
-                        tenant.roasTrend >= 0 ? 'text-success' : 'text-danger'
-                      )}
-                    >
-                      {tenant.roasTrend >= 0 ? '+' : ''}
-                      {tenant.roasTrend.toFixed(1)}
+                    <span className={cn(
+                      'text-xs',
+                      tenant.roasTrend >= 0 ? 'text-success' : 'text-danger'
+                    )}>
+                      {tenant.roasTrend >= 0 ? '+' : ''}{tenant.roasTrend.toFixed(1)}
                     </span>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-text-muted">Spend</div>
-                  <div className="text-white font-medium">
-                    ${(tenant.monthlySpend / 1000).toFixed(0)}k
-                  </div>
+                  <div className="text-white font-medium">${(tenant.monthlySpend / 1000).toFixed(0)}k</div>
                 </div>
                 <div className="text-right">
                   <div className="text-text-muted">Renewal</div>
-                  <div
-                    className={cn(
-                      'font-medium',
-                      tenant.renewalDate &&
-                        tenant.renewalDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000
-                        ? 'text-warning'
-                        : 'text-white'
-                    )}
-                  >
+                  <div className={cn(
+                    'font-medium',
+                    tenant.renewalDate && (tenant.renewalDate.getTime() - Date.now()) < 30 * 24 * 60 * 60 * 1000
+                      ? 'text-warning'
+                      : 'text-white'
+                  )}>
                     {formatDaysUntil(tenant.renewalDate)}
                   </div>
                 </div>
@@ -555,5 +517,5 @@ export default function Portfolio() {
         )}
       </div>
     </div>
-  );
+  )
 }

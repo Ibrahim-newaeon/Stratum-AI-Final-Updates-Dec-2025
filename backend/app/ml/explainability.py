@@ -11,15 +11,14 @@ Provides:
 - User-friendly explanations for non-technical users
 """
 
-import json
-import statistics
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
-from typing import Any, Optional
-
-import joblib
+import json
 import numpy as np
+import pandas as pd
+import joblib
 
 from app.core.logging import get_logger
 
@@ -28,7 +27,6 @@ logger = get_logger(__name__)
 # Try to import SHAP - it's optional
 try:
     import shap
-
     SHAP_AVAILABLE = True
 except ImportError:
     SHAP_AVAILABLE = False
@@ -38,7 +36,6 @@ except ImportError:
 @dataclass
 class FeatureContribution:
     """Contribution of a single feature to a prediction."""
-
     feature_name: str
     feature_value: Any
     contribution: float  # SHAP value (positive = increases prediction)
@@ -50,16 +47,15 @@ class FeatureContribution:
 @dataclass
 class PredictionExplanation:
     """Complete explanation for a single prediction."""
-
     prediction_id: str
     model_name: str
     predicted_value: float
     base_value: float  # Expected value (average prediction)
 
     # Feature contributions
-    top_positive_factors: list[FeatureContribution]
-    top_negative_factors: list[FeatureContribution]
-    all_contributions: list[FeatureContribution]
+    top_positive_factors: List[FeatureContribution]
+    top_negative_factors: List[FeatureContribution]
+    all_contributions: List[FeatureContribution]
 
     # Summary
     confidence_score: float  # How reliable is this prediction
@@ -67,25 +63,24 @@ class PredictionExplanation:
     detailed_explanation: str  # Paragraph explanation
 
     # Metadata
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
 class GlobalExplanation:
     """Global explanation across many predictions."""
-
     model_name: str
     num_samples: int
 
     # Feature importance
-    feature_importance: dict[str, float]  # feature -> mean |SHAP value|
-    feature_importance_ranked: list[tuple[str, float]]
+    feature_importance: Dict[str, float]  # feature -> mean |SHAP value|
+    feature_importance_ranked: List[Tuple[str, float]]
 
     # Interaction effects
-    top_interactions: list[tuple[str, str, float]]  # (feature1, feature2, strength)
+    top_interactions: List[Tuple[str, str, float]]  # (feature1, feature2, strength)
 
     # Summary
-    key_drivers: list[str]
+    key_drivers: List[str]
     summary: str
 
 
@@ -113,7 +108,7 @@ class ModelExplainer:
         self.model = None
         self.scaler = None
         self.imputer = None
-        self.feature_names: list[str] = []
+        self.feature_names: List[str] = []
         self.shap_explainer = None
         self.base_value = 0.0
 
@@ -140,7 +135,7 @@ class ModelExplainer:
             # Load metadata
             metadata_path = self.models_path / f"{self.model_name}_metadata.json"
             if metadata_path.exists():
-                with metadata_path.open() as f:
+                with open(metadata_path) as f:
                     metadata = json.load(f)
                     self.feature_names = metadata.get("features", [])
 
@@ -166,7 +161,7 @@ class ModelExplainer:
                 self.shap_explainer = shap.KernelExplainer(self.model.predict, background)
 
             # Calculate base value
-            if hasattr(self.shap_explainer, "expected_value"):
+            if hasattr(self.shap_explainer, 'expected_value'):
                 ev = self.shap_explainer.expected_value
                 self.base_value = float(ev) if np.isscalar(ev) else float(ev[0])
 
@@ -178,7 +173,7 @@ class ModelExplainer:
 
     def explain_prediction(
         self,
-        features: dict[str, Any],
+        features: Dict[str, Any],
         prediction: Optional[float] = None,
         prediction_id: Optional[str] = None,
         top_k: int = 5,
@@ -196,7 +191,7 @@ class ModelExplainer:
             PredictionExplanation with feature contributions
         """
         if prediction_id is None:
-            prediction_id = f"pred_{datetime.now(UTC).timestamp()}"
+            prediction_id = f"pred_{datetime.now(timezone.utc).timestamp()}"
 
         # Prepare feature vector
         X = self._prepare_features(features)
@@ -235,7 +230,7 @@ class ModelExplainer:
             detailed_explanation=detailed,
         )
 
-    def _prepare_features(self, features: dict[str, Any]) -> np.ndarray:
+    def _prepare_features(self, features: Dict[str, Any]) -> np.ndarray:
         """Prepare feature dict as model input."""
         # Create feature vector in correct order
         X = np.zeros((1, len(self.feature_names)))
@@ -257,8 +252,8 @@ class ModelExplainer:
     def _calculate_contributions(
         self,
         X: np.ndarray,
-        features: dict[str, Any],
-    ) -> list[FeatureContribution]:
+        features: Dict[str, Any],
+    ) -> List[FeatureContribution]:
         """Calculate feature contributions using SHAP or fallback."""
         contributions = []
 
@@ -277,20 +272,14 @@ class ModelExplainer:
                     contrib = float(shap_values[i])
                     pct = (abs(contrib) / total_impact * 100) if total_impact > 0 else 0
 
-                    contributions.append(
-                        FeatureContribution(
-                            feature_name=name,
-                            feature_value=value,
-                            contribution=contrib,
-                            contribution_percent=round(pct, 1),
-                            direction="positive"
-                            if contrib > 0.01
-                            else "negative"
-                            if contrib < -0.01
-                            else "neutral",
-                            human_explanation=self._explain_feature(name, value, contrib),
-                        )
-                    )
+                    contributions.append(FeatureContribution(
+                        feature_name=name,
+                        feature_value=value,
+                        contribution=contrib,
+                        contribution_percent=round(pct, 1),
+                        direction="positive" if contrib > 0.01 else "negative" if contrib < -0.01 else "neutral",
+                        human_explanation=self._explain_feature(name, value, contrib),
+                    ))
 
             except Exception as e:
                 logger.warning(f"SHAP calculation failed, using fallback: {e}")
@@ -300,13 +289,13 @@ class ModelExplainer:
 
         return contributions
 
-    def _fallback_contributions(self, features: dict[str, Any]) -> list[FeatureContribution]:
+    def _fallback_contributions(self, features: Dict[str, Any]) -> List[FeatureContribution]:
         """Fallback contribution calculation when SHAP is unavailable."""
         contributions = []
 
         # Use feature importance from model if available
         importances = {}
-        if hasattr(self.model, "feature_importances_"):
+        if hasattr(self.model, 'feature_importances_'):
             for i, name in enumerate(self.feature_names):
                 if i < len(self.model.feature_importances_):
                     importances[name] = self.model.feature_importances_[i]
@@ -331,16 +320,14 @@ class ModelExplainer:
 
             pct = (importance / total_importance * 100) if total_importance > 0 else 0
 
-            contributions.append(
-                FeatureContribution(
-                    feature_name=name,
-                    feature_value=value,
-                    contribution=contrib,
-                    contribution_percent=round(pct, 1),
-                    direction=direction,
-                    human_explanation=self._explain_feature(name, value, contrib),
-                )
-            )
+            contributions.append(FeatureContribution(
+                feature_name=name,
+                feature_value=value,
+                contribution=contrib,
+                contribution_percent=round(pct, 1),
+                direction=direction,
+                human_explanation=self._explain_feature(name, value, contrib),
+            ))
 
         return contributions
 
@@ -357,19 +344,11 @@ class ModelExplainer:
             "cpm": f"CPM of ${value:.2f} {impact} {direction} predicted ROAS",
             "log_spend": f"Spend level {impact} {direction} predicted ROAS",
             "roas_7d_avg": f"7-day average ROAS of {value:.2f} {impact} {direction} prediction",
-            "creative_video": f"Video creative {impact} {direction} predicted ROAS"
-            if value
-            else "Non-video creative",
-            "audience_retargeting": f"Retargeting audience {impact} {direction} predicted ROAS"
-            if value
-            else "Non-retargeting audience",
+            "creative_video": f"Video creative {impact} {direction} predicted ROAS" if value else "Non-video creative",
+            "audience_retargeting": f"Retargeting audience {impact} {direction} predicted ROAS" if value else "Non-retargeting audience",
             "platform_meta": f"Meta platform {impact} {direction} predicted ROAS" if value else "",
-            "platform_google": f"Google platform {impact} {direction} predicted ROAS"
-            if value
-            else "",
-            "is_weekend": f"Weekend timing {impact} {direction} predicted ROAS"
-            if value
-            else "Weekday timing",
+            "platform_google": f"Google platform {impact} {direction} predicted ROAS" if value else "",
+            "is_weekend": f"Weekend timing {impact} {direction} predicted ROAS" if value else "Weekday timing",
         }
 
         # Check for partial matches
@@ -380,19 +359,18 @@ class ModelExplainer:
         # Default explanation
         return f"{name} = {value} {impact} {direction} the prediction"
 
-    def _calculate_confidence(self, features: dict[str, Any]) -> float:
+    def _calculate_confidence(self, features: Dict[str, Any]) -> float:
         """Calculate confidence score based on feature coverage and values."""
         # Check how many expected features are present
-        present = sum(
-            1 for name in self.feature_names if name in features and features[name] is not None
-        )
+        present = sum(1 for name in self.feature_names if name in features and features[name] is not None)
         coverage = present / len(self.feature_names) if self.feature_names else 0
 
         # Check for extreme values
         extreme_penalty = 0
         for name, value in features.items():
-            if isinstance(value, (int, float)) and (value > 1000 or value < -1000):
-                extreme_penalty += 0.05
+            if isinstance(value, (int, float)):
+                if value > 1000 or value < -1000:
+                    extreme_penalty += 0.05
 
         confidence = max(0.0, min(1.0, coverage - extreme_penalty))
         return round(confidence, 2)
@@ -400,8 +378,8 @@ class ModelExplainer:
     def _generate_summary(
         self,
         prediction: float,
-        positive: list[FeatureContribution],
-        negative: list[FeatureContribution],
+        positive: List[FeatureContribution],
+        negative: List[FeatureContribution],
     ) -> str:
         """Generate one-line summary."""
         if not positive and not negative:
@@ -422,7 +400,7 @@ class ModelExplainer:
     def _generate_detailed_explanation(
         self,
         prediction: float,
-        contributions: list[FeatureContribution],
+        contributions: List[FeatureContribution],
     ) -> str:
         """Generate detailed paragraph explanation."""
         lines = [f"The model predicts a ROAS of {prediction:.2f}."]
@@ -432,15 +410,11 @@ class ModelExplainer:
 
         if positive:
             factors = [c.feature_name for c in positive[:3]]
-            lines.append(
-                f"Key factors driving this prediction higher: {', '.join(self._friendly_name(f) for f in factors)}."
-            )
+            lines.append(f"Key factors driving this prediction higher: {', '.join(self._friendly_name(f) for f in factors)}.")
 
         if negative:
             factors = [c.feature_name for c in negative[:3]]
-            lines.append(
-                f"Factors limiting the prediction: {', '.join(self._friendly_name(f) for f in factors)}."
-            )
+            lines.append(f"Factors limiting the prediction: {', '.join(self._friendly_name(f) for f in factors)}.")
 
         # Add specific insights
         for c in contributions[:5]:
@@ -480,7 +454,7 @@ class ModelExplainer:
     def get_global_explanation(
         self,
         X: np.ndarray,
-        feature_names: Optional[list[str]] = None,
+        feature_names: Optional[List[str]] = None,
     ) -> GlobalExplanation:
         """
         Get global feature importance across many predictions.
@@ -542,11 +516,11 @@ class ModelExplainer:
             summary=summary,
         )
 
-    def _fallback_importance(self) -> dict[str, float]:
+    def _fallback_importance(self) -> Dict[str, float]:
         """Fallback feature importance from model."""
         importance = {}
 
-        if hasattr(self.model, "feature_importances_"):
+        if hasattr(self.model, 'feature_importances_'):
             for i, name in enumerate(self.feature_names):
                 if i < len(self.model.feature_importances_):
                     importance[name] = float(self.model.feature_importances_[i])
@@ -559,15 +533,15 @@ class ModelExplainer:
 
     def _estimate_interactions(
         self,
-        importance: dict[str, float],
-    ) -> list[tuple[str, str, float]]:
+        importance: Dict[str, float],
+    ) -> List[Tuple[str, str, float]]:
         """Estimate feature interactions based on importance."""
         # Simplified: pair top features
         ranked = sorted(importance.items(), key=lambda x: x[1], reverse=True)[:10]
 
         interactions = []
         for i, (name1, imp1) in enumerate(ranked):
-            for name2, imp2 in ranked[i + 1 : i + 3]:
+            for name2, imp2 in ranked[i+1:i+3]:
                 # Estimate interaction as product of importances
                 strength = (imp1 * imp2) ** 0.5
                 interactions.append((name1, name2, round(strength, 4)))
@@ -576,7 +550,7 @@ class ModelExplainer:
 
     def _generate_global_summary(
         self,
-        ranked: list[tuple[str, float]],
+        ranked: List[Tuple[str, float]],
         num_samples: int,
     ) -> str:
         """Generate global explanation summary."""
@@ -596,12 +570,11 @@ class ModelExplainer:
 # Convenience Functions
 # =============================================================================
 
-
 def explain_roas_prediction(
-    features: dict[str, Any],
+    features: Dict[str, Any],
     prediction: float,
     models_path: str = "./models",
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Explain a ROAS prediction.
 
@@ -645,7 +618,7 @@ def explain_roas_prediction(
 def get_model_feature_importance(
     model_name: str = "roas_predictor",
     models_path: str = "./models",
-) -> dict[str, float]:
+) -> Dict[str, float]:
     """
     Get global feature importance for a model.
 
@@ -660,14 +633,12 @@ def get_model_feature_importance(
 # Advanced Explainability Features (P2 Enhancement)
 # =============================================================================
 
-
 @dataclass
 class CounterfactualExplanation:
     """What-if scenario explanation."""
-
     original_prediction: float
     counterfactual_prediction: float
-    changed_features: dict[str, tuple[Any, Any]]  # feature -> (original, new)
+    changed_features: Dict[str, Tuple[Any, Any]]  # feature -> (original, new)
     impact: float
     feasibility_score: float  # How realistic is this change
     recommendation: str
@@ -676,13 +647,12 @@ class CounterfactualExplanation:
 @dataclass
 class ModelDriftAlert:
     """Alert for model drift detection."""
-
     alert_id: str
     model_name: str
     drift_type: str  # data_drift, concept_drift, performance_drift
     severity: str  # low, medium, high, critical
     detected_at: datetime
-    affected_features: list[str]
+    affected_features: List[str]
     drift_magnitude: float
     recommended_action: str
 
@@ -690,7 +660,6 @@ class ModelDriftAlert:
 @dataclass
 class FeatureInteraction:
     """Interaction between two features."""
-
     feature_1: str
     feature_2: str
     interaction_strength: float
@@ -708,8 +677,8 @@ class CounterfactualExplainer:
     """
 
     def __init__(self):
-        self._feature_ranges: dict[str, tuple[float, float]] = {}
-        self._feature_types: dict[str, str] = {}
+        self._feature_ranges: Dict[str, Tuple[float, float]] = {}
+        self._feature_types: Dict[str, str] = {}
 
     def set_feature_constraints(
         self,
@@ -724,7 +693,7 @@ class CounterfactualExplainer:
 
     def generate_counterfactual(
         self,
-        original_features: dict[str, float],
+        original_features: Dict[str, float],
         original_prediction: float,
         target_prediction: float,
         model_predict_fn: Optional[Any] = None,
@@ -738,13 +707,8 @@ class CounterfactualExplainer:
 
         # Priority features for marketing optimization
         feature_priority = [
-            "spend",
-            "ctr",
-            "conversion_rate",
-            "avg_order_value",
-            "impressions",
-            "clicks",
-            "audience_size",
+            "spend", "ctr", "conversion_rate", "avg_order_value",
+            "impressions", "clicks", "audience_size"
         ]
 
         for feature in feature_priority:
@@ -765,13 +729,10 @@ class CounterfactualExplainer:
 
             # Check if we've reached target (simplified)
             estimated_impact = abs(new_value - original_value) / max(original_value, 0.01) * 0.1
-            current_prediction += (
-                direction * estimated_impact * abs(target_prediction - original_prediction)
-            )
+            current_prediction += direction * estimated_impact * abs(target_prediction - original_prediction)
 
-            if (direction > 0 and current_prediction >= target_prediction) or (
-                direction < 0 and current_prediction <= target_prediction
-            ):
+            if (direction > 0 and current_prediction >= target_prediction) or \
+               (direction < 0 and current_prediction <= target_prediction):
                 break
 
         # Calculate feasibility
@@ -791,7 +752,7 @@ class CounterfactualExplainer:
             recommendation=recommendation,
         )
 
-    def _calculate_feasibility(self, changed_features: dict[str, tuple]) -> float:
+    def _calculate_feasibility(self, changed_features: Dict[str, Tuple]) -> float:
         """Calculate how feasible the proposed changes are."""
         if not changed_features:
             return 1.0
@@ -814,7 +775,7 @@ class CounterfactualExplainer:
 
     def _generate_recommendation(
         self,
-        changed_features: dict[str, tuple],
+        changed_features: Dict[str, Tuple],
         original: float,
         target: float,
     ) -> str:
@@ -843,21 +804,21 @@ class ModelDriftDetector:
     """
 
     def __init__(self):
-        self._baseline_stats: dict[str, dict[str, float]] = {}
-        self._performance_history: list[tuple[datetime, float]] = []
-        self._alerts: list[ModelDriftAlert] = []
+        self._baseline_stats: Dict[str, Dict[str, float]] = {}
+        self._performance_history: List[Tuple[datetime, float]] = []
+        self._alerts: List[ModelDriftAlert] = []
 
     def set_baseline(
         self,
         model_name: str,
-        feature_stats: dict[str, dict[str, float]],
+        feature_stats: Dict[str, Dict[str, float]],
     ):
         """Set baseline statistics for drift detection."""
         self._baseline_stats[model_name] = feature_stats
 
     def record_performance(self, accuracy: float):
         """Record model performance for drift detection."""
-        self._performance_history.append((datetime.now(UTC), accuracy))
+        self._performance_history.append((datetime.now(timezone.utc), accuracy))
 
         # Keep last 1000 records
         if len(self._performance_history) > 1000:
@@ -866,12 +827,12 @@ class ModelDriftDetector:
     def detect_drift(
         self,
         model_name: str,
-        current_features: dict[str, list[float]],
+        current_features: Dict[str, List[float]],
         current_performance: Optional[float] = None,
-    ) -> list[ModelDriftAlert]:
+    ) -> List[ModelDriftAlert]:
         """Detect drift in current data vs baseline."""
         alerts = []
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         baseline = self._baseline_stats.get(model_name, {})
         if not baseline:
@@ -898,18 +859,16 @@ class ModelDriftDetector:
 
         if drifted_features:
             severity = "high" if len(drifted_features) > 3 else "medium"
-            alerts.append(
-                ModelDriftAlert(
-                    alert_id=f"data_drift_{model_name}_{now.timestamp()}",
-                    model_name=model_name,
-                    drift_type="data_drift",
-                    severity=severity,
-                    detected_at=now,
-                    affected_features=drifted_features,
-                    drift_magnitude=len(drifted_features) / len(current_features),
-                    recommended_action="Review feature pipelines and retrain model if drift persists",
-                )
-            )
+            alerts.append(ModelDriftAlert(
+                alert_id=f"data_drift_{model_name}_{now.timestamp()}",
+                model_name=model_name,
+                drift_type="data_drift",
+                severity=severity,
+                detected_at=now,
+                affected_features=drifted_features,
+                drift_magnitude=len(drifted_features) / len(current_features),
+                recommended_action="Review feature pipelines and retrain model if drift persists",
+            ))
 
         # Check performance drift
         if current_performance is not None and self._performance_history:
@@ -918,27 +877,26 @@ class ModelDriftDetector:
 
             if perf_drop > 0.1:  # 10% drop
                 severity = "critical" if perf_drop > 0.2 else "high"
-                alerts.append(
-                    ModelDriftAlert(
-                        alert_id=f"perf_drift_{model_name}_{now.timestamp()}",
-                        model_name=model_name,
-                        drift_type="performance_drift",
-                        severity=severity,
-                        detected_at=now,
-                        affected_features=[],
-                        drift_magnitude=perf_drop,
-                        recommended_action="Immediate model retraining recommended",
-                    )
-                )
+                alerts.append(ModelDriftAlert(
+                    alert_id=f"perf_drift_{model_name}_{now.timestamp()}",
+                    model_name=model_name,
+                    drift_type="performance_drift",
+                    severity=severity,
+                    detected_at=now,
+                    affected_features=[],
+                    drift_magnitude=perf_drop,
+                    recommended_action="Immediate model retraining recommended",
+                ))
 
         self._alerts.extend(alerts)
         return alerts
 
-    def get_drift_summary(self, model_name: str, days: int = 7) -> dict[str, Any]:
+    def get_drift_summary(self, model_name: str, days: int = 7) -> Dict[str, Any]:
         """Get drift summary for a model."""
-        cutoff = datetime.now(UTC) - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         recent_alerts = [
-            a for a in self._alerts if a.model_name == model_name and a.detected_at > cutoff
+            a for a in self._alerts
+            if a.model_name == model_name and a.detected_at > cutoff
         ]
 
         return {
@@ -946,16 +904,14 @@ class ModelDriftDetector:
             "period_days": days,
             "total_alerts": len(recent_alerts),
             "data_drift_alerts": sum(1 for a in recent_alerts if a.drift_type == "data_drift"),
-            "performance_drift_alerts": sum(
-                1 for a in recent_alerts if a.drift_type == "performance_drift"
-            ),
+            "performance_drift_alerts": sum(1 for a in recent_alerts if a.drift_type == "performance_drift"),
             "most_affected_features": self._get_most_affected_features(recent_alerts),
             "status": "healthy" if not recent_alerts else "needs_attention",
         }
 
-    def _get_most_affected_features(self, alerts: list[ModelDriftAlert]) -> list[str]:
+    def _get_most_affected_features(self, alerts: List[ModelDriftAlert]) -> List[str]:
         """Get most frequently affected features."""
-        feature_counts: dict[str, int] = {}
+        feature_counts: Dict[str, int] = {}
         for alert in alerts:
             for feature in alert.affected_features:
                 feature_counts[feature] = feature_counts.get(feature, 0) + 1
@@ -974,13 +930,13 @@ class FeatureInteractionAnalyzer:
     """
 
     def __init__(self):
-        self._interaction_cache: dict[str, FeatureInteraction] = {}
+        self._interaction_cache: Dict[str, FeatureInteraction] = {}
 
     def analyze_interaction(
         self,
         feature_1: str,
         feature_2: str,
-        data: list[dict[str, float]],
+        data: List[Dict[str, float]],
         target_column: str = "roas",
     ) -> FeatureInteraction:
         """Analyze interaction between two features."""
@@ -1029,7 +985,7 @@ class FeatureInteractionAnalyzer:
         self._interaction_cache[cache_key] = result
         return result
 
-    def _calculate_correlation(self, x: list[float], y: list[float]) -> float:
+    def _calculate_correlation(self, x: List[float], y: List[float]) -> float:
         """Calculate Pearson correlation coefficient."""
         if len(x) != len(y) or len(x) < 2:
             return 0.0
@@ -1062,15 +1018,15 @@ class FeatureInteractionAnalyzer:
 
     def get_top_interactions(
         self,
-        features: list[str],
-        data: list[dict[str, float]],
+        features: List[str],
+        data: List[Dict[str, float]],
         top_n: int = 5,
-    ) -> list[FeatureInteraction]:
+    ) -> List[FeatureInteraction]:
         """Get top feature interactions by strength."""
         interactions = []
 
         for i, f1 in enumerate(features):
-            for f2 in features[i + 1 :]:
+            for f2 in features[i+1:]:
                 interaction = self.analyze_interaction(f1, f2, data)
                 interactions.append(interaction)
 

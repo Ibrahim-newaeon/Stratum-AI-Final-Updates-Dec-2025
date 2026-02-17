@@ -13,17 +13,17 @@ Features:
 - Audit logging
 """
 
-from datetime import UTC, date, datetime
-from typing import Optional
+from datetime import datetime, timedelta, timezone, date
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
-from sqlalchemy import desc, func, or_, select
+from sqlalchemy import select, func, desc, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models import Campaign, Tenant, User, UserRole
+from app.models import Tenant, User, UserRole, Campaign
 from app.schemas import APIResponse
 
 logger = get_logger(__name__)
@@ -35,7 +35,6 @@ router = APIRouter()
 # =============================================================================
 class RevenueMetrics(BaseModel):
     """Platform revenue metrics."""
-
     mrr: float  # Monthly Recurring Revenue
     arr: float  # Annual Recurring Revenue
     mrr_growth_pct: float
@@ -48,7 +47,6 @@ class RevenueMetrics(BaseModel):
 
 class TenantPortfolioItem(BaseModel):
     """Tenant in the portfolio table."""
-
     id: int
     name: str
     slug: str
@@ -58,7 +56,7 @@ class TenantPortfolioItem(BaseModel):
     users_count: int
     users_limit: int
     campaigns_count: int
-    connectors: list[str]
+    connectors: List[str]
     data_freshness_hours: Optional[float]
     signal_health: str  # healthy/risk/degraded/critical
     open_alerts: int
@@ -69,7 +67,6 @@ class TenantPortfolioItem(BaseModel):
 
 class SystemHealthMetrics(BaseModel):
     """System health indicators."""
-
     pipeline_success_rate_24h: float
     pipeline_success_rate_7d: float
     api_error_rate: float
@@ -83,12 +80,11 @@ class SystemHealthMetrics(BaseModel):
 
 class ChurnRiskItem(BaseModel):
     """Tenant with churn risk."""
-
     tenant_id: int
     tenant_name: str
     risk_score: float
-    risk_factors: list[str]
-    recommended_actions: list[str]
+    risk_factors: List[str]
+    recommended_actions: List[str]
     mrr_at_risk: float
 
 
@@ -130,39 +126,27 @@ async def get_revenue_metrics(
     require_superadmin(request)
 
     # Get all active tenants
-    result = await db.execute(select(Tenant).where(Tenant.is_deleted == False))
+    result = await db.execute(
+        select(Tenant).where(Tenant.is_deleted == False)
+    )
     tenants = result.scalars().all()
 
     # Calculate MRR
-    total_mrr = sum(getattr(t, "mrr_cents", 0) or 0 for t in tenants) / 100
+    total_mrr = sum(getattr(t, 'mrr_cents', 0) or 0 for t in tenants) / 100
 
     # Count tenants by status
-    active_count = len([t for t in tenants if getattr(t, "status", "active") == "active"])
-    trial_count = len(
-        [t for t in tenants if t.plan == "trial" or getattr(t, "status", "") == "trialing"]
-    )
+    active_count = len([t for t in tenants if getattr(t, 'status', 'active') == 'active'])
+    trial_count = len([t for t in tenants if t.plan == 'trial' or getattr(t, 'status', '') == 'trialing'])
 
     # Calculate ARPA
     arpa = total_mrr / max(active_count, 1)
 
-    # Calculate trial conversion rate from real data
-    converted_count = len(
-        [t for t in tenants if getattr(t, "plan", "") not in ("trial", "") and
-         getattr(t, "status", "") != "trialing"]
-    )
-    trial_conversion_rate = (
-        round((converted_count / (converted_count + trial_count)) * 100, 1)
-        if (converted_count + trial_count) > 0
-        else 0.0
-    )
-
-    # These metrics require historical subscription data to compute accurately.
-    # Set to 0 until billing history tracking is implemented.
-    mrr_growth = 0.0
-    gross_margin = 0.0
-    nrr = 0.0
-    logo_churn = 0.0
-    revenue_churn = 0.0
+    # Placeholder metrics (would be calculated from historical data)
+    mrr_growth = 8.5  # 8.5% month-over-month
+    gross_margin = 72.0  # 72% gross margin
+    nrr = 105.0  # 105% net revenue retention
+    logo_churn = 3.2  # 3.2% logo churn
+    revenue_churn = 2.1  # 2.1% revenue churn
 
     return APIResponse(
         success=True,
@@ -178,7 +162,7 @@ async def get_revenue_metrics(
             "active_tenants": active_count,
             "trial_tenants": trial_count,
             "total_tenants": len(tenants),
-            "trial_conversion_rate": trial_conversion_rate,
+            "trial_conversion_rate": 45.0,  # Placeholder
         },
     )
 
@@ -193,7 +177,9 @@ async def get_revenue_breakdown(
     """
     require_superadmin(request)
 
-    result = await db.execute(select(Tenant).where(Tenant.is_deleted == False))
+    result = await db.execute(
+        select(Tenant).where(Tenant.is_deleted == False)
+    )
     tenants = result.scalars().all()
 
     # Group by plan
@@ -203,7 +189,7 @@ async def get_revenue_breakdown(
         if plan not in by_plan:
             by_plan[plan] = {"count": 0, "mrr": 0}
         by_plan[plan]["count"] += 1
-        by_plan[plan]["mrr"] += (getattr(t, "mrr_cents", 0) or 0) / 100
+        by_plan[plan]["mrr"] += (getattr(t, 'mrr_cents', 0) or 0) / 100
 
     return APIResponse(
         success=True,
@@ -250,7 +236,10 @@ async def get_tenant_portfolio(
     user_counts = {}
     for t in tenants:
         count_result = await db.execute(
-            select(func.count(User.id)).where(User.tenant_id == t.id, User.is_deleted == False)
+            select(func.count(User.id)).where(
+                User.tenant_id == t.id,
+                User.is_deleted == False
+            )
         )
         user_counts[t.id] = count_result.scalar() or 0
 
@@ -259,7 +248,8 @@ async def get_tenant_portfolio(
     for t in tenants:
         count_result = await db.execute(
             select(func.count(Campaign.id)).where(
-                Campaign.tenant_id == t.id, Campaign.is_deleted == False
+                Campaign.tenant_id == t.id,
+                Campaign.is_deleted == False
             )
         )
         campaign_counts[t.id] = count_result.scalar() or 0
@@ -269,7 +259,7 @@ async def get_tenant_portfolio(
     for t in tenants:
         # Determine signal health (would come from real data)
         signal_health = "healthy"
-        if hasattr(t, "health_score") and t.health_score:
+        if hasattr(t, 'health_score') and t.health_score:
             if t.health_score < 50:
                 signal_health = "critical"
             elif t.health_score < 70:
@@ -277,26 +267,24 @@ async def get_tenant_portfolio(
             elif t.health_score < 85:
                 signal_health = "risk"
 
-        portfolio.append(
-            {
-                "id": t.id,
-                "name": t.name,
-                "slug": t.slug,
-                "plan": t.plan,
-                "status": getattr(t, "status", "active"),
-                "mrr": (getattr(t, "mrr_cents", 0) or 0) / 100,
-                "users_count": user_counts.get(t.id, 0),
-                "users_limit": t.max_users,
-                "campaigns_count": campaign_counts.get(t.id, 0),
-                "connectors": [],  # Would come from platform_connectors table
-                "data_freshness_hours": None,
-                "signal_health": signal_health,
-                "open_alerts": 0,  # Would come from alerts table
-                "churn_risk": getattr(t, "churn_risk_score", None),
-                "last_admin_login": getattr(t, "last_admin_login_at", None),
-                "created_at": t.created_at,
-            }
-        )
+        portfolio.append({
+            "id": t.id,
+            "name": t.name,
+            "slug": t.slug,
+            "plan": t.plan,
+            "status": getattr(t, 'status', 'active'),
+            "mrr": (getattr(t, 'mrr_cents', 0) or 0) / 100,
+            "users_count": user_counts.get(t.id, 0),
+            "users_limit": t.max_users,
+            "campaigns_count": campaign_counts.get(t.id, 0),
+            "connectors": [],  # Would come from platform_connectors table
+            "data_freshness_hours": None,
+            "signal_health": signal_health,
+            "open_alerts": 0,  # Would come from alerts table
+            "churn_risk": getattr(t, 'churn_risk_score', None),
+            "last_admin_login": getattr(t, 'last_admin_login_at', None),
+            "created_at": t.created_at,
+        })
 
     # Sort
     if sort_by == "mrr":
@@ -331,41 +319,41 @@ async def get_system_health(
     """
     require_superadmin(request)
 
-    import psutil
-
-    # Real system resource metrics
-    cpu_percent = psutil.cpu_percent(interval=0.1)
-    memory = psutil.virtual_memory()
-    disk = psutil.disk_usage("/")
-
+    # These would come from system_health_hourly table and real metrics
+    # Using placeholders for now
     return APIResponse(
         success=True,
         data={
             "pipeline": {
-                "success_rate_24h": None,
-                "success_rate_7d": None,
-                "jobs_total_24h": None,
-                "jobs_failed_24h": None,
+                "success_rate_24h": 99.2,
+                "success_rate_7d": 99.5,
+                "jobs_total_24h": 1250,
+                "jobs_failed_24h": 10,
             },
             "api": {
-                "requests_24h": None,
-                "error_rate": None,
-                "latency_p50_ms": None,
-                "latency_p99_ms": None,
+                "requests_24h": 45000,
+                "error_rate": 0.3,
+                "latency_p50_ms": 45,
+                "latency_p99_ms": 320,
             },
             "queue": {
-                "depth": None,
-                "latency_ms": None,
+                "depth": 12,
+                "latency_ms": 150,
             },
-            "platforms": {},
+            "platforms": {
+                "meta": {"status": "healthy", "success_rate": 99.8, "rate_limit_remaining": 85},
+                "google": {"status": "healthy", "success_rate": 99.5, "rate_limit_remaining": 90},
+                "tiktok": {"status": "healthy", "success_rate": 98.9, "rate_limit_remaining": 78},
+                "snap": {"status": "risk", "success_rate": 95.2, "rate_limit_remaining": 45},
+            },
             "resources": {
-                "cpu_percent": round(cpu_percent, 1),
-                "memory_percent": round(memory.percent, 1),
-                "disk_percent": round(disk.percent, 1),
+                "cpu_percent": 35,
+                "memory_percent": 62,
+                "disk_percent": 48,
             },
             "warehouse": {
-                "cost_daily_usd": None,
-                "storage_gb": None,
+                "cost_daily_usd": 45.50,
+                "storage_gb": 125,
             },
         },
     )
@@ -388,7 +376,9 @@ async def get_churn_risks(
     require_superadmin(request)
 
     # Get tenants with churn risk score
-    result = await db.execute(select(Tenant).where(Tenant.is_deleted == False))
+    result = await db.execute(
+        select(Tenant).where(Tenant.is_deleted == False)
+    )
     tenants = result.scalars().all()
 
     # Calculate churn risk for each tenant
@@ -397,18 +387,16 @@ async def get_churn_risks(
         risk_score, risk_factors = calculate_churn_risk(t)
 
         if risk_score >= min_risk:
-            mrr = (getattr(t, "mrr_cents", 0) or 0) / 100
-            risks.append(
-                {
-                    "tenant_id": t.id,
-                    "tenant_name": t.name,
-                    "plan": t.plan,
-                    "risk_score": round(risk_score, 2),
-                    "risk_factors": risk_factors,
-                    "recommended_actions": get_churn_actions(risk_factors),
-                    "mrr_at_risk": mrr,
-                }
-            )
+            mrr = (getattr(t, 'mrr_cents', 0) or 0) / 100
+            risks.append({
+                "tenant_id": t.id,
+                "tenant_name": t.name,
+                "plan": t.plan,
+                "risk_score": round(risk_score, 2),
+                "risk_factors": risk_factors,
+                "recommended_actions": get_churn_actions(risk_factors),
+                "mrr_at_risk": mrr,
+            })
 
     # Sort by risk score (highest first)
     risks.sort(key=lambda x: x["risk_score"], reverse=True)
@@ -442,9 +430,9 @@ def calculate_churn_risk(tenant) -> tuple[float, list[str]]:
     factors = []
 
     # Usage drop (simulated - would check tenant_usage_daily)
-    last_activity = getattr(tenant, "last_activity_at", None)
+    last_activity = getattr(tenant, 'last_activity_at', None)
     if last_activity:
-        days_inactive = (datetime.now(UTC) - last_activity).days
+        days_inactive = (datetime.now(timezone.utc) - last_activity).days
         if days_inactive > 14:
             usage_drop = min(1.0, days_inactive / 30)
             risk += 0.35 * usage_drop
@@ -454,32 +442,32 @@ def calculate_churn_risk(tenant) -> tuple[float, list[str]]:
         factors.append("No recent activity data")
 
     # Data failures (simulated)
-    health_score = getattr(tenant, "health_score", 100) or 100
+    health_score = getattr(tenant, 'health_score', 100) or 100
     if health_score < 80:
         data_failure_risk = (80 - health_score) / 80
         risk += 0.25 * data_failure_risk
         factors.append(f"Data quality issues (health score: {health_score:.0f})")
 
     # Onboarding incomplete
-    onboarding = getattr(tenant, "onboarding_completed", True)
+    onboarding = getattr(tenant, 'onboarding_completed', True)
     if not onboarding:
         risk += 0.20 * 0.7
         factors.append("Onboarding not completed")
 
     # Trial expiring soon
-    trial_ends = getattr(tenant, "trial_ends_at", None)
+    trial_ends = getattr(tenant, 'trial_ends_at', None)
     if trial_ends:
-        days_left = (trial_ends - datetime.now(UTC)).days
+        days_left = (trial_ends - datetime.now(timezone.utc)).days
         if 0 < days_left < 7:
             risk += 0.15
             factors.append(f"Trial ending in {days_left} days")
 
     # Status past due
-    status = getattr(tenant, "status", "active")
-    if status == "past_due":
+    status = getattr(tenant, 'status', 'active')
+    if status == 'past_due':
         risk += 0.25
         factors.append("Payment past due")
-    elif status == "cancelled":
+    elif status == 'cancelled':
         risk += 0.50
         factors.append("Subscription cancelled")
 
@@ -543,8 +531,7 @@ async def get_audit_logs(
     require_superadmin(request)
 
     try:
-        from sqlalchemy import MetaData
-
+        from sqlalchemy import Table, MetaData
         metadata = MetaData()
 
         # Build query for audit_logs table
@@ -577,28 +564,25 @@ async def get_audit_logs(
         params["skip"] = skip
 
         from sqlalchemy import text
-
         result = await db.execute(text(query), params)
         rows = result.fetchall()
 
         logs = []
         for row in rows:
-            logs.append(
-                {
-                    "id": row[0],
-                    "timestamp": row[1].isoformat() if row[1] else None,
-                    "tenant_id": row[2],
-                    "user_id": row[3],
-                    "user_email": row[4],
-                    "action": row[5],
-                    "resource_type": row[6],
-                    "resource_id": row[7],
-                    "details": row[8],
-                    "ip_address": row[9],
-                    "success": row[10],
-                    "error_message": row[11],
-                }
-            )
+            logs.append({
+                "id": row[0],
+                "timestamp": row[1].isoformat() if row[1] else None,
+                "tenant_id": row[2],
+                "user_id": row[3],
+                "user_email": row[4],
+                "action": row[5],
+                "resource_type": row[6],
+                "resource_id": row[7],
+                "details": row[8],
+                "ip_address": row[9],
+                "success": row[10],
+                "error_message": row[11],
+            })
 
         # Get total count
         count_query = "SELECT COUNT(*) FROM audit_logs WHERE 1=1"
@@ -647,9 +631,8 @@ async def create_audit_log(
     Used by other endpoints to track admin actions.
     """
     try:
-        import json
-
         from sqlalchemy import text
+        import json
 
         query = text("""
             INSERT INTO audit_logs
@@ -660,22 +643,19 @@ async def create_audit_log(
              :resource_id, :details, :ip_address, :user_agent, :success, :error_message)
         """)
 
-        await db.execute(
-            query,
-            {
-                "tenant_id": tenant_id,
-                "user_id": user_id,
-                "user_email": user_email,
-                "action": action,
-                "resource_type": resource_type,
-                "resource_id": resource_id,
-                "details": json.dumps(details) if details else None,
-                "ip_address": ip_address,
-                "user_agent": user_agent,
-                "success": success,
-                "error_message": error_message,
-            },
-        )
+        await db.execute(query, {
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+            "user_email": user_email,
+            "action": action,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "details": json.dumps(details) if details else None,
+            "ip_address": ip_address,
+            "user_agent": user_agent,
+            "success": success,
+            "error_message": error_message,
+        })
         await db.commit()
     except Exception as e:
         logger.warning(f"Failed to create audit log: {e}")
@@ -697,41 +677,36 @@ async def get_subscription_plans(
 
     try:
         from sqlalchemy import text
-
-        result = await db.execute(
-            text("""
+        result = await db.execute(text("""
             SELECT id, name, display_name, tier, billing_period, price_cents,
                    currency, max_users, max_campaigns, max_connectors,
                    max_refresh_frequency_mins, features, is_active, sort_order
             FROM subscription_plans
             WHERE is_active = true
             ORDER BY sort_order
-        """)
-        )
+        """))
         rows = result.fetchall()
 
         plans = []
         for row in rows:
-            plans.append(
-                {
-                    "id": row[0],
-                    "name": row[1],
-                    "display_name": row[2],
-                    "tier": row[3],
-                    "billing_period": row[4],
-                    "price_cents": row[5],
-                    "price": row[5] / 100,
-                    "currency": row[6],
-                    "limits": {
-                        "max_users": row[7],
-                        "max_campaigns": row[8],
-                        "max_connectors": row[9],
-                        "max_refresh_frequency_mins": row[10],
-                    },
-                    "features": row[11] or {},
-                    "is_active": row[12],
-                }
-            )
+            plans.append({
+                "id": row[0],
+                "name": row[1],
+                "display_name": row[2],
+                "tier": row[3],
+                "billing_period": row[4],
+                "price_cents": row[5],
+                "price": row[5] / 100,
+                "currency": row[6],
+                "limits": {
+                    "max_users": row[7],
+                    "max_campaigns": row[8],
+                    "max_connectors": row[9],
+                    "max_refresh_frequency_mins": row[10],
+                },
+                "features": row[11] or {},
+                "is_active": row[12],
+            })
 
         return APIResponse(success=True, data={"plans": plans})
     except Exception as e:
@@ -741,34 +716,10 @@ async def get_subscription_plans(
             success=True,
             data={
                 "plans": [
-                    {
-                        "id": "free",
-                        "name": "Free",
-                        "tier": "free",
-                        "price": 0,
-                        "limits": {"max_users": 5, "max_campaigns": 10, "max_connectors": 2},
-                    },
-                    {
-                        "id": "starter_monthly",
-                        "name": "Starter",
-                        "tier": "starter",
-                        "price": 99,
-                        "limits": {"max_users": 10, "max_campaigns": 50, "max_connectors": 3},
-                    },
-                    {
-                        "id": "professional_monthly",
-                        "name": "Professional",
-                        "tier": "professional",
-                        "price": 299,
-                        "limits": {"max_users": 25, "max_campaigns": 200, "max_connectors": 5},
-                    },
-                    {
-                        "id": "enterprise_monthly",
-                        "name": "Enterprise",
-                        "tier": "enterprise",
-                        "price": 999,
-                        "limits": {"max_users": 100, "max_campaigns": 1000, "max_connectors": 10},
-                    },
+                    {"id": "free", "name": "Free", "tier": "free", "price": 0, "limits": {"max_users": 5, "max_campaigns": 10, "max_connectors": 2}},
+                    {"id": "starter_monthly", "name": "Starter", "tier": "starter", "price": 99, "limits": {"max_users": 10, "max_campaigns": 50, "max_connectors": 3}},
+                    {"id": "professional_monthly", "name": "Professional", "tier": "professional", "price": 299, "limits": {"max_users": 25, "max_campaigns": 200, "max_connectors": 5}},
+                    {"id": "enterprise_monthly", "name": "Enterprise", "tier": "enterprise", "price": 999, "limits": {"max_users": 100, "max_campaigns": 1000, "max_connectors": 10}},
                 ],
             },
         )
@@ -776,7 +727,6 @@ async def get_subscription_plans(
 
 class PlanUpdate(BaseModel):
     """Plan update request."""
-
     price_cents: Optional[int] = None
     max_users: Optional[int] = None
     max_campaigns: Optional[int] = None
@@ -799,15 +749,8 @@ async def update_subscription_plan(
     user_id = require_superadmin(request)
 
     try:
-        import json
-
         from sqlalchemy import text
-
-        # Allowlist of updatable columns — defense-in-depth against SQL injection
-        ALLOWED_COLUMNS = frozenset({
-            "price_cents", "max_users", "max_campaigns",
-            "max_connectors", "features", "is_active",
-        })
+        import json
 
         updates = []
         params = {"plan_id": plan_id}
@@ -831,12 +774,6 @@ async def update_subscription_plan(
             updates.append("is_active = :is_active")
             params["is_active"] = update.is_active
 
-        # Verify all column names are in the allowlist
-        for clause in updates:
-            col_name = clause.split(" = ")[0].strip()
-            if col_name not in ALLOWED_COLUMNS:
-                raise HTTPException(status_code=400, detail=f"Invalid column: {col_name}")
-
         if updates:
             updates.append("updated_at = NOW()")
             query = text(f"UPDATE subscription_plans SET {', '.join(updates)} WHERE id = :plan_id")
@@ -845,12 +782,9 @@ async def update_subscription_plan(
 
             # Create audit log
             await create_audit_log(
-                db,
-                action="plan_updated",
-                user_id=user_id,
-                resource_type="subscription_plan",
-                resource_id=plan_id,
-                details=update.dict(exclude_none=True),
+                db, action="plan_updated", user_id=user_id,
+                resource_type="subscription_plan", resource_id=plan_id,
+                details=update.dict(exclude_none=True)
             )
 
         return APIResponse(success=True, message=f"Plan {plan_id} updated")
@@ -903,35 +837,31 @@ async def get_invoices(
 
         invoices = []
         for row in rows:
-            invoices.append(
-                {
-                    "id": row[0],
-                    "tenant_id": row[1],
-                    "tenant_name": row[2],
-                    "invoice_number": row[3],
-                    "status": row[4],
-                    "amount_cents": row[5],
-                    "amount": row[5] / 100 if row[5] else 0,
-                    "tax_cents": row[6],
-                    "total_cents": row[7],
-                    "total": row[7] / 100 if row[7] else 0,
-                    "currency": row[8],
-                    "due_date": row[9].isoformat() if row[9] else None,
-                    "paid_at": row[10].isoformat() if row[10] else None,
-                    "created_at": row[11].isoformat() if row[11] else None,
-                }
-            )
+            invoices.append({
+                "id": row[0],
+                "tenant_id": row[1],
+                "tenant_name": row[2],
+                "invoice_number": row[3],
+                "status": row[4],
+                "amount_cents": row[5],
+                "amount": row[5] / 100 if row[5] else 0,
+                "tax_cents": row[6],
+                "total_cents": row[7],
+                "total": row[7] / 100 if row[7] else 0,
+                "currency": row[8],
+                "due_date": row[9].isoformat() if row[9] else None,
+                "paid_at": row[10].isoformat() if row[10] else None,
+                "created_at": row[11].isoformat() if row[11] else None,
+            })
 
         # Get summary
-        summary_result = await db.execute(
-            text("""
+        summary_result = await db.execute(text("""
             SELECT
                 SUM(CASE WHEN status = 'paid' THEN total_cents ELSE 0 END) as paid,
                 SUM(CASE WHEN status = 'pending' THEN total_cents ELSE 0 END) as pending,
                 SUM(CASE WHEN status = 'overdue' THEN total_cents ELSE 0 END) as overdue
             FROM invoices
-        """)
-        )
+        """))
         summary_row = summary_result.fetchone()
 
         return APIResponse(
@@ -1000,20 +930,18 @@ async def get_subscriptions(
 
         subscriptions = []
         for row in rows:
-            subscriptions.append(
-                {
-                    "id": row[0],
-                    "tenant_id": row[1],
-                    "tenant_name": row[2],
-                    "plan_id": row[3],
-                    "plan_name": row[4],
-                    "status": row[5],
-                    "current_period_start": row[6].isoformat() if row[6] else None,
-                    "current_period_end": row[7].isoformat() if row[7] else None,
-                    "cancel_at_period_end": row[8],
-                    "discount_percent": row[9],
-                }
-            )
+            subscriptions.append({
+                "id": row[0],
+                "tenant_id": row[1],
+                "tenant_name": row[2],
+                "plan_id": row[3],
+                "plan_name": row[4],
+                "status": row[5],
+                "current_period_start": row[6].isoformat() if row[6] else None,
+                "current_period_end": row[7].isoformat() if row[7] else None,
+                "cancel_at_period_end": row[8],
+                "discount_percent": row[9],
+            })
 
         return APIResponse(
             success=True,
@@ -1029,7 +957,6 @@ async def get_subscriptions(
 
 class SubscriptionAction(BaseModel):
     """Subscription action request."""
-
     action: str  # upgrade, downgrade, cancel, pause, resume, extend_trial
     new_plan_id: Optional[str] = None
     reason: Optional[str] = None
@@ -1053,58 +980,41 @@ async def perform_subscription_action(
         from sqlalchemy import text
 
         if action_req.action == "cancel":
-            await db.execute(
-                text("""
+            await db.execute(text("""
                 UPDATE subscriptions
                 SET cancel_at_period_end = true, updated_at = NOW()
                 WHERE id = :id
-            """),
-                {"id": subscription_id},
-            )
+            """), {"id": subscription_id})
 
         elif action_req.action == "upgrade" and action_req.new_plan_id:
-            await db.execute(
-                text("""
+            await db.execute(text("""
                 UPDATE subscriptions
                 SET plan_id = :plan_id, updated_at = NOW()
                 WHERE id = :id
-            """),
-                {"id": subscription_id, "plan_id": action_req.new_plan_id},
-            )
+            """), {"id": subscription_id, "plan_id": action_req.new_plan_id})
 
         elif action_req.action == "extend_trial" and action_req.extend_days:
-            await db.execute(
-                text(
-                    """
+            await db.execute(text("""
                 UPDATE subscriptions
                 SET current_period_end = current_period_end + interval ':days days',
                     updated_at = NOW()
                 WHERE id = :id
-            """.replace(":days", str(action_req.extend_days))
-                ),
-                {"id": subscription_id},
-            )
+            """.replace(":days", str(action_req.extend_days))), {"id": subscription_id})
 
         elif action_req.action == "resume":
-            await db.execute(
-                text("""
+            await db.execute(text("""
                 UPDATE subscriptions
                 SET cancel_at_period_end = false, status = 'active', updated_at = NOW()
                 WHERE id = :id
-            """),
-                {"id": subscription_id},
-            )
+            """), {"id": subscription_id})
 
         await db.commit()
 
         # Audit log
         await create_audit_log(
-            db,
-            action=f"subscription_{action_req.action}",
-            user_id=user_id,
-            resource_type="subscription",
-            resource_id=str(subscription_id),
-            details=action_req.dict(),
+            db, action=f"subscription_{action_req.action}", user_id=user_id,
+            resource_type="subscription", resource_id=str(subscription_id),
+            details=action_req.dict()
         )
 
         return APIResponse(success=True, message=f"Subscription {action_req.action} successful")
@@ -1143,32 +1053,24 @@ async def get_tenant_usage(
 
     # Get campaign count
     campaign_result = await db.execute(
-        select(func.count(Campaign.id)).where(
-            Campaign.tenant_id == tenant_id, Campaign.is_deleted == False
-        )
+        select(func.count(Campaign.id)).where(Campaign.tenant_id == tenant_id, Campaign.is_deleted == False)
     )
     campaigns_count = campaign_result.scalar() or 0
 
     # Get connector count (from platform_connectors)
     try:
         from sqlalchemy import text
-
-        connector_result = await db.execute(
-            text("""
+        connector_result = await db.execute(text("""
             SELECT COUNT(*) FROM platform_connectors WHERE tenant_id = :tenant_id AND status = 'connected'
-        """),
-            {"tenant_id": tenant_id},
-        )
+        """), {"tenant_id": tenant_id})
         connectors_count = connector_result.scalar() or 0
-    except Exception as e:
-        # Table may not exist or other DB error - default to 0
-        logger.warning(f"Could not fetch connector count for tenant {tenant_id}: {e}")
+    except:
         connectors_count = 0
 
     # Get limits from tenant or default
     max_users = tenant.max_users
-    max_campaigns = getattr(tenant, "max_campaigns", 1000)
-    max_connectors = getattr(tenant, "max_connectors", 5)
+    max_campaigns = getattr(tenant, 'max_campaigns', 1000)
+    max_connectors = getattr(tenant, 'max_connectors', 5)
 
     # Calculate usage percentages
     users_pct = (users_count / max_users * 100) if max_users > 0 else 0
@@ -1178,43 +1080,17 @@ async def get_tenant_usage(
     # Determine warnings
     warnings = []
     if users_pct >= 90:
-        warnings.append(
-            {
-                "type": "users",
-                "message": f"User limit nearly reached ({users_count}/{max_users})",
-                "severity": "high",
-            }
-        )
+        warnings.append({"type": "users", "message": f"User limit nearly reached ({users_count}/{max_users})", "severity": "high"})
     elif users_pct >= 75:
-        warnings.append(
-            {"type": "users", "message": f"User usage at {users_pct:.0f}%", "severity": "medium"}
-        )
+        warnings.append({"type": "users", "message": f"User usage at {users_pct:.0f}%", "severity": "medium"})
 
     if campaigns_pct >= 90:
-        warnings.append(
-            {
-                "type": "campaigns",
-                "message": f"Campaign limit nearly reached ({campaigns_count}/{max_campaigns})",
-                "severity": "high",
-            }
-        )
+        warnings.append({"type": "campaigns", "message": f"Campaign limit nearly reached ({campaigns_count}/{max_campaigns})", "severity": "high"})
     elif campaigns_pct >= 75:
-        warnings.append(
-            {
-                "type": "campaigns",
-                "message": f"Campaign usage at {campaigns_pct:.0f}%",
-                "severity": "medium",
-            }
-        )
+        warnings.append({"type": "campaigns", "message": f"Campaign usage at {campaigns_pct:.0f}%", "severity": "medium"})
 
     if connectors_pct >= 100:
-        warnings.append(
-            {
-                "type": "connectors",
-                "message": f"Connector limit reached ({connectors_count}/{max_connectors})",
-                "severity": "critical",
-            }
-        )
+        warnings.append({"type": "connectors", "message": f"Connector limit reached ({connectors_count}/{max_connectors})", "severity": "critical"})
 
     return APIResponse(
         success=True,
@@ -1223,25 +1099,12 @@ async def get_tenant_usage(
             "tenant_name": tenant.name,
             "plan": tenant.plan,
             "usage": {
-                "users": {
-                    "current": users_count,
-                    "limit": max_users,
-                    "percent": round(users_pct, 1),
-                },
-                "campaigns": {
-                    "current": campaigns_count,
-                    "limit": max_campaigns,
-                    "percent": round(campaigns_pct, 1),
-                },
-                "connectors": {
-                    "current": connectors_count,
-                    "limit": max_connectors,
-                    "percent": round(connectors_pct, 1),
-                },
+                "users": {"current": users_count, "limit": max_users, "percent": round(users_pct, 1)},
+                "campaigns": {"current": campaigns_count, "limit": max_campaigns, "percent": round(campaigns_pct, 1)},
+                "connectors": {"current": connectors_count, "limit": max_connectors, "percent": round(connectors_pct, 1)},
             },
             "warnings": warnings,
-            "needs_upgrade": len([w for w in warnings if w["severity"] in ["high", "critical"]])
-            > 0,
+            "needs_upgrade": len([w for w in warnings if w["severity"] in ["high", "critical"]]) > 0,
         },
     )
 
@@ -1261,16 +1124,20 @@ async def get_superadmin_dashboard(
     require_superadmin(request)
 
     # Get tenant counts
-    result = await db.execute(select(Tenant).where(Tenant.is_deleted == False))
+    result = await db.execute(
+        select(Tenant).where(Tenant.is_deleted == False)
+    )
     tenants = result.scalars().all()
 
     total_tenants = len(tenants)
-    active_tenants = len([t for t in tenants if getattr(t, "status", "active") == "active"])
-    trial_tenants = len([t for t in tenants if t.plan == "trial"])
-    total_mrr = sum((getattr(t, "mrr_cents", 0) or 0) for t in tenants) / 100
+    active_tenants = len([t for t in tenants if getattr(t, 'status', 'active') == 'active'])
+    trial_tenants = len([t for t in tenants if t.plan == 'trial'])
+    total_mrr = sum((getattr(t, 'mrr_cents', 0) or 0) for t in tenants) / 100
 
     # Get user count
-    user_result = await db.execute(select(func.count(User.id)).where(User.is_deleted == False))
+    user_result = await db.execute(
+        select(func.count(User.id)).where(User.is_deleted == False)
+    )
     total_users = user_result.scalar() or 0
 
     # Get campaign count
@@ -1314,363 +1181,5 @@ async def get_superadmin_dashboard(
                 "high": 2,
                 "medium": 5,
             },
-        },
-    )
-
-
-# =============================================================================
-# Landing Page Subscribers Management
-# =============================================================================
-class SubscriberListItem(BaseModel):
-    """Subscriber item in the list."""
-
-    id: int
-    email: str
-    full_name: Optional[str]
-    company_name: Optional[str]
-    source_page: str
-    language: str
-    status: str
-    created_at: datetime
-    reviewed_at: Optional[datetime]
-
-
-class SubscriberDetail(BaseModel):
-    """Detailed subscriber information."""
-
-    id: int
-    email: str
-    full_name: Optional[str]
-    company_name: Optional[str]
-    source_page: str
-    language: str
-    utm_source: Optional[str]
-    utm_medium: Optional[str]
-    utm_campaign: Optional[str]
-    referrer_url: Optional[str]
-    status: str
-    admin_notes: Optional[str]
-    reviewed_by_user_id: Optional[int]
-    reviewed_at: Optional[datetime]
-    converted_to_tenant_id: Optional[int]
-    converted_at: Optional[datetime]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
-    created_at: datetime
-    updated_at: datetime
-
-
-class SubscriberUpdateRequest(BaseModel):
-    """Request to update a subscriber."""
-
-    status: Optional[str] = None
-    admin_notes: Optional[str] = None
-
-
-@router.get("/subscribers", response_model=APIResponse)
-async def list_subscribers(
-    request: Request,
-    db: AsyncSession = Depends(get_async_session),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
-    language: Optional[str] = Query(None, description="Filter by language"),
-    search: Optional[str] = Query(None, description="Search by email or name"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=100),
-):
-    """
-    List all landing page subscribers.
-    SuperAdmin only.
-    """
-    from app.base_models import LandingPageSubscriber
-
-    require_superadmin(request)
-
-    # Build query
-    query = select(LandingPageSubscriber)
-
-    if status_filter:
-        query = query.where(LandingPageSubscriber.status == status_filter)
-
-    if language:
-        query = query.where(LandingPageSubscriber.language == language)
-
-    if search:
-        search_term = f"%{search.lower()}%"
-        query = query.where(
-            or_(
-                func.lower(LandingPageSubscriber.email).like(search_term),
-                func.lower(LandingPageSubscriber.full_name).like(search_term),
-                func.lower(LandingPageSubscriber.company_name).like(search_term),
-            )
-        )
-
-    # Get total count
-    count_query = select(func.count()).select_from(query.subquery())
-    total_result = await db.execute(count_query)
-    total = total_result.scalar()
-
-    # Apply pagination and ordering
-    query = query.order_by(desc(LandingPageSubscriber.created_at))
-    query = query.offset((page - 1) * page_size).limit(page_size)
-
-    # Execute query
-    result = await db.execute(query)
-    subscribers = result.scalars().all()
-
-    # Get status counts
-    status_counts_query = select(
-        LandingPageSubscriber.status, func.count(LandingPageSubscriber.id)
-    ).group_by(LandingPageSubscriber.status)
-    status_result = await db.execute(status_counts_query)
-    status_counts = {row[0]: row[1] for row in status_result.all()}
-
-    return APIResponse(
-        success=True,
-        message="Subscribers retrieved successfully",
-        data={
-            "subscribers": [
-                SubscriberListItem(
-                    id=s.id,
-                    email=s.email,
-                    full_name=s.full_name,
-                    company_name=s.company_name,
-                    source_page=s.source_page,
-                    language=s.language,
-                    status=s.status,
-                    created_at=s.created_at,
-                    reviewed_at=s.reviewed_at,
-                ).model_dump()
-                for s in subscribers
-            ],
-            "pagination": {
-                "page": page,
-                "page_size": page_size,
-                "total": total,
-                "total_pages": (total + page_size - 1) // page_size,
-            },
-            "status_counts": status_counts,
-        },
-    )
-
-
-@router.get("/subscribers/{subscriber_id}", response_model=APIResponse)
-async def get_subscriber(
-    subscriber_id: int,
-    request: Request,
-    db: AsyncSession = Depends(get_async_session),
-):
-    """
-    Get detailed subscriber information.
-    SuperAdmin only.
-    """
-    from app.base_models import LandingPageSubscriber
-
-    require_superadmin(request)
-
-    result = await db.execute(
-        select(LandingPageSubscriber).where(LandingPageSubscriber.id == subscriber_id)
-    )
-    subscriber = result.scalar_one_or_none()
-
-    if not subscriber:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Subscriber not found",
-        )
-
-    return APIResponse(
-        success=True,
-        message="Subscriber retrieved successfully",
-        data=SubscriberDetail(
-            id=subscriber.id,
-            email=subscriber.email,
-            full_name=subscriber.full_name,
-            company_name=subscriber.company_name,
-            source_page=subscriber.source_page,
-            language=subscriber.language,
-            utm_source=subscriber.utm_source,
-            utm_medium=subscriber.utm_medium,
-            utm_campaign=subscriber.utm_campaign,
-            referrer_url=subscriber.referrer_url,
-            status=subscriber.status,
-            admin_notes=subscriber.admin_notes,
-            reviewed_by_user_id=subscriber.reviewed_by_user_id,
-            reviewed_at=subscriber.reviewed_at,
-            converted_to_tenant_id=subscriber.converted_to_tenant_id,
-            converted_at=subscriber.converted_at,
-            ip_address=subscriber.ip_address,
-            user_agent=subscriber.user_agent,
-            created_at=subscriber.created_at,
-            updated_at=subscriber.updated_at,
-        ).model_dump(),
-    )
-
-
-@router.patch("/subscribers/{subscriber_id}", response_model=APIResponse)
-async def update_subscriber(
-    subscriber_id: int,
-    update_data: SubscriberUpdateRequest,
-    request: Request,
-    db: AsyncSession = Depends(get_async_session),
-):
-    """
-    Update subscriber status or notes.
-    SuperAdmin only.
-    """
-    from app.base_models import LandingPageSubscriber, SubscriberStatus
-
-    user_id = require_superadmin(request)
-
-    result = await db.execute(
-        select(LandingPageSubscriber).where(LandingPageSubscriber.id == subscriber_id)
-    )
-    subscriber = result.scalar_one_or_none()
-
-    if not subscriber:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Subscriber not found",
-        )
-
-    # Update fields
-    if update_data.status:
-        # Validate status
-        valid_statuses = [s.value for s in SubscriberStatus]
-        if update_data.status not in valid_statuses:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status. Must be one of: {valid_statuses}",
-            )
-        subscriber.status = update_data.status
-        subscriber.reviewed_at = datetime.now(UTC)
-        subscriber.reviewed_by_user_id = user_id
-
-    if update_data.admin_notes is not None:
-        subscriber.admin_notes = update_data.admin_notes
-
-    subscriber.updated_at = datetime.now(UTC)
-
-    await db.commit()
-    await db.refresh(subscriber)
-
-    # Log the action
-    logger.info(
-        f"Superadmin {user_id} updated subscriber {subscriber_id}: "
-        f"status={update_data.status}, notes={'updated' if update_data.admin_notes else 'unchanged'}"
-    )
-
-    return APIResponse(
-        success=True,
-        message="Subscriber updated successfully",
-        data={"id": subscriber.id, "status": subscriber.status},
-    )
-
-
-@router.delete("/subscribers/{subscriber_id}", response_model=APIResponse)
-async def delete_subscriber(
-    subscriber_id: int,
-    request: Request,
-    db: AsyncSession = Depends(get_async_session),
-):
-    """
-    Delete a subscriber record.
-    SuperAdmin only.
-    """
-    from app.base_models import LandingPageSubscriber
-
-    user_id = require_superadmin(request)
-
-    result = await db.execute(
-        select(LandingPageSubscriber).where(LandingPageSubscriber.id == subscriber_id)
-    )
-    subscriber = result.scalar_one_or_none()
-
-    if not subscriber:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Subscriber not found",
-        )
-
-    email = subscriber.email
-    await db.delete(subscriber)
-    await db.commit()
-
-    logger.info(f"Superadmin {user_id} deleted subscriber {subscriber_id} ({email})")
-
-    return APIResponse(
-        success=True,
-        message="Subscriber deleted successfully",
-    )
-
-
-@router.get("/subscribers/export/csv", response_model=APIResponse)
-async def export_subscribers_csv(
-    request: Request,
-    db: AsyncSession = Depends(get_async_session),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
-):
-    """
-    Export subscribers to CSV format.
-    SuperAdmin only.
-    """
-    import csv
-    import io
-
-    from app.base_models import LandingPageSubscriber
-
-    require_superadmin(request)
-
-    # Build query
-    query = select(LandingPageSubscriber)
-    if status_filter:
-        query = query.where(LandingPageSubscriber.status == status_filter)
-    query = query.order_by(desc(LandingPageSubscriber.created_at))
-
-    result = await db.execute(query)
-    subscribers = result.scalars().all()
-
-    # Generate CSV
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(
-        [
-            "ID",
-            "Email",
-            "Full Name",
-            "Company",
-            "Source Page",
-            "Language",
-            "Status",
-            "UTM Source",
-            "UTM Medium",
-            "UTM Campaign",
-            "Created At",
-        ]
-    )
-
-    for s in subscribers:
-        writer.writerow(
-            [
-                s.id,
-                s.email,
-                s.full_name or "",
-                s.company_name or "",
-                s.source_page,
-                s.language,
-                s.status,
-                s.utm_source or "",
-                s.utm_medium or "",
-                s.utm_campaign or "",
-                s.created_at.isoformat() if s.created_at else "",
-            ]
-        )
-
-    return APIResponse(
-        success=True,
-        message="Export generated successfully",
-        data={
-            "csv_content": output.getvalue(),
-            "filename": f"subscribers_export_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
-            "total_records": len(subscribers),
         },
     )

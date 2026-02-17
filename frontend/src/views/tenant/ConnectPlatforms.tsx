@@ -5,33 +5,33 @@
  * Supports Meta, Google, TikTok, and Snapchat ad platforms.
  */
 
-import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
 import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
   LinkIcon,
+  CheckCircleIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils'
 import {
-  type Platform,
-  useAdAccounts,
   useConnectorStatus,
-  useDisconnectPlatform,
-  useRefreshToken,
   useStartConnection,
-} from '@/api/campaignBuilder';
+  useRefreshToken,
+  useDisconnectPlatform,
+  useAdAccounts,
+  type Platform,
+} from '@/api/campaignBuilder'
 
 interface PlatformConnection {
-  id: string;
-  name: string;
-  logo: string;
-  status: 'connected' | 'disconnected' | 'expired' | 'error';
-  connectedAt?: string;
-  expiresAt?: string;
-  accountCount?: number;
+  id: string
+  name: string
+  logo: string
+  status: 'connected' | 'disconnected' | 'expired' | 'error'
+  connectedAt?: string
+  expiresAt?: string
+  accountCount?: number
 }
 
 const platforms: PlatformConnection[] = [
@@ -65,29 +65,7 @@ const platforms: PlatformConnection[] = [
     logo: '/platforms/snapchat.svg',
     status: 'disconnected',
   },
-  {
-    id: 'linkedin',
-    name: 'LinkedIn Ads',
-    logo: '/platforms/linkedin.svg',
-    status: 'disconnected',
-  },
-];
-
-// Connection health based on signal reliability
-type ConnectionHealth = 'healthy' | 'degraded' | 'unhealthy';
-const platformHealthMock: Record<string, { health: ConnectionHealth; emqScore: number; lastSync: string; dataVolume: string }> = {
-  meta: { health: 'healthy', emqScore: 92, lastSync: '2 min ago', dataVolume: '12.4k events/day' },
-  google: { health: 'healthy', emqScore: 88, lastSync: '5 min ago', dataVolume: '8.2k events/day' },
-  tiktok: { health: 'degraded', emqScore: 0, lastSync: 'Never', dataVolume: '0 events' },
-  snapchat: { health: 'unhealthy', emqScore: 0, lastSync: 'Never', dataVolume: '0 events' },
-  linkedin: { health: 'unhealthy', emqScore: 0, lastSync: 'Never', dataVolume: '0 events' },
-};
-
-const healthDotColor: Record<ConnectionHealth, string> = {
-  healthy: 'bg-green-500',
-  degraded: 'bg-amber-500',
-  unhealthy: 'bg-gray-500',
-};
+]
 
 const statusConfig = {
   connected: {
@@ -114,45 +92,29 @@ const statusConfig = {
     bgColor: 'bg-red-50 dark:bg-red-950/30',
     label: 'Connection Error',
   },
-};
+}
 
 export default function ConnectPlatforms() {
-  const { tenantId } = useParams<{ tenantId: string }>();
-  const tid = parseInt(tenantId || '1', 10);
-  const [connecting, setConnecting] = useState<string | null>(null);
-
-  // FEATURE: Sync On/Off toggle state per platform
-  const [syncEnabled, setSyncEnabled] = useState<Record<string, boolean>>({
-    meta: true,
-    google: true,
-    tiktok: true,
-    snapchat: true,
-    linkedin: true,
-  });
-
-  const handleToggleSync = (platformId: string) => {
-    setSyncEnabled((prev) => {
-      const newState = { ...prev, [platformId]: !prev[platformId] };
-      return newState;
-    });
-  };
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const tid = parseInt(tenantId || '1', 10)
+  const [connecting, setConnecting] = useState<string | null>(null)
 
   // API hooks for connector status
-  const { data: metaStatus } = useConnectorStatus(tid, 'meta');
-  const { data: googleStatus } = useConnectorStatus(tid, 'google');
-  const { data: tiktokStatus } = useConnectorStatus(tid, 'tiktok');
-  const { data: snapchatStatus } = useConnectorStatus(tid, 'snapchat');
+  const { data: metaStatus } = useConnectorStatus(tid, 'meta')
+  const { data: googleStatus } = useConnectorStatus(tid, 'google')
+  const { data: tiktokStatus } = useConnectorStatus(tid, 'tiktok')
+  const { data: snapchatStatus } = useConnectorStatus(tid, 'snapchat')
 
   // API hooks for ad account counts
-  const { data: metaAccounts } = useAdAccounts(tid, 'meta');
-  const { data: googleAccounts } = useAdAccounts(tid, 'google');
-  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok');
-  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat');
+  const { data: metaAccounts } = useAdAccounts(tid, 'meta')
+  const { data: googleAccounts } = useAdAccounts(tid, 'google')
+  const { data: tiktokAccounts } = useAdAccounts(tid, 'tiktok')
+  const { data: snapchatAccounts } = useAdAccounts(tid, 'snapchat')
 
   // Mutation hooks
-  const startConnection = useStartConnection(tid);
-  const refreshToken = useRefreshToken(tid);
-  const disconnectPlatform = useDisconnectPlatform(tid);
+  const startConnection = useStartConnection(tid)
+  const refreshToken = useRefreshToken(tid)
+  const disconnectPlatform = useDisconnectPlatform(tid)
 
   // Build platforms with API data or fallback to mock
   const platformsWithStatus: PlatformConnection[] = useMemo(() => {
@@ -161,17 +123,17 @@ export default function ConnectPlatforms() {
       google: googleStatus,
       tiktok: tiktokStatus,
       snapchat: snapchatStatus,
-    };
+    }
     const accountsMap: Record<string, typeof metaAccounts> = {
       meta: metaAccounts,
       google: googleAccounts,
       tiktok: tiktokAccounts,
       snapchat: snapchatAccounts,
-    };
+    }
 
     return platforms.map((p) => {
-      const apiStatus = statusMap[p.id];
-      const accounts = accountsMap[p.id];
+      const apiStatus = statusMap[p.id]
+      const accounts = accountsMap[p.id]
 
       if (apiStatus) {
         return {
@@ -179,58 +141,49 @@ export default function ConnectPlatforms() {
           status: apiStatus.status as PlatformConnection['status'],
           connectedAt: apiStatus.connected_at?.split('T')[0],
           accountCount: accounts?.length ?? 0,
-        };
+        }
       }
-      return p;
-    });
-  }, [
-    metaStatus,
-    googleStatus,
-    tiktokStatus,
-    snapchatStatus,
-    metaAccounts,
-    googleAccounts,
-    tiktokAccounts,
-    snapchatAccounts,
-  ]);
+      return p
+    })
+  }, [metaStatus, googleStatus, tiktokStatus, snapchatStatus, metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
 
   const handleConnect = async (platformId: string) => {
-    setConnecting(platformId);
+    setConnecting(platformId)
     try {
-      const result = await startConnection.mutateAsync(platformId as Platform);
+      const result = await startConnection.mutateAsync(platformId as Platform)
       // Redirect to OAuth URL
       if (result.oauth_url) {
-        window.location.href = result.oauth_url;
+        window.location.href = result.oauth_url
       }
     } catch (error) {
-      // Error - falling back to demo mode
+      console.error('Failed to start connection:', error)
       // Fallback for demo mode
-      alert(`OAuth flow would start for ${platformId}`);
+      alert(`OAuth flow would start for ${platformId}`)
     } finally {
-      setConnecting(null);
+      setConnecting(null)
     }
-  };
+  }
 
   const handleDisconnect = async (platformId: string) => {
     if (confirm('Are you sure you want to disconnect this platform?')) {
       try {
-        await disconnectPlatform.mutateAsync(platformId as Platform);
+        await disconnectPlatform.mutateAsync(platformId as Platform)
       } catch (error) {
-        // Error - falling back to demo mode
-        alert(`Disconnected ${platformId} (demo mode)`);
+        console.error('Failed to disconnect:', error)
+        alert(`Disconnected ${platformId} (demo mode)`)
       }
     }
-  };
+  }
 
   const handleRefresh = async (platformId: string) => {
     try {
-      await refreshToken.mutateAsync(platformId as Platform);
-      alert('Token refreshed successfully');
+      await refreshToken.mutateAsync(platformId as Platform)
+      alert('Token refreshed successfully')
     } catch (error) {
-      // Error - falling back to demo mode
-      alert(`Refreshing token for ${platformId} (demo mode)`);
+      console.error('Failed to refresh token:', error)
+      alert(`Refreshing token for ${platformId} (demo mode)`)
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -238,25 +191,15 @@ export default function ConnectPlatforms() {
       <div>
         <h1 className="text-2xl font-bold">Connect Platforms</h1>
         <p className="text-muted-foreground">
-          Connect your advertising accounts via OAuth to manage campaigns and access ad accounts
-        </p>
-        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-          <ExclamationTriangleIcon className="w-3 h-3" />
-          <span>
-            This grants access to <strong>ad accounts & campaigns</strong>. For server-side
-            conversion tracking, go to{' '}
-            <a href="/dashboard/integrations" className="text-primary hover:underline">
-              Integrations
-            </a>
-          </span>
+          Connect your advertising accounts to start building campaigns
         </p>
       </div>
 
       {/* Platform Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {platformsWithStatus.map((platform) => {
-          const status = statusConfig[platform.status];
-          const StatusIcon = status.icon;
+          const status = statusConfig[platform.status]
+          const StatusIcon = status.icon
 
           return (
             <div
@@ -282,63 +225,11 @@ export default function ConnectPlatforms() {
                     </div>
                   </div>
                 </div>
-                {/* Health indicator */}
-                {platform.status === 'connected' && platformHealthMock[platform.id] && (
-                  <div className="flex items-center gap-2">
-                    <span className={cn('h-2.5 w-2.5 rounded-full', healthDotColor[platformHealthMock[platform.id].health])} />
-                    <span className="text-xs text-muted-foreground capitalize">{platformHealthMock[platform.id].health}</span>
-                    {platformHealthMock[platform.id].emqScore > 0 && (
-                      <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                        EMQ {platformHealthMock[platform.id].emqScore}%
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
-
-              {/* FEATURE: Data Sync Toggle — only for connected platforms */}
-              {platform.status === 'connected' && (
-                <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Data Sync</span>
-                    <span
-                      className={cn(
-                        'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
-                        syncEnabled[platform.id]
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : 'bg-amber-500/10 text-amber-500'
-                      )}
-                    >
-                      {syncEnabled[platform.id] ? 'Active' : 'Paused'}
-                    </span>
-                  </div>
-                  {/* Toggle switch — reuses Settings.tsx pattern */}
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={syncEnabled[platform.id]}
-                    aria-label={`Toggle data sync for ${platform.name}`}
-                    onClick={() => handleToggleSync(platform.id)}
-                    className={cn(
-                      'relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-                      syncEnabled[platform.id]
-                        ? 'bg-primary'
-                        : 'bg-gray-300 dark:bg-gray-600'
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                        syncEnabled[platform.id] && 'translate-x-6'
-                      )}
-                    />
-                  </button>
-                </div>
-              )}
 
               {/* Connection details */}
               {platform.status === 'connected' && (
-                <div className={cn('mt-3 pt-3 border-t space-y-2', !syncEnabled[platform.id] && 'opacity-50')}>
+                <div className="mt-4 pt-4 border-t space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Connected Accounts</span>
                     <span className="font-medium">{platform.accountCount}</span>
@@ -351,20 +242,6 @@ export default function ConnectPlatforms() {
                     <span className="text-muted-foreground">Token Expires</span>
                     <span className="font-medium">{platform.expiresAt}</span>
                   </div>
-                  {platformHealthMock[platform.id] && (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Last Sync</span>
-                        <span className={cn('font-medium', !syncEnabled[platform.id] && 'line-through')}>
-                          {syncEnabled[platform.id] ? platformHealthMock[platform.id].lastSync : 'Paused'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Data Volume</span>
-                        <span className="font-medium">{platformHealthMock[platform.id].dataVolume}</span>
-                      </div>
-                    </>
-                  )}
                 </div>
               )}
 
@@ -402,7 +279,7 @@ export default function ConnectPlatforms() {
                 )}
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
@@ -417,5 +294,5 @@ export default function ConnectPlatforms() {
         </ul>
       </div>
     </div>
-  );
+  )
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark" data-theme="dark">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,68 +7,59 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace']
-          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            // Core Surfaces - Theme v3.0
+            // Core Surfaces
             dark: {
-              950: '#050508',  // Void
-              900: '#0a0a0f',  // Primary
-              800: '#0d0d14',  // Secondary
-              700: '#12121a',  // Card
-              600: '#1a1a24',  // Card Hover
-              500: '#1e1e28',  // Elevated
+              950: '#0a0a1a',  // App Background
+              900: '#14162b',  // Surface 1 (Cards)
+              800: '#1a1f3c',  // Surface 2 (Elevated)
+              700: '#21264a',  // Surface 3 (Hover)
+              600: '#2d3356',
             },
-            // Primary Brand - Stratum Gold
+            // Primary Brand
             primary: {
-              DEFAULT: '#D4AF37',
-              hover: '#F4D03F',
-              active: '#B8860B',
-              50: 'rgba(212, 175, 55, 0.1)',
-              100: 'rgba(212, 175, 55, 0.15)',
-              500: '#D4AF37',
-              600: '#B8860B',
-              700: '#996B06',
+              DEFAULT: '#4DA3FF',
+              hover: '#6CB6FF',
+              active: '#3A8AE6',
+              50: '#EBF5FF',
+              100: '#E1EFFF',
+              500: '#4DA3FF',
+              600: '#3A8AE6',
+              700: '#2B7ACC',
             },
             // Accent Colors
             accent: {
-              gold: '#D4AF37',
-              cyan: '#14F0C6',
-              purple: '#8b5cf6',
-              glow: '#14F0C6',
-              emerald: '#22c55e',
+              glow: '#00F2EA',
+              purple: '#7C7CFF',
+              emerald: '#2CFFC8',
             },
             // Status Colors
-            success: '#22c55e',
-            warning: '#f59e0b',
-            danger: '#ef4444',
-            info: '#0a84ff',
+            success: '#2EE59D',
+            warning: '#FFC857',
+            danger: '#FF4D6D',
+            info: '#4DA3FF',
             // Typography
             text: {
-              primary: '#ffffff',
-              secondary: '#cccccc',
-              tertiary: '#999999',
-              muted: '#888888',
-              disabled: '#555555',
-              inverse: '#0a0a0f',
+              primary: '#EAEAF0',
+              secondary: '#B3B3C6',
+              muted: '#8A8AA3',
+              disabled: '#5F5F7A',
+              inverse: '#0A0A1A',
             }
           },
           boxShadow: {
-            'soft': '0 2px 8px rgba(0,0,0,0.3)',
-            'medium': '0 4px 16px rgba(0,0,0,0.4)',
-            'deep': '0 8px 32px rgba(0,0,0,0.5)',
-            'xl': '0 16px 48px rgba(0,0,0,0.6)',
-            'gold': '0 0 40px rgba(212, 175, 55, 0.25)',
-            'glow': '0 0 30px rgba(212, 175, 55, 0.3), 0 0 60px rgba(20, 240, 198, 0.15)',
-            'glow-accent': '0 0 20px rgba(20, 240, 198, 0.4)',
+            'soft': '0 4px 12px rgba(0,0,0,0.25)',
+            'medium': '0 8px 24px rgba(0,0,0,0.35)',
+            'deep': '0 16px 48px rgba(0,0,0,0.45)',
+            'glow': '0 0 30px rgba(77, 163, 255, 0.3), 0 0 60px rgba(0, 242, 234, 0.15)',
+            'glow-accent': '0 0 20px rgba(0, 242, 234, 0.4)',
           }
         }
       }
@@ -78,78 +69,36 @@
     [x-cloak] { display: none !important; }
 
     /* ============================================
-       STRATUM AI THEME SYSTEM v3.0 - Dashboard
-       NN/g Compliant | WCAG 2.1 AA
+       PROFESSIONAL DARK UI COLOR SYSTEM
        ============================================ */
 
-    :root, [data-theme="dark"] {
-      /* Core Surfaces - Layered depth */
-      --bg-void: #050508;
-      --bg-primary: #0a0a0f;
-      --bg-secondary: #0d0d14;
-      --bg-card: #12121a;
-      --bg-card-hover: #1a1a24;
-      --bg-elevated: #1e1e28;
-      --surface-bg: #0a0a0f;
-      --surface-1: #12121a;
-      --surface-2: #1a1a24;
-      --surface-3: #1e1e28;
+    :root {
+      /* Core Surfaces */
+      --surface-bg: #0a0a1a;
+      --surface-1: #14162b;
+      --surface-2: #1a1f3c;
+      --surface-3: #21264a;
       --border-color: rgba(255,255,255,0.06);
-      --border-default: rgba(255,255,255,0.06);
-      --border-hover: rgba(255,255,255,0.10);
-      --border-gold: rgba(212, 175, 55, 0.15);
 
-      /* Primary Brand - Stratum Gold */
-      --gold: #D4AF37;
-      --gold-bright: #F4D03F;
-      --gold-muted: #B8860B;
-      --gold-glow: rgba(212, 175, 55, 0.5);
-      --gold-subtle: rgba(212, 175, 55, 0.1);
-      --primary: #D4AF37;
-      --primary-hover: #F4D03F;
-      --primary-active: #B8860B;
+      /* Primary Brand */
+      --primary: #4DA3FF;
+      --primary-hover: #6CB6FF;
+      --primary-active: #3A8AE6;
+      --glow-accent: #00F2EA;
 
-      /* Accents */
-      --cyan: #14F0C6;
-      --purple: #8b5cf6;
-      --glow-accent: #14F0C6;
-      --accent-purple: #8b5cf6;
-      --accent-emerald: #22c55e;
-      --accent-cyan: #14F0C6;
-
-      /* Status Colors */
-      --status-success: #22c55e;
-      --status-warning: #f59e0b;
-      --status-error: #ef4444;
-      --status-info: #0a84ff;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --success: #22c55e;
-      --info: #0a84ff;
-
-      /* Shadows */
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-      --shadow-gold: 0 0 40px rgba(212, 175, 55, 0.25);
-      --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      /* Secondary & Accent */
+      --accent-purple: #7C7CFF;
+      --accent-emerald: #2CFFC8;
+      --warning: #FFC857;
+      --danger: #FF4D6D;
+      --success: #2EE59D;
+      --info: #4DA3FF;
 
       /* Typography */
-      --text-primary: #ffffff;
-      --text-secondary: #cccccc;
-      --text-tertiary: #999999;
-      --text-muted: #888888;
-      --text-disabled: #555555;
-      --text-inverse: #0a0a0f;
-
-      /* Glass */
-      --glass-bg: rgba(20, 20, 30, 0.75);
-      --glass-border: rgba(255, 255, 255, 0.08);
-
-      /* Charts */
-      --chart-line-1: #D4AF37;
-      --chart-line-2: #14F0C6;
-      --chart-line-3: #8b5cf6;
+      --text-primary: #EAEAF0;
+      --text-secondary: #B3B3C6;
+      --text-muted: #8A8AA3;
+      --text-disabled: #5F5F7A;
     }
 
     /* Glassmorphism Layer */
@@ -1488,9 +1437,9 @@
 
               <!-- Nextmind Theme - From GitHub -->
               <div :class="activeTheme === 'nextmind' ? 'border-primary ring-2 ring-primary/30' : 'border-dark-700'" class="card p-4 cursor-pointer hover:border-primary/50 transition-all relative" @click="setTheme('nextmind')">
-                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-400 text-xs font-medium">GitHub</div>
+                <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium">GitHub</div>
                 <div class="h-20 rounded-lg mb-3 overflow-hidden">
-                  <div class="h-full bg-gradient-to-br from-amber-500 to-teal-400"></div>
+                  <div class="h-full bg-gradient-to-br from-purple-500 to-cyan-400"></div>
                 </div>
                 <div class="flex items-center justify-between">
                   <div>
@@ -1506,7 +1455,7 @@
               <!-- Ocean Theme -->
               <div :class="activeTheme === 'ocean' ? 'border-primary ring-2 ring-primary/30' : 'border-dark-700'" class="card p-4 cursor-pointer hover:border-primary/50 transition-all" @click="setTheme('ocean')">
                 <div class="h-20 rounded-lg mb-3 overflow-hidden">
-                  <div class="h-full bg-gradient-to-br from-emerald-500 to-teal-400"></div>
+                  <div class="h-full bg-gradient-to-br from-blue-500 to-cyan-400"></div>
                 </div>
                 <div class="flex items-center justify-between">
                   <div>

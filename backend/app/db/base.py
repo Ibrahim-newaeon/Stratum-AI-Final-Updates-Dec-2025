@@ -6,10 +6,10 @@ Base model configuration with common mixins and utilities.
 All models inherit from this base for consistent behavior.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import DateTime, Integer, MetaData
+from sqlalchemy import DateTime, Integer, MetaData, event, func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -54,13 +54,13 @@ class TimestampMixin:
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
@@ -77,7 +77,7 @@ class SoftDeleteMixin:
 
     def soft_delete(self) -> None:
         """Mark the record as deleted."""
-        self.deleted_at = datetime.now(UTC)
+        self.deleted_at = datetime.now(timezone.utc)
         self.is_deleted = True
 
 
@@ -90,7 +90,6 @@ class TenantMixin:
     @declared_attr
     def tenant_id(cls) -> Mapped[int]:
         from sqlalchemy import ForeignKey
-
         return mapped_column(
             Integer,
             ForeignKey("tenants.id", ondelete="CASCADE"),
@@ -101,7 +100,6 @@ class TenantMixin:
     @declared_attr
     def tenant(cls):
         from sqlalchemy.orm import relationship
-
         return relationship("Tenant", foreign_keys=[cls.tenant_id])
 
 
