@@ -64,18 +64,17 @@ const tabs: TabConfig[] = [
   },
 ];
 
-// Mock stats for overview
-const mockStats = {
-  totalContacts: 12453,
-  optedIn: 11234,
-  optedOut: 1219,
-  templates: 8,
-  approvedTemplates: 6,
-  pendingTemplates: 2,
-  messagesSent: 45678,
-  messagesDelivered: 44123,
-  messagesRead: 38456,
-  broadcastsThisMonth: 12,
+const emptyStats = {
+  totalContacts: 0,
+  optedIn: 0,
+  optedOut: 0,
+  templates: 0,
+  approvedTemplates: 0,
+  pendingTemplates: 0,
+  messagesSent: 0,
+  messagesDelivered: 0,
+  messagesRead: 0,
+  broadcastsThisMonth: 0,
 };
 
 export default function WhatsAppManager() {
@@ -92,7 +91,7 @@ export default function WhatsAppManager() {
       case 'messages':
         return <WhatsAppMessages />;
       default:
-        return <OverviewDashboard stats={mockStats} onNavigate={setActiveTab} />;
+        return <OverviewDashboard stats={emptyStats} onNavigate={setActiveTab} />;
     }
   };
 
@@ -150,7 +149,7 @@ function OverviewDashboard({
   stats,
   onNavigate,
 }: {
-  stats: typeof mockStats;
+  stats: typeof emptyStats;
   onNavigate: (tab: TabId) => void;
 }) {
   const deliveryRate = ((stats.messagesDelivered / stats.messagesSent) * 100).toFixed(1);

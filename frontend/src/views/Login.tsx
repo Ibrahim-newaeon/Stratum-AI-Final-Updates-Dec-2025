@@ -22,7 +22,6 @@ import {
   FingerPrintIcon,
   LockClosedIcon,
   UserIcon,
-  BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { pageSEO, SEO } from '@/components/common/SEO';
@@ -32,20 +31,18 @@ import { authStyles } from '@/components/auth/authStyles';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, demoLogin } = useAuth();
+  const { login } = useAuth();
 
   const formRef = useRef<HTMLFormElement>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingRole, setLoadingRole] = useState<string | null>(null); // BUG-019: per-button spinner
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(
     () => localStorage.getItem('stratum_remember_me') === 'true'
   );
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
-  const [ssoHover, setSsoHover] = useState(false);
 
   const from = location.state?.from?.pathname || '/dashboard/overview';
   const showVerificationBanner = location.state?.registered || location.state?.needsVerification;
@@ -106,28 +103,6 @@ export default function Login() {
     }
   };
 
-  // BUG-001/002: Demo login now uses demoLogin() with client-side fallback
-  // BUG-019: Track which demo button is loading for per-button spinner
-  const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer') => {
-    setError('');
-    setIsLoading(true);
-    setLoadingRole(role);
-
-    try {
-      const result = await demoLogin(role);
-      if (result.success) {
-        navigate(from, { replace: true });
-      } else {
-        setError(result.error || 'Demo login failed');
-      }
-    } catch {
-      setError('An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-      setLoadingRole(null);
-    }
-  };
-
   return (
     <>
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
@@ -142,7 +117,7 @@ export default function Login() {
           <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
         </div>
 
-        <main className="relative z-10 w-full flex min-h-screen">
+        <main className="relative z-10 w-full flex min-h-screen mx-auto" style={{ maxWidth: '1500px' }}>
           {/* Left Panel — hidden on mobile */}
           <AuthLeftPanel className="hidden lg:flex" />
 
@@ -302,7 +277,7 @@ export default function Login() {
                   disabled={isLoading}
                   className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  {isLoading && !loadingRole ? (
+                  {isLoading ? (
                     <span className="flex items-center gap-2">
                       <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -316,75 +291,10 @@ export default function Login() {
                 </button>
               </form>
 
-              {/* SSO Section */}
-              <div className="mt-12 pt-8 border-t border-white/5 flex flex-col items-center gap-4">
-                <p className="text-xs text-slate-500 font-medium tracking-wide">Or connect via Enterprise SSO</p>
-                {/* BUG-006: SSO Buttons — disabled with Coming Soon tooltip */}
-                <div className="flex gap-4 relative">
-                  {['hub', 'key', 'security'].map((icon) => (
-                    <button
-                      key={icon}
-                      type="button"
-                      disabled
-                      onMouseEnter={() => setSsoHover(true)}
-                      onMouseLeave={() => setSsoHover(false)}
-                      className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors cursor-not-allowed opacity-60"
-                      aria-label="SSO authentication coming soon"
-                    >
-                      <BuildingOfficeIcon className="w-5 h-5 text-slate-300" />
-                    </button>
-                  ))}
-                  {ssoHover && (
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#FF1F6D] text-white text-[11px] font-bold py-1 px-3 rounded-lg whitespace-nowrap z-30 shadow-lg">
-                      Coming Soon
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
 
-            {/* Divider */}
-            <div className="w-full max-w-md px-10 mb-8">
-              <div className="h-[1px] w-full bg-white/10" />
-            </div>
-
-            {/* Demo Access Section */}
+            {/* Footer links */}
             <div className="w-full max-w-md px-10 relative z-10">
-              <div className="text-center mb-4">
-                <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">
-                  Demo Access
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 mb-8">
-                {([
-                  { role: 'superadmin' as const, label: 'Super Admin', icon: '\u26A1' },
-                  { role: 'admin' as const, label: 'Admin', icon: '\uD83D\uDEE1\uFE0F' },
-                  { role: 'viewer' as const, label: 'Viewer', icon: '\uD83D\uDC64' },
-                ]).map((item) => (
-                  <button
-                    key={item.role}
-                    type="button"
-                    onClick={() => handleDemoLogin(item.role)}
-                    disabled={isLoading}
-                    className="group py-2.5 px-2 bg-white/[0.03] hover:bg-white/[0.06] text-[11px] font-semibold text-white/40 hover:text-white/70 rounded-xl border border-white/[0.06] hover:border-white/[0.12] transition-all disabled:opacity-50 flex flex-col items-center gap-1"
-                  >
-                    {/* BUG-019: Show spinner on the specific demo button that's loading */}
-                    {loadingRole === item.role ? (
-                      <svg className="animate-spin w-[14px] h-[14px] text-[#FF1F6D]" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                    ) : (
-                      <span className="text-[14px] opacity-60 group-hover:opacity-100 transition-opacity">
-                        {item.icon}
-                      </span>
-                    )}
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Footer links */}
               <div className="flex flex-col items-center gap-4">
                 <p className="text-center text-[13px] text-white/30">
                   New entity?{' '}

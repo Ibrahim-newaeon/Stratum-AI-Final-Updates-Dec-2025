@@ -309,9 +309,7 @@ export default function CDPIdentityGraph() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Identity Graph</h1>
-          <p className="text-muted-foreground mt-1">
-            Visualize identity relationships and profile connections
-          </p>
+          <p className="text-muted-foreground mt-1 max-w-3xl">Unify customer identities across devices, channels, and sessions into a single golden profile. The Identity Graph resolves emails, phone numbers, device IDs, and anonymous visitors to give you a complete 360° view of each customer.</p>
         </div>
       </div>
 

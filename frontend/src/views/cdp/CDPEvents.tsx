@@ -210,9 +210,7 @@ export default function CDPEvents() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Events Timeline</h1>
-          <p className="text-muted-foreground mt-1">
-            {stats?.total_events?.toLocaleString() || 0} events in the last {periodDays} days
-          </p>
+          <p className="text-muted-foreground mt-1 max-w-3xl">Track and analyze every customer interaction across your digital touchpoints. Events power segmentation, attribution, and predictive models. Monitor event volume in real-time, detect anomalies, and understand the full customer journey from first touch to conversion.</p>
         </div>
         <div className="flex items-center gap-3">
           <select

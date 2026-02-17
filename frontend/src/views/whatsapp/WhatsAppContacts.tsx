@@ -33,59 +33,6 @@ interface Contact {
   created_at: string;
 }
 
-// Mock data
-const mockContacts: Contact[] = [
-  {
-    id: 1,
-    phone_number: '+1234567890',
-    country_code: 'US',
-    display_name: 'John Doe',
-    opt_in_status: 'opted_in',
-    message_count: 24,
-    last_message_at: '2025-01-30T10:00:00Z',
-    created_at: '2024-12-01T00:00:00Z',
-  },
-  {
-    id: 2,
-    phone_number: '+1987654321',
-    country_code: 'US',
-    display_name: 'Jane Smith',
-    opt_in_status: 'opted_in',
-    message_count: 18,
-    last_message_at: '2025-01-29T15:30:00Z',
-    created_at: '2024-12-05T00:00:00Z',
-  },
-  {
-    id: 3,
-    phone_number: '+447123456789',
-    country_code: 'GB',
-    display_name: 'Alice Johnson',
-    opt_in_status: 'pending',
-    message_count: 0,
-    last_message_at: null,
-    created_at: '2025-01-20T00:00:00Z',
-  },
-  {
-    id: 4,
-    phone_number: '+971501234567',
-    country_code: 'AE',
-    display_name: 'Mohammed Ali',
-    opt_in_status: 'opted_in',
-    message_count: 45,
-    last_message_at: '2025-01-30T08:00:00Z',
-    created_at: '2024-11-15T00:00:00Z',
-  },
-  {
-    id: 5,
-    phone_number: '+33612345678',
-    country_code: 'FR',
-    display_name: 'Pierre Dupont',
-    opt_in_status: 'opted_out',
-    message_count: 12,
-    last_message_at: '2025-01-15T12:00:00Z',
-    created_at: '2024-10-20T00:00:00Z',
-  },
-];
 
 const statusConfig = {
   opted_in: {
@@ -99,7 +46,7 @@ const statusConfig = {
 };
 
 export default function WhatsAppContacts() {
-  const [contacts, setContacts] = useState<Contact[]>(mockContacts);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);

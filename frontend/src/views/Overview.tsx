@@ -29,7 +29,9 @@ import {
   ShoppingCart,
   BarChart3,
   Keyboard,
+  LayoutDashboard,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { CampaignTable } from '@/components/dashboard/CampaignTable'
@@ -57,177 +59,9 @@ import {
 import { useCampaigns, useAnomalies, useTenantOverview } from '@/api/hooks'
 import { useTenantStore } from '@/stores/tenantStore'
 
-// Mock data for demonstration
-const mockCampaigns: Campaign[] = [
-  {
-    campaign_id: '1',
-    campaign_name: 'Summer Sale 2024',
-    platform: 'Meta Ads',
-    region: 'Saudi Arabia',
-    campaign_type: 'Conversion',
-    spend: 12500,
-    revenue: 45000,
-    conversions: 450,
-    impressions: 1250000,
-    clicks: 25000,
-    ctr: 2.0,
-    cpm: 10.0,
-    cpa: 27.78,
-    roas: 3.6,
-    status: 'Active',
-    start_date: '2024-06-01',
-  },
-  {
-    campaign_id: '2',
-    campaign_name: 'Brand Awareness Q4',
-    platform: 'Google Ads',
-    region: 'UAE',
-    campaign_type: 'Brand Awareness',
-    spend: 8200,
-    revenue: 28700,
-    conversions: 287,
-    impressions: 980000,
-    clicks: 19600,
-    ctr: 2.0,
-    cpm: 8.37,
-    cpa: 28.57,
-    roas: 3.5,
-    status: 'Active',
-    start_date: '2024-09-15',
-  },
-  {
-    campaign_id: '3',
-    campaign_name: 'Retargeting - Cart Abandoners',
-    platform: 'Meta Ads',
-    region: 'Saudi Arabia',
-    campaign_type: 'Retargeting',
-    spend: 5600,
-    revenue: 22400,
-    conversions: 320,
-    impressions: 560000,
-    clicks: 11200,
-    ctr: 2.0,
-    cpm: 10.0,
-    cpa: 17.5,
-    roas: 4.0,
-    status: 'Active',
-    start_date: '2024-10-01',
-  },
-  {
-    campaign_id: '4',
-    campaign_name: 'TikTok Influencer Campaign',
-    platform: 'TikTok Ads',
-    region: 'UAE',
-    campaign_type: 'Prospecting',
-    spend: 15000,
-    revenue: 37500,
-    conversions: 500,
-    impressions: 2500000,
-    clicks: 50000,
-    ctr: 2.0,
-    cpm: 6.0,
-    cpa: 30.0,
-    roas: 2.5,
-    status: 'Active',
-    start_date: '2024-11-01',
-  },
-  {
-    campaign_id: '5',
-    campaign_name: 'Snapchat Gen-Z Reach',
-    platform: 'Snapchat Ads',
-    region: 'Qatar',
-    campaign_type: 'Prospecting',
-    spend: 4500,
-    revenue: 11250,
-    conversions: 150,
-    impressions: 750000,
-    clicks: 15000,
-    ctr: 2.0,
-    cpm: 6.0,
-    cpa: 30.0,
-    roas: 2.5,
-    status: 'Active',
-    start_date: '2024-11-15',
-  },
-  {
-    campaign_id: '6',
-    campaign_name: 'LinkedIn B2B Lead Gen',
-    platform: 'LinkedIn Ads',
-    region: 'United States',
-    campaign_type: 'Lead Generation',
-    spend: 9800,
-    revenue: 39200,
-    conversions: 196,
-    impressions: 420000,
-    clicks: 8400,
-    ctr: 2.0,
-    cpm: 23.33,
-    cpa: 50.0,
-    roas: 4.0,
-    status: 'Active',
-    start_date: '2024-10-20',
-  },
-]
-
-const mockPlatformSummary: PlatformSummary[] = [
-  { platform: 'Meta Ads', spend: 18100, revenue: 67400, conversions: 770, roas: 3.72, cpa: 23.51, impressions: 1810000, clicks: 36200 },
-  { platform: 'Google Ads', spend: 8200, revenue: 28700, conversions: 287, roas: 3.5, cpa: 28.57, impressions: 980000, clicks: 19600 },
-  { platform: 'TikTok Ads', spend: 15000, revenue: 37500, conversions: 500, roas: 2.5, cpa: 30.0, impressions: 2500000, clicks: 50000 },
-  { platform: 'Snapchat Ads', spend: 4500, revenue: 11250, conversions: 150, roas: 2.5, cpa: 30.0, impressions: 750000, clicks: 15000 },
-  { platform: 'LinkedIn Ads', spend: 9800, revenue: 39200, conversions: 196, roas: 4.0, cpa: 50.0, impressions: 420000, clicks: 8400 },
-]
-
-const mockDailyPerformance: DailyPerformance[] = Array.from({ length: 30 }, (_, i) => {
-  const date = new Date()
-  date.setDate(date.getDate() - (29 - i))
-  return {
-    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    spend: 1200 + Math.random() * 800 + i * 20,
-    revenue: 4000 + Math.random() * 2000 + i * 60,
-    conversions: 40 + Math.floor(Math.random() * 20) + Math.floor(i * 0.5),
-    roas: 2.5 + Math.random() * 1.5 + i * 0.03,
-    ctr: 1.5 + Math.random() * 1.5,
-    cpa: 25 + Math.random() * 15,
-    impressions: 120000 + Math.random() * 50000 + i * 2000,
-    clicks: 2400 + Math.floor(Math.random() * 1000) + i * 40,
-  }
-})
-
-const mockAlerts = [
-  {
-    id: '1',
-    severity: 'warning' as const,
-    title: 'Campaign budget depleted',
-    message: '"Summer Sale 2024" has reached 95% of daily budget',
-    time: '10 minutes ago',
-  },
-  {
-    id: '2',
-    severity: 'good' as const,
-    title: 'ROAS target achieved',
-    message: '"Brand Awareness Q4" exceeded 4.0x ROAS target',
-    time: '1 hour ago',
-  },
-  {
-    id: '3',
-    severity: 'critical' as const,
-    title: 'New optimization suggestion',
-    message: 'AI detected underperforming keywords in 3 campaigns',
-    time: '3 hours ago',
-  },
-]
-
-// Regional data for pie chart
-const regionalData = [
-  { name: 'Saudi Arabia', value: 45 },
-  { name: 'UAE', value: 30 },
-  { name: 'Qatar', value: 10 },
-  { name: 'Kuwait', value: 8 },
-  { name: 'Other', value: 7 },
-]
-
 export function Overview() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
@@ -274,7 +108,7 @@ export function Overview() {
         start_date: c.start_date || c.startDate || new Date().toISOString(),
       })) as Campaign[]
     }
-    return mockCampaigns
+    return [] as Campaign[]
   }, [campaignsData])
 
   // Memoized: Calculate KPI metrics from campaigns (API or mock)
@@ -499,6 +333,14 @@ export function Overview() {
           </button>
 
           <button
+            onClick={() => navigate('/dashboard/custom-dashboard')}
+            className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium bg-background hover:bg-muted transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4 mr-2" />
+            Customize
+          </button>
+
+          <button
             onClick={handleRefresh}
             disabled={loading}
             className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium bg-background hover:bg-muted transition-colors disabled:opacity-50"
@@ -656,13 +498,13 @@ export function Overview() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PlatformPerformanceChart
-          data={mockPlatformSummary}
+          data={[]}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
 
         <ROASByPlatformChart
-          data={mockPlatformSummary}
+          data={[]}
           loading={initialLoading}
           targetROAS={3.0}
           onRefresh={handleRefresh}
@@ -673,14 +515,14 @@ export function Overview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <DailyTrendChart
-            data={mockDailyPerformance}
+            data={[]}
             loading={initialLoading}
             onRefresh={handleRefresh}
           />
         </div>
 
         <RegionalBreakdownChart
-          data={regionalData}
+          data={[]}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
@@ -758,7 +600,7 @@ export function Overview() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {mockAlerts.map((alert) => (
+            {([] as { id: string; severity: 'warning' | 'good' | 'critical'; title: string; message: string; time: string }[]).map((alert) => (
               <div
                 key={alert.id}
                 className={cn(

@@ -39,92 +39,6 @@ interface Message {
   error_message: string | null;
 }
 
-const mockMessages: Message[] = [
-  {
-    id: 1,
-    contact_name: 'John Doe',
-    contact_phone: '+1234567890',
-    direction: 'outbound',
-    message_type: 'template',
-    template_name: 'order_confirmation',
-    content: 'Hi John, your order #12345 has been confirmed...',
-    status: 'read',
-    sent_at: '2025-01-30T10:00:00Z',
-    delivered_at: '2025-01-30T10:00:05Z',
-    read_at: '2025-01-30T10:05:00Z',
-    error_message: null,
-  },
-  {
-    id: 2,
-    contact_name: 'Jane Smith',
-    contact_phone: '+1987654321',
-    direction: 'outbound',
-    message_type: 'template',
-    template_name: 'appointment_reminder',
-    content: 'Hi Jane, this is a reminder for your appointment on Feb 1...',
-    status: 'delivered',
-    sent_at: '2025-01-30T09:30:00Z',
-    delivered_at: '2025-01-30T09:30:03Z',
-    read_at: null,
-    error_message: null,
-  },
-  {
-    id: 3,
-    contact_name: 'John Doe',
-    contact_phone: '+1234567890',
-    direction: 'inbound',
-    message_type: 'text',
-    template_name: null,
-    content: 'Thanks for the confirmation!',
-    status: 'delivered',
-    sent_at: '2025-01-30T10:10:00Z',
-    delivered_at: null,
-    read_at: null,
-    error_message: null,
-  },
-  {
-    id: 4,
-    contact_name: 'Alice Johnson',
-    contact_phone: '+447123456789',
-    direction: 'outbound',
-    message_type: 'template',
-    template_name: 'verification_code',
-    content: 'Your verification code is 123456...',
-    status: 'sent',
-    sent_at: '2025-01-30T09:00:00Z',
-    delivered_at: null,
-    read_at: null,
-    error_message: null,
-  },
-  {
-    id: 5,
-    contact_name: 'Mohammed Ali',
-    contact_phone: '+971501234567',
-    direction: 'outbound',
-    message_type: 'template',
-    template_name: 'promo_winter_sale',
-    content: 'Winter Sale is here! Get up to 50% off...',
-    status: 'failed',
-    sent_at: '2025-01-30T08:00:00Z',
-    delivered_at: null,
-    read_at: null,
-    error_message: 'Phone number not registered on WhatsApp',
-  },
-  {
-    id: 6,
-    contact_name: 'Pierre Dupont',
-    contact_phone: '+33612345678',
-    direction: 'outbound',
-    message_type: 'image',
-    template_name: null,
-    content: 'product-catalog.jpg',
-    status: 'read',
-    sent_at: '2025-01-29T15:00:00Z',
-    delivered_at: '2025-01-29T15:00:02Z',
-    read_at: '2025-01-29T15:30:00Z',
-    error_message: null,
-  },
-];
 
 const statusConfig = {
   pending: { label: 'Pending', color: 'text-gray-400', bg: 'bg-gray-500/10', icon: ClockIcon },
@@ -153,7 +67,7 @@ const messageTypeIcons = {
 };
 
 export default function WhatsAppMessages() {
-  const [messages] = useState<Message[]>(mockMessages);
+  const [messages] = useState<Message[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [directionFilter, setDirectionFilter] = useState<string>('all');

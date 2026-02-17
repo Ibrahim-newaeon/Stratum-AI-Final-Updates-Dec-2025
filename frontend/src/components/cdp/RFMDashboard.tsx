@@ -381,9 +381,7 @@ export function RFMDashboard() {
             <Target className="w-6 h-6 text-primary" />
             RFM Analysis
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Customer segmentation based on Recency, Frequency, and Monetary value
-          </p>
+          <p className="text-muted-foreground mt-1 max-w-3xl">Classify your customers by Recency, Frequency, and Monetary value to identify champions, loyalists, and at-risk segments. RFM analysis helps you prioritize retention efforts and allocate marketing budgets to the highest-value audiences.</p>
         </div>
         <button
           onClick={handleCompute}
