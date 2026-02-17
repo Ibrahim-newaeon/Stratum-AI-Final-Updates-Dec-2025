@@ -6,6 +6,7 @@ Main FastAPI application entry point.
 Configures routers, middleware, and application lifecycle events.
 """
 
+import asyncio
 import time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -58,16 +59,29 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         )
         logger.info("sentry_initialized")
 
-    # Verify database connection
-    db_health = await check_database_health()
-    if db_health["status"] != "healthy":
-        logger.error("database_connection_failed", **db_health)
-    else:
-        logger.info("database_connected")
+    # Verify database connection (with timeout to prevent blocking startup)
+    try:
+        db_health = await asyncio.wait_for(check_database_health(), timeout=10.0)
+        if db_health["status"] != "healthy":
+            logger.error("database_connection_failed", **db_health)
+        else:
+            logger.info("database_connected")
+    except asyncio.TimeoutError:
+        logger.error(
+            "database_health_check_timeout",
+            detail="Database health check timed out after 10s",
+        )
 
-    # Start WebSocket manager
-    await ws_manager.start()
-    logger.info("websocket_manager_started")
+    # Start WebSocket manager (graceful degradation if Redis unavailable)
+    try:
+        await ws_manager.start()
+        logger.info("websocket_manager_started")
+    except Exception as e:
+        logger.warning(
+            "websocket_manager_start_failed",
+            error=str(e),
+            detail="App will run without real-time WebSocket support",
+        )
 
     yield
 

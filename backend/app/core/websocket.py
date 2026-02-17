@@ -115,12 +115,22 @@ class WebSocketManager:
             return
 
         self._running = True
-        self._redis = redis.from_url(settings.redis_url)
 
-        # Start Redis pubsub listener
-        self._pubsub_task = asyncio.create_task(self._redis_listener())
+        # Try to connect to Redis for cross-instance pub/sub
+        try:
+            self._redis = redis.from_url(settings.redis_url)
+            await self._redis.ping()  # Verify connectivity
+            self._pubsub_task = asyncio.create_task(self._redis_listener())
+            logger.info("websocket_redis_connected")
+        except Exception as e:
+            logger.warning(
+                "websocket_redis_unavailable",
+                error=str(e),
+                detail="Operating in local-only mode without cross-instance pub/sub",
+            )
+            self._redis = None  # Operate without Redis
 
-        # Start heartbeat task
+        # Heartbeat runs regardless of Redis availability
         self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
         logger.info("websocket_manager_started")
