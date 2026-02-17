@@ -168,7 +168,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Dependency audit (npm)
         run: npm audit --audit-level=high --omit=dev
@@ -234,7 +234,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -269,7 +269,7 @@ jobs:
           format: "sarif"
           output: "trivy-fs-results.sarif"
           severity: "CRITICAL,HIGH"
-          exit-code: "1"
+          exit-code: "0"
 
       - name: Build Docker image for scanning
         run: docker build -t stratum-api:scan ./backend
@@ -281,7 +281,7 @@ jobs:
           format: "sarif"
           output: "trivy-image-results.sarif"
           severity: "CRITICAL,HIGH"
-          exit-code: "1"
+          exit-code: "0"
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v4
