@@ -42,6 +42,13 @@
 </script>
 <style type="text/tailwindcss">
     @layer components {
+        .container {
+            box-sizing: border-box;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 1500px;
+            width: 100%;
+        }
         .glass-morphism {
             background: rgba(10, 22, 40, 0.65);
             backdrop-filter: blur(20px);
@@ -600,17 +607,17 @@ New: Knowledge Graph
 <div class="section-divider"></div>
 
 <!-- ═══════════════════ PRICING ═══════════════════ -->
-<section class="py-24 bg-midnight" id="pricing">
+<section class="py-24 navy-gradient-bg" id="pricing">
 <div class="max-w-[1920px] mx-auto px-6 lg:px-16">
 <div class="text-center max-w-2xl mx-auto mb-20 space-y-6">
 <div class="text-secondary font-bold tracking-widest uppercase text-xs">Pricing</div>
-<h2 class="text-4xl lg:text-5xl font-display font-extrabold leading-tight text-white anim-fade-up">Scale Your Revenue, Not Your Costs</h2>
+<h2 class="text-4xl lg:text-5xl font-display font-extrabold leading-tight text-white">Scale Your Revenue, <span class="gradient-text-cyber">Not Your Costs</span></h2>
 <p class="text-slate-300">Transparent pricing that grows with you. No hidden fees, no surprise charges. All plans include our Trust Gate system.</p>
 </div>
-<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
 <!-- Trial -->
-<div class="glass-card-blue p-8 rounded-3xl border border-white/10 flex flex-col hover:border-primary/40 transition-all anim-fade-up anim-delay-1">
-<div class="mb-8">
+<div class="glass-card-blue p-8 rounded-3xl border border-white/10 flex flex-col min-h-[600px] hover:border-primary/40 transition-all">
+<div class="mb-6">
 <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Trial</div>
 <h3 class="text-2xl font-bold mb-4 text-white">Free Trial</h3>
 <div class="flex items-baseline gap-1 text-white">
@@ -618,24 +625,34 @@ New: Knowledge Graph
 <span class="text-slate-400 text-sm">/14 days</span>
 </div>
 </div>
-<a href="/signup" target="_top" class="w-full py-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors text-center block mt-auto">Start 14 Days Free Trial</a>
-</div>
-<!-- Scale (Recommended) -->
-<div class="glass-card-blue p-8 rounded-3xl border-2 border-primary relative flex flex-col scale-105 shadow-[0_0_40px_rgba(255,31,109,0.2)] anim-scale-in anim-delay-2">
-<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Recommended</div>
-<div class="mb-8">
-<div class="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Professional</div>
-<h3 class="text-2xl font-bold mb-4 text-primary">Scale</h3>
-<div class="flex items-baseline gap-1">
-<span class="text-4xl font-extrabold text-primary">$1,499</span>
-<span class="text-slate-400 text-sm">/month</span>
-</div>
-</div>
-<a href="/signup" target="_top" class="w-full py-4 rounded-xl btn-cyber-primary font-bold hover:shadow-[0_0_20px_rgba(255,31,109,0.4)] transition-all text-center block mt-auto">Start 14 Days Free Trial</a>
+<div class="h-px bg-white/5 my-4"></div>
+<ul class="space-y-3 flex-1 text-sm text-slate-300">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Full platform access
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Up to 2 ad accounts
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Trust Gate system
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Basic analytics dashboard
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Email support
+</li>
+</ul>
+<a href="/signup" target="_top" class="w-full py-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors text-center block mt-6">Start Free Trial</a>
 </div>
 <!-- Growth -->
-<div class="glass-card-blue p-8 rounded-3xl border border-secondary/20 flex flex-col hover:border-secondary/40 transition-all anim-fade-up anim-delay-3">
-<div class="mb-8">
+<div class="glass-card-blue p-8 rounded-3xl border border-secondary/20 flex flex-col min-h-[600px] hover:border-secondary/40 transition-all">
+<div class="mb-6">
 <div class="text-[10px] font-bold uppercase tracking-widest text-secondary mb-2">Starter</div>
 <h3 class="text-2xl font-bold mb-4 text-secondary">Growth</h3>
 <div class="flex items-baseline gap-1">
@@ -643,18 +660,120 @@ New: Knowledge Graph
 <span class="text-slate-400 text-sm">/month</span>
 </div>
 </div>
-<a href="/signup" target="_top" class="w-full py-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors text-center block mt-auto">Start 14 Days Free Trial</a>
+<div class="h-px bg-white/5 my-4"></div>
+<ul class="space-y-3 flex-1 text-sm text-slate-300">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-base mt-0.5">check_circle</span>
+Everything in Trial
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-base mt-0.5">check_circle</span>
+Up to 10 ad accounts
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-base mt-0.5">check_circle</span>
+AI budget optimization
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-base mt-0.5">check_circle</span>
+Multi-touch attribution
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-base mt-0.5">check_circle</span>
+Campaign builder
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-base mt-0.5">check_circle</span>
+Priority support
+</li>
+</ul>
+<a href="/signup" target="_top" class="w-full py-4 rounded-xl border border-secondary/30 text-white font-bold hover:bg-secondary/10 transition-colors text-center block mt-6">Start 14 Days Free Trial</a>
 </div>
-<!-- Enterprise -->
-<div class="glass-card-blue p-8 rounded-3xl border border-white/10 flex flex-col hover:border-white/20 transition-all anim-fade-up anim-delay-4">
-<div class="mb-8">
+<!-- Scale (Recommended) -->
+<div class="glass-card-blue p-8 rounded-3xl border-2 border-primary relative flex flex-col min-h-[600px] scale-105 shadow-[0_0_40px_rgba(255,31,109,0.2)]">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Recommended</div>
+<div class="mb-6">
+<div class="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Professional</div>
+<h3 class="text-2xl font-bold mb-4 text-primary">Scale</h3>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-extrabold text-primary">$1,499</span>
+<span class="text-slate-400 text-sm">/month</span>
+</div>
+</div>
+<div class="h-px bg-primary/20 my-4"></div>
+<ul class="space-y-3 flex-1 text-sm text-slate-300">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Everything in Growth
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Unlimited ad accounts
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Trust-Gated Autopilot
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Profit & ROAS tracking
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Custom audiences & segments
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Competitor benchmarking
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base mt-0.5">check_circle</span>
+Dedicated success manager
+</li>
+</ul>
+<a href="/signup" target="_top" class="w-full py-4 rounded-xl btn-cyber-primary font-bold hover:shadow-[0_0_20px_rgba(255,31,109,0.4)] transition-all text-center block mt-6">Start 14 Days Free Trial</a>
+</div>
+<!-- Enterprise / Custom -->
+<div class="glass-card-blue p-8 rounded-3xl border border-white/10 flex flex-col min-h-[600px] hover:border-white/20 transition-all">
+<div class="mb-6">
 <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Enterprise</div>
 <h3 class="text-2xl font-bold mb-4 text-white">Custom</h3>
 <div class="flex items-baseline gap-1 text-white">
 <span class="text-4xl font-extrabold">Custom</span>
 </div>
 </div>
-<a href="/contact" target="_top" class="w-full py-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors text-center block mt-auto">Contact Sales</a>
+<div class="h-px bg-white/5 my-4"></div>
+<ul class="space-y-3 flex-1 text-sm text-slate-300">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-cyber-yellow text-base mt-0.5">check_circle</span>
+Everything in Scale
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-cyber-yellow text-base mt-0.5">check_circle</span>
+White-label option
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-cyber-yellow text-base mt-0.5">check_circle</span>
+Custom integrations & API
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-cyber-yellow text-base mt-0.5">check_circle</span>
+SLA & uptime guarantee
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-cyber-yellow text-base mt-0.5">check_circle</span>
+Dedicated infrastructure
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-cyber-yellow text-base mt-0.5">check_circle</span>
+On-premise deployment
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-cyber-yellow text-base mt-0.5">check_circle</span>
+24/7 premium support
+</li>
+</ul>
+<a href="/contact" target="_top" class="w-full py-4 rounded-xl border border-white/10 text-white font-bold hover:bg-white/5 transition-colors text-center block mt-6">Contact Sales</a>
 </div>
 </div>
 </div>
