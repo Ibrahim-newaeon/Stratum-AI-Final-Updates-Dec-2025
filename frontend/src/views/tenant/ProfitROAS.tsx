@@ -22,6 +22,7 @@ import {
   PlusIcon,
   CalculatorIcon,
   ShoppingBagIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 
@@ -35,12 +36,14 @@ export default function ProfitROAS() {
     endDate: new Date().toISOString().split('T')[0],
   })
 
-  const { data: products } = useProducts()
-  const { data: marginRules } = useMarginRules()
-  const { data: profitSummary } = useProfitSummary(dateRange)
-  const { data: trueROAS } = useTrueROAS(dateRange)
-  const { data: cogsUploads } = useCOGSUploads()
+  const { data: products, isLoading: loadingProducts } = useProducts()
+  const { data: marginRules, isLoading: loadingMargins } = useMarginRules()
+  const { data: profitSummary, isLoading: loadingSummary } = useProfitSummary(dateRange)
+  const { data: trueROAS, isLoading: loadingROAS } = useTrueROAS(dateRange)
+  const { data: cogsUploads, isLoading: loadingCOGS } = useCOGSUploads()
   const uploadCOGS = useUploadCOGS()
+
+  const isLoading = loadingProducts || loadingMargins || loadingSummary || loadingROAS || loadingCOGS
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
@@ -95,6 +98,25 @@ export default function ProfitROAS() {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Loading State */}
+          {(loadingSummary || loadingROAS) && (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading profit data...</span>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loadingSummary && !loadingROAS && !trueROAS && !profitSummary && (
+            <div className="rounded-xl border bg-muted/30 p-12 text-center">
+              <CalculatorIcon className="h-12 w-12 mx-auto text-muted-foreground" />
+              <h3 className="mt-4 font-semibold">No Profit Data Yet</h3>
+              <p className="text-muted-foreground mt-2">
+                Upload COGS data and add products to start calculating True ROAS
+              </p>
+            </div>
+          )}
+
           {/* ROAS Comparison */}
           {trueROAS && (
             <div className="rounded-xl border bg-card p-6 shadow-card">
@@ -241,51 +263,72 @@ export default function ProfitROAS() {
 
       {/* Products Tab */}
       {activeTab === 'products' && (
-        <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">Product</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">SKU</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Category</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">COGS</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Margin %</th>
-                <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {products?.items.map((product) => (
-                <tr key={product.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{product.name}</p>
-                    {product.brand && (
-                      <p className="text-sm text-muted-foreground">{product.brand}</p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-mono">{product.sku}</td>
-                  <td className="px-4 py-3 text-sm">{product.category || '-'}</td>
-                  <td className="px-4 py-3 text-right font-medium">
-                    {product.currency} {product.defaultCogs.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium">
-                    {product.defaultMarginPct.toFixed(1)}%
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={cn(
-                        'px-2 py-1 rounded-full text-xs',
-                        product.status === 'active' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                        product.status === 'inactive' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
-                        product.status === 'discontinued' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-                      )}
-                    >
-                      {product.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div>
+          {loadingProducts && (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading products...</span>
+            </div>
+          )}
+
+          {!loadingProducts && (!products?.items || products.items.length === 0) && (
+            <div className="rounded-xl border bg-muted/30 p-12 text-center">
+              <ShoppingBagIcon className="h-12 w-12 mx-auto text-muted-foreground" />
+              <h3 className="mt-4 font-semibold">No Products Yet</h3>
+              <p className="text-muted-foreground mt-2">
+                Add products to track COGS and calculate True ROAS
+              </p>
+            </div>
+          )}
+
+          {!loadingProducts && products?.items && products.items.length > 0 && (
+            <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Product</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">SKU</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Category</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">COGS</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Margin %</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {products.items.map((product) => (
+                    <tr key={product.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <p className="font-medium">{product.name}</p>
+                        {product.brand && (
+                          <p className="text-sm text-muted-foreground">{product.brand}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-mono">{product.sku}</td>
+                      <td className="px-4 py-3 text-sm">{product.category || '-'}</td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        {product.currency} {product.defaultCogs.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        {product.defaultMarginPct.toFixed(1)}%
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className={cn(
+                            'px-2 py-1 rounded-full text-xs',
+                            product.status === 'active' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+                            product.status === 'inactive' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
+                            product.status === 'discontinued' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                          )}
+                        >
+                          {product.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -298,51 +341,71 @@ export default function ProfitROAS() {
               Add Rule
             </button>
           </div>
-          <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Rule Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Applies To</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Margin Type</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Value</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium">Priority</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {marginRules?.map((rule) => (
-                  <tr key={rule.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3">
-                      <p className="font-medium">{rule.name}</p>
-                      {rule.description && (
-                        <p className="text-sm text-muted-foreground truncate max-w-xs">
-                          {rule.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm capitalize">{rule.appliesTo}</td>
-                    <td className="px-4 py-3 text-sm capitalize">{rule.marginType}</td>
-                    <td className="px-4 py-3 text-right font-medium">
-                      {rule.marginType === 'percentage' ? `${rule.marginValue}%` : `$${rule.marginValue}`}
-                    </td>
-                    <td className="px-4 py-3 text-center">{rule.priority}</td>
-                    <td className="px-4 py-3 text-center">
-                      {rule.isActive ? (
-                        <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300">
-                          Inactive
-                        </span>
-                      )}
-                    </td>
+
+          {loadingMargins && (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading margin rules...</span>
+            </div>
+          )}
+
+          {!loadingMargins && (!marginRules || marginRules.length === 0) && (
+            <div className="rounded-xl border bg-muted/30 p-12 text-center">
+              <CalculatorIcon className="h-12 w-12 mx-auto text-muted-foreground" />
+              <h3 className="mt-4 font-semibold">No Margin Rules</h3>
+              <p className="text-muted-foreground mt-2">
+                Create margin rules to automatically calculate profit margins
+              </p>
+            </div>
+          )}
+
+          {!loadingMargins && marginRules && marginRules.length > 0 && (
+            <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Rule Name</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Applies To</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Margin Type</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Value</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">Priority</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y">
+                  {marginRules.map((rule) => (
+                    <tr key={rule.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <p className="font-medium">{rule.name}</p>
+                        {rule.description && (
+                          <p className="text-sm text-muted-foreground truncate max-w-xs">
+                            {rule.description}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm capitalize">{rule.appliesTo}</td>
+                      <td className="px-4 py-3 text-sm capitalize">{rule.marginType}</td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        {rule.marginType === 'percentage' ? `${rule.marginValue}%` : `$${rule.marginValue}`}
+                      </td>
+                      <td className="px-4 py-3 text-center">{rule.priority}</td>
+                      <td className="px-4 py-3 text-center">
+                        {rule.isActive ? (
+                          <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300">
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -368,49 +431,68 @@ export default function ProfitROAS() {
           </div>
 
           {/* Upload History */}
-          <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-            <div className="p-4 border-b">
-              <h3 className="font-medium">Upload History</h3>
+          {loadingCOGS && (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading upload history...</span>
             </div>
-            <table className="w-full">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Filename</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Uploaded</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Rows</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Success</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Errors</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {cogsUploads?.map((upload) => (
-                  <tr key={upload.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium">{upload.filename}</td>
-                    <td className="px-4 py-3 text-sm">
-                      {new Date(upload.uploadedAt).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right">{upload.rowCount}</td>
-                    <td className="px-4 py-3 text-right text-emerald-600">{upload.successCount}</td>
-                    <td className="px-4 py-3 text-right text-red-600">{upload.errorCount}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={cn(
-                          'px-2 py-1 rounded-full text-xs',
-                          upload.status === 'completed' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                          upload.status === 'processing' && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
-                          upload.status === 'failed' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-                          upload.status === 'pending' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
-                        )}
-                      >
-                        {upload.status}
-                      </span>
-                    </td>
+          )}
+
+          {!loadingCOGS && (!cogsUploads || cogsUploads.length === 0) && (
+            <div className="rounded-xl border bg-muted/30 p-8 text-center">
+              <DocumentArrowUpIcon className="h-10 w-10 mx-auto text-muted-foreground" />
+              <h3 className="mt-3 font-semibold">No Upload History</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Upload a CSV file above to get started
+              </p>
+            </div>
+          )}
+
+          {!loadingCOGS && cogsUploads && cogsUploads.length > 0 && (
+            <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+              <div className="p-4 border-b">
+                <h3 className="font-medium">Upload History</h3>
+              </div>
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Filename</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Uploaded</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Rows</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Success</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Errors</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y">
+                  {cogsUploads.map((upload) => (
+                    <tr key={upload.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3 font-medium">{upload.filename}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {new Date(upload.uploadedAt).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right">{upload.rowCount}</td>
+                      <td className="px-4 py-3 text-right text-emerald-600">{upload.successCount}</td>
+                      <td className="px-4 py-3 text-right text-red-600">{upload.errorCount}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className={cn(
+                            'px-2 py-1 rounded-full text-xs',
+                            upload.status === 'completed' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+                            upload.status === 'processing' && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
+                            upload.status === 'failed' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
+                            upload.status === 'pending' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
+                          )}
+                        >
+                          {upload.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

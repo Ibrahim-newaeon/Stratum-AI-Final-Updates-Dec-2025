@@ -34,40 +34,6 @@ interface AdAccount {
   lastSyncAt: string
 }
 
-const mockAccounts: AdAccount[] = [
-  {
-    id: '1',
-    platformAccountId: 'act_123456789',
-    name: 'Main Business Account',
-    platform: 'meta',
-    currency: 'SAR',
-    timezone: 'Asia/Riyadh',
-    enabled: true,
-    spendCap: 50000,
-    lastSyncAt: '2024-01-20T10:30:00Z',
-  },
-  {
-    id: '2',
-    platformAccountId: 'act_987654321',
-    name: 'E-commerce Store',
-    platform: 'meta',
-    currency: 'SAR',
-    timezone: 'Asia/Riyadh',
-    enabled: true,
-    lastSyncAt: '2024-01-20T10:30:00Z',
-  },
-  {
-    id: '3',
-    platformAccountId: '123-456-7890',
-    name: 'Company Google Ads',
-    platform: 'google',
-    currency: 'SAR',
-    timezone: 'Asia/Riyadh',
-    enabled: false,
-    lastSyncAt: '2024-01-19T14:00:00Z',
-  },
-]
-
 const platformLabels = {
   meta: 'Meta Ads',
   google: 'Google Ads',
@@ -89,9 +55,9 @@ export default function AdAccounts() {
   const syncAccounts = useSyncAdAccounts(tid)
   const updateAccount = useUpdateAdAccount(tid)
 
-  // Combine all accounts with fallback to mock data
+  // Combine all accounts from API (no mock fallback)
   const accounts: AdAccount[] = useMemo(() => {
-    const apiAccounts = [
+    return [
       ...(metaAccounts || []),
       ...(googleAccounts || []),
       ...(tiktokAccounts || []),
@@ -107,9 +73,6 @@ export default function AdAccounts() {
       spendCap: acc.daily_budget_cap,
       lastSyncAt: acc.last_synced_at || new Date().toISOString(),
     }))
-
-    // Return API data if available, otherwise fall back to mock
-    return apiAccounts.length > 0 ? apiAccounts : mockAccounts
   }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
 
   const handleToggleAccount = async (account: AdAccount) => {

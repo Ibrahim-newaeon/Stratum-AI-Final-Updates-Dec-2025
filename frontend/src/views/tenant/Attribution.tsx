@@ -21,6 +21,8 @@ import {
   LightBulbIcon,
   ArrowsRightLeftIcon,
   SparklesIcon,
+  CloudArrowUpIcon,
+  LinkIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 
@@ -50,12 +52,12 @@ export default function Attribution() {
     ...dateRange,
     model: selectedModel,
   })
-  const { data: topPaths } = useTopConversionPaths({ ...dateRange, limit: 10 })
-  const { data: comparison } = useCompareModels({
+  const { data: topPaths, isLoading: loadingPaths } = useTopConversionPaths({ ...dateRange, limit: 10 })
+  const { data: comparison, isLoading: loadingComparison } = useCompareModels({
     ...dateRange,
     models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'],
   })
-  const { data: trainedModels } = useTrainedModels()
+  const { data: trainedModels, isLoading: loadingModels } = useTrainedModels()
   const trainMarkov = useTrainMarkovModel()
   const trainShapley = useTrainShapleyModel()
 
@@ -116,6 +118,56 @@ export default function Attribution() {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Loading State */}
+          {loadingSummary && (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading attribution data...</span>
+            </div>
+          )}
+
+          {/* Empty State — Data Import Explanation */}
+          {!loadingSummary && !summary && (
+            <div className="rounded-xl border bg-card p-8 shadow-card">
+              <div className="text-center mb-6">
+                <ChartPieIcon className="h-12 w-12 mx-auto text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-semibold">No Attribution Data Yet</h3>
+                <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
+                  Attribution data is automatically imported from your connected ad platforms and website analytics.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <LinkIcon className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium text-sm">1. Connect Platforms</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Link your Meta, Google, TikTok, or Snapchat ad accounts from the Connect Platforms page.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CloudArrowUpIcon className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium text-sm">2. Data Sync</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Conversion events, touchpoints, and channel data are synced automatically every 6 hours.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <SparklesIcon className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium text-sm">3. AI Attribution</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Train Markov or Shapley models for data-driven attribution once sufficient data is collected.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Summary Stats */}
           {summary && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -248,103 +300,160 @@ export default function Attribution() {
           </div>
 
           {/* Trained Models */}
-          <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-            <div className="p-4 border-b">
-              <h3 className="font-medium">Trained Models</h3>
+          {loadingModels && (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading trained models...</span>
             </div>
-            <table className="w-full">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Model</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Type</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Trained</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Accuracy</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {trainedModels?.map((model) => (
-                  <tr key={model.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium">{model.name}</td>
-                    <td className="px-4 py-3 text-sm capitalize">{model.modelType.replace('_', ' ')}</td>
-                    <td className="px-4 py-3 text-sm">
-                      {new Date(model.trainedAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium">
-                      {model.accuracy ? `${(model.accuracy * 100).toFixed(1)}%` : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={cn(
-                          'px-2 py-1 rounded-full text-xs',
-                          model.status === 'active' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                          model.status === 'training' && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
-                          model.status === 'failed' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-                        )}
-                      >
-                        {model.status}
-                      </span>
-                    </td>
+          )}
+
+          {!loadingModels && (!trainedModels || trainedModels.length === 0) && (
+            <div className="rounded-xl border bg-muted/30 p-8 text-center">
+              <BeakerIcon className="h-10 w-10 mx-auto text-muted-foreground" />
+              <h3 className="mt-3 font-semibold">No Trained Models</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Train a Markov or Shapley model above to get started with data-driven attribution.
+              </p>
+            </div>
+          )}
+
+          {!loadingModels && trainedModels && trainedModels.length > 0 && (
+            <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+              <div className="p-4 border-b">
+                <h3 className="font-medium">Trained Models</h3>
+              </div>
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Model</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Type</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Trained</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Accuracy</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y">
+                  {trainedModels.map((model) => (
+                    <tr key={model.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3 font-medium">{model.name}</td>
+                      <td className="px-4 py-3 text-sm capitalize">{model.modelType.replace('_', ' ')}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {new Date(model.trainedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        {model.accuracy ? `${(model.accuracy * 100).toFixed(1)}%` : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className={cn(
+                            'px-2 py-1 rounded-full text-xs',
+                            model.status === 'active' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+                            model.status === 'training' && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
+                            model.status === 'failed' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                          )}
+                        >
+                          {model.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
       {/* Conversion Paths Tab */}
       {activeTab === 'paths' && (
-        <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-          <div className="p-4 border-b">
-            <h3 className="font-medium">Top Conversion Paths</h3>
-            <p className="text-sm text-muted-foreground">
-              Most common channel sequences leading to conversions
-            </p>
-          </div>
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">Path</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Conversions</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Revenue</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Avg. Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {topPaths?.map((path, idx) => (
-                <tr key={idx} className="hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {path.path.map((channel, i) => (
-                        <span key={i} className="flex items-center gap-1">
-                          <span className="px-2 py-1 rounded bg-muted text-xs font-medium">
-                            {channel}
-                          </span>
-                          {i < path.path.length - 1 && (
-                            <ArrowsRightLeftIcon className="h-3 w-3 text-muted-foreground" />
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium">
-                    {path.conversions.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium">
-                    ${path.totalRevenue.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm text-muted-foreground">
-                    {path.avgTimeToConversion.toFixed(1)} days
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div>
+          {loadingPaths && (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading conversion paths...</span>
+            </div>
+          )}
+
+          {!loadingPaths && (!topPaths || topPaths.length === 0) && (
+            <div className="rounded-xl border bg-muted/30 p-12 text-center">
+              <ArrowsRightLeftIcon className="h-12 w-12 mx-auto text-muted-foreground" />
+              <h3 className="mt-4 font-semibold">No Conversion Paths Yet</h3>
+              <p className="text-muted-foreground mt-2">
+                Conversion path data will appear once enough touchpoint data has been collected from your connected platforms.
+              </p>
+            </div>
+          )}
+
+          {!loadingPaths && topPaths && topPaths.length > 0 && (
+            <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+              <div className="p-4 border-b">
+                <h3 className="font-medium">Top Conversion Paths</h3>
+                <p className="text-sm text-muted-foreground">
+                  Most common channel sequences leading to conversions
+                </p>
+              </div>
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Path</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Conversions</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Revenue</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Avg. Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {topPaths.map((path, idx) => (
+                    <tr key={idx} className="hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {path.path.map((channel, i) => (
+                            <span key={i} className="flex items-center gap-1">
+                              <span className="px-2 py-1 rounded bg-muted text-xs font-medium">
+                                {channel}
+                              </span>
+                              {i < path.path.length - 1 && (
+                                <ArrowsRightLeftIcon className="h-3 w-3 text-muted-foreground" />
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        {path.conversions.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        ${path.totalRevenue.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-muted-foreground">
+                        {path.avgTimeToConversion.toFixed(1)} days
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
       {/* Model Comparison Tab */}
+      {activeTab === 'compare' && loadingComparison && (
+        <div className="flex items-center justify-center py-12">
+          <ArrowPathIcon className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Loading model comparison...</span>
+        </div>
+      )}
+
+      {activeTab === 'compare' && !loadingComparison && !comparison && (
+        <div className="rounded-xl border bg-muted/30 p-12 text-center">
+          <ChartPieIcon className="h-12 w-12 mx-auto text-muted-foreground" />
+          <h3 className="mt-4 font-semibold">No Comparison Data</h3>
+          <p className="text-muted-foreground mt-2">
+            Model comparison data will be available once attribution data is collected.
+          </p>
+        </div>
+      )}
+
       {activeTab === 'compare' && comparison && (
         <div className="rounded-xl border bg-card shadow-card overflow-hidden">
           <div className="p-4 border-b">
